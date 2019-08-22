@@ -703,22 +703,27 @@ class PostgresBase(object):
         return names
 
 
-    def _copy_from(self, filename, table, columns, header, kwds):
+    def _copy_from(self, filename, table, columns, header, sep, kwds):
         """
         Helper function for ``copy_from`` and ``reload``.
 
         INPUT:
 
         - ``filename`` -- the filename to load
+
         - ``table`` -- the table into which the data should be added
+
         - ``columns`` -- a list of columns to load (the file may contain them in
             a different order, specified by a header row)
-        - ``cur_count`` -- the current number of rows in the table
+
         - ``header`` -- whether the file has header rows ordering the columns.
             This should be True for search and extra tables, False for counts and stats.
+
+        - ``sep`` -- the single one-byte character that separates
+            columns within each row (line).
+
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"\t")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -745,7 +750,7 @@ class PostgresBase(object):
                     self._execute(alter_table, [seq_name])
 
                 cur = self._db.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
+                cur.copy_from(F, table, columns=columns, sep=sep, **kwds)
 
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
@@ -3314,39 +3319,64 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, log_change=True, **kwds):
+    def reload(self,
+               searchfile, extrafile=None, sep='|',
+               countsfile=None, statsfile=None,
+               indexesfile=None, constraintsfile=None, metafile=None,
+               resort=None, reindex=True, restat=None,
+               final_swap=True, silence_meta=False, adjust_schema=False,
+               commit=True, log_change=True, **kwds):
         """
-        Safely and efficiently replaces this table with the contents of one or more files.
+        Safely and efficiently replaces this table with the contents of one or
+        more files.
 
         INPUT:
 
         - ``searchfile`` -- a string, the file with data for the search table
+
         - ``extrafile`` -- a string, the file with data for the extra table.
             If there is an extra table, this argument is required.
-        - ``countsfile`` -- a string (optional), giving a file containing counts
-            information for the table.
+
+        - ``sep`` -- the single one-byte character, default `|`, that separates
+            columns within each row (line).
+
+        - ``countsfile`` -- a string (optional), giving a file containing
+            counts information for the table.
+
         - ``statsfile`` -- a string (optional), giving a file containing stats
             information for the table.
-        - ``indexesfile`` -- a string (optional), giving a file containing index
-            information for the table.
-        - ``constraintsfile`` -- a string (optional), giving a file containing constraint
-            information for the table.
-        - ``metafile`` -- a string (optional), giving a file containing the meta
-            information for the table.
+
+        - ``indexesfile`` -- a string (optional), giving a file containing
+            index information for the table.
+
+        - ``constraintsfile`` -- a string (optional), giving a file containing
+            constraint information for the table.
+
+        - ``metafile`` -- a string (optional), giving a file containing the
+            meta information for the table.
+
         - ``resort`` -- whether to sort the ids after copying in the data.
             Only relevant for tables that are id_ordered.  Defaults to sorting
             when the searchfile and extrafile do not contain ids.
+
         - ``reindex`` -- whether to drop the indexes before importing data
             and rebuild them afterward.  If the number of rows is a substantial
             fraction of the size of the table, this will be faster.
-        - ``restat`` -- whether to refresh statistics afterward.  Default behavior
-            is to refresh stats if either countsfile or statsfile is missing.
+
+        - ``restat`` -- whether to refresh statistics afterward.  The default
+            behavior is to refresh stats if either countsfile or statsfile is
+            missing.
+
         - ``final_swap`` -- whether to perform the final swap exchanging the
             temporary table with the live one.
+
         - ``adjust_schema`` -- If True, it will create the new tables using the
             header columns, otherwise expects the schema specified by the files
             to match the current one
-        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+
+        - ``kwds`` -- passed on to psycopg2's ``copy_from``.
+            Cannot include "columns".
+
 
         .. NOTE:
 
@@ -3571,19 +3601,30 @@ class PostgresTable(PostgresBase):
         return res
 
 
-    def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
+    def copy_from(self, searchfile, extrafile=None, sep='|', resort=True,
+                  reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
 
         INPUT:
 
         - ``searchfile`` -- a string, the file with data for the search table
+
         - ``extrafile`` -- a string, the file with data for the extra table.
             If there is an extra table, this argument is required.
-        - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
-        - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
-            If the number of rows is a substantial fraction of the size of the table, this will be faster.
-        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+
+        - ``sep`` -- the single one-byte character, default `|`, that separates
+            columns within each row (line).
+
+        - ``resort`` -- whether to sort the ids after copying in the data.
+            Only relevant for tables that are id_ordered.
+
+        - ``reindex`` -- whether to drop the indexes before importing data and
+            rebuild them afterward.  If the number of rows is a substantial
+            fraction of the size of the table, this will be faster.
+
+        - ``kwds`` -- passed on to psycopg2's ``copy_from``.
+            Cannot include "columns".
 
         .. NOTE:
 
@@ -3595,9 +3636,9 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, kwds)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, sep, kwds)
             if extrafile is not None:
-                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, sep, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
                     raise ValueError("Different number of rows in searchfile and extrafile")
@@ -3617,7 +3658,9 @@ class PostgresTable(PostgresBase):
             self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
-    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
+    def copy_to(self, searchfile, extrafile=None, sep='|',
+                countsfile=None, statsfile=None, indexesfile=None,
+                constraintsfile=None, metafile=None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -3626,18 +3669,34 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``searchfile`` -- a string, the filename to write data into for the search table
-        - ``extrafile`` -- a string,the filename to write data into for the extra table.
-            If there is an extra table, this argument is required.
-        - ``countsfile`` -- a string (optional), the filename to write the data into for the counts table.
-        - ``statsfile`` -- a string (optional), the filename to write the data into for the stats table.
-        - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
-        - ``constraintsfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_constraints table.
-        - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
-        - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
+        - ``searchfile`` -- a string, the filename to write data into for the
+            search table
+
+        - ``extrafile`` -- a string,the filename to write data into for the
+            extra table. If there is an extra table, this argument is required.
+
+        - ``sep`` -- the single one-byte character, default `|`, that separates
+            columns within each row (line).
+
+        - ``countsfile`` -- a string (optional), the filename to write the data
+            into for the counts table.
+
+        - ``statsfile`` -- a string (optional), the filename to write the data
+            into for the stats table.
+
+        - ``indexesfile`` -- a string (optional), the filename to write the
+            data into for the corresponding rows of the meta_indexes table.
+
+        - ``constraintsfile`` -- a string (optional), the filename to write the
+            data into for the corresponding rows of the meta_constraints table.
+
+        - ``metatablesfile`` -- a string (optional), the filename to write the
+            data into for the corresponding row of the meta_tables table.
+
+        - ``kwds`` -- passed on to psycopg2's ``copy_to``.
+            Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        sep = kwds.get("sep", u"\t")
 
         tabledata = [
                 # tablename, cols, addid, write_header, filename
@@ -3667,7 +3726,8 @@ class PostgresTable(PostgresBase):
                     try:
                         if write_header:
                             self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols_wquotes, **kwds)
+                        cur.copy_to(F, table,
+                                    columns=cols_wquotes, sep=sep, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
