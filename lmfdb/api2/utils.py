@@ -404,8 +404,6 @@ def simple_search_postgres(search_dict, projection=None):
 
     offset = search_dict.get('view_start', 0)
     rcount = search_dict.get('max_count', 100)
-    f_e_c = search_dict.get('correct_count', False)
-    count_only = search_dict.get('count_only', False)
 
     if not projection: 
         projection = 2
