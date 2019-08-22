@@ -421,7 +421,7 @@ def simple_search_postgres(search_dict, projection=None):
     info={}
     try:
         data = C.search(search_dict['query'], projection = projection, limit = rcount, 
-            offset = offset, info = info, force_exact_count = f_e_c, count_only = count_only)
+            offset = offset, info = info)
     except Exception as e:
         data = []
         info['number'] = 0
