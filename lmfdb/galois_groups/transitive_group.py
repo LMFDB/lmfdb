@@ -234,7 +234,7 @@ def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     if not name:
-        if group is not None and group.get('pretty',None) is not None:
+        if group is not None and group.get('pretty', None) is not None:
             name = group['pretty']
         else:
             name = label

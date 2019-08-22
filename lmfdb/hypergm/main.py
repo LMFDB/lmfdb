@@ -10,7 +10,7 @@ from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
-    clean_input, parse_ints, parse_bracketed_posints, parse_rational, 
+    clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, search_wrap, web_latex)
 from base64 import b64encode
 from urllib import quote
@@ -38,7 +38,7 @@ GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
 def dogapthing(m1):
     mnew = str(m1[2])
-    mnew = mnew.replace(' ','')
+    mnew = mnew.replace(' ', '')
     if GAP_ID_RE.match(mnew):
         mnew = mnew[1:-1]
         two = mnew.split(',')
@@ -53,14 +53,14 @@ def dogapthing(m1):
         m1[2] = '$%s$'% m1[2]
     return m1
 
-def getgroup(m1,ell):
-    pind = {2: 0,3:1,5:2,7:3,11:4,13:5}
-    if len(m1[3][2])==0:
+def getgroup(m1, ell):
+    pind = {2: 0, 3: 1, 5: 2, 7: 3, 11: 4, 13: 5}
+    if not m1[3][2]:
         return [m1[2], m1[0]]
-    myA = list2string(m1[3][0])
-    myB = list2string(m1[3][1])
-    if len(myA)==0 and len(myB)==0:
-        return [small_group_display_knowl(1,1), 1]
+    myA = m1[3][0]
+    myB = m1[3][1]
+    if not myA and not myB:  # myA = myB = []
+        return [small_group_display_knowl(1, 1), 1]
     mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
     if mono is None:
         return ['??', 1]
@@ -100,7 +100,7 @@ def cyc_to_QZ(A):
     return alpha
 
 # A and B are lists, tn and td are num/den for t
-def ab_label(A,B):
+def ab_label(A, B):
     return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
 
 def list2Cnstring(li):
@@ -133,8 +133,8 @@ def splitint(a,p):
     return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
 
 
-def make_abt_label(A,B,t):
-    AB_str = ab_label(A,B)
+def make_abt_label(A, B, t):
+    AB_str = ab_label(A, B)
     t = QQ(t)
     t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
@@ -144,7 +144,9 @@ def make_t_label(t):
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
-    bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
+    bc = [("Motives", url_for("motive.index")),
+          ("Hypergeometric", url_for("motive.index2")),
+          ("$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -219,7 +221,13 @@ def index():
     if len(request.args) != 0:
         return hgm_search(request.args)
     info = {'count': 50}
-    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=get_bread(), credit=HGM_credit, info=info, learnmore=learnmore_list())
+    return render_template(
+            "hgm-index.html",
+            title="Hypergeometric Motives over $\Q$",
+            bread=get_bread(),
+            credit=HGM_credit,
+            info=info,
+            learnmore=learnmore_list())
 
 def hgm_family_circle_plot_data(AB):
     A,B = AB.split("_")
@@ -283,13 +291,13 @@ def hgm_jump(info):
     return redirect(url_for(".index"))
 
 @search_wrap(template="hgm-search.html",
-             table=db.hgm_motives, # overridden if family search
+             table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
              per_page=50,
-             shortcuts={'jump_to':hgm_jump},
-             bread=lambda:get_bread([("Search Results", '')]),
-             credit=lambda:HGM_credit,
+             shortcuts={'jump_to': hgm_jump},
+             bread=lambda: get_bread([("Search Results", '')]),
+             credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     family_search = False
@@ -304,19 +312,19 @@ def hgm_search(info, query):
     for param in ['A', 'B']:
 #    , 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
 #                  'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
-        parse_bracketed_posints(info, queryab, param, split=True, 
+        parse_bracketed_posints(info, queryab, param, split=True,
                                 keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
