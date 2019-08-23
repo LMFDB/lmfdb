@@ -139,7 +139,7 @@ class WebHyperGeometricFamily(object):
             for pp in b:
                 eds.append([pp[0], pp[1]])
         eds.sort()
-        l2 = ['C_{{}}'.format(a[0]**a[1]) for a in eds]
+        l2 = ['C_{{{}}}'.format(a[0]**a[1]) for a in eds]
         return (r' \times ').join(l2)
 
     @lazy_attribute
