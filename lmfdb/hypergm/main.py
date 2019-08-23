@@ -539,7 +539,7 @@ def render_hgm_family_webpage(label):
                 'bezoutmat': bezoutmat,
                 'bezoutdet': bezoutdet,
                 'mono': mono,
-                'imprim': data['imprim'],
+                'rotation_number': data['imprim'],
                 'ppart': ppart,
                 'type': typee,
                 'junk': small_group_display_knowl(18,2),
