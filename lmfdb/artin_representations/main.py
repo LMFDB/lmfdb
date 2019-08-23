@@ -168,7 +168,7 @@ def render_artin_representation_webpage(label):
     nf_url = the_nf.url_for()
     if nf_url:
         friends.append(("Artin Field", nf_url))
-    cc = the_rep.central_character()
+    cc = the_rep.determinant()
     if cc is not None:
         if the_rep.dimension()==1:
             if cc.order == 2:
@@ -177,7 +177,7 @@ def render_artin_representation_webpage(label):
                 cc_name = cc.texname
             friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
         else:
-            detrep = the_rep.central_character_as_artin_rep()
+            detrep = ArtinRepresentation(cc)
             friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
     add_lfunction_friends(friends,label)
 
