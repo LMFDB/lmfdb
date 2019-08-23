@@ -310,7 +310,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 	</table>
 
-	{% if not data.data.optimality_known %}<sup>*</sup>optimality has not been proved rigorously in all cases for conductors over 60000, but the Manin constant is correct where given{% endif %}
+	{% if not data.data.optimality_known %}<sup>*</sup>optimality has not been proved rigorously in all cases for conductors over {{ data.data.optimality_bound }}, but the Manin constant is correct where given{% endif %}
 	</p>
 
 	{#

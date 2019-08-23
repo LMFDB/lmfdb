@@ -44,7 +44,7 @@ text-align: center;
 {% endfor %}
 </table>
 
-{% if not info.optimality_known %}<sup>*</sup>optimality has not been proved rigorously for conductors over 60000{% endif %}
+{% if not info.optimality_known %}<sup>*</sup>optimality has not been proved rigorously for conductors over {{ info.optimality_bound }}{% endif %}
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
