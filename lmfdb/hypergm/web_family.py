@@ -3,14 +3,16 @@ import re
 from flask import url_for
 from collections import defaultdict
 from sage.all import ZZ, QQ
-from sage.all import (cached_method, divisors, gcd, latex, lazy_attribute,
+from sage.all import (cached_method, ceil, divisors, gcd,
+                      latex, lazy_attribute,
                       matrix, valuation)
+from sage.geometry.newton_polygon import NewtonPolygon
 
 from lmfdb import db
 from lmfdb.utils import (
     encode_plot, flash_error, list_to_factored_poly_otherorder,
-    web_latex)
-from lmfdb.galois_groups.transitive_group import small_group_display_knowl
+    make_bigint, web_latex)
+from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
 from plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
@@ -40,6 +42,8 @@ class WebHyperGeometricFamily(object):
         self.beta = cyc_to_QZ(self.B)
         self.hodge = data['famhodge']
         self.bezout = matrix(self.bezout)
+        #FIXME
+        self.rotation_number = self.imprim
 
     @staticmethod
     def by_label(label):
@@ -97,7 +101,12 @@ class WebHyperGeometricFamily(object):
         exp = -QQ(self.weight * self.degree)/2
         first = r'\Q({})'.format(exp)
 
-        foo = str(self.det[0]) if self.det[0] != 1 else ""
+        if self.det[0] == 1:
+            foo = ""
+        elif self.det[0] == -1:
+            foo = "-"
+        else:
+            foo = str(self.det[0])
         foo += self.det[1]
         if foo == "":
             foo = "1"
@@ -242,13 +251,6 @@ class WebHyperGeometricFamily(object):
                  "?A={}&B={}".format(str(self.A), str(self.B)))]
 
 
-    @lazy_attribute
-    def euler_factors(self):
-        return dict([(elt['p'], elt['eulers']) for elt in
-                     db.hgm_euler_survey.search({'label': self.label},
-                                          projection=['p', 'eulers'],
-                                          sort=[])])
-
 
     @lazy_attribute
     def title(self):
@@ -260,6 +262,85 @@ class WebHyperGeometricFamily(object):
                 ("Hypergeometric", url_for("motive.index2")),
                 ("$\Q$", url_for(".index")),
                 ('family A = {}, B = {}'.format(str(self.A), str(self.B)), '')]
+
+    @lazy_attribute
+    def euler_factors(self):
+        return dict([(elt['p'], elt['eulers']) for elt in
+                     db.hgm_euler_survey.search({'label': self.label},
+                                                 projection=['p', 'eulers'],
+                                                 sort=[])])
+    @lazy_attribute
+    def maxp(self):
+        return -1 if not self.euler_factors.keys() else max(self.euler_factors.keys())
+
+    @lazy_attribute
+    def hodge_polygon(self):
+        expand_hodge = []
+        for i, h in enumerate(self.hodge):
+            expand_hodge += [i]*h
+        return NewtonPolygon(expand_hodge).vertices()
+
+    @lazy_attribute
+    def ordinary(self):
+        if self.weight > 0:
+            middle = ceil(ZZ(len(self.hodge_polygon))/2)
+            def ordinary(f, p):
+                return all(valuation(f[i], p) == v
+                           for i, v in self.hodge_polygon[:middle])
+                # return [valuation(elt, p) for elt in f] == self.hodge_polygon
+        else:
+            def ordinary(f, p):
+                return None
+
+        return ordinary
+
+    @lazy_attribute
+    def process_euler(self):
+        galois = self.display_galois_groups
+        def process_euler(f, p):
+            fG = list_to_factored_poly_otherorder(f, galois=galois, p=p)
+            if galois:
+                factors, gal_groups = fG
+            else:
+                factors, gal_groups = fG, ""
+
+            factors = make_bigint('\( %s \)' % factors)
+
+            if gal_groups:
+                if gal_groups[0] == [0,0]:
+                    gal_groups = ""
+                else:
+                    gal_groups = "$\\times$".join(
+                            [group_display_knowl_C1_as_trivial(n, t)
+                                for n, t in gal_groups])
+            return [gal_groups, factors, self.ordinary(f, p)]
+        return process_euler
+    @lazy_attribute
+    def display_galois_groups(self):
+        return False if self.degree <= 2 or self.degree >= 12 else True
+
+    @cached_method
+    def table_euler_factors_p(self, p):
+        if p not in self.euler_factors.keys():
+            return []
+
+        ef = self.euler_factors[p]
+        assert len(ef) == p - 2
+        return [[t] + self.process_euler(f, p)
+                for t, f in enumerate(ef, 2)]
+
+    @cached_method
+    def table_euler_factors_t(self, tn, td):
+        t = QQ(tn/td)
+        ts = [(p, t.mod_ui(p)) for p in sorted(self.euler_factors.keys())
+              if td % p != 0]
+        # filter
+        return [[p] + self.process_euler(self.euler_factors[p][tp - 2], p)
+                for tp in ts if tp > 1]
+
+
+
+
 
 
 

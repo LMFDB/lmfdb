@@ -27,7 +27,7 @@
       <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:<td>${{family.weight}}$
       <tr><td>{{KNOWL('hgm.type', title="Type")}}:<td>{{family.type}}
       <tr><td>{{KNOWL('mot.hodgevector', title="Hodge vector")}}:<td>${{family.hodge}}$
-      <tr><td>{{KNOWL('hgm.imprimitivity_index', title="Imprimitivity index")}}:<td>${{family.imprim}}$
+      <tr><td>{{KNOWL('hgm.rotation_number', title="Rotation number")}}:<td>${{family.rotation_number}}$
       <tr><td>{{KNOWL('hgm.determinant', title="Motive determinant character")}}:<td>${{family.motivic_det_char}}$
       <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:<td>${{family.bezout_latex}}$
       <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:<td>${{family.bezout_det}}$
@@ -74,5 +74,65 @@
       {% endif %}
     {% endfor %}
     </table>
+
+
+<p>
+<h2>Good Euler factors</h2>
+  {% set euler_factors = family.table_euler_factors_p(family.maxp) %}
+  <table class='ntdata euler'>
+    <thead>
+    <tr class='space'>
+      <th class='weight'> $t$ </th>
+      {% if family.degree < 12 and family.degree > 2 %}
+        {% set colspan = 3 %}
+        <th class='weight'> $\Gal(F_p)$ </th>
+      {% else %}
+        {% set colspan = 2 %}
+      {% endif %}
+      <th class='weight'> $F_p$ </th>
+      {% if family.weight > 0 %}
+        {% set colspan = colspan + 1 %}
+        <th class='weight'> Ordinary? </th>
+      {% endif %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for t, Gal, Fp, ord in euler_factors %}
+      {% if loop.index < 20 %}
+        <tr>
+      {% else %}
+        <tr class="more nodisplay">
+      {% endif %}
+        <td style="text-align: center;"> ${{t}}$ </td>
+        {% if family.degree < 12 and family.degree > 2 %}
+          <td class='galois'>
+            {{Gal | safe}}
+          </td>
+        {% endif %}
+        <td> {{Fp}} </td>
+        {% if family.weight > 0 %}
+          <td style="text-align: center;">
+          {% if not ord %}
+            &#10008;
+          {% endif %}
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+
+    {% if euler_factors | length > 20 %}
+    <tr class="less toggle">
+      <td colspan="{{colspan}}">
+        <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+      </td>
+    </tr>
+    <tr class="more toggle nodisplay">
+      <td colspan="{{colspan}}">
+        <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+      </td>
+    </tr>
+    {% endif %}
+    </tbody>
+  </table>
 
 {% endblock %}
