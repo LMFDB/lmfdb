@@ -14,6 +14,8 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSer
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
+OPTIMALITY_BOUND = 250000 # optimality of curve no. 1 in class only proved in all cases for conductor less than this
+
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
 lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
@@ -201,10 +203,11 @@ class WebEC(object):
             data['degree'] = 0 # invalid, but will be displayed nicely
         else:
             data['degree'] = self.degree
-        if self.number == 1:
+
+        try:
             data['an'] = self.anlist
             data['ap'] = self.aplist
-        else:
+        except AttributeError:
             r = db.ec_curves.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
@@ -272,7 +275,8 @@ class WebEC(object):
             data['Gamma0optimal'] = bool(self.number == 3)
         else:
             data['Gamma0optimal'] = bool(self.number == 1)
-        data['optimality_known'] = (int(self.class_size)==1) or (N<60000)
+        data['optimality_known'] = (int(self.class_size)==1) or (N<OPTIMALITY_BOUND)
+        data['optimality_bound'] = OPTIMALITY_BOUND
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
@@ -297,11 +301,19 @@ class WebEC(object):
         else:
             self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
             self.class_name = self.lmfdb_iso
+
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
-            ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
-            ('L-function', url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso))]
+            ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv))]
+
+        lfun_url = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
+        origin_url = lfun_url.lstrip('/L/').rstrip('/')
+
+        if db.lfunc_instances.exists({'url':origin_url}):
+            self.friends += [('L-function', lfun_url)]
+        else:
+            self.friends += [('L-function not available', "")]
 
         if not self.cm:
             if N<=300:
@@ -443,10 +455,13 @@ class WebEC(object):
                 iw['data'] += [[p,rtype,lambdas,mus]]
 
     def make_torsion_growth(self):
-        if self.tor_gro is None:
+        try:
+            tor_gro = self.tor_gro
+        except AttributeError: # for curves with norsion growth data
+            tor_gro = None
+        if tor_gro is None:
             self.torsion_growth_data_exists = False
             return
-        tor_gro = self.tor_gro
         self.torsion_growth_data_exists = True
         self.tg = tg = {}
         tg['data'] = tgextra = []

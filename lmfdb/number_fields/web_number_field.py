@@ -641,6 +641,11 @@ class WebNumberField:
             return 1
         return na_text()
 
+    def units_safe(self):  # fundamental units, if they are not too long
+        units = self.units()
+        if len(units) > 500:
+            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
+
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):

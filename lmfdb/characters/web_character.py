@@ -778,7 +778,7 @@ class WebChar(WebCharObject):
 
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("Character Group", cglink) )
+        f.append( ("Character group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
@@ -1140,7 +1140,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character Group", cglink) )
+        friendlist.append( ("Character group", cglink) )
         if self.type == "Dirichlet" and self.isprimitive == "Yes":
             url = url_character(
                 type=self.type,
@@ -1158,6 +1158,14 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             )
         if len(self.vflabel) > 0:
             friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        label = "%s.%s"%(self.modulus, self.number)
+        myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
+        if not myrep is None:
+            j=myrep['Dets'].index(label)
+            artlabel = myrep['Baselabel']+'c'+str(j+1)
+            friendlist.append(('Artin representation '+artlabel,
+                url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
+
         return friendlist
 
     def symbol_numerator(self):

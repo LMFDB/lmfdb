@@ -2,7 +2,7 @@
 from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND
 from lmfdb import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -62,7 +62,8 @@ class ECisog_class(object):
 
         # Set optimality flags.  The optimal curve is number 1 except
         # in one case which is labeled differently in the Cremona tables
-        self.optimality_known = (self.ncurves==1) or (self.conductor<60000)
+        self.optimality_known = (self.ncurves==1) or (self.conductor<OPTIMALITY_BOUND)
+        self.optimality_bound = OPTIMALITY_BOUND
         for c in self.curves:
             c['optimal'] = (c['number']==(3 if self.iso == '990h' else 1))
             c['ai'] = c['ainvs']
