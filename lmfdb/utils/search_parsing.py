@@ -318,7 +318,8 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
+    if parse_one is None: 
+        parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, split0 = True)
