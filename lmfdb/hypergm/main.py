@@ -6,15 +6,13 @@ import re
 
 from flask import render_template, request, url_for, redirect, abort
 from sage.all import (
-    ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd, divisors)
+    ZZ, QQ, latex, valuation, PolynomialRing, gcd, divisors)
 
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, search_wrap, web_latex)
-from base64 import b64encode
-from urllib import quote
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from web_family import WebHyperGeometricFamily

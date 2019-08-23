@@ -2,7 +2,7 @@
 import re
 from flask import url_for
 from collections import defaultdict
-from sage.all import ZZ, QQ
+from sage.all import ZZ, QQ, LCM
 from sage.all import (cached_method, ceil, divisors, gcd,
                       latex, lazy_attribute,
                       matrix, valuation)
@@ -10,7 +10,7 @@ from sage.geometry.newton_polygon import NewtonPolygon
 
 from lmfdb import db
 from lmfdb.utils import (
-    encode_plot, flash_error, list_to_factored_poly_otherorder,
+    encode_plot, list_to_factored_poly_otherorder,
     make_bigint, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
 from plot import circle_image, piecewise_constant_image, piecewise_linear_image
@@ -94,6 +94,11 @@ class WebHyperGeometricFamily(object):
         gamma = gamma[1] + gamma[0]
         gamma.sort()
         return gamma
+
+    @lazy_attribute
+    def wild_primes(self):
+        return LCM(LCM(self.A), LCM(self.B)).prime_divisors()
+
 
 
     @lazy_attribute
@@ -331,12 +336,13 @@ class WebHyperGeometricFamily(object):
 
     @cached_method
     def table_euler_factors_t(self, tn, td):
-        t = QQ(tn/td)
-        ts = [(p, t.mod_ui(p)) for p in sorted(self.euler_factors.keys())
+        t = QQ(tn)/td
+        tmodp = [(p, t.mod_ui(p)) for p in sorted(self.euler_factors.keys())
               if td % p != 0]
+        print tmodp
         # filter
         return [[p] + self.process_euler(self.euler_factors[p][tp - 2], p)
-                for tp in ts if tp > 1]
+                for p, tp in tmodp if tp > 1]
 
 
 
