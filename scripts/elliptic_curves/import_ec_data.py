@@ -12,62 +12,63 @@ Rewritten by John Cremona and David Roe, Bristol, March 2012
 Evolved during 2012-2018
 2018: adapted for postgres, JEC.
 
-Postgres table ec_curves has these columns:
+Postgres table ec_curves has these columns (updated 2019-08-05):
 """
 
 qcurves_col_type = {
- u'2adic_gens': u'jsonb',
- u'2adic_index': u'smallint',
- u'2adic_label': u'text',
- u'2adic_log_level': u'smallint',
- u'ainvs': u'jsonb',
- u'anlist': u'jsonb',
- u'aplist': u'jsonb',
- u'class_deg': u'smallint',
- u'class_size': u'smallint',
- u'cm': u'smallint',
- u'conductor': u'numeric',
- u'degree': u'numeric',
- u'equation': u'text',
- u'galois_images': u'jsonb',
- u'gens': u'jsonb',
- u'heights': u'jsonb',
- u'id': u'bigint',
- u'iso': u'text',
- u'iso_nlabel': u'smallint',
- u'isogeny_degrees': u'jsonb',
- u'isogeny_matrix': u'jsonb',
- u'iwdata': u'jsonb',
- u'iwp0': u'smallint',
- u'jinv': u'text',
- u'label': u'text',
- u'lmfdb_iso': u'text',
- u'lmfdb_label': u'text',
- u'lmfdb_number': u'smallint',
- u'local_data': u'jsonb',
- u'min_quad_twist': u'jsonb',
- u'modp_images': u'jsonb',
- u'nonmax_primes': u'jsonb',
- u'nonmax_rad': u'integer',
- u'number': u'smallint',
- u'rank': u'smallint',
- u'real_period': u'numeric',
- u'regulator': u'numeric',
- u'sha': u'integer',
- u'sha_an': u'numeric',
- u'sha_primes': u'jsonb',
- u'signD': u'smallint',
- u'special_value': u'numeric',
- u'tamagawa_product': u'integer',
- u'tor_degs': u'jsonb',
- u'tor_fields': u'jsonb',
- u'tor_gro': u'jsonb',
- u'torsion': u'smallint',
- u'torsion_generators': u'jsonb',
- u'torsion_primes': u'jsonb',
- u'torsion_structure': u'jsonb',
- u'trace_hash': u'bigint',
- u'xcoord_integral_points': u'jsonb',
+    u'2adic_gens': 'jsonb',
+    u'2adic_index': 'smallint',
+    u'2adic_label': 'text',
+    u'2adic_log_level': 'smallint',
+    u'ainvs': 'jsonb',
+    u'anlist': 'jsonb',
+    u'aplist': 'jsonb',
+    u'bad_primes': 'integer[]',
+    u'class_deg': 'smallint',
+    u'class_size': 'smallint',
+    u'cm': 'smallint',
+    u'conductor': 'numeric',
+    u'degree': 'numeric',
+    u'equation': 'text',
+    u'galois_images': 'jsonb',
+    u'gens': 'jsonb',
+    u'heights': 'jsonb',
+    u'id': 'bigint',
+    u'iso': 'text',
+    u'iso_nlabel': 'smallint',
+    u'isogeny_degrees': 'jsonb',
+    u'isogeny_matrix': 'jsonb',
+    u'iwdata': 'jsonb',
+    u'iwp0': 'smallint',
+    u'jinv': 'text',
+    u'label': 'text',
+    u'lmfdb_iso': 'text',
+    u'lmfdb_label': 'text',
+    u'lmfdb_number': 'smallint',
+    u'local_data': 'jsonb',
+    u'min_quad_twist': 'jsonb',
+    u'modp_images': 'jsonb',
+    u'nonmax_primes': 'jsonb',
+    u'nonmax_rad': 'integer',
+    u'number': 'smallint',
+    u'rank': 'smallint',
+    u'real_period': 'numeric',
+    u'regulator': 'numeric',
+    u'sha': 'integer',
+    u'sha_an': 'numeric',
+    u'sha_primes': 'jsonb',
+    u'signD': 'smallint',
+    u'special_value': 'numeric',
+    u'tamagawa_product': 'integer',
+    u'tor_degs': 'jsonb',
+    u'tor_fields': 'jsonb',
+    u'tor_gro': 'jsonb',
+    u'torsion': 'smallint',
+    u'torsion_generators': 'jsonb',
+    u'torsion_primes': 'jsonb',
+    u'torsion_structure': 'jsonb',
+    u'trace_hash': 'bigint',
+    u'xcoord_integral_points': 'jsonb',
 }
 
 r"""
@@ -99,7 +100,7 @@ The documents in the mongo collection 'curves' in the database 'elliptic_curves'
    - 'degree': (int) degree of modular parametrization, e.g. 1984
    - 'nonmax_primes': (list of ints) primes p for which the
       mod p Galois representation is not maximal, e.g. [5]
-   - 'nonmax_radd': (int) product of nonmax_primes
+   - 'nonmax_rad': (int) product of nonmax_primes
    - 'modp_images': (list of strings) Sutherland codes for the
       images of the mod p Galois representations for the primes in
       'nonmax_primes' e.g. ['5B']
@@ -260,7 +261,7 @@ def allgens(line):
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
-    extra_data = make_extra_data(label,content['number'],ainvs,content['gens'])
+    extra_data = make_extra_data(label,ainvs,content['gens'])
     content.update(extra_data)
 
     return label, content
@@ -707,9 +708,8 @@ def add_galreps_to_one(c):
 
 # function to compute some extra data on the fly duringupload.  This is called in the function allgens()
 
-def make_extra_data(label,number,ainvs,gens):
-    """Given a curve label (and number, as some data is only stored wih
-    curve number 1 in each class) and its ainvs and gens, returns a
+def make_extra_data(label,ainvs,gens):
+    """Given a curve label and its ainvs and gens, returns a
     dict with which to update the entry.
 
     Extra items computed here:
@@ -718,17 +718,17 @@ def make_extra_data(label,number,ainvs,gens):
     'local_data': list of dicts, one item for each bad prime
     'min_quad_twist': dict holding curve's min quadratic twist and the twisting discriminant
     'heights': list of heights of gens
-
-    and for curve #1 in a class only:
-
+    'bad_primes': list of primes dividing conductor
     'aplist': list of a_p for p<100
     'anlist': list of a_n for n<=20
 
     """
     E = EllipticCurve(parse_ainvs(ainvs))
+    N = E.conductor()
     data = {}
     # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
     data['equation'] = web_latex(E)
+    data['bad_primes'] = N.prime_factors() # will be sorted
     data['signD'] = int(E.discriminant().sign())
     data['local_data'] = [{'p': int(ld.prime().gen()),
                            'ord_cond':int(ld.conductor_valuation()),
@@ -740,7 +740,7 @@ def make_extra_data(label,number,ainvs,gens):
                            'cp':int(ld.tamagawa_number())}
                           for ld in E.local_data()]
     Etw, Dtw = E.minimal_quadratic_twist()
-    if Etw.conductor()==E.conductor():
+    if Etw.conductor()==N:
         data['min_quad_twist'] = {'label':label, 'disc':int(1)}
     else:
         minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
@@ -750,13 +750,12 @@ def make_extra_data(label,number,ainvs,gens):
     from lmfdb.elliptic_curves.web_ec import parse_points
     gens = [E(g) for g in parse_points(gens)]
     data['heights'] = [float(P.height()) for P in gens]
-    if number==1:
-        data['aplist'] = E.aplist(100,python_ints=True)
-        data['anlist'] = E.anlist(20,python_ints=True)
+    data['aplist'] = E.aplist(100,python_ints=True)
+    data['anlist'] = E.anlist(20,python_ints=True)
     return data
 
 
-def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
+def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
     r""" Check that for conductors in the specified range (or all
     conductors) every database entry has all the fields it should, and
     that these have the correct type.
@@ -778,6 +777,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
     keys_and_types = {'label':  str_type,
                       'lmfdb_label':  str_type,
                       'conductor': bigint_type,
+                      'bad_primes': list_type,
                       'iso': str_type,
                       'lmfdb_iso': str_type,
                       'iso_nlabel': int_type,
@@ -999,3 +999,63 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
             else:
                 print("Using upsert to change database entry for {}".format(lab))
                 curves.upsert({'label': lab}, e)
+
+def swap2curves(iso, test=True):
+    """Swaps the Cremona number part of the Cremona labels of two curves in isogeny class iso.
+
+    Here iso is the Cremona label of an isogeny class (no dot, no
+    final number).
+
+    Example: swap2curves('235470bb') will swap curves '235470bb1' and
+    '235470bb2'.  The only columns affected are 'label' and 'number'.
+    This uses the fact that the columns 'lmfdb_label' (and
+    'lmfdb_number') are unchanged.
+
+    """
+    c1_old_label = iso+"1"
+    c2_old_label = iso+"2"
+    c1_data = curves.lucky({'label':c1_old_label}, projection=['lmfdb_label','aplist','anlist'])
+    c2_data = curves.lucky({'label':c2_old_label}, projection=['lmfdb_label','aplist','anlist'])
+    c1_lmfdb_label = c1_data['lmfdb_label']
+    c2_lmfdb_label = c2_data['lmfdb_label']
+    print("Retrieved curves with LMFDB labels {} (keys {}) and {} (keys {})".format(c1_lmfdb_label, c1_data.keys(), c2_lmfdb_label, c2_data.keys()))
+    print("Old (Cremona) labels for these: {} and {}".format(c1_old_label, c2_old_label))
+    c1_new_data = {'label': c2_old_label, 'number': 2}
+    c2_new_data = {'label': c1_old_label, 'number': 1, 'aplist':c1_data['aplist'], 'anlist':c1_data['anlist']}
+    print("New (Cremona) labels for these: {} and {}".format(c2_old_label, c1_old_label))
+
+    # Now do the updates:
+
+    print("Changing data for {} using {}".format(c1_lmfdb_label, c1_new_data))
+    print("Changing data for {} using {}".format(c2_lmfdb_label, c2_new_data))
+    if not test:
+        curves.upsert({'lmfdb_label':c1_lmfdb_label},c1_new_data)
+        curves.upsert({'lmfdb_label':c2_lmfdb_label},c2_new_data)
+        print("changes made")
+    else:
+        print("Taking no further action")
+
+
+an_global = {}
+ap_global={}
+
+def get_an_ap(iso, verbose):
+    global an_global, ap_global
+    if not iso in an_global:
+        if verbose:
+            print("fetching anlist and aplist for class {}".format(iso))
+        an_ap = db.ec_curves.lucky({'iso':iso, 'number':1}, projection=['anlist', 'aplist'])
+        an_global[iso] = an_ap['anlist']
+        ap_global[iso] = an_ap['aplist']
+    return an_global[iso], ap_global[iso]
+
+def add_an(e, verbose=False):
+    """Given a curve record, adds fields 'anlist' and 'aplist' if not there already.
+    """
+    if not 'anlist' in e:
+        if verbose:
+            print("adding anlist and aplist to record {}".format(e['label']))
+        anlist, aplist = get_an_ap(e['iso'], verbose)
+        e['anlist'] = anlist
+        e['aplist'] = aplist
+    return e
