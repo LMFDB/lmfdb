@@ -448,7 +448,7 @@ class WebEC(object):
 
     def make_torsion_growth(self):
         try:
-            tor_gro = self.get(tor_gro)
+            tor_gro = self.tor_gro
         except AttributeError: # for curves with norsion growth data
             tor_gro = None
         if tor_gro is None:
