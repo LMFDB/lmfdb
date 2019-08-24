@@ -125,7 +125,7 @@ class Lfunction(object):
 
         info['degree'] = int(self.degree)
         info['conductor'] = self.level
-        if not is_prime(int(self.level)):
+        if not is_prime(int(self.level)) and int(self.level)!=1:
             if self.level >= 10**8:
                 info['conductor'] = latex(self.level_factored)
             else:
