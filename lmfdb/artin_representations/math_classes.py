@@ -91,7 +91,7 @@ class ArtinRepresentation(object):
                 label = "%sc%s"%(str(x[0]),str(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
-            self._data = db.artin_reps_new.lucky({'Baselabel':str(base)})
+            self._data = db.artin_reps.lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label'] = label
@@ -99,12 +99,12 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_reps_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
         # What about label?
-        return cls(data=db.artin_reps_new.lucky(*args, **kwds))
+        return cls(data=db.artin_reps.lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
@@ -124,6 +124,24 @@ class ArtinRepresentation(object):
 
     def NFGal(self):
         return  map(int, self._data["NFGal"]);
+
+    # If the dimension is 1, we want the result as a webcharacter
+    # Otherwise, we want the label of it as an Artin rep.
+    # Mostly, this is pulled from the database, but we can fall back
+    # and compute it ourselves
+    def determinant(self):
+        if len(self._data['Dets'])>0:
+            parts = self.label().split("c")
+            thischar = str( self._data['Dets'][int(parts[1])-1] )
+            if self.dimension()==1:
+                wc = thischar.split(r'.')
+                self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
+                return self._data['central_character']
+            return(thischar)
+        # Not in the database
+        if self.dimension()==1:
+            return self.central_character()
+        return self.central_character_as_artin_rep().label()
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
@@ -623,18 +641,18 @@ class NumberFieldGaloisGroup(object):
             else:
                 coeffs = x[0]
             coeffs = [int(c) for c in coeffs]
-            self._data = db.artin_field_data_new.lucky({'Polynomial':coeffs})
+            self._data = db.artin_field_data.lucky({'Polynomial':coeffs})
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
                 raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_field_data_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
-        result = db.artin_field_data_new.lucky(*args, **kwds)
+        result = db.artin_field_data.lucky(*args, **kwds)
         if result is not None:
             return cls(data=result)
 

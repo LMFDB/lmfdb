@@ -12,11 +12,11 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
-from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
+ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
 
 
 # Utility for permutations
@@ -45,6 +45,13 @@ def make_cond_key(D):
     if D1<1: D1=ZZ(1)
     D1 = int(D1.log(10))
     return '%04d%s'%(D1,str(D))
+
+def parse_artin_orbit_label(label):
+    label = clean_input(label)
+    if ORBIT_RE.match(label):
+        return label
+    else:
+        raise ValueError
 
 def parse_artin_label(label):
     label = clean_input(label)
@@ -84,7 +91,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps_new,
+             table=db.artin_reps,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,
@@ -133,23 +140,41 @@ def render_artin_representation_webpage(label):
     clean_label = clean_input(label)
     if clean_label != label:
         return redirect(url_for('.render_artin_representation_webpage', label=clean_label), 301)
-    try:
-        the_rep = ArtinRepresentation(label)
-    except:
+    # We could have a single representation or a Galois orbit
+    case = 'rep' if ('c' in clean_label) else 'orbit'
+    # Do this twice to customize error messages
+    if case == 'rep':
         try:
-            newlabel = parse_artin_label(label)
-            flash_error("Artin representation %s is not in database", newlabel)
-            return redirect(url_for(".index"))
-        except ValueError:
-            flash_error("%s is not in a valid form for an Artin representation label", label)
-            return redirect(url_for(".index"))
+            the_rep = ArtinRepresentation(label)
+        except:
+            try:
+                newlabel = parse_artin_label(label)
+                flash_error("Artin representation %s is not in database", newlabel)
+                return redirect(url_for(".index"))
+            except ValueError:
+                flash_error("%s is not in a valid form for an Artin representation label", label)
+                return redirect(url_for(".index"))
+    else: # it is an orbit
+        try:
+            the_rep = ArtinRepresentation(label+'c1')
+        except:
+            try:
+                newlabel = parse_artin_orbit_label(label)
+                flash_error("Galois orbit of Artin representations %s is not in database", newlabel)
+                return redirect(url_for(".index"))
+            except ValueError:
+                flash_error("%s is not in a valid form for the label of a Galois orbit of Artin representations", label)
+                return redirect(url_for(".index"))
+        # in this case we want all characters
+        num_conj = the_rep.galois_conjugacy_size()
+        allchars = [ ArtinRepresentation(label+'c'+str(j)).character_formatted() for j in range(1,num_conj+1)]
 
-    extra_data = {} # for testing?
-    extra_data['galois_knowl'] = group_display_knowl(5,3) # for testing?
     #artin_logger.info("Found %s" % (the_rep._data))
 
-
-    title = "Artin Representation %s" % label
+    if case=='rep':
+        title = "Artin representation %s" % label
+    else:
+        title = "Galois orbit of Artin representations %s" % label
     the_nf = the_rep.number_field_galois_group()
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
@@ -158,53 +183,65 @@ def render_artin_representation_webpage(label):
     properties = [("Label", label),
                   ("Dimension", str(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
-                  #("Bad primes", str(the_rep.bad_primes())),
-                  ("Root number", processed_root_number),
-                  ("Frobenius-Schur indicator", str(the_rep.indicator()))
-                  ]
+                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$")]
+    if case == 'rep':
+        properties.append( ("Root number", processed_root_number) )
+    properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )
 
     friends = []
     nf_url = the_nf.url_for()
     if nf_url:
         friends.append(("Artin Field", nf_url))
-    cc = the_rep.central_character()
-    if cc is not None:
-        if the_rep.dimension()==1:
-            if cc.order == 2:
-                cc_name = cc.symbol
+    if case == 'rep':
+        cc = the_rep.central_character()
+        if cc is not None:
+            if the_rep.dimension()==1:
+                if cc.order == 2:
+                    cc_name = cc.symbol
+                else:
+                    cc_name = cc.texname
+                friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
             else:
-                cc_name = cc.texname
-            friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
-        else:
-            detrep = the_rep.central_character_as_artin_rep()
-            friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
-    add_lfunction_friends(friends,label)
+                detrep = the_rep.central_character_as_artin_rep()
+                friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
+        add_lfunction_friends(friends,label)
 
-    # once the L-functions are in the database, the link can always be shown
-    #if the_rep.dimension() <= 6:
-    if the_rep.dimension() == 1:
-        # Zeta is loaded differently
-        if cc.modulus == 1 and cc.number == 1:
-            friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
-        else:
-            # looking for Lhash dirichlet_L_modulus.number
-            mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
-            lres = db.lfunc_instances.lucky({'Lhash': mylhash})
-            if lres is not None:
+        # once the L-functions are in the database, the link can always be shown
+        #if the_rep.dimension() <= 6:
+        if the_rep.dimension() == 1:
+            # Zeta is loaded differently
+            if cc.modulus == 1 and cc.number == 1:
                 friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+            else:
+                # looking for Lhash dirichlet_L_modulus.number
+                mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
+                lres = db.lfunc_instances.lucky({'Lhash': mylhash})
+                if lres is not None:
+                    friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
 
-    # Dimension > 1
-    elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
-        friends.append(("L-function", url_for("l_functions.l_function_artin_page",
-                                          label=the_rep.label())))
-    info={}
+        # Dimension > 1
+        elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
+            friends.append(("L-function", url_for("l_functions.l_function_artin_page",
+                                              label=the_rep.label())))
+        orblabel = re.sub(r'c\d+$', '', label)
+        friends.append(("Galois orbit "+orblabel,
+            url_for(".render_artin_representation_webpage", label=orblabel)))
+    else:
+        for j in range(1,1+the_rep.galois_conjugacy_size()):
+            newlabel = label+'c'+str(j)
+            friends.append(("Artin representation "+newlabel,
+                url_for(".render_artin_representation_webpage", label=newlabel)))
 
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
+    info={} # for testing
+
+    if case == 'rep':
+        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, info=info, learnmore=learnmore_list())
+    # else we have an orbit
+    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():
-    rep = db.artin_reps_new.random(projection=2)
+    rep = db.artin_reps.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)

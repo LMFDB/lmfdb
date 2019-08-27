@@ -4,8 +4,7 @@
 <h2>Refine search </h2>
 
 <form id='re-search' onsubmit='cleanSubmit(this.id)'>
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table>
 <td>{{ KNOWL('st_group.weight', title='weight') }}</td>
@@ -43,7 +42,7 @@
 </tr>
 
 <tr>
-<td class="button"><button type='submit' name='refine' value='1' style="width: 110px">Search again</button></td>
+<td class="button"><button type='submit' name='refine' value='1' style="width: 110px" onclick='resetStart()'>Search again</button></td>
 </tr>
 
 </table>
