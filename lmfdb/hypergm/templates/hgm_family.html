@@ -50,41 +50,59 @@
 </table>
 
 <p>
-<p><h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$</h2>
-    <table>
-     <tr> <th> $\ell$
-          <th> Index
-          <th> Subimage
-            <th> Image <th> $A^{\perp} _\ell$ <th> $B^{\perp} _\ell$ <th> $C^{\perp} _\ell$
-          <th> Imprimitivity
+<p>
+<h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$</h2>
+<table>
+  <tr>
+    <th> $\ell$ </th>
+    <th> Index </th>
+    <th> Subimage</th>
+    <th> Image  </th>
+    <th> $A^{\perp} _\ell$ </th>
+    <th> $B^{\perp} _\ell$ </th>
+    <th> $C^{\perp} _\ell$ </th>
+    <th> Imprimitivity </th>
     {% for m in family.monodromy %}
       {% if m[1]!=0 %}
         <tr>
-        <td> ${{m[0]}}$
-        <td> ${{m[3]}}$
-        <td> {{m[2] | safe}}
-        <td> {{m[1][2] | safe}}
-        {% for i in range(3) %}
-          {% if m[1][3][i] %}
-            <td> ${{m[1][3][i]}}$ </td>
-          {% else %}
-            <td> $[\ ]$ </td>
-          {% endif %}
-        {% endfor %}
-        <td> ${{m[1][3][3]}}$
-      {% endif %}
-    {% endfor %}
-    </table>
-
-
+          <td> ${{m[0]}}$ </td>
+          <td> ${{m[3]}}$</td>
+          <td> {{m[2] | safe}}</td>
+          <td> {{m[1][2] | safe}}</td>
+          {% for i in range(3) %}
+            {% if m[1][3][i] %}
+              <td> ${{m[1][3][i]}}$ </td>
+            {% else %}
+              <td> $[\ ]$ </td>
+            {% endif %}
+          {% endfor %}
+          <td> ${{m[1][3][3]}}$</td>
+        {% endif %}
+      {% endfor %}
+</table>
 <p>
 <h2>Good Euler factors</h2>
-  {% set euler_factors = family.table_euler_factors_t(1, 42) %}
-  {% set euler_factors = family.table_euler_factors_p(family.maxp) %}
-  <table class='ntdata euler'>
+<form id='euler_factors'>
+  <table>
+    <tr>
+      <td>\(p\)</td>
+      <td><input type='text' name='ps' style="width: 60px" value="{{info.n}}" placeholder="{{family.default_prange}}"></td>
+      <td><span class="formexample"> e.g. 2 or 2-10</span></td>
+    </tr>
+    <tr>
+      <td>\(t\)</td>
+      <td><input type='text' name='ts' style="width: 60px" value="{{info.t}}" placeholder="1/3"></td>
+      <td><span class="formexample"> e.g. 2 or 1/2</span></td>
+    </tr>
+  </table>
+</form>
+
+{% for var, value, col_var, euler_factors in family.table_euler_factors_generic([11,13], [1/3, 1/2]) %}
+  <h3>${{var}}={{value}}$</h3>
+  <table class='ntdata'>
     <thead>
     <tr class='space'>
-      <th class='weight'> $t$ </th>
+      <th class='weight'> ${{col_var}}$ </th>
       {% if family.degree < 12 and family.degree > 2 %}
         {% set colspan = 3 %}
         <th class='weight'> $\Gal(F_p)$ </th>

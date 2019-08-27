@@ -274,6 +274,22 @@ class WebHyperGeometricFamily(object):
                      db.hgm_euler_survey.search({'label': self.label},
                                                  projection=['p', 'eulers'],
                                                  sort=[])])
+
+    @lazy_attribute
+    def defaultp(self):
+        if not self.euler_factors.keys():
+            return []
+        else:
+            return sorted(self.euler_factors.keys())[:4]
+
+    @lazy_attribute
+    def default_prange(self):
+        if not self.defaultp:
+            return ""
+        else:
+            return "{}-{}".format(self.defaultp[0], self.defaultp[-1])
+
+
     @lazy_attribute
     def maxp(self):
         return -1 if not self.euler_factors.keys() else max(self.euler_factors.keys())
@@ -331,18 +347,26 @@ class WebHyperGeometricFamily(object):
 
         ef = self.euler_factors[p]
         assert len(ef) == p - 2
-        return [[t] + self.process_euler(f, p)
+        return 't', [[t] + self.process_euler(f, p)
                 for t, f in enumerate(ef, 2)]
 
     @cached_method
-    def table_euler_factors_t(self, tn, td):
-        t = QQ(tn)/td
-        tmodp = [(p, t.mod_ui(p)) for p in sorted(self.euler_factors.keys())
-              if td % p != 0]
-        print tmodp
+    def table_euler_factors_t(self, t, plist=None):
+        if plist is None:
+            plist = sorted(self.euler_factors.keys())
+        tmodp = [(p, t.mod_ui(p)) for p in plist if t.denominator() % p != 0]
         # filter
         return [[p] + self.process_euler(self.euler_factors[p][tp - 2], p)
                 for p, tp in tmodp if tp > 1]
+
+    @cached_method
+    def table_euler_factors_generic(self, plist=None, tlist=None):
+        if tlist is None:
+            if plist is None:
+                plist = self.defaultp
+            return [('t', t, 'p', self.table_euler_factors_p(p)) for p in plist]
+        else:
+            return [('p', p, 't', self.table_euler_factors_t(tn, td, plist)) for t in tlist]
 
 
 

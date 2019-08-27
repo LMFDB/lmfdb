@@ -478,11 +478,24 @@ def render_hgm_webpage(label):
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
     return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
+
+def parse_pandt(info, family):
+    pass
+    # HERE
+    #info['ps'] = integer_options(info.get('
+
 def render_hgm_family_webpage(label):
     try:
         family = WebHyperGeometricFamily.by_label(label)
     except (KeyError, ValueError) as err:
         return abort(404, err.args)
+
+
+    info = to_dict(request.args)
+    errs = parse_pandt(info, newform)
+    if errs:
+        flash_error("%s", "<br>".join(errs))
+
 
     return render_template("hgm_family.html",
                            family=family,
