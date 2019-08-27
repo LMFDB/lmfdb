@@ -84,14 +84,14 @@ The documents in the mongo collection 'curves' in the database 'elliptic_curves'
    - 'iso_nlabel': (int) numerical version of the (lmfdb) isogeny class label
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
-   - 'ainvs': (string representing list of ints) a-invariants, e.g. '[0,1,1,10617,75394]'
+   - 'ainvs': (list of ints) a-invariants, e.g. [0,1,1,10617,75394]
    - 'jinv': (string) j-invariant, e.g. -4096/11
    - 'cm': (int) 0 for no CM, or a negative discriminant
    - 'rank': (int) rank, e.g. 0
    - 'torsion': (int) torsion order, e.g. 1
    - 'torsion_structure': (list of strings) list of invariants of torsion subgroup, e.g. ['3']
    - 'torsion_generators': (list of strings) list of generators of torsion subgroup, e.g. ['(5, 5)']
-   - 'xcoord_integral_points': (string) list of x-coordinates of integral points, e.g. '[5,16]'
+   - 'xcoord_integral_points': (list of ints) list of x-coordinates of integral points, e.g. [5,16]
    - 'gens': (list of strings) list of generators of infinite order, e.g. ['(0:0:1)']
    - 'regulator': (float) regulator, e.g. 1.0
    - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
@@ -123,7 +123,6 @@ The documents in the mongo collection 'curves' in the database 'elliptic_curves'
    - 'torsion_primes': (list of ints) primes dividing torsion
 
 Extra data fields added May 2016 to avoid computation on the fly:
-   - 'ainvs': (string) '[a1,a2,a3,a4,a6]' (replaced 'ainvs' in due course)
    - 'equation': (string)
    - 'local_data': (list of dicts, one per prime)
    - 'signD': (sign of discriminant) int (+1 or -1)
@@ -134,7 +133,7 @@ Extra data fields added May 2016 to avoid computation on the fly:
 """
 
 import re, os, pprint
-from sage.all import ZZ, RR, EllipticCurve, prod, Set
+from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma
 from lmfdb.utils import web_latex
 from lmfdb import db
 print "setting curves"
@@ -190,7 +189,7 @@ def allbsd(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    ainvs = data[3]
+    ainvs = parse_ainvs(data[3])
 
     torsion = ZZ(data[5])
     sha_an = RR(data[10])
@@ -240,14 +239,15 @@ def allgens(line):
     else:
         t = [int(c) for c in t[1:-1].split(",")]
     torsion = int(prod([ti for ti in t], 1))
-    ainvs = data[3]
-    E = EllipticCurve([ZZ(a) for a in parse_ainvs(ainvs)])
+    ainvs = parse_ainvs(data[3])
+    E = EllipticCurve(ainvs)
     jinv = unicode(str(E.j_invariant()))
     if E.has_cm():
         cm = int(E.cm_discriminant())
     else:
         cm = int(0)
-
+    trace_hash = ZZ(magma.TraceHash(E))
+        
     content = {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
@@ -260,6 +260,7 @@ def allgens(line):
         'torsion': torsion,
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
+        'trace_hash': trace_hash,
     }
     extra_data = make_extra_data(label,ainvs,content['gens'])
     content.update(extra_data)
@@ -325,10 +326,11 @@ def intpts(line):
     """
     data = split(line)
     label = data[0]
-    ainvs = data[1]
+    ainvs = parse_ainvs(data[1])
+    xs = [] if data[2]=='[]' else parse_ainvs(data[2])
     return label, {
         'ainvs': ainvs,
-        'xcoord_integral_points': data[2]
+        'xcoord_integral_points': xs
     }
 
 
@@ -558,8 +560,10 @@ def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
     twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
     allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename,allisog_filename]
-#    file_list = [twoadic_filename]
-#    file_list = [allgens_filename]
+    #    file_list = [twoadic_filename]
+    #    file_list = [allgens_filename]
+
+    magma.attach("/scratch/home/jcremona/CMFs/magma/hash.m")
 
     parsing_dict = {}
     for f in file_list:
@@ -571,7 +575,10 @@ def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
 
 
     data_to_insert = {}  # will hold all the data to be inserted
-
+    keys = curves.col_type.keys()
+    keys.remove('id')
+    keys.sort()
+    
     for f in file_list:
         if f==allisog_filename: # dealt with differently
             continue
@@ -583,7 +590,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
         for line in h.readlines():
             label, data = parse(line)
             if count%5000==0:
-                print "read %s" % label
+                print("read {} ({} lines so far)".format(label, count+1))
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
@@ -604,12 +611,34 @@ def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
         for val in vals:
                 val.update(isogmats[val['label']])
 
+    # file fields iw* and tor* with null values as these are uploaded
+    # separately, and WebEC objects handle these being None properly.
+    for v in vals:
+        v['iwdata'] = None
+        v['iwp0'] = None
+        v['tor_degs'] = None
+        v['tor_fields'] = None
+        v['tor_gro'] = None
+        if 'galois_images' in keys: # redundant column, but still exists 2019-08-22
+            v['galois_images'] = None
+
     if insert:
         if test:
             print("(not) inserting all data")
-            print("First 10 vals:")
-            for v in vals[:10]:
-                pprint.pprint(v)
+            print("Checking keys")
+            ok = True
+            for v in vals:
+                vkeys = sorted(v.keys())
+                if vkeys!=keys:
+                    ok = False
+                    print("{} has incorrect key set".format(v['label']))
+                    print("keys present but not expected: {}".format([k for k in vkeys if not k in keys]))
+                    print("keys expected but not present: {}".format([k for k in keys if not k in vkeys]))
+                    #print("keys are {} but should be {}".format(vkeys,keys))
+            if ok:
+                print("First 10 vals:")
+                for v in vals[:10]:
+                    pprint.pprint(v)
         else:
             print("inserting all data ({} items)".format(len(vals)))
             curves.insert_many(vals)
@@ -706,7 +735,7 @@ def add_galreps_to_one(c):
     c.update(galrepdata[c['label']])
     return c
 
-# function to compute some extra data on the fly duringupload.  This is called in the function allgens()
+# function to compute some extra data on the fly during upload.  This is called in the function allgens()
 
 def make_extra_data(label,ainvs,gens):
     """Given a curve label and its ainvs and gens, returns a
@@ -723,7 +752,7 @@ def make_extra_data(label,ainvs,gens):
     'anlist': list of a_n for n<=20
 
     """
-    E = EllipticCurve(parse_ainvs(ainvs))
+    E = EllipticCurve(ainvs)
     N = E.conductor()
     data = {}
     # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
@@ -744,7 +773,7 @@ def make_extra_data(label,ainvs,gens):
         data['min_quad_twist'] = {'label':label, 'disc':int(1)}
     else:
         minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
-        r = curves.find_one({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
+        r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
         minq_label = "" if r is None else r['label']
         data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
     from lmfdb.elliptic_curves.web_ec import parse_points
@@ -847,7 +876,6 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
         return
 
     iwasawa_keys = ['iwdata', 'iwp0']        # not present for N > iwasawa_bound
-    number_1_only_keys = ['aplist','anlist'] # only present if 'number':1
     no_cm_keys = ['2adic_log_level', '2adic_gens', '2adic_label']
 
     print("key_set has {} keys".format(len(key_set)))
@@ -868,8 +896,6 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
         if count%10000==0:
             print("Checked {} entries...".format(count))
         expected_keys = key_set
-        if c['number']!=1:
-            expected_keys = expected_keys - number_1_only_keys
         if c['conductor'] > iwasawa_bound:
             expected_keys = expected_keys - iwasawa_keys
 
@@ -991,7 +1017,7 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
                 print("file has x = {} not in db".format(d))
 
             # Update the copy of the database record:
-            e['xcoord_integral_points'] = file_xs
+            e['xcoord_integral_points'] = parse_ainvs(file_xs)
             if verbose>1:
                 print("New curve record for {}: {}".format(lab, e))
             if test:
@@ -1058,4 +1084,7 @@ def add_an(e, verbose=False):
         anlist, aplist = get_an_ap(e['iso'], verbose)
         e['anlist'] = anlist
         e['aplist'] = aplist
+    else:
+        if verbose:
+            print("{} already has anlist and aplist fields".format(e['label']))
     return e
