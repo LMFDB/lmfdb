@@ -15,7 +15,7 @@ text-align:right;
   <p>
     Currently the database contains all groups $G$ acting as automorphisms of
     curves $X/\C$ of genus {{info.stats.genus.min}} to
-    {{info.stats.genus.max}} such that $X/G$ has genus 0. There are {{info.stats.refined_passports.distinct}}
+    {{info.stats.genus.max}} such that $X/G$ has genus 0, as well as genus 2 through 4  with quotient genus greater than 0. There are {{info.stats.refined_passports.distinct}}
     distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
     {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
     Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
@@ -75,6 +75,16 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
           </tr>
 
 
+ <tr align=left>
+            <td align=right>
+             {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient Genus')}}:
+            </td><td><input type="integer" name="g0" value=""
+      placeholder="0"></td>
+      <td>
+	<span class="formexample">e.g. 4, or a range like 3..5</span>
+      </td>
+          </tr>
+	  
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -152,4 +162,5 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </form>
 
 
-{% endblock %}
+      {% endblock %}
+      

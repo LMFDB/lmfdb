@@ -20,15 +20,19 @@ from types import GeneratorType
 from urllib import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
-from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
+from sage.all import (CC, CBF, CDF,
+                      Factorization, NumberField,
+                      PolynomialRing, PowerSeriesRing, QQ,
+                      RealField, RR, RIF, TermOrder, ZZ)
+from sage.all import floor, latex, prime_range, valuation
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
-def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
+def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
@@ -50,7 +54,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     sfacts_fc_list = [[(-g).list() if g[0] == -1 else g.list(), e] for g, e in sfacts_fc]
     return list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois, vari, p)
 
-def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari = 'T', p = None):
+def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari='T', p=None):
     """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
@@ -58,8 +62,9 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
-    gal_list=[]
-    ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
+    gal_list = []
+    order = TermOrder('M(0,-1,0,-1)')
+    ZZpT = PolynomialRing(ZZ, ['p', vari], order=order)
     ZZT = PolynomialRing(ZZ, vari)
     outstr = ''
     for g, e in sfacts_fc_list:
@@ -74,12 +79,12 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
         # casting from ZZT -> ZZpT
         if p is None:
-            gtoprint = dict( zip( zip( [0]*len(g), range(len(g))), g) )
+            gtoprint = dict(zip(zip([0]*len(g), range(len(g))), g))
         else:
             gtoprint = {}
             for i, elt in enumerate(g):
                 if elt != 0:
-                    val =  ZZ(elt).valuation(p)
+                    val = ZZ(elt).valuation(p)
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
@@ -91,11 +96,11 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
     if galois:
         # 2 factors of degree 2
-        if len(sfacts_fc_list)==2:
+        if len(sfacts_fc_list) == 2:
             if len(sfacts_fc_list[0][0]) == 3 and len(sfacts_fc_list[1][0]) == 3:
                 troubletest = ZZT(sfacts_fc_list[0][0]).disc()*ZZT(sfacts_fc_list[1][0]).disc()
                 if troubletest.is_square():
-                    gal_list=[[2,1]]
+                    gal_list = [[2, 1]]
         return outstr, gal_list
     return outstr
 
@@ -1002,7 +1007,7 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
+    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
 cache = SimpleCache()

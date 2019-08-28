@@ -87,9 +87,17 @@ def rational_elliptic_curves(err_args=None):
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     if err_args.get("err_msg"):
-        flash_error(err_args.pop("err_msg"),err_args.pop("label"))
+        # this comes from elliptic_curve_jump_error
+        flash_error(err_args.pop("err_msg"), err_args.pop("label"))
         return redirect(url_for(".rational_elliptic_curves"))
-    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
+    return render_template("ec-index.html",
+                           info=info,
+                           credit=ec_credit(),
+                           title=t,
+                           bread=bread,
+                           learnmore=learnmore_list(),
+                           calling_function="ec.rational_elliptic_curves",
+                           **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -142,8 +150,6 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     err_args['label'] = label
     if wellformed_label:
         err_args['err_msg'] = "No curve or isogeny class in the database has label %s"
-    # elif cremona_label:
-    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'"
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
@@ -436,7 +442,7 @@ def render_curve_webpage_by_label(label):
                          bread=data.bread, title=data.title,
                          friends=data.friends,
                          downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%label,
+                         KNOWL_ID="ec.q.%s"%lmfdb_label,
                          BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
                          learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
