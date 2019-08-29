@@ -224,7 +224,7 @@ class ArtinRepresentation(object):
         return group_display_knowl(galnt[0],galnt[1])
 
     def is_ramified(self, p):
-        return self.number_field_galois_group().discriminant() % p == 0
+        return self.is_bad_prime(p)
 
     # sets up, and returns a function to compute the central character
     # as a function
@@ -279,9 +279,9 @@ class ArtinRepresentation(object):
         artfull = [[a, a.central_char_function(),2*a.character_field()] for a in artfull]
         n = 2*self.character_field()
         p = 2
-        disc = nfgg.discriminant()
+        hard_primes = self.hard_primes()
         while len(artfull)>1:
-            if (disc % p) != 0:
+            if not p in hard_primes:
               k=0
               while k<len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
@@ -817,13 +817,29 @@ class NumberFieldGaloisGroup(object):
     def artin_representations(self):
         return [ArtinRepresentation(z['Baselabel'],z['GalConj']) for z in self.ArtinReps()]
 
-    def discriminant(self):
-        return self.sage_object().discriminant()
+    # We don't want to compute the discriminant to get this
+    def all_hard_primes(self):
+        primes = set([])
+        ars = self.artin_representations()
+        for ar in ars:
+            primes = primes.union(ar.hard_primes())
+        return list(primes)
 
-    def sage_object(self):
+    def all_bad_primes(self):
+        primes = set([])
+        ars = self.artin_representations()
+        for ar in ars:
+            primes = primes.union(ar.bad_primes())
+        return list(primes)
+
+    def discriminant(self):
+        return self.nfinit().disc()
+
+    def nfinit(self):
+        from sage.all import pari
         X = PolynomialRing(QQ, "x")
-        from sage.rings.number_field.number_field import NumberField
-        return NumberField(X(map(str,self.polynomial())), "x")
+        pol = X(map(str,self.polynomial()))
+        return pari("nfinit([%s,%s])" % (str(pol), self.all_hard_primes()))
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
@@ -851,7 +867,7 @@ class NumberFieldGaloisGroup(object):
 
     def frobenius_cycle_type(self, p):
         try:
-            assert not self.discriminant() % p == 0
+            assert p not in self.all_bad_primes()
         except:
             raise AssertionError, "Expecting a prime not dividing the discriminant", p
         return tuple(self.residue_field_degrees(p))
@@ -873,7 +889,7 @@ class NumberFieldGaloisGroup(object):
             wnf = self.wnf()
             if wnf._data is None:
                 from lmfdb.number_fields.number_field import sage_residue_field_degrees_function
-                fn_with_pari_output = sage_residue_field_degrees_function(self.sage_object())
+                fn_with_pari_output = sage_residue_field_degrees_function(self.nfinit())
             else:
                 from lmfdb.number_fields.number_field import residue_field_degrees_function
                 fn_with_pari_output = residue_field_degrees_function(wnf)

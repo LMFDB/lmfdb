@@ -773,9 +773,10 @@ def sage_residue_field_degrees_function(nf):
     """ Version of above which takes a sage number field
         Used by Artin representation code when the Artin field is not
         in the database.
+        Changing it to take a pari number field
     """
     D = nf.disc()
-    return main_work(pari(nf),D,'sage')
+    return main_work(nf,D,'sage')
 
 def main_work(k1, D, typ):
     # Difference for sage vs pari array indexing
