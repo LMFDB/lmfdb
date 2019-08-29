@@ -885,14 +885,8 @@ class NumberFieldGaloisGroup(object):
         try:
             return self._residue_field_degrees(p)
         except AttributeError:
-            # Try to make WebNumberField, but only helps if the field is in our database
-            wnf = self.wnf()
-            if wnf._data is None:
-                from lmfdb.number_fields.number_field import sage_residue_field_degrees_function
-                fn_with_pari_output = sage_residue_field_degrees_function(self.nfinit())
-            else:
-                from lmfdb.number_fields.number_field import residue_field_degrees_function
-                fn_with_pari_output = residue_field_degrees_function(wnf)
+            from lmfdb.number_fields.number_field import residue_field_degrees_function
+            fn_with_pari_output = residue_field_degrees_function(self.nfinit())
             self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
