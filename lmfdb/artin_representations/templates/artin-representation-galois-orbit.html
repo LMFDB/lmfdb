@@ -31,6 +31,7 @@
     {% endif %}
    <div>
     Roots:
+     <center>
       <table>
         {% for root in object.number_field_galois_group().computation_roots()%}
         <tr>
@@ -39,6 +40,7 @@
           <td>${{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td>
         {% endfor %}
       </table>
+     </center>
    </div>
     
     <h3>Generators of the action on the roots 
