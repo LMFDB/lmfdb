@@ -638,27 +638,40 @@ def cmp_label(lab1, lab2):
 def comp_dict_by_label(d1, d2):
     return cmp_label(d1['label'], d2['label'])
 
-curves_search_columns = ['id', 'label', 'lmfdb_label', 'iso',
-                         'lmfdb_iso', 'iso_nlabel', 'number',
-                         'lmfdb_number', 'ainvs', 'jinv', 'conductor',
-                         'torsion', 'rank', 'sha',
-                         'torsion_structure', 'cm', 'isogeny_degrees',
-                         'nonmax_primes', 'nonmax_rad', 'trace_hash',
-                         'bad_primes', 'class_size']
+def encode(x):
+    if x is None:
+        return '\N'
+    if x is True:
+        return 't'
+    if x is False:
+        return 'f'
+    return str(x)
 
-curves_extra_columns = ['id', 'equation', 'signD',
-                        'torsion_generators',
-                        'xcoord_integral_points', 'gens', 'heights',
-                        'regulator', 'tamagawa_product',
-                        'special_value', 'real_period', 'degree',
-                        'modp_images', '2adic_label', '2adic_index',
-                        '2adic_log_level', '2adic_gens',
-                        'isogeny_matrix', 'class_deg', 'sha_an',
-                        'sha_primes', 'torsion_primes', 'tor_degs',
-                        'tor_fields', 'tor_gro', 'local_data',
-                        'min_quad_twist', 'aplist', 'anlist',
-                        'iwdata', 'iwp0']
+def copy_records_to_file(records, fname, id0=0, verbose=True):
+    searchfile = fname+'.search'
+    extrafile = fname+'.extra'
+    if verbose:
+        print("Writing records to {} and {}".format(searchfile, extrafile))
 
+    # NB since records might be a generator object we only pass through it once.
+    
+    fs = open(searchfile, 'w')
+    fe = open(extrafile, 'w')
+    curves._write_header_lines(fs, ["id"]+curves._search_cols)
+    curves._write_header_lines(fe, ["id"]+curves._extra_cols)
+
+    id = id0
+    for c in records:
+        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves._search_cols]))
+        fs.write("\n")
+        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves._extra_cols]))
+        fe.write("\n")
+        id +=1
+    fs.close()
+    fe.close()
+    if verbose:
+        print("Wrote {} lines to {} and {}".format(id-id0, searchfile, extrafile))
+    
 # To run this go into the top-level lmfdb directory, run sage and give
 # the command
 # %runfile lmfdb/elliptic_curves/import_ec_data.py
@@ -751,26 +764,31 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
         v['tor_fields'] = None
         v['tor_gro'] = None
 
+    print("Checking keys")
+    ok = True
+    for v in vals:
+        vkeys = sorted(v.keys())
+        if vkeys!=keys:
+            ok = False
+            print("{} has incorrect key set".format(v['label']))
+            print("keys present but not expected: {}".format([k for k in vkeys if not k in keys]))
+            print("keys expected but not present: {}".format([k for k in keys if not k in vkeys]))
+            #print("keys are {} but should be {}".format(vkeys,keys))
+    if ok:
+        print("All records have all required keys")
+    else:
+        print("Some records have missing keys, no uploading")
+        return
+    
     if insert:
         if mode=='test':
             print("(not) inserting all data")
-            print("Checking keys")
-            ok = True
-            for v in vals:
-                vkeys = sorted(v.keys())
-                if vkeys!=keys:
-                    ok = False
-                    print("{} has incorrect key set".format(v['label']))
-                    print("keys present but not expected: {}".format([k for k in vkeys if not k in keys]))
-                    print("keys expected but not present: {}".format([k for k in keys if not k in vkeys]))
-                    #print("keys are {} but should be {}".format(vkeys,keys))
-            if ok:
-                return vals
+            return vals
         elif mode=='upload':
             print("inserting all data ({} items)".format(len(vals)))
             curves.insert_many(vals)
         elif mode=='dump':
-            print("mode=dump not yet implemented")
+            copy_records_to_file(vals, 'curves.{}-{}'.format(min_N,max_N), curves.max_id()+1)
         else:
             print("mode {} not recognised!  Should be one of 'test', 'upload', 'dump'.".format(mode))
     else:
@@ -910,7 +928,6 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
                       'degree': bigint_type,
                       'nonmax_primes': list_type, # of ints
                       'nonmax_rad': int_type,
-                      'galois_images': list_type, # of strings [REDUNDANT]
                       'modp_images': list_type, # of strings
                       '2adic_index': int_type,
                       '2adic_log_level': int_type,
@@ -938,6 +955,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
                       'tor_gro': dict_type,
                       'tor_degs': list_type,
                       'trace_hash': type(long()),
+                      'num_int_pts': int_type,
                       'num_bad_primes': int_type,
                       'semistable': bool_type,
                       'optimality': int_type,
@@ -965,6 +983,9 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
     iwasawa_keys = ['iwdata', 'iwp0']        # not present for N > iwasawa_bound
     no_cm_keys = ['2adic_log_level', '2adic_gens', '2adic_label']
 
+    tor_gro_keys = ['tor_gro', 'tor_degs', 'tor_fields']
+    tor_gro_bound = 400000
+    
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
@@ -985,6 +1006,8 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
         expected_keys = key_set
         if c['conductor'] > iwasawa_bound:
             expected_keys = expected_keys - iwasawa_keys
+        if c['conductor'] > tor_gro_bound:
+            expected_keys = expected_keys - tor_gro_keys
 
         label = c['label']
         db_keys = Set([str(k) for k in c.keys()]) - ['id']
