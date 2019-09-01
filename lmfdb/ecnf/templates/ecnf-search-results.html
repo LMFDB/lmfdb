@@ -87,19 +87,19 @@
 </tr>
 <tr>
 <td align=left>{{ KNOWL('ec.torsion_order',title="Torsion order") }}</td>
-<td align=left>{{ KNOWL('ec.torsion_subgroup', title="Torsion structure") }}</td>
 <td align=left>{{ KNOWL('ec.isogeny', title='Isogeny degree') }}</td>
+<td align=left>{{ KNOWL('ec.torsion_subgroup', title="Torsion structure") }}</td>
 <td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
 </tr>
 <tr>
           <td>
-          <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
+          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
+          </td>
+          <td>
+          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
           </td>
           <td>
             {{ tor_struct_search_nf(info.torsion_structure)| safe }}
-          </td>
-          <td>
-          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
           </td>
           <td colspan=2>
           <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
@@ -129,11 +129,11 @@ table td.params {
 </style>
 <table>
   <tr>
-    <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
-    <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
-    <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
-    <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
-    <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
+    <th class="center">{{ KNOWL('ec.curve_label',title = "Label") }}</th>
+    <th class="center">{{ KNOWL('nf',title = "Base field") }}</th>
+    <th class="center">{{ KNOWL('ec.conductor',title = "Conductor") }} norm</th>
+    <th class="center">{{ KNOWL('ec.conductor_label',title = "Conductor label") }}</th>
+    <th class="center">{{ KNOWL('ec.isogeny_class',title = "Isogeny class")}}</th>
     <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
   </tr>
   {% for curve in info.results: %}
