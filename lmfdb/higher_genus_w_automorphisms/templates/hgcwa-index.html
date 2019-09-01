@@ -66,7 +66,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmitHGCWA(this.id)">
         <table class="">
           <tr align=left>
-            <td align=right>
+            <td>
              {{KNOWL('ag.curve.genus',title='Genus')}}:
             </td><td><input type="integer" name="genus" value="" placeholder="3"></td>
       <td>
@@ -76,7 +76,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
 
  <tr align=left>
-            <td align=right>
+            <td>
              {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient Genus')}}:
             </td><td><input type="integer" name="g0" value=""
       placeholder="0"></td>
@@ -86,7 +86,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
           </tr>
 	  
 	  <tr>
-            <td align=right>
+            <td>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
             </td><td><input type="text" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
       <td>
@@ -94,7 +94,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	  </td> </tr>
 
         <tr>
-            <td align=right>
+            <td>
  {{KNOWL('group.order',title='Group order(s)')}}:
             </td>
 	    <td><input type="text" name="group_order" placeholder="2..5" ></td>
@@ -102,7 +102,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
         </tr>
 
         <tr>
-            <td align=right>
+            <td>
 	      {{KNOWL('group.small_group_label', title="Group identifier")}}:
             </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
       <td>
@@ -110,13 +110,13 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </td>
           </tr>
 
-	 <tr><td align=right>
+	 <tr><td>
               {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
             </td><td><input type="integer" name="dim" value="" placeholder="1"></td>
       <td>
 	<span class="formexample">e.g. 1, or a range like 0..2</span>
 	 </td> </tr>
-              <tr>  <td align=right>
+              <tr>  <td>
 	       {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
        </td>  <td> <select id='inc_hyper' name='inc_hyper'>
                     <option value='include'>include </option>
@@ -128,7 +128,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	<span class="formexample"></span>
 	 </td></tr>
 
-	  <tr>  <td align=right>
+	  <tr>  <td>
 	       {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
        </td>  <td> <select id='inc_cyc_trig' name='inc_cyc_trig'>
                     <option value='include'>include </option>
@@ -140,7 +140,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	<span class="formexample"></span>
 	 </td></tr>
 
- <tr>  <td align=right>
+ <tr>  <td>
       {{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}:
     </td>  <td> <select id='inc_full' name='inc_full'>
                     <option value='include'>include </option>
@@ -153,8 +153,8 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	 </td></tr>
 
           <tr>
-          <td align=right>
-              Maximum number of families to display:
+          <td>
+              Maximum number to display:
             </td><td><input id="count" type="text" name="count" value="50" size="10"></td>
           </tr>
   </table>
