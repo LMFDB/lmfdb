@@ -149,14 +149,17 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 4 </span>
           </td>
+          <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
           <td>
-          {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
-          </td>
-          <td>
-          <input type='text' name='isodeg' example="16" size=10 />
-          </td>
-          <td>
-          <span class="formexample"> e.g. 16 </span>
+             <select name='optimal', style="width: 155px">
+    {% if optimal=='on' %}
+               <option value="">No</option>
+               <option value="on" selected="yes">Yes</option>
+    {% else %}
+               <option value="">No</option>
+               <option value="on">Yes</option>
+    {% endif %}
+             </select>
           </td>
       </tr>
 
@@ -177,20 +180,15 @@ Please enter a value or leave blank:
 
 
     <tr>
-      <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
-      <td>
-         <select name='optimal', style="width: 155px">
-{% if optimal=='on' %}
-           <option value="">No</option>
-           <option value="on" selected="yes">Yes</option>
-{% else %}
-           <option value="">No</option>
-           <option value="on">Yes</option>
-{% endif %}
-         </select>
-      </td>
-
-
+        <td>
+        {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
+        </td>
+        <td>
+        <input type='text' name='isodeg' example="16" size=10 />
+        </td>
+        <td>
+        <span class="formexample"> e.g. 16 </span>
+        </td>
     </tr>
 
 <tr>
