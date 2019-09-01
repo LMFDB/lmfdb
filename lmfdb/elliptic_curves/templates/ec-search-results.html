@@ -23,8 +23,8 @@
 
 <tr>
 <td align=left><input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left><input type='text' name='jinv'size=5 value={{info.jinv}}></td>
-<td>         <select name='include_cm'>
+<td align=left><input type='text' name='jinv'size=10 value={{info.jinv}}></td>
+<td>         <select name='include_cm', style='width: 155px'>
 {% if info.include_cm == "only" %}
            <option value="">include</option>
            <option value="exclude">exclude</option>
@@ -42,12 +42,12 @@
 {% endif %}
          </select>
 </td>
-<td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
-<td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
+<td align=left><input type='text' name='rank' size=10 value={{info.rank}}></td>
+<td align=left><input type='text' name='torsion' size=10 value={{info.torsion}}> </td>
 <td align=left>
   {{ tor_struct_search_Q(info.torsion_structure)|safe }}
 </td>
-<td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
+<td align=left><input type='text' name='sha' size=10 value={{info.sha}}> </td>
 </tr>
 
 <tr>
@@ -59,7 +59,7 @@
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 <tr>
-<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
+<td align=left><input type='text' name='isodeg' size=10 value={{info.isodeg}}> </td>
 <td align=left>
    <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
 </td>
@@ -76,7 +76,7 @@
 <input type='text' name='nonsurj_primes' size=10  value={{info.nonsurj_primes}}>
 </td>
 <td align=left>
-<select name='optimal'>
+<select name='optimal', style='width: 155px'>
 {% if info.optimal=='on' %}
   <option value="">No</option>
   <option selected value="on">Yes</option>

@@ -109,7 +109,7 @@ Please enter a value or leave blank:
     {{ KNOWL('ec.complex_multiplication',title="CM") }}
     </td>
      <td>
-         <select name='include_cm'>
+         <select name='include_cm', style="width: 155px">
            <option value="" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
@@ -179,7 +179,7 @@ Please enter a value or leave blank:
     <tr>
       <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
       <td>
-         <select name='optimal'>
+         <select name='optimal', style="width: 155px">
 {% if optimal=='on' %}
            <option value="">No</option>
            <option value="on" selected="yes">Yes</option>
