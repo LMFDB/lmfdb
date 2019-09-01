@@ -475,8 +475,8 @@ def render_field_webpage(args):
     if nf.degree() > 1:
         gpK = nf.gpK()
         rootof1coeff = gpK.nfrootsof1()
-        rootofunityorder = int(rootof1coeff[1])
-        rootof1coeff = rootof1coeff[2]
+        rootofunityorder = int(rootof1coeff[0])
+        rootof1coeff = rootof1coeff[1]
         rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
         rootofunity += ' (order $%d$)' % rootofunityorder
     else:
@@ -586,7 +586,7 @@ def render_field_webpage(args):
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         arts = [z.label() for z in info["tim_number_field"].artin_representations()]
-        print arts
+        #print arts
         for ar in arts:
             info['friends'].append(('Artin representation '+str(ar), 
                 url_for("artin_representations.render_artin_representation_webpage", label=ar)))
@@ -761,39 +761,25 @@ def number_field_search(info, query):
     info['gg_display'] = group_pretty_and_nTj
 
 def residue_field_degrees_function(nf):
-    """ Given a WebNumberField, returns a function that has
+    """ Given the result of pari(nfinit(...)), returns a function that has
             input: a prime p
             output: the residue field degrees at the prime p
     """
-    k1 = nf.gpK()
     D = nf.disc()
-    return main_work(k1,D,'pari')
 
-def sage_residue_field_degrees_function(nf):
-    """ Version of above which takes a sage number field
-        Used by Artin representation code when the Artin field is not
-        in the database.
-    """
-    D = nf.disc()
-    return main_work(pari(nf),D,'sage')
-
-def main_work(k1, D, typ):
-    # Difference for sage vs pari array indexing
-    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
-            dec = k1.idealprimedec(p)
-            dec = [z[ind] for z in dec]
-            return dec
+            return [z[3] for z in nf.idealprimedec(p)]
         else:
             raise ValueError("Expecting a prime not dividing D")
+
     return decomposition
 
 # Compute Frobenius cycle types, returns string nicely presenting this
 
 
 def frobs(nf):
-    frob_at_p = residue_field_degrees_function(nf)
+    frob_at_p = residue_field_degrees_function(nf.gpK())
     D = nf.disc()
     ans = []
     seeram = False
@@ -848,10 +834,6 @@ def nf_download(**args):
 
 def nf_data(**args):
     label = args['nf']
-    print ""
-    print ""
-    print label
-    print ""
     nf = WebNumberField(label)
     data = '/* Data is in the following format\n'
     data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
