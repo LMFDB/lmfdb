@@ -70,12 +70,12 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 <td><input type='text' name='level_norm' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 or 1-100</td>
 <td>{{ KNOWL('mf.bianchi.newform', title='Dimension') }}</td>
-<td><input type='text' name='dimension' placeholder='1' size=2.9>
+<td><input type='text' name='dimension' placeholder='1' size=5>
 <td><span class="formexample"> e.g. 1 or 2</td>
 </tr>
 <tr>
 <td>{{ KNOWL('mf.bianchi.sign', title='Sign') }}</td>
-<td>       <select name='sfe',  style="width: 110px">
+<td>       <select name='sfe',  style="width: 155px">
            <option value="any" selected>any</option>
            <option value="+1">+1</option>
            <option value="-1">-1</option>
@@ -83,7 +83,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 <td>&nbsp;</td>
 <td>{{ KNOWL('mf.bianchi.base_change',title="Base change") }} </td>
   <td>
-         <select name='include_base_change'>
+         <select name='include_base_change', style="width: 80px">
            <option value="off">exclude</option>
            <option value="on" selected="yes">include</option>
          </select>
@@ -92,7 +92,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
     {{ KNOWL('mf.bianchi.cm',title="CM") }}
     </td>
      <td>
-         <select name='include_cm'>
+         <select name='include_cm', style="width: 80px">
            <option value="include" selected="yes">include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
