@@ -64,8 +64,8 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         <td><span class="formexample"> e.g. 2, 5-6 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.geometry_type', title='Heometry type') }}</td>
-      <td><select name='geomtype' width="107" style="width: 107px">
+      <td>{{ KNOWL('belyi.geometry_type', title='Geometry type') }}</td>
+      <td><select name='geomtype' style="width: 155px">
           <option ></option>
           {% for G in info.geometry_types_list %}
           <option value='{{G}}'>{{info.geometry_types_dict[G]}}</option>
