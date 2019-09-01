@@ -16,11 +16,11 @@
     <table border="0">
 
         <tr>
-            <td align=left>{{ KNOWL('ag.base_field',title = "base field") }}</td>
-            <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
+            <td align=left>{{ KNOWL('ag.base_field',title = "Base field cardinality") }}</td>
+            <td align=left>{{ KNOWL('ag.dimension',title = "Dimension") }}</td>
             <td align=left>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</td>
-            <td align=left>{{KNOWL('av.fq.angle_rank',title='angle rank')}}</td>
-            <td align=left>{{ KNOWL('lf.newton_polygon',title="slopes") }}</td>
+            <td align=left>{{KNOWL('av.fq.angle_rank',title='Angle rank')}}</td>
+            <td align=left>{{ KNOWL('lf.newton_polygon',title="Slopes") }}</td>
         </tr>
 
         <tr>
@@ -32,10 +32,10 @@
         </tr>
 
         <tr>
-            <td align=left>{{ KNOWL('av.fq.initial_coefficients',title='initial coefficients')}}</td>
-            <td align=left>{{ KNOWL('ag.fq.point_counts',title="points on variety") }}</td>
-            <td align=left>{{ KNOWL('av.fq.curve_point_counts',title="points on curve") }}</td>
-            <td align=left>{{ KNOWL('av.fq.number_field',title="number field") }}</td>
+            <td align=left>{{ KNOWL('av.fq.initial_coefficients',title='Initial coefficients')}}</td>
+            <td align=left>{{ KNOWL('ag.fq.point_counts',title="Points on variety") }}</td>
+            <td align=left>{{ KNOWL('av.fq.curve_point_counts',title="Points on curve") }}</td>
+            <td align=left>{{ KNOWL('av.fq.number_field',title="Number field") }}</td>
 	    <td align=left>{{ KNOWL('nf.galois_group',title="Galois group") }}</td>
         </tr>
 
@@ -48,11 +48,11 @@
         </tr>
 
         <tr>
-            <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
-            <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
+            <td align=left>{{ KNOWL('av.simple',title="Simple") }}</td>
+            <td align=left>{{ KNOWL('ag.primitive',title="Primitive") }}</td>
             <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
-            <td align=left>{{ KNOWL('av.princ_polarizable',title="princ polarizable") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="simple factors") }}
+            <td align=left>{{ KNOWL('av.princ_polarizable',title="Princ. polarizable") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="Simple factors") }}
                 <select name='simple_quantifier'>
                     <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
                     <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
@@ -90,11 +90,11 @@
         </tr>
 
         <tr>
-            <td align=left>{{ KNOWL('av.decomposition',title="dim 1 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="dim 2 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="dim 3 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="dim 4 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="dim 5 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="1-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="2-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="3-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="4-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="5-d factors") }}</td>
         </tr>
 
         <tr>
@@ -106,9 +106,9 @@
         </tr>
 
         <tr>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 1 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 2 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 3 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 1-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 2-d factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 3-d factors") }}</td>
         </tr>
 
         <tr>

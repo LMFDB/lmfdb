@@ -18,13 +18,17 @@
 <td align=left>{{ KNOWL('ec.rank', title='Rank') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</td>
-<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
 </tr>
 
 <tr>
 <td align=left><input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left><input type='text' name='jinv'size=5 value={{info.jinv}}></td>
-<td>         <select name='include_cm'>
+<td align=left><input type='text' name='jinv'size=10 value={{info.jinv}}></td>
+<td align=left><input type='text' name='rank' size=10 value={{info.rank}}></td>
+<td align=left><input type='text' name='torsion' size=10 value={{info.torsion}}> </td>
+<td align=left>
+  {{ tor_struct_search_Q(info.torsion_structure)|safe }}
+</td>
+<td>         <select name='include_cm', style='width: 155px'>
 {% if info.include_cm == "only" %}
            <option value="">include</option>
            <option value="exclude">exclude</option>
@@ -42,26 +46,32 @@
 {% endif %}
          </select>
 </td>
-<td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
-<td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
-<td align=left>
-  {{ tor_struct_search_Q(info.torsion_structure)|safe }}
-</td>
-<td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
 </tr>
 
 <tr>
-<td align=left>cyclic {{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
-<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}}
-</td>
-<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}}
-</td>
+<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
+<td align=left>{{ KNOWL('ec.isogeny', title='Cyclic isogeny degree') }}</td>
+<td align=left>{{KNOWL('ec.maximal_galois_rep', title='Maximal primes')}}</td>
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
+<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}
+</td>
 </tr>
 <tr>
-<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
+<td align=left><input type='text' name='sha' size=10 value={{info.sha}}> </td>
+<td align=left><input type='text' name='isodeg' size=10 value={{info.isodeg}}> </td>
 <td align=left>
    <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
+</td>
+<td align=left>
+<select name='optimal', style='width: 155px'>
+{% if info.optimal=='on' %}
+  <option value="">No</option>
+  <option selected value="on">Yes</option>
+{% else %}
+  <option value="">No</option>
+  <option value="on">Yes</option>
+{% endif %}
+</select>
 </td>
 <td align=left colspan=2>
   <select name='surj_quantifier'>
@@ -74,17 +84,6 @@
 {% endif %}
   </select>
 <input type='text' name='nonsurj_primes' size=10  value={{info.nonsurj_primes}}>
-</td>
-<td align=left>
-<select name='optimal'>
-{% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected value="on">Yes</option>
-{% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
-{% endif %}
-</select>
 </td>
 </tr>
 
