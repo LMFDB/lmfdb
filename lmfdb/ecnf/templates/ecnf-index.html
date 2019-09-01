@@ -117,7 +117,7 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.j_invariant', title="j-invariant") }}
           </td>
           <td colspan=2>
-          <input type='text' name='jinv' example="105474/49 + a*34213/49" size=18 value="{{jinv}}" />
+          <input type='text' name='jinv' example="105474/49 + a*34213/49" size=20 value="{{jinv}}" />
           </td>
           <td colspan=2>
           <span class="formexample">
@@ -134,7 +134,7 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.torsion_order',title="Torsion order") }}
           </td>
           <td>
-          <input type='text' name='torsion' example="2" size=5 value="{{torsion}}" />
+          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
@@ -152,22 +152,19 @@ Please enter a value or leave blank:
 
       </tr>
     <tr>
-      <td colspan=3>&nbsp;</td>
       <td>
         {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
       </td>
       <td>
-        <input type='text' name='isodeg' example="16" size=5 />
+        <input type='text' name='isodeg' example="16" size=10 />
       </td>
       <td>
         <span class="formexample"> e.g. 16 </span>
       </td>
+      <td colspan=3>&nbsp;</td>
     </tr>
  <tr>
-  <td>Maximum number of curves to display</td>
-  <td>
-  <input type='text' name='count'  example='10' size=10 value="{{count}}" />
-  </td>
+<td>Results to display</td><td> <input type='text' name='count' value={{count}} size=10></td>
  </tr>
 
   </table>
