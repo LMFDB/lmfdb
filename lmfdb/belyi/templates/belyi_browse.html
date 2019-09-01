@@ -34,37 +34,37 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 <form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
-      <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+      <td>{{ KNOWL('belyi.degree', title='Degree') }}</td>
       <td><input type='text' name='deg' placeholder='5' size=10>
         <td><span class="formexample"> e.g. 4, 5-6 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.group', title='group') }}</td>
+      <td>{{ KNOWL('belyi.group', title='Group') }}</td>
       <td><input type='text' name='group' placeholder='4T5' size=10>
         <td><span class="formexample"> e.g. 4T5 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.orders', title='orders') }}</td>
+      <td>{{ KNOWL('belyi.orders', title='Orders') }}</td>
       <td><input type='text' name='abc' placeholder='5' size=10>
         <td><span class="formexample"> e.g. 4, 5-6 </td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.abc', title='abc triple') }}</td>
+      <td>{{ KNOWL('belyi.abc', title='\(a,b,c\) triple') }}</td>
       <td><input type='text' name='abc_list' placeholder='[4,4,3]' size=10>
         <td><span class="formexample"> e.g. [4,4,3]</td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.genus', title='genus') }}</td>
+      <td>{{ KNOWL('belyi.genus', title='Genus') }}</td>
       <td><input type='text' name='g' placeholder='1' size=10>
         <td><span class="formexample"> e.g. 1, 0-2 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.orbit_size', title='orbit size') }}</td>
+      <td>{{ KNOWL('belyi.orbit_size', title='Orbit size') }}</td>
       <td><input type='text' name='orbit_size' placeholder='2' size=10>
         <td><span class="formexample"> e.g. 2, 5-6 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
+      <td>{{ KNOWL('belyi.geometry_type', title='Heometry type') }}</td>
       <td><select name='geomtype' width="107" style="width: 107px">
           <option ></option>
           {% for G in info.geometry_types_list %}
