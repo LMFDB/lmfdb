@@ -581,7 +581,9 @@ aliases = {}
 
 # Do all cyclic groups as once
 for j in range(1,48):
-    aliases['C'+str(j)] = [(j,1)]
+    if j != 32:
+        aliases['C'+str(j)] = [(j,1)]
+aliases['C32'] = [(32,33)]
 
 aliases['S1'] = [(1, 1)]
 aliases['A1'] = [(1, 1)]
@@ -683,4 +685,12 @@ aliases['F23'] = [(23, 3)]
 aliases['M23'] = [(23, 5)]
 aliases['A23'] = [(23, 6)]
 aliases['S23'] = [(23, 7)]
+
+# Load all sibling representations from the database
+for ky in aliases.keys():
+    nt = aliases[ky][0]
+    label = "%sT%s"% nt
+    aliases[ky] = [z[0] for z in db.gps_transitive.lookup(label)['siblings']]
+    if nt not in aliases[ky]:
+        aliases[ky].append(nt)
 
