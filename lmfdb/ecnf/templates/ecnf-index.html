@@ -76,7 +76,7 @@ Please enter a value or leave blank:
           {% endfor %}
          </select>
   </td>
-     <td align=right>{{ KNOWL('ec.q_curve',title="$Q$-curves") }} </td>
+     <td>{{ KNOWL('ec.q_curve',title="Q-curves") }} </td>
   <td>
          <select name='include_Q_curves'>
            <option value="" selected>include</option>
@@ -94,7 +94,7 @@ Please enter a value or leave blank:
      </td>
      <td><span class="formexample"> e.g. 31 or 1-100</span></td>
 
-  <td align=right>{{ KNOWL('ec.isogeny',title="Isogenous curves") }}</td>
+  <td>{{ KNOWL('ec.isogeny',title="Isogenous curves") }}</td>
   <td>
          <select name='include_isogenous'>
            <option value="off">exclude</option>
@@ -140,7 +140,7 @@ Please enter a value or leave blank:
           <span class="formexample"> e.g. 2 </span>
           </td>
 
-          <td align=right>
+          <td>
           {{ KNOWL('ec.torsion_subgroup', title="Torsion structure") }}
           </td>
           <td>
