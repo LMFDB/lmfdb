@@ -645,6 +645,7 @@ class WebNumberField:
         units = self.units()
         if len(units) > 500:
             return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
+        return units
 
     def units(self):  # fundamental units
         res = None
