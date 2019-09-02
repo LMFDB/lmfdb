@@ -103,3 +103,9 @@ class NumberFieldTest(LmfdbTest):
 
         L = self.tc.get('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
         assert '7.3.1420409.1' in L.data
+
+    def test_fundamental_units(self):
+        L = self.tc.get('NumberField/2.2.10069.1/')
+        assert '43388173' in L.data
+        L = self.tc.get('NumberField/3.3.10004569.1')
+        assert '22153437467081345' in L.data
