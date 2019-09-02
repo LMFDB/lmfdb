@@ -576,27 +576,25 @@ def opt_man(line):
 
     Input line fields:
 
-    label opt mc
+    N iso num ainvs opt mc
 
-    where label = full curve label, opt = (0 if not optimal, 1 if
-    optimal, n>1 if one of n possibly optimal curves in the isogeny
-    class), and mc = Manin constant *conditional* on curve #1 in the
-    lcass being the optimal one.
+    where opt = (0 if not optimal, 1 if optimal, n>1 if one of n
+    possibly optimal curves in the isogeny class), and mc = Manin
+    constant *conditional* on curve #1 in the lcass being the optimal
+    one.
 
     Sample input lines with comments added:
 
-    250002e1 1 1 # optimal, mc=1
-    250002f1 1 1 # optimal, mc=1
-    250002f2 0 1 # not optimal, mc=1
-    250002g1 3 1 #
-    250002g2 3 1 # 3 possible optimal curves in class g, mc=1 for all whichever is optimal
-    250002g3 3 1 #
-    250002g4 0 1 # not optimal, mc=1
-    250002h1 1 1 # optimal, mc=1
-    250002i1 2 1 #
-    250002i2 2 1 # 2 possible optimal curves in class i, mc=1 for all whichever is optimal
+    11 a 1 [0,-1,1,-10,-20] 1 1       # optimal, mc=1
+    11 a 2 [0,-1,1,-7820,-263580] 0 1 # not optimal, mc=1
+    11 a 3 [0,-1,1,0,0] 0 5           # not optimal, mc=5
+    499992 a 1 [0,-1,0,4481,148204] 3 1       # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 2 [0,-1,0,-29964,1526004] 3 1    # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 3 [0,-1,0,-446624,115024188] 3 1 # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 4 [0,-1,0,-164424,-24344100] 0 1 # not optimal, mc=1
     """
-    label, opt, mc = split(line)
+    N, iso, num, ainvs, opt, mc = split(line)
+    label = N+iso+num
     opt = int(opt)
     mc = int(mc)
     return label, {
@@ -700,7 +698,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
     twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
     allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
-    opt_man_filename = 'opt_man.%s-%s' % (min_N, max_N)
+    opt_man_filename = 'opt_man/opt_man.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
     #    file_list = [twoadic_filename]
     #    file_list = [allgens_filename]
@@ -1210,20 +1208,12 @@ def add_an(e, verbose=False):
 
 def read_opt_man_data():
     opt_man_dict = {}
-    for N in range(25):
-        fname = "/scratch/home/jcremona/ecdata/tmanin.{}0000-{}9999".format(N,N)
+    for N in range(50):
+        fname = "/scratch/home/jcremona/ecdata/opt_man/opt_man.{}0000-{}9999".format(N,N)
         print("Reading from {}".format(fname))
         for line in open(fname):
-            N, iso, num, ai, mc = line.split()
+            N, iso, num, ainvs, opt, mc = line.split()
             label = N+iso+num
-            mc = int(mc)
-            opt = 1 if num=='1' else 0
-            opt_man_dict[label] = {'optimality': opt, 'manin_constant': mc}
-    for N in range(25,41):
-        fname = "/scratch/home/jcremona/ecdata/opt_man.{}0000-{}9999".format(N,N)
-        print("Reading from {}".format(fname))
-        for line in open(fname):
-            label, opt, mc = line.split()
             mc = int(mc)
             opt = int(opt)
             opt_man_dict[label] = {'optimality': opt, 'manin_constant': mc}

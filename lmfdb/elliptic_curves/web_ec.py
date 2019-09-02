@@ -14,7 +14,7 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSer
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 250000 # optimality of curve no. 1 in class only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 260000 # optimality of curve no. 1 in class only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -212,6 +212,7 @@ class WebEC(object):
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
 
+        print(data['minq_label'])
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         data['disc_factor'] = latex(Dfac)
@@ -269,16 +270,37 @@ class WebEC(object):
 
         # Optimality (the optimal curve in the class is the curve
         # whose Cremona label ends in '1' except for '990h' which was
-        # labelled wrongly long ago)
+        # labelled wrongly long ago): this is proved for N up to
+        # OPTIMALITY_BOUND (and when there is only one curve in an
+        # isogeny class, obviously) and expected for all N.
 
-        if self.iso == '990h':
-            data['Gamma0optimal'] = bool(self.number == 3)
-        else:
-            data['Gamma0optimal'] = bool(self.number == 1)
-        data['optimality_known'] = (int(self.class_size)==1) or (N<OPTIMALITY_BOUND)
+        # Column 'optimality' is 1 for certainly optimal curves, 0 for
+        # non-optimal curves, and is n>1 if the curve is one of n in
+        # the isogeny class which may be optimal given current
+        # knowledge.
+
+        # Column "manin_constant' is the correct Manin constant
+        # assuming that the curve with (Cremona) number 1 in the class
+        # is optimal.
+        
+        data['optimality_code'] = self.optimality
+        # The "or" clause in the next line is so that we can update
+        # things by changing one line in this file even without
+        # changing the data:
+        data['optimality_known'] = (self.optimality < 2) or (N<OPTIMALITY_BOUND)
         data['optimality_bound'] = OPTIMALITY_BOUND
+        # (conditional on data['optimality_known'])
+        data['manin_constant'] = self.manin_constant
+
+        # To detect whether the optimal curve in this curve's class is
+        # known when its optimality code s >1 we need to look at the
+        # code for the curve with 'number'==1.  Here we also record
+        # the label of that curve for the template.
+        opt_curve = db.ec_curves.lucky({'iso':self.iso, 'number':3 if self.iso=='990h' else 1},projection=['label','lmfdb_label','optimality'])
+        data['manin_known'] = self.optimality==1 or (opt_curve['optimality']==1)
+        data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
         data['p_adic_data_exists'] = False
-        if data['Gamma0optimal']:
+        if data['optimality_code']==1:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
 
         # Iwasawa data (where present)
@@ -301,7 +323,9 @@ class WebEC(object):
         else:
             self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
             self.class_name = self.lmfdb_iso
-
+        data['class_name'] = self.class_name
+        data['number'] = self.number
+        
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
