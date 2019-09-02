@@ -105,7 +105,7 @@ class NumberFieldTest(LmfdbTest):
         assert '7.3.1420409.1' in L.data
 
     def test_fundamental_units(self):
-        L = self.tc.get('NumberField/2.2.10069.1/')
+        L = self.tc.get('NumberField/2.2.10069.1')
         assert '43388173' in L.data
         L = self.tc.get('NumberField/3.3.10004569.1')
         assert '22153437467081345' in L.data
