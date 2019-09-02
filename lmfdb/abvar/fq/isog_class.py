@@ -3,12 +3,10 @@
 """
 TODO
 - add geometric_number_fields, geometric_galois_groups
-- set Jacobians to 0 when known, make sure it doesn't display otherwise
 - add search on max twist degree?
 - has geometric supersingular factor (has a degree 1 factor geometrically)
 - search on discriminant over the center (absolute norm down to Q)
 - Use the polredabs polynomial to give the places.  It's a bit weird to have Q(sqrt(-1)) represented using the polynomial x^2 - 1481250*x + 95367431640625
-- Fun examples: 4.5.f_k_z_cx, 4.2.b_e_c_j, 4.5.k_bt_fa_lt
 """
 
 from flask import url_for
@@ -86,11 +84,11 @@ class AbvarFq_isoclass(object):
         """
         Searches for a specific isogeny class in the database by label.
         """
-        #try:
-        data = db.av_fq_isog.lookup(label)
-        return cls(data)
-        #except (AttributeError, TypeError):
-            #raise ValueError("Label not found in database")
+        try:
+            data = db.av_fq_isog.lookup(label)
+            return cls(data)
+        except (AttributeError, TypeError):
+            raise ValueError("Label not found in database")
 
     def make_class(self):
         self.decompositioninfo = decomposition_display(zip(self.simple_distinct,self.simple_multiplicities))
@@ -125,9 +123,9 @@ class AbvarFq_isoclass(object):
         else:
             p, r = Integer(q).is_prime_power(get_data=True)
         if r == 1:
-            return '\F_{' + '{0}'.format(p) + '}'
+            return '\F_{%s}' % p
         else:
-            return '\F_{' + str(p) + '^{' + str(r) + '}}'
+            return '\F_{%s^{%s}}' % (p, r)
 
     def nf(self):
         if self.is_simple:
@@ -241,12 +239,12 @@ class AbvarFq_isoclass(object):
 
     def display_number_field(self):
         if self.is_simple:
-            if self.nf() == "":
-                return "The number field of this isogeny class is not in the database."
-            else:
+            if self.nf():
                 return nf_display_knowl(self.nf(),field_pretty(self.nf()))
+            else:
+                return "The number field of this isogeny class is not in the database."
         else:
-            return "The class is not simple, so we will display the number fields later"
+            return "The class is not simple"
 
     def display_galois_group(self):
         if not hasattr(self, 'galois_groups') or not self.galois_groups[0]: #the number field was not found in the database
@@ -272,20 +270,19 @@ class AbvarFq_isoclass(object):
 
     def alg_clo_field(self):
         if self.r == 1:
-            return '\\overline{\F}_{' + '{0}'.format(self.p) + '}'
+            return '\\overline{\F}_{%s}' % (self.p)
         else:
-            return '\\overline{\F}_{' + str(self.p) + '^{' + str(self.r) + '}}'
+            return '\\overline{\F}_{%s^{%s}}' % (self.p, self.r)
 
     def ext_field(self,s):
         n = s*self.r
         if n == 1:
-            return '\F_{' + '{0}'.format(self.p) + '}'
+            return '\F_{%s}' % (self.p)
         else:
-            return '\F_{' + str(self.p) + '^{' + str(n) + '}}'
+            return '\F_{%s^{%s}}' % (self.p, n)
 
     @cached_method
     def endo_extensions(self):
-        #data = db.av_fq_endalg_factors.lucky({'label':self.label})
         return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
 
     def relevant_degs(self):
@@ -299,7 +296,7 @@ class AbvarFq_isoclass(object):
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
             if factors == []:
-                return 'The data at degree ' + str(degree) + ' is missing.', do_describe
+                return 'The data at degree %s is missing.' % degree, do_describe
             ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
         else:
             factors = zip(self.simple_distinct,self.simple_multiplicities)
@@ -310,7 +307,7 @@ class AbvarFq_isoclass(object):
         dec_display = decomposition_display(factors)
         if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
+            if end_alg is None:
                 return no_endo_data(), do_describe
             if degree > 1:
                 ans += 'the simple isogeny class '
@@ -319,7 +316,7 @@ class AbvarFq_isoclass(object):
             ans += end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
+            if end_alg is None:
                 return no_endo_data(), do_describe
             ans += dec_display + ' and its endomorphism algebra is '
             ans += matrix_display(factors[0],end_alg)
@@ -368,6 +365,8 @@ class AbvarFq_isoclass(object):
         return len(self.twists)
 
     def twist_display(self,show_all):
+        if self.num_twists() == 0:
+            return "This isogeny class has no twists."
         if show_all:
             ans = "Below is a list of all twists of this isogeny class."
         else:
@@ -418,15 +417,12 @@ def Ppoly_irred(label):
     g, q, coeffs = label.split('.')
     g, q = ZZ(g), ZZ(q)
     polylist = map(signed_class_to_int, coeffs.split('_'))
-    print "A", polylist
     polylist = [ZZ(1)] + polylist + [q**i * c for (i, c) in enumerate(reversed(polylist[:-1]), 1)] + [q**g]
-    print "B", polylist
     from sage.all import latex
     polylist.reverse()
     ZZx = PolynomialRing(ZZ,'x')
     poly = ZZx(polylist)
     factor = poly.factor()[0][0]
-    print label, factor
     return latex(factor)
 
 def describe_end_algebra(p,extension_label):
