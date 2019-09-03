@@ -5,7 +5,7 @@ import os, yaml
 from flask import url_for
 from sage.all import (
     gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
-    AbelianGroup, QQ, NumberField, PolynomialRing, latex, pari, cached_function)
+    QQ, NumberField, PolynomialRing, latex, pari, cached_function)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
