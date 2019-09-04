@@ -1409,3 +1409,30 @@ def TraceHashClass(iso, E):
         th = TH_dict[iso] = TraceHash(E)
         return th
 
+
+def fix_opt(iso, test=True):
+    """Given an isogeny class of 2 or more curves, fixes the 'optimality'
+    column, so that the first has value 1 and the others 0.  Use for
+    certain special cases or after determining that curve #1 is
+    optimal in some range.
+    """
+    for c in curves.search({'iso':iso}, projection=['label', 'number', 'optimality']):
+        old_opt = c['optimality']
+        label = c['label']
+        if old_opt:
+            c['optimality'] = new_opt = int(c['number']==1)
+
+            # Now do the updates:
+
+            print("Updating optimality for {} from {} to {}".format(label, old_opt, new_opt))
+            if not test:
+                curves.upsert({'label':label},c)
+                print("changes made")
+            else:
+                print("Taking no further action")
+        else:
+            print("No action for curve {} whose optimality code is 0".format(label))
+
+opt_fixes = ['260116a', '280916a', '285172a', '291664a', '300368a', '302516a',
+             '306932a', '329492a', '343412a', '345808a', '367252a', '377012b',
+             '384464d', '391892a', '401972a', '425168b', '446288a', '481652a']
