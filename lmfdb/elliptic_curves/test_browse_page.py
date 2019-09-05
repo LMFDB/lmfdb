@@ -99,4 +99,4 @@ class HomePageTest(LmfdbTest):
                         '[1, -1, 0, -1575, 751869]')
 
         self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
-                        '990h3')
+                        '990h1')
