@@ -12,6 +12,7 @@ from lmfdb.utils import (
     web_latex, to_dict, web_latex_split_on_pm, flash_error,
     parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
     search_wrap)
+from lmfdb.utils.search_parsing import collapse_ors
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -274,7 +275,7 @@ def elliptic_curve_search(info, query):
         # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
         # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
         # Instead, we use this more complicated query:
-        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
+        collapse_ors(["$or",[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]], query)
 
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
