@@ -149,15 +149,15 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 4 </span>
           </td>
-          <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
+          <td>{{ KNOWL('ec.isogeny_class',title="Curves per isogeny class") }}</td>
           <td>
              <select name='optimal', style="width: 155px">
     {% if optimal=='on' %}
-               <option value="">No</option>
-               <option value="on" selected="yes">Yes</option>
+               <option value="">all</option>
+               <option value="on" selected="yes">one</option>
     {% else %}
-               <option value="">No</option>
-               <option value="on">Yes</option>
+               <option value="">all</option>
+               <option value="on">one</option>
     {% endif %}
              </select>
           </td>

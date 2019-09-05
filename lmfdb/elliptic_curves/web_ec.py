@@ -14,7 +14,7 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSer
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 260000 # optimality of curve no. 1 in class only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 270000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -212,7 +212,6 @@ class WebEC(object):
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
 
-        print(data['minq_label'])
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         data['disc_factor'] = latex(Dfac)
