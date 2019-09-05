@@ -196,9 +196,9 @@ class WebEC(object):
         Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
 
         data['minq_D'] = minqD = self.min_quad_twist['disc']
-        minq_label = self.min_quad_twist['label']
-        data['minq_label'] = db.ec_curves.lucky({'label':minq_label}, 'lmfdb_label')
-        data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
+        data['minq_label'] = self.min_quad_twist['lmfdb_label'] if self.label_type=='LMFDB' else self.min_quad_twist['label']
+        data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
+
         if self.degree is None:
             data['degree'] = 0 # invalid, but will be displayed nicely
         else:
@@ -211,8 +211,6 @@ class WebEC(object):
             r = db.ec_curves.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
-
-        minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         data['disc_factor'] = latex(Dfac)
         data['cond_factor'] =latex(Nfac)
@@ -327,7 +325,7 @@ class WebEC(object):
         
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
-            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
+            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv))]
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)

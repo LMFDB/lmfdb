@@ -185,6 +185,13 @@ whitespace = re.compile(r'\s+')
 def split(line):
     return whitespace.split(line.strip())
 
+# Two dicts: the first has lmfdb labels as keys and the corresponding
+# Cremona labels as values; the second is the other way round.  These
+# are filled by alllabels() and used by allgens().
+
+lmfdb_label_to_label = {}
+label_to_lmfdb_label = {}
+    
 
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
@@ -248,9 +255,18 @@ def allgens(line):
 
     20202 i 2 [1,0,0,-298389,54947169] 1 [2,4] [-570:6603:1] [-622:311:1] [834:19239:1]
     """
+    global lmfdb_label_to_label
+    global label_to_lmfdb_label
+
     data = split(line)
     iso = data[0] + data[1]
     label = iso + data[2]
+    try:
+        lmfdb_label = label_to_lmfdb_label[label]
+    except AttributeError:
+        print("Label {} not found in label_to_lmfdb_label dict!".format(label))
+        lmfdb_label = ""
+
     global nallgens
     nallgens += 1
     if nallgens%100==0:
@@ -289,12 +305,11 @@ def allgens(line):
 
     Etw, Dtw = E.minimal_quadratic_twist()
     if Etw.conductor()==N:
-        min_quad_twist = {'label':label, 'disc':int(1)}
+        min_quad_twist = {'label':label, 'lmfdb_label':lmfdb_label, 'disc':int(1)}
     else:
-        minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
-        r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
-        minq_label = "" if r is None else r['label']
-        min_quad_twist = {'label':minq_label, 'disc':int(Dtw)}
+        minq_ainvs = Etw.ainvs()
+        r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs}, projection=['label','lmfdb_label'])
+        min_quad_twist = {'label': r['label'], 'lmfdb_label':r['lmfdb_label'], 'disc':int(Dtw)}
     
     #print("computing hash")    
     #trace_hash = ZZ(magma.TraceHash(E))
@@ -416,11 +431,14 @@ def alldegphi(line):
         'degree': int(data[4])
     }
 
-
 def alllabels(line):
     r""" Parses one line from an alllabels file.  Returns the label
     and a dict containing seven fields, 'conductor', 'iso', 'number',
     'lmfdb_label', 'lmfdb_iso', 'iso_nlabel', 'lmfdb_number', being strings or ints.
+
+    Also populates two global dictionaries lmfdb_label_to_label and
+    label_to_lmfdb_label, allowing other upload functions to look
+    these up.
 
     Input line fields:
 
@@ -431,6 +449,8 @@ def alllabels(line):
     57 c 2 57 b 1
 
     """
+    global lmfdb_label_to_label
+    global label_to_lmfdb_label
     data = split(line)
     if data[0] != data[3]:
         raise ValueError("Inconsistent data in alllabels file: %s" % line)
@@ -438,6 +458,10 @@ def alllabels(line):
     lmfdb_label = data[3] + '.' + data[4] + data[5]
     lmfdb_iso = data[3] + '.' + data[4]
     iso_nlabel = numerical_iso_label(lmfdb_iso)
+
+    lmfdb_label_to_label[lmfdb_label] = label
+    label_to_lmfdb_label[label] = lmfdb_label
+
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
@@ -620,9 +644,6 @@ def fix_isogeny_degrees(C):
     return C
     
 
-filename_base_list = ['allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
-
-
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
 #    print lab1,lab2
@@ -670,10 +691,8 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     if verbose:
         print("Wrote {} lines to {} and {}".format(id-id0, searchfile, extrafile))
     
-# To run this go into the top-level lmfdb directory, run sage and give
-# the command
-# %runfile lmfdb/elliptic_curves/import_ec_data.py
 #
+
 
 def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     r""" Uses insert_many() if insert=True, which is faster but will create
@@ -688,7 +707,32 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     In case mode=='dump', files ec_curves.<N1>-<N2> and
     ec_curves.extras.<N1>-<N2> will be written, suitable for reading
     in using copy_from *after* prepending three header lines to each.
-    
+
+    NB The allgens() function requires the labels dics to be populated to alllabels must be read before allgens
+
+    To run this go into the top-level lmfdb directory, run sage and give
+    the command
+    sage: %runfile lmfdb/elliptic_curves/import_ec_data.py
+
+    The a typical command would be
+
+    sage: v = upload_to_db("/scratch/jcremona/ecdata/", 490000, 499999, mode='test')
+
+    to test that all is OK using input files in ~/ecdata/*/*.490000-499999
+
+    or
+
+    sage: upload_to_db("/scratch/jcremona/ecdata/", 490000, 499999, mode='upload')
+
+    to actually upload data.  NB In the default insert==True it is
+    important that the curves being uploaded are *not* already in
+    the database.  To clear out the range about to be uploaded (if necessary) do
+
+    sage: curves.delete({'conductor': {'$gte':490000, '$lte': 499999}})
+
+    Future plans: run with mode='dump' to do all the processing and
+    write to a file with correct headers (written but only partially
+    tested); then use curves.copy_from() to do the upload.
     """
     allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
     allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
@@ -699,7 +743,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
     allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
     opt_man_filename = 'opt_man/opt_man.%s-%s' % (min_N, max_N)
-    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
+    file_list = [alllabels_filename, allgens_filename, allbsd_filename, intpts_filename, alldegphi_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
     #    file_list = [twoadic_filename]
     #    file_list = [allgens_filename]
 
@@ -1193,6 +1237,23 @@ def add_an(e, verbose=False):
         e['anlist'] = anlist
         e['aplist'] = aplist
     return e
+
+def fix_quad_twist(c):
+    mqt = c['min_quad_twist']
+    if mqt['label'] == '':
+        if mqt['lmfdb_label'] == '':
+            ainvs = [ZZ(a) for a in EllipticCurve(c['ainvs']).quadratic_twist(mqt['disc']).ainvs()]
+            ct = curves.lucky({'ainvs':ainvs}, projection=['label', 'lmfdb_label'])
+        else:
+            ct = curves.lucky({'lmfdb_label':mqt['lmfdb_label']}, projection=['label', 'lmfdb_label'])
+        if ct==None:
+            print("failed to find curve (twist of {})".format(c['label']))
+        else:
+            mqt['label'] = ct['label']
+            if mqt['lmfdb_label'] == '':
+                mqt['lmfdb_label'] = ct['lmfdb_label']
+    return c    
+        
 
 # Rewrite function to add optimality and manin constant data.
 #
