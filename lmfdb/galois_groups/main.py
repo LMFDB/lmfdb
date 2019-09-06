@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#i -*- coding: utf-8 -*-
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
@@ -232,6 +232,8 @@ def render_group_webpage(args):
             data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
+        if data['nilpotency'] < 0:
+            data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
         return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
