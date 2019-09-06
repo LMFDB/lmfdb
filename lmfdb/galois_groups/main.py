@@ -121,6 +121,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
+    parse_ints(info,query,'nilpotency')
     parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
