@@ -73,7 +73,7 @@ def local_field_data(label):
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = f['gal']
     gn = f['n']
-    ans += 'Degree: %s<br>' % str(gt)
+    ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
