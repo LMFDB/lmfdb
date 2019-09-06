@@ -232,7 +232,8 @@ def render_group_webpage(args):
             data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
-        if data['nilpotency'] < 0:
+        data['nilpotency'] = '$%s$' % data['nilpotency']
+        if data['nilpotency'] == '$-1$':
             data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
