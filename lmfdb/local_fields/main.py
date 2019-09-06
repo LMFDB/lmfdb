@@ -15,6 +15,7 @@ from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+from lmfdb.number_fields.web_number_field import formatfield
 
 import re
 
@@ -242,6 +243,7 @@ def render_field_webpage(args):
             gsm = 'Does not exist'
         else:
             gsm = web_latex(coeff_to_poly(gsm))
+            #gsm = formatfield(gsm)
 
 
         info.update({
