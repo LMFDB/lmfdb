@@ -93,10 +93,10 @@
 </tr>
 <tr>
           <td>
-          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
+          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
           </td>
           <td>
-          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
+          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
           </td>
           <td>
             {{ tor_struct_search_nf(info.torsion_structure)| safe }}
