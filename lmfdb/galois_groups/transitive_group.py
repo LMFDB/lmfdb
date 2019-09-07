@@ -770,7 +770,8 @@ aliases['D47'] = [(47,2)]
 for ky in aliases.keys():
     nt = aliases[ky][0]
     label = "%sT%s"% nt
-    aliases[ky] = [z[0] for z in db.gps_transitive.lookup(label)['siblings']]
+    aliases[ky] = [tuple(z[0]) for z in db.gps_transitive.lookup(label)['siblings']]
     if nt not in aliases[ky]:
         aliases[ky].append(nt)
+    aliases[ky].sort()
 
