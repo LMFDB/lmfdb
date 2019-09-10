@@ -55,19 +55,27 @@ table.ntdata a {
 
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='Degree')}} <td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
-</td>
+{{KNOWL('gg.degree',title='Degree')}} 
 
 <td align=left> 
-{{KNOWL('gg.tnumber',title='$t$-number')}} 
-<td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
+{{KNOWL('gg.tnumber',title='$T$-number')}} 
 
 <td align=left> 
 {{KNOWL('group.order',title='Order')}} 
-<td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
+
 <td align=left> 
 {{KNOWL('group.small_group_label',title='GAP id')}} 
-<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
+
+<td align=left> 
+{{KNOWL('group.nilpotent',title='Nilpotency')}} 
+
+<tr>
+<td align=left> <input type='text' name='n' size="5" placeholder="6" value="{{info.n}}">
+<td align=left> <input type="text" name="t" size="5" placeholder="2" value="{{info.t}}" ></td>
+<td align=left> <input type="text" name="order" size="5" placeholder="12" value="{{info.order}}" ></td>
+
+<td align=left><input type="text" name="gapid" size="5" placeholder="[6,3]" value="{{info.gapid}}" ></td>
+<td align=left><input type="text" name="nilpotency" size="5" placeholder="1..100" value="{{info.nilpotency}}" ></td>
 </tr>
 
 <tr>
