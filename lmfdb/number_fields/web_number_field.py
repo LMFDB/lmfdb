@@ -5,7 +5,7 @@ import os, yaml
 from flask import url_for
 from sage.all import (
     gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
-    AbelianGroup, QQ, NumberField, PolynomialRing, latex, pari, cached_function)
+    QQ, NumberField, PolynomialRing, latex, pari, cached_function)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
@@ -645,6 +645,7 @@ class WebNumberField:
         units = self.units()
         if len(units) > 500:
             return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
+        return units
 
     def units(self):  # fundamental units
         res = None
@@ -681,7 +682,6 @@ class WebNumberField:
         cg_list = self._data['class_group']
         if cg_list == []:
             return 'Trivial'
-        #return cg_list
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
@@ -692,7 +692,11 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            return str(AbelianGroup(cg_list)) + ', order ' + self.class_number_latex()
+            if cg_list == []:
+                return 'Trivial group, which has order $1$'
+            cg_list = [r'C_{%s}'% z for z in cg_list]
+            cg_string = r'\times '.join(cg_list)
+            return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
         return na_text()
 
     def class_number(self):

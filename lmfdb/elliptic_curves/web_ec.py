@@ -14,7 +14,7 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSer
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 260000 # optimality of curve no. 1 in class only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 270000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -492,8 +492,10 @@ class WebEC(object):
         for F, T in tor_gro.items():
             tg1 = {}
             tg1['bc'] = "Not in database"
-            if ":" in F:
-                F = F.replace(":",".")
+            # mongo did not allow "." in a dict key so we changed (e.g.) '3.1.44.1' to '3:1:44:1'
+            # Here we change it back (but this code also works in case the fields already use ".")
+            F = F.replace(":",".")
+            if "." in F:
                 field_data = nf_display_knowl(F, field_pretty(F))
                 deg = int(F.split(".")[0])
                 bcc = [x for x,y in zip(bcs, bcfs) if y==F]

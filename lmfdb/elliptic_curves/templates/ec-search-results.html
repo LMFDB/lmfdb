@@ -14,10 +14,10 @@
 <tr>
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
 <td align=left>{{ KNOWL('ec.q.j_invariant', title='j-invariant') }}</td>
-<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
 <td align=left>{{ KNOWL('ec.rank', title='Rank') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</td>
+<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
 </tr>
 
 <tr>
@@ -52,7 +52,7 @@
 <td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
 <td align=left>{{ KNOWL('ec.isogeny', title='Cyclic isogeny degree') }}</td>
 <td align=left>{{KNOWL('ec.maximal_galois_rep', title='Maximal primes')}}</td>
-<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
+<td align=left>{{ KNOWL('ec.isogeny_class', title='Curves per isogeny class') }}</td>
 <td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}
 </td>
 </tr>
@@ -65,11 +65,11 @@
 <td align=left>
 <select name='optimal', style='width: 155px'>
 {% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected value="on">Yes</option>
+  <option value="">all</option>
+  <option selected value="on">one</option>
 {% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
+  <option value="">all</option>
+  <option value="on">one</option>
 {% endif %}
 </select>
 </td>

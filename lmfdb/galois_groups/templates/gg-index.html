@@ -10,32 +10,41 @@
 
 
 <p>
-Browse by {{KNOWL('gg.degree', title='degree')}} $n$ :
+Browse by {{KNOWL('gg.degree', title='degree')}} $n$:
 {% for n in info.degree_list: %}
-   <a href="?n={{n}}">{{n}}</a>
+   <a href="?n={{n}}">{{n}}</a>{% if not loop.last %},{% endif %}
 {% endfor %}
 </p>
 
 <p>
 Browse by type:
-<a href="?parity=-1">Odd</a>
-<a href="?parity=1">Even</a>
-<a href="?cyc=True">Cyclic</a>
-<a href="?cyc=False">Non-cyclic</a>
-<a href="?solv=True">Solvable</a>
-<a href="?solv=False">Non-solvable</a>
-<a href="?prim=True">Primitive</a>
+<a href="?parity=-1">Odd</a>,
+<a href="?parity=1">Even</a>,
+<a href="?cyc=True">Cyclic</a>,
+<a href="?cyc=False">Non-cyclic</a>,
+<a href="?solv=True">Solvable</a>,
+<a href="?solv=False">Non-solvable</a>,
+<a href="?prim=True">Primitive</a>,
 <a href="?prim=False">Imprimitive</a>
 
 <p>
 Browse by abstract group:
-<a href="?gapid=[6,1]">$S_3$</a>
-<a href="?gapid=[8,3]">$D_4$</a>
-<a href="?gapid=[12,3]">$A_4$</a>
-<a href="?gapid=[24,12]">$S_4$</a>
-<a href="?gapid=[60,5]">$A_5$</a>
-<a href="?gapid=[120,34]">$S_5$</a>
-<a href="?gapid=[168,42]">$\GL(3,2)$</a>
+<a href="?gapid=[6,1]">$S_3$</a>,
+<a href="?gapid=[8,3]">$D_4$</a>,
+<a href="?gapid=[12,3]">$A_4$</a>,
+<a href="?gapid=[24,12]">$S_4$</a>,
+<a href="?gapid=[60,5]">$A_5$</a>,
+<a href="?gapid=[120,34]">$S_5$</a>,
+<a href="?gapid=[168,42]">$\GL(3,2)$</a>,
+<a href="?gapid=[360,118]">$A_6$</a>,
+<a href="?gapid=[504,156]">$\PSL(2,8)$</a>,
+<a href="?gapid=[660,13]">$\PSL(2,11)$</a>,
+<a href="?gapid=[1092,25]">$\PSL(2,13)$</a>,
+<a href="?solv=False&order=5616">$\PSL(3,3)$</a>,
+<a href="?solv=False&t=323%2C6815&order=6048">$\PSU(3,3)$</a>,
+<a href="?solv=False&t=993%2C12781%2C14345%2C666&order=25920">$\PSp(4,3)$</a>,
+<a href="?solv=False&n=11..22&order=7920">$M_{11}$</a>,
+<a href="?solv=False&n=12&order=95040">$M_{12}$</a>
 <p>
 
 <p>
@@ -105,7 +114,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
           </tr>
           <tr>
             <td>
-              {{KNOWL('gg.tnumber',title='$t$-number')}} 
+              {{KNOWL('gg.tnumber',title='$T$-number')}} 
             </td><td><input type="text" name="t" value="" placeholder="3" size=10></td>
 	    <td>
 	      <span class="formexample">e.g. 3 or 4,6 or 2..5 or 4,6..8</span>
@@ -126,6 +135,15 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
             </td><td><input type="text" name="gapid" value="" placeholder="[8,3]" size=10></td>
 	    <td>
 	      <span class="formexample">e.g. [8,3] or [16,7]</span>
+	    </td>
+          </tr>
+
+          <tr>
+            <td>
+              {{KNOWL('group.nilpotent',title='Nilpotency class')}} 
+            </td><td><input type="text" name="nilpotency" value="" placeholder="1..100" size=10></td>
+	    <td>
+	      <span class="formexample">e.g. -1, or 1..3</span>
 	    </td>
           </tr>
 

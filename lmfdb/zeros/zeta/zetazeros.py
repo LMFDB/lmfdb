@@ -37,7 +37,7 @@ def zetazeros():
 
 @ZetaZeros.route("/Completeness")
 def completeness():
-    t = 'Completeness of Reimann Zeta Zeros Data$'
+    t = 'Completeness of Reimann Zeta Zeros Data'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Completeness', ' ')]
     return render_template("single.html", kid='rcs.cande.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 

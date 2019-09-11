@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#i -*- coding: utf-8 -*-
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
@@ -86,7 +86,7 @@ def index():
     if len(request.args) != 0:
         return galois_group_search(request.args)
     info = {'count': 50}
-    info['degree_list'] = range(16)[2:]
+    info['degree_list'] = range(48)[2:]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
@@ -121,6 +121,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
+    parse_ints(info,query,'nilpotency')
     parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
@@ -231,6 +232,9 @@ def render_group_webpage(args):
             data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
+        data['nilpotency'] = '$%s$' % data['nilpotency']
+        if data['nilpotency'] == '$-1$':
+            data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
         return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
