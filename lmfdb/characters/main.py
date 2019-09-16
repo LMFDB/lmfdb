@@ -264,7 +264,11 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
     number = label_to_number(modulus, number)
     if number == 0:
-        flash_error("the value %s is invalid. It should be a positive integer coprime to and no greater than the modulus %s.", args['number'], args['modulus'])
+        flash_error(
+            "the value %s is invalid. It should either be a positive integer "
+            "coprime to and no greater than the modulus %s, or a letter that "
+            "corresponds to a valid orbit index.", args['number'], args['modulus']
+        )
         return redirect(url_for(".render_Dirichletwebpage"))
     args['number'] = number
     webchar = make_webchar(args)
