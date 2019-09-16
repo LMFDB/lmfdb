@@ -473,7 +473,7 @@ def resolve_display(resolves):
         if j[0] != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for stem field(s)'
+                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
