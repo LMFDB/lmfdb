@@ -734,15 +734,16 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     write to a file with correct headers (written but only partially
     tested); then use curves.copy_from() to do the upload.
     """
-    allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
-    allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
-    intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
-    alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
-    alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
-    galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
-    twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
-    allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
-    opt_man_filename = 'opt_man/opt_man.%s-%s' % (min_N, max_N)
+    Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+    allbsd_filename = 'allbsd/allbsd.{}'.format(Nrange)
+    allgens_filename = 'allgens/allgens.{}'.format(Nrange)
+    intpts_filename = 'intpts/intpts.{}'.format(Nrange)
+    alldegphi_filename = 'alldegphi/alldegphi.{}'.format(Nrange)
+    alllabels_filename = 'alllabels/alllabels.{}'.format(Nrange)
+    galreps_filename = 'galrep/galrep.{}'.format(Nrange)
+    twoadic_filename = '2adic/2adic.{}'.format(Nrange)
+    allisog_filename = 'allisog/allisog.{}'.format(Nrange)
+    opt_man_filename = 'opt_man/opt_man.{}'.format(Nrange)
     file_list = [alllabels_filename, allgens_filename, allbsd_filename, intpts_filename, alldegphi_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
     #    file_list = [twoadic_filename]
     #    file_list = [allgens_filename]
@@ -853,7 +854,8 @@ def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     if min_N==0:
         f = 'allisog/allisog.00000-09999'
     else:
-        f = 'allisog/allisog.%s-%s' % (min_N, max_N)
+        Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+        f = 'allisog/allisog.{}'.format(Nrange)
     h = open(os.path.join(base_path, f))
     print("Opened {}".format(os.path.join(base_path, f)))
     data = {}
