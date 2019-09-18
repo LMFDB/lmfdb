@@ -14,7 +14,7 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSer
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 270000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 300000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -93,18 +93,6 @@ def parse_points(s):
     """
     return [parse_point(P) for P in s]
 
-def parse_ainvs(ai):
-    r""" converts a-invariants as stored in the database to a list of ints.
-    This will work whether the data is stored as a list of strings
-    (the old way), e.g. ['0','0','0','0','1'] or as a single list
-    e.g. '[0,0,0,0,1]' with or without the brackets.
-    """
-    if '[' in ai: # strip the brackets
-        ai = ai[1:-1]
-    if ',' in ai: # it's a single string so split it on commas
-        ai = ai.split(',')
-    return [int(a) for a in ai]
-
 def EC_ainvs(E):
     """ Return the a-invariants of a Sage elliptic curve in the correct format for the database.
     """
@@ -172,7 +160,7 @@ class WebEC(object):
         # is still included.
 
         data = self.data = {}
-        data['ainvs'] = self.ainvs
+        data['ainvs'] = [ZZ(ai) for ai in self.ainvs]
         data['conductor'] = N = ZZ(self.conductor)
         data['j_invariant'] = QQ(str(self.jinv))
         data['j_inv_factor'] = latex(0)
