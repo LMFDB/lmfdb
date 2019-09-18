@@ -8,23 +8,27 @@
 <h2> Further refine search </h2>
 
 <form id='re-search' onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0" cellpadding="5">
 
 <tr>
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
 <td align=left>{{ KNOWL('ec.q.j_invariant', title='j-invariant') }}</td>
-<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
 <td align=left>{{ KNOWL('ec.rank', title='Rank') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</td>
-<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
+<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
 </tr>
 
 <tr>
 <td align=left><input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left><input type='text' name='jinv'size=5 value={{info.jinv}}></td>
-<td>         <select name='include_cm'>
+<td align=left><input type='text' name='jinv'size=10 value={{info.jinv}}></td>
+<td align=left><input type='text' name='rank' size=10 value={{info.rank}}></td>
+<td align=left><input type='text' name='torsion' size=10 value={{info.torsion}}> </td>
+<td align=left>
+  {{ tor_struct_search_Q(info.torsion_structure)|safe }}
+</td>
+<td>         <select name='include_cm', style='width: 155px'>
 {% if info.include_cm == "only" %}
            <option value="">include</option>
            <option value="exclude">exclude</option>
@@ -42,26 +46,32 @@
 {% endif %}
          </select>
 </td>
-<td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
-<td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
-<td align=left>
-  {{ tor_struct_search_Q(info.torsion_structure)|safe }}
-</td>
-<td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
 </tr>
 
 <tr>
-<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
-<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}}
+<td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
+<td align=left>{{ KNOWL('ec.isogeny', title='Cyclic isogeny degree') }}</td>
+<td align=left>{{KNOWL('ec.maximal_galois_rep', title='Maximal primes')}}</td>
+<td align=left>{{ KNOWL('ec.isogeny_class', title='Curves per isogeny class') }}</td>
+<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}
 </td>
-<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}}
-</td>
-<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 <tr>
-<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
+<td align=left><input type='text' name='sha' size=10 value={{info.sha}}> </td>
+<td align=left><input type='text' name='isodeg' size=10 value={{info.isodeg}}> </td>
 <td align=left>
    <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
+</td>
+<td align=left>
+<select name='optimal', style='width: 155px'>
+{% if info.optimal=='on' %}
+  <option value="">all</option>
+  <option selected value="on">one</option>
+{% else %}
+  <option value="">all</option>
+  <option value="on">one</option>
+{% endif %}
+</select>
 </td>
 <td align=left colspan=2>
   <select name='surj_quantifier'>
@@ -75,28 +85,9 @@
   </select>
 <input type='text' name='nonsurj_primes' size=10  value={{info.nonsurj_primes}}>
 </td>
-<td align=left>
-<select name='optimal'>
-{% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected value="on">Yes</option>
-{% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
-{% endif %}
-</select>
-</td>
 </tr>
 
-<tr>
-<td align=left colspan=2>Maximum number of curves to display
-</td>
-<td align=left><input type='text' name='count' value={{info.count}} size=10>
-</td>
-<td>&nbsp;
-</td>
-</tr>
-<tr><td class="button"><button type='submit' value='refine'>Search again</button></td></tr>
+<tr><td class="button"><button type='submit' value='refine' onclick='resetStart()'>Search again</button></td></tr>
 </table>
 </form>
 
@@ -135,7 +126,7 @@ table td.params {
 <td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.label}}</a></td>
 <td class="center"><a href="{{info.iso_url_LMFDB(curve)}}">{{curve.lmfdb_iso}}</a></td>
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
-<td class="params">{{curve.ainvs}}</td>
+<td class="params">{{info.curve_ainvs(curve)}}</td>
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}

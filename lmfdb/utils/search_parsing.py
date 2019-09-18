@@ -5,9 +5,8 @@
 import re
 from collections import defaultdict, Counter
 
-from flask import flash
-from markupsafe import Markup
-from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
+from lmfdb.utils.utilities import flash_error
+from sage.all import ZZ, QQ, prod, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
 SPACES_RE = re.compile(r'\d\s+\d')
@@ -30,7 +29,7 @@ BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [
 
 
 class SearchParser(object):
-    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield,error_is_safe):
         self.f = f
         self.clean_info = clean_info
         self.prep_ranges = prep_ranges
@@ -39,6 +38,7 @@ class SearchParser(object):
         self.default_field = default_field
         self.default_name = default_name
         self.default_qfield = default_qfield
+        self.error_is_safe = error_is_safe # Indicates that the message in raised exception contains no user input, so it is not escaped
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
             if field is None: field=self.default_field
@@ -69,14 +69,17 @@ class SearchParser(object):
             if self.clean_info:
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s" % (inp, name, str(err))), "error")
+            if self.error_is_safe:
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>"+str(err)+"</span>. %s", inp, name)
+            else:
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
             raise
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
-                  default_field=None, default_name=None, default_qfield=None):
-    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield)
+                  default_field=None, default_name=None, default_qfield=None,error_is_safe=False):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
@@ -123,8 +126,7 @@ def parse_ints_to_list_flash(arg,name):
     try:
         return parse_ints_to_list(arg)
     except ValueError:
-        errmsg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>." % (arg,name)
-        flash(Markup(errmsg+"  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)."), "error")
+        flash_error("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).", arg, name)
         raise
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
@@ -320,7 +322,8 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
+    if parse_one is None: 
+        parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, split0 = True)
@@ -457,7 +460,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None):
     _parse_subset(primes, query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, extractor=None):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, check_divisibility=None, keepbrackets=False, extractor=None):
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
@@ -500,6 +503,8 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                     raise ValueError("Each entry must divide the next, such as [2,4].")
         if process is not None:
             L = [process(a) for a in L]
+        if listprocess is not None:
+            L = listprocess(L)
         if extractor is not None:
             for qf, v in zip(qfield, extractor(L)):
                 if qf in query and query[qf] != v:
@@ -514,7 +519,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
 def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
-@search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
+@search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
@@ -549,18 +554,19 @@ def parse_galgrp(inp, query, qfield):
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
-def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
-    if F == 'Q':
+def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+    if FF in ['q', 'Q']:
         return '1.1.1.1'
-    if F == 'Qi' or F == 'Q(i)':
+    if FF.lower() in ['qi', 'q(i)']:
         return '2.0.4.1'
     # Change unicode dash with minus sign
-    F = F.replace(u'\u2212', '-')
+    FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
-    F = F.decode('utf8').encode('ascii', 'ignore')
+    FF = FF.decode('utf8').encode('ascii', 'ignore')
+    F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
-    if F[0] == 'Q':
+    if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
@@ -569,7 +575,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
-                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(FF[:5]))
             if d == 1:
                 return '1.1.1.1'
             if d % 4 in [2, 3]:
@@ -579,24 +585,30 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             absD = D.abs()
             s = 0 if D < 0 else 2
             return '2.%s.%s.1' % (s, str(absD))
-        if F[1:5] == 'zeta':
+        if F[0:5] == 'qzeta':
             if '_' in F:
                 F = F.replace('_','')
-            try:
-                d = ZZ(str(F[5:]))
-            except ValueError:
-                d = 0
-            if d < 1:
-                raise ValueError("After {0}, the remainder must be a positive integer.  Use {0}5 for example.".format(F[:5]))
+            match_obj = re.match(r'^qzeta(\d+)(\+|plus)?$', F)
+            if not match_obj:
+                raise ValueError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+
+            d = ZZ(str(match_obj.group(1)))
             if d % 4 == 2:
                 d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
-            if d == 1:
-                return '1.1.1.1'
-            deg = euler_phi(d)
-            if deg > 23:
+
+            if match_obj.group(2):  # asking for the totally real field
+                from lmfdb.number_fields.web_number_field import rcyclolookup
+                if d in rcyclolookup:
+                    return rcyclolookup[d]
+                else:
+                    raise ValueError('%s is not in the database.' % F)
+            # Now not the totally real subfield
+            from lmfdb.number_fields.web_number_field import cyclolookup
+            if d in cyclolookup:
+                return cyclolookup[d]
+            else:
                 raise ValueError('%s is not in the database.' % F)
-            adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
-            return '%s.0.%s.1' % (deg, adisc)
+                
         raise ValueError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
@@ -665,7 +677,7 @@ def parse_hmf_weight(inp, query, qfield):
         try:
             query[normal_field] = str(split_list(inp))
         except ValueError:
-            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers, such as 2 or 2,4,6.")
+            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers enclosed in brackets, such as 2, or [2,2], or [2,4,6].")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool(inp, query, qfield, process=None, blank=[]):
@@ -885,10 +897,4 @@ def parse_start(info, default=0):
             start += (1 - (start + 1) / count) * count
     except (KeyError, ValueError):
         start = default
-    try:
-        paging = int(info['paging'])
-        if paging == 0:
-            start = 0
-    except (KeyError, ValueError, TypeError):
-        pass
     return start

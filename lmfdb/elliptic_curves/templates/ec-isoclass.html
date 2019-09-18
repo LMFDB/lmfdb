@@ -35,13 +35,20 @@ text-align: center;
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
 </td>
 {% if c.optimal %}
-<td>\(\Gamma_0(N)\)-optimal</td>
+<td>\(\Gamma_0(N)\)-optimal{% if not info.optimality_known %}<sup>*</sup>{% endif %}
+</td>
 {% else %}
 <td>&nbsp;</td>
 {% endif %}
 </tr>
 {% endfor %}
 </table>
+
+{% if not info.optimality_known %}<sup>*</sup>optimality has not been
+proved rigorously for conductors over {{ info.optimality_bound }}.  In
+this case the optimal curve is certainly one of the {{
+info.curves[0].optimality }} curves highlighted, and conditionally
+curve {{info.optimal_label}}.{% endif %}
 
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}

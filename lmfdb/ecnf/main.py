@@ -6,15 +6,15 @@ import ast, re, StringIO, time
 from operator import mul
 from urllib import quote, unquote
 
-from flask import render_template, request, url_for, redirect, flash, send_file, make_response
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect, send_file, make_response
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.app import app
 from lmfdb.utils import (
-    to_dict,
-    parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints,
+    to_dict, flash_error,
+    parse_ints, parse_noop, nf_string_to_label, parse_element_of,
+    parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     search_wrap)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -23,13 +23,14 @@ from lmfdb.ecnf.ecnf_stats import ECNF_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
+
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
     (field_label,conductor_label,isoclass_label,curve_number)
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % lab), "error")
+        flash_error("%s is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1", lab)
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -38,7 +39,7 @@ def split_full_label(lab):
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
         curve_number = re.search("\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1",  lab)
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -49,7 +50,7 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % lab), "error")
+        flash_error("%s is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1", lab)
         raise ValueError
     conductor_label = data[0]
     try:
@@ -57,7 +58,7 @@ def split_short_label(lab):
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
         curve_number = re.search("\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1", lab)
         raise ValueError
     return (conductor_label, isoclass_label, curve_number)
 
@@ -68,7 +69,7 @@ def split_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
+        flash_error("%s is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a", lab)
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -82,7 +83,7 @@ def split_short_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % lab), "error")
+        flash_error("%s is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a", lab)
         raise ValueError
     conductor_label = data[0]
     isoclass_label = data[1]
@@ -94,7 +95,7 @@ def conductor_label_norm(lab):
     if re.match(r'\d+.\d+',s):
         return s.split('.')[0]
     else:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab), "error")
+        flash_error("%s is not a valid conductor label. It must be of the form N.m or [N,c,d]", lab)
         raise ValueError
 
 def get_nf_info(lab):
@@ -103,7 +104,7 @@ def get_nf_info(lab):
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (lab,err)), "error")
+        flash_error("%s is not a valid number field. %s", lab,err)
         raise ValueError
     return label, pretty
 
@@ -483,7 +484,7 @@ def elliptic_curve_search(info, query):
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
         query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-    parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, url_for, request, redirect, make_response, flash
-from markupsafe import Markup
+from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
-    web_latex_split_on_pm,
+    web_latex_split_on_pm, flash_error,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
     search_wrap)
@@ -68,7 +67,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % lab), "error")
+        flash_error("%s is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a", lab)
         raise ValueError
     field_label = data[0]
     level_label = data[1]
@@ -82,7 +81,7 @@ def hilbert_modular_form_by_label(lab):
         res = lab
         lab = res['label']
     if res is None:
-        flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No Hilbert modular form in the database has label or name %s", lab)
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
     else:
         return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
@@ -283,7 +282,7 @@ def render_hmf_webpage(**args):
         label = str(args['label'])
         data = get_hmf(label)
     if data is None:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % args['label']), "error")
+        flash_error("%s is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a", args['label'])
         return search_input_error()
     info = {}
     try:

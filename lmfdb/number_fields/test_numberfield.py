@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 class NumberFieldTest(LmfdbTest):
@@ -22,7 +22,7 @@ class NumberFieldTest(LmfdbTest):
         assert '16T1535' in L.data
 
     def test_search_ramif_cl_deg(self):
-        L = self.tc.get('/NumberField/?start=0&paging=0&degree=5&signature=&galois_group=&class_number=&class_group=[2%2C2]&ur_primes=7&discriminant=&ram_quantifier=some&ram_primes=2%2C3%2C5&count=20')
+        L = self.tc.get('/NumberField/?degree=5&signature=&galois_group=&class_number=&class_group=[2%2C2]&ur_primes=7&discriminant=&ram_quantifier=some&ram_primes=2%2C3%2C5&count=20')
         assert '5.1.27000000000.8' in L.data
 
     def test_abelian_conductor(self):
@@ -46,7 +46,7 @@ class NumberFieldTest(LmfdbTest):
         assert '41' in L.data # minpoly
 
     def test_search_disc(self):
-        L = self.tc.get('/NumberField/?start=&paging=0&degree=&signature=&galois_group=&class_number=&class_group=&ur_primes=&discriminant=1988-2014&ram_quantifier=all&ram_primes=&count=')
+        L = self.tc.get('/NumberField/?degree=&signature=&galois_group=&class_number=&class_group=&ur_primes=&discriminant=1988-2014&ram_quantifier=all&ram_primes=&count=')
         assert '401' in L.data # factor of one of the discriminants
 
     def test_url_label(self):
@@ -103,3 +103,9 @@ class NumberFieldTest(LmfdbTest):
 
         L = self.tc.get('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
         assert '7.3.1420409.1' in L.data
+
+    def test_fundamental_units(self):
+        L = self.tc.get('NumberField/2.2.10069.1')
+        assert '43388173' in L.data
+        L = self.tc.get('NumberField/3.3.10004569.1')
+        assert '22153437467081345' in L.data

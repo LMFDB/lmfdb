@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+import StringIO
+import time
 
-from flask import flash, render_template, url_for, request, redirect, send_file
-from markupsafe import Markup
+from flask import render_template, url_for, request, redirect, send_file
 from collections import defaultdict
 from sage.rings.all import PolynomialRing, ZZ
 
@@ -11,7 +13,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
-    to_dict,
+    to_dict, flash_error,
     parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
     parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap)
@@ -85,16 +87,16 @@ def abelian_varieties_by_gq(g, q):
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
-    label = abvar_label(g,q,iso)
+    label = abvar_label(g, q, iso)
     try:
         validate_label(label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
+        flash_error("%s is not a valid label: %s.", label, str(err))
         return search_input_error()
     try:
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
+        flash_error("%s is not in the database.", label)
         return search_input_error()
     bread = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
                       (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
@@ -205,7 +207,7 @@ def abelian_variety_browse(**args):
     gs = av_stats.gs
     try:
         if ',' in info['table_dimension_range']:
-            flash(Markup("Error: You cannot use commas in the table ranges."), "error")
+            flash_error("You cannot use commas in the table ranges.")
             raise ValueError
         parse_ints(info,table_params,'table_dimension_range',qfield='g')
     except (ValueError, AttributeError, TypeError):
@@ -221,7 +223,7 @@ def abelian_variety_browse(**args):
     qs = av_stats.qs
     try:
         if ',' in info['table_field_range']:
-            flash(Markup("Error: You cannot use commas in the table ranges."), "error")
+            flash_error("You cannot use commas in the table ranges.")
             raise ValueError
         parse_ints(info,table_params,'table_field_range',qfield='q')
     except (ValueError, AttributeError, TypeError):
@@ -262,44 +264,48 @@ def by_label(label):
     try:
         validate_label(label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
+        flash_error("%s is not a valid label: %s.", label, str(err))
         return redirect(url_for(".abelian_varieties"))
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
+    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
 
 @abvarfq_page.route("/random")
 def random_class():
     label = db.av_fqisog.random()
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
+    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the Weil Polynomial Data'
     bread = get_bread(('Completeness', '.'))
     return render_template("single.html", kid='dq.av.fq.extent',
-                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           credit=abvarfq_credit, title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of the Weil Polynomial Data'
     bread = get_bread(('Reliability', '.'))
     return render_template("single.html", kid='dq.av.fq.reliability',
-                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+                           credit=abvarfq_credit, title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Reliability'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
     t = 'Source of the Weil Polynomial Data'
     bread = get_bread(('Source', '.'))
     return render_template("single.html", kid='dq.av.fq.source',
-                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=abvarfq_credit, title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Source'))
 
 @abvarfq_page.route("/Labels")
 def labels_page():
     t = 'Labels for Isogeny Classes of Abelian Varieties'
     bread = get_bread(('Labels', '.'))
     return render_template("single.html", kid='av.fq.lmfdb_label',
-                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+                           credit=abvarfq_credit, title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Labels'))
 
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
 

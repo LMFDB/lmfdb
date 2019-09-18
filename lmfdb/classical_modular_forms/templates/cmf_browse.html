@@ -231,17 +231,30 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
     </tr>
 
     <tr>
+      <td colspan=2>{{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index*') }}</td>
+      <td><input type='text' style="width: 160px;" name='hecke_ring_index' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+
+      <td colspan=2>{{ KNOWL('cmf.hecke_ring_generators', title='Coefficient ring gens.')}}</td>
+      <td><input type='text' style="width: 160px" name='hecke_ring_generator_nbound' placeholder='20'></td>
+      <td><span class="formexample"> e.g. 7, 1-10</span></td>
+    </tr>
+
+    <tr>
       <td colspan=2>{{ KNOWL('cmf.analytic_rank',title='Analytic rank') }}</td>
       <td><input type='text' style="width: 160px;" name='analytic_rank' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</span></td>
+
       <td colspan=2>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
       <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15'></td>
       <td><span class="formexample"> wt. 1 only</span></td>
-    <td>
+    </tr>
+
     <tr>
       <td align=left colspan=2>Results to display</td>
       <td><input type='text' style="width: 160px;" name='count' placeholder='50'></td>
       <td></td>
+
       <td colspan=2>{{ KNOWL('cmf.projective_image', title='Projective image type') }}</td>
       <td>
         <select name='projective_image_type' style="width: 170px;">

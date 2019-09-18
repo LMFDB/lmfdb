@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#i -*- coding: utf-8 -*-
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
@@ -16,7 +16,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
-    group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
+    small_group_display_knowl, galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
@@ -86,7 +86,7 @@ def index():
     if len(request.args) != 0:
         return galois_group_search(request.args)
     info = {'count': 50}
-    info['degree_list'] = range(16)[2:]
+    info['degree_list'] = range(48)[2:]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
@@ -121,6 +121,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
+    parse_ints(info,query,'nilpotency')
     parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
@@ -130,7 +131,7 @@ def galois_group_search(info, query):
 
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
-    info['group_display'] = group_display_pretty
+    info['group_display'] = group_display_short
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
 
@@ -148,9 +149,9 @@ def render_group_webpage(args):
         data = db.gps_transitive.lookup(label)
         if data is None:
             if re.match(r'^\d+T\d+$', label):
-                flash_error("Group <span style='color:black'>%s</span> was not found in the database.", label)
+                flash_error("Group %s was not found in the database.", label)
             else:
-                flash_error("<span style='color:black'>%s</span> is not a valid label for a Galois group.", label)
+                flash_error("%s is not a valid label for a Galois group.", label)
             return redirect(url_for(".index"))
         data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
@@ -225,12 +226,15 @@ def render_group_webpage(args):
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
-        pretty = group_display_pretty(n,t)
+        pretty = group_display_short(n,t, emptyifnotpretty=True)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
             data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
+        data['nilpotency'] = '$%s$' % data['nilpotency']
+        if data['nilpotency'] == '$-1$':
+            data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
         return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
