@@ -126,7 +126,7 @@ table td.params {
 <td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.label}}</a></td>
 <td class="center"><a href="{{info.iso_url_LMFDB(curve)}}">{{curve.lmfdb_iso}}</a></td>
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
-<td class="params">{{curve.ainvs}}</td>
+<td class="params">{{info.curve_ainvs(curve)}}</td>
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
