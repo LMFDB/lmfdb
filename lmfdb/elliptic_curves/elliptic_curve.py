@@ -87,9 +87,17 @@ def rational_elliptic_curves(err_args=None):
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     if err_args.get("err_msg"):
-        flash_error(err_args.pop("err_msg"),err_args.pop("label"))
+        # this comes from elliptic_curve_jump_error
+        flash_error(err_args.pop("err_msg"), err_args.pop("label"))
         return redirect(url_for(".rational_elliptic_curves"))
-    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
+    return render_template("ec-index.html",
+                           info=info,
+                           credit=ec_credit(),
+                           title=t,
+                           bread=bread,
+                           learnmore=learnmore_list(),
+                           calling_function="ec.rational_elliptic_curves",
+                           **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -142,8 +150,6 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     err_args['label'] = label
     if wellformed_label:
         err_args['err_msg'] = "No curve or isogeny class in the database has label %s"
-    # elif cremona_label:
-    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'"
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
@@ -264,12 +270,22 @@ def elliptic_curve_search(info, query):
         mode = 'append'
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
+    # The button which used to be labelled Optimal only no/yes"
+    # (default no) has been renamed "Curves per isogeny class all/one"
+    # (default one) but the only change in behavious is that we no
+    # longer treat class 990h (where the optial curve is #3 not #1) as
+    # special: the "one" option just restricts to curves whose
+    # 'number' is 1.
     if 'optimal' in info and info['optimal'] == 'on':
+        query.update({'number':1})
+
+        # Old behaviour was as follows:
         # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
         # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
         # Instead, we use this more complicated query:
-        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
+        # query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
+    info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
@@ -436,7 +452,7 @@ def render_curve_webpage_by_label(label):
                          bread=data.bread, title=data.title,
                          friends=data.friends,
                          downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%label,
+                         KNOWL_ID="ec.q.%s"%lmfdb_label,
                          BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
                          learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
@@ -594,7 +610,7 @@ def tor_struct_search_Q(prefill="any"):
             gps.append(cyc(n))
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
-    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+    return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)

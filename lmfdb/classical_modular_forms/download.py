@@ -74,10 +74,6 @@ class CMF_download(Downloader):
             '            if gcd(k, pp) == 1:',
             '                an[pp*k] = an[pp]*an[k]']
 
-    field_and_convert_sage_dim1 = [
-            'K = QQ',
-            'convert_elt_to_field = lambda elt: K(elt)']
-
     field_and_convert_sage_powbasis = [
             'from sage.all import PolynomialRing, NumberField',
             'R = PolynomialRing(QQ, "x")',
@@ -126,19 +122,18 @@ class CMF_download(Downloader):
             'PS = PowerSeriesRing(K, "q")',
             'for p, ap in zip(primes, aps):',
             '    if p.divides(level):',
-            '        an[p] = ap',
+            '        euler_factor = [1, -ap]',
             '    else:',
-            '        k = RR(an_list_bound).log(p).floor() + 1',
             '        euler_factor = [1, -ap, p**(weight - 1) * char_values[p]]',
-            '        foo = (1/PS(euler_factor)).padded_list(k)',
-            '        for i in range(1, k):',
-            '            an[p**i] = foo[i]',
+            '    k = RR(an_list_bound).log(p).floor() + 1',
+            '    foo = (1/PS(euler_factor)).padded_list(k)',
+            '    for i in range(1, k):',
+            '        an[p**i] = foo[i]',
             'extend_multiplicatively(an)',
             'return PS(an)']
 
     header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
-    qexp_dim1_function_body = {'sage': header + extend_multiplicatively_sage + field_and_convert_sage_dim1 + convert_aps + ['char_values = dict(zip(good_primes, [1]*len(good_primes)))'] + an_code_sage }
-    qexp_function_body_generic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
     qexp_function_body_powbasis = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
     qexp_function_body_sparse_cyclotomic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
@@ -151,7 +146,6 @@ class CMF_download(Downloader):
         if hecke_nf is None:
             return abort(404, "No q-expansion found for %s" % label)
 
-        dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
         level_data = self.assign(lang, 'level', level);
@@ -165,39 +159,34 @@ class CMF_download(Downloader):
         explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
         aps_data = self.assign(lang, 'aps_data', aps);
         code = ''
-        if dim == 1:
-            func_body = self.get('qexp_dim1_function_body',{}).get(lang,[])
-            basis_data = poly_data = hecke_ring_character_values = ''
+        hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values']);
+
+        if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
+            func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
+            explain += c + ' Each a_p is given as list of pairs\n'
+            explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
+            basis_data = ''
+            poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
-            hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values']);
-
-            if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-                func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
-                explain += c + ' Each a_p is given as list of pairs\n'
-                explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
-                basis_data = ''
-                poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            explain += c + ' Each a_p is given as a linear combination\n'
+            explain += c + ' of the following basis for the coefficient ring.\n'
+            poly_data = '\n' + c + ' The following line gives the coefficients of\n'
+            poly_data += c + ' the defining polynomial for the coefficient field.\n'
+            poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level = 1)
+            if hecke_nf['hecke_ring_power_basis']:
+                basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
+                basis_data += c + ' in the root of the defining polynomial above.\n'
+                func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
             else:
-                explain += c + ' Each a_p is given as a linear combination\n'
-                explain += c + ' of the following basis for the coefficient ring.\n'
-                poly_data = '\n' + c + ' The following line gives the coefficients of\n'
-                poly_data += c + ' the defining polynomial for the coefficient field.\n'
-                poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level = 1)
-                if hecke_nf['hecke_ring_power_basis']:
-                    basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
-                    basis_data += c + ' in the root of the defining polynomial above.\n'
-                    basis_data = ''
-                    func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
-                else:
-                    basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
-                    basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
-                    basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                    basis_data += self.assign(lang,  'basis_data ', zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators']))
-                    basis_data += '\n'
-                    func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
+                basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
+                basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
+                basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
+                basis_data += self.assign(lang,  'basis_data ', zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators']))
+                basis_data += '\n'
+                func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
 
-            if lang in ['sage']:
-                explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
+        if lang in ['sage']:
+            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
 
 
         if lang in ['sage']:
@@ -229,8 +218,7 @@ class CMF_download(Downloader):
             count = db.mf_newforms.count(query)
         limit = 1000
         if count > limit:
-            msg = "We limit downloads of traces to %d forms" % limit
-            flash_error(msg)
+            flash_error("We limit downloads of traces to %s forms", limit)
             return redirect(url_for('.index'))
         if spaces:
             res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
@@ -622,7 +610,7 @@ class CMF_download(Downloader):
 
         out += self._magma_MakeCharacters(newform, hecke_nf) + newlines
 
-        if newform.hecke_cutters:
+        if newform.hecke_cutters is not None and newform.weight > 1:
             out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors

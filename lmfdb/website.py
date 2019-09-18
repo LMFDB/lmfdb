@@ -26,6 +26,8 @@ from lmfdb.app import app
 #assert utils
 import api
 assert api
+import api2
+assert api2
 import belyi
 assert belyi
 import bianchi_modular_forms

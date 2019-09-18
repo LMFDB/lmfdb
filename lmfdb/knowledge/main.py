@@ -20,6 +20,7 @@ from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
                   redirect, render_template, render_template_string,\
                   request, url_for
+from markupsafe import Markup
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
@@ -49,9 +50,9 @@ def allowed_id(ID):
         for c in "[],T":
             ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
+        flash_error("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+                  no spaces, numbers or '.', '_' and '-'.""", ID)
         return False
     return True
 
@@ -83,20 +84,21 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+# priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('math$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
-md.inlinePatterns.add('math$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
-md.inlinePatterns.add('math\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
-md.inlinePatterns.add('math\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
+md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
+md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
 
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
+md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
 knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
-md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex), '<escape')
+md.inlinePatterns.register(KnowlTagPatternWithTitle(knowltagtitle_regex), 'knowltagtitle', 181)
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -324,7 +326,7 @@ def edit(ID):
     author = knowl._last_author
     # Existing comments can only be edited by admins and the author
     if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
-        flash("You can only edit your own comments", "error")
+        flash_error("You can only edit your own comments")
         return redirect(url_for(".show", ID=knowl.source))
 
     lock = None
@@ -404,9 +406,9 @@ def remove_author(ID):
     k = Knowl(ID)
     uid = current_user.get_id()
     if uid not in k.authors:
-        flash("You are not an author on %s"%(k.id), "error")
+        flash_error("You are not an author on %s", k.id)
     elif len(k.authors) == 1:
-        flash("You cannot remove yourself unless there are other authors", "error")
+        flash_error("You cannot remove yourself unless there are other authors")
     else:
         knowldb.remove_author(ID, uid)
     return redirect(url_for(".show", ID=ID))
@@ -464,7 +466,7 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flash("Knowl %s has been deleted." % ID)
+    flash(Markup("Knowl %s has been deleted." % ID))
     return redirect(url_for(".index"))
 
 
@@ -473,7 +475,7 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flash("Knowl %s has been resurrected." % ID)
+    flash(Markup("Knowl %s has been resurrected." % ID))
     return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/review/<ID>/<int:timestamp>")
@@ -482,7 +484,7 @@ def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flash("Knowl %s has been positively reviewed." % ID)
+    flash(Markup("Knowl %s has been positively reviewed." % ID))
     return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/demote/<ID>/<int:timestamp>")
@@ -491,7 +493,7 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flash("Knowl %s has been returned to beta." % ID)
+    flash(Markup("Knowl %s has been returned to beta." % ID))
     return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/review_recent/<int:days>/")
@@ -554,7 +556,7 @@ def delete_comment(ID):
             raise ValueError
         comment.delete()
     except ValueError:
-        flash("Only admins and the original author can delete comments", "error")
+        flash_error("Only admins and the original author can delete comments")
     return redirect(url_for(".show", ID=comment.source))
 
 @knowledge_page.route("/edit", methods=["POST"])
@@ -579,12 +581,12 @@ def save_form():
     if FINISH_RENAME:
         k = Knowl(ID)
         k.actually_rename()
-        flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
+        flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
         return redirect(url_for(".show", ID=k.source_name))
     elif UNDO_RENAME:
         k = Knowl(ID)
         k.undo_rename()
-        flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
+        flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
         return redirect(url_for(".show", ID=ID))
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
@@ -595,7 +597,7 @@ def save_form():
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
             k.resurrect()
-            flash("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored.")
+            flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
         k.timestamp = datetime.now()
@@ -603,7 +605,7 @@ def save_form():
         k.save(who=who)
     if NEWID:
         if not current_user.is_admin():
-            flash("You do not have permissions to rename knowl", "error")
+            flash_error("You do not have permissions to rename knowl")
         elif not allowed_id(NEWID):
             pass
         else:
@@ -611,18 +613,18 @@ def save_form():
                 if k.sed_safety == 0:
                     time.sleep(0.01)
                     k.actually_rename(NEWID)
-                    flash("Knowl renamed to {0} successfully.".format(NEWID))
+                    flash(Markup("Knowl renamed to {0} successfully.".format(NEWID)))
                 else:
                     k.start_rename(NEWID, who)
             except ValueError as err:
-                flash(str(err), "error")
+                flash_error(str(err), "error")
             else:
                 if k.sed_safety == 1:
-                    flash("Knowl rename process started. You can change code references using".format(NEWID))
-                    flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
-                    flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
+                    flash(Markup("Knowl rename process started. You can change code references using".format(NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
                 elif k.sed_safety == -1:
-                    flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
+                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID)))
                 ID = NEWID
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))

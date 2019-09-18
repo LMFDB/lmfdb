@@ -1643,7 +1643,7 @@ class DedekindZeta(Lfunction):
 
 
 class ArtinLfunctionDB(Lfunction_from_db):
-    """Class representing a Hilbert modular form L-function stored in the database
+    """Class representing an Artin representation L-function stored in the database
 
     Compulsory parameters: label
 

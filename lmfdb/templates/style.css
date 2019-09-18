@@ -1190,6 +1190,7 @@ div.limit-height {
 /*  font-size: 75%;
 */
   font-style: italic;
+  font-family: KaTeX_Math;
 }
 
 /*** Tables for the Siegel corner ***/

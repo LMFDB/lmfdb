@@ -10,7 +10,7 @@ table.ntdata a {
 </style>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
           <tr>
@@ -24,67 +24,27 @@ table.ntdata a {
               </tr>
               <tr>
                 <td> <select name='parity'>
- {% if info.parity=='1' %}
-                   <option value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option selected='yes' value='1'>Even</option>
- {% elif info.parity=='-1' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.parity != '1' and info.parity != '-1' }} >All</option>
+                   <option value='-1' {{ "selected" if info.parity == '-1' }}>Odd</option>
+                   <option value='1'{{ "selected" if info.parity == '1' }}>Even</option>
                   </select>
                 </td>
                 <td> <select name='cyc'>
- {% if info.cyc=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.cyc=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.cyc != 'True' and info.cyc != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.cyc == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.cyc == 'False' }}>No</option>
                   </select>
                 </td>
                 <td> <select name='solv'>
- {% if info.solv=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.solv=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.solv != 'True' and info.solv != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.solv == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.solv == 'False' }}>No</option>
                   </select>
                 </td>
                 <td> <select name='prim'>
- {% if info.prim=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.prim=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.prim != 'True' and info.prim != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.prim == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.prim == 'False' }}>No</option>
                   </select>
                 </td>
               </tr>
@@ -95,28 +55,32 @@ table.ntdata a {
 
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='degree')}} <td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
-</td>
+{{KNOWL('gg.degree',title='Degree')}} 
 
 <td align=left> 
-{{KNOWL('gg.tnumber',title='$t$')}} 
-<td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
+{{KNOWL('gg.tnumber',title='$T$-number')}} 
 
 <td align=left> 
-{{KNOWL('group.order',title='order')}} 
-<td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
+{{KNOWL('group.order',title='Order')}} 
+
 <td align=left> 
 {{KNOWL('group.small_group_label',title='GAP id')}} 
-<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
+
+<td align=left> 
+{{KNOWL('group.nilpotent',title='Nilpotency')}} 
+
+<tr>
+<td align=left> <input type='text' name='n' size="5" placeholder="6" value="{{info.n}}">
+<td align=left> <input type="text" name="t" size="5" placeholder="2" value="{{info.t}}" ></td>
+<td align=left> <input type="text" name="order" size="5" placeholder="12" value="{{info.order}}" ></td>
+
+<td align=left><input type="text" name="gapid" size="5" placeholder="[6,3]" value="{{info.gapid}}" ></td>
+<td align=left><input type="text" name="nilpotency" size="5" placeholder="1..100" value="{{info.nilpotency}}" ></td>
 </tr>
 
 <tr>
-<td align='left' colspan='8'>Maximum number of groups to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
-</tr>
-<tr>
 <td align=left colspan="2"> 
-<button type='submit' value='refine'>Search again</button>
+<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td></tr>
 </table>
 </form>

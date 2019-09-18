@@ -4,15 +4,14 @@
 <h2> Further refine search </h2>
 
 <form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table>
 <tr>
-<td>Field</td>
-<td>{{ KNOWL('mf.bianchi.level', title='Level') }} norm</td>
-<td>{{ KNOWL('mf.bianchi.newform', title='dimension') }}</td>
-<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
-<td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
+<td>{{ KNOWL('nf',title='Base Field') }}</td>
+<td>{{ KNOWL('mf.bianchi.level', title='Level norm') }}</td>
+<td>{{ KNOWL('mf.bianchi.newform', title='Dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.sign', title='Sign') }}</td>
+<td>{{ KNOWL('mf.bianchi.base_change', title='Base change') }}</td>
 <td>{{ KNOWL('mf.bianchi.cm', title='CM') }}</td>
 </tr>
 <tr>
@@ -64,7 +63,7 @@
 <tr>
 <td>Maximum number</td>
 <td><input type='text' name='count' value={{info.count}} size=10></td>
-<td colspan=3><button type='submit' value='Search'>Search</button></td>
+<td colspan=3><button type='submit' value='Search' onclick='resetStart()'>Search</button></td>
 </tr>
 </table>
 </form>

@@ -4,14 +4,14 @@
 <h2> Further refine search </h2>
 
 <form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table border="0">
 
 <tr>
 <td>{{ KNOWL('nf', title='Field') }}</td>
-<td>Field {{ KNOWL('nf.degree', title='degree') }}</td>
-<td>Field {{ KNOWL('nf.discriminant', title='discriminant') }}</td>
+<td>{{ KNOWL('nf.degree', title='Degree') }}</td>
+<td>{{ KNOWL('nf.discriminant', title='Discriminant') }}</td>
 <td>{{ KNOWL('mf.cm',title="CM") }}</td>
 </tr>
 
@@ -65,11 +65,7 @@
 </td>
 </tr>
 <tr>
-<td>Maximum number</td>
-<td><input type='text' name='count' size=10 value={{info.count}}></td>
-</tr>
-<tr>
-<td class="button"><button type='submit' value='Search'>Search again</button>
+<td class="button"><button type='submit' value='Search' onclick='resetStart()'>Search again</button>
 </td>
 </tr>
 </table>

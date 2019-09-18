@@ -237,7 +237,7 @@ def genus2_jump(info):
                     errmsg = "hash %s not found"
             else:
                 errmsg = "%s is not a valid genus 2 curve or isogeny class label"
-    flash_error (errmsg, jump)
+        flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
 class G2C_download(Downloader):
