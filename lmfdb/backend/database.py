@@ -2796,7 +2796,7 @@ class PostgresTable(PostgresBase):
             projection = search_cols + self._extra_cols
             extra_cols = ["id"] + self._extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
-        # to give func access to the data to process.
+        # to give func access to the data to process. 
         # An alternative approach would be to use COPY TO and have func and filter both
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
