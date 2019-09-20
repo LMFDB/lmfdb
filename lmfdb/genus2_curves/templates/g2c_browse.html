@@ -134,6 +134,16 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
+<td>
+{{KNOWL('g2c.geometric_invariants', title='Geometric invariants')}} 
+  <select name='geometric_invariants'>
+  <option value='igusa_clebsch'>Igusa-Clebsch</option>
+  <option value='igusa'>Igusa</option>
+  <option value='g2'>G2</option>
+  </select>
+</td>
+<td><input type='text' name='geometric_invariants' size=10 example='[8,3172,30056,-692224]'></td>
+<td><span class="formexample"> e.g. [8,3172,30056,-692224]</span></td>
 <td>{{ KNOWL('ag.geom_simple', title='Geometrically simple') }}</td>
 <td><select name='is_simple_geom' width="122" style="width: 122px">
                    <option ></option>
@@ -141,6 +151,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
                    <option value='False'>False</option>
 </select></td>
 </tr>
+
 <tr>
 <td>Results to display</td>
 <td><input type='text' name='count' value=50 size=10></td>
