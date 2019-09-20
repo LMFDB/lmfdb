@@ -146,30 +146,24 @@ class AbvarFq_isoclass(object):
                 pts.append((c,s))
             else:
                 pts.extend([(c,s),(c,-s)])
-        P = points(pts,size=100) + circle((0,0),1,color='black')
+        P = circle((0,0),1,color='black',thickness=3)
+        P[0].set_zorder(-1)
+        P += points(pts,size=300)
         P.axes(False)
         P.set_aspect_ratio(1)
-        return encode_plot(P)
-
-    def _make_jacpol_property(self):
-        ans = []
-        if self.is_pp == 1:
-            ans.append((None, 'Principally polarizable'))
-        elif self.is_pp == -1:
-            ans.append((None, 'Not principally polarizable'))
-        if self.is_jac == 1:
-            ans.append((None, 'Contains a Jacobian'))
-        elif self.is_jac == -1:
-            ans.append((None, 'Does not contain a Jacobian'))
-        return ans
+        return encode_plot(P,pad=0,pad_inches=0,transparent = True)
 
     def properties(self):
         return [('Label', self.label),
+                (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
                 ('Base Field', '$%s$'%(self.field(self.q))),
                 ('Dimension', '$%s$'%(self.g)),
-                (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
                 #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-                ('$p$-rank', '$%s$'%(self.p_rank))] + self._make_jacpol_property()
+                ('Ordinary', 'Yes' if self.is_ordinary == 1 else 'No'),
+                ('$p$-rank', '$%s$'%(self.p_rank)),
+                ('Principally polarizable', 'Yes' if self.is_pp == 1 else 'No'),
+                ('Contains a Jacobian', 'Yes' if self.is_jac == 1 else 'No'),
+                ]
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
     # this is not covered by the tests
