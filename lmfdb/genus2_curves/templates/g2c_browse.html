@@ -134,9 +134,6 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>Results to display</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
 <td>{{ KNOWL('ag.geom_simple', title='Geometrically simple') }}</td>
 <td><select name='is_simple_geom' width="122" style="width: 122px">
                    <option ></option>
@@ -146,6 +143,11 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button></td>
+</tr>
+<tr>
+<td>Results to display</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
 </tr>
 </table>
 
