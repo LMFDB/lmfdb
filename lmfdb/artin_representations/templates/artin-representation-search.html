@@ -13,10 +13,10 @@
       <td>{{ KNOWL('artin.parity',title="Parity") }}</td>
 
     <tr>
-      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15/></td>
-      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15/></td>
-      <td><input type='text' name='group' value="{{info.group}}" size=15></td>
-      <td><input type='text' name='root_number' value = "{{info.root_number}}" size=15/></td>
+      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15 placeholder="2"/></td>
+      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15 placeholder="50-100,150-200"/></td>
+      <td><input type='text' name='group' value="{{info.group}}" size=15 placeholder="A5"></td>
+      <td><input type='text' name='root_number' placeholder="1" value = "{{info.root_number}}" size=15/></td>
       <td><select name='Is_Even' width="105" style="width: 105px">
         <option value=''>All</option>
         <option value='True' {{ "selected" if info.Is_Even == 'True'}} >Even</option>
@@ -31,10 +31,10 @@
       <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
     </tr>
     <tr>
-      <td><input type='text' name='container' value="{{info.container}}" size=15></td>
-      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15/></td>
-      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15/></td>
-      <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" size=15/></td>
+      <td><input type='text' name='container' value="{{info.container}}" size=15 placeholder="6T13"></td>
+      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15 placeholder="2" /></td>
+      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15 placeholder="5,7" /></td>
+      <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" size=15 placeholder="1" /></td>
     </tr>
   <tr>
     <td class="button"><button type='submit' value='Search' onclick='resetStart()'>Search again</button></td>

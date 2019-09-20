@@ -10,23 +10,23 @@
 
 <tr>
   <td align=left>{{KNOWL('ag.curve.genus',title='Genus')}}</td>
-  <td align=left><input type='text' name="genus" size="14" value="{{info.genus}}"></td>
+  <td align=left><input type='text' name="genus" placeholder='3' size="14" value="{{info.genus}}"></td>
   <td align=left>{{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient genus')}}</td>
-  <td align=left><input type="text" name="g0" size="14" value="{{info.g0}}"></td>
+  <td align=left><input type="text" name="g0" size="14" placeholder='0' value="{{info.g0}}"></td>
 </tr>
 
 <tr>
   <td align=left>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}</td>
-  <td align=left><input type="text" name="dim" size="14" value="{{info.dim}}"></td>
+  <td align=left><input type="text" name="dim" placeholder='1' size="14" value="{{info.dim}}"></td>
   <td align=left>{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}</td>
-  <td align=left><input type="text" name="signature" size="14" value="{{info.signature}}"></td>
+  <td align=left><input type="text" name="signature" placeholder='[0,2,3,3,6]' size="14" value="{{info.signature}}"></td>
 </tr>
 
 <tr align=left>
   <td align=left>{{KNOWL('group.order',title='Group order(s)')}}</td>
-  <td align=left><input type="text" name="group_order" size="14" value="{{info.group_order}}"></td>
+  <td align=left><input type="text" name="group_order" size="14" placeholder='2..5' value="{{info.group_order}}"></td>
   <td align=left>{{KNOWL('group.small_group_label',title="Group identifier")}}</td>
-  <td align=left><input type="text" name="group" size="14" value="{{info.group}}"></td>
+  <td align=left><input type="text" name="group" size="14" placeholder='[4,2]'  value="{{info.group}}"></td>
 </tr>
 
 <tr><td>
@@ -78,7 +78,7 @@
     <td>
         {{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}
         </td>
-        
+
           <td> <select id='inc_full' name='inc_full'>
         {% if info.inc_full == "only" %}
                    <option value="include">include</option>
@@ -99,7 +99,7 @@
 </tr>
 
 
-  
+
 
 
 <tr>
@@ -116,7 +116,7 @@
 	         <option value="descg0"{% if info.sort_order == "descg0" %} selected {% endif %}>quotient genus descending</option>
 	   <option value="descgroup_order"{% if info.sort_order == "descgroup_order" %} selected {% endif %}>group order descending</option>
          <option value="descdim"{% if info.sort_order == "descdim" %} selected {% endif %}>dimension descending</option>
-               
+
      </select>
    </td>
  </tr>
@@ -172,4 +172,3 @@
 {% include 'debug_info.html' %}
 
   {% endblock %}
-  

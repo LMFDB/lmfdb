@@ -21,10 +21,10 @@
 </tr>
 
 <tr>
-<td align=left><input type='text' name='conductor' size=10 value={{info.conductor}}></td>
-<td align=left><input type='text' name='jinv'size=10 value={{info.jinv}}></td>
-<td align=left><input type='text' name='rank' size=10 value={{info.rank}}></td>
-<td align=left><input type='text' name='torsion' size=10 value={{info.torsion}}> </td>
+<td align=left><input type='text' name='conductor' placeholder='389'  size=10 value={{info.conductor}}></td>
+<td align=left><input type='text' name='jinv'size=10 placeholder='1728' value={{info.jinv}}></td>
+<td align=left><input type='text' name='rank' size=10 placeholder='0' value={{info.rank}}></td>
+<td align=left><input type='text' name='torsion' size=10 placeholder='2' value={{info.torsion}}> </td>
 <td align=left>
   {{ tor_struct_search_Q(info.torsion_structure)|safe }}
 </td>
@@ -57,10 +57,10 @@
 </td>
 </tr>
 <tr>
-<td align=left><input type='text' name='sha' size=10 value={{info.sha}}> </td>
-<td align=left><input type='text' name='isodeg' size=10 value={{info.isodeg}}> </td>
+<td align=left><input type='text' name='sha' placeholder='4' size=10 value={{info.sha}}> </td>
+<td align=left><input type='text' name='isodeg' placeholder='16' size=10 value={{info.isodeg}}> </td>
 <td align=left>
-   <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
+   <input type='text' name='surj_primes' placeholder="2,3" size=10 value={{info.surj_primes}}>
 </td>
 <td align=left>
 <select name='optimal', style='width: 155px'>
@@ -83,7 +83,7 @@
   <option value='exactly'>exactly</option>
 {% endif %}
   </select>
-<input type='text' name='nonsurj_primes' size=10  value={{info.nonsurj_primes}}>
+<input type='text' name='nonsurj_primes' placeholder="2,3" size=10  value={{info.nonsurj_primes}}>
 </td>
 </tr>
 
