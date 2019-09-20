@@ -1,0 +1,14 @@
+{% extends 'cmf_refine_search.html' %}
+
+{% block show_results %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+{% include 'cmf_newform_list.html' %}
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+
+{% endblock %}

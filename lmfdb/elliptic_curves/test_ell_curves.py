@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
+
 
 class EllCurveTest(LmfdbTest):
 
@@ -26,8 +27,14 @@ class EllCurveTest(LmfdbTest):
         assert '/EllipticCurve/Q/12350/s/' in L.data
 
     def test_Cremona_label_mal(self):
-        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class')
-        assert '12qx does not define a recognised elliptic curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
+        assert '12qx' in L.data and 'does not define a recognised elliptic curve' in L.data
+
+    def test_missing_curve(self):
+        L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
+        assert '13.a1' in L.data and 'No curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
+        assert '13a1' in L.data and 'No curve' in L.data
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -73,7 +80,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '["1", "-1", "1", "-3", "3"]' in L.data
+        assert '[1, -1, 1, -3, 3]' in L.data
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -89,7 +96,7 @@ class EllCurveTest(LmfdbTest):
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert '\(-1 \cdot 163^{9} \)' in L.data
+        assert r'\(-1 \cdot 163^{9} \)' in L.data
 
     def test_torsion_growth(self):
         """
@@ -98,3 +105,26 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/392/c/1')
         assert ' is strictly larger than ' in L.data
         assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data
+
+    def test_990h(self):
+        """
+        Test the exceptional 990h/990.i optimal labelling.
+        """
+        # The isogeny class 990h (Cremona labelling) or 990.i (LMFDB labelling)
+        # has a different Gamma-optimal curve in its labelling than all others.
+        L = self.tc.get('/EllipticCurve/Q/990/i/')
+        row = '\n'.join([
+          '<td class="center">[1, -1, 1, -1568, -4669]</td>',
+          '<td align="center">6</td>',
+          '<td align="center">',
+          '1728</td>',
+          '<td>\(\Gamma_0(N)\)-optimal</td>'
+        ])
+        self.assertTrue(row in L.data,
+                        "990.i appears to have the wrong optimal curve.")
+
+        L = self.tc.get('EllipticCurve/Q/990h/')
+        #print row
+        #print L.data
+        self.assertTrue(row in L.data,
+                        "990h appears to have the wrong optimal curve.")

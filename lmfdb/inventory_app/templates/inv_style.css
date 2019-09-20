@@ -1,7 +1,4 @@
 
-{% import 'color.css' as color %}
-
-
 .inventory_form  { display: table;}
 .inventory_row   { display: table-row; }
 .inventory_row > label{

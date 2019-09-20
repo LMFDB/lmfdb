@@ -8,9 +8,9 @@
 
 from sage.all import QQ, polygen
 
+from lmfdb import db
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from lmfdb.hilbert_modular_forms.hilbert_modular_form import db_forms
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 
 logger = make_logger("hmf")
 
@@ -23,8 +23,6 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
-def is_hmf_in_db(label):
-    return db_forms().find({"label": label}).limit(1).count(True) > 0
 
 class WebHMF(object):
     """
@@ -60,7 +58,7 @@ class WebHMF(object):
         Searches for a specific Hilbert newform in the forms
         collection by its label.
         """
-        data = db_forms().find_one({"label" : label})
+        data = db.hmf_forms.lookup(label)
 
         if data:
             return WebHMF(data)
@@ -163,9 +161,6 @@ class WebHMF(object):
         data['is_CM'] = '?'
         data['is_base_change'] = '?'
 
-
-    def save_to_db(self):
-        pass
 
     def compare_with_db(self, field=None):
         lab = self.dbdata['label']

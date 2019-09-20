@@ -15,10 +15,8 @@
 {% endblock title_block %}
 
 {% block main_body %}
-  <div class = 'important'>
-    Rescraping inventory information touches every record in the designated collection(s).
-    This can take a very long time, so proceed with caution. Large collections should only rescraped
-    during database downtime. <b> Editing the inventory for a collection is locked until the rescrape completes</b>
+  <div>
+    Rescraping inventory information collects schema data and metadata for every table in the designated collection(s).
   </div>
   <div class = 'listing'>
   {% for item in listing %}

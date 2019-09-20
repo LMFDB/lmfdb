@@ -1,0 +1,38 @@
+{% set lang_text = {'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma'} %}
+{% if not languages %}
+  {% set languages = ['gp', 'sage', 'magma'] %}
+{% endif %}
+{% if 'download_limit' in info %}
+  {% set download_limit = info.download_limit %}
+{% else %}
+  {% set download_limit = 100000 %}
+{% endif %}
+
+<br>
+<br>
+<div id="download-area">
+{% if info.number > download_limit %}
+  <span id="download-msg">
+    There are too many search results for downloading.
+  </span>
+{% else %}
+  {% if info.exact_count %}
+    <form id="download-form">
+  {% else %}
+    <span id="download-msg">
+      In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{download_limit}}); return false;">determine the number of results</a>.
+    </span>
+    <form id="download-form" style="display:none;">
+  {% endif %}
+  Download all search results for&nbsp;
+  {% for lang in languages %}
+    <button type="submit" name="Submit" value="{{lang}}">{{lang_text[lang]}}</button>&nbsp;
+  {% endfor %}
+  <input type="hidden" name="download" value="1"/>
+  <input type="hidden" name="query" value="{{info.query}}"/>
+  {% if info.search_type %}
+    <input type="hidden" name="search_type" value="{{info.search_type}}"/>
+  {% endif %}
+  </form>
+{% endif %}
+</div>

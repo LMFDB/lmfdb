@@ -1,25 +1,24 @@
 from bson.code import Code
 import dbtools
 import id_object
-from lmfdb.base import getDBConnection
 import datetime
-import threading
-import bson
-import time
+#import threading
+#import bson
+#import time
+from collections import defaultdict
+from lmfdb.backend.database import db
 
 __version__ = '1.0.0'
 
 def _is_good_database(name):
     """ Function to test if a database is one to scan """
-    bad=['admin','test','contrib','local','userdb','upload', 'inventory']
+    bad=['inv']
     if name in bad:
       return False
     return True
 
-def _is_good_collection(dbname, name):
-    """ Function to test if a collection should be scanned """
-    if '.' in name:
-      return False
+def _is_good_table(name):
+    """ Function to test if a table should be scanned """
     return True
 
 
@@ -32,9 +31,9 @@ def merge_dicts(d1, d2):
         else:
             d1[key] = value2
 
-def _get_db_records(coll):
+def _get_db_records(table):
 
-    """ Routine to execute the MapReduce operation on a specified collection 
+    """ Routine to execute the MapReduce operation on a specified table 
        object """
 
     mapper = Code("""
@@ -51,23 +50,25 @@ def _get_db_records(coll):
                     """)
 
     try:
-        results = coll.inline_map_reduce(mapper,reducer)
+        results = table.inline_map_reduce(mapper,reducer)
     except Exception as err:
-        print('Unable to perform map_reduce. Collection or database may not exist')
+        print('Unable to perform map_reduce. Table or database may not exist')
         raise err
     #Strip the _id field from the results
     for doc in results:
         if '_id' in doc['_id']: doc['_id'].remove('_id')
     return results
 
-def _jsonify_collection_info(coll, dbname = None):
+def _jsonify_table_info(table, dbname = None):
 
-    """Private function to turn information about one collection into base 
+    """Private function to turn information about one table into base 
        JSON """
+    # Needs to be rewritten for Postgres
+    raise NotImplementedError
 
     if dbname is None:
-        dbname = coll.name
-    results = _get_db_records(coll)
+        dbname = table.search_table
+    results = _get_db_records(table)
 
     json_db_data = {}
     json_db_data['dbinfo'] ={}
@@ -83,7 +84,7 @@ def _jsonify_collection_info(coll, dbname = None):
 
     for doc in lst:
         try:
-            rls = dbtools.get_sample_record(coll, str(doc))
+            rls = dbtools.get_sample_record(table, str(doc))
             try:
                 typedesc = id_object.get_description(rls[str(doc)])
             except:
@@ -113,7 +114,7 @@ def _jsonify_collection_info(coll, dbname = None):
         json_db_data['records'][recordid]['count'] = int(doc['value'])
         json_db_data['records'][recordid]['schema'] = doc['_id']
 
-    indices = coll.index_information()
+    indices = table.index_information()
     json_db_data['indices'] = {}
     for recordid, index in enumerate(indices):
         json_db_data['indices'][recordid] = {}
@@ -122,30 +123,25 @@ def _jsonify_collection_info(coll, dbname = None):
 
     return json_db_data
 
-def parse_collection_info_to_json(dbname, collname, connection = None, retval = None, date = None):
+def parse_table_info_to_json(tablename, retval = None, date = None):
+    """ Front end routine to create JSON information about a table """
 
-    """ Front end routine to create JSON information about a collection """
-
-    if connection is None:
-        connection = getDBConnection()
-
-    dbstring = dbname + '\\' + collname
-    coll = connection[dbname][collname]
-    json_raw = _jsonify_collection_info(coll, dbstring)
-    json_wrap = {dbname:{collname:json_raw}}
+    from lmfdb.db_backend import db
+    json_raw = _jsonify_table_info(db[tablename], tablename)
+    json_wrap = {tablename:json_raw}
     if not date:
         date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-    json_wrap[dbname][collname]['scrape_date'] = date
+    json_wrap[tablename]['scrape_date'] = date
     if retval is not None: retval['data'] = json_wrap
     return json_wrap
 
-def create_user_template(structure_json, dbname, collname, field_subs = ['tiype',' example', 'description'],
+def create_user_template(structure_json, dbname, tablename, field_subs = ['tiype',' example', 'description'],
                          info_subs = ['description', 'status','contact','code'], note_subs = ['description']):
 
     """Legacy routine to create blank user specified data JSON"""
 
     result_json = {}
-    substr = structure_json[dbname][collname]
+    substr = structure_json[dbname][tablename]
     result_json['(INFO)'] = {}
     for el in info_subs:
         result_json['(INFO)'][el] = ""
@@ -159,93 +155,79 @@ def create_user_template(structure_json, dbname, collname, field_subs = ['tiype'
     return result_json
 
 
-def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
+def parse_lmfdb_to_json(tables = None, databases = None,
                         is_good_database = _is_good_database,
-                        is_good_collection = _is_good_collection):
+                        is_good_table = _is_good_table):
 
     """Legacy routine to scan any specified chunk of LMFDB to JSON"""
+    raise NotImplementedError
+    # connection has been deleted
+#
+#    if not tables:
+#        tables = get_lmfdb_tables(databases = databases,
+#                          is_good_database = is_good_database, is_good_table = is_good_table)
+#    else:
+#        if not hasattr(tables, '__iter__'): tables = [tables]
+#        if not isinstance(tables, dict):
+#            if not databases:
+#                databases = get_lmfdb_databases(is_good_database = is_good_database)
+#            if len(databases) == 1:
+#                tbldict = {databases[0] : tables}
+#            else:
+#                tbldict = defaultdict(list)
+#                for table in tables:
+#                    db_name = table.split('_')[0]
+#                    tbldict[db_name].append(table)
+#            tables = tbldict
+#        else:
+#            for db_name, L in tables.items():
+#                if not isinstance(L, list):
+#                    if L:
+#                        tables[db_name] = [L]
+#                    else:
+#                        tables.update(get_lmfdb_tables(databases=db_name))
+#
+#    db_struct = {}
+#    for db_name in tables:
+#        print('Running ' + db_name)
+#        if is_good_database(db_name):
+#            for table in tables[db_name]:
+#                print('Parsing ' + table)
+#                if is_good_table(table):
+#                    mydict={}
+#                    mythread = threading.Thread(target = parse_table_info_to_json, args = [table, mydict])
+#                    mythread.start()
+#                    while mythread.isAlive():
+#                        u=bson.son.SON({"$ownOps":1,"currentOp":1})
+#                        progress = connection['admin'].command(u)
+#                        for el in progress['inprog']:
+#                            if 'progress' in el.keys():
+#                                if el['ns'] == table:
+#                                    print("Scanning " + table + " " +
+#                                        unicode(int(el['progress']['done'])) +
+#                                        "\\" + unicode(int(el['progress']['total'])))
+#                        time.sleep(5)
+#
+#                    merge_dicts(db_struct, mydict['data'])
+#    return db_struct
 
-    if connection is None:
-        connection = getDBConnection()
-
-    if not collections:
-        collections = get_lmfdb_collections(connection = connection, databases = databases,
-                          is_good_database = is_good_database, is_good_collection = is_good_collection)
-    else:
-        if not hasattr(collections, '__iter__'): collections = [collections]
-        if type(collections) is not dict:
-            if not databases:
-                databases = get_lmfdb_databases(connection = connection, is_good_database = is_good_database)
-            if len(databases) == 1:
-                coldict = {databases[0] : collections}
-            else:
-                coldict = {}
-                for db in databases:
-                    coldict[db] = []
-                    for coll in connection[db].collection_names():
-                        if coll in collections and is_good_collection(db, coll):
-                            coldict[db].append(coll)
-            collections = coldict
-        else:
-            for coll in collections:
-                if type(collections[coll]) is not list:
-                    if collections[coll]:
-                        collections[coll] = [collections[coll]]
-                    else:
-                        collections[coll] = connection[coll].collection_names()
-
-    db_struct = {}
-    for db in collections:
-        print('Running ' + db)
-        if is_good_database(db):
-            for coll in collections[db]:
-                print('Parsing ' + coll)
-                if is_good_collection(db, coll):
-                    mydict={}
-                    mythread = threading.Thread(target = parse_collection_info_to_json, args = [db, coll, connection, mydict])
-                    mythread.start()
-                    while mythread.isAlive():
-                        u=bson.son.SON({"$ownOps":1,"currentOp":1})
-                        progress = connection['admin'].command(u)
-                        for el in progress['inprog']:
-                            if 'progress' in el.keys():
-                                if el['ns'] == db + "." + coll:
-                                    print("Scanning " + db + "." + coll + " " +
-                                        unicode(int(el['progress']['done'])) +
-                                        "\\" + unicode(int(el['progress']['total'])))
-                        time.sleep(5)
-                    
-                    merge_dicts(db_struct, mydict['data'])
-    return db_struct
-
-def get_lmfdb_databases(connection = None, is_good_database = _is_good_database):
+def get_lmfdb_databases(is_good_database=_is_good_database):
     """ Routine to get list of available databases """
+    return [db_name for db_name in db.inv_dbs.search({},'name') if is_good_database(db_name)]
 
-    if connection is None:
-        connection = getDBConnection()
-    el = []
-
-    for db in connection.database_names():
-        if is_good_database(db): el.append(db)
-
-    return el
-
-def get_lmfdb_collections(connection = None, databases = None, is_good_database =
-                          _is_good_database, is_good_collection = _is_good_collection):
+def get_lmfdb_tables(databases=None, is_good_database=_is_good_database,
+                     is_good_table=_is_good_table):
 
     """Routine to get a dictionary with keys of all databases and member lists
-       of collections in that database"""
+       of tables in that database"""
 
-    if connection is None:
-        connection = getDBConnection()
-    if not databases: databases = get_lmfdb_databases(connection = connection,
-                                      is_good_database = is_good_database)
-    if not hasattr(databases, '__iter__'): databases = [databases]
-    collections = {}
-    for db in databases:
-        if is_good_database(db):
-            collections[db] = []
-            for coll in connection[db].collection_names():
-                if is_good_collection(db, coll): collections[db].append(coll)
-
-    return collections
+    if not databases:
+        databases = get_lmfdb_databases(is_good_database=is_good_database)
+    if not hasattr(databases, '__iter__'):
+        databases = [databases]
+    tables = defaultdict(list)
+    for table in db.tablenames:
+        db_name = table.split('_')[0]
+        if db_name in databases and is_good_table(table):
+            tables[db_name].append(table)
+    return tables

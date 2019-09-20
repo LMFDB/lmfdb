@@ -88,11 +88,14 @@ def make_empty_record(eg):
 def transform_examples(str, backwards=False):
     """ Converts between stored and display example strings. This is sub-optimal and should probably be fixed upstream
     """
-    if not backwards and len(str)>1 and str[0] == '`' and str[-1] == '`':
-        return str[1:-1]
-    elif backwards:
-        return '`'+str+'`'
-    else:
+    try:
+        if not backwards and len(str)>1 and str[0] == '`' and str[-1] == '`':
+            return str[1:-1]
+        elif backwards:
+            return '`'+str+'`'
+        else:
+            return str
+    except:
         return str
 
 def escape_for_display(obj):
@@ -101,7 +104,7 @@ def escape_for_display(obj):
     for item in obj:
         for field in obj[item]:
             if obj[item][field]:
-                obj[item][field] = obj[item][field].replace('\n', ' ')
+                obj[item][field] = str(obj[item][field]).replace('\n', ' ')
             #This is not ideal, but it works for now for display etc
             if field == 'example':
                 obj[item][field] = transform_examples(obj[item][field])
@@ -302,7 +305,7 @@ def parse_edit_url(url):
 #Most bugs the front end can do little more than a ``something went wrong'' and diagnosis must be done backend.
 #These are the exceptions to that principle
 class ConnectOrAuthFail(Exception):
-    """Raise for failure to connect or auth i.e. int_client in invalid state"""
+    """Raise for failure to connect or auth"""
     def __init__(self, message):
         mess = "Failed to connect to db"
         super(Exception, self).__init__(mess)

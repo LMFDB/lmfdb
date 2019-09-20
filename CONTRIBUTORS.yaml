@@ -12,9 +12,10 @@ url: https://www.math.u-bordeaux.fr/~ballombe/
 ---
 name: Samuele Anni
 email: samuele.anni@gmail.com
-affil: University of Heidelberg
+affil: University of Luxembourg
+url: https://wwwfr.uni.lu/recherche/fstc/mathematics_research_unit/people/samuele_anni
 ---
-name: Angelica Babei 
+name: Angelica Babei
 url: https://www.math.dartmouth.edu/~ababei/
 affil: Dartmouth College
 ---
@@ -25,8 +26,8 @@ url: http://math.bu.edu/people/jbala/
 affil: Boston University
 ---
 name: Alex Bartel
-url: http://homepages.warwick.ac.uk/~maslan/
-affil: University of Warwick
+url: https://www.gla.ac.uk/schools/mathematicsstatistics/staff/alexbartel/
+affil: University of Glasgow
 ---
 name: Jennifer Beineke
 url: http://mars.wne.edu/~jbeineke/
@@ -50,7 +51,7 @@ affil: Google Inc.
 name: Chris Brady
 affil: University of Warwick
 ---
-name: Benjamin Breen 
+name: Benjamin Breen
 url: https://www.math.dartmouth.edu/~breen/
 affil: Dartmouth College
 ---
@@ -65,6 +66,10 @@ affil: University of California, San Diego
 name: Sarunas Burdulis
 affil: Dartmouth College
 url: https://math.dartmouth.edu/~sarunas/
+---
+name: Mirela Ciperiani
+url: https://web.ma.utexas.edu/users/mirela/
+affil: University of Texas, Austin
 ---
 name: Henri Cohen
 url: http://www.math.u-bordeaux1.fr/~hecohen/
@@ -103,8 +108,8 @@ email: maarten@mderickx.nl
 affil: Universiteit Leiden
 ---
 name: Martin Dickson
-url: http://www.maths.bris.ac.uk/~mamjd/
-affil: University of Bristol
+affil: Kings College London
+url:  https://nms.kcl.ac.uk/martin.dickson/
 ---
 name: Tim Dokchitser
 url: http://www.maths.bris.ac.uk/~matyd/
@@ -131,7 +136,6 @@ affil: Grinnell College
 ---
 name: Markus Fraczek
 email: markus.fraczek@gmail.com
-affil: University of Warwick
 ---
 name: Sharon Frechette
 affil: College of Holy Cross
@@ -159,6 +163,8 @@ name: William Hart
 affil: Technische Universit&auml;t Kaiserslautern
 ---
 name: Ghaith Hiary
+affil: The Ohio State University
+url: https://people.math.osu.edu/hiary.1/
 ---
 name: Duc Khiem Huynh
 url: http://www.math.uwaterloo.ca/~dkhuynh/
@@ -180,7 +186,6 @@ name: Kamal Khuri-Makdisi
 affil: American University Beirut
 ---
 name: Sally Koutsoliotas
-url: http://www.bucknell.edu/x18772.xml
 affil: Bucknell University
 ---
 name: Patrick Kühn
@@ -205,7 +210,7 @@ affil: Grinnell College
 ---
 name: Nicolas Mascot
 email: nmascot@math.u-bordeaux1.fr
-affil: University of Warwick
+affil: American University Beirut
 ---
 name: Mark McConnell
 email: mmcconnell17704@yahoo.com
@@ -226,7 +231,6 @@ affil: Université Paris 7
 ---
 name: Warren Moore
 email: warrenmoore30@yahoo.co.uk
-affil: University of Warwick
 ---
 name: Bartosz Naskręcki
 email: nasqret@gmail.com
@@ -242,7 +246,7 @@ affil: Grinnell College
 name: Aurel Page
 url: http://www.normalesup.org/~page/index-en.html
 email: aurel.page@normalesup.org
-affil: University of Warwick
+affil: University of Bordeaux
 ---
 name: Jennifer Paulhus
 affil: Grinnell College
@@ -256,6 +260,10 @@ name: Robert Pollack
 affil: Boston University
 url: http://math.bu.edu/people/rpollack/
 ---
+name: Alexander D. Rahm
+affil: University of Luxembourg
+url: http://math.uni.lu/~rahm
+---
 name: Heather Ratcliffe
 affil: University of Warwick
 ---
@@ -264,6 +272,10 @@ name: Rishikesh
 name: David Roberts
 affil: University of Minnesota, Morris
 url: http://cda.mrs.umn.edu/~roberts/index.html
+---
+name: Fernando Rodriguez Villegas
+affil: ICTP, Trieste
+url: https://users.ictp.it/~villegas/
 ---
 name: Michael Rubinstein
 url: http://www.math.uwaterloo.ca/~mrubinst/
@@ -276,6 +288,9 @@ affil: Bucknell University
 name: George J. Schaeffer
 email: gschaeff@stanford.edu
 affil: Stanford University
+---
+name: Ciaran Schembri
+affil: University of Sheffield
 ---
 name: Sam Schiavone
 url: https://math.dartmouth.edu/~samschiavone/
@@ -344,8 +359,7 @@ url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
 name: Alex Torzewski
-url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/torzewski/
-affil: University of Warwick
+affil: University College London
 ---
 name: Christelle Vincent
 affil: University of Vermont

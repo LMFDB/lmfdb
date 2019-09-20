@@ -3,34 +3,30 @@ r""" Import torsion growth data (as computed by Enrique Gonzalez).
 
 Initial version (Warwick November 2017)
 
+2018: updated for postgres BUT not yet checked to see if the data
+types are what the postgres table wants.
+
 Additional data fields for each elliptic curve over Q
 
-   - 'iwp0' (int) if nonzero, a prime p0 such that lambda=mu=0 for all good p>=p0
-   - 'iwdata' (dict) keys: primes, including all bad multiplicative primes and all primes up to some bound
-                     values: '?' if unknown
-                             'a' if bad additive
-                             [lambda,mu] (two ints) if good ordinary or bad multiplicative
-                             [lambda+,lambda-,mu] (three ints) if good supersingular
-                                              [Here mu=0 always (conjecturally) but stored to distinguish cases.]
+ 'tor_degs': u'jsonb'    list of degrees in which torsion grows
+ 'tor_fields': u'jsonb', list of field labels in which torsison grows
 
+ 'tor_gro': u'jsonb',    dictionary, keys are field labels or poly
+                         strings, values are structure constants of the larger torsion
 
+NB We have hard-coded the maximum degree of number field for which we
+currently have data (currently 7) in lmfdb/elliptic_curves/web_ec.py
+since tor_degs and the other extra columns are in the extr table.  If
+data for higher degrees is uploaded that will need to be changed.
 """
 import os
 from sage.all import ZZ, PolynomialRing, QQ, NumberField
 
-from lmfdb.base import getDBConnection
+from lmfdb import db
 
-print "getting connection"
-C= getDBConnection()
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
-curves = C.elliptic_curves.curves
-fields = C.numberfields.fields
+curves = db.ec_curves
+fields = db.nf_fields
 
 Qx = PolynomialRing(QQ,'x')
 
@@ -88,8 +84,14 @@ def get_degree(label_or_coeffs):
         return label_or_coeffs.count(',')
 
 def onefieldtor(dat, degree):
-    """
-    Input: string e.g. [2,6][4,-1,1], where the first list is a torsion structure and the second is a list of polynomial coefficients.
+    """Input: string e.g. [2,6][4,-1,1], where the first list is a
+    torsion structure and the second is a list of polynomial
+    coefficients.
+
+    Output: a list [F,tor] where F is the field defined by the
+    polynomial coefficients (as a label if in the database or as a
+    string), and tor is the torsion structure string.
+
     """
     tor, pol = dat.split("][")
     tor = tor[1:]
@@ -104,6 +106,9 @@ def onefieldxtor(dat):
     """Input: string e.g. [2,6]:4,-1,1, where the first list is a torsion
     structure and the second is a list of polynomial coefficients, or
     [2,6]:2.2.5.1 with the second part an LMFDB field label.
+
+    Output: as for onefieldtor()
+
     """
     T, F = dat.split(":")
     T = T[1:-1]
@@ -257,10 +262,9 @@ def read_xtorsion_growth_data(base_path, filename, degree, maxlines=0):
     print("finished reading {} lines from file".format(count))
     return tor_data
 
-# for use with the rewrite script in data_mgt/utilities/rewrite.py we
-# need to give it the old and new collection names (e.g. curves and
-# curves.new) and a function taking one mongodb record (dictionary) and
-# returning a possible changed version of it.
+# for use with the rewrite method. We need to give it a function
+# taking one record (dictionary) and returning a possible changed
+# version of it.
 
 #  The following returns such a function, only applying it to curves with conductors in a given range
 

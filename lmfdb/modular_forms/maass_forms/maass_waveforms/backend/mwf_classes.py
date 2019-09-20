@@ -1,19 +1,18 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from lmfdb.utils import truncate_number
 from mwf_utils import mwf_logger
-from sage.all import Gamma0, CC
-import bson
-
-
+from maass_forms_db import maass_db
+from sage.all import Gamma0, CC, imag_part, real_part
+from lmfdb import db
+from lmfdb.utils import display_complex
 
 class MaassFormTable(MFDataTable):
     r"""
     To Display one form
     """
-    def __init__(self, dbname='', **kwds):
-        MFDataTable.__init__(self, dbname, **kwds)
-        self._id = kwds.get('id', None)
-        if not self._id:
+    def __init__(self, **kwds):
+        MFDataTable.__init__(self, **kwds)
+        self.maass_id = kwds.get('maass_id', None)
+        if not self.maass_id:
             mwf_logger.critical("You must supply an id!")
 
     def set_table(self, **kwds):
@@ -29,17 +28,14 @@ class MaassFormTable(MFDataTable):
         skip = rec_len * self._skip_rec
         mwf_logger.debug("rows: {0}".format(self._nrows))
         mwf_logger.debug("cols: {0}".format(self._ncols))
-        mwf_logger.debug("In mwf.set_table: collections : {0}".format(self.collection()))
+        mwf_logger.debug("In mwf.set_table")
         mwf_logger.debug("skip: {0} rec_len:{1}".format(skip, rec_len))
-        # only have one collection here...
-        c = self.collection()[0]
-        mwf_logger.debug("collection: {0}".format(c))
         limit = self._nrows
         skip = self._skip_rec
         mwf_logger.debug("limit: {0}, skip: {1}".format(limit, skip))
-        f = c.find_one({'_id': bson.objectid.ObjectId(self._id)})  # .skip(skip).limit(limit)
+        f = db.mwf_forms.lucky({'maass_id': self.maass_id})  # .skip(skip).limit(limit)
         if not f:
-            mwf_logger.critical("You did not supply a valid id! Got:{0}".format(self._id))
+            mwf_logger.critical("You did not supply a valid id! Got:{0}".format(self.maass_id))
             return
         self._props['Eigenvalue'] = f['Eigenvalue']
         self._props['Symmetry'] = f['Symmetry']
@@ -51,15 +47,6 @@ class MaassFormTable(MFDataTable):
             self._props['Character'] = 0
 
         self._props['Level'] = f['Level']
-        # self._props['prec'] = f['prec']
-        metadata = dict()
-        MD = self._db['metadata']
-        mwf_logger.debug("metadata: {0}".format(MD))
-        mdfind = MD.find_one({'c_name': self._collection_name})
-        mwf_logger.debug("mdfind: {0}".format(mdfind))
-        for x in mdfind:
-            metadata[x] = mdfind[x]
-        self._props['metadata'] = metadata
         numc = len(f['Coefficient'])
         mwf_logger.debug("numc: {0}".format(numc))
         self._props['numc'] = numc
@@ -82,18 +69,15 @@ class MaassFormTable(MFDataTable):
 
 
 class WebMaassForm(object):
-    def __init__(self, db, maassid, **kwds):
+    def __init__(self, maass_id, **kwds):
         r"""
-        Setup a Maass form from maassid in the database db
+        Setup a Maass form from maass_id in the database db
         of the type MaassDB.
         OPTIONAL parameters:
         - dirichlet_c_only = 0 or 1
         -fnr = get the Dirichlet series coefficients of this function in self only
         - get_coeffs = False if we do not compute or fetch coefficients
         """
-        mwf_logger.debug(
-            "calling WebMaassform with DB={0} and maassid={1}, kwds={2}".format(db, maassid, kwds))
-        self._db = db
         self.R = None
         self.symmetry = -1
         self.weight = 0
@@ -101,19 +85,10 @@ class WebMaassForm(object):
         self.level = 1
         self.table = {}
         self.coeffs = {}
-        if not isinstance(maassid, (bson.objectid.ObjectId, str)):
-            ids = db.find_Maass_form_id(id=maassid)
-            if len(ids) == 0:
-                raise KeyError("maassid %s not found in database"%maassid)
-            mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
-            maassid = ids[0]
-        self._maassid = bson.objectid.ObjectId(maassid)
-        mwf_logger.debug("_id={0}".format(self._maassid))
-        ff = db.get_Maass_forms(id=self._maassid)
-        # print "ff=",ff
-        if len(ff) == 0:
-            raise KeyError("massid %s not found in database"%maassid)
-        f = ff[0]
+        self._maass_id = maass_id
+        f = maass_db.lucky({'maass_id':maass_id})
+        if f is None:
+            raise KeyError("massid %s not found in database"%maass_id)
 
         # print "f here=",f
         self.dim = f.get('Dim', 1)
@@ -130,11 +105,11 @@ class WebMaassForm(object):
         self.level = f.get('Level', None)
         ## Contributor key
         self.contr = f.get('Contributor', '')
-        md = db._mongo_db['metadata'].find_one({'c_name': self.contr})
-        ## Contributor full name
-        try:
-            self.contributor_name = md.get('contributor', self.contr)
-        except:
+        if self.contr == 'FS':
+            self.contributor_name = 'Fredrik Stroemberg'
+        elif self.contr == 'HT':
+            self.contributor_name = 'Holger Then'
+        else:
             self.contributor_name = self.contr
         self.num_coeff = f.get('Numc', 0)
         if self.R is None or self.level is None:
@@ -163,15 +138,13 @@ class WebMaassForm(object):
 
         else:
             self.coeffs = {}
-        coeff_id = f.get('coeff_id', None)
         nc = Gamma0(self.level).ncusps()
         self.M0 = f.get('M0', nc)
-        mwf_logger.debug("coeffid={0}, get_coeffs={1}".format(coeff_id, self._get_coeffs))
-        if coeff_id and self._get_coeffs:  # self.coeffs==[] and coeff_id:
+        mwf_logger.debug("maass_id={0}, get_coeffs={1}".format(maass_id, self._get_coeffs))
+        if self._get_coeffs:  # self.coeffs==[] and maass_id:
             ## Let's see if we have coefficients stored
-            C = self._db.get_coefficients({"_id": self._maassid})
-            if len(C) >= 1:
-                C = C[0]
+            C = maass_db.get_coefficients({"maass_id": self._maass_id})
+            if C is not None:
                 if self._get_dirichlet_c_only:
                     mwf_logger.debug("setting Dirichlet C!")
                     if self._fnr > len(C):
@@ -184,7 +157,7 @@ class WebMaassForm(object):
                 else:
                     mwf_logger.debug("setting C!")
                     self.coeffs = C
-         ## Make sure that self.coeffs is only the current coefficients
+        ## Make sure that self.coeffs is only the current coefficients
         if self._get_coeffs and isinstance(self.coeffs, dict) and not self._get_dirichlet_c_only:
             if not isinstance(self.coeffs, dict):
                 mwf_logger.warning("Coefficients s not a dict. Got:{0}".format(type(self.coeffs)))
@@ -193,12 +166,13 @@ class WebMaassForm(object):
                 mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
                 if n1 != self.dim:
                     mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())={1}".format(self.dim, n1))
-                if n1 > 0:
-                    for j in range(self.dim):
-                        n2 = len(self.coeffs.get(j, {}).keys())
-                        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
-                        if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
+                # silence these (apparently benign) warnings, per issue 1517
+                #if n1 > 0:
+                #    for j in range(self.dim):
+                #        n2 = len(self.coeffs.get(j, {}).keys())
+                #        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
+                #        if n2 != nc:
+                #            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
@@ -222,7 +196,7 @@ class WebMaassForm(object):
         #     else:
         #         return self.character
         # elif not self._using_conrey:
-        #     chi = self._db.getDircharConrey(self.level,self.character)
+        #     chi = maass_db.getDircharConrey(self.level,self.character)
         #     #return "\chi_{" + str(self.level) + "}(" +strIO(chi) + ",
 #            \cdot)"
 
@@ -259,7 +233,8 @@ class WebMaassForm(object):
             return "odd"
         elif self.symmetry == 0:
             return "even"
-        else:          return "undefined"
+        else:
+            return "undefined"
 
     def download_text(self):
         r"""
@@ -278,15 +253,15 @@ class WebMaassForm(object):
         return ans
 
     def has_plot(self):
-        return self._db.maassform_has_plot(self._maassid)
+        return maass_db.maassform_has_plot(self._maass_id)
 
     def next_maassform_id(self):
-        return self._db.get_next_maassform_id(self.level, self.character,
-                                              self.weight, self.R, self._maassid)
+        return maass_db.get_next_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maass_id)
 
     def prev_maassform_id(self):
-        return self._db.get_prev_maassform_id(self.level, self.character,
-                                              self.weight, self.R, self._maassid)
+        return maass_db.get_prev_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maass_id)
 
     def set_table(self, fnr=-1, cusp=0, prec=9):
         r"""
@@ -317,7 +292,7 @@ class WebMaassForm(object):
                             c = self.coeffs[k][cusp].get(n, None)
                         except (KeyError, IndexError):
                             mwf_logger.critical(
-                                "Got coefficient in wrong format for id={0}".format(self._maassid))
+                                "Got coefficient in wrong format for id={0}".format(self._maass_id))
                         # mwf_logger.debug("{0},{1}".format(k,c))
                         if c is not None:
                             realnumc += 1
@@ -359,55 +334,23 @@ class WebMaassForm(object):
         mwf_logger.debug("realnumc={0}".format(realnumc))
 
 
-import sage
-
-
-def pretty_coeff(c, digits=10, prec=9):
+def pretty_coeff(c, prec=9):
     '''
     Format the complex coefficient `c` for display on the website.
     '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
-    elif isinstance(c, (complex, sage.rings.complex_number.ComplexNumber)):
-        x = c.real()
-        y = c.imag()
     else:
-        x = c
-        y = 0
+        x = real_part(c)
+        y = imag_part(c)
+    # the number of digits to display 'prec' digits after the .
+    digits = lambda z: len(str(abs(z)).split('.')[0].lstrip('0')) + prec
 
-    x_trunc = float(truncate_number(x, precision=prec))
-    y_trunc = float(truncate_number(y, precision=prec))
-    xs = format_num(x_trunc, digits=digits)
-    ys = format_num(y_trunc, digits=digits)
+    res =  display_complex(x, y, digits = max(map(digits, [x, y])))
 
-    if xs == '0' and ys == '0':
+    if res == '0':
         return '&nbsp;0'
-    if ys == '0':
-        return xs
-    if xs == '0':
-        return ys + 'i'
-
-    return xs + ' + ' + ys + 'i'
-
-
-def format_num(x, digits=10):
-    '''
-    Format real number x for website display.
-    '''
-    if x == 0:
-        return '0'
-    d2 = digits
-    d1 = digits + 1
-    if abs(x) < 10.0 ** -digits:
-        if x > 0:
-            xs = '{0:<2.1g}'.format(float(x))
-        else:
-            xs = '{0:<3.1g}'.format(float(x))
     else:
-        x = round(x, digits)
-        if x > 0:
-            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
-        elif x < 0:
-            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
-    return xs
+        return res
+

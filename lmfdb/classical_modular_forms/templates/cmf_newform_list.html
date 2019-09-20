@@ -1,0 +1,81 @@
+{%- from "knowl-defs.html" import KNOWL with context -%}
+{% set AL_signs = info.display_AL(info.results) %}
+{% set Fricke_sign = info.display_Fricke(info.results) %}
+{% set Projective_image = info.all_weight1(info.results) %}
+{% set RM_col = info.any_weight1(info.results) %}
+
+<table class="ntdata">
+  <thead>
+    <tr class="middle dark">
+      <th rowspan=2>{{ KNOWL('cmf.label', title='Label') }}</th>
+      <th rowspan=2>{{ KNOWL('cmf.dimension_galois_orbit', title='Dim.') }}</th>
+      <th rowspan=2>{{ KNOWL('cmf.analytic_conductor', title='\(A\)') }}</th>
+      <th rowspan=2>{{ KNOWL('cmf.coefficient_field', title='Field') }}</th>
+      {% if Projective_image %}
+      <th class="center" rowspan=2>{{ KNOWL('cmf.projective_image', title='Image') }}</th>
+      {% endif %}
+      <th rowspan=2>{{ KNOWL('cmf.self_twist', title='CM') }}</th>
+      {% if RM_col %}
+      <th rowspan=2>{{ KNOWL('cmf.self_twist', title='RM') }}</th>
+      {% endif %}
+      <th colspan=4 class="center">{{ KNOWL('cmf.trace_form', title='Traces') }}</th>
+      {% if AL_signs %}
+      <th rowspan=2></th>
+      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> {{ KNOWL('cmf.atkinlehner', title='A-L signs') }}</th>
+      {% elif Fricke_sign %}
+      <th class="center" rowspan=2>{{ KNOWL('cmf.fricke', title='Fricke sign') }}</th>
+      {% endif %}
+
+      <th rowspan=2>{{ KNOWL('cmf.q-expansion', title='$q$-expansion') }}</th>
+    </tr>
+    <tr class="dark">
+      <th class="right">\(a_2\)</th>
+      <th class="right">\(a_3\)</th>
+      <th class="right">\(a_5\)</th>
+      <th class="right">\(a_7\)</th>
+      {% if AL_signs %}
+      {% for p, ev in info.results[0]['atkin_lehner_eigenvals'] %}
+      <th class="center">{{ p }}</th>
+      {% endfor %}
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for mf in info.results %}
+    <tr>
+      <td> <a href="{{ info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
+      <td> \({{ mf.dim }}\) </td>
+      <td> \({{ "%.3f" | format(mf.analytic_conductor|float) }}\) </td>
+      <td> {{ info.nf_link(mf) | safe }} </td>
+      {% if Projective_image %}
+      <td class="center">
+        \({{ info.display_projective_image(mf) }}\)
+      </td>
+      {% endif %}
+      <td> {{ info.cm_link(mf) | safe }} </td>
+      {% if RM_col %}
+      <td> {{ info.rm_link(mf) | safe }} </td>
+      {% endif %}
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[0], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[1], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[2], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[3], 12) | safe }}</td>
+      {% if AL_signs %}
+      <td></td>
+      {% for p, ev in mf.atkin_lehner_eigenvals %}
+      <td class="center">\({{"+" if ev == 1 else "-"}}\)</td>
+      {% endfor %}
+      {% elif Fricke_sign %}
+      <td class="center">{% if 'fricke_eigenval' in mf and mf['fricke_eigenval'] %}\({{"+" if mf['fricke_eigenval'] == 1 else "-"}}\){% endif %}</td>
+      {% endif %}
+      <td>
+        {% if mf.qexp_display %}
+        <a href="{{info.mf_url(mf)}}">
+          \({{ mf.qexp_display }}\)
+        </a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

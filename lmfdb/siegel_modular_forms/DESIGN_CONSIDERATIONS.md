@@ -31,8 +31,7 @@ layers:
 
 ### 1. Organization of data
 
-The data should be represented ( in the object oriented) mongodb as
-instances of the following objects.
+The data should be represented as instances of the following objects.
 
 ```
                         Family/Collection

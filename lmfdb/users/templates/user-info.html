@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}  
 
 {% if user_is_authenticated %}
@@ -88,6 +87,14 @@
     </tr>
    </table>
   </form>
+
+  <h2>Change Color Scheme</h2>
+
+  {% for color_scheme in all_colors %}
+  <form action="{{ url_for('.change_colors', scheme=color_scheme.code) }}" style="display: inline;">
+    <input class="color_selecter" style="background-color: {{ color_scheme.col_main_ld }}; color: {{ color_scheme.col_main_dl }}; border-color: {{ color_scheme.col_main_lg }}; width: 150px;" type="submit" value="{{ color_scheme.__class__.__name__ }}" rel="{{ url_for('css', color=color_scheme.code) }}">
+  </form>
+  {% endfor %}
 {% endif %}
 
 {# this script constructs a url and shows it as a link, just for testing #}
@@ -118,6 +125,10 @@ function checkpw() {
 $(function () {
   $("#pw1").keyup(function(evt) { evt.preventDefault(); checkpw(); });
   $("#pw2").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  /*$(".color_selecter").mouseenter(function (evt) {
+    $("link#style_css").attr("href",$(this).attr('rel'))});
+  $(".color_selecter").mouseleave(function (evt) {
+    $("link#style_css").attr("href","{{ url_for('css') }}")});*/
   checkpw();
 })
 </script>

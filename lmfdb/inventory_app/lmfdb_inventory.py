@@ -1,17 +1,14 @@
-from pymongo import MongoClient
 import json
 import logging, logging.handlers
-from lmfdb.base import getDBConnection
+from os import devnull
+#from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 #Email contact for app errors
 email_contact = 'rse@warwick.ac.uk'
-
-#DB client
-int_client = None
 
 #Sting constants
 STR_NAME = 'name'
@@ -21,10 +18,12 @@ STR_INFO = "(INFO)"
 
 #Fields to edit for normal records. These will always be shown, blank if no data exists
 #Value can be used to impose ordering in views
-base_editable_fields = {'type':1, 'description':2, 'example':3}
+base_editable_fields = {'type':2, 'description':3, 'example':4, 'c_name':-1}
 #sorted(d, key=d.get) returns keys sorted by values
 def display_field_order():
-    return sorted(base_editable_fields, key=base_editable_fields.get)
+    return sorted(base_editable_fields, key=lambda s : abs(base_editable_fields.get(s)))
+def field_editable():
+    return [name for (name, val) in base_editable_fields.items() if val > 0]
 
 info_editable_fields = {'nice_name':1, 'description':2, 'contact':4, 'status':3, 'code':5}
 def info_field_order():
@@ -53,11 +52,11 @@ class db_struc:
     n_colls = 8
     db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name', 'nice_name']}
     coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date', 'status']}
-    fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
-    fields_human = {STR_NAME : 'fields_human', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
-    record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'schema', 'count']}
+    fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'table_id', 'name', 'data']}
+    fields_human = {STR_NAME : 'fields_human', STR_CONTENT : ['_id', 'table_id', 'name', 'data']}
+    record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'table_id', 'hash', 'name', 'descrip', 'schema', 'count']}
     rollback_human = {STR_NAME : 'rollback', STR_CONTENT:['_id', 'diff']}
-    indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'coll_id', 'keys']}
+    indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'table_id', 'keys']}
     ops = {STR_NAME : 'ops', STR_CONTENT:[]} #Ops has no fixed format
     def get_fields(self, which):
         if which =='auto':
@@ -85,45 +84,6 @@ class db_struc:
 #Constant instance of db_struct
 ALL_STRUC = db_struc()
 
-_auth_as_edit = False
-_auth_on_remote = False
-def setup_internal_client(remote=True, editor=False):
-    """Get mongo connection and set int_client to it"""
-
-    #This is a temporary arrangement, to be replaced with LMFDB connection
-    log_dest.info("Getting db client")
-    global int_client, _auth_as_edit, _auth_on_remote
-    if(int_client and _auth_as_edit == editor and _auth_on_remote == remote):
-        return True
-    try:
-        if remote:
-            #Attempt to connect to LMFDB
-            int_client=getDBConnection()
-        else:
-            #Use local tunnel (for debugging)
-            int_client = MongoClient("localhost", 37010)
-
-#       Below was old way of doing auth. To be removed when working
-#        pw_dict = yaml.load(open("passwords.yaml"))
-        #if editor:
-        #    key = 'data'
-        #    auth_db = 'inventory'
-        #else:
-        #    key = 'default'
-        #    auth_db = 'admin'
-#        auth_db = 'inventory'
-#        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
-#        int_client[auth_db].authenticate(pw_dict['webserver']['username'], pw_dict['webserver']['password'])
-#        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
-
-    except Exception as e:
-        log_dest.error("Error setting up connection "+str(e))
-        int_client = None
-        return(False)
-    _auth_as_edit = editor
-    _auth_on_remote = remote
-    return True
-
 #Structure helpers -----------------------------------------------------------------------
 def get_inv_db_name():
     """ Get name of inventory db"""
@@ -139,27 +99,6 @@ def get_inv_table_names():
         if isinstance(value, dict) and STR_NAME in value and STR_CONTENT in value:
             names.append(value[STR_NAME])
     return names
-
-def validate_mongodb(db):
-    """Validates the db and collection names in db against expected structure"""
-    n_colls = 0
-    try:
-        if db.name != get_inv_db_name():
-            raise KeyError('name')
-        colls = db.collection_names()
-        tables = get_inv_table_names()
-        for coll in colls:
-            #Should contain only known tables and maybe some other admin ones.
-            if coll not in tables and not 'system.' in coll:
-                raise KeyError(coll)
-            elif coll in tables:
-                n_colls += 1
-        if n_colls != ALL_STRUC.n_colls and n_colls != 0:
-            raise ValueError('n_colls')
-    except:
-        # Exception as e:
-        return False
-    return True
 
 #End structure helpers -------------------------------------------------------------------
 #Other data and form helpers -------------------------------------------------------------
@@ -220,13 +159,15 @@ def init_run_log(level_name=None):
 
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
-        log_dest.setLevel(level)
+        assert(level)
+        #log_dest.setLevel(level)
 
     #Add handler only if not already present
     if not len(log_dest.handlers):
-        log_file_handler = logging.FileHandler(LOG_FILE_NAME)
-        formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
-        log_file_handler.setFormatter(formatter)
+        #log_file_handler = logging.FileHandler(LOG_FILE_NAME)
+        log_file_handler = logging.FileHandler(devnull)
+        #formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
+        #log_file_handler.setFormatter(formatter)
         log_dest.addHandler(log_file_handler)
 
     if level_name:
@@ -241,16 +182,18 @@ def init_transac_log(level_name=None):
 
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
-        log_transac.setLevel(level)
+        #log_transac.setLevel(level)
+        assert(level)
 
     #Add handler only if not already present
     if not len(log_transac.handlers):
-        #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
-        log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
-        formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")
-        log_file_handler.setFormatter(formatter)
-        log_transac.addHandler(log_file_handler)
+        log_file_handler = logging.FileHandler(devnull)
 
+        #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
+        #log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
+        #formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")
+        #log_file_handler.setFormatter(formatter)
+        log_transac.addHandler(log_file_handler)
 
     if level_name:
         #Print the level change in debug mode

@@ -1,33 +1,42 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
-from lmfdb.utils import make_logger
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
+from lmfdb import db
+from lmfdb.logger import make_logger
+from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, names_and_urls
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+        get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
-def db_dims():
-    return getDBConnection().bmfs.dimensions
+# Labels of BMFs which have no elliptic curve but are not twists of
+# base change.  Those which have no curve but are twists of base
+# change are detectable automatically in the code below, but these are
+# not.  Up to Galois conjugacy and quadratic twist there are only four
+# of these known; each is associated to the Jacobian of a genus 2
+# curve over the base field; these curves were found by Ciaran
+# Schembri.  At some point we will want to list these abelian surfaces
+# as friends when there is no curve.
 
-def db_dimstats():
-    return getDBConnection().bmfs.dimensions.stats
-
-def db_forms():
-    return getDBConnection().bmfs.forms
-
-def db_nf_fields():
-    return getDBConnection().numberfields.fields
-
-def db_ecnf():
-    return getDBConnection().elliptic_curves.nfcurves
-
-def is_bmf_in_db(label):
-    return db_forms().find({"label": label}).limit(1).count(True) > 0
+bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
+                      '2.0.4.1-34225.7-a',
+                      '2.0.4.1-34225.3-b',
+                      '2.0.4.1-34225.3-a',
+                      '2.0.3.1-67081.3-a',
+                      '2.0.3.1-67081.3-b',
+                      '2.0.3.1-67081.7-b',
+                      '2.0.3.1-67081.7-a',
+                      '2.0.3.1-61009.1-a',
+                      '2.0.3.1-61009.1-b',
+                      '2.0.3.1-61009.9-a',
+                      '2.0.3.1-61009.9-b',
+                      '2.0.3.1-123201.1-b',
+                      '2.0.3.1-123201.1-c',
+                      '2.0.3.1-123201.3-b',
+                      '2.0.3.1-123201.3-c']
 
 class WebBMF(object):
     """
@@ -53,7 +62,7 @@ class WebBMF(object):
         Searches for a specific Hilbert newform in the forms
         collection by its label.
         """
-        data = db_forms().find_one({"label" : label})
+        data = db.bmf_forms.lookup(label)
 
         if data:
             return WebBMF(data)
@@ -69,9 +78,9 @@ class WebBMF(object):
         from lmfdb.ecnf.WebEllipticCurve import FIELD
         self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
-        self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
+        self.field_knowl = nf_display_knowl(self.field_label, pretty_field)
         try:
-            dims = db_dims().find_one({'field_label':self.field_label, 'level_label':self.level_label})['gl2_dims']
+            dims = db.bmf_dims.lucky({'field_label':self.field_label, 'level_label':self.level_label}, projection='gl2_dims')
             self.newspace_dimension = dims[str(self.weight)]['new_dim']
         except TypeError:
             self.newspace_dimension = 'not available'
@@ -107,10 +116,14 @@ class WebBMF(object):
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        if self.sfe == 1:
-            self.sign = "+1"
-        elif self.sfe == -1:
-            self.sign = "-1"
+        
+        try:
+            if self.sfe == 1:
+                self.sign = "+1"
+            elif self.sfe == -1:
+                self.sign = "-1"
+        except AttributeError:
+            self.sfe = '?'
 
         if self.Lratio == '?':
             self.Lratio = "not determined"
@@ -127,10 +140,16 @@ class WebBMF(object):
                             ('Dimension', str(self.dimension))
         ]
 
-        if self.CM == '?':
+        try:
+            if self.CM == '?':
+                self.CM = 'not determined'
+            elif self.CM == 0:
+                self.CM = 'no'
+            else:
+                if self.CM%4 in [2,3]:
+                    self.CM = 4*self.CM
+        except AttributeError:
             self.CM = 'not determined'
-        elif self.CM == 0:
-            self.CM = 'no'
         self.properties2.append(('CM', str(self.CM)))
 
         self.bc_extra = ''
@@ -156,19 +175,18 @@ class WebBMF(object):
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         self.properties2.append(('Base-change', str(self.bc)))
 
-        curve = db_ecnf().find_one({'class_label':self.label})
-        if curve:
+        curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
+        if curve_bc is not None:
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
-            curve_bc = curve['base_change']
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
-            bc_urls = [url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso) for cond, iso, num in curve_bc_parts]
-            bc_labels = [newform_label(cond,2,1,iso) for cond,iso,num in curve_bc_parts]
-            bc_exists = [is_newform_in_db(lab) for lab in bc_labels]
+            bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
+            bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
+            bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
             self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         else:
             self.bc_forms = []
-            if self.bct:
+            if self.bct or self.label in bmfs_with_no_curve:
                 self.ec_status = 'none'
             else:
                 self.ec_status = 'missing'
@@ -177,13 +195,25 @@ class WebBMF(object):
         self.properties2.append(('Analytic rank', self.anrank))
 
         self.friends = []
-        if self.dimension==1:
-            if self.ec_status == 'exists':
-                self.friends += [('Elliptic curve isogeny class {}'.format(self.label), self.ec_url)]
-            elif self.ec_status == 'missing':
-                self.friends += [('Elliptic curve {} missing'.format(self.label), "")]
-            else:
-                self.friends += [('No elliptic curve', "")]
+        self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]
+        url = 'ModularForm/GL2/ImaginaryQuadratic/{}'.format(
+                self.label.replace('-', '/'))
+        Lfun = get_lfunction_by_url(url)
+        if Lfun:
+            instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'], Lfun['degree'], Lfun['trace_hash'])
 
-        self.friends += [ ('Newspace {}'.format(self.newspace_label),self.newspace_url)]
-        self.friends += [ ('L-function not available','')]
+            # This will also add the EC/G2C, as this how the Lfun was computed
+            # and not add itself
+            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends.append(('L-function', '/L/'+url))
+        else:
+            # old code
+            if self.dimension == 1:
+                if self.ec_status == 'exists':
+                    self.friends += [('Isogeny class {}'.format(self.label), self.ec_url)]
+                elif self.ec_status == 'missing':
+                    self.friends += [('Isogeny class {} missing'.format(self.label), "")]
+                else:
+                    self.friends += [('No elliptic curve', "")]
+
+            self.friends += [ ('L-function not available','')]

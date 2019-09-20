@@ -2,7 +2,6 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones
 
-import re
 from flask import render_template, url_for, redirect, request
 
 from lmfdb.motives import motive_page
@@ -15,8 +14,6 @@ def get_bread(breads=[]):
     for b in breads:
         bc.append(b)
     return bc
-
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 @motive_page.route("/")
 def index():

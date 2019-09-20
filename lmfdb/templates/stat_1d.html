@@ -1,0 +1,39 @@
+{% for rows, div_classes, span_class in d.divs %}
+<div class="{{div_classes}}">
+<table border=1>
+  {% for r in rows %}
+  <tr>
+    <th>{{d.attribute.row_title}}</th>
+    {% for c in r %}
+    <td>{{c.value|safe}}</td>
+    {% endfor %}
+  </tr>
+  <tr>
+    <th>count</th>
+    {% for c in r %}
+    <td><a href='{{c.query}}'>{{c.count}}</a></td>
+    {% endfor %}
+  </tr>
+  <tr>
+    {# Omit if first (and thus all) blank #}
+    {% if r[0].proportion %}
+    <th>proportion</th>
+    {% for c in r %}
+    <td>{{c.proportion}}</td>
+    {% endfor %}
+    {% endif %}
+  </tr>
+  <tr height = 10px></tr>
+  {% endfor %} {# r in rows #}
+</table>
+{% if span_class == 'short' %}
+<div class="toggle">Display
+  <span class="short_table_{{d.attribute.hash}}"><a onclick="return show_stats_rows('{{d.attribute.hash}}','long');" href="#{{d.attribute.hash}}-anchor">more</a></span>
+</div>
+{% elif span_class == 'long' %}
+<div class="toggle">Display
+  <span class="long_table_{{d.attribute.hash}} nodisplay"><a onclick="return show_stats_rows('{{d.attribute.hash}}','short');" href="#{{d.attribute.hash}}-anchor">less</a></span>
+</div>
+{% endif %}
+</div>
+{% endfor %} {# d.divs #}

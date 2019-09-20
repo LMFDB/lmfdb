@@ -1,0 +1,42 @@
+  <tr style="height:30px"></tr>
+  <tr>
+    <td class="table_h2">
+      Variables
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td colspan="2">{{ KNOWL('stats.buckets', title='Buckets') }}</td>
+    <td>{{ KNOWL('stats.totals', title='Totals') }}</td>
+    <td>{{ KNOWL('stats.proportions', title='Proportions') }}</td>
+  </tr>
+  {% for i in [1,2] %}
+  <tr>
+    <td>
+      <select id="col{{i}}_select" name='col{{i}}' style="width: 150px;" onchange="set_buckets(this, 'buckets{{i}}')">
+        {% for col, disp in info.stats._dynamic_cols %}
+        <option value="{{ col }}"{% if col==info.get_col(i) %} selected='yes'{% endif %}>{{ disp }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td colspan="2">
+      <input id="buckets{{i}}" type='text' style="width: 310px" name='buckets{{i}}' value='{{ info.get_bucket(i) }}'>
+    </td>
+    <td>
+      <input name="totals{{i}}" value="yes" type='checkbox'{% if info.get_total(i) %} checked{% endif %}>
+    </td>
+    {% if i == 1 %}
+    <td rowspan="2">
+      <select name="proportions" style="width: 150px;">
+        <option value="recurse"{% if info.proportions=='recurse' %} selected='yes'{% endif %}>Vs unconstrained</option>
+        <option value="rows"{% if info.proportions=='rows' %} selected='yes'{% endif %}>By rows</option>
+        <option value="cols"{% if info.proportions=='cols' %} selected='yes'{% endif %}>By columns</option>
+        <option value="none"{% if info.proportions=='none' %} selected='yes'{% endif %}>None</option>
+      </select>
+    </td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+  <tr style="height:50px">
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px">Generate statistics</button></td>
+  </tr>

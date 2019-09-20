@@ -2,8 +2,8 @@ import lmfdb_inventory as inv
 import inventory_db_core as invc
 import inventory_live_data as ild
 import datetime
+from lmfdb import db as lmfdb_db
 
-#TODO this should log to its own logger
 #Routines to upload data from reports scan into inventory DB
 
 MAX_SZ = 10000
@@ -15,43 +15,31 @@ def upload_scraped_data(structure_data, uid):
     uid -- string uuid from scraper process start call
     """
 
-    try:
-        got_client = inv.setup_internal_client(editor=True)
-        assert(got_client == True)
-        inv_db = inv.int_client[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
+    upload_scraped_inventory(structure_data, uid)
 
-    inv.log_dest.warning('In upload with '+str(uid))
-    upload_scraped_inventory(inv_db, structure_data, uid)
-
-def upload_scraped_inventory(db, structure_dat, uid):
+def upload_scraped_inventory(structure_dat, uid):
     """Upload a json structure document and store any oprhans
 
-        db -- LMFDB connection to inventory database
         structure_dat -- JSON document containing all db/collections to upload
         uid -- UID string for uploading process
     """
 
-    inv.log_dest.info("_____________________________________________________________________________________________")
     n_dbs = len(structure_dat.keys())
     progress_tracker = 0
 
     for db_name in structure_dat:
         progress_tracker += 1
-        inv.log_dest.info("Uploading " + db_name+" ("+str(progress_tracker)+" of "+str(n_dbs)+')')
-        invc.set_db(db, db_name, db_name)
+        invc.set_db(db_name, db_name)
 
         for coll_name in structure_dat[db_name]:
-            inv.log_dest.info("    Uploading collection "+coll_name)
-            orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False)
+            orphaned_keys = upload_collection_structure(db_name, coll_name, structure_dat, fresh=False)
             if len(orphaned_keys) != 0:
-                db_id = invc.get_db_id(db, db_name)
-                coll_id = invc.get_coll_id(db, db_id['id'], coll_name)
-                ild.store_orphans(db, db_id['id'], coll_id['id'], uid, orphaned_keys)
+                db_id = invc.get_db_id(db_name)
+                coll_id = invc.get_coll_id(db_id['id'], coll_name)
+                ild.store_orphans(db_id['id'], coll_id['id'], uid, orphaned_keys)
+    return n_dbs
 
-def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False):
+def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
     """Upload the structure description for a single collection
 
     Any entered descriptions for keys which still exist are preserved.
@@ -68,62 +56,49 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
     dummy_info = {} #Dummy per collection info, containing basic fields we want included
     for field in inv.info_editable_fields:
         dummy_info[field] = None
-
     try:
         coll_entry = structure_dat[db_name][coll_name]
-        db_entry = invc.get_db_id(db, db_name)
+        db_entry = invc.get_db_id(db_name)
         if not db_entry['exist']:
             #All dbs should have been added from the struc: if not is error
-            inv.log_dest.error("ERROR: No inventory DB entry "+ db_name)
-            inv.log_dest.error("Cannot add descriptions")
             return
+        #Inventory data migration includes db name in collection name for some reason
+        #Work around until we can fix the data
+        full_coll_name = db_name +'_' + coll_name
 
-        _c_id = invc.get_coll_id(db, db_entry['id'], coll_name)
+        _c_id = invc.get_coll_id(db_entry['id'], full_coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  {'description':None}, dummy_info, 0)
+            _c_id = invc.set_coll(db_entry['id'], full_coll_name, full_coll_name,  {'description':None}, dummy_info, 0)
         else:
 	    #Delete existing auto-table entries (no collection => no entries)
-           delete_collection_data(db, _c_id['id'], tbl='auto')
+           delete_collection_data(_c_id['id'], tbl='auto')
         try:
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
-        except Exception as e:
-            inv.log_dest.info("Scrape date parsing failed "+str(e))
+        except:
             scrape_date = datetime.datetime.min
-        invc.set_coll_scrape_date(db, _c_id['id'], scrape_date)
 
-    except Exception as e:
-        inv.log_dest.error("Failed to refresh collection (db, coll or scrape data) "+str(e))
+        invc.set_coll_scrape_date(_c_id['id'], scrape_date)
+
+    except:
+        pass
 
     try:
         for field in coll_entry['fields']:
-            inv.log_dest.info("            Processing "+field)
-            invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
-        for record in coll_entry['records']:
-            inv.log_dest.info("            Processing record "+str(record))
-            invc.set_record(db, _c_id['id'], coll_entry['records'][record])
-        #Cleanup any records which no longer exist
-        invc.cleanup_records(db, _c_id['id'], coll_entry['records'])
+            invc.set_field(_c_id['id'], field, coll_entry['fields'][field])
+            #Add any keys needed to human_table
+            invc.create_field(_c_id['id'], field, 'human')
 
-        inv.log_dest.info("            Processing indices")
-        upload_indices(db, _c_id['id'], coll_entry['indices'])
-
-    except Exception as e:
-        inv.log_dest.error("Failed to refresh collection entries "+str(e))
+    except:
+        pass
 
     orphaned_keys = []
     if not fresh:
         try:
 	    #Trim any human table keys which are now redundant
-            orphaned_keys = invc.trim_human_table(db, db_entry['id'], _c_id['id'])
-        except Exception as e:
-            inv.log_dest.error("Failed trimming table "+str(e))
-
-    #Ensure everything mandatory is present in human table
-    try:
-        invc.complete_human_table(db, db_entry['id'], _c_id['id'])
-    except Exception as e:
-        inv.log_dest.error("Failed padding table "+str(e))
+            orphaned_keys = invc.trim_human_table(db_entry['id'], _c_id['id'])
+        except:
+            pass
 
     return orphaned_keys
 
@@ -153,16 +128,14 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
     try:
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
-    except Exception as e:
-        inv.log_dest.error("Failed to get db or coll id "+str(e))
+    except:
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
         #err = upload_indices(db, coll_info['id'], data)
         upload_indices(db, coll_info['id'], data)
         # TODO rethrow if err
-    except Exception as e:
-        inv.log_dest.error("Failed to upload index "+str(e))
+    except:
         return {'err':True, 'mess':'Failed to upload'}
     return {'err':False, 'mess':''}
 
@@ -178,68 +151,33 @@ def upload_indices(db, coll_id, data):
 #End upload routines -----------------------------------------------------------------
 
 #Table removal -----------------------------------------------------------------------
-def delete_contents(db, tbl_name, check=True):
+def delete_contents(tbl_name, check=True):
     """Delete contents of tbl_name """
+    # This should be named unsafe, but shouldn't bother re-doing the checks
 
-    if not inv.validate_mongodb(db) and check:
-        raise TypeError("db does not match Inventory structure")
-        return
-    #Grab the possible table names
-    tbl_names = inv.get_inv_table_names()
-    if tbl_name in tbl_names:
-        try:
-            db[tbl_name].remove()
-        except Exception as e:
-            inv.log_dest.error("Error deleting from "+ tbl_name+' '+ str(e)+", dropping")
-            #Capped tables, e.g rollback, can only be dropped, so try that
-	    try:
-		db[tbl_name].drop()
-            except Exception as e:
-                inv.log_dest.error("Error dropping "+ tbl_name+' '+ str(e))
+    try:
+        #TODO if keep, below should delete all records
+        lmfdb_db[tbl_name].empty()
+    except:
+        pass
 
-def delete_table(db, tbl_name, check=True):
-    """Delete tbl_name (must be empty) """
-
-    if not inv.validate_mongodb(db) and check:
-        raise TypeError("db does not match Inventory structure")
-        return
-    #Grab the possible table names
-    tbl_names = inv.get_inv_table_names()
-    if tbl_name in tbl_names:
-        try:
-	    assert(db[tbl_name].find_one() is None) #Check content is gone
-            db[tbl_name].drop()
-        except Exception as e:
-            inv.log_dest.error("Error dropping "+ tbl_name+' '+ str(e))
-            #Capped tables, e.g rollback, can only be dropped, so try that
-
-def unsafe_delete_all_tables(db):
-    """Delete inventory tables by name without checking this really is the inventory db
-    use if inv.validate_mongod fails and you know some table is missing and you are sure db is the inventory"""
-
+def delete_all_tables():
+    """ Delete all tables specified by inv Note that other names can be present"""
+    # TODO remove this completely???
+    # TODO this should create the list of tables to delete and do any checking it can they are correct
     tbls = inv.get_inv_table_names()
+
+    for tbl in tbls:
+        # Any possible checking here
+        pass
+
     for tbl in tbls:
         try:
-            delete_contents(db, tbl, check=False)
-            delete_table(db, tbl, check=False)
-        except Exception as e:
-            inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
+            delete_contents(tbl)
+        except:
+            pass
 
-def delete_all_tables(db):
-    """ Delete all tables specified by inv Note that other names can be present, see inv.validate_mongod"""
-
-    if not inv.validate_mongodb(db):
-        raise TypeError("db does not match Inventory structure")
-        return
-    tbls = inv.get_inv_table_names()
-    for tbl in tbls:
-        try:
-            delete_contents(db, tbl)
-            delete_table(db, tbl)
-        except Exception as e:
-            inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
-
-def delete_collection_data(inv_db, coll_id, tbl, dry_run=False):
+def delete_collection_data(coll_id, tbl, dry_run=False):
     """Clean out the data for given collection id
       Removes all entries for coll_id in auto, human or records
 
@@ -256,67 +194,53 @@ def delete_collection_data(inv_db, coll_id, tbl, dry_run=False):
             rec_find = {fields_fields[2]:coll_id}
 
         if not dry_run:
-            inv_db[fields_tbl].remove(rec_find)
+            lmfdb_db[fields_tbl].delete(rec_find)
         else:
             print 'Finding '+str(rec_find)
             print 'Operation would delete:'
-            curs = inv_db[fields_tbl].find(rec_find)
+            curs = lmfdb_db[fields_tbl].search(rec_find)
             for item in curs:
                 print item
-    except Exception as e:
-        inv.log_dest.error("Error removing fields " + str(e))
+    except:
+        pass
 
-def delete_by_collection(inv_db, db_name, coll_name):
+def delete_by_collection(db_name, coll_name):
     """Remove collection entry and all its fields"""
 
-    if not inv.validate_mongodb(inv_db):
-        raise TypeError("db does not match Inventory structure")
-        return
-
     try:
-        _db_id = invc.get_db_id(inv_db, db_name)
-        _c_id = invc.get_coll_id(inv_db, _db_id['id'], coll_name)
-    except Exception as e:
-        inv.log_dest.error("Error getting collection " + str(e))
+        _db_id = invc.get_db_id(db_name)
+        _c_id = invc.get_coll_id(_db_id['id'], coll_name)
+    except:
         return {'err':True, 'id':0, 'exist':False}
 
     #Remove fields entries matching _c_id
-    delete_collection_data(inv_db, _c_id['id'], tbl='auto')
-    delete_collection_data(inv_db, _c_id['id'], tbl='human')
-    delete_collection_data(inv_db, _c_id['id'], tbl='records')
+    delete_collection_data(_c_id['id'], tbl='auto')
+    delete_collection_data(_c_id['id'], tbl='human')
+    delete_collection_data(_c_id['id'], tbl='records')
 
     try:
-        inv_db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].remove({'_id':_c_id['id']})
-    except Exception as e:
-        inv.log_dest.error("Error removing collection " + str(e))
-
+        lmfdb_db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].delete({'_id':_c_id['id']})
+    except:
+        pass
 
 #End table removal -----------------------------------------------------------------------
 
 #Rollback table handling
-def recreate_rollback_table(inv_db, sz):
+def recreate_rollback_table(sz):
     """Create anew the table for edit rollbacks
 
     Arguments :
-    inv_db -- LMFDB db connection to inventory table
     sz -- Max size of the capped table
     If table exists, it is now deleted
     """
     try:
-        table_name = inv.ALL_STRUC.rollback_human[inv.STR_NAME]
-        coll = inv_db[table_name]
-    except Exception as e:
-        inv.log_dest.error("Error getting collection "+str(e))
-        return {'err':True, 'id':0}
-    #fields = inv.ALL_STRUC.rollback_human[inv.STR_CONTENT]
-
-    try:
-        coll.drop()
+        #TODO clearout rollbacks here
+        pass
     except:
         #TODO Do something useful here?
         pass
-
-    inv_db.create_collection(table_name, capped=True, size=sz)
+    #TODO replace with a recreate of rollbacks
+    #lmfdb_db.create_collection(table_name, capped=True, size=sz)
 
 #-----Orphan handling Functions --------------
 

@@ -1,0 +1,284 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<!-- Debugging! -->
+{% if false %}
+<hr>
+<div>
+Info was: {{info}}
+</div>
+{% endif %}
+
+<div>
+{{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse <a href="./stats">statistics</a> or <a href="./dynamic_stats">create your own</a> </h2>
+<h2> Browse {{ KNOWL('cmf.newform','newforms')}}</h2>
+
+<p>
+  By {{ KNOWL('cmf.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?weight={{weight}}">{{weight}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{ KNOWL('cmf.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?level={{level}}">{{level}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+{% for sublist in info.newform_list %}
+<p>
+  {% if loop.index == 1 %}
+  Some interesting newforms:
+  {% endif %}
+  {% for newform in sublist %}
+  <a href="{{ newform.url }}" title="{{ newform.reason }}"> {{ newform.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+{% endfor %}
+
+<p>
+  A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('cmf.q-expansion', title='\(q\)-expansion') }}
+</p>
+
+<h2> Browse {{ KNOWL('cmf.newspace','newspaces')}}</h2>
+
+<p>
+  By {{ KNOWL('cmf.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{ KNOWL('cmf.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+Create a <a href = "?search_type=Spaces">search</a> for newspaces,
+ a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}
+</p>
+
+{% for sublist in info.space_list %}
+<p>
+  {% if loop.index == 1 %}
+  Some interesting newspaces:
+  {% endif %}
+  {% for space in sublist %}
+  <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+{% endfor %}
+
+
+<h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='3.6.a.a'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 3.6.a.a, 55.3.d or 20.5 </span>
+</form>
+
+{# SEARCHING #}
+
+<h2> Search </h2>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  <table>
+    <tr>
+
+      <td>{{ KNOWL('cmf.level', title='Level') }}</td>
+      <td>
+        <select name='level_type' style="width: 105px;">
+          <option value="">unrestricted</option>
+          <option value="prime">prime</option>
+          <option value="prime_power">prime power</option>
+          <option value="square">square</option>
+          <option value="squarefree">squarefree</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='level' placeholder='4'></td>
+      <td><span class="formexample"> e.g. 4, 1-20</td>
+
+      <td>{{ KNOWL('cmf.weight', title='Weight') }}</td>
+      <td>
+        <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='weight' placeholder='2'></td>
+      <td><span class="formexample"> e.g. 2, 4-8 </span></td>
+    </tr>
+
+    <tr>
+      <td>
+        {{ KNOWL('cmf.bad_prime',title='Bad \(p\)') }}
+      </td>
+      <td>
+        <select name='prime_quantifier' style="width: 105px;">
+          <option value='subsets'>subset of</option>
+          <option value='' selected='yes'>equal to</option>
+          <option value='append'>superset of</option>
+        </select>
+      </td>
+      <td><input type='text' name='level_primes' example='2,3' style="width: 160px"></td>
+      <td><span class="formexample"> e.g. 2,3</span></td>
+
+
+      <td>{{ KNOWL('cmf.character', title='Character') }}</td>
+      <td>
+        <select class="simult_select" name="char_parity" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='char_label' placeholder='20.d'></td>
+      <td><span class="formexample"> e.g. 20.d </td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
+      <td><input type='text' style="width: 160px;" name='char_order' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</td>
+
+      <td colspan=2>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
+      <td><input type='text' style="width: 160px;" name='prim_label' placeholder='1.a'></td>
+      <td><span class="formexample"> e.g. 1.a </td>
+
+    </tr>
+
+    <tr>
+      <td colspan>{{ KNOWL('cmf.dimension', title='Dim.') }}</td>
+      <td>
+        <select name="dim_type" style="min-width: 105px;">
+          <option value="">absolute</option>
+          <option value="rel">relative</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='dim' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 2, 1-6 </span></td>
+
+      <td colspan=2>{{ KNOWL('cmf.coefficient_field', title='Coefficient field') }}</td>
+      <td><input type='text' style="width: 160px;" name='nf_label' placeholder='1.1.1.1'></td>
+      <td><span class="formexample"> e.g. 4.0.144.1, Qsqrt5 </span></td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
+      <td><input type='text' style="width: 160px;" name='analytic_conductor' placeholder='1-10'></td>
+      <td><span class="formexample"> e.g. 1-10</span></td>
+      <td colspan=2>{{ KNOWL('cmf.nk2', title='\(Nk^2\)') }}</td>
+      <td><input type='text' style="width: 160px;" name='Nk2' placeholder='40-100'></td>
+      <td><span class="formexample"> e.g. 40-100</span></td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('cmf.self_twist', title='Self-twists') }}</td>
+      <td>
+        <div class="float-left">
+          <select name='cm' style="min-width: 80px;">
+            {% for val, text in [('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="float-right">
+          <select name='rm' style="min-width: 80px;">
+            {% for val, text in [('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('cmf.self_twist', title='CM/RM discriminant')}}</td>
+      <td><input type='text' style="width: 160px;" name='self_twist_discs' placeholder='-3'></td>
+      <td><span class="formexample"> e.g. -3 </span></td>
+    </tr>
+
+    <tr>
+      {#
+      <td colspan=2>{{ KNOWL('cmf.minimal', title='Twist minimal') }}</td>
+      <td><select name='is_twist_minimal' style="width: 170px;">
+          <option ></option>
+          <option value='True'>Yes</option>
+          <option value='False'>No</option>
+        </select>
+      </td>
+      <td></td>
+      #}
+      <td colspan=2>{{ KNOWL('cmf.inner_twist_count', title='Inner twist count*') }}</td>
+      <td>
+        <input type='text' style="width: 160px;" name='inner_twist_count' placeholder='1-'></td>
+      </td>
+      <td><span class="formexample"> e.g. 0, 1-, 2-3</span></td>
+      <td colspan=2>{{ KNOWL('cmf.selfdual', title='Is self-dual') }}</td>
+      <td>
+        <select name='is_self_dual' style="width: 170px;">
+          {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
+          {% for val, text in is_self_dual_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index*') }}</td>
+      <td><input type='text' style="width: 160px;" name='hecke_ring_index' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+
+      <td colspan=2>{{ KNOWL('cmf.hecke_ring_generators', title='Coefficient ring gens.')}}</td>
+      <td><input type='text' style="width: 160px" name='hecke_ring_generator_nbound' placeholder='20'></td>
+      <td><span class="formexample"> e.g. 7, 1-10</span></td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('cmf.analytic_rank',title='Analytic rank') }}</td>
+      <td><input type='text' style="width: 160px;" name='analytic_rank' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+
+      <td colspan=2>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
+      <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15'></td>
+      <td><span class="formexample"> wt. 1 only</span></td>
+    </tr>
+
+    <tr>
+      <td align=left colspan=2>Results to display</td>
+      <td><input type='text' style="width: 160px;" name='count' placeholder='50'></td>
+      <td></td>
+
+      <td colspan=2>{{ KNOWL('cmf.projective_image', title='Projective image type') }}</td>
+      <td>
+        <select name='projective_image_type' style="width: 170px;">
+          {% set projective_image_type_values = [('', 'unrestricted'), ('Dn', 'Dn'), ('A4', 'A4'), ('S4', 'S4'), ('A5','A5')] %}
+          {% for val, text in projective_image_type_values %}
+          <option value="{{ val }}"{% if info.projective_image_type == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td><span class="formexample">wt. 1 only</span></td>
+    </tr>
+  </table>
+  <br>
+  <table>
+    {% for knowl, ktitle, buttons in [('cmf.newform', 'Newforms', [('List', 'List of forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')])] %}
+    <tr>
+      <td>Display: </td>
+      {% for type, desc in buttons %}
+      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 170px;">{{desc}}</button></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+</form>
+
+
+{% endblock %}

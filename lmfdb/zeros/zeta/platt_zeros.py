@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # AUTHOR: Jonathan Bober <jwbober@gmail.com>
 #
@@ -14,7 +15,7 @@ from math import log
 import mpmath
 mpmath.mp.prec = 300
 
-zeta_folder =  os.path.expanduser('~/data/zeros/zeta/')
+zeta_folder =  os.path.expanduser('/home/lmfdb/data/zeros/zeta/')
 data_location = os.path.join(zeta_folder, 'data/')
 db_location = os.path.join(zeta_folder,'index.db')
 
@@ -116,8 +117,8 @@ def list_zeros(filename,
                 # we can just look at a list to get the next one.)
                 #
                 c = db.cursor()
-                query = 'select * from zero_index where N = %d limit 1' % N
-                c.execute(query)
+                query = 'select * from zero_index where N = ? limit 1'
+                c.execute(query, (N,))
                 result = c.fetchone()
                 if result is None:
                     return
@@ -162,9 +163,9 @@ def list_zeros(filename,
 def zeros_starting_at_t(t, number_of_zeros=1000):
     if t < 14:
         t = 14
-    query = 'select * from zero_index where t <= %d order by t desc limit 1' % float(t)
+    query = 'select * from zero_index where t <= ? order by t desc limit 1'
     c = sqlite3.connect(db_location).cursor()
-    c.execute(query)
+    c.execute(query, (float(t),))
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, t_start=t)
 
@@ -174,9 +175,9 @@ def zeros_starting_at_N(N, number_of_zeros=1000):
     if N < 0:
         N = 0
 
-    query = 'select * from zero_index where N <= %d order by N desc limit 1' % N
+    query = 'select * from zero_index where N <= ? order by N desc limit 1'
     c = sqlite3.connect(db_location).cursor()
-    c.execute(query)
+    c.execute(query, (N,))
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
 

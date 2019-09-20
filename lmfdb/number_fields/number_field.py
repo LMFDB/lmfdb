@@ -1,29 +1,31 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-D
 
-import pymongo
-ASC = pymongo.ASCENDING
-import time, os
+import ast, os, re, StringIO, time
+
 import flask
-from lmfdb.base import app, getDBConnection
-from flask import render_template, request, url_for, redirect, send_file, flash, make_response
-import StringIO
-from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
+from flask import render_template, request, url_for, redirect, send_file, make_response
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
+
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.utils import (
+    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
+    web_latex_split_on_pm, flash_error,
+    clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
+    parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
+    parse_floats, search_wrap)
 from lmfdb.local_fields.main import show_slope_content
-
-
-from markupsafe import Markup
-
-import re
+from lmfdb.galois_groups.transitive_group import (
+    cclasses_display_knowl,character_table_display_knowl,
+    group_phrase, galois_group_data, 
+    group_cclasses_knowl_guts, group_pretty_and_nTj,
+    group_character_table_knowl_guts, group_alias_table)
+from lmfdb.number_fields import nf_page, nf_logger
+from lmfdb.number_fields.web_number_field import (
+    field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
+    factor_base_factorization_latex)
 
 assert nf_logger
-
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
-
-from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts, group_character_table_knowl_guts, group_alias_table
-
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm, search_cursor_timeout_decorator
-from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
@@ -35,39 +37,36 @@ nfields = None
 max_deg = None
 init_nf_flag = False
 
-def db():
-    return getDBConnection()
-
-def nfdb():
-    return db().numberfields.fields
-
-def statdb():
-    return db().numberfields.stats
-
 # For imaginary quadratic field class group data
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
     if not init_nf_flag:
-        fields = nfdb()
-        nfields = fields.find().count()
-        max_deg = fields.find().sort('degree', pymongo.DESCENDING).limit(1)[0]['degree']
+        nfields = db.nf_fields.count()
+        max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
-
 def group_cclasses_data(n, t):
-    return flask.Markup(group_cclasses_knowl_guts(n, t, db()))
+    return flask.Markup(group_cclasses_knowl_guts(n, t))
 
 def group_character_table_data(n, t):
-    return flask.Markup(group_character_table_knowl_guts(n, t, db()))
+    return flask.Markup(group_character_table_knowl_guts(n, t))
 
 def number_field_data(label):
-    return flask.Markup(nf_knowl_guts(label, db()))
+    return flask.Markup(nf_knowl_guts(label))
 
 #def na_text():
 #    return "Not computed"
 
+# fixed precision display of float, rounding off
+def fixed_prec(r, digs=3):
+  n = RealField(200)(r)*(10**digs)
+  n = str(n.round())
+  head = int(n[:-digs])
+  if head>=10**4:
+    head = comma(head)
+  return str(head)+'.'+n[-digs:]
 
 @app.context_processor
 def ctx_galois_groups():
@@ -84,10 +83,17 @@ def global_numberfield_summary():
     init_nf_count()
     return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
 
-#def group_display_shortC(C):
-#    def gds(nt):
-#        return group_display_short(nt['n'], nt['t'], C)
-#    return gds
+def learnmore_list():
+    return [(Completename, url_for(".render_discriminants_page")), 
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
+            ('Global number field labels', url_for(".render_labels_page")), 
+            ('Galois group labels', url_for(".render_groups_page")), 
+            ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def poly_to_field_label(pol):
     try:
@@ -95,63 +101,52 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
-    #coeffs = list2string([int(c) for c in pol.coeffs()])
-    #d = int(pol.degree())
-    #query = {'coeffs': coeffs}
-    #C = base.getDBConnection()
-    #one = C.numberfields.fields.find_one(query)
-    #if one:
-    #    return one['label']
-    #return None
 
 @app.route("/NF")
 @app.route("/NF/")
 def NF_redirect():
     return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
-@nf_page.route("/HowComputed")
-def how_computed_page():
-    info = {}
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), 
-        ('Galois group labels', url_for(".render_groups_page")), 
-        (Completename, url_for(".render_discriminants_page")) ]
-    t = 'How Number Field Data was Computed'
+@nf_page.route("/Source")
+def source():
+    learnmore = learnmore_list_remove('Source')
+    t = 'Source of number field data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
-    return render_template("single.html", kid='dq.nf.howcomputed', 
-        credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("single.html", kid='rcs.source.nf', 
+        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+
+@nf_page.route("/Reliability")
+def reliability():
+    learnmore = learnmore_list_remove('Reliability')
+    t = 'Reliability of number field data'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Reliability', ' ')]
+    return render_template("single.html", kid='rcs.rigor.nf', 
+        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 @nf_page.route("/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
-    t = 'Galois Group Labels'
+    learnmore = learnmore_list_remove('Galois group')
+    t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
-    return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
-
+    return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 @nf_page.route("/FieldLabels")
 def render_labels_page():
     info = {}
-    info['learnmore'] = [(Completename, url_for(".render_discriminants_page")),
-                         ('How data was computed', url_for(".how_computed_page")),
-                         ('Galois group labels', url_for(".render_groups_page")),
-                         ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Labels for Global Number Fields'
+    learnmore = learnmore_list_remove('number field labels')
+    t = 'Labels for global number fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Number Field Labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
-    return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
-@nf_page.route("/Discriminants")
+@nf_page.route("/Completeness")
 def render_discriminants_page():
-    info = {}
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Completeness of Global Number Field Data'
+    learnmore = learnmore_list_remove('Completeness')
+    t = 'Completeness of global number field data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
-    return render_template("single.html", kid='dq.nf.completeness', 
-        credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("single.html", kid='rcs.cande.nf', 
+        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/QuadraticImaginaryClassGroups")
@@ -161,8 +156,8 @@ def render_class_group_data():
     #for k in info.keys():
     # nf_logger.info(str(k) + ' ---> ' + str(info[k]))
     #nf_logger.info('******************* ')
-    #info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page"))]
-    t = 'Class Groups of Quadratic Imaginary Fields'
+    learnmore = learnmore_list_remove('Quadratic imaginary')
+    t = 'Class groups of quadratic imaginary fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (t, ' ')]
     info['message'] =  ''
     info['filename']='none'
@@ -192,10 +187,10 @@ def render_class_group_data():
             info['message'] = 'Invalid congruence requested'
             return class_group_request_error(info, bread)
 
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
+    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=learnmore)
 
 def class_group_request_error(info, bread):
-    t = 'Class Groups of Quadratic Imaginary Fields'
+    t = 'Class groups of quadratic imaginary fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
 # Helper for stats page
@@ -210,63 +205,90 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    t = 'Global Number Field Statistics'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
+    fields = db.nf_fields
+    nfstatdb = fields.stats
+    title = 'Global number field statistics'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
+             ('Number Field Statistics', '')]
     init_nf_count()
-    n = statdb().find_one({'_id': 'degree'})['counts']
-    nsig = statdb().find_one({'_id': 'nsig'})['counts']
+    ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954,
+              10, 983, 8, 1117, 164, 59, 7, 25000, 211, 96, 2392, 1854, 8, 5712]
+    degree_stats = nfstatdb.column_counts('degree')
+    n = [degree_stats[elt + 1] for elt in range(23)]
+
+    degree_r2_stats = nfstatdb.column_counts(['degree', 'r2'])
+    # if a count is missing it is because it is zero
+    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)/2)]
+            for deg in range(23)]
     # Galois groups
-    nt_all = statdb().find_one({'_id': 'nt'})['counts']
+    nt_stats = nfstatdb.column_counts(['degree', 'galt'])
+    # if a count is missing it is because it is zero
+    nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
+              for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
     sn = galstatdict([u[max(len(u)-1,0)] for u in nt_all], n, [len(u) for u in nt_all])
     an = galstatdict([u[max(len(u)-2,0)] for u in nt_all], n, [len(u)-1 for u in nt_all])
     # t-numbers for D_n
-    dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
-    dn = galstatdict(statdb().find_one({'_id': 'dn'})['counts'], n, dn_tlist)
+    dn_tlist = [1, 1, 2, 3, 2, 3, 2, 6, 3, 3, 2, 12, 2, 3, 2, 56, 2, 13, 2, 10,
+                5, 3, 2]
+    dn = galstatdict([nt_stats[(j+1,dn_tlist[j])] for j in range(len(dn_tlist))], n, dn_tlist)
 
-    h = statdb().find_one({'_id': 'h_range'})['counts']
-    has_h = statdb().find_one({'_id': 'has_h'})['val']
-    hdeg = statdb().find_one({'_id': 'hdeg'})['counts']
-    has_hdeg = statdb().find_one({'_id': 'has_hdeg'})['counts']
-    hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
+    hdeg_stats = {j: nfstatdb.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(1, 12)}
+    hdeg_stats[0] = nfstatdb.column_counts('degree', {'class_number': 1})
+    h = [sum(hdeg_stats[j].get(k+1,0) for k in range(max_deg)) for j in range(12)]
+    # if a count is missing it is because it is zero
+    hdeg = [[hdeg_stats[j].get(deg+1, 0) for j in range(12)] for deg in range(23)]
+    has_hdeg_stats = nfstatdb.column_counts('degree', {'class_number': {'$exists': True}})
+    has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
+    has_h = sum(has_hdeg[j] for j in range(len(has_hdeg)))
+    hdeg = [[{'cnt': comma(hdeg[nn][j]),
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s' % (nn + 1, str(1 + 10**(j - 1)) + '-' + str(10**j))}
+             for j in range(len(h))]
+            for nn in range(len(hdeg))]
 
     has_hdeg = [{'cnt': comma(has_hdeg[nn]),
                  'prop': format_percentage(has_hdeg[nn], n[nn]),
-                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000'%(nn+1)} for nn in range(len(has_hdeg))]
+                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000' % (nn + 1)} for nn in range(len(has_hdeg))]
     maxt = 1+max([len(entry) for entry in nt])
 
-    nt = [ [ {'cnt': comma(nt[nn][tt]), 
-              'prop': format_percentage(nt[nn][tt], n[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,tt+1))} for tt in range(len(nt[nn]))] for nn in range(len(nt))]
+    nt = [[{'cnt': comma(nt[nn][tt]),
+            'prop': format_percentage(nt[nn][tt], n[nn]),
+            'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s' % (nn + 1, "%dt%d" % (nn + 1, tt + 1))}
+           for tt in range(len(nt[nn]))]
+          for nn in range(len(nt))]
     # Totals for signature table
-    sigtotals = [ comma(sum([nsig[nn][r2] for nn in range(max(r2*2-1,0),23)])) for r2 in range(12)]
-    nsig = [ [ {'cnt': comma(nsig[nn][r2]), 
-              'prop': format_percentage(nsig[nn][r2], n[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
-    h = [ {'cnt': comma(h[j]),
-           'prop': format_percentage(h[j], has_h),
-           'label': '$10^{'+str(j-1)+'}<h\leq 10^{'+str(j)+'}$',
-           'query': url_for(".number_field_render_webpage")+'?class_number=%s'%(str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))]
+    sigtotals = [comma(
+                 sum([nsig[nn][r2]
+                 for nn in range(max(r2*2 - 1, 0), 23)]))
+                 for r2 in range(12)]
+    nsig = [[{'cnt': comma(nsig[nn][r2]),
+             'prop': format_percentage(nsig[nn][r2], n[nn]),
+             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+    h = [{'cnt': comma(h[j]),
+          'prop': format_percentage(h[j], has_h),
+          'label': '$10^{' + str(j - 1) + '}<h\leq 10^{' + str(j) + '}$',
+          'query': url_for(".number_field_render_webpage")+'?class_number=%s' % (str(1 + 10**(j - 1)) + '-' + str(10**j))} for j in range(len(h))]
     h[0]['label'] = '$h=1$'
     h[1]['label'] = '$1<h\leq 10$'
     h[2]['label'] = '$10<h\leq 10^2$'
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
     # Class number 1 by signature
-    sigclass1 = statdb().find_one({'_id': 'sigclass1'})['counts']
-    sighasclass = statdb().find_one({'_id': 'sighasclass'})['counts']
-    sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
-              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
-              'show': sighasclass[nn][r2]>0,
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+    sigclass1 = nfstatdb.column_counts(['degree', 'r2'], {'class_number': 1})
+    sighasclass = nfstatdb.column_counts(['degree', 'r2'], {'class_number': {'$exists': True}})
+    sigclass1 = [[{'cnt': comma(sigclass1.get((nn+1,r2),0)),
+                   'prop': format_percentage(sigclass1.get((nn+1,r2),0), sighasclass.get((nn+1,r2),0)) if sighasclass.get((nn+1,r2),0) > 0 else 0,
+                   'show': sighasclass.get((nn+1,r2),0) > 0,
+                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
+                  for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
-    n = [ {'cnt': comma(n[nn]),
-           'prop': format_percentage(n[nn], nfields),
-           'query': url_for(".number_field_render_webpage")+'?degree=%d'%(nn+1)} for nn in range(len(n))]
+    n = [{'cnt': comma(n[nn]),
+          'prop': format_percentage(n[nn], nfields),
+          'query': url_for(".number_field_render_webpage")+'?degree=%d' % (nn + 1)}
+         for nn in range(len(n))]
 
     info = {'degree': n,
             'nt': nt,
@@ -282,7 +304,11 @@ def statistics():
             'maxt': maxt,
             'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
             'maxdeg': max_deg}
-    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("nf-statistics.html",
+                           info=info,
+                           credit=NF_credit,
+                           title=title,
+                           bread=bread)
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -299,21 +325,20 @@ def number_field_render_webpage():
             'degree_list': range(1, max_deg + 1),
             'signature_list': sig_list,
             'class_number_list': range(1, 6) + ['6..10'],
-            'count': '20',
+            'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,
             'discriminant_list': discriminant_list
         }
-        t = 'Global Number Fields'
+        t = 'Global number fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+        return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(args)
 
 @nf_page.route("/random")
 def random_nfglobal():
-    label = random_object_from_collection( nfdb() )['label']
+    label = db.nf_fields.random()
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -345,7 +370,6 @@ def string2list(s):
 
 def render_field_webpage(args):
     data = None
-    C = db()
     info = {}
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
 
@@ -354,14 +378,15 @@ def render_field_webpage(args):
     nf = WebNumberField(label)
     data = {}
     if nf.is_null():
-        bread.append(('Search Results', ' '))
-        info['err'] = 'There is no field with label %s in the database' % label
-        info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
-        return search_input_error(info, bread)
+        if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            flash_error("Number field %s was not found in the database.", label)
+        else:
+            flash_error("%s is not a valid label for a global number field.", label)
+        return redirect(url_for(".number_field_render_webpage"))
 
     info['wnf'] = nf
     data['degree'] = nf.degree()
-    data['class_number'] = nf.class_number()
+    data['class_number'] = nf.class_number_latex()
     ram_primes = nf.ramified_primes()
     t = nf.galois_t()
     n = nf.degree()
@@ -380,9 +405,9 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factor(data['conductor'], ram_primes)
             factored_conductor = factor_base_factorization_latex(factored_conductor)
             data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), factored_conductor)
-    data['galois_group'] = group_display_knowl(n, t, C)
-    data['cclasses'] = cclasses_display_knowl(n, t, C)
-    data['character_table'] = character_table_display_knowl(n, t, C)
+    data['galois_group'] = group_pretty_and_nTj(n,t,True)
+    data['cclasses'] = cclasses_display_knowl(n, t)
+    data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
@@ -395,6 +420,8 @@ def render_field_webpage(args):
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
     data['frob_data'], data['seeram'] = frobs(nf)
+    # This could put commas in the rd, we don't want to trigger spaces
+    data['rd'] = ('$%s$' % fixed_prec(nf.rd(),2)).replace(',','{,}')
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -405,7 +432,7 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j])
+                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
             else:
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
@@ -424,9 +451,11 @@ def render_field_webpage(args):
         loc_alg += '</tbody></table>'
 
     ram_primes = str(ram_primes)[1:-1]
+    # Get rid of python L for big numbers
+    ram_primes = ram_primes.replace('L', '')
     if ram_primes == '':
         ram_primes = r'\textrm{None}'
-    data['phrase'] = group_phrase(n, t, C)
+    data['phrase'] = group_phrase(n, t)
     zk = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
     zk = [latex(Ra(x)) for x in zk]
@@ -446,8 +475,8 @@ def render_field_webpage(args):
     if nf.degree() > 1:
         gpK = nf.gpK()
         rootof1coeff = gpK.nfrootsof1()
-        rootofunityorder = int(rootof1coeff[1])
-        rootof1coeff = rootof1coeff[2]
+        rootofunityorder = int(rootof1coeff[0])
+        rootof1coeff = rootof1coeff[1]
         rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
         rootofunity += ' (order $%d$)' % rootofunityorder
     else:
@@ -462,7 +491,7 @@ def render_field_webpage(args):
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
-        'fund_units': nf.units(),
+        'fund_units': nf.units_safe(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
     })
@@ -478,7 +507,7 @@ def render_field_webpage(args):
             info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
-        info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
+        info['friends'].append(('Dirichlet character group', url_for("characters.dirichlet_group_table",
                                                            modulus=int(conductor),
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),
@@ -528,41 +557,39 @@ def render_field_webpage(args):
             resinfo.append(('ae', dnc, len(arith_equiv[1])))
 
     info['resinfo'] = resinfo
-    info['learnmore'] = [('Global number field labels', url_for(
-        ".render_labels_page")), 
-        (Completename, url_for(".render_discriminants_page")),
-        ('How data was computed', url_for(".how_computed_page"))]
-    if info['signature'] == [0,1]:
-        info['learnmore'].append(('Quadratic imaginary class groups', url_for(".render_class_group_data")))
-    # With Galois group labels, probably not needed here
-    # info['learnmore'] = [('Global number field labels',
-    # url_for(".render_labels_page")), ('Galois group
-    # labels',url_for(".render_groups_page")),
-    # (Completename,url_for(".render_discriminants_page"))]
-    title = "Global Number Field %s" % info['label']
+    learnmore = learnmore_list()
+    title = "Global number field %s" % info['label']
 
     if npr == 1:
         primes = 'prime'
     else:
         primes = 'primes'
 
+    label_orig = label
+    if len(label)>25:
+        label = label[:16]+'...'+label[-6:]
     properties2 = [('Label', label),
-                   ('Degree', '%s' % data['degree']),
+                   ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
+                   ('Root discriminant', '%s' % data['rd']),
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_display_short(data['degree'], t, C))
+                   ('Galois Group', group_pretty_and_nTj(data['degree'], t))
                    ]
-    downloads = []
-    for lang in [["Magma","magma"], ["SageMath","sage"], ["GP", "gp"]]:
+    downloads = [('Stored data to gp', url_for('.nf_download', nf=label_orig, download_type='data'))]
+    for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
         downloads.append(('Download {} code'.format(lang[0]),
-                          url_for(".nf_code_download", nf=label, download_type=lang[1])))
-
+                          url_for(".nf_download", nf=label_orig, download_type=lang[1])))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
+        arts = [z.label() for z in info["tim_number_field"].artin_representations()]
+        #print arts
+        for ar in arts:
+            info['friends'].append(('Artin representation '+str(ar), 
+                url_for("artin_representations.render_artin_representation_webpage", label=ar)))
         v = nf.factor_perm_repn(info["tim_number_field"])
         def dopow(m):
             if m==0: return ''
@@ -572,9 +599,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-#    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=info.pop('learnmore'), info=info)
-
+    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))
@@ -590,7 +615,7 @@ def format_coeffs(coeffs):
 #    if len(request.args) != 0:
 #        return number_field_search(**request.args)
 #    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
-#    return render_template("number_field_all.html", info = info)
+#    return render_template("nf-index.html", info = info)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -598,194 +623,14 @@ def by_label(label):
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
             return redirect(url_for(".by_label", label=nflabel), 301)
-        return render_field_webpage({'label': nf_string_to_label(label)})
+        return render_field_webpage({'label': nflabel})
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
-        return search_input_error({'err':''}, bread)
+        flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
+        return redirect(url_for(".number_field_render_webpage"))
 
 # input is a sage int
 
-
-def make_disc_key(D):
-    s = 1
-    if D < 0:
-        s = -1
-    Dz = D.abs()
-    if Dz == 0:
-        D1 = 0
-    else:
-        D1 = int(Dz.log(10))
-    return s, '%03d%s' % (D1, str(Dz))
-
-def number_field_search(info):
-
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Global Number Field Search Results'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
-
-    if 'natural' in info:
-        query = {'label_orig': info['natural']}
-        try:
-            parse_nf_string(info,query,'natural',name="Label",qfield='label')
-            return redirect(url_for(".by_label", label=query['label']))
-        except ValueError:
-            query['err'] = info['err']
-            return search_input_error(query, bread)
-
-    if 'algebra' in info:
-        fields=info['algebra'].split('_')
-        fields2=[WebNumberField.from_coeffs(a) for a in fields]
-        for j in range(len(fields)):
-            if fields2[j] is None:
-                fields2[j] = WebNumberField.fakenf(fields[j])
-        t = 'Number Field Algebra'
-        info = {}
-        info = {'fields': fields2}
-        return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
-
-
-
-    query = {}
-    try:
-        parse_galgrp(info,query, qfield='galois')
-        parse_ints(info,query,'degree')
-        parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
-        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
-        parse_ints(info,query,'class_number')
-        parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
-        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
-        # modes are now contained (in), exactly, include
-        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-            mode = 'append'
-            parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
-        elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-            parse_primes(info,query,'ram_primes','ramified primes','ramps_all','subsets',to_string=False)
-            pass # build list
-        else:
-            mode = 'liststring'
-            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
-    except ValueError:
-        return search_input_error(info, bread)
-    count = parse_count(info)
-    start = parse_start(info)
-
-    # nf_logger.debug(query)
-    info['query'] = dict(query)
-    if 'lucky' in info:
-        one = nfdb().find_one(query)
-        if one:
-            label = one['label']
-            return redirect(url_for(".by_label", label=clean_input(label)))
-
-    fields = nfdb()
-
-    res = fields.find(query)
-    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
-
-    if 'download' in info and info['download'] != '0':
-        return download_search(info, res)
-
-    # equivalent to
-    # nres = res.count()
-    #if(start >= nres):
-    #    start -= (1 + (start - nres) / count) * count
-    #if(start < 0):
-    #    start = 0
-    # res = res.skip(start).limit(count)
-    try:
-        start, nres, res = search_cursor_timeout_decorator(res, start, count);
-    except ValueError as err:
-        info['err'] = err;
-        return search_input_error(info, bread)
-
-
-    info['fields'] = res
-    info['number'] = nres
-    info['start'] = start
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-
-    info['wnf'] = WebNumberField.from_data
-    return render_template("number_field_search.html", info=info, title=t, bread=bread)
-
-
-def search_input_error(info, bread):
-    return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
-
-
-def residue_field_degrees_function(nf):
-    """ Given a WebNumberField, returns a function that has
-            input: a prime p
-            output: the residue field degrees at the prime p
-    """
-    k1 = nf.gpK()
-    D = nf.disc()
-    return main_work(k1,D,'pari')
-
-def sage_residue_field_degrees_function(nf):
-    """ Version of above which takes a sage number field
-        Used by Artin representation code when the Artin field is not
-        in the database.
-    """
-    D = nf.disc()
-    return main_work(pari(nf),D,'sage')
-
-def main_work(k1, D, typ):
-    # Difference for sage vs pari array indexing
-    ind = 3 if typ is 'sage' else 4
-    def decomposition(p):
-        if not ZZ(p).divides(D):
-            dec = k1.idealprimedec(p)
-            dec = [z[ind] for z in dec]
-            return dec
-        else:
-            raise ValueError("Expecting a prime not dividing D")
-    return decomposition
-
-# Compute Frobenius cycle types, returns string nicely presenting this
-
-
-def frobs(nf):
-    frob_at_p = residue_field_degrees_function(nf)
-    D = nf.disc()
-    ans = []
-    seeram = False
-    for p in primes(2, 60):
-        if not ZZ(p).divides(D):
-            # [3] ,   [2,1]
-            dec = frob_at_p(p)
-            vals = list(set(dec))
-            vals = sorted(vals, reverse=True)
-            dec = [[x, dec.count(x)] for x in vals]
-            #dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
-            s = '$'
-            firstone = 1
-            for j in dec:
-                if firstone == 0:
-                    s += '{,}\,'
-                if j[0]<15:
-                    s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
-                        label="%d.%d.0.1"%(p,j[0])), j[0])
-                else:
-                    s += str(j[0])
-                if j[1] > 1:
-                    s += '^{' + str(j[1]) + '}'
-                firstone = 0
-            s += '$'
-            ans.append([p, s])
-        else:
-            ans.append([p, 'R'])
-            seeram = True
-    return ans, seeram
-
-
-def download_search(info, res):
+def download_search(info):
     dltype = info.get('Submit')
     delim = 'bracket'
     com = r'\\'  # single line comment start
@@ -822,18 +667,14 @@ def download_search(info, res):
         s += 'data = ['
     s += '\\\n'
     Qx = PolynomialRing(QQ,'x')
-    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
+    # reissue saved query here
+    res = db.nf_fields.search(ast.literal_eval(info["query"]))
     for f in res:
-        ##  We should try to avoid using database specific information here
-        ##  Kept for now for speed
-#        wnf = WebNumberField.from_data(f)
-#        entry = ', '.join(
-#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
-        pol = str2pol(f['coeffs'])
-        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
-        gal_t = f['galois']['t']
+        pol = Qx(f['coeffs'])
+        D = f['disc_abs'] * f['disc_sign']
+        gal_t = f['galt']
         if 'class_group' in f:
-            cl = string2list(f['class_group'])
+            cl = f['class_group']
         else:
             cl = [-1]
         entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
@@ -858,11 +699,175 @@ def download_search(info, res):
                      as_attachment=True,
                      add_etags=False)
 
+def number_field_jump(info):
+    query = {'label_orig': info['natural']}
+    try:
+        parse_nf_string(info,query,'natural',name="Label",qfield='label')
+        return redirect(url_for(".by_label", label=query['label']))
+    except ValueError:
+        return redirect(url_for(".number_field_render_webpage"))
+
+## This doesn't seem to be used currently
+#def number_field_algebra(info):
+#    fields = info['algebra'].split('_')
+#    fields2 = [WebNumberField.from_coeffs(a) for a in fields]
+#    for j in range(len(fields)):
+#        if fields2[j] is None:
+#            fields2[j] = WebNumberField.fakenf(fields[j])
+#    t = 'Number Field Algebra'
+#    info = {'results': fields2}
+#    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
+
+@search_wrap(template="nf-search.html",
+             table=db.nf_fields,
+             title='Global number field search results',
+             err_title='Global number field search error',
+             per_page=50,
+             shortcuts={'natural':number_field_jump,
+                        #'algebra':number_field_algebra,
+                        'download':download_search},
+             split_ors=['galois_group'],
+             bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
+                           ('Search Results', '.')],
+             learnmore=learnmore_list)
+def number_field_search(info, query):
+    parse_ints(info,query,'degree')
+    parse_galgrp(info,query, qfield=('degree', 'galt'))
+    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
+    parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
+    parse_floats(info, query, 'rd')
+    parse_floats(info, query, 'regulator')
+    parse_ints(info,query,'class_number')
+    parse_ints(info,query,'num_ram')
+    parse_bool(info,query,'cm_field',qfield='cm')
+    parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
+    parse_primes(info,query,'ur_primes',name='Unramified primes',
+                 qfield='ramps',mode='complement')
+    # modes are now contained (in), exactly, include
+    if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
+        mode='append'
+    elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
+        mode='subsets'
+    else:
+        mode='exact'
+    parse_primes(info,query,'ram_primes',name='Ramified primes',
+                 qfield='ramps',mode=mode,radical='disc_rad')
+    ## This seems not to be used
+    #if 'lucky' in info:
+    #    label = db.nf_fields.lucky(query, 0)
+    #    if label:
+    #        return redirect(url_for(".by_label", label=clean_input(label)))
+    info['wnf'] = WebNumberField.from_data
+    info['gg_display'] = group_pretty_and_nTj
+
+def residue_field_degrees_function(nf):
+    """ Given the result of pari(nfinit(...)), returns a function that has
+            input: a prime p
+            output: the residue field degrees at the prime p
+    """
+    D = nf.disc()
+
+    def decomposition(p):
+        if not ZZ(p).divides(D):
+            return [z[3] for z in nf.idealprimedec(p)]
+        else:
+            raise ValueError("Expecting a prime not dividing D")
+
+    return decomposition
+
+# Compute Frobenius cycle types, returns string nicely presenting this
+
+
+def frobs(nf):
+    frob_at_p = residue_field_degrees_function(nf.gpK())
+    D = nf.disc()
+    ans = []
+    seeram = False
+    for p in primes(2, 60):
+        if not ZZ(p).divides(D):
+            # [3] ,   [2,1]
+            dec = frob_at_p(p)
+            vals = list(set(dec))
+            vals = sorted(vals, reverse=True)
+            dec = [[x, dec.count(x)] for x in vals]
+            #dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
+            s = '$'
+            firstone = 1
+            for j in dec:
+                if firstone == 0:
+                    s += '{,}\,'
+                if j[0]<15:
+                    s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
+                        label="%d.%d.0.1"%(p,j[0])), j[0])
+                else:
+                    s += str(j[0])
+                if j[1] > 1:
+                    s += '^{' + str(j[1]) + '}'
+                firstone = 0
+            s += '$'
+            ans.append([p, s])
+        else:
+            ans.append([p, 'R'])
+            seeram = True
+    return ans, seeram
+
+# utility for downloading data
+def unlatex(s):
+    s = re.sub(r'\\+', r'\\',s)
+    s = s.replace('\\(', '')
+    s = s.replace('\\)', '')
+    s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
+    s = s.replace(r'{',r'(')
+    s = s.replace(r'}',r')')
+    s = re.sub(r'([^\s+-])\s*a', r'\1*a',s)
+    return s
+
 @nf_page.route('/<nf>/download/<download_type>')
-def nf_code_download(**args):
-    response = make_response(nf_code(**args))
+def nf_download(**args):
+    typ = args['download_type']
+    if typ == 'data':
+        response = make_response(nf_data(**args))
+    else:
+        response = make_response(nf_code(**args))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+def nf_data(**args):
+    label = args['nf']
+    nf = WebNumberField(label)
+    data = '/* Data is in the following format\n'
+    data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
+    data += '[polynomial,\ndegree,\nt-number of Galois group,\nsignature [r,s],\ndiscriminant,\nlist of ramifying primes,\nintegral basis as polynomials in a,\n1 if it is a cm field otherwise 0,\nclass number,\nclass group structure,\n1 if grh was assumed and 0 if not,\nfundamental units,\nregulator,\nlist of subfields each as a pair [polynomial, number of subfields isomorphic to one defined by this polynomial]\n]';
+    data += '\n*/\n\n'
+    zk = nf.zk()
+    Ra = PolynomialRing(QQ, 'a')
+    zk = [str(Ra(x)) for x in zk]
+    zk = ', '.join(zk)
+    units = str(unlatex(nf.units()))
+    units = units.replace('&nbsp;', ' ')
+    subs = nf.subfields()
+    subs = [[coeff_to_poly(string2list(z[0])),z[1]] for z in subs]
+
+    # Now add actual data
+    data += '[%s, '%nf.poly()
+    data += '%s, '%nf.degree()
+    data += '%s, '%nf.galois_t()
+    data += '%s, '%nf.signature()
+    data += '%s, '%nf.disc()
+    data += '%s, '%nf.ramified_primes()
+    data += '[%s], '%zk
+    data += '%s, '%str(1 if nf.is_cm_field() else 0)
+    if nf.can_class_number():
+        data += '%s, '%nf.class_number()
+        data += '%s, '%nf.class_group_invariants_raw()
+        data += '%s, '%(1 if nf.used_grh() else 0)
+        data += '[%s], '%units
+        data += '%s, '%nf.regulator()
+    else:
+        data += '0,0,0,0,0, '
+    data += '%s'%subs
+    data += ']'
+    return data
 
 
 sorted_code_names = ['field', 'poly', 'degree', 'signature',
@@ -894,9 +899,9 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def nf_code(**args):
     label = args['nf']
+    lang = args['download_type']
     nf = WebNumberField(label)
     nf.make_code_snippets()
-    lang = args['download_type']
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     if lang=='gp':

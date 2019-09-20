@@ -1,5 +1,5 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+# -*- coding: utf-8 -*-
+from lmfdb.tests import LmfdbTest
 
 class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
@@ -21,7 +21,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_search_genus_group(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=2&group=%5B48%2C29%5D&signature=&dim=&hyperelliptic=include&count=20&Submit=Search')
-        assert '2 matches' in L.data
+        assert 'both matches' in L.data
 
 
     def test_random(self):
@@ -48,5 +48,18 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
     def test_unique_groups_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats/groups_per_genus/5')
         assert 'Distribution of groups in curves of genus 5' in L.data
+
+        
+    def test_quo_genus_gt_0(self):
+        L = self.tc.get('/HigherGenus/C/Aut/3.2-1.2.0.1')
+        assert '[2;-]' in L.data
+
+    def test_quo_genus_search(self):
+        L = self.tc.get('/HigherGenus/C/Aut/?genus=3&g0=1..3')
+        assert 'displaying all 10 matches' in L.data
+
+    def idG_showing(self):
+        L = self.tc.get('/HigherGenus/C/Aut/2.2-1.1.2-2.1')
+        assert 'Id(G)' in L.data
 
         

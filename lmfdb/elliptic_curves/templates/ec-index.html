@@ -26,7 +26,8 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 
 {% else %}
 <div>
-{{ KNOWL_INC('dq.ec.extent') }}
+{{elliptic_curve_summary()| safe}}
+Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
@@ -38,13 +39,13 @@ By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('ec.q.rank', title="rank")}}:
+By {{ KNOWL('ec.rank', title="rank")}}:
 {% for r in info.rank_list: %}
 <a href="?rank={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
+By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:
 {% for t in info.torsion_list: %}
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
@@ -59,8 +60,9 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 
 
 <h2> Find a specific curve or {{
-  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
-  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
+  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients,
+  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }}, or 
+  {{ KNOWL('ec.q.cremona_label',title="Cremona label") }} </h2>
 {% if err_msg %}
 <form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}
@@ -69,7 +71,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 <input type='text' name='label' size=25 example="11.a2">
 <button type='submit' name='jump' value='curve or isogeny class label'
         >curve, label or isogeny class label</button>
-<br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
+<br><span class="formexample">e.g. 11.a2 or 389.a or 11a1 or 389a or 
 [0,1,1,-2,0] or [-3024, 46224]
 </span>
 </form>
@@ -80,7 +82,7 @@ Please enter a value or leave blank:
 <form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
-      <td>{{ KNOWL('ec.q.conductor',title = "conductor") }}</td>
+      <td>{{ KNOWL('ec.q.conductor',title = "Conductor") }}</td>
      <td>
        <input type='text' name='conductor' example="389" size=10 value="{{conductor}}" />
      </td>
@@ -96,7 +98,7 @@ Please enter a value or leave blank:
 
    <tr>
    <td>
-    {{ KNOWL('ec.q.rank',title="rank") }}
+    {{ KNOWL('ec.rank',title="Rank") }}
     </td>
            <td>
            <input type='text' name='rank' example="0" size=10 value="{{rank}}" />
@@ -107,7 +109,7 @@ Please enter a value or leave blank:
     {{ KNOWL('ec.complex_multiplication',title="CM") }}
     </td>
      <td>
-         <select name='include_cm'>
+         <select name='include_cm', style="width: 155px">
            <option value="" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
@@ -117,7 +119,7 @@ Please enter a value or leave blank:
 
     <tr>
           <td>
-          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
+          {{ KNOWL('ec.torsion_order',title="Torsion order") }}
           </td>
           <td>
           <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
@@ -127,7 +129,7 @@ Please enter a value or leave blank:
           </td>
 
           <td>
-          {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
+          {{ KNOWL('ec.torsion_subgroup',title="Torsion structure") }}
           </td>
           <td>
             {{ tor_struct_search_Q()|safe }}
@@ -139,7 +141,7 @@ Please enter a value or leave blank:
 
     <tr>
           <td>
-          {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;") }}
+          {{ KNOWL('ec.q.analytic_sha_order',title="Analytic order of &#1064;") }}
           </td>
           <td>
           <input type='text' name='sha' example="4" size=10 />
@@ -147,23 +149,26 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 4 </span>
           </td>
+          <td>{{ KNOWL('ec.isogeny_class',title="Curves per isogeny class") }}</td>
           <td>
-          {{ KNOWL('ec.isogeny',title="isogeny degree") }}
-          </td>
-          <td>
-          <input type='text' name='isodeg' example="16" size=10 />
-          </td>
-          <td>
-          <span class="formexample"> e.g. 16 </span>
+             <select name='optimal', style="width: 155px">
+    {% if optimal=='on' %}
+               <option value="">all</option>
+               <option value="on" selected="yes">one</option>
+    {% else %}
+               <option value="">all</option>
+               <option value="on">one</option>
+    {% endif %}
+             </select>
           </td>
       </tr>
 
 <tr>
-<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
+<td align=left>{{KNOWL('ec.maximal_galois_rep', title='Maximal primes')}} 
    <td><input type='text' name='surj_primes' size=10 example='2,3'></td>
 <td><span class="formexample"> e.g. 2,3</span></td>
 <td align=left>
-{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}} 
+{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}} 
   <select name='surj_quantifier'>
   <option value='include'>include</option>
   <option value='exactly'>exactly</option>
@@ -175,25 +180,19 @@ Please enter a value or leave blank:
 
 
     <tr>
-      <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
-      <td>
-         <select name='optimal'>
-{% if optimal=='on' %}
-           <option value="">No</option>
-           <option value="on" selected="yes">Yes</option>
-{% else %}
-           <option value="">No</option>
-           <option value="on">Yes</option>
-{% endif %}
-         </select>
-      </td>
-
-
+        <td>
+        {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
+        </td>
+        <td>
+        <input type='text' name='isodeg' example="16" size=10 />
+        </td>
+        <td>
+        <span class="formexample"> e.g. 16 </span>
+        </td>
     </tr>
 
 <tr>
-<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{count}} size=10 />
-</td>
+<td>Results to display</td><td> <input type='text' name='count' value=50 size=10></td>
 </tr>
 
 

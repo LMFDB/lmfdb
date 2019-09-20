@@ -1,8 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Results ({{info.report}})</h2>
-
+{% include 'matches.html' %}
+{% if info.number %}
 <table class="ntdata">
 <tr>
 <th>Label</th>
@@ -11,7 +11,7 @@
 <th>Character</th>
 <th>Dimension</th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td align='left'><a href="{{url_for('hiwf.render_hiwf_webpage', label=form.label)}}">{{form.label}} </a></td>
 <td>${{form.level}}$</td>
@@ -22,12 +22,10 @@
 {% endfor %}
 
 </table>
-
-<br>
-<!--
-   <p class="tex2jax_ignore">
-   Results for database query {{ info.query }}
-   </p>
--->
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

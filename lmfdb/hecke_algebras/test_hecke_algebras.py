@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class HomePageTest(LmfdbTest):
 

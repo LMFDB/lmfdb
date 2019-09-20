@@ -4,38 +4,29 @@ r""" Checking that knowls only cross-reference existing knowls
 Initial version (Bristol March 2016)
 
 """
-import os.path
-import os
+from lmfdb.knowledge.knowl import knowldb
+from commands import getoutput
 
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-print "authenticating on the knowledge database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['knowledge'].authenticate(username, password)
-print "setting knowls"
-knowls = C.knowledge.knowls
-
-cats = knowls.distinct('cat')
+cats = knowldb.get_categories()
 print("There are %s categories of knowl in the database" % len(cats))
 
 def check_knowls(cat='ec', verbose=False):
-    cat_knowls = knowls.find({'cat': cat})
+    cat_knowls = knowldb.search(category=cat)
     if verbose:
-        print("%s knowls in category %s" % (cat_knowls.count(),cat))
+        print("%s knowls in category %s" % (len(cat_knowls),cat))
     for k in cat_knowls:
         if verbose:
-            print("Checking knowl %s" % k['_id'])
+            print("Checking knowl %s" % k['id'])
+        k = knowldb.get_knowl(k['id'])
         cont = k['content']
+        all_content = cont
+        cont = cont.replace("KNOWL ","KNOWL")
         i = 0
         while (i>=0):
             i = cont.find("KNOWL_INC")
             if i>=0:
                 offset = 10
-            else:    
+            else:
                 i = cont.find("KNOWL")
                 if i>=0:
                     offset=6
@@ -47,11 +38,91 @@ def check_knowls(cat='ec', verbose=False):
                 if verbose:
                     print("..cites %s" % ref)
                 cont = cont[j+1:]
-                the_ref = knowls.find_one({'_id':ref})
-                if the_ref==None:
-                    print("Non-existing reference to %s in knowl %s" % (ref,k['_id']))
+                the_ref = knowldb.get_knowl(ref)
+                if the_ref is None:
+                    print("Non-existing reference to %s in knowl %s" % (ref,k['id']))
+                    print("content of {} = ".format(k['id']))
+                    print(all_content)
+                    return False
                 elif verbose:
                     print("--- found")
+    return True
+
+def find_knowl_crossrefs(id, all=True, verbose=False):
+    """Finds knowl(s) which cite the given knowl.
+
+    if verbose, list the citing knowls (or just the first if
+    all=False), otherwise just return True/False according to whether
+    any other knowls cite the given one.
+
+    EXAMPLE:
+
+    sage: find_knowl_crossrefs("ec.q.torsion_order", verbose=True)
+    knowl ec.q.torsion_order is cited by ec.q.bsd_invariants
+    knowl ec.q.torsion_order is cited by ec.q.mordell-weil
+    True
+
+    """
+    found = False
+    for k in knowldb.search():
+        content = knowldb.get_knowl(k['id'])['content']
+        if id in content:
+            found = True
+            if verbose:
+                print("knowl {} is cited by {}".format(id,k['id']))
+            if not all or not verbose:
+                return True
+    return found    
+
+def find_knowl_links(id, base=None, all=True, verbose=False):
+    """Use grep to find the given knowl id in the source tree, assuming
+    that to be based in the directory lmfdb in the current directory
+    unless otherwise specified.
+
+    EXAMPLE:
+
+    sage: find_knowl_links("ec.q.torsion_order")
+    /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-isoclass.html:<th>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+    /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-index.html:By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
+    /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-index.html:          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
+    /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-search-results.html:<td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
+    /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-search-results.html:  <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+
+    """
+    if base==None:
+        base = "~/lmfdb"
+    found = False
+    for L in getoutput('grep -r "{}" {}'.format(id, base)).splitlines():
+        found = True
+        if verbose:
+            print L
+        if not all or not verbose:
+            return True
+    return found
+
+def uncited_knowls(ignore_top_and_bottom=True):
+    """Lists all knowls not cited by other knowls.
+
+    Knowls whose id ends in "top" or "bottom" are ignored by default.
+
+    NB This lists a lot of knowls which are linked from code or
+    templates so is not so useful by itself.
+
+    """
+    for k in knowldb.search():
+        kid = k['id']
+        if kid.endswith(".top") or kid.endswith(".bottom"):
+            continue
+        crossrefs = find_knowl_crossrefs(kid)
+        links = find_knowl_links(kid)
+        if crossrefs:
+            print("{} is cited by other knowl(s)".format(kid))
+        else:
+            print("No other knowl cites {}".format(kid))
+        if links:
+            print("{} IS mentioned in the source code".format(kid))
+        else:
+            print("{} is NOT mentioned in the source code".format(kid))
 
 """
 Result of running

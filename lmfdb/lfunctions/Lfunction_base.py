@@ -1,5 +1,5 @@
 from flask import url_for
-from sage.all import ZZ, is_prime, latex, factor, imag_part
+from sage.all import ZZ, is_prime, latex, imag_part
 from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                 specialValueTriple)
@@ -8,10 +8,10 @@ from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least
 # possible, so it can be loaded from sage or even python
-# Please do not pollute with flask, pymongo, logger or similar
+# Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
-class Lfunction:
+class Lfunction(object):
     """Class representing a general L-function
     """
 
@@ -41,8 +41,8 @@ class Lfunction:
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
-        
-        
+
+
     ############################################################################
     ### other useful methods not implemented universally yet
     ############################################################################
@@ -53,8 +53,8 @@ class Lfunction:
         # Not dependent on time actually
         # Manual tuning required
         if (self.degree > 2 or self.Ltype() == "maass" or
-            self.Ltype() == 'lcalcurl' or self.Ltype() == "hgmQ" or
-            self.Ltype() == "artin" ):  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            self.Ltype() == "hgmQ" or
+            self.Ltype() == "artin" ):
             allZeros = self.compute_heuristic_zeros(**kwargs)
         else:
             allZeros = self.compute_checked_zeros(**kwargs)
@@ -73,14 +73,14 @@ class Lfunction:
 
     def compute_heuristic_zeros(self, step_size = 0.02, upper_bound = 20, lower_bound = None):
      #   if self.Ltype() == "hilbertmodularform":
-        if self.Ltype() not in ["riemann", "maass", "ellipticmodularform" , "ellipticcurve"]:
+        if self.Ltype() not in ["riemann", "maass"]:
             upper_bound = 10
         if self.selfdual:
             lower_bound = lower_bound or - step_size / 2
         else:
             lower_bound = lower_bound or -20
         return self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound, lower_bound = lower_bound)
-    
+
     def compute_lcalc_zeros(self, via_N = True, **kwargs):
 
         if not hasattr(self,"fromDB"):
@@ -103,7 +103,7 @@ class Lfunction:
             if not self.sageLfunction:
                 return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
-    
+
     def general_webpagedata(self):
         info = {}
         try:
@@ -125,8 +125,12 @@ class Lfunction:
 
         info['degree'] = int(self.degree)
         info['conductor'] = self.level
-        if not is_prime(int(self.level)):
-            info['conductor_factored'] = latex(factor(int(self.level)))
+        if not is_prime(int(self.level)) and int(self.level)!=1:
+            if self.level >= 10**8:
+                info['conductor'] = latex(self.level_factored)
+            else:
+                info['conductor_factored'] = latex(self.level_factored)
+
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
         info['algebraic'] = self.algebraic
@@ -141,7 +145,7 @@ class Lfunction:
         info['dirichlet'] = lfuncDShtml(self, "analytic")
         # Hack, fix this more general?
         info['dirichlet'] = info['dirichlet'].replace('*I','<em>i</em>')
-        
+
         info['eulerproduct'] = lfuncEPtex(self, "abstract")
         info['functionalequation'] = lfuncFEtex(self, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(self, "selberg")
@@ -155,7 +159,7 @@ class Lfunction:
 
         if hasattr(self, 'factorization'):
             info['factorization'] = self.factorization
-            
+
         if self.fromDB and self.algebraic:
             info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
             info['eulerproduct_arithmetic'] = lfuncEPtex(self, "arithmetic")
@@ -181,15 +185,22 @@ class Lfunction:
             info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
             chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
-            info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage', 
+            info['chi'] = ''
+            if self.charactermodulus != self.level:
+                info['chi'] += "induced by "
+            info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage', 
                                                     modulus=self.charactermodulus, number=self.characternumber)
             info['chi'] += '">' + chilatex + '</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link
             info['rank'] = self.order_of_vanishing
-            info['motivic_weight'] = self.motivic_weight
-        
+            info['motivic_weight'] = r'\(%d\)' % self.motivic_weight
+
+        elif self.Ltype() == "riemann":
+            info['sv_edge'] = r"\[\zeta(1) \approx $\infty$\]"
+            info['sv_critical'] = r"\[\zeta(1/2) \approx -1.460354508\]"
+
         elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
             try:
                 info['sv_edge'] = specialValueString(self, 1, '1')

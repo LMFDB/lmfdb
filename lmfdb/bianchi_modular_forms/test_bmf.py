@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 
@@ -10,7 +10,12 @@ class BMFTest(LmfdbTest):
         assert text in self.tc.get(path, follow_redirects=True).data
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        if text in self.tc.get(path, follow_redirects=True).data:
+            assert True
+        else:
+            print(text)
+            print(self.tc.get(path, follow_redirects=True).data)
+            assert False
 
     # All tests should pass
     #
@@ -38,6 +43,9 @@ class BMFTest(LmfdbTest):
         t = "?field_label=2.0.3.1"
         assert t in homepage
         self.check_args(base_url+t, "/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/124.1/a/")
+        t = "?field_label=2.0.4.1"
+        assert t in homepage
+        self.check_args(base_url+t, "/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/164.1")
         t = "gl2dims/2.0.4.1"
         assert t in homepage
         self.check_args(base_url+t,'show both the dimension $d$ of the space of cusp forms of weight')
@@ -70,7 +78,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check newspace pages
         """
-        self.check_args(base_url+'2.0.3.1/77283.1', 'are 2 cuspidal newforms')
+        self.check_args(base_url+'2.0.3.1/77283.1', 'contains the following\nnewforms')
         self.check_args(base_url+'2.0.11.1/207.6', 'Dimension of new cuspidal subspace:')
         # I don't know why the follwing fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.11.1/207.6', '\((2 a + 13) = (\left(a - 1\right))^{2} \cdot (\left(a - 5\right)) \)')
@@ -81,11 +89,41 @@ class BMFTest(LmfdbTest):
         r"""
         Check newform pages
         """
+        base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
         self.check_args(base_url+'2.0.11.1/207.6/b', 'Base change')
-        # I don't know why the follwing fails, as the text was copied from the page source:
-        #self.check_args(base_url+'2.0.11.1/207.6/b', 'Level: \( \left(2 a + 13\right) \) of norm 207')
-        self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve isogeny class 2.0.3.1-44332.1-a')
-        # I don't know why the follwing fails, as the text was copied from the page source:
-        #self.check_args(base_url+'2.0.3.1/44332.1/a/', '\( \left(-238 a + 76\right) \)')
+        self.check_args(base_url+'2.0.11.1/207.6/b', '2.0.11.1-207.6-b')
+        self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Isogeny class 2.0.3.1-44332.1-a')
+        self.check_args(base_url+'2.0.3.1/44332.1/a/', '-238 a + 76')
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base-change of a form over');
-        self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve isogeny class 2.0.11.1-256.1-a');
+        self.check_args(base_url+'2.0.11.1/256.1/a/', 'Isogeny class 2.0.11.1-256.1-a');
+        # A dimension 2 example
+        self.check_args(base_url+'2.0.4.1/377.1/a2', 'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining');
+
+
+    def test_friends(self):
+        for url, texts, notitself in [
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.3/a/',
+                    ('Bianchi modular form 2.0.7.1-44.4-a',
+                        'Isogeny class 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.4-a'),
+                    'Bianchi modular form 2.0.7.1-44.3-a'),
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.4/a/',
+                    ('Bianchi modular form 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.4-a'),
+                    'Bianchi modular form 2.0.7.1-44.4-a'),
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.8.1/32.1/a/',
+                    ('Hilbert modular form 2.2.8.1-32.1-a',
+                        'Isogeny class 2.0.8.1-32.1-a',
+                        'Isogeny class 2.2.8.1-32.1-a'),
+                    'Bianchi modular form 2.0.8.1-32.1-a')
+                    ]:
+            L = self.tc.get(url)
+            for t in texts:
+                assert t in L.data
+            assert 'L-function' in L.data
+
+            # this test isn't very specific
+            # but the goal is to test that itself doesn't show in the friends list
+            assert notitself not in L.data
+

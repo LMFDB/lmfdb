@@ -14,13 +14,15 @@
 
   {% for h in history %}
   <tr>
-   <td>{{ h.time|fmtdatetime }}</td>
-   <td>{{ h.who }}</td>
-   <td><a href="{{url_for('.show', ID=h['_id'])}}">
-     {% if h.title -%}{{ h.title|safe }}{%- else -%}{{ h['_id'] }}{%- endif %}</a></td>
+   <td><a id="{{loop.index}}"></a>{{ h.timestamp|fmtdatetime }}</td>
+   <td>{{ h.last_author }}</td>
+   <td>{{ KNOWL(h.id) }}</td>
   </tr>
   {% endfor %}
  </table>
+ {% if (history|length) == limit %}
+ <a href="{{url_for('.history', limit=limit+25)}}#{{limit}}">See more history</a>
+ {% endif %}
 </div>
 
 {% endblock %}

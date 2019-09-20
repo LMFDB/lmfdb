@@ -1,33 +1,24 @@
-# -*- coding: utf8 -*-
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
-import StringIO
-from ast import literal_eval
 import re
-import time
-from pymongo import ASCENDING, DESCENDING
+from ast import literal_eval
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file, abort
+
+from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 
-from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
-from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_bool, parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay, formatters)
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.genus2_curves import g2c_page
+from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
 
 credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki"
-
-###############################################################################
-# global database connection and stats objects
-###############################################################################
-
-the_g2cstats = None
-def g2cstats():
-    global the_g2cstats
-    if the_g2cstats is None:
-        the_g2cstats = G2C_stats()
-    return the_g2cstats
 
 ###############################################################################
 # List and dictionaries needed routing and searching
@@ -53,6 +44,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End_QQbar tensored with QQ
+geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
+geom_end_alg_dict = { x:x for x in geom_end_alg_list }
+
 aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
 aut_grp_dict = {
         '[2,1]':'C_2',
@@ -74,12 +69,13 @@ geom_aut_grp_dict = {
         '[48,29]':'\\tilde{S}_4'}
 
 ###############################################################################
-# Routing for top level, random_curve,  and stats
+# Routing for top level and random_curve
 ###############################################################################
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+            ('Source of the data', url_for(".source_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Genus 2 curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -93,8 +89,8 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     if len(request.args) > 0:
-        return genus2_curve_search(to_dict(request.args))
-    info = {'counts' : g2cstats().counts()}
+        return genus2_curve_search(request.args)
+    info = {'stats' : G2C_stats()}
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] =  lambda label: url_for_curve_label(label)
     curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1')
@@ -109,21 +105,16 @@ def index_Q():
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_dict"] = geom_end_alg_dict
     title = 'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
-@g2c_page.route("/Q/random")
+@g2c_page.route("/Q/random/")
 def random_curve():
-    label = random_value_from_collection(g2c_db_curves(), 'label')
+    label = db.g2c_curves.random()
     return redirect(url_for_curve_label(label), 307)
-
-@g2c_page.route("/Q/stats")
-def statistics():
-    info = { 'counts': g2cstats().counts(), 'stats': g2cstats().stats() }
-    title = 'Genus 2 curves over $\Q$: Statistics'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
-    return render_template("g2c_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
 # Curve and isogeny class pages
@@ -139,7 +130,7 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     data = to_dict(request.args)
     clabel = str(cond)+"."+alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
-    if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
+    if not db.g2c_curves.exists({'class':clabel}):
         return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
     data['title'] = 'Genus 2 Curves in Isogeny Class %s of Discriminant %s' % (clabel,disc)
     data['bread'] = [('Genus 2 Curves', url_for(".index")),
@@ -196,7 +187,8 @@ def render_curve_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def render_isogeny_class_webpage(label):
     try:
@@ -210,7 +202,8 @@ def render_isogeny_class_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def url_for_curve_label(label):
     slabel = label.split(".")
@@ -227,29 +220,55 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 
-def genus2_curve_search(info):
-    if 'jump' in info:
-        jump = info["jump"].strip()
-        if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
-            return redirect(url_for_curve_label(jump), 301)
+def genus2_jump(info):
+    jump = info["jump"].strip()
+    if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
+        return redirect(url_for_curve_label(jump), 301)
+    else:
+        if re.match(r'^\d+\.[a-z]+$', jump):
+            return redirect(url_for_isogeny_class_label(jump), 301)
         else:
-            if re.match(r'^\d+\.[a-z]+$', jump):
-                return redirect(url_for_isogeny_class_label(jump), 301)
-            else:
-                # Handle direct Lhash input
-                if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-                    c = g2c_db_curves().find_one({'Lhash': jump[1:].strip()})
-                    if c:
-                        return redirect(url_for_isogeny_class_label(c["class"]), 301)
-                    else:
-                        errmsg = "hash %s not found"
+            # Handle direct Lhash input
+            if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+                c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
+                if c:
+                    return redirect(url_for_isogeny_class_label(c), 301)
                 else:
-                    errmsg = "%s is not a valid genus 2 curve or isogeny class label"
-        flash_error (errmsg, jump)
-        return redirect(url_for(".index"))
-    if info.get('download','').strip():
-        return download_search(info)
+                    errmsg = "hash %s not found"
+            else:
+                errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+        flash_error(errmsg, jump)
+    return redirect(url_for(".index"))
 
+class G2C_download(Downloader):
+    table = db.g2c_curves
+    title = 'Genus 2 curves'
+    columns = 'eqn'
+    column_wrappers = {'eqn':literal_eval}
+    data_format = ['[[f coeffs],[h coeffs]]']
+    data_description = 'defining the hyperelliptic curve y^2+h(x)y=f(x).'
+    function_body = {'magma':['R<x>:=PolynomialRing(Rationals());',
+                              'return [HyperellipticCurve(R![c:c in r[1]],R![c:c in r[2]]):r in data];'],
+                     'sage':['R.<x>=PolynomialRing(QQ)',
+                             'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
+                     'gp':['[apply(Polrev,c)|c<-data];']}
+
+@search_wrap(template="g2c_search_results.html",
+             table=db.g2c_curves,
+             title='Genus 2 Curve Search Results',
+             err_title='Genus 2 Curves Search Input Error',
+             shortcuts={'jump':genus2_jump,
+                        'download':G2C_download()},
+             projection=['label','eqn','st_group','is_gl2_type','is_simple_geom','analytic_rank'],
+             cleaners={"class": lambda v: class_from_curve_label(v["label"]),
+                       "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
+                       "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
+             bread=lambda:[('Genus 2 Curves', url_for(".index")),
+                           ('$\Q$', url_for(".index_Q")),
+                           ('Search Results', '.')],
+             learnmore=learnmore_list,
+             credit=lambda:credit_string)
+def genus2_curve_search(info, query):
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
@@ -258,90 +277,38 @@ def genus2_curve_search(info):
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    bread = info.get('bread',(('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Search Results', '.')))
-
-    query = {}
-    try:
-        parse_ints(info,query,'abs_disc','absolute discriminant')
-        parse_bool(info,query,'is_gl2_type','is of GL2-type')
-        parse_bool(info,query,'has_square_sha','has square Sha')
-        parse_bool(info,query,'locally_solvable','is locally solvable')
-        parse_bool(info,query,'is_simple_geom','is geometrically simple')
-        parse_ints(info,query,'cond','conductor')
-        parse_ints(info,query,'num_rat_pts','rational points')
-        parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
-        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
-        parse_ints(info,query,'torsion_order','torsion order')
-        if 'torsion' in query and not 'torsion_order' in query:
-            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
-        if 'torsion' in query:
-            query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
-            query.pop('torsion') # search using string key, not array of ints
-        parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
-        parse_ints(info,query,'analytic_rank','analytic rank')
-        # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-        if 'g20' in info and 'g21' in info and 'g22' in info:
-            query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
-        if 'class' in info:
-            query['class'] = info['class']
-        for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id'):
-            if info.get(fld): query[fld] = info[fld]
-    except ValueError as err:
-        info['err'] = str(err)
-        return render_template("g2c_search_results.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
-    # Database query happens here
-    info["query"] = query # save query for reuse in download_search
-    cursor = g2c_db_curves().find(query, {'_id':False, 'label':True, 'eqn':True, 'st_group':True, 'is_gl2_type':True, 'is_simple_geom':True, 'analytic_rank':True})
-
-    count = parse_count(info, 50)
-    start = parse_start(info)
-    nres = cursor.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    res = cursor.sort([("cond", ASCENDING), ("class", ASCENDING),  ("disc_key", ASCENDING),  ("label", ASCENDING)]).skip(start).limit(count)
-    nres = res.count()
-
-    if nres == 1:
-        info["report"] = "unique match"
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-    res_clean = []
-
-    for v in res:
-        v_clean = {}
-        v_clean["label"] = v["label"]
-        v_clean["class"] = class_from_curve_label(v["label"])
-        v_clean["is_gl2_type"] = v["is_gl2_type"] 
-        v_clean["is_simple_geom"] = v["is_simple_geom"] 
-        v_clean["equation_formatted"] = list_to_min_eqn(literal_eval(v["eqn"]))
-        v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
-        v_clean["analytic_rank"] = v["analytic_rank"]
-        res_clean.append(v_clean)
-
-    info["curves"] = res_clean
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_dict"] = geom_end_alg_dict
+    parse_ints(info,query,'abs_disc','absolute discriminant')
+    parse_bool(info,query,'is_gl2_type','is of GL2-type')
+    parse_bool(info,query,'has_square_sha','has square Sha')
+    parse_bool(info,query,'locally_solvable','is locally solvable')
+    parse_bool(info,query,'is_simple_geom','is geometrically simple')
+    parse_ints(info,query,'cond','conductor')
+    parse_ints(info,query,'num_rat_pts','rational points')
+    parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
+    parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
+    parse_ints(info,query,'torsion_order','torsion order')
+    if 'torsion' in query and not 'torsion_order' in query:
+        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
+    if 'torsion' in query:
+        query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
+        query.pop('torsion') # search using string key, not array of ints
+    parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
+    parse_ints(info,query,'analytic_rank','analytic rank')
+    # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
+    if 'g20' in info and 'g21' in info and 'g22' in info:
+        query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
+    if 'class' in info:
+        query['class'] = info['class']
+    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
+        if info.get(fld): query[fld] = info[fld]
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
-    info["start"] = start
-    info["count"] = count
-    info["more"] = int(start+count<nres)
-    
-    title = info.get('title','Genus 2 Curve Search Results')
-    credit = credit_string
-    
-    return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
 
 ################################################################################
 # Statistics
 ################################################################################
-
-def boolean_format(value):
-    return 'True' if value else 'False'
 
 def aut_grp_format(id):
     return "\("+aut_grp_dict[id]+"\)"
@@ -355,154 +322,112 @@ def st0_group_format(name):
 def st_group_format(name):
     return st_link_by_name(1,4,name)
 
-stats_attribute_list = [
-    {'name':'num_rat_pts','top_title':'rational points','row_title':'rational points','knowl':'g2c.num_rat_pts','avg':True},
-    {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
-    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
-    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
-    {'name':'analytic_rank','top_title':'analytic ranks','row_title':'analytic rank','knowl':'g2c.analytic_rank','avg':True},
-    {'name':'two_selmer_rank','top_title':'2-Selmer ranks','row_title':'2-Selmer rank','knowl':'g2c.two_selmer_rank','avg':True},
-    {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_format},
-    {'name':'locally_solvable','top_title':'local solvability','row_title':'locally solvable','knowl':'g2c.locally_solvable', 'format':boolean_format},
-    {'name':'is_gl2_type','top_title':'$\mathrm{GL}_2$-type','row_title':'is of GL2-type','knowl':'g2c.gl2type', 'format':boolean_format},
-    {'name':'real_geom_end_alg','top_title':'Sato-Tate group identity components','row_title':'identity component','knowl':'g2c.st_group_identity_component', 'format':st0_group_format},
-    {'name':'st_group','top_title':'Sato-Tate groups','row_title':'Sato-Tate groups','knowl':'g2c.st_group', 'format':st_group_format},
-    {'name':'torsion_order','top_title':'torsion subgroup orders','row_title':'torsion order','knowl':'g2c.torsion_order','avg':True},
-]
-
-class G2C_stats(object):
+class G2C_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for genus 2 curves over Q
     """
-
     def __init__(self):
-        self._counts = {}
-        self._stats = {}
+        self.ncurves = comma(db.g2c_curves.count())
+        self.max_D = comma(db.g2c_curves.max('abs_disc'))
+        self.disc_knowl = display_knowl('g2c.abs_discriminant', title = "absolute discriminant")
 
-    def counts(self):
-        self.init_g2c_count()
-        return self._counts
+    @property
+    def short_summary(self):
+        stats_url = url_for(".statistics")
+        g2c_knowl = display_knowl('g2c.g2curve', title='genus 2 curves')
+        return 'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves, g2c_knowl, self.disc_knowl, self.max_D, stats_url)
 
-    def stats(self):
-        self.init_g2c_count()
-        self.init_g2c_stats()
-        return self._stats
+    @property
+    def summary(self):
+        nclasses = comma(db.lfunc_instances.count({'type':'G2Q'}))
+        return 'The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s.' % (self.ncurves, nclasses, self.disc_knowl, self.max_D)
 
-    def init_g2c_count(self):
-        if self._counts:
-            return
-        curves = g2c_db_curves()
-        counts = {}
-        ncurves = curves.count()
-        counts['ncurves']  = ncurves
-        counts['ncurves_c'] = comma(ncurves)
-        nclasses = g2c_db_isogeny_classes_count()
-        counts['nclasses'] = nclasses
-        counts['nclasses_c'] = comma(nclasses)
-        max_D = curves.find().sort('abs_disc', DESCENDING).limit(1)[0]['abs_disc']
-        counts['max_D'] = max_D
-        counts['max_D_c'] = comma(max_D)
-        self._counts  = counts
+    table = db.g2c_curves
+    baseurl_func = ".index_Q"
+    knowls = {'num_rat_pts': 'g2c.num_rat_pts',
+              'num_rat_wpts': 'g2c.num_rat_wpts',
+              'aut_grp_id': 'g2c.aut_grp',
+              'geom_aut_grp_id': 'g2c.geom_aut_grp',
+              'analytic_rank': 'g2c.analytic_rank',
+              'two_selmer_rank': 'g2c.two_selmer_rank',
+              'has_square_sha': 'g2c.has_square_sha',
+              'locally_solvable': 'g2c.locally_solvable',
+              'is_gl2_type': 'g2c.gl2type',
+              'real_geom_end_alg': 'g2c.st_group_identity_component',
+              'st_group': 'g2c.st_group',
+              'torsion_order': 'g2c.torsion_order'}
+    row_titles = {'num_rat_pts': 'rational points',
+                  'num_rat_wpts': 'Weierstrass points',
+                 'aut_grp_id': 'automorphism group',
+                  'geom_aut_grp_id': 'automorphism group',
+                  'two_selmer_rank': '2-Selmer rank',
+                  'has_square_sha': 'has square Sha',
+                  'is_gl2_type': 'is of GL2-type',
+                  'real_geom_end_alg': 'identity component',
+                  'st_group': 'Sato-Tate group',
+                  'torsion_order': 'torsion order'}
+    top_titles = {'num_rat_wpts': 'rational Weierstrass points',
+                  'aut_grp_id': '$\mathrm{Aut}(X)$',
+                  'geom_aut_grp_id': '$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$',
+                  'has_square_sha': 'squareness of &#1064;',
+                  'locally_solvable': 'local solvability',
+                  'is_gl2_type': '$\mathrm{GL}_2$-type',
+                  'real_geom_end_alg': 'Sato-Tate group identity components',
+                  'torsion_order': 'torsion subgroup orders'}
+    formatters = {'aut_grp_id': aut_grp_format,
+                  'geom_aut_grp_id': geom_aut_grp_format,
+                  'has_square_sha': formatters.boolean,
+                  'is_gl2_type': formatters.boolean,
+                  'real_geom_end_alg': st0_group_format,
+                  'st_group': st_group_format}
 
-    def init_g2c_stats(self):
-        if self._stats:
-            return
-        curves = g2c_db_curves()
-        counts = self._counts
-        total = counts["ncurves"]
-        stats = {}
-        dists = []
-        # TODO use aggregate $group to speed this up and/or just store these counts in the database
-        for attr in stats_attribute_list:
-            counts = attribute_value_counts(curves, attr['name'])
-            counts = [c for c in counts if c[0] != None]
-            if len(counts) == 0:
-                continue
-            vcounts = []
-            rows = []
-            avg = 0
-            total = sum([c[1] for c in counts])
-            for value,n in counts:
-                prop = format_percentage(n,total)
-                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
-                    avg += n*value
-                value_string = attr['format'](value) if 'format' in attr else value
-                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index_Q")+'?'+attr['name']+'='+str(value),'proportion': prop})
-                if len(vcounts) == 10:
-                    rows.append(vcounts)
-                    vcounts = []
-            if len(vcounts):
-                rows.append(vcounts)
-            if 'avg' in attr and attr['avg']:
-                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'curves':total, 'query':url_for(".index_Q") +'?'+attr['name'],'proportion':format_percentage(1,1)})
-            dists.append({'attribute':attr,'rows':rows})
-        stats["distributions"] = dists
-        self._stats = stats
+    stat_list = [
+        {'cols': 'num_rat_pts', 'totaler': {'avg': True}},
+        {'cols': 'num_rat_wpts', 'totaler': {'avg': True}},
+        {'cols': 'aut_grp_id'},
+        {'cols': 'geom_aut_grp_id'},
+        {'cols': 'analytic_rank', 'totaler': {'avg': True}},
+        {'cols': 'two_selmer_rank', 'totaler': {'avg': True}},
+        {'cols': 'has_square_sha'},
+        {'cols': 'locally_solvable'},
+        {'cols': 'is_gl2_type'},
+        {'cols': 'real_geom_end_alg'},
+        {'cols': 'st_group'},
+        {'cols': 'torsion_order', 'totaler': {'avg': True}},
+    ]
 
-download_languages = ['magma', 'sage', 'gp', 'text']
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
-download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
-download_make_data = {
-'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
-'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
-'text':''
-}
-download_make_data_comment = {
-        'magma': 'To create a list of curves, type "curves:= make_data();"',
-        'sage':'To create a list of curves, type "curves = make_data()"',
-        'gp':'To create a list of curves [f,h], type "curves = make_data()"',
-        'text':''}
+@g2c_page.route("/Q/stats")
+def statistics():
+    title = 'Genus 2 curves over $\Q$: Statistics'
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
+    return render_template("display_stats.html", info=G2C_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
-def download_search(info):
-    lang = info.get('download','text').strip()
-    filename = 'genus2_curves' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue query here
-    try:
-        res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
-    except Exception as err:
-        return "Unable to parse query: %s"%err
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
-    s += c + ' Below is a list called data. Each entry has the form:\n'
-    s += c + '   [[f coeffs],[h coeffs]]\n'
-    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
-    s += c + '\n'
-    s += c + ' ' + download_make_data_comment[lang] + '\n'
-    s += '\n'
-    s += download_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join([str(r['eqn']) for r in res])) # list of curve equations
-    s += download_assignment_end[lang]
-    s += '\n\n'
-    s += download_make_data[lang]
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 @g2c_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Completeness',''))
-    return render_template("single.html", kid='dq.g2c.extent',
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
+    return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
-def how_computed_page():
+def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Source',''))
-    return render_template("single.html", kid='dq.g2c.source',
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
+    return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@g2c_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of Genus 2 Curve Data over $\Q$'
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
+    return render_template("single.html", kid='rcs.rigor.g2c',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Labels")
 def labels_page():
     t = 'Labels for Genus 2 Curves over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Labels',''))
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Labels',''))
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
