@@ -294,6 +294,11 @@ def genus2_curve_search(info, query):
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
+# TODO: finish this #
+#    parse_bracketed_posints(info, query, 'geometric_invariants', 'geometric invariants', maxlength=5)
+    if 'geometric_invariants' in query:
+        query[info['geometric_invariants_type']] = str(info['geometric_invariants']).replace(" ", "")
+
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
