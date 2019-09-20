@@ -78,7 +78,7 @@
     <td>
         {{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}
         </td>
-        
+
           <td> <select id='inc_full' name='inc_full'>
         {% if info.inc_full == "only" %}
                    <option value="include">include</option>
@@ -99,7 +99,7 @@
 </tr>
 
 
-  
+
 
 
 <tr>
@@ -116,7 +116,7 @@
 	         <option value="descg0"{% if info.sort_order == "descg0" %} selected {% endif %}>quotient genus descending</option>
 	   <option value="descgroup_order"{% if info.sort_order == "descgroup_order" %} selected {% endif %}>group order descending</option>
          <option value="descdim"{% if info.sort_order == "descdim" %} selected {% endif %}>dimension descending</option>
-               
+
      </select>
    </td>
  </tr>
@@ -172,4 +172,3 @@
 {% include 'debug_info.html' %}
 
   {% endblock %}
-  
