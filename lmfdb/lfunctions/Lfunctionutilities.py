@@ -91,9 +91,11 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
             if coeff == "I":
                 rp = 0
                 ip = 1
+                coeff = CDF(I)
             elif coeff == "-I":
                 rp = 0
                 ip = -1
+                coeff = CDF(-I)
             else:
                 coeff = string2number(coeff)
         if type(coeff) == complex:
