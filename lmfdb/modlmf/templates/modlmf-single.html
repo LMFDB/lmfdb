@@ -3,9 +3,6 @@
 {% block content %}
 
 
-{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 <h2> {{ KNOWL('modlmf.q_expansion', title='<i>q</i>-expansion') }} </h2>
 
 <p><form>
@@ -55,7 +52,7 @@ $\F_{ {{info.characteristic}} }$
 {% endif %}
     <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.cuspidal_lift', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_lift_weight}}</td></tr>
     <tr><td>{{ KNOWL('modlmf.cuspidal_lift', title='form') }}: <a HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{info.cuspidal_lift_orbit}}">{{info.cuspidal_lift_orbit}}</a></td></tr>
-    <tr><td>{{ KNOWL('mf.elliptic.coefficient_field', title='coefficient field') }}: 
+    <tr><td>{{ KNOWL('cmf.coefficient_field', title='coefficient field') }}: 
         {% if info.cuspidal_hecke_field == 1 %}
         $\Q$
         {% else %}
@@ -129,11 +126,6 @@ where $a$ satisfies ${{info.field | safe}}$.
 {% endif %}
 </p>
 
-
-
-
-{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">
 var number_of_coefficients = 20;

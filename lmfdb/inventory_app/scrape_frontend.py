@@ -1,26 +1,17 @@
-import scripts.reports.jsonify_db_structure as jdbs
+import scripts.reports.jsonify_pg_structure as jdbs
 import inventory_upload_data as iud
-from lmfdb.base import getDBConnection
 from scrape_progress_update import update_scrape_progress
 import threading
 
-def get_scrape_progress(db, coll, connection):
-    """Routine to query database on state of MapReduce on a given db
-       collection. Will only return data for first operation if more than
-       one in flight
+def get_scrape_progress(db, coll):
+    """Routine to query database on state of scrape
 
        db - String name of database
        coll - String name of collection
-       connection - MongoDB connection object. Should be same role as called
-                    scrape_and_upload_threaded
 
        returns tuple containing (number of records scanned, total number of records)
     """
-    progress = connection['admin'].current_op()
-    for el in progress['inprog']:
-        if 'progress' in el.keys():
-            if el['ns'] == db + "." + coll:
-                return int(el['progress']['done']), int(el['progress']['total'])
+    #TODO restore progress or remove
     return -1, -1
 
 def scrape_worker(db, coll, uuid, connection):
@@ -35,8 +26,7 @@ def scrape_worker(db, coll, uuid, connection):
 
     for el in coll:
         update_scrape_progress(db, el, uuid, running = True)
-        data = jdbs.parse_collection_info_to_json(db, el,
-            connection = connection)
+        data = jdbs.parse_collection_info_to_json(db+'_'+el)
         iud.upload_scraped_data(data, uuid)
         update_scrape_progress(db, el, uuid, running = False, complete = True)
 
@@ -53,8 +43,8 @@ def scrape_and_upload_threaded(db, coll, uuid, connection = None):
                     lmfdb.base.getDBConnection()
     """
 
-    if not connection:
-        connection = getDBConnection()
+#    if not connection:
+#        connection = getDBConnection()
 
     worker = threading.Thread(target = scrape_worker,
         args = [db, coll, uuid, connection])
@@ -62,8 +52,8 @@ def scrape_and_upload_threaded(db, coll, uuid, connection = None):
 
 def scrape_and_upload(dblist, connection = None):
     """ Legacy function, do not use """
-    if not connection:
-        connection = getDBConnection()
+#    if not connection:
+#        connection = getDBConnection()
 
     data = jdbs.parse_lmfdb_to_json(collections=dblist, connection = connection)
     invdb = connection['inventory']

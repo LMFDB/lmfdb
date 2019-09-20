@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import app
-from lmfdb.utils import comma, make_logger
+from lmfdb.app import app
+from lmfdb.utils import comma, StatsDisplay
+from lmfdb.logger import make_logger
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.db_backend import db
+from lmfdb import db
+from sage.misc.lazy_attribute import lazy_attribute
+from sage.misc.cachefunc import cached_method
+from collections import defaultdict
 
 def field_data(s):
     r"""
@@ -20,91 +24,165 @@ def sort_field(F):
 
 logger = make_logger("ecnf")
 
-def ecnf_summary():
-    ecnfstats = db.ec_nfcurves.stats
-    ec_knowl = '<a knowl="ec">elliptic curves</a>'
-    iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
-    nf_knowl = '<a knowl="nf">number fields</a>'
-    deg_knowl = '<a knowl="nf.degree">degree</a>'
-    data = ecnfstats.get_oldstat('conductor_norm')
-    ncurves = comma(data['ncurves'])
-    nclasses = comma(data['nclasses'])
-    data = ecnfstats.get_oldstat('field_label')
-    nfields = len(data['counts'])
-    data = ecnfstats.get_oldstat('signatures_by_degree')
-    maxdeg = max(int(d) for d in data if d!='_id')
-    return ''.join([r'The database currently contains {} '.format(ncurves),
-                    ec_knowl,
-                    r' in {} '.format(nclasses),
-                    iso_knowl,
-                    r', over {} '.format(nfields),
-                    nf_knowl, ' (not including $\mathbb{Q}$) of ',
-                    deg_knowl,
-                    r' up to {}.'.format(maxdeg)])
-
-def ecnf_field_summary(field):
-    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_field')[field]
-    ncurves = data['ncurves']
-    s = '' if ncurves==1 else 's'
-    ec_knowl = '<a knowl="ec">elliptic curve{}</a>'.format(s)
-    nclasses = data['nclasses']
-    s = '' if nclasses==1 else 'es'
-    iso_knowl = '<a knowl="ec.isogeny_class">isogeny class{}</a>'.format(s)
+class ECNF_stats(StatsDisplay):
+    ec_knowls = '<a knowl="ec">elliptic curves</a>'
+    ec_knowl = '<a knowl="ec">elliptic curve</a>'
+    iso_knowls = '<a knowl="ec.isogeny_class">isogeny classes</a>'
+    iso_knowl = '<a knowl="ec.isogeny_class">isogeny class</a>'
+    nf_knowls = '<a knowl="nf">number fields</a>'
     nf_knowl = '<a knowl="nf">number field</a>'
-    max_norm = data['max_norm']
-    s = '' if max_norm==1 else 's'
-    cond_knowl = '<a knowl="ec.conductor">conductor{}</a>'.format(s)
-    s = '' if max_norm==1 else 'up to '
-    return ''.join([r'The database currently contains {} '.format(ncurves),
-                    ec_knowl,
-                    r' defined over the ',
-                    nf_knowl,
-                    r' {}, in {} '.format(field_pretty(field), nclasses),
-                    iso_knowl,
-                    r', with ',
-                    cond_knowl,
-                    r' of norm {} {}.'.format(s,data['max_norm'])])
+    deg_knowl = '<a knowl="nf.degree">degree</a>'
+    cond_knowls = '<a knowl="ec.conductor">conductors</a>'
+    cond_knowl = '<a knowl="ec.conductor">conductor</a>'
+    @lazy_attribute
+    def ncurves(self):
+        return db.ec_nfcurves.count()
+    @lazy_attribute
+    def nclasses(self):
+        return db.ec_nfcurves.count({'number':1})
+    @lazy_attribute
+    def field_counts(self):
+        return db.ec_nfcurves.stats.column_counts('field_label')
+    @lazy_attribute
+    def field_classes(self):
+        return db.ec_nfcurves.stats.column_counts('field_label', {'number':1})
+    @lazy_attribute
+    def sig_counts(self):
+        return db.ec_nfcurves.stats.column_counts('signature')
+    @lazy_attribute
+    def sig_classes(self):
+        return db.ec_nfcurves.stats.column_counts('signature', {'number':1})
+    @lazy_attribute
+    def deg_counts(self):
+        return db.ec_nfcurves.stats.column_counts('degree')
+    @lazy_attribute
+    def deg_classes(self):
+        return db.ec_nfcurves.stats.column_counts('degree', {'number':1})
+    @lazy_attribute
+    def torsion_counts(self):
+        return db.ec_nfcurves.stats.column_counts('torsion_structure')
+    @lazy_attribute
+    def field_normstats(self):
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'field_label')
+        return {label: {'ncurves': self.field_counts[label],
+                        'nclasses': self.field_classes[label],
+                        'max_norm': D[label]['max']}
+                for label in D}
+    @lazy_attribute
+    def sig_normstats(self):
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'signature')
+        return {sig: {'ncurves': self.sig_counts[sig],
+                      'nclasses': self.sig_classes[sig],
+                      'max_norm': D[sig]['max']}
+                for sig in D}
+    @lazy_attribute
+    def deg_normstats(self):
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'degree')
+        return {deg: {'ncurves': self.deg_counts[deg],
+                      'nclasses': self.deg_classes[deg],
+                      'max_norm': D[deg]['max']}
+                for deg in D}
+    @lazy_attribute
+    def maxdeg(self):
+        return db.ec_nfcurves.max('degree')
+    @staticmethod
+    def _get_sig(nflabel):
+        d,r = map(int,nflabel.split('.',2)[:2])
+        return (r,(d-r)//2)
+    @staticmethod
+    def _get_deg(nflabel):
+        return int(nflabel.split('.',1)[0])
+    def _fields_by(self, func):
+        D = defaultdict(list)
+        for label in self.field_counts:
+            D[func(label)].append(label)
+        for fields in D.values():
+            fields.sort(key=sort_field)
+        return D
+    @lazy_attribute
+    def fields_by_sig(self):
+        return self._fields_by(self._get_sig)
+    @lazy_attribute
+    def fields_by_deg(self):
+        return self._fields_by(self._get_deg)
+    @lazy_attribute
+    def sigs_by_deg(self):
+        def _get_deg_s(sig):
+            r, s = sig
+            return r + 2*s
+        D = defaultdict(list)
+        for sig in self.sig_counts:
+            D[_get_deg_s(sig)].append(sig)
+        for sigs in D.values():
+            sigs.sort()
+        return D
 
-def ecnf_signature_summary(sig):
-    ec_knowl = '<a knowl="ec">elliptic curves</a>'
-    iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
-    nf_knowl = '<a knowl="nf">number fields</a>'
-    cond_knowl = '<a knowl="ec.conductor">conductors</a>'
-    r, s = [int(x) for x in sig.split(",")]
-    d = r+2*s
-    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_signature')[sig]
-    ncurves = data['ncurves']
-    nclasses = data['nclasses']
-    max_norm = data['max_norm']
-    return ''.join([r'The database currently contains {} '.format(ncurves),
-                    ec_knowl,
-                    r' defined over ',
-                    nf_knowl,
-                    r' of signature ({}) (degree {}), in {} '.format(sig, d, nclasses),
-                    iso_knowl,
-                    r', with ',
-                    cond_knowl,
-                    r' of norm up to {}.'.format(max_norm)])
+    def summary(self):
+        return ''.join([r'The database currently contains {} '.format(comma(self.ncurves)),
+                        self.ec_knowls,
+                        r' in {} '.format(comma(self.nclasses)),
+                        self.iso_knowls,
+                        r', over {} '.format(len(self.field_counts)),
+                        self.nf_knowls, ' (not including $\mathbb{Q}$) of ',
+                        self.deg_knowl,
+                        r' up to {}.'.format(self.maxdeg)])
 
-def ecnf_degree_summary(d):
-    ec_knowl = '<a knowl="ec">elliptic curves</a>'
-    iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
-    nf_knowl = '<a knowl="nf">number fields</a>'
-    cond_knowl = '<a knowl="ec.conductor">conductors</a>'
-    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_degree')[str(d)]
-    ncurves = data['ncurves']
-    nclasses = data['nclasses']
-    max_norm = data['max_norm']
-    return ''.join([r'The database currently contains {} '.format(ncurves),
-                    ec_knowl,
-                    r' defined over ',
-                    nf_knowl,
-                    r' of degree {}, in {} '.format(d, nclasses),
-                    iso_knowl,
-                    r', with ',
-                    cond_knowl,
-                    r' of norm up to {}.'.format(max_norm)])
+    @cached_method
+    def field_summary(self, field):
+        stats = self.field_normstats[field]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
+        ec_knowl = self.ec_knowl if ncurves==1 else self.ec_knowls
+        iso_knowl = self.iso_knowl if ncurves==1 else self.iso_knowls
+        nf_knowl = self.nf_knowl if ncurves==1 else self.nf_knowls
+        cond_knowl = self.cond_knowl if ncurves==1 else self.cond_knowls
+        s = '' if max_norm==1 else 'up to '
+        norm_phrase = ' of norm {}{}.'.format(s, max_norm)
+        return ''.join([r'The database currently contains {} '.format(ncurves),
+                        ec_knowl,
+                        r' defined over the ',
+                        nf_knowl,
+                        r' {}, in {} '.format(field_pretty(field), nclasses),
+                        iso_knowl,
+                        r', with ',
+                        cond_knowl,
+                        norm_phrase])
+
+    @cached_method
+    def signature_summary(self, sig):
+        r, s = sig
+        d = r+2*s
+        stats = self.sig_normstats[r,s]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
+        return ''.join([r'The database currently contains {} '.format(ncurves),
+                        self.ec_knowls,
+                        r' defined over ',
+                        self.nf_knowls,
+                        r' of signature ({},{}) (degree {}), in {} '.format(r, s, d, nclasses),
+                        self.iso_knowls,
+                        r', with ',
+                        self.cond_knowls,
+                        r' of norm up to {}.'.format(max_norm)])
+
+    @cached_method
+    def degree_summary(self, d):
+        stats = self.deg_normstats[d]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
+        return ''.join([r'The database currently contains {} '.format(ncurves),
+                        self.ec_knowls,
+                        r' defined over ',
+                        self.nf_knowls,
+                        r' of degree {}, in {} '.format(d, nclasses),
+                        self.iso_knowls,
+                        r', with ',
+                        self.cond_knowls,
+                        r' of norm up to {}.'.format(max_norm)])
 
 @app.context_processor
 def ctx_ecnf_summary():
-    return {'ecnf_summary': ecnf_summary}
+    return {'ecnf_summary': ECNF_stats().summary}

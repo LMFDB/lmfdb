@@ -5,17 +5,14 @@ import re
 import yaml
 import json
 import flask
-import lmfdb.base as base
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
+from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
-from bson import json_util
-from bson.objectid import ObjectId
 
 def pluck(n, list):
     return [_[n] for _ in list]
@@ -68,7 +65,7 @@ def full_index():
 @api_page.route("/stats")
 def stats():
     def mb(x):
-        return int(round(x/1000000.0))
+        return int(round(x/2**20.))
     info={}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
@@ -76,51 +73,85 @@ def stats():
         info['minsizes'] = '1'
     info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
     info['sortby'] = request.args.get('sortby','size').strip().lower()
-    if not info['sortby'] in ['size', 'objects']:
+    if not info['sortby'] in ['size', 'objects', 'name']:
         info['sortby'] = 'size'
-    dbs = get_database_info(True)
-    C = base.getDBConnection()
-    dbstats = {elt:C[elt].command("dbstats") for elt in dbs}
-    info['dbs'] = len(dbstats.keys())
-    collections = objects = 0
-    size = dataSize = indexSize = 0
+    nobjects = size = dataSize = indexSize = 0
+    dbSize = defaultdict(int)
+    dbObjects = defaultdict(int)
     stats = {}
-    for elt in dbstats:
-        dbsize = dbstats[elt]['dataSize']+dbstats[elt]['indexSize']
-        size += dbsize
-        dataSize += dbstats[elt]['dataSize']
-        indexSize += dbstats[elt]['indexSize']
-        dbsize = mb(dbsize)
-        dbobjects = dbstats[elt]['objects']
-        for c in pluck(0,dbs[elt]):
-            if C[elt][c].count():
-                collections += 1
-                coll = '<a href = "' + url_for (".api_query", db=elt, collection = c) + '">'+c+'</a>'
-                cstats = C[elt].command("collstats",c)
-                objects += cstats['count']
-                csize = mb(cstats['size']+cstats['totalIndexSize'])
-                if csize >= int(info['minsize']):
-                    stats[cstats['ns']] = {'db':elt, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
-                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
-    info['collections'] = collections
-    info['objects'] = objects
+    table_sizes = db.table_sizes()
+    def split_db(tablename):
+        i = tablename.find('_')
+        if i == -1:
+            return '', tablename
+        else:
+            return tablename[:i], tablename[i+1:]
+    for tablename, sizes in table_sizes.items():
+        dname, name = split_db(tablename)
+        dbSize[dname] += sizes['total_bytes']
+        dbObjects[dname] += sizes['nrows']
+    for tablename, sizes in table_sizes.items():
+        tsize = sizes['total_bytes']
+        size += tsize
+        csize = mb(tsize)
+        nobjects += sizes['nrows']
+        indexSize += sizes['index_bytes']
+        if csize >= int(info['minsize']):
+            dname, name = split_db(tablename)
+            if tablename not in db.tablenames:
+                link = tablename
+            else:
+                link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if not sizes['toast_bytes']:
+                sizes['toast_bytes'] = 0 
+            if sizes['nrows']:
+                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
+            else:
+                avg_size = 0
+            stats[tablename] = {
+                'db':dname, 'table':link, 'dbSize':dbSize[dname], 'dbObjects':dbObjects[dname],
+                'size': csize, 'avgObjSize':avg_size,
+                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']),
+                'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
+                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
+    dataSize = size - indexSize
+    info['ntables'] = len(table_sizes)
+    info['nobjects'] = nobjects
     info['size'] = mb(size)
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
-    if info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['coll']))
+    if info['sortby'] == 'name':
+        sortedkeys = sorted(list(stats))
+    elif info['sortby'] == 'objects' and info['groupby'] == 'db':
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
+
+
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
-    return api_query(table, id = id)
+    if id == 'schema':
+        out = ''
+        table = getattr(db, table)
+        col_type = table.col_type
+        out = """
+        <table>
+        <tr>
+        <th> name </th><th>type</th>
+        </tr>
+        """;
+        for c in sorted(col_type.keys()):
+            out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
+        return out
+    else:
+        return api_query(table, id = id)
 
 @api_page.route("/<table>")
 @api_page.route("/<table>/")
@@ -138,7 +169,7 @@ def api_query(table, id = None):
     if fields:
         fields = ['id'] + fields.split(DELIM)
     else:
-        fields = 1.1
+        fields = 3
 
     if sortby:
         sortby = sortby.split(DELIM)
@@ -185,8 +216,6 @@ def api_query(table, id = None):
                     qval = int(qval[1:])
                 elif qval.startswith("f"):
                     qval = float(qval[1:])
-                elif qval.startswith("o"):
-                    qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
@@ -280,7 +309,7 @@ def api_query(table, id = None):
 
     if format.lower() == "json":
         #return flask.jsonify(**data) # can't handle binary data
-        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2, default=json_util.default), mimetype='application/json')
+        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,

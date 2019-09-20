@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.modular_forms.maass_forms.picard import mwfp_logger
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from flask import url_for

@@ -1,0 +1,45 @@
+  <tr style="height:20px"></tr>
+  <tr>
+    <td colspan="2"> Columns to display </td>
+    <td> Show </td>
+  </tr>
+  <tr>
+    <td>
+      <input type='text' style="width: 140px;" name='n' placeholder='1-40' value='{{info.n}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. 3,7,19, 40-90 </span>
+    </td>
+    <td>
+      <select name='n_primality' style="width: 150px;">
+        <option value="" {{ "selected" if info.n_primality == ''}}>primes only</option>
+        <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
+        <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2"> Trace constraints </td>
+    <td colspan="2"> Modulo </td>
+    <td> View </td>
+  </tr>
+  <tr>
+    <td>
+      <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. a17=1, a8=0 </span>
+    </td>
+    <td>
+      <input type='text' style="width: 140px;" name='an_modulo' value='{{info.an_modulo}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. 5, 16 </span>
+    </td>
+    <td>
+      <select name='view_modp' style="width: 150px;">
+        <option value=""{{ "selected" if info.view_modp == '' }}>integers</option>
+        <option value="reductions"{{ "selected" if info.view_modp == 'reductions' }}>reductions</option>
+      </select>
+    </td>
+  </tr>

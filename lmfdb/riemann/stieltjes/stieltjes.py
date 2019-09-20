@@ -1,27 +1,31 @@
-import flask
-from flask import render_template, request, url_for
-import sqlite3
+# -*- coding: utf-8 -*-
 import os
-
+import sqlite3
 from sage.all import RealField, RealIntervalField, ZZ
+from flask import Blueprint, Response, render_template, request, url_for
 
 RR = RealField(63)
 
 dbpath = os.path.expanduser('~/data/riemann/stieltjes.db')
 
-StieltjesConstants = flask.Blueprint("stieltjes", __name__, template_folder="templates")
-#logger = lmfdb.utils.make_logger(StieltjesConstants)
+StieltjesConstants = Blueprint("stieltjes", __name__, template_folder="templates")
+
 
 @StieltjesConstants.route("/")
 def stieltjes_constants():
     start = request.args.get("start", 0, int)
     limit = request.args.get("limit", 100, int)
-    return render_template('stieltjes.html', start=start, limit=limit, title="Stieltjes Constants", bread=[('Stieltjes Constants', ' '), ])
+    return render_template('stieltjes.html',
+                           start=start,
+                           limit=limit,
+                           title="Stieltjes Constants",
+                           bread=[('Stieltjes Constants', ' '), ])
+
 
 @StieltjesConstants.route("/list")
-def list_constants( start = None,
-                    limit = None,
-                    fmt = None):
+def list_constants(start=None,
+                   limit=None,
+                   fmt=None):
     if start is None:
         start = request.args.get("start", 0, int)
     if limit is None:
@@ -35,21 +39,24 @@ def list_constants( start = None,
         limit = 1000
     if start < 0:
         start = 0
-
     s_constants = stieltjes_list(start, limit)
 
     if fmt == 'plain':
-        response = flask.Response(("%d %s %s\n" % (n, str(g), str(c)) for (n, g, c) in s_constants))
+        response = Response(
+                "%d %s %s\n" % (n, str(g), str(c))
+                for (n, g, c) in s_constants)
         response.headers['content-type'] = 'text/plain'
     else:
         response = str(list(s_constants))
 
     return response
 
+
 def stieltjes_list(start, limit):
     db = sqlite3.connect(dbpath)
     c = db.cursor()
-    query = 'SELECT n, smallmantissa, smallexponent FROM stieltjes WHERE n >= ? LIMIT ?'
+    query = 'SELECT n, smallmantissa, smallexponent ' +\
+            'FROM stieltjes WHERE n >= ? LIMIT ?'
     c.execute(query, (start, limit))
     L = []
     for (n, m, e) in c:
@@ -59,15 +66,17 @@ def stieltjes_list(start, limit):
 
     return L
 
+
 @StieltjesConstants.route("/getone")
-def getone(n = None, digits = None, plain = False):
+def getone(n=None, digits=None, plain=False):
     if n is None:
         n = request.args.get('n', 0, int)
     if digits is None:
         digits = request.args.get('digits', 50, int)
     db = sqlite3.connect(dbpath)
     c = db.cursor()
-    query = 'SELECT error_mantissa, error_exponent, mantissa, exponent FROM stieltjes WHERE n = ? LIMIT 1'
+    query = 'SELECT error_mantissa, error_exponent, mantissa, exponent ' +\
+            'FROM stieltjes WHERE n = ? LIMIT 1'
     c.execute(query, (n,))
     em, ee, mantissa, exponent = c.fetchone()
 
@@ -99,9 +108,11 @@ def getone(n = None, digits = None, plain = False):
             g += '? &times; 10<sup style="font-size:60%;">' + e[1:] + '</sup>'
 
         return render_template('getone.html',
-                                n=n,
-                                digits=digits,
-                                gamma=g,
-                                title="Stieltjes Constant $\gamma_{{{}}}$".format(n),
-                                bread=[ ('Stieltjes Constants', url_for('.stieltjes_constants')),
-                                        ('$\gamma_{{{}}}$'.format(n), ' '), ])
+                               n=n,
+                               digits=digits,
+                               gamma=g,
+                               title="Stieltjes Constant $\gamma_{{{}}}$".format(n),
+                               bread=[
+                                    ('Stieltjes Constants',
+                                     url_for('.stieltjes_constants')),
+                                    ('$\gamma_{{{}}}$'.format(n), ' '), ])

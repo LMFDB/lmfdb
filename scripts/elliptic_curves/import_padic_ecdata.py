@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
+from lmfdb import db
 
-padic_db = getDBConnection().ellcurves.padic_db
-padic_db.create_index("label")
-padic_db.create_index("prime")
+# 2018: updated for postgres, but not used (ever?)
 
+padic_db = db.ec_padic
 
 def lookup_or_create(label, p):
-    item = padic_db.find_one({'label': label, 'p': p})
+    item = padic_db.lucky({'label': label, 'p': p})
     if item is None:
         return {'label': label, 'p': p}
     else:

@@ -4,8 +4,7 @@
 <h2>Refine search</h2>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table border="0">
 <tr>
@@ -17,29 +16,29 @@
 </tr>
 
 <tr>
-<td align=left><input type='text' name='modulus' size=6 value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
+<td align=left><input type='text' name='modulus' placeholder="13" size=6 value="{{args.modulus}}"></td>
+<td align=left><input type='text' name='conductor' placeholder="5" size=6 value="{{args.conductor}}"></td>
+<td align=left><input type='text' name='order' placeholder="2" size=6 value="{{args.order}}"></td>
 <td align=left>
 <select name='parity'>
-    {% for x in ('All', 'Odd', 'Even') %}
-    <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option>
-    {% endfor %}
+      <option value="">all</option>
+      <option value="Even" {{ "selected" if args.parity == 'Even'}}>even</option>
+      <option value="Odd" {{ "selected" if args.parity == 'Odd'}}>odd</option>
 </select>
 </td>
 <td align=left>
 <select name='primitive'>
-    {% for x in ('All', 'Yes', 'No') %}
-    <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option>
-    {% endfor %}
+      <option value="">all</option>
+      <option value="Yes" {{ "selected" if args.primitive == 'Yes'}}>yes</option>
+      <option value="No" {{ "selected" if args.primitive == 'No'}}>no</option>
 </select>
 </td>
 </tr>
 <tr>
-<td colspan=2 align=left>maximum results to display</td>
-<td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td></tr>
+<td colspan=2 align=left>Maximum number of results to display</td>
+<td align=left> <input type='text' name='limit'size=6 placeholder="50"  value="{{args.limit}}"> </td></tr>
 <tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" name='refine' value='1'>Search again</button>
+<td class="button"><button type='submit' width="170" style="width: 170px" name='refine' value='1' onclick='resetStart()'>Search again</button>
 </td> </tr>
 </table>
 
@@ -72,6 +71,7 @@ table td.params {
 <table>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.galois_orbit_label', title='Orbit label')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.modulus', title='Modulus')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.order', title='Order') }}</th>
@@ -79,13 +79,14 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
 
-{% for (mod,num,cond,order,par,prim,name) in info.chars: %}
+{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>
 <td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
+<td class="center">{{orbit_label}}</a></td>
 <td class="center">{{mod}}</td>
 <td class="center">{{cond}}</td>
 <td class="center">{{order}}</td>
-<td class="center">{{'Odd' if par else 'Even'}}</td>
+<td class="center">{{par}}</td>
 <td class="center">{{'&#x2713;'|safe if prim}}</td>
 </tr>
 {% endfor %}

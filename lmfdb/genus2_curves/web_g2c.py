@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from ast import literal_eval
-from lmfdb.db_backend import db
-from lmfdb.utils import web_latex, encode_plot
-from lmfdb.ecnf.main import split_full_label
+from lmfdb import db
+from lmfdb.utils import (key_for_numerically_sort, encode_plot,
+                         list_to_factored_poly_otherorder, names_and_urls,
+                         web_latex)
+from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
+from lmfdb.ecnf.main import split_full_label as split_ecnf_label
+from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
+from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -38,12 +42,9 @@ def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
     else:
-        (nf, conductor_label, class_label, number) = split_full_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = conductor_label, class_label = class_label, number = number)
-        # fixup conductor norm labels for the form "[a,b,c]" that have been converted to urls to ensure friend matching works
-        url.replace("%5B","[")
-        url.replace("%2C",".")
-        url.replace("%5D","]")
+        (nf, cond, isog, num) = split_ecnf_label(label)
+        cond = convert_IQF_label(nf,cond)
+        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
         return url
 
 def url_for_ec_class(ec_label):
@@ -51,8 +52,9 @@ def url_for_ec_class(ec_label):
         (cond, iso, num) = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:
-        (nf, cond, iso, num) = split_full_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=iso)
+        (nf, cond, isog, num) = split_ecnf_label(ec_label)
+        cond = convert_IQF_label(nf,cond)
+        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 def ec_label_class(ec_label):
     x = ec_label
@@ -74,7 +76,7 @@ def factorsRR_raw_to_pretty(factorsRR):
     elif factorsRR == ['CC', 'CC']:
         return r'\C \times \C'
     elif factorsRR == ['HH']:
-        return r'\mathbf{H}'
+        return r'\H'
     elif factorsRR == ['M_2(RR)']:
         return r'\mathrm{M}_2 (\R)'
     elif factorsRR == ['M_2(CC)']:
@@ -101,72 +103,6 @@ def ring_pretty(L, f):
         return r'\Z [' + (str(f//2) if f != 2 else "") + r'\sqrt{' + str(D) + r'}]'
     return r'\Z [\frac{1 +' + str(f) + r'\sqrt{' + str(D) + r'}}{2}]'
 
-# currently galois functionality is not used here, but it is used in lfunctions so don't delete it
-def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
-    """ Either return the polynomial in a nice factored form,
-        or return a pair, with first entry the factored polynomial
-        and the second entry a list describing the Galois groups
-        of the factors.
-        vari allows to choose the variable of the polynomial to be returned.
-    """
-    gal_list=[]
-    if len(s) == 1:
-        if galois:
-            return [str(s[0]), [[0,0]]]
-        return str(s[0])
-    sfacts = factor(PolynomialRing(ZZ, 'T')(s))
-    sfacts_fc = [[v[0],v[1]] for v in sfacts]
-    if sfacts.unit() == -1:
-        sfacts_fc[0][0] *= -1
-    outstr = ''
-    x = var('x')
-    for v in sfacts_fc:
-        this_poly = v[0]
-        # if the factor is -1+T^2, replace it by 1-T^2
-        # this should happen an even number of times, mod powers
-        if this_poly.substitute(T=0) == -1:
-            this_poly = -1*this_poly
-            v[0] = this_poly
-        if galois:
-            this_degree = this_poly.degree()
-                # hack because currently sage only handles monic polynomials:
-            this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
-            this_number_field = NumberField(this_poly, "a")
-            this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group().__pari__()[2].sage()
-            gal_list.append([this_degree, this_t_number])
-        vcf = v[0].list()
-        started = False
-        if len(sfacts) > 1 or v[1] > 1:
-            outstr += '('
-        for i in range(len(vcf)):
-            if vcf[i] != 0:
-                if started and vcf[i] > 0:
-                    outstr += '+'
-                started = True
-                if i == 0:
-                    outstr += str(vcf[i])
-                else:
-                    if abs(vcf[i]) != 1:
-                        outstr += str(vcf[i])
-                    elif vcf[i] == -1:
-                        outstr += '-'
-                    if i == 1:
-                        outstr += vari #instead of putting in T for the variable, put in a variable of your choice
-                    elif i > 1:
-                        outstr += vari + '^{' + str(i) + '}'
-        if len(sfacts) > 1 or v[1] > 1:
-            outstr += ')'
-        if v[1] > 1:
-            outstr += '^{' + str(v[1]) + '}'
-    if galois:
-        if galois and len(sfacts_fc)==2:
-            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
-                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
-                if troubletest.is_square():
-                    gal_list=[[2,1]]
-        return [outstr, gal_list]
-    return outstr
 
 def QpName(p):
     if p==0:
@@ -241,7 +177,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
 # Name conversions for the Sato-Tate and real endomorphism algebras
 ###############################################################################
 
-def end_alg_name(name):
+def real_geom_end_alg_name(name):
     name_dict = {
         "R":"\\R",
         "C":"\\C",
@@ -250,6 +186,23 @@ def end_alg_name(name):
         "C x C":"\\C \\times \\C",
         "M_2(R)":"\\mathrm{M}_2(\\R)",
         "M_2(C)":"\\mathrm{M}_2(\\C)"
+        }
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
+
+def geom_end_alg_name(name):
+    name_dict = {
+        "Q":"\\Q",
+        "RM":"\\mathrm{RM}",
+        "Q x Q":"\\Q \\times \\Q",
+        "CM x Q":"\\mathrm{CM} \\times \\Q",
+        "CM":"\\mathrm{CM}",
+        "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
+        "QM":"\\mathrm{QM}",
+        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
+        "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -276,8 +229,8 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "of \(\GL_2\)-type over " + base
-    return "not of \(\GL_2\)-type over " + base
+        return "Of \(\GL_2\)-type over " + base
+    return "Not of \(\GL_2\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
@@ -392,7 +345,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
 
 def end_field_statement(field_label, poly):
     if field_label == '1.1.1.1':
-        return """All endomorphisms of the Jacobian are defined over \(\Q\)"""
+        return """All \(\overline{\Q}\)-endomorphisms of the Jacobian are defined over \(\Q\)."""
     elif field_label != '':
         pretty = field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
@@ -466,17 +419,29 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        label = parts[1] + "-" + parts[2] + "-" + parts[3]
+        cond = convert_IQF_label(parts[1],parts[2])
+        label = parts[1] + "-" + cond + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
         return ("Hilbert MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "ImaginaryQuadratic":
+        label = '.'.join(parts[4:6])
+        return ("Bianchi MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "Q" and parts[3] == "holomorphic":
+        label = '.'.join(parts[4:8])
+        return ("Modular form " + label, "/" + url)
     return (url, "/" + url)
 
-# add new friend to list of friends, but only if really new (e.g. don't add an elliptic curve and its isogeny class)
-def add_friend(friends,friend):
+# add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
+def add_friend(friends, friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
+            return
+        # compare again with slashes converted to dots to deal with minor differences in url/label formatting
+        olddots = ".".join(oldfriend[1].split("/"))
+        newdots = ".".join(friend[1].split("/"))
+        if olddots in newdots or newdots in olddots:
             return
     friends.append(friend)
 
@@ -590,7 +555,7 @@ class WebG2C(object):
                 sz = "everywhere"
             data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
-            data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
+            data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
@@ -649,7 +614,8 @@ class WebG2C(object):
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
             data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" %("ring" if is_curve else "algebra") + \
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
-        data['real_geom_end_alg_name'] = end_alg_name(curve['real_geom_end_alg'])
+        data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
+        data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
 
         # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
         if is_curve:
@@ -685,28 +651,53 @@ class WebG2C(object):
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
+            ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\Q\)', '\(%s\)' % data['geom_end_alg_name']),
             ('\(\\overline{\\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             ('\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
 
         # Friends
-        self.friends = friends = [('L-function', data['lfunc_url'])]
+        self.friends = friends = []
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
-        for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
-            if '|' in friend_url:
-                for url in friend_url.split('|'):
-                    add_friend (friends, lfunction_friend_from_url(url))
-            else:
-                add_friend (friends, lfunction_friend_from_url(friend_url))
+
+        # first deal with EC
+        ecs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
-                    add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
+                    ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+
+        ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
+
+        # then again EC from lfun
+        instances = []
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+            instances.extend(elt.split('|'))
+
+        # and then the other isogeny friends
+        instances.extend([
+            elt['url'] for elt in
+            get_instances_by_Lhash_and_trace_hash(data["Lhash"],
+                                                  4,
+                                                  int(data["Lhash"])
+                                                  )
+            ])
+        exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                   if elt[1]}
+        exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
+        for elt in ecs + names_and_urls(instances, exclude=exclude):
+            # because of the splitting we must use G2C specific code
+            add_friend(friends, elt)
         if is_curve:
-            friends.append(('Twists', url_for(".index_Q", g20 = str(data['g2'][0]), g21 = str(data['g2'][1]), g22 = str(data['g2'][2]))))
+            friends.append(('Twists', url_for(".index_Q",
+                                              g20=str(data['g2'][0]),
+                                              g21=str(data['g2'][1]),
+                                              g22=str(data['g2'][2]))))
+
+        friends.append(('L-function', data['lfunc_url']))
 
         # Breadcrumbs
         self.bread = bread = [

@@ -1,5 +1,4 @@
 {% extends "homepage.html" %}
-{% import 'color.css' as color %}
 {% block content %}
 {% if BETA %}
 <div>
@@ -27,13 +26,13 @@
 <h2> Browse {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras') }} for {{ KNOWL('group.sl2z.subgroup.gamma0n', title='$\Gamma_0$') }}</h2>
 
 <p>
-By {{ KNOWL('mf.elliptic.level', title='Level') }}: 
+By {{ KNOWL('cmf.level', title='Level') }}: 
 {% for rnge in info.lvl_list %}
 <a href="?level={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('mf.elliptic.weight', title='Weight') }}:
+By {{ KNOWL('cmf.weight', title='Weight') }}:
 {% for rnge in info.wt_list%}
 <a href="?weight={{rnge}}">{{rnge}}</a>
 {% endfor %}
@@ -66,23 +65,23 @@ Some of our favourite {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras
 <form>
 <table>
 <tr>
-<td align= right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td>
+<td align= right>{{ KNOWL('cmf.level', title='Level') }}:</td>
 <td><input type='text' name='level' placeholder='3' size=10>
 <td><span class="formexample"> e.g. 3 or 2-5</td>
 </tr>
 
 <tr>
-<td align= right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td>
+<td align= right>{{ KNOWL('cmf.weight', title='Weight') }}:</td>
 <td><input type='text' name='weight' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 2 or 10-100</td>
 </tr>
 <tr>
-<td align= right>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}:</td>
+<td align= right>Number of {{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}:</td>
 <td><input type='text' name='num_orbits' placeholder='4' size=10>
 <td><span class="formexample"> e.g. 4 or 1-3</td>
 </tr>
 <tr>
-<td align= right>{{ KNOWL('mf.elliptic.hecke-orbit-label', title='Hecke orbit label') }} :</td>
+<td align= right>{{ KNOWL('cmf.hecke-orbit-label', title='Hecke orbit label') }} :</td>
 <td><input type='text' name='orbit_label' placeholder='1.12.1.1' size=10>
 <td><span class="formexample"> e.g. 1.12.1.1 or 139.2.1.2</td>
 </tr>

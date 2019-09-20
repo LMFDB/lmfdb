@@ -153,20 +153,22 @@ def make_curves_line(ec):
 
     Output line fields (13):
 
-    field_label conductor_label iso_label number conductor_ideal conductor_norm a1 a2 a3 a4 a6 cm base_change
+    field_label conductor_label iso_label number conductor_ideal conductor_norm a1 a2 a3 a4 a6 cm q_curve
 
     Sample output line:
 
     2.0.4.1 65.18.1 a 1 [65,65,-4*w-7] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
     cond_lab = ec['conductor_label']
+    q_curve = ec.get('q_curve', '?')
+    if q_curve!='?': q_curve=str(int(q_curve))
     output_fields = [ec['field_label'],
                      cond_lab,
                      ec['iso_label'],
                      str(ec['number']),
                      ec['conductor_ideal'],
                      str(ec['conductor_norm'])
-                    ]  + ec['ainvs'].split(";") + [str(ec['cm']), '?' if ec['base_change']=='?' else str(int(len(ec['base_change']) > 0))]
+                    ]  + ec['ainvs'].split(";") + [str(ec['cm']), q_curve]
     return " ".join(output_fields)
 
 
@@ -208,5 +210,23 @@ def make_curve_data_line(ec):
                      rk, rk_bds, an_rk,
                      ngens] + gens + [sha]
     return " ".join(output_fields)
+
+
+
+
+def make_galrep_line(ec):
+    r""" for ec a curve object from the database, create a line of text to
+    match the corresponding raw input line from a galdata file.
+
+    Output line contains n+1 fields where n is the number of non-maximal primes.
+
+    full_label image_code image_code ... image_code
+
+    Sample output line:
+
+    2.0.4.1-1010.1-a1 2B 3B.1.2 
+    
+    """
+    return " ".join([ec['label']] + ec['galois_images'])
 
 

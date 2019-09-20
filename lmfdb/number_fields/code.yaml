@@ -41,6 +41,11 @@ discriminant:
   pari:  K.disc
   magma: Discriminant(K);
 
+rd:
+  sage: (K.disc().abs())^(1./K.degree())
+  pari: abs(K.disc)^(1/poldegree(K.pol))
+  magma: Abs(Discriminant(K))^(1/Degree(K));
+
 ramified_primes:
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~

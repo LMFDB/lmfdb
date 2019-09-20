@@ -11,7 +11,14 @@
     var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
     var jsonTypes = {{ type_data|safe }};
     var table_fields = {{table_fields | safe}};
+    var table_edit = {{table_edit | safe}};
     var submitDest = "{{ url_for('inventory_app.submit_edits') }}";
+    {% if user_is_admin -%}
+      var editCNames = true;
+    {% else %}
+      var editCNames = false;
+    {% endif %}
+
 </script>
 <script type="text/javascript">
     //Put in initial text and fit boxes to content
@@ -31,6 +38,7 @@
       for( var key in mainBlockList.blockList){
           var block = mainBlockList.blockList[key];
           if(startVisible) fitToText(block.docElementId);
+          updateCNameLock(block, editCNames);
       }
 
       createTypePopButtons(mainBlockList, jsonTypes);

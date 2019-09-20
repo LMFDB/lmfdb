@@ -1,6 +1,6 @@
 # Functions for getting info about elliptic curves and related modular forms
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # TODO These should perhaps be defined in the elliptic curves codebase
 
@@ -15,6 +15,20 @@ def isogeny_class_table(Nmin, Nmax):
     # Get all the curves and sort them according to conductor
     res = db.ec_curves.search(query, 'lmfdb_iso')
     iso_list = [iso.split('.') for iso in res]
+
+    return iso_list
+
+def genus2_isogeny_class_table(Nmin, Nmax):
+    ''' Returns a table of all isogeny classes of elliptic curves with
+     conductor in the ranges NMin, NMax.
+    '''
+    iso_list = []
+
+    query = {'cond': {'$lte': Nmax, '$gte': Nmin}}
+
+    # Get all the curves and sort them according to conductor
+    res = db.g2c_curves.search(query, 'class')
+    iso_list = sorted([iso.split('.') for iso in set([r for r in res])])
 
     return iso_list
 

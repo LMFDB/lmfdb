@@ -1,32 +1,20 @@
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-#from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
-from flask import flash, make_response, send_file, request, render_template, redirect, url_for
 
-from lmfdb.db_backend import db
+import ast, re, StringIO, time
 
+from flask import make_response, send_file, request, render_template, redirect, url_for
 from sage.all import ZZ, conway_polynomial
 
-from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
-from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list
-from lmfdb.search_wrapper import search_wrap
-
+from lmfdb import db
+from lmfdb.utils import flash_error, parse_ints, parse_list, search_wrap
 #should these functions be defined in lattices or somewhere else?
 from lmfdb.lattice.main import vect_to_sym, vect_to_matrix
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
+from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
+from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 
 rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
-
-
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def my_latex(s):
     ss = ""
@@ -97,9 +85,9 @@ def rep_galois_modl_by_label_or_name(lab):
     if db.modlgal_reps.exists({'$or':[{'label': lab}, {'name': lab}]}):
         return render_rep_galois_modl_webpage(label=lab)
     if rep_galois_modl_label_regex.match(lab):
-        flash(Markup("The integral rep_galois_modl <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral rep_galois_modl %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral rep_galois_modl in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral rep_galois_modl in the database has label or name %s", lab)
     return redirect(url_for(".rep_galois_modl_render_webpage"))
 
 #download
@@ -141,7 +129,7 @@ def download_search(info):
              table=db.modlgal_reps,
              title='Mod &#x2113; Galois representations Search Results',
              err_title='Mod &#x2113; Galois representations Search Results Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'download':download_search,
                         'label':lambda info:rep_galois_modl_by_label_or_name(info.get('label'))},
              projection=['label','dim','det','level','gram'],
@@ -157,7 +145,7 @@ def rep_galois_modl_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].",  gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -170,7 +158,7 @@ def render_rep_galois_modl_webpage(**args):
     if data is None:
         t = "Mod &#x2113; Galois representations Search Error"
         bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; Galois representation in the database." % (lab)),"error")
+        flash_error("%s is not a valid label for a mod &#x2113; Galois representation in the database.", lab)
         return render_template("rep_galois_modl-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -231,7 +219,7 @@ def render_rep_galois_modl_webpage(**args):
         ('Dimension', '%s' %info['dim']),
         ('Field characteristic', '%s' %info['field_char']),
         ('Conductor', '%s' %info['conductor']),]
-    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='gal.modl.%s'%info['label'])
 #friends=friends
 
 

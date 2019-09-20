@@ -1,0 +1,30 @@
+{% extends 'cmf_space_refine_search.html' %}
+
+{% block show_results %}
+
+<script>
+  function switch_space(newspace, title) {
+  $('.table_hidable').hide();
+  $('.table_' + newspace).show();
+  $('.a_switcher').removeClass('inactive');
+  $('.a_' + newspace).addClass('inactive');
+  $('.span_switcher').removeClass('disable-links');
+  $('.span_' + newspace).addClass('disable-links');
+  }
+</script>
+{% if not info.err %}
+<p> Use these links to change the kind of {{ KNOWL('cmf.space',title='modular form space') }} whose dimension is displayed in the table. </p>
+{% endif %}
+<table>
+  {% for X in info.cusp_types %}
+  <tr>
+    {% for typ in info.newness_types %}
+    <td><span class="span_switcher span_{{X}}{{typ}}{% if X=='S' and typ=='new' %} disable-links{% endif %}"><a class="a_switcher a_{{X}}{{typ}}{% if X=='S' and typ=='new' %} inactive{% endif %}" onclick="switch_space('{{X}}{{typ}}'); return false" href="#">{{ info.switch_text(X, typ) }}</a></span></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+<p>The dimensions shown are for spaces of modular forms in each weight and level that satisfy the specified conditions.</p>
+{% include 'cmf_dimension_table_display.html' %}
+
+{% endblock %}

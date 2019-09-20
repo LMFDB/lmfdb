@@ -1,0 +1,91 @@
+{% include "knowl-diff-core.html" %}
+
+<script type="text/javascript"
+        src="{{ url_for('static', filename='knowl_diff.js') }}"></script>
+<script type="text/javascript">
+
+$(document).ready(function () {
+  $('#compare').mergely(mergely_settings);
+  $('#lhsselect').change(lhs_change);
+  $('#rhsselect').change(rhs_change);
+  {# in editing mode? #}
+  {% if k.editing %}
+    add_editing_to_selects("{{k.ms_timestamp}}");
+    //$('#kcontent').keyup(content_change);
+  {% else %}
+    $('#rhsselect').val("{{k.ms_timestamp}}").change();
+    {% if k.previous_review_spot %}
+      {# we have reversed the indexes #}
+      $('#lhsselect').val("{{k.previous_review_spot}}").change();
+    {% else %}
+      $('#lhsselect').val("{{k.edit_history[-2].ms_timestamp}}").change();
+    {% endif %}
+  {% endif %} {# k.editing #}
+  $('#compare').trigger('resize');
+
+  $('#inline_button').click(inline_handler);
+  $('#sidebyside_button').click(sidebyside_handler);
+});
+
+
+</script>
+
+
+<div id='diffselector'>
+  <table style="width: 100%">
+    <!--
+      <tr>
+      <th> Left hand side</th>
+      <th> Right hand side</th>
+      </tr>
+    -->
+    <tr>
+      <td align="center">
+        <form>
+          <select id='lhsselect' size="4">
+            {% for elt in k.edit_history|reverse %}
+              <option value='{{elt.ms_timestamp}}'>
+              {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
+              {% if elt.status == 1 %}
+                (Reviewed)
+              {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+      <td align="center">
+        <form>
+          <select id='rhsselect' size="4">
+            {% for elt in k.edit_history|reverse %}
+              <option value='{{elt.ms_timestamp}}'>
+              {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
+              {% if elt.status == 1 %}
+                (Reviewed)
+              {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+    </tr>
+  </table>
+</div>
+<div class="sidebyside">
+  <strong> Side by side </strong>
+  <a href="#" id="inline_button">(inline)</a>
+  <div class="diff_wrapper">
+    <div id="compare"></div>
+  </div>
+</div>
+
+<div class="inline" style="display: none;" sytle>
+  <strong> Inline </strong>
+  <a href="#" id="sidebyside_button">(side by side)</a>
+  <div class="diff_wrapper">
+    <div id="compareinline"></div>
+  </div>
+</div>
+
+
+

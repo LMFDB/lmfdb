@@ -1,29 +1,22 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-import StringIO
+import ast, re, StringIO, time
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-from markupsafe import Markup
-
+from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.utils import web_latex_split_on_pm
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
-from lmfdb.search_wrapper import search_wrap
-
+from lmfdb.utils import (
+    web_latex_split_on_pm, flash_error,
+    parse_ints, parse_list, parse_count, parse_start, clean_input,
+    search_wrap)
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 from lmfdb.lattice.isom import isom
+from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 # Database connection
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # utilitary functions for displays 
 
@@ -105,13 +98,17 @@ def lattice_by_label_or_name(lab):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
-        label = db.lat_lattices.lucky({'$or':[{'label': l}, {'name': l}]}, 'label')
+        label = db.lat_lattices.lucky(
+                {'$or':
+                    [{'label': l},
+                     {'name': {'$contains': [l]}}]},
+                    'label')
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".lattice_render_webpage"))
 
 #download
@@ -195,7 +192,7 @@ def lattice_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -210,7 +207,7 @@ def render_lattice_webpage(**args):
     if f is None:
         t = "Integral Lattices Search Error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(f)
@@ -301,7 +298,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):

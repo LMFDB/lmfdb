@@ -2,7 +2,6 @@
 // markItUp! Universal MarkUp Engine, JQuery plugin
 // By Jay Salvat - http://markitup.jaysalvat.com/
 // ------------------------------------------------------------------*/
-{% import 'color.css' as color %}
 .markItUp * {
 	margin:0px; padding:0px;
 	outline:none;

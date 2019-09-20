@@ -5,18 +5,20 @@
 
 import flask
 from functools import wraps
-from lmfdb.base import app
+from lmfdb.app import app
+from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
+from lmfdb.utils import flash_error
+from markupsafe import Markup
 
-from lmfdb.db_backend import db
+from lmfdb import db
 assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-import lmfdb.utils
-logger = lmfdb.utils.make_logger(login_page)
+logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
@@ -55,6 +57,7 @@ def ctx_proc_userdata():
         userdata['username'] = 'Anonymous'
         userdata['user_is_admin'] = False
         userdata['user_is_authenticated'] = False
+        userdata['user_can_review_knowls'] = False
         userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
     else:
@@ -67,7 +70,8 @@ def ctx_proc_userdata():
             userdata['user_is_authenticated'] = current_user.is_authenticated()
 
         userdata['user_is_admin'] = current_user.is_admin()
-        userdata['get_username'] = get_username # this is a function
+        userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
+        userdata['get_username'] = get_username  # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -108,6 +112,15 @@ def list():
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
 
+@login_page.route("/change_colors/<int:scheme>")
+@login_required
+def change_colors(scheme):
+    userid = current_user.get_id()
+    userdb.change_colors(userid, scheme)
+    flask.flash(Markup("Color scheme successfully changed"))
+    response = make_response(flask.redirect(url_for(".info")))
+    response.set_cookie('color', str(scheme))
+    return response
 
 @login_page.route("/myself")
 def info():
@@ -116,7 +129,9 @@ def info():
     info['logout'] = url_for(".logout")
     info['user'] = current_user
     info['next'] = request.referrer
+    from lmfdb.utils.color import all_color_schemes
     return render_template("user-info.html",
+                           all_colors=all_color_schemes.values(),
                            info=info, title="Userinfo",
                            bread=base_bread() + [("Myself", url_for(".info"))])
 
@@ -129,7 +144,7 @@ def set_info():
     for k, v in request.form.iteritems():
         setattr(current_user, k, v)
     current_user.save()
-    flask.flash("Thank you for updating your details!")
+    flask.flash(Markup("Thank you for updating your details!"))
     return flask.redirect(url_for(".info"))
 
 
@@ -148,7 +163,7 @@ def profile(userid):
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
     # login and validate the user …
-    # remember = True sets a cookie to remmeber the user
+    # remember = True sets a cookie to remember the user
     name = request.form["name"]
     password = request.form["password"]
     next = request.form["next"]
@@ -156,10 +171,11 @@ def login(**kwargs):
     user = LmfdbUser(name)
     if user and user.authenticate(password):
         login_user(user, remember=remember)
-        flask.flash("Hello %s, your login was successful!" % user.name)
+        flask.flash(Markup("Hello %s, your login was successful!" % user.name))
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
+        # FIXME add color cookie, see change_colors
         return flask.redirect(next or url_for(".info"))
-    flask.flash("Oops! Wrong username or password.", "error")
+    flash_error("Oops! Wrong username or password.")
     return flask.redirect(url_for(".info"))
 
 
@@ -176,6 +192,18 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return decorated_view
 
+def knowl_reviewer_required(fn):
+    """
+    wrap this around those entry points where you need to be a knowl reviewer.
+    """
+    @wraps(fn)
+    @login_required
+    def decorated_view(*args, **kwargs):
+        logger.info("reviewer access attempt by %s" % current_user.get_id())
+        if not current_user.is_knowl_reviewer():
+            return flask.abort(403)  # acess denied
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def housekeeping(fn):
     """
@@ -222,26 +250,26 @@ def register_token(token):
     elif request.method == 'POST':
         name = request.form['name']
         if not allowed_usernames.match(name):
-            flask.flash("""Oops, usename '%s' is not allowed.
+            flash_error("""Oops, usename '%s' is not allowed.
                   It must consist of lower/uppercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % name, "error")
+                  no spaces, numbers or '.', '_' and '-'.""", name)
             return flask.redirect(url_for(".register_new"))
 
         pw1 = request.form['password1']
         pw2 = request.form['password2']
         if pw1 != pw2:
-            flask.flash("Oops, passwords do not match!", "error")
+            flash_error("Oops, passwords do not match!")
             return flask.redirect(url_for(".register_new"))
 
-        if len(pw1) <= 3:
-            flask.flash("Oops, password too short. Minimum 4 characters please!", "error")
+        if len(pw1) < 8:
+            flash_error("Oops, password too short. Minimum 8 characters please!")
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
         #next = request.form["next"]
 
         if userdb.user_exists(name):
-            flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
+            flash_error("Sorry, user ID '%s' already exists!", name)
             return flask.redirect(url_for(".register_new"))
 
         newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
@@ -249,7 +277,7 @@ def register_token(token):
         #newuser.full_name = full_name
         #newuser.save()
         login_user(newuser, remember=True)
-        flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
+        flask.flash(Markup("Hello %s! Congratulations, you are a new user!" % newuser.name))
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
         return flask.redirect(url_for(".info"))
@@ -261,25 +289,26 @@ def change_password():
     uid = current_user.get_id()
     pw_old = request.form['oldpwd']
     if not current_user.authenticate(pw_old):
-        flask.flash("Ooops, old password is wrong!", "error")
+        flash_error("Ooops, old password is wrong!")
         return flask.redirect(url_for(".info"))
 
     pw1 = request.form['password1']
     pw2 = request.form['password2']
     if pw1 != pw2:
-        flask.flash("Oops, new passwords do not match!", "error")
+        flash_error("Oops, new passwords do not match!")
         return flask.redirect(url_for(".info"))
 
     userdb.change_password(uid, pw1)
-    flask.flash("Your password has been changed.")
+    flask.flash(Markup("Your password has been changed."))
     return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/logout")
 @login_required
 def logout():
+    # FIXME delete color cookie
     logout_user()
-    flask.flash("You are logged out now. Have a nice day!")
+    flask.flash(Markup("You are logged out now. Have a nice day!"))
     return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
 
 

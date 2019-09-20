@@ -1,18 +1,15 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from lmfdb.utils import truncate_number
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
-from sage.all import Gamma0, CC
-from lmfdb.db_backend import db
+from sage.all import Gamma0, CC, imag_part, real_part
+from lmfdb import db
+from lmfdb.utils import display_complex
 
 class MaassFormTable(MFDataTable):
     r"""
     To Display one form
     """
     def __init__(self, **kwds):
-        """
-        db -- a PostgresTable from lmfdb.db_backend
-        """
         MFDataTable.__init__(self, **kwds)
         self.maass_id = kwds.get('maass_id', None)
         if not self.maass_id:
@@ -169,12 +166,13 @@ class WebMaassForm(object):
                 mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
                 if n1 != self.dim:
                     mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())={1}".format(self.dim, n1))
-                if n1 > 0:
-                    for j in range(self.dim):
-                        n2 = len(self.coeffs.get(j, {}).keys())
-                        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
-                        if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
+                # silence these (apparently benign) warnings, per issue 1517
+                #if n1 > 0:
+                #    for j in range(self.dim):
+                #        n2 = len(self.coeffs.get(j, {}).keys())
+                #        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
+                #        if n2 != nc:
+                #            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
@@ -336,55 +334,23 @@ class WebMaassForm(object):
         mwf_logger.debug("realnumc={0}".format(realnumc))
 
 
-import sage
-
-
-def pretty_coeff(c, digits=10, prec=9):
+def pretty_coeff(c, prec=9):
     '''
     Format the complex coefficient `c` for display on the website.
     '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
-    elif isinstance(c, (complex, sage.rings.complex_number.ComplexNumber)):
-        x = c.real()
-        y = c.imag()
     else:
-        x = c
-        y = 0
+        x = real_part(c)
+        y = imag_part(c)
+    # the number of digits to display 'prec' digits after the .
+    digits = lambda z: len(str(abs(z)).split('.')[0].lstrip('0')) + prec
 
-    x_trunc = float(truncate_number(x, precision=prec))
-    y_trunc = float(truncate_number(y, precision=prec))
-    xs = format_num(x_trunc, digits=digits)
-    ys = format_num(y_trunc, digits=digits)
+    res =  display_complex(x, y, digits = max(map(digits, [x, y])))
 
-    if xs == '0' and ys == '0':
+    if res == '0':
         return '&nbsp;0'
-    if ys == '0':
-        return xs
-    if xs == '0':
-        return ys + 'i'
-
-    return xs + ' + ' + ys + 'i'
-
-
-def format_num(x, digits=10):
-    '''
-    Format real number x for website display.
-    '''
-    if x == 0:
-        return '0'
-    d2 = digits
-    d1 = digits + 1
-    if abs(x) < 10.0 ** -digits:
-        if x > 0:
-            xs = '{0:<2.1g}'.format(float(x))
-        else:
-            xs = '{0:<3.1g}'.format(float(x))
     else:
-        x = round(x, digits)
-        if x > 0:
-            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
-        elif x < 0:
-            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
-    return xs
+        return res
+

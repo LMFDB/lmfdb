@@ -7,13 +7,64 @@ information. If the entry does not exist then it creates it and
 returns that.
 
 Initial version (Arizona March 2014) based on import_ec_data.py: John Cremona
-Revised continuously 2014-2015 by John Cremona: now uncludes download functions too.
+Revised continuously 2014-2018 by John Cremona: now includes download functions too.
 
-The documents in the collection 'nfcurves' in the database
-'elliptic_curves' have the following keys (* denotes a mandatory
-field) and value types (with examples).  Here the base field is
-K=Q(w) of degree d.
+2018-12-14: updated for postgres interface instead of mongo
 
+The only relevant postgres table is ec_nfcurves (the mongo equivalent was elliptic_curves.nfcurves)
+
+The table ec_nfcurves has the following columns (i.e. keys) and value
+types (with examples).  Here the base field is K=Q(w) of degree d.
+
+NB see ec_nfcurves.col_type for an up-to-date list.
+
+"""
+ec_nfcurves_col_types = {
+ u'abs_disc': 'bigint',
+ u'ainvs': 'text',
+ u'analytic_rank': 'smallint',
+ u'base_change': 'jsonb',
+ u'class_deg': 'integer',
+ u'class_label': 'text',
+ u'class_size': 'smallint',
+ u'cm': 'integer',
+ u'conductor_ideal': 'text',
+ u'conductor_label': 'text',
+ u'conductor_norm': 'bigint',
+ u'degree': 'smallint',
+ u'equation': 'text',
+ u'field_label': 'text',
+ u'galois_images': 'jsonb',
+ u'gens': 'jsonb',
+ u'heights': 'jsonb',
+ u'id': 'bigint',
+ u'iso_label': 'text',
+ u'iso_nlabel': 'smallint',
+ u'isogeny_degrees': 'jsonb',
+ u'isogeny_matrix': 'jsonb',
+ u'jinv': 'text',
+ u'label': 'text',
+ u'local_data': 'jsonb',
+ u'minD': 'text',
+ u'ngens': 'smallint',
+ u'non-surjective_primes': 'jsonb',
+ u'non_min_p': 'jsonb',
+ u'number': 'smallint',
+ u'q_curve': 'boolean',
+ u'rank': 'smallint',
+ u'rank_bounds': 'jsonb',
+ u'reg': 'numeric',
+ u'short_class_label': 'text',
+ u'short_label': 'text',
+ u'signature': 'jsonb',
+ u'torsion_gens': 'jsonb',
+ u'torsion_order': 'smallint',
+ u'torsion_structure': 'jsonb',
+ u'trace_hash': 'bigint',
+}
+
+
+r"""
  An NFelt-string is a string representing an element of K as a
  comma-separated list of rational coefficients with respect to the
  power basis.
@@ -80,31 +131,17 @@ directory, start sage and use the command
 import os.path
 import re
 import os
-import pymongo
 import pprint
-from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
+from lmfdb import db
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
-from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
+from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, make_galrep_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
-print "getting connection"
-C= getDBConnection()
-
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
-print "setting nfcurves"
-oldnfcurves = C.elliptic_curves.nfcurves.old
-nfcurves = C.elliptic_curves.nfcurves
-qcurves = C.elliptic_curves.curves
-C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
-
+print "setting nfcurves and qcurves"
+nfcurves = db.ec_nfcurves
+qcurves = db.ec_curves
 
 # We have to look up number fields in the database from their labels,
 # but only want to do this once for each label, so we will maintain a
@@ -125,16 +162,26 @@ def nf_lookup(label):
         #print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
     #print "We do not have it yet, finding in database..."
-    field = C.numberfields.fields.find_one({'label': label})
+    field = db.nf_fields.lucky({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
     #print "Found it!"
-    coeffs = [ZZ(c) for c in field['coeffs'].split(",")]
+    coeffs = [ZZ(c) for c in field['coeffs']]
     gen_name = special_names.get(label,'a')
     K = NumberField(PolynomialRing(QQ, 'x')(coeffs), gen_name)
     #print "The field with label %s is %s" % (label, K)
     nf_lookup_table[label] = K
     return K
+
+
+def LMFDB_label(ec):
+    """Get LMFDB label from ec_curves table, instead of using Sage's
+    database (which may not be installed).
+    """
+    try:
+        return qcurves.lucky({'ainvs':[int(c) for c in ec.ainvs()]}, projection='lmfdb_label')
+    except:
+        return "?"
 
 from lmfdb.nfutils.psort import ideal_label
 
@@ -172,7 +219,7 @@ def convert_ideal_label(K, lab):
 def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     r""" Extract curve data for the given field for curves with conductor
     norm in the given range, and write to output files in the same
-    format as in the curves/curve_data/isoclass input files.
+    format as in the curves/curve_data/isoclass/galrep input files.
     """
     query = {}
     query['field_label'] = field_label
@@ -181,14 +228,16 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = C.elliptic_curves.nfcurves.find(query)
-    ASC = pymongo.ASCENDING
-    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
+    res = nfcurves.search(query, sort = ['conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])
 
     file = {}
-    prefixes = ['curves', 'curve_data', 'isoclass']
-    prefixes = ['curve_data']
-    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    #prefixes = ['curves', 'curve_data', 'isoclass', 'galrep']
+    #prefixes = ['curves']
+    prefixes = ['galrep']
+    suffix = ''.join([".", field_label])
+    if min_norm>0 or max_norm!='infinity':
+        suffix = ''.join([suffix, ".", str(min_norm), "-", str(max_norm)])
+
     for prefix in prefixes:
         filename = os.path.join(base_path, ''.join([prefix, suffix]))
         file[prefix] = open(filename, 'w')
@@ -201,6 +250,9 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         if 'isoclass' in prefixes:
             if ec['number'] == 1:
                 file['isoclass'].write(make_isoclass_line(ec) + "\n")
+        if 'galrep' in prefixes:
+            #print(make_galrep_line(ec))
+            file['galrep'].write(make_galrep_line(ec) + "\n")
 
     for prefix in prefixes:
         file[prefix].close()
@@ -300,8 +352,8 @@ def curves(line, verbose=False):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if True:  # q_curve: now we have not precomputed Q-curve status
-              # but still want to test for base change!
+    if q_curve!=0:  # q_curve (definitely or possibly, if we have not precomputed Q-curve status)
+        # but still want to test for base change!
         if verbose:
             print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
@@ -320,14 +372,27 @@ def curves(line, verbose=False):
     # problems except that the bad_reduction_type is then None which
     # cannot be converted to an integer.  The bad reduction types are
     # coded as (Sage) integers in {-1,0,1}.
+    if any([ld.bad_reduction_type()==0 for ld in E.local_data()]):
+        mE = magma(E) # for local root numbers if not semistable
+    def local_root_number(ldp): # ldp is a component of E.local_data()
+        red_type = ldp.bad_reduction_type()
+        if red_type==0: # additive reduction: call Magma
+            eps = mE.RootNumber(ldp.prime())
+        elif red_type==+1:
+            eps = -1
+        else:  # good or non-split multiplcative reduction
+            eps = +1
+        return int(eps)
+
     local_data = [{'p': ideal_to_string(ld.prime()),
                    'normp': str(ld.prime().norm()),
-                   'ord_cond':int(ld.conductor_valuation()),
-                   'ord_disc':int(ld.discriminant_valuation()),
-                   'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red':None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
-                   'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
-                   'cp':int(ld.tamagawa_number())}
+                   'ord_cond': int(ld.conductor_valuation()),
+                   'ord_disc': int(ld.discriminant_valuation()),
+                   'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
+                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'rootno': local_root_number(ld),
+                   'kod': str(latex(ld.kodaira_symbol())),
+                   'cp': int(ld.tamagawa_number())}
                   for ld in E.local_data()]
 
     non_minimal_primes = [ideal_to_string(P) for P in E.non_minimal_primes()]
@@ -356,17 +421,13 @@ def curves(line, verbose=False):
         'torsion_order': ntors,
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
-        'equation': web_latex(E),
+        'equation': str(latex(E)), # no "\(", "\)"
         'local_data': local_data,
         'minD': minD,
         'non_min_p': non_minimal_primes,
     }
 
     return label, edata
-
-
-
-
 
 def add_heights(data, verbose = False):
     r""" If data holds the data fields for a curve this returns the same
@@ -462,7 +523,9 @@ def read1isogmats(base_path, filename_suffix):
             if n==0:
                 #print("adding isogmat = {} to {}".format(isogmat,label))
                 data[label]['isogeny_matrix'] = isogmat
-
+            else:
+                #postgres will fail if not all columns present
+                data[label]['isogeny_matrix'] = None
     return data
 
 def split_galois_image_code(s):
@@ -475,7 +538,7 @@ def split_galois_image_code(s):
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non_surjective_primes', a list of
+    dict containing two fields: 'non-surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
     surjective (cut off at p=37 for CM curves for which this would
     otherwise contain all primes), 'galois_images', a list of strings
@@ -503,14 +566,14 @@ def galrep(line):
     number = ''.join([c for c in c_label if c.isdigit()])
     assert iso_label+number==c_label
     conductor_label = convert_conductor_label(field_label, conductor_label)
-    print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
+    #print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
     image_codes = data[1:]
 #    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
     return label, {
-        'non_surjective_primes': pr,
+        'non-surjective_primes': pr,
         'galois_images': image_codes,
     }
 
@@ -530,10 +593,13 @@ def readgalreps(base_path, filename):
 #
 # galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
 #
-# then use rewrite like this:
-# %runfile data_mgt/utilities/rewrite.py
-# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves.new", add_galrep_data_to_nfcurve)
+# then use the rewrite method for the ec_nfcurves table like this:
 #
+# %runfile data_mgt/utilities/rewrite.py
+# db.ec_nfcurves.rewrite(add_galrep_data_to_nfcurve)
+#
+# NB Not yet tested on postgres.  See ec_nfcurves.rewrite? for more documentation; in particular columns cannot be added this way, use add_column() for that
+
 galrepdat = {} # for pyflakes
 
 def add_galrep_data_to_nfcurve(cu):
@@ -541,23 +607,29 @@ def add_galrep_data_to_nfcurve(cu):
         cu.update(galrepdat[cu['label']])
     return cu
 
-filename_base_list = ['curves', 'curve_data']
+filename_base_list = ['curves', 'isoclass']
 
 #
 
 def upload_to_db(base_path, filename_suffix, insert=True, test=True):
-    r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label is already in the database; otherwise uses update_one()
-    with upsert=True
+    r""" Uses insert_many() if insert=True, which is faster but will create
+    duplicates and cause problems if any of the the labels are already
+    in the database; otherwise uses upsert() which will update a
+    single row, or add a row.
+
+    NB We do *not* yet have a function curve_data() to parse a line
+    from a curve_data file!  So if you include curve_data in the list
+    of filesnames to be processed, this will fail (but not until after
+    the curves file has been processed).
     """
     curves_filename = 'curves.%s' % (filename_suffix)
-    curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    #curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
+    file_list = [curves_filename, isoclass_filename, galrep_filename]
+#    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
 #    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
@@ -598,7 +670,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     for val in vals:
         val = add_heights(val)
 
-    if isoclass_filename in file_list: # code added March 2017, not yet tested
+    if isoclass_filename in file_list:
         print("processing isogeny matrices")
         isogmats = read1isogmats(base_path, filename_suffix)
         for val in vals:
@@ -606,6 +678,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
             #print("adding isog data for {}".format(lab))
             if lab in isogmats:
                 val.update(isogmats[lab])
+                #print("updated val with {}".format(isogmats[lab]))
             else:
                 print("error: label {} not in isogmats!".format(lab))
 
@@ -613,8 +686,8 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         if test:
             print("(not) inserting all data")
             #nfcurves.insert_many(vals)
-            print("First 10 vals:")
-            for v in vals[:10]:
+            print("First val:")
+            for v in vals[:1]:
                 pprint.pprint(v)
         else:
             print("inserting all data ({} items)".format(len(vals)))
@@ -624,7 +697,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         print("inserting data one curve at a time...")
         for val in vals:
             #print val
-            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            nfcurves.upsert({'label': val['label']}, val)
             count += 1
             if count % 100 == 0:
                 print "inserted %s" % (val['label'])
@@ -694,10 +767,6 @@ def make_isoclass_line(ec):
 #
 ##############
 
-def make_indices():
-    for x in ['field_label', 'degree', 'number', 'label', 'base_change', 'isogeny_degrees', 'class_label', 'torsion_order']:
-        nfcurves.create_index(x)
-    nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])
 
 ########################################################
 #
@@ -705,7 +774,7 @@ def make_indices():
 #
 ########################################################
 
-def check_database_consistency(collection, field=None, degree=None, ignore_ranks=False):
+def check_database_consistency(table, field=None, degree=None, ignore_ranks=False):
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
     """
@@ -724,6 +793,8 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'short_label':  str_type,
                       'class_label':  str_type,
                       'short_class_label':  str_type,
+                      'class_deg':  int_type,
+                      'class_size':  int_type,
                       'conductor_label': str_type,
                       'conductor_ideal': str_type,
                       'conductor_norm': int_type,
@@ -745,7 +816,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      'non_surjective_primes': list_type, # of ints
+                      'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
@@ -757,14 +828,10 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'reg': float_type, # or int(1)
                       'q_curve': bool_type,
                       'base_change': list_type, # of strings
+                      'trace_hash': type(long())
     }
 
     key_set = Set(keys_and_types.keys())
-#
-#   Some keys are only used for the first curve in each class.
-#   Currently only the isogeny matrix, but later there may be more.
-#
-    number_1_only_keys = ['isogeny_matrix'] # only present if 'number':1
 #
 #   As of April 2017 rank data is only computed for imaginary
 #   quadratic fields so we need to be able to say to ignore the
@@ -772,14 +839,14 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
 #   upper and lower bounds then the rank key is not set, and this
 #   script should allow for that.
 #
-    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens']
+    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens', 'heights', 'old_heights']
 #
 #   As of April 2017 we have mod p Galois representration data for all
 #   curves except some of those over degree 6 fields since over these
 #   fields the curves are still being found and uploaded, o we ignore
 #   these keys over degree 6 fields for now.
 #
-    galrep_keys = ['galois_images', 'non_surjective_primes']
+    galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
@@ -789,18 +856,19 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
         query['degree'] = int(degree)
 
     count=0
-    for c in C.elliptic_curves.get_collection(collection).find(query):
+    for c in table.search(query):
         count +=1
         if count%1000==0:
             print("Checked {} entries...".format(count))
         expected_keys = key_set
         if ignore_ranks:
             expected_keys = expected_keys - rank_keys
-        if c['number']!=1:
-            expected_keys = expected_keys - number_1_only_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys
-        db_keys = Set([str(k) for k in c.keys()]) - ['_id', 'class_deg', 'class_size']
+        if c['degree'] > 2:
+            expected_keys = expected_keys - ['trace_hash']
+            
+        db_keys = Set([str(k) for k in c.keys()]) - ['_id']
         if ignore_ranks:
             db_keys = db_keys - rank_keys
         if c['degree']==6:
@@ -858,11 +926,81 @@ def add_isogs_to_one(c):
     c.update(isogdata[c['label']])
     return c
 
-#
-# 3. in a call to rewrite_collection such as
-#
-#  %runfile data_mgt/utilities/rewrite.py
-#  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+# The following function can be used in a rewrite to add local root
+# numbers to all curves in the database:
+
+def add_root_number_to_local_data(field_label, ainvs, ld):
+    # ld is a list with one dict for each prime ideal dividing the
+    # discriminant of the stored model, which will be empty for a
+    # global minimal model of a curve with everywhere good reduction.
+    if len(ld)==0:
+        return ld
+    if all(['rootno' in ldp for ldp in ld]): # already have root numbers
+        if not any([ldp['rootno']=='?' for ldp in ld]):
+            return ld
+
+    # test for easy case of a semistable curve (no additive primes)
+    # when we do not have to construct the curve at all:
+    if any([ldp['red']==0 for ldp in ld]):
+        K = nf_lookup(field_label)
+        ainvsK = parse_ainvs(K,ainvs)  # list of K-elements
+        mE = magma(EllipticCurve(ainvsK))
+        mN = mE.Conductor() # looks redundant but without this line
+        assert mN           # the LocalRootNumber call sometimes (rarely) fails
+
+    for i, ldp in enumerate(ld):
+        red_type = ldp['red']
+        if red_type==0:
+            P = magma(ideal_from_string(K,ldp['p']))
+            #print("Root number of {}\n   at P={}...".format(mE,P))
+            eps = mE.IntegralModel().RootNumber(P)
+            #print("... {}".format(eps))
+        elif red_type==+1:
+            eps = -1
+        elif red_type==-1:
+            eps = +1
+        else:  # good reduction
+            eps = +1
+        ldp['rootno'] = int(eps)
+        ld[i] = ldp
+    return ld
+
+def add_root_number(C, verbose=False):
+    """
+    Adds local root number to an elliptic curve record, for each prime in its local_data field.
+
+    NB Requires Magma
+    """
+    C['local_data'] = add_root_number_to_local_data(C['field_label'], C['ainvs'], C['local_data'])
+    return C
+
+the_local_data = {} # global
+
+def add_root_number_from_local_data(C, verbose=False):
+    """Adds local root number to an elliptic curve record, for each prime in its local_data field.
+
+    NB Requires global object the_local_data to be a dict with keys
+    field_labels, values dicts with keys full curve labels, values
+    local_data structure
+
+    """
+    global the_local_data
+
+    # do nothing unless this field_label is in the_local_data.
+    try:
+        data = the_local_data[C['field_label']]
+    except KeyError:
+        return C
+
+    # do nothing unless this curve is in the_local_data.
+    try:
+        new_local_data = data[C['label']]
+    except KeyError:
+        return C
+
+    C['local_data'] = new_local_data
+    return C
+
 
 ################################################################################
 #
@@ -873,8 +1011,8 @@ def add_isogs_to_one(c):
 def update_stats(verbose=True):
     from data_mgt.utilities.rewrite import update_attribute_stats
     from bson.code import Code
-    ec = C.elliptic_curves
-    ecdbstats = ec.nfcurves.stats
+    ec = db.ec_nfcurves
+    ecdbstats = db.ec_nfcurves.stats
 
     # get list of degrees
 
@@ -1031,6 +1169,9 @@ def update_stats(verbose=True):
     entry.update(field_data)
     ecdbstats.insert_one(entry)
 
+# This was a one-off and can probably be deleted:
+# not adapted for postgres.
+
 def make_IQF_ideal_table(infile, insert=False):
     items = []
     n = 0
@@ -1042,10 +1183,13 @@ def make_IQF_ideal_table(infile, insert=False):
     print("read {} lines from {}".format(n,infile))
     if insert:
         print("inserting into IQF_labels collection")
-        C['elliptic_curves']['IQF_labels'].insert_many(items)
+        db.ec_iqf_labels.insert_many(items)
     else:
         print("No insertion, dummy run")
 
+# Various functions for attempting to correctly add Q-curve flags.
+# Not yet fully implemented.
+        
 
 # function to give to rewrite_collection() to fix q_curve flags (only touches quadratic field so far)
 
@@ -1101,7 +1245,7 @@ def fix1_qcurve_flag(ec, verbose=False):
     return ec
 
 def is_Q_curve(E):
-    """Test if an elliptic curve is a Q-curve.
+    """Test if an elliptic curve is a Q-curve.  This version only for quadratic fields.
     """
     jE =  E.j_invariant()
     if jE in QQ:
@@ -1109,16 +1253,35 @@ def is_Q_curve(E):
     if E.has_cm():
         return True
     K = E.base_field()
+
+    # Simple test should catch many non-Q-curves: find primes of
+    # good reduction and of the same norm and test if the
+    # traces of Frobenius are equal *up to sign*
+
+    pmax = 200
+    NN = E.conductor().norm()
+    for p in primes(pmax):
+        if p.divides(NN):
+            continue
+        Plist = [P for P in K.primes_above(p)
+                 if P.residue_class_degree() == 1]
+        if len(Plist)<2:
+            continue
+        aP0 = E.reduction(Plist[0]).trace_of_frobenius()
+        for P in Plist[1:]:
+            aP = E.reduction(P).trace_of_frobenius()
+            if aP.abs() != aP0.abs():
+                return False
+
     if K.degree()>2:
         raise NotImplementedError("Only quadratic fields implemented so far")
-    sigma = K.galois_group()[1]
-    N = E.conductor()
-    if N!=sigma(N):
-        return False
-    jEs = sigma(jE)
     C = E.isogeny_class()
+    jC = [E1.j_invariant() for E1 in C]
+    if any(j in QQ for j in jC):
+        return True
+    sigma = K.galois_group()[1]
     # check that the conjugate of j(E) is in the class:
-    return any(E1.j_invariant()==jEs for E1 in C)
+    return sigma(jE) in jC
 
 def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     """Given a (quadratic) field label test all curves E over that field for being Q-curves.
@@ -1130,13 +1293,12 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = nfcurves.search(query)
     # keep the curves and re-find them, else the cursor times out.
     curves = [ec['label'] for ec in cursor]
     ncurves = len(curves)
     print("Checking {} curves over field {}".format(ncurves,field_label))
     K = FIELD(field_label)
-    sigma = K.K().galois_group()[1]
     bad1 = []
     bad2 = []
     count = 0
@@ -1144,7 +1306,7 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         count += 1
         if count%1000==0:
             print("checked {} curves ({}%)".format(count, 100.0*count/ncurves))
-        ec = nfcurves.find_one({'label':label})
+        ec = nfcurves.lucky({'label':label})
         assert label == ec['label']
         method = None
         # first check that j(E) is rational (no computation needed)
@@ -1157,20 +1319,13 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
             if verbose: print("{}: CM".format(label))
             qc = True
             method = "CM"
-        else: # construct and check the conductor
+        else: # construct and check the curve
             if verbose:
-                print("{}: checking conductor".format(label))
-            N = ideal_from_string(K.K(),ec['conductor_ideal'])
-            if sigma(N)!=N:
-                qc = False
-                method = "conductor"
-            else: # construct and check the curve
-                if verbose:
-                    print("{}: checking isogenies".format(label))
-                ainvsK = parse_ainvs(K.K(), ec['ainvs'])
-                E = EllipticCurve(ainvsK)
-                qc = is_Q_curve(E)
-                method = "isogenies"
+                print("{}: checking isogenies".format(label))
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+            E = EllipticCurve(ainvsK)
+            qc = is_Q_curve(E)
+            method = "isogenies"
         db_qc = ec['q_curve']
         if qc and not db_qc:
             print("Curve {} is a Q-curve (using {}) but database thinks not".format(label, method))
@@ -1184,3 +1339,286 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
     print("{} curves in the database are incorrectly labelled as being Q-curves".format(len(bad2)))
     print("{} curves in the database are incorrectly labelled as NOT being Q-curves".format(len(bad1)))
     return bad1, bad2
+
+
+def ld1p(ldp):
+    # we do not just join ldp.values() since we want to fix the order
+    ld1str = ":".join([str(ldp[k]) for k in ['p', 'normp', 'ord_cond', 'ord_disc', 'ord_den_j', 'red']])
+    ld2str = str(ldp.get('rootno', '?'))
+    ld3str = ":".join([str(ldp[k]) for k in ['kod', 'cp']])
+    # remove embedded blanks in kodaira symbols
+    ld3str = ld3str.replace(" ","")
+    return ":".join([ld1str,ld2str,ld3str])
+
+def local_data_to_string(ld):
+    return ";".join([ld1p(ldp) for ldp in ld])
+
+def ld1s(s):
+    dat = s.split(":")
+    return {'p': dat[0], # string
+            'normp': int(dat[1]),
+            'ord_cond': int(dat[2]),
+            'ord_disc': int(dat[3]),
+            'ord_den_j': int(dat[4]),
+            'red': None if dat[5]=='None' else int(dat[5]),
+            'rootno': '?' if dat[6]=='?' else int(dat[6]),
+            'kod': dat[7], # string
+            'cp': int(dat[8])}
+
+def local_data_from_string(s):
+    return [ld1s(si) for si in s.split(";")]
+
+def download_local_data(field_label, base_path=".", min_norm=0, max_norm=None):
+    r""" Extract local data for the given field for curves with conductor
+    norm in the given range, and write to an output file local_data.<field>.
+    """
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte': int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+
+    filename = ''.join(["local_data",".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    filename = os.path.join(base_path, filename)
+    outfile = open(filename, 'w')
+
+    res = nfcurves.search(query, sort = ['conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])
+    for ec in res:
+        # make local data output line: same as curves output line with extra fields
+        curve_line = make_curves_line(ec)
+        local_data = local_data_to_string(ec['local_data'])
+        assert not " " in local_data
+        outfile.write(" ".join([curve_line,local_data]) + "\n")
+    outfile.close()
+
+def read_local_data_file(filename, base_path="."):
+    infile = open(os.path.join(base_path,filename))
+    all_local_data = []
+    for line in infile.readlines():
+        data = split(line)
+        curve_line = " ".join(data[:13])
+        local_data = [] # default
+        try:
+            local_data = local_data_from_string(data[13])
+        except IndexError:
+            pass
+
+        field_label = data[0]       # string
+        conductor_label = data[1]   # string
+        iso_label = data[2]         # string
+        #iso_nlabel = numerify_iso_label(iso_label)         # int
+        number = int(data[3])       # int
+        short_class_label = "%s-%s" % (conductor_label, iso_label)
+        short_label = "%s%s" % (short_class_label, str(number))
+        #class_label = "%s-%s" % (field_label, short_class_label)
+        label = "%s-%s" % (field_label, short_label)
+        ainvs = ";".join(data[6:11])  # one string joining 5 NFelt strings
+
+        all_local_data.append({
+            'label': label,
+            'field_label': field_label,
+            'ainvs': ainvs,
+            'local_data': local_data,
+            'curve_line': curve_line,
+            })
+    return all_local_data
+
+def write_local_data_file(data, filename, base_path="."):
+    """data is a list of dicts with keys 'label', 'field_label', 'ainvs',
+    'local_data', 'curve_line' as for the value of the output of
+    read_local_data_file
+    """
+    outfile = open(os.path.join(base_path, filename), 'w')
+    for v in data:
+        outfile.write(" ".join([v['curve_line'],local_data_to_string(v['local_data'])]) + "\n")
+    outfile.close()
+
+
+def add_rootnos_to_local_data_file(filename, base_path=".", test=True):
+    data = read_local_data_file(filename, base_path)
+    nc = 0
+    print("{} curves to process".format(len(data)))
+    for c in data:
+        nc += 1
+        if nc%1000==0:
+            print("{}: {}".format(nc,c['label']))
+        c['local_data'] = add_root_number_to_local_data(c['field_label'], c['ainvs'], c['local_data'])
+    write_local_data_file(data, filename+".x", base_path)
+
+def make_the_local_data(filename, base_path="."):
+    global the_local_data
+    data = read_local_data_file(filename, base_path)
+    the_local_data = {}
+    for c in data:
+        field_label = c['field_label']
+        if not field_label in the_local_data:
+            the_local_data[field_label] = {}
+        the_local_data[field_label][c['label']] = c['local_data']
+
+def read_qcurve_flags(filename, base_path="."):
+    """
+    Read a curves file and return a dict with keys full curve labels
+    and values the Q-curve flag (True or False).  Conductor labels are
+    assumes already in LMFDB format (no IQF conversion).
+    """
+    qcurve_dict = {}
+    for line in open(os.path.join(base_path, filename)).readlines():
+        data = split(line)
+        if len(data) != 13:
+            print "line %s does not have 13 fields, skipping" % line
+        field_label = data[0]
+        conductor_label = data[1]
+        iso_label = data[2]
+        number = data[3]
+        short_class_label = "-".join([conductor_label, iso_label])
+        short_label = "".join([short_class_label, number])
+        label = "-".join([field_label, short_label])
+        qcurve = data[12]
+        if not qcurve in ['0','1']:
+            print("Curve {} has no Q-curve flag set: {}".format(label, qcurve))
+        else:
+            qcurve_dict[label] = (qcurve=='1')
+    return qcurve_dict
+
+def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
+    QFs = nfcurves.distinct("field_label", {'degree':2})
+    IQFs = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
+    RQFs = [f for f in QFs if f[:4]=='2.2.']
+    cubics = nfcurves.distinct("field_label", {'degree':3})
+    quartics = nfcurves.distinct("field_label", {'degree':4})
+    quintics = nfcurves.distinct("field_label", {'degree':5})
+    sextics = nfcurves.distinct("field_label", {'degree':6})
+
+    qc = {}
+    base = "/home/jcremona/ecnf-data/"
+
+    if 2 in degrees:
+        qc2 = {}
+        for f in RQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
+        for f in IQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
+        assert len(qc2)==nfcurves.count({'degree':2}) - 8
+        qc.update(qc2)
+        
+    if 3 in degrees:
+        qc3 = {}
+        for f in cubics:
+            if f == '3.1.23.1':
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "gunnells/"))
+            else:
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "cubics/"))
+        assert len(qc3)==nfcurves.count({'degree':3})
+        qc.update(qc3)
+
+    if 4 in degrees:
+        qc4 = {}
+        for f in quartics:
+            qc4.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quartics/"))
+        assert len(qc4)==nfcurves.count({'degree':4})
+        qc.update(qc4)
+
+    if 5 in degrees:
+        qc5 = {}
+        for f in quintics:
+            qc5.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quintics/"))
+        assert len(qc5)==nfcurves.count({'degree':5})
+        qc.update(qc5)
+
+    if 6 in degrees:
+        qc6 = {}
+        for f in sextics:
+            qc6.update(read_qcurve_flags(filename="curves."+f, base_path=base + "sextics/"))
+        assert len(qc6)==nfcurves.count({'degree':6})
+        qc.update(qc6)
+
+    return qc
+
+def make_qcurve_flag_updater(degrees=[2,3,4,5,6], filename=None, basepath="."):
+    if filename:
+        qc = read_qcurve_flags(filename, basepath)
+    else:
+        qc = read_all_qcurve_flags(degrees)
+    print("Updating Q-curve flag for {} curves".format(len(qc)))
+    def qcurve_flag_updater(C):
+        label = C['label']
+        degree = C['degree']
+        if degree in degrees and label in qc:
+            # else leave C alone
+            old_flag = C.get('q_curve', None)
+            new_flag = qc[label]
+            if old_flag!=new_flag:
+                pass
+                #print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
+            C['q_curve'] = new_flag
+    
+        for ld in C['local_data']:
+            ld['kod'] = kod_fixer(ld['kod'])
+    
+        return C
+    return qcurve_flag_updater
+
+def kod_fixer(kod):
+    """
+    Remove extraneous "\\\\" and "\\(", "\\)" from one kodaira symbol
+    """
+    while '\\\\' in kod:
+        kod = kod.replace('\\\\', '\\')
+    kod = kod.replace('\\(','').replace('\\)','')
+    return kod
+
+def eqn_fixer(eqn):
+    """
+    Remove extraneous "\\\\" and "\\(", "\\)" and '"' from latex equation
+    """
+    while '\\\\' in eqn:
+        eqn = eqn.replace('\\\\', '\\')
+    eqn = eqn.replace('"','').replace('\\(','').replace('\\)','')
+    return eqn
+
+def kod_eqn_updater(C):
+    C['equation'] = eqn_fixer(C['equation'])
+    for ld in C['local_data']:
+        ld['kod'] = kod_fixer(ld['kod'])
+    return C
+    
+def check_bc(field_label, label=None, update=False):
+    """Checks that curve(s) over the field have their base_change column
+    correct in the database.  Set label to the short label (without
+    the field) to apply to a single curve, otherwise it checks all
+    curves over the field.  Will output information if there is a
+    discrepancy.  No change is made to the database unless
+    update=True.
+    """
+    K = FIELD(field_label)
+    query = {'field_label':field_label}
+    if label != None:
+        query['short_label'] = label
+    ntotal = nfcurves.count(query)
+    if ntotal==0:
+        print("No curves over field {}".format(field_label))
+        return
+    curves = nfcurves.search(query, projection=['label','ainvs','base_change'])
+    print("field {}: processing {} curves".format(field_label,ntotal))
+    nc = 0
+    for ec in curves:
+        label = ec['label']
+        nc += 1
+        if nc%1000==0:
+            print("processed {} of {} curves".format(nc,ntotal))
+        ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+        E = EllipticCurve(ainvsK)
+        base_change = [LMFDB_label(E1) for E1 in E.descend_to(QQ)]
+        if base_change != ec['base_change']:
+            print("Bad base-change data for {}: database has {} instead of {}".format(ec['label'],ec['base_change'],base_change))
+            if update:
+                print("updating database entry...")
+                c = nfcurves.lucky({'label':label}) # no projection as we need everything
+                #print("Old curve record = {}".format(c))
+                c['base_change'] = base_change
+                print("New curve record = {}".format(c))
+                nfcurves.update({'label':label}, c, resort=False, restat=False)
+            else:   
+                print("leaving database unchanged")
