@@ -3,22 +3,24 @@ import string
 
 from lmfdb import db
 
-from sage.all import ZZ, gap
+from sage.all import ZZ, gap, cached_function
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
+@cached_function
 def small_group_display_knowl(n, k, name=None):
     if not name:
         myname = '$[%d, %d]$'%(n,k)
     else:
         myname = name
-    group = db.gps_small.lookup('%s.%s'%(n,k))
+    group = db.gps_small.lookup('%s.%s' % (n, k))
     if group is None:
         return myname
     if not name:
         myname = '$%s$'%group['pretty']
     return '<a title = "' + myname + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + myname + '</a>'
 
+@cached_function
 def small_group_label_display_knowl(label, name=None):
     if not name:
         group = db.gps_small.lookup(label)
@@ -26,6 +28,7 @@ def small_group_label_display_knowl(label, name=None):
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
 
+@cached_function
 def small_group_data(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
@@ -205,9 +208,11 @@ def trylink(n, t):
     return '%dT%d' % (n, t)
 
 
+@cached_function
 def group_display_short(n, t, emptyifnotpretty=False):
     return WebGaloisGroup.from_nt(n,t).display_short(emptyifnotpretty)
 
+@cached_function
 def group_pretty_and_nTj(n, t, useknowls=False):
     label = base_label(n, t)
     string = label
@@ -230,11 +235,12 @@ def group_pretty_and_nTj(n, t, useknowls=False):
         string = ntj
     return string
 
+@cached_function
 def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     if not name:
-        if group is not None and group.get('pretty',None) is not None:
+        if group is not None and group.get('pretty', None) is not None:
             name = group['pretty']
         else:
             name = label
@@ -242,7 +248,14 @@ def group_display_knowl(n, t, name=None):
         return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
+def group_display_knowl_C1_as_trivial(n, t):
+    if [n, t] == [1, 1]:
+        return group_display_knowl(n, t, '$C_1$')
+    else:
+        return group_display_knowl(n, t)
 
+
+@cached_function
 def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
@@ -250,6 +263,7 @@ def galois_module_knowl(n, t, index):
     return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
 
 
+@cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
@@ -262,6 +276,7 @@ def cclasses_display_knowl(n, t, name=None):
     return name + ' are not computed'
 
 
+@cached_function
 def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
@@ -272,6 +287,7 @@ def character_table_display_knowl(n, t, name=None):
     return name + ' is not computed'
 
 
+@cached_function
 def group_phrase(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -289,6 +305,7 @@ def group_phrase(n, t):
     return(inf)
 
 
+@cached_function
 def group_display_long(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -312,6 +329,7 @@ def group_display_long(n, t):
     return group['name'] + inf
 
 
+@cached_function
 def galois_group_data(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -359,6 +377,7 @@ def galois_group_data(n, t):
 
 
 
+@cached_function
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -375,6 +394,7 @@ def group_cclasses_knowl_guts(n, t):
     return rest
 
 
+@cached_function
 def group_character_table_knowl_guts(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -392,6 +412,7 @@ def group_character_table_knowl_guts(n, t):
     return(inf)
 
 
+@cached_function
 def galois_module_knowl_guts(n, t, index):
     mymod = db.gps_gmodules.lucky({'n': int(n), 't': int(t), 'index': int(index)}, ['name','dim','gens'])
     if mymod is None:

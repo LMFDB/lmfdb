@@ -5568,6 +5568,8 @@ class PostgresDatabase(PostgresBase):
             privileges = ['INSERT', 'SELECT', 'UPDATE']
             knowls_tables = ['kwl_knowls']
             cur = sorted(list(self._execute(SQL("SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN (" + ",".join(['%s']*len(knowls_tables)) + ") AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user] +  knowls_tables + privileges)))
+#            print cur
+#            print sorted([(table, priv) for table in knowls_tables for priv in privileges])
             self._read_and_write_knowls = cur == sorted([(table, priv) for table in knowls_tables for priv in privileges])
 
             cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
