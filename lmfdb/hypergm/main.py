@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones
+# Author: John Jones, Edgar Costa
 
 import re
 
 from flask import render_template, request, url_for, redirect, abort
 from sage.all import (
-    ZZ, QQ, latex, valuation, PolynomialRing, gcd, divisors)
+    is_prime, ZZ, QQ, latex, valuation, PolynomialRing, gcd, divisors)
 
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
-    parse_restricted, search_wrap, web_latex)
+    parse_restricted, integer_options, parse_range2rat, search_wrap,
+    to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from web_family import WebHyperGeometricFamily
@@ -479,10 +480,35 @@ def render_hgm_webpage(label):
     return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 
+
+
 def parse_pandt(info, family):
-    pass
-    # HERE
-    #info['ps'] = integer_options(info.get('
+    errs = []
+    try:
+        info['ps'] = [elt for elt in
+                integer_options(info.get('p', family.default_prange), family.maxp)
+                if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
+    except (ValueError, TypeError) as err:
+        info['ps'] = family.defaultp
+        if err.args and err.args[0] == 'Too many options':
+            errs.append(r"Only p up to %s are available" % (family.maxp))
+        else:
+            errs.append("<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
+
+    try:
+        if info.get('t'):
+            ts = parse_range2rat(info.get('t'), 'doesntmatter', lambda x: QQ(x))
+            if ts[0] == '$or':
+                # ts[1] is a list of dict {'doesntmatter': rational}
+                info['ts'] = [elt['doesntmatter'] for elt in ts[1]]
+            else:
+                info['ts'] = ts[1]
+        else:
+            info['ts'] = None
+    except (ValueError, TypeError) as err:
+        info['ts'] = None
+        errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
+    return errs
 
 def render_hgm_family_webpage(label):
     try:
@@ -492,12 +518,13 @@ def render_hgm_family_webpage(label):
 
 
     info = to_dict(request.args)
-    errs = parse_pandt(info, newform)
+    errs = parse_pandt(info, family)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        flash_error("<br>".join(errs))
 
 
     return render_template("hgm_family.html",
+                           info=info,
                            family=family,
                            properties2=family.properties,
                            credit=HGM_credit,
@@ -516,18 +543,18 @@ def show_slopes(sl):
 @hypergm_page.route("/random_family")
 def random_family():
     label = db.hgm_families.random()
-    return redirect(url_for(".by_family_label", label= label))
+    return redirect(url_for(".by_family_label", label=label))
 
 @hypergm_page.route("/random_motive")
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label= s[0], t='t'+s[1]))
+    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Hypergeometric Motive Data over $\Q$'
-    bread = get_bread(('Completeness',''))
+    bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))

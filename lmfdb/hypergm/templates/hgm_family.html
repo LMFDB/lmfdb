@@ -81,23 +81,27 @@
       {% endfor %}
 </table>
 <p>
+{% if info.err %}
+
+{% endif %}
 <h2>Good Euler factors</h2>
 <form id='euler_factors'>
   <table>
     <tr>
       <td>\(p\)</td>
-      <td><input type='text' name='ps' style="width: 60px" value="{{info.n}}" placeholder="{{family.default_prange}}"></td>
+      <td><input type='text' name='p' style="width: 60px" value="{{info.p}}" placeholder="{{family.default_prange}}"></td>
       <td><span class="formexample"> e.g. 2 or 2-10</span></td>
     </tr>
     <tr>
       <td>\(t\)</td>
-      <td><input type='text' name='ts' style="width: 60px" value="{{info.t}}" placeholder="1/3"></td>
+      <td><input type='text' name='t' style="width: 60px" value="{{info.t}}" placeholder="1/3"></td>
       <td><span class="formexample"> e.g. 2 or 1/2</span></td>
     </tr>
   </table>
+  <button id="refresh_euler">Refresh table</button>
 </form>
 
-{% for var, value, col_var, euler_factors in family.table_euler_factors_generic([11,13], [1/3, 1/2]) %}
+{% for var, value, col_var, euler_factors in family.table_euler_factors_generic(info.ps, info.ts) %}
   <h3>${{var}}={{value}}$</h3>
   <table class='ntdata'>
     <thead>
@@ -154,5 +158,6 @@
     {% endif %}
     </tbody>
   </table>
+{% endfor %}
 
 {% endblock %}

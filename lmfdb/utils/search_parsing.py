@@ -187,16 +187,16 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None):
 
 # Like parse_range2, but to deal with strings which could be rational numbers
 # process is a function to apply to arguments after they have been parsed
-def parse_range2rat(arg, key, process):
+def parse_range2rat(arg, key, process, allow_range=True):
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if QQ_DEC_RE.match(arg):
         return [key, process(arg)]
     if ',' in arg:
-        tmp = [parse_range2rat(a, key, process) for a in arg.split(',')]
+        tmp = [parse_range2rat(a, key, process, allow_range) for a in arg.split(',')]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ['$or', tmp]
-    elif '-' in arg[1:]:
+    elif '-' in arg[1:] and allow_range:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
@@ -255,6 +255,7 @@ def integer_options(arg, max_opts=None):
         else:
             ans.add(int(interval))
     return sorted(list(ans))
+
 
 def collapse_ors(parsed, query):
     # work around syntax for $or

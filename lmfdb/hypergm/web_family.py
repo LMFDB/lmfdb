@@ -340,33 +340,31 @@ class WebHyperGeometricFamily(object):
     def display_galois_groups(self):
         return False if self.degree <= 2 or self.degree >= 12 else True
 
-    @cached_method
     def table_euler_factors_p(self, p):
         if p not in self.euler_factors.keys():
             return []
 
         ef = self.euler_factors[p]
         assert len(ef) == p - 2
-        return 't', [[t] + self.process_euler(f, p)
+        return [[t] + self.process_euler(f, p)
                 for t, f in enumerate(ef, 2)]
 
-    @cached_method
     def table_euler_factors_t(self, t, plist=None):
         if plist is None:
             plist = sorted(self.euler_factors.keys())
+        t = QQ(t)
         tmodp = [(p, t.mod_ui(p)) for p in plist if t.denominator() % p != 0]
         # filter
         return [[p] + self.process_euler(self.euler_factors[p][tp - 2], p)
                 for p, tp in tmodp if tp > 1]
 
-    @cached_method
     def table_euler_factors_generic(self, plist=None, tlist=None):
         if tlist is None:
             if plist is None:
                 plist = self.defaultp
-            return [('t', t, 'p', self.table_euler_factors_p(p)) for p in plist]
+            return [('p', p, 't', self.table_euler_factors_p(p)) for p in plist]
         else:
-            return [('p', p, 't', self.table_euler_factors_t(tn, td, plist)) for t in tlist]
+            return [('t', t, 'p', self.table_euler_factors_t(t, plist)) for t in tlist]
 
 
 
