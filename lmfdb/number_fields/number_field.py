@@ -475,8 +475,8 @@ def render_field_webpage(args):
     if nf.degree() > 1:
         gpK = nf.gpK()
         rootof1coeff = gpK.nfrootsof1()
-        rootofunityorder = int(rootof1coeff[1])
-        rootof1coeff = rootof1coeff[2]
+        rootofunityorder = int(rootof1coeff[0])
+        rootof1coeff = rootof1coeff[1]
         rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
         rootofunity += ' (order $%d$)' % rootofunityorder
     else:
@@ -491,7 +491,7 @@ def render_field_webpage(args):
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
-        'fund_units': nf.units(),
+        'fund_units': nf.units_safe(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
     })
@@ -565,6 +565,7 @@ def render_field_webpage(args):
     else:
         primes = 'primes'
 
+    label_orig = label
     if len(label)>25:
         label = label[:16]+'...'+label[-6:]
     properties2 = [('Label', label),
@@ -577,15 +578,15 @@ def render_field_webpage(args):
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group', group_pretty_and_nTj(data['degree'], t))
                    ]
-    downloads = []
+    downloads = [('Stored data to gp', url_for('.nf_download', nf=label_orig, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
         downloads.append(('Download {} code'.format(lang[0]),
-                          url_for(".nf_code_download", nf=label, download_type=lang[1])))
+                          url_for(".nf_download", nf=label_orig, download_type=lang[1])))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         arts = [z.label() for z in info["tim_number_field"].artin_representations()]
-        print arts
+        #print arts
         for ar in arts:
             info['friends'].append(('Artin representation '+str(ar), 
                 url_for("artin_representations.render_artin_representation_webpage", label=ar)))
@@ -598,7 +599,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label)
+    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))
@@ -760,39 +761,25 @@ def number_field_search(info, query):
     info['gg_display'] = group_pretty_and_nTj
 
 def residue_field_degrees_function(nf):
-    """ Given a WebNumberField, returns a function that has
+    """ Given the result of pari(nfinit(...)), returns a function that has
             input: a prime p
             output: the residue field degrees at the prime p
     """
-    k1 = nf.gpK()
     D = nf.disc()
-    return main_work(k1,D,'pari')
 
-def sage_residue_field_degrees_function(nf):
-    """ Version of above which takes a sage number field
-        Used by Artin representation code when the Artin field is not
-        in the database.
-    """
-    D = nf.disc()
-    return main_work(pari(nf),D,'sage')
-
-def main_work(k1, D, typ):
-    # Difference for sage vs pari array indexing
-    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
-            dec = k1.idealprimedec(p)
-            dec = [z[ind] for z in dec]
-            return dec
+            return [z[3] for z in nf.idealprimedec(p)]
         else:
             raise ValueError("Expecting a prime not dividing D")
+
     return decomposition
 
 # Compute Frobenius cycle types, returns string nicely presenting this
 
 
 def frobs(nf):
-    frob_at_p = residue_field_degrees_function(nf)
+    frob_at_p = residue_field_degrees_function(nf.gpK())
     D = nf.disc()
     ans = []
     seeram = False
@@ -824,11 +811,63 @@ def frobs(nf):
             seeram = True
     return ans, seeram
 
+# utility for downloading data
+def unlatex(s):
+    s = re.sub(r'\\+', r'\\',s)
+    s = s.replace('\\(', '')
+    s = s.replace('\\)', '')
+    s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
+    s = s.replace(r'{',r'(')
+    s = s.replace(r'}',r')')
+    s = re.sub(r'([^\s+-])\s*a', r'\1*a',s)
+    return s
+
 @nf_page.route('/<nf>/download/<download_type>')
-def nf_code_download(**args):
-    response = make_response(nf_code(**args))
+def nf_download(**args):
+    typ = args['download_type']
+    if typ == 'data':
+        response = make_response(nf_data(**args))
+    else:
+        response = make_response(nf_code(**args))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+def nf_data(**args):
+    label = args['nf']
+    nf = WebNumberField(label)
+    data = '/* Data is in the following format\n'
+    data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
+    data += '[polynomial,\ndegree,\nt-number of Galois group,\nsignature [r,s],\ndiscriminant,\nlist of ramifying primes,\nintegral basis as polynomials in a,\n1 if it is a cm field otherwise 0,\nclass number,\nclass group structure,\n1 if grh was assumed and 0 if not,\nfundamental units,\nregulator,\nlist of subfields each as a pair [polynomial, number of subfields isomorphic to one defined by this polynomial]\n]';
+    data += '\n*/\n\n'
+    zk = nf.zk()
+    Ra = PolynomialRing(QQ, 'a')
+    zk = [str(Ra(x)) for x in zk]
+    zk = ', '.join(zk)
+    units = str(unlatex(nf.units()))
+    units = units.replace('&nbsp;', ' ')
+    subs = nf.subfields()
+    subs = [[coeff_to_poly(string2list(z[0])),z[1]] for z in subs]
+
+    # Now add actual data
+    data += '[%s, '%nf.poly()
+    data += '%s, '%nf.degree()
+    data += '%s, '%nf.galois_t()
+    data += '%s, '%nf.signature()
+    data += '%s, '%nf.disc()
+    data += '%s, '%nf.ramified_primes()
+    data += '[%s], '%zk
+    data += '%s, '%str(1 if nf.is_cm_field() else 0)
+    if nf.can_class_number():
+        data += '%s, '%nf.class_number()
+        data += '%s, '%nf.class_group_invariants_raw()
+        data += '%s, '%(1 if nf.used_grh() else 0)
+        data += '[%s], '%units
+        data += '%s, '%nf.regulator()
+    else:
+        data += '0,0,0,0,0, '
+    data += '%s'%subs
+    data += ']'
+    return data
 
 
 sorted_code_names = ['field', 'poly', 'degree', 'signature',
@@ -860,9 +899,9 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def nf_code(**args):
     label = args['nf']
+    lang = args['download_type']
     nf = WebNumberField(label)
     nf.make_code_snippets()
-    lang = args['download_type']
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     if lang=='gp':

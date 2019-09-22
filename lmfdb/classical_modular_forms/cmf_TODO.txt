@@ -119,6 +119,7 @@ Style:
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
+* How does git work again?
 
 ISSUES todo:
 Ask David Farmer if he wants to reopen #59

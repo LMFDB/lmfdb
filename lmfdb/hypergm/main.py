@@ -515,8 +515,6 @@ def render_hgm_family_webpage(label):
         family = WebHyperGeometricFamily.by_label(label)
     except (KeyError, ValueError) as err:
         return abort(404, err.args)
-
-
     info = to_dict(request.args)
     errs = parse_pandt(info, family)
     if errs:

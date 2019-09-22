@@ -2,7 +2,7 @@
 from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND
 from lmfdb import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -60,11 +60,16 @@ class ECisog_class(object):
         self.curves = [db.ec_curves.lucky({'iso':self.iso, number_key: i+1})
                           for i in range(ncurves)]
 
-        # Set optimality flags.  The optimal curve is number 1 except
-        # in one case which is labeled differently in the Cremona tables
-        self.optimality_known = (self.ncurves==1) or (self.conductor<60000)
+        # Set optimality flags.  The optimal curve is conditionally
+        # number 1 except in one case which is labeled differently in
+        # the Cremona tables.  We know which curve is optimal iff the
+        # optimality code for curve #1 is 1 (except for class 990h).
+        self.optimality_known = (self.optimality==1) or (self.iso=='990h')
+        self.optimality_bound = OPTIMALITY_BOUND
+        self.optimal_label = self.label if self.label_type == 'Cremona' else self.lmfdb_label
         for c in self.curves:
-            c['optimal'] = (c['number']==(3 if self.iso == '990h' else 1))
+            c['optimal'] = (c['optimality']!=0)
+            c['optimality_known'] = (c['optimality']<2)
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['label'])

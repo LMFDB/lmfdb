@@ -12,15 +12,6 @@
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
-        {% if object.dimension() == 1 %}
-            {%if object.det_url()=="Not available"%}
-                <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> {{ object.det_display()|safe}} </tr>
-            {%else%}
-                <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> <a href={{object.det_url()}}>{{ object.det_display()|safe}}</a> </tr>
-            {%endif%}
-        {% else %}
-            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_as_artin_display()|safe}} </tr>
-        {% endif %}
     </table>
 
 
@@ -40,7 +31,7 @@
     {% endif %}
    <div>
     Roots:
-      <center>
+     <center>
       <table>
         {% for root in object.number_field_galois_group().computation_roots()%}
         <tr>
@@ -48,9 +39,9 @@
           <td> $=$ </td>
           <td>${{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td>
         {% endfor %}
-        </table>
-      </center>
-    </div>
+      </table>
+     </center>
+   </div>
     
     <h3>Generators of the action on the roots 
     {% if object.number_field_galois_group().degree() < 4  %}
@@ -87,12 +78,24 @@
         {% endfor %}$
     {% else %}
         $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$
-    {% endif %}</td><td>Character value</td></tr></thead>
+    {% endif %}</td><td colspan="{{object.galois_conjugacy_size()}}" align="center">Character values</td></tr>
+        <tr><td></td><td></td><td></td>
+        {% for blah in allchars %}
+        <td align="center">$c{{loop.index}}$</td>
+        {% endfor %}
+        </tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
+        {% set outer_loop = loop.index %}
             <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="bluehighlight"{%endif%}> 
-                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
+                <td align="center">${{gen.size()}}$</td>
+                <td align="center">${{gen.order()}}$</td>
+                <td align="center">${{cycle_string(gen.representative())}}$</td>
+                {% for cvalue in allchars %}
+                    <td align="center">${{ cvalue[outer_loop - 1]}}$</td>
+                {% endfor %}
+                </tr>
         {% endfor %}
       </tbody>
       </table>
@@ -100,15 +103,6 @@
        The blue line marks the conjugacy class containing complex conjugation.
     </div>
  <div>
- {# For testing in progress
- <br>
- {{ info.pol2 }} <br>
- {{ info.pol3 }} <br>
- {{ info.pol5 }} <br>
- {{ info.pol7 }} <br>
- {{ info.pol11 }} <br>
- </div>
- #}
    
 {% endblock %}
 

@@ -2773,7 +2773,7 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, searchfile=None, extrafile=None, **kwds):
+    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, searchfile=None, extrafile=None, progress_count=10000, **kwds):
         """
         This function can be used to edit some or all records in the table.
 
@@ -2796,7 +2796,7 @@ class PostgresTable(PostgresBase):
             projection = search_cols + self._extra_cols
             extra_cols = ["id"] + self._extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
-        # to give func access to the data to process.
+        # to give func access to the data to process. 
         # An alternative approach would be to use COPY TO and have func and filter both
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
@@ -2815,6 +2815,9 @@ class PostgresTable(PostgresBase):
             raise ValueError("Extra file %s already exists" % extrafile)
         else:
             extrafile = open(extrafile, 'w')
+        start = time.time()
+        count = 0
+        tot = self.count(query)
         try:
             with searchfile:
                 with extrafile:
@@ -2830,6 +2833,10 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
+                        count += 1
+                        if (count % progress_count) == 0:
+                            print "%d of %d records (%.1f percent) dumped in %.3f secs" % (count, tot, 100.0*count/tot,time.time()-start)
+            print "All records dumped in %.3f secs" % (time.time()-start)
             self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, log_change=False, **kwds)
             self.log_db_change("rewrite", query=query, projection=projection)
         finally:

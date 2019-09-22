@@ -29,7 +29,7 @@ BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [
 
 
 class SearchParser(object):
-    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield,error_is_safe):
         self.f = f
         self.clean_info = clean_info
         self.prep_ranges = prep_ranges
@@ -38,6 +38,7 @@ class SearchParser(object):
         self.default_field = default_field
         self.default_name = default_name
         self.default_qfield = default_qfield
+        self.error_is_safe = error_is_safe # Indicates that the message in raised exception contains no user input, so it is not escaped
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
             if field is None: field=self.default_field
@@ -68,14 +69,17 @@ class SearchParser(object):
             if self.clean_info:
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
-            flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
+            if self.error_is_safe:
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>"+str(err)+"</span>. %s", inp, name)
+            else:
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
             raise
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
-                  default_field=None, default_name=None, default_qfield=None):
-    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield)
+                  default_field=None, default_name=None, default_qfield=None,error_is_safe=False):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
@@ -319,7 +323,8 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
+    if parse_one is None: 
+        parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, split0 = True)
@@ -515,7 +520,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
 def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
-@search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
+@search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:

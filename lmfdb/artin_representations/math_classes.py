@@ -125,6 +125,24 @@ class ArtinRepresentation(object):
     def NFGal(self):
         return  map(int, self._data["NFGal"]);
 
+    # If the dimension is 1, we want the result as a webcharacter
+    # Otherwise, we want the label of it as an Artin rep.
+    # Mostly, this is pulled from the database, but we can fall back
+    # and compute it ourselves
+    def determinant(self):
+        if len(self._data['Dets'])>0:
+            parts = self.label().split("c")
+            thischar = str( self._data['Dets'][int(parts[1])-1] )
+            if self.dimension()==1:
+                wc = thischar.split(r'.')
+                self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
+                return self._data['central_character']
+            return(thischar)
+        # Not in the database
+        if self.dimension()==1:
+            return self.central_character()
+        return self.central_character_as_artin_rep().label()
+
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
         factors = self.factored_conductor()
@@ -206,7 +224,7 @@ class ArtinRepresentation(object):
         return group_display_knowl(galnt[0],galnt[1])
 
     def is_ramified(self, p):
-        return self.number_field_galois_group().discriminant() % p == 0
+        return self.is_bad_prime(p)
 
     # sets up, and returns a function to compute the central character
     # as a function
@@ -261,9 +279,9 @@ class ArtinRepresentation(object):
         artfull = [[a, a.central_char_function(),2*a.character_field()] for a in artfull]
         n = 2*self.character_field()
         p = 2
-        disc = nfgg.discriminant()
+        hard_primes = self.hard_primes()
         while len(artfull)>1:
-            if (disc % p) != 0:
+            if not p in hard_primes:
               k=0
               while k<len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
@@ -799,13 +817,29 @@ class NumberFieldGaloisGroup(object):
     def artin_representations(self):
         return [ArtinRepresentation(z['Baselabel'],z['GalConj']) for z in self.ArtinReps()]
 
-    def discriminant(self):
-        return self.sage_object().discriminant()
+    # We don't want to compute the discriminant to get this
+    def all_hard_primes(self):
+        primes = set([])
+        ars = self.artin_representations()
+        for ar in ars:
+            primes = primes.union(ar.hard_primes())
+        return list(primes)
 
-    def sage_object(self):
+    def all_bad_primes(self):
+        primes = set([])
+        ars = self.artin_representations()
+        for ar in ars:
+            primes = primes.union(ar.bad_primes())
+        return list(primes)
+
+    def discriminant(self):
+        return self.nfinit().disc()
+
+    def nfinit(self):
+        from sage.all import pari
         X = PolynomialRing(QQ, "x")
-        from sage.rings.number_field.number_field import NumberField
-        return NumberField(X(map(str,self.polynomial())), "x")
+        pol = X(map(str,self.polynomial()))
+        return pari("nfinit([%s,%s])" % (str(pol), self.all_hard_primes()))
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
@@ -833,7 +867,7 @@ class NumberFieldGaloisGroup(object):
 
     def frobenius_cycle_type(self, p):
         try:
-            assert not self.discriminant() % p == 0
+            assert p not in self.all_bad_primes()
         except:
             raise AssertionError, "Expecting a prime not dividing the discriminant", p
         return tuple(self.residue_field_degrees(p))
@@ -851,14 +885,8 @@ class NumberFieldGaloisGroup(object):
         try:
             return self._residue_field_degrees(p)
         except AttributeError:
-            # Try to make WebNumberField, but only helps if the field is in our database
-            wnf = self.wnf()
-            if wnf._data is None:
-                from lmfdb.number_fields.number_field import sage_residue_field_degrees_function
-                fn_with_pari_output = sage_residue_field_degrees_function(self.sage_object())
-            else:
-                from lmfdb.number_fields.number_field import residue_field_degrees_function
-                fn_with_pari_output = residue_field_degrees_function(wnf)
+            from lmfdb.number_fields.number_field import residue_field_degrees_function
+            fn_with_pari_output = residue_field_degrees_function(self.nfinit())
             self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)

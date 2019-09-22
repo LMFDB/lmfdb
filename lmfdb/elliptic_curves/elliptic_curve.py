@@ -270,12 +270,22 @@ def elliptic_curve_search(info, query):
         mode = 'append'
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
+    # The button which used to be labelled Optimal only no/yes"
+    # (default no) has been renamed "Curves per isogeny class all/one"
+    # (default one) but the only change in behavious is that we no
+    # longer treat class 990h (where the optial curve is #3 not #1) as
+    # special: the "one" option just restricts to curves whose
+    # 'number' is 1.
     if 'optimal' in info and info['optimal'] == 'on':
+        query.update({'number':1})
+
+        # Old behaviour was as follows:
         # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
         # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
         # Instead, we use this more complicated query:
-        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
+        # query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
+    info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
@@ -600,7 +610,7 @@ def tor_struct_search_Q(prefill="any"):
             gps.append(cyc(n))
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
-    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+    return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
