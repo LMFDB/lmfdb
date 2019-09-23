@@ -296,8 +296,8 @@ def genus2_curve_search(info, query):
         query.pop('torsion') # search using string key, not array of ints
 # TODO: finish this #
 #    parse_bracketed_posints(info, query, 'geometric_invariants', 'geometric invariants', maxlength=5)
-    if 'geometric_invariants' in query:
-        query[info['geometric_invariants_type']] = str(info['geometric_invariants']).replace(" ", "")
+    if 'geometric_invariants' in info:
+        query[info['geometric_invariants_type']] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
 
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
