@@ -1,7 +1,13 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+# -*- coding: utf-8 -*-
+from lmfdb.tests import LmfdbTest
+
 
 class EllCurveTest(LmfdbTest):
+
+    def check_args_with_timeout(self, path, text):
+        timeout_error = 'The search query took longer than expected!'
+        data = self.tc.get(path, follow_redirects=True).data
+        assert (text in data) or (timeout_error in data)
 
     # All tests should pass
     #
@@ -17,11 +23,18 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/12350/s/')
         assert '[1, -1, 1, -3655, -83403]' in L.data
         L = self.tc.get('/EllipticCurve/Q/12350/s')
-        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/12350/s/">http://localhost/EllipticCurve/Q/12350/s/</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/12350/s/' in L.data
 
     def test_Cremona_label_mal(self):
-        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class')
-        assert '12qx does not define a recognised elliptic curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
+        assert '12qx' in L.data and 'does not define a recognised elliptic curve' in L.data
+
+    def test_missing_curve(self):
+        L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
+        assert '13.a1' in L.data and 'No curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
+        assert '13a1' in L.data and 'No curve' in L.data
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -29,11 +42,13 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/210/')
         assert '[1, 0, 0, 729, -176985]' in L.data
         L = self.tc.get('/EllipticCurve/Q/210')
-        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/210/">http://localhost/EllipticCurve/Q/210/</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/210/' in L.data
 
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]')
-        assert 'You should be redirected automatically to target URL: <a href="/EllipticCurve/Q/10351.b1">/EllipticCurve/Q/10351.b1</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/' in L.data
 
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -50,12 +65,10 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, 9588, 2333199]' in L.data
 
     def test_SurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '[0, 0, 1, -270, -1708]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]');
 
     def test_NonSurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100')
-        assert '[0, 0, 0, -36705844875, 2706767485056250]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]');
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
@@ -67,7 +80,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '["1", "-1", "1", "-3", "3"]' in L.data
+        assert '[1, -1, 1, -3, 3]' in L.data
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -83,5 +96,35 @@ class EllCurveTest(LmfdbTest):
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert '\(-1 \cdot 163^{9} \)' in L.data
+        assert r'\(-1 \cdot 163^{9} \)' in L.data
 
+    def test_torsion_growth(self):
+        """
+        Test for torsion growth data
+        """
+        L = self.tc.get('/EllipticCurve/Q/392/c/1')
+        assert ' is strictly larger than ' in L.data
+        assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data
+
+    def test_990h(self):
+        """
+        Test the exceptional 990h/990.i optimal labelling.
+        """
+        # The isogeny class 990h (Cremona labelling) or 990.i (LMFDB labelling)
+        # has a different Gamma-optimal curve in its labelling than all others.
+        L = self.tc.get('/EllipticCurve/Q/990/i/')
+        row = '\n'.join([
+          '<td class="center">[1, -1, 1, -1568, -4669]</td>',
+          '<td align="center">6</td>',
+          '<td align="center">',
+          '1728</td>',
+          '<td>\(\Gamma_0(N)\)-optimal</td>'
+        ])
+        self.assertTrue(row in L.data,
+                        "990.i appears to have the wrong optimal curve.")
+
+        L = self.tc.get('EllipticCurve/Q/990h/')
+        #print row
+        #print L.data
+        self.assertTrue(row in L.data,
+                        "990h appears to have the wrong optimal curve.")

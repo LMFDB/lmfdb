@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import lmfdb
-from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import WebDirichlet, WebHecke
+from lmfdb.tests import LmfdbTest
+from lmfdb.characters.web_character import WebDirichlet, WebHecke
+from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
 
@@ -16,7 +16,7 @@ class WebCharacterTest(LmfdbTest):
       from sage.all import NumberField, var
       x = var('x')
       k = NumberField(x**3-x**2+x+1,'a')
-      modlabel, numlabel = '82.-5a0+1a2', '5.3.3'
+      modlabel, numlabel = '128.1', '1.1'
       mod = WebHecke.label2ideal(k, modlabel)
       assert WebHecke.ideal2label(mod) == modlabel
       num = WebHecke.label2number(numlabel)
@@ -24,15 +24,20 @@ class WebCharacterTest(LmfdbTest):
 
 class DirichletSearchTest(LmfdbTest):
 
-    def test_condbrowse(self): 
+    def test_condbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?condbrowse=24-41')
         assert '(\\frac{40}{\\bullet}\\right)' in W.data
 
-    def test_order(self): 
+    def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
         assert '\chi_{25}(2' in W.data
 
-    def test_modbrowse(self): 
+    def test_even_odd(self):
+	W = self.tc.get('/Character/Dirichlet/?modulus=35')
+	assert '>Even</t' in W.data
+	assert '>Odd</t' in W.data
+
+    def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
         """
         curl -s '/Character/?modbrowse=51-81' | grep 'Dirichlet/[0-9][0-9]/27' | wc -l
@@ -55,8 +60,8 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even&limit=25')
         assert '\chi_{50}(11,' in W.data and '\chi_{75}(46,' in W.data
 
-    def test_condsearch(self): 
-        W = self.tc.get('/Character/Dirichlet/?conductor=111')
+    def test_condsearch(self):
+        W = self.tc.get('/Character/Dirichlet/?conductor=111&limit=100')
         assert '111/17' in W.data
 
     def test_nextprev(self):
@@ -108,6 +113,10 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
 
+    def test_valuefield(self):
+        W = self.tc.get('/Character/Dirichlet/13/2')
+        assert  'Value Field' in W.data
+
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -146,9 +155,9 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletchar531(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
-        assert '/Character/Dirichlet/531/391' in W.data
-        assert '(356,235)' in W.data, "generators"
-        assert 'Kloosterman sum' in W.data
+        assert '/Character/Dirichlet/531/247' in W.data
+        assert '(119,415)' in W.data, "generators"
+        #assert 'Kloosterman sum' in W.data
         assert  '(\\zeta_{87})' in W.data, "field of values"
 
     def test_dirichletchar6000lfunc(self):
@@ -157,15 +166,15 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/SatoTateGroup/0.1.100' in W.data
         assert 'L/Character/Dirichlet/6000/11' in W.data
         W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
-        assert '1.0766030216' in W.data
+        assert '1.076603021' in W.data
 
     def test_dirichletchar9999lfunc(self):
         """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""
         W = self.tc.get('/Character/Dirichlet/9999/2')
         assert '/SatoTateGroup/0.1.300' in W.data
-        b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
+        b = get_lfunction_by_url('Character/Dirichlet/9999/2')
         assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
-        
+
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
@@ -183,16 +192,16 @@ class HeckeCharactersTest(LmfdbTest):
         assert 'C_{5}' in W.data
 
     def test_heckegroup(self):
-        W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
+        W = self.tc.get('/Character/Hecke/3.1.44.1/4.1')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
     def test_heckechar(self):
-        W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
+        W = self.tc.get('/Character/Hecke/2.0.4.1/25.2/2')
         assert 'Related objects' in W.data
         assert 'Primitive' in W.data
 
     def test_hecke_calc(self):
-        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
-        assert '(1-a)=i' in W.data
+        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/25.2/1?val=13.2')
+        assert '=-i' in W.data
 

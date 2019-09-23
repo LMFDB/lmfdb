@@ -1,0 +1,117 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.err  %}
+{{info.err}}
+{% else %}
+
+  <h2>  Base Field: {{data.field_knowl |safe}}  </h2>
+
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ data.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{data.field.poly()}}\);  {{ KNOWL('nf.class_number', 'class number')
+ }} \({{data.field.class_number()}}\).
+</p>
+
+
+<h2> {{ KNOWL('mf.bianchi.newform', 'Form') }} </h2>
+
+<p>
+<table>
+<tr><td> {{ KNOWL('mf.bianchi.weight', 'Weight')}}<td> {{data.weight}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.level', 'Level')}}<td>  {{data.level_label}} = {{ data.level_ideal2 }}{#,  norm {{ data.level_norm }}#} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.labels', 'Label')}}<td> {{ data.label }} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Dimension') }}:<td> {{ data.dimension }} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.cm',title="CM") }}:<td> {{data.CM}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.base_change',title="Base change") }}:
+  <td> {{data.bc}}{{data.bc_extra}}
+  <td> {%-for f in data.bc_forms %} {%-if f.exists  %}
+    {%-if loop.index > 1 %},{%-endif %} <a href={{f.url}}>{{f.label}}</a>
+    {% endif %} {% endfor %}</tr>
+<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> <td>(dimension {{ data.newspace_dimension }}) </tr>
+<tr><td> {{ KNOWL('mf.bianchi.sign',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:<td> {{data.anrank}} </tr>
+{% if data.Lratio %}
+<tr><td> {{ KNOWL('mf.bianchi.anr',title="L-ratio")}}:<td> {{data.Lratio}} </tr>
+{% endif %}
+</table>
+</p>
+
+<h2> {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke eigenvalues') }} </h2>
+
+  {#
+<p>
+  The database contains {{data.nap}} eigenvalues{% if data.nap0 <
+  data.nap %} of which we only show {{data.nap0}}{%endif%}.
+</p>
+#}
+
+{% if data.dimension > 1 %}
+<p>
+The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining
+polynomial: {{data.hecke_poly}}.
+</p>
+{% else %}
+<p>The Hecke eigenvalue field is $\Q$</a>.</p>
+{% endif %}
+
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in data.hecke_table: %}
+<tr>
+<td>{{entry[0]}}</td>
+<td>{{entry[1]}} = ({{entry[2]}})</td>
+<td align=right>{{entry[3]}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>  Atkin-Lehner eigenvalues  </h2>
+
+{% if data.have_AL %} 
+<p>
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in data.AL_table: %}
+<tr>
+<td>{{entry[0]}}</td>
+<td>{{entry[1]}} = ({{entry[2]}})</td>
+<td align=right>{{entry[3]}}</td>
+</tr>
+{% endfor %}
+</table>
+</p>
+{% else %}
+<p>Not known</P>
+{% endif %}
+
+
+
+{#
+<form>
+<table>
+<tr>
+<td>Display number of eigenvalues</td>
+<td><input type='text' name='numeigs' placeholder='20' size=10>
+</tr>
+<tr>
+<td colspan=3><button type='submit' value='display'>Display</button>
+</td>
+</tr>
+</table>
+</form>
+#}
+
+{% endif %}
+
+{% endblock %}

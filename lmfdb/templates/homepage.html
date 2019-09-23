@@ -1,11 +1,19 @@
 {% extends "base.html" %}
-{% import 'color.css' as color %}
 
 {% macro place_code(item) %}
 {% if code and code[item] %}
 {% for L in code[item] %}
 {% if code[item][L] %}
+{# currently there are two uses of multiline code:
+   - either strings containing newlines and ending with a newline
+   - or arrays of lines
+   first convert the first case to the second
+#}
+{% if code[item][L] is string %}
 {% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% else %}
+{% set lines = code[item][L] %}
+{% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
 <div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
@@ -24,108 +32,98 @@
 {% endif %}
 </a></div>
     <div class="right">
-      <div class="bread">
-        {% if bread %}
-          <a href="/">&#8962;</a>
+      <div class="upper">
+        <div class="bread">
+          {% if bread %}
+            <a href="/">&#8962;</a>
 {# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
-          {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
-          {% endfor %}
-         {% else %}
-          <a href="/">&#8962;</a>
-         {% endif %}
-      </div>
-      <div class="topright">
+            {% for b in bread -%}
+              &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+            {% endfor %}
+           {% else %}
+            <a href="/">&#8962;</a>
+           {% endif %}
+        </div>
+        <div class="topright">
+{# search box does not work (see Issue #2389)
           <form method="GET" action="{{ url_for('search') }}" id="search-topright">
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
-          {% if user_is_admin -%}
-            &middot;
-            <a href="{{ url_for('users.register') }}">RT</a>
-          {% endif %}
-          {% if user_is_authenticated -%}
-            &middot;
-            <a href="{{ url_for('users.info') }}">{{ username }}</a> 
-            &middot;
-            <a href="{{ url_for('users.logout') }}">Logout</a>
-          {%- else -%}
-            {# <a href="{{ url_for('users.register_new') }}">Register</a>
-            &middot; #}
-            {% if BETA %}
-            &middot;
-            <a href="{{ url_for('users.info') }}">Login</a>
+#}
+            {% if user_is_admin -%}
+              &middot;
+              <a href="{{ url_for('users.register') }}">Registration Tokens</a>
             {% endif %}
-          {%- endif %}
-          <br/>
+            {% if user_is_authenticated -%}
+              &middot;
+              <a href="{{ url_for('users.info') }}">{{ username }}</a> 
+              &middot;
+              <a href="{{ url_for('users.logout') }}">Logout</a>
+              <br/>
+            {%- else -%}
+              {# <a href="{{ url_for('users.register_new') }}">Register</a>
+              &middot; #}
+              {% if BETA %}
+              &middot;
+              <a href="{{ url_for('users.info') }}">Login</a>
+              <br/>
+              {% endif %}
+            {%- endif %}
 <!--
-          <span id="communication-wrapper">
-            <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            <span id="communication"></span>
-          </span>
+            <span id="communication-wrapper">
+              <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+              <span id="communication"></span>
+            </span>
 -->
-      </div>
-      <div class="undertopright">
-          <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
-            &middot;
-          {% if g.show_menu %}
-             <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
-          {% else %}
-             <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
-          {% endif %}
-      </div>
+          <div class="undertopright">
+            <a href="{{ url_for('contact') }}" target="_blank">Feedback</a>
+              &middot;
+            <a href="#" id="menutoggle">
+            {%- if g.show_menu -%}
+               Hide Menu
+            {% else %}
+               Show Menu
+            {% endif %}
+            </a>
+          </div>
+        </div>
 {# deleting the confusing prev/next character links, 
    but leaving the code in case it is useful later
-      {% if navi is defined -%}
-        <div id="navi">
-         {% for txt, u in navi -%}
-          <a href="{{ u }}">{{ txt|safe }}</a>
-          {% if not loop.last -%}&middot;{%- endif %}
-         {%- endfor %}
-        </div>
-      {%- elif navi_raw is defined -%}
-        <div id="navi">{{ navi_raw|safe }}</div>
-      {%- endif %} 
+        {% if navi is defined -%}
+          <div id="navi">
+           {% for txt, u in navi -%}
+            <a href="{{ u }}">{{ txt|safe }}</a>
+            {% if not loop.last -%}&middot;{%- endif %}
+           {%- endfor %}
+          </div>
+        {%- elif navi_raw is defined -%}
+          <div id="navi">{{ navi_raw|safe }}</div>
+        {%- endif %} 
 #}
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
-      {% if title_arithmetic -%}
-      <div id="title" class="arithmetic"><span id="title-content">{{ title_arithmetic|safe }}</span></div>
-      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title_analytic|safe }}</span></div>
-      {% else %}
-      <div id="title"><span id="title-content">{{ title|safe }}</span></div>
-      {% endif %}
+        </div>
+        {% if title_arithmetic -%}
+        <div id="title" class="arithmetic">{{ title_arithmetic|safe }}</div>
+        <div id="title" class="analytic nodisplay">{{ title_analytic|safe }}</div>
+        {% else %}
+        <div id="title">{{ title|safe }}</div>
+        {% endif %}
 
     </div>
 </div>
 
 {% block sidebar -%}
 {% if g.show_menu %}
-{#  This macro is not used! #}
- {% macro entry(title, entries) -%}
-   {% if entries %}
-    <h2>{{ title }}</h2>
-    <ul class="subnav">
-        {% for text,url in entries %}
-           <li><a href="{{ url }}">{{ text }}</a></li>
-        {% endfor %}
-    </ul>
-   {% endif %}
- {%- endmacro %}
-
 <div id="sidebar">
 {%- include "sidebar.html" -%}
-
-{# remove upload from sidebar #}
-{#% if user_is_authenticated -%#}
-    {#{ entry("Data", getUploadedFor(request.path, true) ) }#}
-{#% endif %#}
-
 </div>
-
-
 {% else %}
+<div id="sidebar" style="display: none; witdh=0">
+{%- include "sidebar.html" -%}
+</div>
 <style type="text/css">
-#main { margin: 0; }
+#main { margin-left: 0; }
 </style>
 {% endif %} {# of g.show_menu #}
 {%- endblock sidebar %}
@@ -134,11 +132,20 @@
    {% if entries %}
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
+    {% if entries is string %}
+      {# For very large lists of friends, we use javascript #}
+      {{ entries | safe }}
+    {% else %}
     <ul>
         {% for text,url in entries %}
+        {% if url %}
            <li><a href="{{ url }}">{{ text }}</a></li>
+        {% else %}
+           <li>{{ text|safe }}</li>
+        {% endif %}
         {% endfor %}
     </ul>
+    {% endif %}
   </div>
    {% endif %}
  {%- endmacro %}
@@ -156,7 +163,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or friends or downloads or learnmore) %}
+{% if (properties2 or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -167,7 +174,7 @@
          {% if label %}
            <tr><td class="label">{{label|safe}}</td><td>
          {% else %}
-           <tr><td colspan="2">
+           <tr><td colspan="2" align="center">
          {% endif %}
          {% if content is string  -%}
              {{ content|safe }}</td></tr>
@@ -177,31 +184,22 @@
               {{c|safe}}</td></tr>
            {%- endfor %}
          {%- endif %}
-       {%- endfor %} 
+       {%- endfor %}
       </table>
       </div>
     {% endif %}
+
+   {{ rightnavig("Origins", origins) }}
+   {{ rightnavig("Instances", Linstances) }}
    {{ rightnavig("Related objects", friends) }}
-   {% if navi %}
-       {{ neighbors("Nearby objects", navi) }}
-   {% endif %}
-
-   {% if downloads %}
-     {{ rightnavig("Downloads", downloads) }}
-   {% endif %}
-
+   {{ rightnavig("Origins of factors", factors_origins) }}
+   {{ neighbors("Nearby objects", navi) }}
+   {{ rightnavig("Downloads", downloads) }}
    {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
 
 <div id="main">
-  {# <div id="mathjax-info">
-    <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-    <br/>
-    Loading website and processing LaTeX ...
-    <br>
-    <span id="mathjax-log"></span>
-  </div> #} 
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">
@@ -236,26 +234,38 @@
             {% endfor %}
         </div>
     {% endif %}
-    {% block content_js %}
-        <script type="text/javascript">
-        // strips empty input/select fields from query URLs.  To enable, put onsubmit="cleanSubmit(this.id)" in form tag (and give it an id).
-        function cleanSubmit(id)
-        {
-            var myForm = document.getElementById(id);
-            var allInputs = myForm.getElementsByTagName('input')
-            var allSelects = myForm.getElementsByTagName('select')
-            var item, i;
-
-            for(i = 0; item = allInputs[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
-            for(i = 0; item = allSelects[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
-        }
-        </script>
-    {% endblock content_js %}
+    {% if KNOWL_ID %}
+    {% if BACKUP_KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='', backupid=BACKUP_KNOWL_ID+'.top') }}</h2>
+    {% else %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+    {% endif %}
+    {% endif %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}
+    {% if KNOWL_ID %}
+    {% if BACKUP_KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information', backupid=BACKUP_KNOWL_ID+'.bottom') }}</h2>
+    {% else %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
+    {% endif %}
+    {% endif %}
   </div>
 </div>
+
+{% if DEBUG %}
+<div class="debug">
+<p>
+The template for this page is: {{ self._TemplateReference__context.name }}
+</p>
+{% if calling_function %}
+<p>
+The function which was called for this page is: {{calling_function}}
+</p>
+{% endif %}
+</div>
+{% endif %}
 
 <div id="footer">
     {% if credit -%}
@@ -275,7 +285,7 @@
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
-      <a href="{{ url_for('management_board') }}">Management Board</a>
+      <a href="{{ url_for('editorial_board') }}">Editorial Board</a>
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
       {{ current_source|safe }}
@@ -283,6 +293,8 @@
       {{ latest_changeset|safe }}
       &middot;
       {{ sage_version|safe }}
+      &middot;
+      {{ version|safe }}
     </div>
 </div>
 

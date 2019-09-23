@@ -17,9 +17,9 @@ not-implemented:
     // (not yet implemented)
 
 field:
-  sage:  K.<a> = NumberField(%s)
+  sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = nfinit(%s);
-  magma: K<a> := NumberField(%s);
+  magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
 
 curve:
   sage: |
@@ -93,4 +93,4 @@ localdata:
   sage:
     E.local_data()
   magma:
-    LocalInformation(E)
+    LocalInformation(E);

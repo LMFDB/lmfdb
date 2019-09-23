@@ -21,8 +21,8 @@
 {% set dat = info.stats.counts[F] %}
 <tr>
 <td>{{dat['field_knowl'] | safe}}
-<td><a href={{dat['forms']}}>{{dat['nforms']}}</a>
-<td>{{dat['maxnorm']}}
+<td align='right'><a href={{dat['forms']}}>{{dat['nforms']}}</a>
+<td align='right'>{{dat['maxnorm']}}
 </tr>
 {% endfor %}
 </table>

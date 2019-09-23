@@ -42,7 +42,7 @@ print OUTFILE qq|
 <tr align="center">
 <th align="center">First&nbsp;complex<br>critical&nbsp;zero</th>
 <th align="center">{{ KNOWL('lfunction.underlying_object', title='underlying object') }}</th>
-<th align="center">{{ KNOWL('lfunction.level', title='\$N\$') }}</th>
+<th align="center">{{ KNOWL('lfunction.conductor', title='\$N\$') }}</th>
 <th align="center">{{ KNOWL('lfunction.central_character', title='\$\\chi\$') }}</th>
 <th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
 <th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>

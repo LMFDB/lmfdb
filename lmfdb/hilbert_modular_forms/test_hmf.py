@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class HMFTest(LmfdbTest):
     def test_home(self):
@@ -18,15 +18,15 @@ class HMFTest(LmfdbTest):
 
     def test_EC(self): #778
         L = self.tc.get('ModularForm/GL2/TotallyReal/5.5.126032.1/holomorphic/5.5.126032.1-82.1-b')
-        assert 'Elliptic curve not available' in L.data     #TODO remove or change url when
-                                                            #the elliptic curve is in the database
+        assert 'EllipticCurve/5.5.126032.1/82.1/b/' in L.data
+
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
         assert 'Isogeny class' in L.data
         assert 'EllipticCurve/2.2.89.1/2.1/a' in L.data
 
     def test_typo(self): #771
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=2.2.5.1') 
-        assert 'or change' in L.data
+        assert 'Search again' in L.data
 
     def test_large(self): #616
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=4.4.2000.1&count=1200')
@@ -44,6 +44,15 @@ class HMFTest(LmfdbTest):
     def test_search(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&deg=2..5&disc=60-200&level_norm=40-90&dimension=3..5&count=100')
         assert '70.1-o' in L.data
+
+
+    def test_search_CM(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&field_label=&deg=5&disc=&weight=2&level_norm=&dimension=&cm=only&bc=include&count=100')
+        assert '121.1-b' in L.data
+
+    def test_search_base_change(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&field_label=&deg=5&disc=&cm=include&bc=exclude&count=100')
+        assert '/ModularForm/GL2/TotallyReal/5.5.14641.1/holomorphic/5.5.14641.1-67.5-a' in L.data
 
     def test_hmf_page(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.73.1/holomorphic/2.2.73.1-48.4-b')
@@ -88,3 +97,45 @@ class HMFTest(LmfdbTest):
     def test_browse_by_degree(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/2/')
         assert 'Number of newforms' in L.data
+
+    def test_missing_AL(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/3.3.49.1/holomorphic/3.3.49.1-512.1-a')
+        assert 'The Atkin-Lehner eigenvalues for this form are not in the database' in L.data
+
+    def test_level_one_AL(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.173.1/holomorphic/2.2.173.1-1.1-a')
+        assert 'This form has no Atkin-Lehner eigenvalues' in L.data
+
+    def test_friends(self):
+        for url, texts, notitself in [
+                ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a',
+                    ('Hilbert modular form 2.2.5.1-31.2-a',
+                        'Isogeny class 2.2.5.1-31.1-a',
+                        'Isogeny class 2.2.5.1-31.2-a'),
+                    'Hilbert modular form 2.2.5.1-31.1-a'),
+                ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.2-a',
+                    ('Hilbert modular form 2.2.5.1-31.1-a',
+                        'Isogeny class 2.2.5.1-31.1-a',
+                        'Isogeny class 2.2.5.1-31.2-a'),
+                    'Hilbert modular form 2.2.5.1-31.2-a'),
+                ('/ModularForm/GL2/TotallyReal/2.2.497.1/holomorphic/2.2.497.1-1.1-a',
+                    ('Isogeny class 2.0.7.1-5041.1-CMa',
+                        'Isogeny class 2.0.7.1-5041.3-CMa',
+                        'Isogeny class 2.2.497.1-1.1-a',
+                        'Modular form 497.2.b.a'),
+                    'Hilbert modular form 2.2.497.1-1.1-a'),
+                ('/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-32.1-a',
+                    ('Bianchi modular form 2.0.8.1-32.1-a',
+                        'Isogeny class 2.0.8.1-32.1-a',
+                        'Isogeny class 2.2.8.1-32.1-a'),
+                    'Hilbert modular form 2.2.8.1-32.1-a')
+                ]:
+            L = self.tc.get(url)
+            for t in texts:
+                assert t in L.data
+            assert 'L-function' in L.data
+
+            # this test isn't very specific
+            # but the goal is to test that itself doesn't show in the friends list
+            assert notitself not in L.data
+

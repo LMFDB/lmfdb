@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}  
 
 {% if user_is_authenticated %}
@@ -9,6 +8,8 @@
 
 {% else %}
   <h1>You are not logged in</h1>
+  {% if user_can_write %}
+ 
 {#  <div style="margin-bottom: 20px">New user? 
      <a href="{{ url_for('.register_new') }}">Register here</a>
   </div>
@@ -26,6 +27,9 @@
       <tr><td /><td><button name="submit" type="submit">Login</button></td></tr>
     </table>
   </form>
+  {% else %}
+    This server is running with an unprivileged connection. You cannot log in since write access to the database is required for features behind the log in system
+  {% endif %}
 {% endif %}
 
 {% if user_is_authenticated %}
@@ -42,11 +46,6 @@
       <tr>
         <td>Full Name:</td>
         <td><input name="full_name" value="{{info.user.full_name}}" size="50" tabindex="1" /></td>
-        <td/>
-      </tr>
-      <tr>
-        <td>E-Mail:</td>
-        <td><input name="email" value="{{info.user.email}}" size="50" tabindex="2" /></td>
         <td/>
       </tr>
       <tr>
@@ -88,6 +87,14 @@
     </tr>
    </table>
   </form>
+
+  <h2>Change Color Scheme</h2>
+
+  {% for color_scheme in all_colors %}
+  <form action="{{ url_for('.change_colors', scheme=color_scheme.code) }}" style="display: inline;">
+    <input class="color_selecter" style="background-color: {{ color_scheme.col_main_ld }}; color: {{ color_scheme.col_main_dl }}; border-color: {{ color_scheme.col_main_lg }}; width: 150px;" type="submit" value="{{ color_scheme.__class__.__name__ }}" rel="{{ url_for('css', color=color_scheme.code) }}">
+  </form>
+  {% endfor %}
 {% endif %}
 
 {# this script constructs a url and shows it as a link, just for testing #}
@@ -118,6 +125,10 @@ function checkpw() {
 $(function () {
   $("#pw1").keyup(function(evt) { evt.preventDefault(); checkpw(); });
   $("#pw2").keyup(function(evt) { evt.preventDefault(); checkpw(); });
+  /*$(".color_selecter").mouseenter(function (evt) {
+    $("link#style_css").attr("href",$(this).attr('rel'))});
+  $(".color_selecter").mouseleave(function (evt) {
+    $("link#style_css").attr("href","{{ url_for('css') }}")});*/
   checkpw();
 })
 </script>

@@ -1,0 +1,85 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_editor.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_uploader.js') }}"></script>
+<script type="text/javascript">
+    //Create a js object of the fields from server.
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var jsonTypes = {{ type_data|safe }};
+    var table_fields = {{table_fields | safe}};
+    var table_edit = {{table_edit | safe}};
+    var submitDest = "{{ url_for('inventory_app.submit_edits') }}";
+    {% if user_is_admin -%}
+      var editCNames = true;
+    {% else %}
+      var editCNames = false;
+    {% endif %}
+
+</script>
+<script type="text/javascript">
+    //Put in initial text and fit boxes to content
+    var startVisible = false;
+
+    function onReady() {
+      //Function to be called when data arrives
+      console.log( "Ready!" );
+        //Loop over blocks and fill text
+        for( var key in mainBlockList.blockList){
+            var block = mainBlockList.blockList[key];
+            $(escape_jq(block.docElementId)).val(String(block.text));
+        }
+      //Now try fetching a stored list and repopulating
+      retrieveBlockList();
+      //Finally, fit boxes to text
+      for( var key in mainBlockList.blockList){
+          var block = mainBlockList.blockList[key];
+          if(startVisible) fitToText(block.docElementId);
+          updateCNameLock(block, editCNames);
+      }
+
+      createTypePopButtons(mainBlockList, jsonTypes);
+    }
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
+      fetchAndPopulateData(mainBlockList, populateEditorPage, startVisible=startVisible);//Start fetching
+    });
+
+    //Store blocklist before a refresh
+    window.onunload = storeBlockList;
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} Editing <span id=nicename></span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>The following is the current inventory for this collection as of <span id=scandate></span>.</p>
+    <p>The "INFO" and "NOTES" fields show general information for this collection</p>
+    <p>Each normal key contains 3 fields: the value type, description and an example of a typical field. By default the type and example fields are auto-filled from the database. </p>
+    <p>After editing any fields you wish to change, press "Submit" to submit your changes</p>
+</div>
+<div id="specialsDiv">
+
+</div>
+<div id="dataDiv">
+
+</div>
+<p></p>
+<div id="buttons">
+      <span id='SubmitButton'>
+        <input type="button" class = "button" value="Submit" onclick="this.blur();submitEdits('{{ url_for('inventory_app.submit_edits') }}')" title="Submit Edits"/>
+      </span><span id='SubmitDummy'></span>
+        <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>
+        <input type="button" class = "button" value="Export" onclick="this.blur();exportAsJson()" title="Export Edits as JSON"/> <!--This button should auto-download a file containing the diffs -->
+        <input type="button" class = "button" id="importbutt" value="Import" onclick="this.blur();importJson()" title="Import Edits from JSON"/> <!--This button should auto-download a file containing the diffs -->
+
+</div>
+<div id="fileDropper" class="upload_div"></div>
+{% endblock main_body %}

@@ -1,0 +1,129 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.err is defined %}
+<p> {{info.err}}
+</p>
+{% else %}
+
+<p>
+Table of the dimensions of the spaces of {{
+KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi cusp forms') }}
+for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\) for {{
+KNOWL('mf.bianchi.level', title='levels') }} \(\mathfrak{n}\) ordered
+by norm, over \(K=\) {{info.field_pretty}}.
+</p>
+<p>
+{% if info.gl_or_sl == 'gl2_dims' %}
+  Each {{ KNOWL('mf.bianchi.level', title='level') }}  {{
+  KNOWL('nf.ideal_labels', title='label') }} is a link to a page
+  showing further details of the {{ KNOWL('mf.bianchi.spaces',
+  title='spaces of cusp forms') }} for that level.
+{% else %}
+
+{% endif %}
+</p>
+<p>
+  For each {{ KNOWL('mf.bianchi.weight', title='weight') }} $w$, we
+  show both the dimension $d$ of the space of cusp forms of weight
+  $w$, and the dimension $n$ of the {{ KNOWL('mf.bianchi.spaces',
+  title='new subspace') }}.
+</p>
+
+{% if info.number %}
+
+<form id='level_flag'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+{# We don't use matches.html since we want to call the results levels rather than matches #}
+<p>{{info.report | safe}}
+                    {# we have to decide which option is preselected
+                    based on a judgement of what users will want to
+                    switch to, i.e. one of the other two options.  For
+                    simplicity I have used the 3-cycle new -> all ->
+                    cusp -> new. #}
+                    {%-if info.level_flag=='new' %}
+                    showing only levels with positive new dimension.
+                    <select name='level_flag'>
+                      <option value='all' selected>Show all levels</option>
+                      <option value='cusp'>Show only levels with positive cuspidal dimension</option>
+                      <option value='new'>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-elif info.level_flag=='cusp' %}
+                    showing only levels with positive cuspidal dimension.
+                    <select name='level_flag'>
+                      <option value='all'>Show all levels</option>
+                      <option value='cusp'>Show only levels with positive cuspidal dimension</option>
+                      <option value='new' selected>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-else %}
+                    showing all levels.
+                    <select name='level_flag'>
+                      <option value='all'>Show all levels</option>
+                      <option value='cusp' selected>Show only levels with positive cuspidal dimension</option>
+                      <option value='new'>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-endif %}
+<button type='submit' value='Go'>Go</button>
+</p>
+</form>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="level_flag" value="{{info.level_flag}}"/>
+
+<div align=left>
+  {% include 'forward_back.html' %}
+
+<p>
+  <table border=2>
+<tr>
+<th style="border-left:none; border-top:none;" >&nbsp;</th>
+<th style="border-left:none; " >{{ KNOWL('mf.bianchi.weight', title='weight') }}</th>
+{% for k in info.weights %}
+<th colspan=2>{{k}}</th>
+{% endfor %}
+</tr>
+<tr>
+<th>{{ KNOWL('mf.bianchi.level', title='level label') }} </th>
+<th>norm</th>
+{% for k in info.weights %}
+<th>$d$</th> <th>$n$</th>
+{% endfor %}
+</tr>
+{% for data in info.dimtable %}
+<tr>
+{% if info.gl_or_sl == 'gl2_dims' %}
+<td align=right><a href={{data.level_space}}>{{data.level_label}}</a></td>
+{% else %}
+<td align=right>{{data.level_label}}</td>
+{% endif %}
+<td align=right>{{data.level_norm}}</td>
+{% for k in info.weights %}
+<td align=center>
+  {% if data.dims[k]['d'] == '?' %}
+  &nbsp;</td><td>&nbsp;
+  {% else %}
+  {{data.dims[k]['d']}} </td><td>{{data.dims[k]['n']}}
+  {% endif %}
+</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+</p>
+
+{% include 'forward_back.html' %}
+
+</div>
+</form>
+{% else %}
+<p>
+No data available for {{info.field_pretty}}
+</p>
+{% endif %}
+{% endif %}
+
+{% endblock %}

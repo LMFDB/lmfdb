@@ -3,9 +3,11 @@
 import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
-from sage.all import Infinity, imag_part, real_part
-from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
+from sage.all import Infinity, imag_part, real_part
+
+from lmfdb.utils import splitcoeff, pair2complex
+from Lfunctionutilities import string2number
 
 def parse_complex_number(z):
     """convert a string representing a complex number to another string looking like "(x,y)"
@@ -33,7 +35,7 @@ def createLcalcfile_ver2(L, url):
     try:
         thefile += "###     type = %s\n" % L.Ltype()
         thefile += "### Data passed to lcalc wrapper, if it is used: \n"
-        thefile += "###     title = %s \n" % L.title
+        thefile += "###     title = %s \n" % L.info['title']
         thefile += "###     coefficient_type = %s \n" % L.coefficient_type
         thefile += "###     dirichlet_coefficients = %s \n" % L.dirichlet_coefficients[:50]
         thefile += "###         (here limited to 50, but in reality %s are passed )\n" % len(

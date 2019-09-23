@@ -68,29 +68,29 @@ The database contains {{dbcount}} Maass forms of weight 0 on $\Gamma_0(N)$ for $
 	<input type="hidden" name="rec_start" value="0"> 
 	<table class="">
 	  <tr>
-	    <td>Level in range:</td>
+	    <td>{{ KNOWL('mf.maass.mwf.level','Level range') }}</td>
 	    <td> 
-	      <input type="text" name="level_range" value="" placeholder="1..10"> 
+	      <input type="text" name="level_range" value="" placeholder="1..10" size=10> 
 	    </td>
 	  </tr>
 	  <tr>
-	    <td>R in range:</td>
+	    <td>{{ KNOWL('mf.maass.mwf.spectralparameter','Spectral parameter range') }}</td>
 	    <td> 
-	      <input type="text" name="ev_range" value="" placeholder="9.5..10.5">
+	      <input type="text" name="ev_range" value="" placeholder="9.5..10.5" size=10>
             </td>
 	  </tr>
 
 	  <tr>
-	    <td>Weight:</td>
+	    <td>{{ KNOWL('mf.maass.mwf.weight','Weight') }}</td>
 	    <td> 
-	      <input type="text" name="weight" value="" placeholder="0"/> 
+	      <input type="text" name="weight" value="" placeholder="0" size=10> 
 	      <span class="formexample"> (leave blank for weight 0)</span>
 	    </td>
 	  </tr>
 	  <tr>
-	    <td>Character:</td>
+	    <td>{{ KNOWL('mf.maass.mwf.character','Character') }}</td>
       <td>
-        <input type="text" name="character" value="" placeholder="1"/>
+        <input type="text" name="character" value="" placeholder="1" size=10>
           <span class="formexample">(1 means trivial character, leave blank for all characters)</span>
       </td>
 	  </tr>

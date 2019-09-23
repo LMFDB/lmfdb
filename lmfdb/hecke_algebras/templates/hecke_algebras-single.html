@@ -1,0 +1,73 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% if info.num_orbits==0 %}
+
+<div>The Hecke algebra with {{KNOWL('hecke_algebras.label', title='label')}} ${{info.label}}$ is trivial: there are no modular forms of level ${{info.level}}$ and weight ${{info.weight}}$.</div>
+
+{% else %}
+<table>
+    <tr><td align=right>{{ KNOWL('cmf.level', title='Level') }}:</td><td>{{info.level}}</td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.weight', title='Weight') }}:</td><td>{{info.weight}}</td></tr>
+    <tr><td align=right>{{KNOWL('hecke_algebras.dimension', title='Dimension')}}:</td><td>{{info.dim_alg}}</td></tr>
+    <tr><td align=right>{{KNOWL('hecke_algebras.label', title='Label')}}:</td><td>{{info.label}}</td></tr>
+</table>
+
+
+
+{% if info.orbits %}
+<h2>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}</h2>
+<div><table>
+    <tr><td align="center">{{KNOWL('hecke_algebras.label', title='Label')}}</td><td align="center">Dimension</td></tr>
+    {% for j in info.orbits %}
+        <tr><td align="center"><a href="#{{loop.index}}">{{j.orbit_label}}</a></td><td align="center">{{j.dim}}</td></tr>
+    {% endfor %}
+</table></div>
+
+</br>
+    {% for j in info.orbits %}
+        <hr>
+        <h3><a name="{{loop.index}}">{{ KNOWL('cmf.hecke_orbit', title='Hecke orbit')}} {{j.orbit_label}}</a></h3>
+        <table>
+        <tr><td align= right>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbit')}} dimension:</td><td valign= bottom>{{j.dim}}</td></tr>
+        {% if j.hecke_op_display == [] %}
+            <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+        {% else %}
+            <tr rowspan=2><td align= right valign= top>Hecke operators:</td><td>
+            {% for m in j.hecke_op_display %}
+                $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
+            {% endfor %}</td></tr>
+            <tr><td></td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+        {% endif %}
+        {%if j.Zbasis %}
+            {% if j.gen_display == [] %}
+                <tr><td align= right valign= top>$\Z$-basis:</td><td>Download the basis for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+            {% else %}
+                <tr><td align= right valign= top>$\Z$-basis:</td><td>
+                {% for n in j.gen_display %}
+                    ${{n}}${% if not loop.last %},  {% endif %}
+                {% endfor %}</td></tr>
+                <tr><td></td><td>Download the basis for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+            {% endif %}
+                <tr><td align= right>Discriminant as $\Z$-algebra:</td><td>
+                {% if j.discriminant ==1 %}
+                    1
+                {% else %}
+                    ${{j.discriminant}}={% for k in j.disc_fac %}{{k[0]}}{% if k[1] !=1 %}^{ {{k[1]}} }{% endif %}{% if not loop.last %}\cdot  {% endif %}{% endfor %}$
+                {% endif %}</td></tr>
+                <tr><td align= right>Inner twists:</td><td>{{j.inner_twists}}</td></tr>
+                <tr><td align= right>$\Q$-basis:</td><td>${% for n in j.Qbasis %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
+                <tr><td align= right>{{KNOWL('hecke_algebras.generator', title='Generator')}} as $\Q$-algebra:</td><td>${% for n in j.Qalg_gen %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
+        {% endif %}
+        </table>
+        <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic and mod &#x2113; data for &#x2113;=
+        {% for i in info.l_adic %}
+             <a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage_l_adic', orbit_label=j.orbit_label, prime=i)}}">{{i}}</a>{% if not loop.last %}, {% endif %}
+        {% endfor %}</p>
+    {% endfor %}
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

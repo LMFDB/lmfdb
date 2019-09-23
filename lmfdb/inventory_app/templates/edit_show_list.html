@@ -1,0 +1,130 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+
+<script type="text/javascript">
+var pageId = {'db':"{{db_name}}", 'collection':null};
+var submittedNice = null;
+
+function promptNiceName(input, element, info){
+  var newName = window.prompt("New Nice Name", input.id);
+  console.log(info, element);
+  if(newName){
+    console.log( new ResponseBlock('top_level', 'nice_name', newName));
+    var diff = makeDiff([new ResponseBlock('top_level', 'nice_name', newName)], info);
+    console.log(newName, diff);
+    var dest = '{{ url_for('inventory_app.submit_edits') }}';
+    var callback = function(){ flashName(element);}
+    submittedNice = newName;
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:false, call: callback});
+  }
+}
+
+function flashName(item){
+  el = document.getElementById(item);
+  console.log(el.innerHTML);
+  if(submittedNice) el.innerHTML = submittedNice;
+  el.classList.add('strongH2');
+}
+
+function promptStatus(input, element, info){
+  $("#dialog").data('info', info);
+  $("#dialog").dialog({
+      buttons: {
+          live: function() {
+              updateStatus('live', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          ops: function() {
+              updateStatus('ops', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          beta: function() {
+              updateStatus('beta', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          old: function() {
+              updateStatus('old', $(this).data('info'));
+              $(this).dialog("close");
+          }
+      },
+      width: "400px"
+  });
+}
+
+function updateStatus(newStatus, info){
+    if(newStatus == 'ops' && !window.confirm("Ops collections are not displayed. Are you sure you wish to set this status?")){
+      return;
+    }
+    var diff = makeDiff([new ResponseBlock('top_level', 'status', newStatus)], info);
+    var dest = '{{ url_for('inventory_app.submit_edits') }}';
+//    var callback = function(){ flashName(element);}
+      var callback = null;
+//    submittedNice = newName;
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:true, call: callback});
+}
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+  {% if db_name is none: %}
+    Available Databases
+  {% else: %}
+    Available  Collections in <span name='nicename'>{{nice_name}}</span> [{{db_name}}]
+  {% endif %}
+{% endblock title_block %}
+
+{% block main_body %}
+  <div id='dialog'></div>
+  {% if lockout %}
+    <h1 class='warn'> Editing functions are not available at this time </h1>
+  {% endif %}
+  <div class='listing'>
+  <!-- Omit ops dbs  Note if you set one to 'ops' and refresh it will be GONE!! This is why there's a confirmation dialog-->
+  {% for item in listing if (db_name is none or item[3] != 'ops') %}
+  <div class='unbreaking'>
+    {% if db_name is none %}
+      <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
+      Contains {{item[2]}} collections</br>
+      {% if user_is_authenticated and not lockout %}
+        <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {db:"{{item[0]}}"})'>
+      {% else %}
+        <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
+      {% endif %}
+
+    {% else %}
+      <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span>
+         <span class='status'>{{item[3]}}</span></h2>
+      <!--Contains {{item[2][0]}} records of {{item[2][1]}} types-->
+    </br>
+      {% if user_is_authenticated and not lockout and not item[4] %}
+        <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
+        <input type='button' id = '{{item[1]}}' value ='Edit Status' onclick='promptStatus(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
+        <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
+        </br></br>
+        <!--<a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
+        <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
+        <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a> -->
+      {% elif user_is_authenticated and not lockout %}
+          <input type='button' value ='Edit Nice Name' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <input type='button' value ='Edit Status' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <input type='button' value ='Edit Inventory' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <!--<a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
+          <input type='button' value ='Edit Record Types' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a> -->
+      {% else %}
+        <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
+        <input type='button' value ='Edit Status' title ='Please login to edit' disabled class=disabledbutton>
+        <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
+        <!--<a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
+        <input type='button' value ='Edit Record Types' title ='Please login to edit' disabled class=disabledbutton>
+        <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a> -->
+      {% endif %}
+
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock main_body %}

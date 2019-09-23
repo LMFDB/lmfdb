@@ -1,6 +1,8 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
+<style>
+<div.ratpts>span { white-space: nowrap; font-family: serif; }
+</style>
 
 <!--New table class to avoid spacing in LaTeX-links -->
 <style type="text/css">
@@ -24,17 +26,10 @@ function show_invs(invstyle) {
   }
 </script>
 
-<script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script>
-<script type="text/javascript"
-        src="http://place_code.jquery.com/jquery-latest.min.js"></script>
+
 {#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
-
-{% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 
 <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 {{place_code('curve')}}
@@ -197,54 +192,96 @@ function show_invs(invstyle) {
     </tr>
 </table>
 
-{{place_code('num_rat_wpts')}}
-<br>
-<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.num_rat_wpts}}\)
+<h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
-<br>
+<p>
 {{place_code('locally_solvable')}}
-<br>
-<h3 class="inline"> {{ KNOWL('g2c.locally_solvable', title='Locally solvable') }}: </h3>{{data.locally_solvable}}
+</p>
+<p> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
-<br>
+{% if data.rat_pts_v > 0 %}
+<p>
+{{place_code('rat_pts')}}
+</p>
+<p>
+{% if data.rat_pts_v == 1 %}
+{% if data.rat_pts %}
+{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: {{data.rat_pts}}
+{% else %}
+{{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
+{% endif %}
+{% else %}
+{% if data.rat_pts %}
+{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: {{data.rat_pts}}
+{% else %}
+There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
+{% endif %}
+{% endif %}
+{% endif %}
+</p>
+
+<p>
+{{place_code('num_rat_wpts')}}
+</p>
+<p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
+
+
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
-<h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.analytic_rank}}\)
+<p> 
+{% if data.analytic_rank > 1 %}
+{{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: \({{data.analytic_rank}}\)
+{% else %}
+{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}: \({{data.analytic_rank}}\)
+{% endif %}
+</p>
 
-<br>
+<!--
+<p>
+{{place_code('mw_rank')}}
+</p>
+{% if data.mw_rank_v %}
+<h3 class="inline"> {{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}: </h3>\({{data.mw_rank}}\)
+{% endif %}
+-->
+
+<p>
 {{place_code('two_selmer')}}
-<br>
-<h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.two_selmer_rank}}\)
+</p>
+<p> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: \({{data.two_selmer_rank}}\)</p>
 
-<br>
+<p>
 {{place_code('has_square_sha')}}
-<br>
-<h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.has_square_sha}}
+</p>
+<p> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: {{data.has_square_sha}}</p>
 
-<br>
+<p>
 {{place_code('tamagawa')}}
-<br>
-<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>
-{{data.tama}}
+</p>
+<p> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: {{data.tama}}</p>
 
-<br>
+<p>
 {{place_code('torsion_subgroup')}}
-<br>
-<h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
+</p>
+<p> {{ KNOWL('g2c.torsion', title='Torsion') }}: \({{data.torsion_subgroup}}\)</p>
 
-<br>
+<p>
+{{place_code('two_torsion_field')}}
+</p>
+<p><div style="display: inline">{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</div></p>
+
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
-<table>
-    <tr>
-        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
-    </tr>
-    <tr>
-        <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
-    </tr>
-</table>
-
-<br>
+<p>
+    <table>
+        <tr>
+            <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
+        </tr>
+        <tr>
+            <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
+        </tr>
+    </table>
+</p>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
 
@@ -278,7 +315,5 @@ Same for all other occasions of it.-->
 {{data.end_lattice_statement|safe}}
 <p></p>
 {% endif %}
-
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

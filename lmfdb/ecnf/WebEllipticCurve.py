@@ -2,33 +2,41 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
-from lmfdb.WebNumberField import WebNumberField
+from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
+                      implicit_plot, plot, prod, rainbow, sqrt, text, var)
+from lmfdb import db
+from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
+                         web_latex_split_on, web_latex_ideal_fact)
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+                                        get_instances_by_Lhash_and_trace_hash)
 
-ecnf = None
-ecnfstats = None
-nfdb = None
+# For backwards compatibility of labels of conductors (ideals) over
+# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
+# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
+# 2. N.c.d
+# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
+#
+# Converting 1->2 is trivial and 2->3 is done via a stored lookup
+# table, which contains entries for the five Euclidean imaginary
+# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
+#
 
-def db_ecnf():
-    global ecnf
-    if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves
-    return ecnf
-
-def db_ecnfstats():
-    global ecnfstats
-    if ecnfstats is None:
-        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
-    return ecnfstats
-
-def db_nfdb():
-    global nfdb
-    if nfdb is None:
-        nfdb = getDBConnection().numberfields.fields
-    return nfdb
+def convert_IQF_label(fld, lab):
+    if fld.split(".")[:2] != ['2','0']:
+        return lab
+    newlab = lab
+    if lab[0]=='[':
+        newlab = lab[1:-1].replace(",",".")
+    if len(newlab.split("."))!=3:
+        return newlab
+    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
+    if newlab:
+        if newlab!=lab:
+            print("Converted label {} to {} over {}".format(lab, newlab, fld))
+        return newlab
+    return lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -49,12 +57,6 @@ def FIELD(label):
     nf.latex_poly = web_latex(nf.poly())
     return nf
 
-def make_field(label):
-    global field_list
-    if not label in field_list:
-        field_list[label] = FIELD(label)
-    return field_list[label]
-
 def parse_NFelt(K, s):
     r"""
     Returns an element of K defined by the string s.
@@ -65,8 +67,11 @@ def parse_ainvs(K,ainvs):
     return [parse_NFelt(K,ai) for ai in ainvs.split(";")]
 
 def web_ainvs(field_label, ainvs):
-    K = make_field(field_label).K()
-    return web_latex(parse_ainvs(K,ainvs))
+    K = FIELD(field_label).K()
+    ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
+    ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
+    ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
+    return ainvsinlatex
 
 from sage.misc.all import latex
 def web_point(P):
@@ -78,7 +83,7 @@ def ideal_from_string(K,s, IQF_format=False):
     it is of the form "[N,a,alpha]" where N is the norm, a the least
     positive integer in the ideal and alpha a second generator so that
     the ideal is (a,alpha).  alpha is a polynomial in the variable w
-    which represents the generator of K (but may actially be an
+    which represents the generator of K (but may actually be an
     integer).  """
     #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
@@ -96,6 +101,11 @@ def ideal_from_string(K,s, IQF_format=False):
         return I
     else:
         return "wrong" ## caller must check
+
+def pretty_ideal(I):
+    easy = I.number_field().degree()==2 or I.norm()==1
+    gens = I.gens_reduced() if easy else I.gens()
+    return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
 
 # HNF of an ideal I in a quadratic field
 
@@ -234,7 +244,7 @@ class ECNF(object):
         """
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
-        self.field = make_field(self.field_label)
+        self.field = FIELD(self.field_label)
         self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
@@ -243,12 +253,14 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
-        data = db_ecnf().find_one({"label": label})
+        data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
 
     def make_E(self):
+        #print("Creating ECNF object for {}".format(self.label))
+        #sys.stdout.flush()
         K = self.field.K()
 
         # a-invariants
@@ -257,8 +269,13 @@ class ECNF(object):
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        N = ideal_from_string(K,self.conductor_ideal)
-        self.cond = web_latex(N)
+        if self.conductor_norm==1:
+            N = K.ideal(1)
+        else:
+            N = ideal_from_string(K,self.conductor_ideal)
+        # The following can trigger expensive computations!
+        #self.cond = web_latex(N)
+        self.cond = pretty_ideal(N)
         self.cond_norm = web_latex(self.conductor_norm)
         local_data = self.local_data
 
@@ -281,12 +298,12 @@ class ECNF(object):
         if not self.is_minimal:
             Pmin = self.non_min_primes[0]
             P_index = badprimes.index(Pmin)
-            self.non_min_prime = web_latex(Pmin)
+            self.non_min_prime = pretty_ideal(Pmin)
             disc_ords[P_index] += 12
 
         if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
             self.fact_cond = self.cond
-            self.fact_cond_norm = self.cond
+            self.fact_cond_norm = '1'
         else:
             Nfac = Factorization([(P,ld['ord_cond']) for P,ld in zip(badprimes,local_data)])
             self.fact_cond = web_latex_ideal_fact(Nfac)
@@ -295,22 +312,21 @@ class ECNF(object):
 
         # D is the discriminant ideal of the model
         D = prod([P**e for P,e in zip(badprimes,disc_ords)], K.ideal(1))
-        self.disc = web_latex(D)
+        self.disc = pretty_ideal(D)
         Dnorm = D.norm()
         self.disc_norm = web_latex(Dnorm)
         if Dnorm == 1:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
-            self.fact_disc_norm = self.disc
+            self.fact_disc_norm = '1'
         else:
             Dfac = Factorization([(P,e) for P,e in zip(badprimes,disc_ords)])
             self.fact_disc = web_latex_ideal_fact(Dfac)
             Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
             self.fact_disc_norm = web_latex(Dnormfac)
 
-
         if not self.is_minimal:
             Dmin = ideal_from_string(K,self.minD)
-            self.mindisc = web_latex(Dmin)
+            self.mindisc = pretty_ideal(Dmin)
             Dmin_norm = Dmin.norm()
             self.mindisc_norm = web_latex(Dmin_norm)
             if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
@@ -348,6 +364,12 @@ class ECNF(object):
         # store the factorization of the denominator of j and display
         # that, which is the most interesting part.
 
+        # The equation is stored in the database as a latex string.
+        # Some of these have extraneous double quotes at beginning and
+        # end, shich we fix here.  We also strip out initial \( and \)
+        # (if present) which are added in the template.
+        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','')
+
         # Images of Galois representations
 
         if not hasattr(self,'galois_images'):
@@ -365,12 +387,6 @@ class ECNF(object):
         self.End = "\(\Z\)"
         if self.cm:
             self.rational_cm = K(self.cm).is_square()
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
-            self.cm_nramp = len(self.cm_ramp)
-            if self.cm_nramp==1:
-                self.cm_ramp = self.cm_ramp[0]
-            else:
-                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
             self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = "yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -378,8 +394,20 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
-            # The line below will need to change once we have curves over non-quadratic fields
-            # that contain the Hilbert class field of an imaginary quadratic field
+
+        # Galois images in CM case:
+        if self.cm and self.galois_images != '?':
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_nramp = len(self.cm_ramp)
+            if self.cm_nramp==1:
+                self.cm_ramp = self.cm_ramp[0]
+            else:
+                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+
+        # Sato-Tate:
+        # The lines below will need to change once we have curves over non-quadratic fields
+        # that contain the Hilbert class field of an imaginary quadratic field
+        if self.cm:
             if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
                 self.ST = st_link_by_name(1,2,'U(1)')
             else:
@@ -388,12 +416,16 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = "no"
         try:
-            if self.q_curve:
+            qc = self.q_curve
+            if qc == True:
                 self.qc = "yes"
-        except AttributeError:  # in case the db entry does not have this field set
-            pass
+            elif qc == False:
+                self.qc = "no"
+            else: # just in case
+                self.qc = "not determined"
+        except AttributeError:
+            self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -445,10 +477,22 @@ class ECNF(object):
                 pass
 
         # Local data
+
+        # Fix for Kodaira symbols, which in the database start and end
+        # with \( and \) and may have multiple backslashes.  Note that
+        # to put a single backslash into a python string you have to
+        # use '\\' which will display as '\\' but only counts as one
+        # character in the string.  which are added in the template.
+        def tidy_kod(kod):
+            while '\\\\' in kod:
+                kod = kod.replace('\\\\', '\\')
+            kod = kod.replace('\\(','').replace('\\)','')
+            return kod
+
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
+            ld['kod'] = tidy_kod(ld['kod'])
 
         # URLs of self and related objects:
         self.urls = {}
@@ -463,13 +507,7 @@ class ECNF(object):
 
         # Isogeny information
 
-        if self.number==1:
-            isogmat = self.isogeny_matrix
-        else:
-            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
-        self.class_deg = max([max(d) for d in isogmat])
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db_ecnf().count({'class_label':self.class_label})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             self.isogeny_degrees = " and ".join(isodegs)
@@ -484,19 +522,39 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if sig[0] <= 2 and db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
+            elif self.abs_disc ** 2 * self.conductor_norm < 70000:
+                # we shouldn't trust the Lfun computed on the fly for large conductor
+                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
+            self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
 
+        # most of this code is repeated in isog_class.py
+        # and should be refactored
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
-        if totally_real:
-            self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-            self.friends += [('L-function', self.urls['Lfunction'])]
+        if totally_real and not 'Lfunction' in self.urls:
+            self.friends += [('Hilbert modular Form ' + self.hmf_label, self.urls['hmf'])]
+
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            if "CM" in self.label:
+                self.friends += [('Bianchi modular Form is not cuspidal', '')]
+            elif not 'Lfunction' in self.urls:
+                if db.bmf_forms.label_exists(self.bmf_label):
+                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
+                else:
+                    self.friends += [('(Bianchi modular Form %s)' % self.bmf_label, '')]
+
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
@@ -505,7 +563,7 @@ class ECNF(object):
         # Plot
         if K.signature()[0]:
             self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
-            self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
 
         self.properties += [
@@ -519,7 +577,8 @@ class ECNF(object):
             self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('Q-curve', self.qc)]
+            self.properties += [('base-change', 'no')]
+        self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
         if r == "?":
@@ -534,6 +593,29 @@ class ECNF(object):
 
         self._code = None # will be set if needed by get_code()
 
+        self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
+        for lang in [["Magma","magma"], ["SageMath","sage"], ["GP", "gp"]]:
+            self.downloads.append(('Code to {}'.format(lang[0]),
+                                   url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
+                                           class_label=self.iso_label, number=self.number, download_type=lang[1])))
+
+
+        if 'Lfunction' in self.urls:
+            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
+            if Lfun is None:
+                self.friends += [('L-function not available', "")]
+            else:
+                instances = get_instances_by_Lhash_and_trace_hash(
+                    Lfun['Lhash'],
+                    Lfun['degree'],
+                    Lfun.get('trace_hash'))
+                exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                         if elt[1]}
+                self.friends += names_and_urls(instances, exclude=exclude)
+                self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
+
     def code(self):
         if self._code == None:
             self.make_code_snippets()
@@ -543,7 +625,7 @@ class ECNF(object):
         # read in code.yaml from current directory:
 
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
         # Fill in placeholders for this specific curve:
 
@@ -552,6 +634,8 @@ class ECNF(object):
             pol = str(self.field.poly())
             if lang=='pari':
                 pol = pol.replace('x',gen)
+            elif lang=='magma':
+                pol = str(self.field.poly().list())
             self._code['field'][lang] = (self._code['field'][lang] % pol).replace("<a>", "<%s>" % gen)
 
         for lang in ['sage', 'magma', 'pari']:

@@ -2,10 +2,6 @@
 
 {% block content %}
 
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
-
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
@@ -16,8 +12,8 @@
     <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>${{info.minimum }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>${{info.kissing }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 {% if info.dim == 1 %}
@@ -103,17 +99,13 @@
 
 
 {% if info.name != "" %}
-<p>This {{ KNOWL('lattice.definition', title='integral lattice') }} {{KNOWL('lattice.name', title='is')}} the {{ info.name }} lattice.</p>
+<p>This {{ KNOWL('lattice.definition', title='integral lattice') }} is the {{ info.name }} lattice.</p>
 {% endif %}
 
 {% if info.comments != "" %}
 <p>{{info.comments}}.</p>
 {% endif %}
 {% endif %}
-
-
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">
 var number_of_coefficients = 20;
@@ -122,8 +114,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "theta_output"]);
+            {# render the output #}
+            renderMathInElement($("#theta_output").get(0), katexOpts);
         });
 }
 $(function() {

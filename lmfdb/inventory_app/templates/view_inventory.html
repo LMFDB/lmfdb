@@ -1,0 +1,50 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_viewer.js') }}"></script>
+<script type="text/javascript">
+    //Create a js object of the fields from server.
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var table_fields = {{table_fields | safe}};
+    var info_fields = {{info_fields | safe}};
+
+</script>
+<script type="text/javascript">
+    //Put in initial text and fit boxes to content
+
+    function onReady() {
+      console.log( "Ready!" );
+    }
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
+      fetchAndPopulateData(mainBlockList, populateViewerPage, startVisible=true);//Start fetching
+    });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} Showing <span id=nicename></span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>The following is the inventory for this collection (last refreshed on <span id=scandate></span>) </p>
+</div>
+<div id="specialsDiv">
+<h2>Collection information</h2>
+</div>
+<div id="dataDiv">
+<h2>List of keys in the database</h2>
+<p>  The following keys appear in this table of the LMFDB
+<br>If no non-empty record can be found, the field is highlighted in blue.
+Only the first 100 characters of the example record are shown</br>
+</p>
+</div>
+<p></p>
+<input type="button" class = "button" id="downloadbutt" value="Download Data" onclick="this.blur();fetchAndDownloadData('inventory')" title="Download Page Data"/>
+
+{% endblock main_body %}

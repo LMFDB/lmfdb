@@ -1,0 +1,8 @@
+
+{% import 'color.css' as color %}
+
+.disabledbutton{
+    background-color :  {{color.button_background_inactive}}  !important;
+    color : #b3b3b3;
+    border: 2px solid {{color.button_border_inactive}};
+}

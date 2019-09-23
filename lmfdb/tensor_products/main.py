@@ -2,17 +2,15 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
-import pymongo
-ASC = pymongo.ASCENDING
-from lmfdb.base import  getDBConnection
+from lmfdb import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
 from galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
-from lmfdb.WebCharacter import WebDirichletCharacter
-from lmfdb.modular_forms.elliptic_modular_forms.backend import WebNewForm
+from lmfdb.characters.web_character import WebDirichletCharacter
+from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey, WebNewform
 from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
 from lmfdb.lfunctions.main import render_lfunction_exception
 
@@ -20,7 +18,7 @@ from lmfdb.lfunctions.main import render_lfunction_exception
 
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.l_function_top_page")),
-          ("Tensor products", url_for(".index"))]
+          ("Tensor Products", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -28,7 +26,7 @@ def get_bread(breads=[]):
 @tensor_products_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("tensor_products_index.html", title="Tensor products", bread=bread)
+    return render_template("tensor_products_index.html", title="Tensor Products", bread=bread)
 
 @tensor_products_page.route("/navigate/")
 def navigate():
@@ -37,7 +35,7 @@ def navigate():
 
     type1 = args.get('type1')
     type2 = args.get('type2')
-    return render_template("tensor_products_navigate.html", title="Tensor products navigation", bread=bread, type1=type1 , type2=type2)
+    return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1 , type2=type2)
 
 @tensor_products_page.route("/show/")
 def show():
@@ -134,11 +132,9 @@ def zeros(L):
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 def galois_rep_from_path(p):
-    C = getDBConnection()
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]+"."+p[3]+p[4]})
-        ainvs = [int(a) for a in data['ainvs']]
+        ainvs = db.ec_curves.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 
@@ -148,12 +144,13 @@ def galois_rep_from_path(p):
         return GaloisRepresentation(chi)
  
     elif (p[0]=='ModularForm'):
-        N = int(p[4])
-        k = int(p[5])
-        chi = p[6] # this should be zero; TODO check this is the case
-        label = p[7] # this is a, b, c, etc.; chooses the galois orbit
+        level = int(p[4])
+        weight = int(p[5])
+        conrey_label = p[6] # this should be zero; TODO check this is the case
+        hecke_orbit = p[7] # this is a, b, c, etc.; chooses the galois orbit
         embedding = p[8] # this is the embedding of that galois orbit
-        form = WebNewForm(N, k, chi=chi, label=label) 
+        label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
+        form = WebNewform(label)
         return GaloisRepresentation([form, ZZ(embedding)])
 
     elif (p[0]=='ArtinRepresentation'):

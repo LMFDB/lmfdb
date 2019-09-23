@@ -6,7 +6,6 @@
 </style>
 
 {#
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
 
 </script><style type="text/css">
   .sagecell .CodeMirror-scroll {
@@ -53,7 +52,7 @@ cellpadding="5";
 
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
 <div style='overflow-x:auto; overflow-y:hidden'>
-{{ ec.equation }}
+\({{ ec.equation }}\)
 </div>
     {{ place_code('curve') }}
 <p>
@@ -186,7 +185,7 @@ cellpadding="5";
 </div>
 
 <div>
-<h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
+<h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
 {% if ec.rk == "?" %}
 {% if ec.rk_bnds != "not available" %}
 <b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
@@ -215,9 +214,9 @@ Generators:
 </p>
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
-Height:
+{{ KNOWL('ec.canonical_height', title="Height") }}:
 {% else %}
-Heights:
+{{ KNOWL('ec.canonical_height', title="Heights") }}:
 {% endif %}</b>
 {% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
 </p>
@@ -226,7 +225,7 @@ Heights:
  {{ place_code('gens') }}
 
 <p>
-<b>Regulator:</b>
+<b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
 {{ ec.reg }}
  {{ place_code('reg') }}
 </p>
@@ -268,6 +267,9 @@ Heights:
 <th>{{KNOWL('ec.tamagawa_number', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
+{% if ec.local_data.0.rootno %}
+<th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
+{% endif %}
 <th>{{KNOWL('ec.conductor_valuation', title='ord(\(\mathfrak{N}\))')}}</th>
 <th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
 <th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
@@ -278,13 +280,13 @@ Heights:
 {{pr.p}}
 </td>
 <td align=center>
-{{pr.norm}}
+\({{pr.norm}}\)
 </td>
 <td align=center>
 \({{pr.cp}}\)
 </td>
 <td align=center>
-{{pr.kod}}
+\({{pr.kod}}\)
 </td>
 <td align=center>
 {% if pr.red==0 %}
@@ -297,9 +299,12 @@ Heights:
     Good
 {% endif %}
 </td>
-<td align=center>{{pr.ord_cond}}</td>
-<td align=center>{{pr.ord_disc }}</td>
-<td align=center>{{pr.ord_den_j}}</td>
+{% if pr.rootno %}
+<td align=center>\({{pr.rootno}}\)</td>
+{% endif %}
+<td align=center>\({{pr.ord_cond}}\)</td>
+<td align=center>\({{pr.ord_disc }}\)</td>
+<td align=center>\({{pr.ord_den_j}}\)</td>
 </tr>
 {% endfor %}
 </table>
@@ -381,14 +386,15 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 </div>
 
 <div>
-  <h2> Isogenies </h2>
+  <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
 {% if ec.isogeny_degrees %}
-This curve has non-trivial cyclic isogenies {% if ec.rational_cm %}
+This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
 (excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
 {{ ec.isogeny_degrees}}.
 <br>
-Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
+Its {{KNOWL('ec.isogeny_class','isogeny class')}}
+<a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
 consists of {{ec.ncurves}} curves linked by isogenies of
 {% if ec.one_deg %}degree{% else %}degrees dividing {% endif %}
 {{ec.class_deg}}.
@@ -397,6 +403,26 @@ This curve has no rational isogenies{% if ec.rational_cm %} other than
 endomorphisms{% endif %}.
 Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   consists of this curve only.
 </p>
+{% endif %}
+</div>
+
+<div>
+<h2> {{KNOWL('ec.base_change','Base change')}} </h2>
+This curve {% if ec.base_change %} is the
+{{KNOWL('ec.base_change','base-change')}} of elliptic curves
+{% for E0 in ec.base_change%}
+<a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
+{% endfor %}
+defined over \(\Q\), so it is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% else %}
+is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
+{% if ec.qc=="yes" %}
+It is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% elif ec.qc=="no" %}
+It is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% else %}
+It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% endif %}
 {% endif %}
 </div>
 

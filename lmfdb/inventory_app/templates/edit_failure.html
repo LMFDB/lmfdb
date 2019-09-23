@@ -1,0 +1,32 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+  <script type="text/javascript">
+
+  function composeEmail() {
+    var email = "{{submit_contact}}";
+    var subject = "Inventory Edit "+"{{message}}";
+    //Use the failure message and add other useful info such as browser info
+    var emailBody = "{{message}} %0D%0A" +"Browser "+navigator.userAgent;
+    console.log("mailto:"+email+"?subject="+subject+"&body="+emailBody);
+    document.location = "mailto:"+email+"?subject="+subject+"&body="+emailBody;
+    return false;
+   };
+
+</script>
+
+{% endblock extra_script %}
+
+{% block title_block %}
+    Failed to submit edits.
+{% endblock title_block %}
+
+{% block main_body %}
+    <p>Submission error was <span class='err'>{{message}} </span></p>
+    <p>Please contact {{submit_contact}} with this information or click
+    <a href="#" onClick="composeEmail()">here</a>
+    to compose an email automatically. NOTE: this will include basic information about your browser and attempted edits. Please review the information before sending.
+
+    </p>
+    <p>Click <a href={{new_url}}> here</a> to return to the page you were editing. Your changes should be preserved if you have cookies enabled.</p>
+{% endblock main_body %}

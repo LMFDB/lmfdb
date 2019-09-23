@@ -2,78 +2,69 @@
 
 {% block content %}
 
-<form id="re-search">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
 <tr>
-<td align=left> 
-{{KNOWL('hgm.degree',title='Degree')}}:</td><td align=left> <input type='text' name='degree' size="8" value="{{info.degree}}" example='4'>
-</td>
-<td> {{KNOWL('hgm.weight', title="weight")}} </td>
+<td align=left> {{KNOWL('hgm.degree',title='Degree')}}</td>
+<td> {{KNOWL('hgm.weight', title="Weight")}} </td>
+<td align=left> {{KNOWL('hgm.familyhodgevector', title="Family Hodge vector")}}</td>
+<td align=left> $A$</td>
+<td align=left> $B$</td>
+</tr><tr>
+<td align=left> <input type='text' name='degree' size="8" value="{{info.degree}}" example='4'></td>
 <td><input type='text' name='weight' size="8" example='3' value="{{info.weight}}"> </td>
-<td align=left> 
-$A$:
-<td align=left> <input type="text" name="A" size="8" value="{{info.A}}" example='[3,2,2]'>
-
-<td align=left>  $B$ </td>
-<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" example='[6,4]'> </td>
-<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}
-  <td align=left><input type='text' name='hodge' size="8" value="{{info.hodge}}" example='[1,1,1,1]'> </td>
-</tr>
-
-<tr>
-<td align=left><a title="A2">A<sub>2</sub></a>
-  <td><input type='text' name='a2' size="8" value="{{info.a2}}" example='[1,1,1,1]'>
-<td align=left><a title="A3">A<sub>3</sub></a>
-  <td><input type='text' name='a3' size="8" value="{{info.a3}}" example='[1,1,1,1]'>
-<td align=left><a title="A5">A<sub>5</sub></a>
-  <td><input type='text' name='a5' size="8" value="{{info.a5}}" example='[1,1,1,1]'>
-<td align=left><a title="A7">A<sub>7</sub></a>
-  <td><input type='text' name='a7' size="8" value="{{info.a7}}" example='[1,1,1,1]'>
-</tr>
-<tr>
-<td align=left><a title="B2">
-B<sub>2</sub></a> 
-<td><input type='text' name='b2' size="8" value="{{info.b2}}" example='[1,1,1,1]'>
-<td align=left><a title="B3">
-B<sub>3</sub></a> 
-<td><input type='text' name='b3' size="8" value="{{info.b3}}" example='[1,1,1,1]'>
-<td align=left><a title="B5">
-B<sub>5</sub></a> 
-<td><input type='text' name='b5' size="8" value="{{info.b5}}" example='[1,1,1,1]'>
-<td align=left><a title="B7">
-B<sub>7</sub></a>
-<td><input type='text' name='b7' size="8" value="{{info.b7}}" example='[1,1,1,1]'>
-</tr>
+<td align=left><input type='text' name='famhodge' size="8" value="{{info.famhodge}}" example='[1,1,1,1]'></td>
+<td align=left> <input type="text" name="A" size="8" value="{{info.A}}" example='[3,2,2]'></td>
+<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" example='[6,4]'></td>
 
 {% if not info.family %}
-<tr>
-<td align=left> {{KNOWL('hgm.conductor', title="conductor")}}
-  <td><input type='text' name='conductor' size=10 value="{{info.conductor}}" example='2^13 3^7'>
-<td align=left> 
-$t$:</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" example='3/2'></td>
-</td>
-<td align=left> 
-$\epsilon$:
-<td align=left> 
-<input type="text" name="sign" size="3" value="{{info.sign}}" example='-1'>
-</tr>
+</tr><tr>
+<td align=left> {{KNOWL('hgm.conductor', title="Conductor")}}</td>
+<td align=left>$t$</td>
+<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}</td>
+<td align=left> $\epsilon$</td>
+</tr><tr>
+<td><input type='text' name='conductor' size=10 value="{{info.conductor}}" example='2^13 3^7'></td>
+<td align=left> <input type="text" name="t" size="3" value="{{info.t}}" example='3/2'></td>
+<td align=left><input type='text' name='hodge' size="8" value="{{info.hodge}}" example='[1,1,1,1]'></td>
+
+<td align=left> <input type="text" name="sign" size="3" value="{{info.sign}}" example='-1'></td>
 {% endif %}
 
+
+</tr><tr>
+
 <tr>
-{% if not info.family %}
-<td align='left' colspan='4'>Maximum number of motives to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-{% else %}
-<td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-{% endif %}
-</td>
+
 </tr>
+
+
+<tr>
+<td>$p$
+<td align=left>{{KNOWL('hgm.defining_parameter_ppart', title="$A_p$")}}</td>
+<td align=left>{{KNOWL('hgm.defining_parameter_ppart', title="$B_p$")}}</td>
+<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','$A^\perp_p$')}}
+<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','$B^\perp_p$')}}
+</tr><tr>
+<td><select name="p">
+  <option value="" {{ "selected" if info.p == '2'}}>2</option>
+  <option value="3" {{ "selected" if info.p == '3'}}>3</option>
+  <option value="5" {{ "selected" if info.p == '5'}}>5</option>
+  <option value="7" {{ "selected" if info.p == '7'}}>7</option>
+  </select>
+</td>
+<td><input type='text' name='Ap' size="8" value="{{info.Ap}}" example='[1,1,1,1]'></td>
+<td><input type='text' name='Bp' size="8" value="{{info.Bp}}" example='[1,1,1,1]'></td>
+<td><input type='text' name='Apperp' size="8" value="{{info.Apperp}}" example='[1,1,1,1]'></td>
+<td><input type='text' name='Bpperp' size="8" value="{{info.Bpperp}}" example='[1,1,1,1]'></td>
+</tr>
+
 
 <tr>
 <td align=left colspan="2"> 
-<button type='submit' value='refine'>Search again</button>
+<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td></tr>
 </table>
 {% if info.family %}
@@ -81,37 +72,8 @@ $\epsilon$:
 {% endif %}
 </form>
 
-{% if info.err is defined %}
-
-{% if info.label is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Motive:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
-<td><button type='submit' value='Find'>Find</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a motive label, e.g. 2.4.6.7</span></td>
-</tr>
-</table>
-</form>
-
-{% endif %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
@@ -129,7 +91,7 @@ $\epsilon$:
 </thead>
 <tbody>
 
-{% for hgm in info.motives: %}
+{% for hgm in info.results: %}
 <tr>
 <td> 
 {% if info.family %}
@@ -138,38 +100,29 @@ $\epsilon$:
     </a> 
 {% else %}
     <a href="{{url_for('.by_label', label=info.ab_label(hgm.A, hgm.B), t=info.make_t_label(hgm.t))}}"> 
-    {{ info.make_label(hgm.A, hgm.B, hgm.t[0], hgm.t[1]) }}
+    {{ info.make_label(hgm.A, hgm.B, hgm.t) }}
     </a> 
 {% endif %}
 </td>
 <td>${{hgm.A}}$</td>
 <td>${{hgm.B}}$</td>
 {% if not info.family %}
-    <td>${{info.display_t(hgm.t[0], hgm.t[1])}}$</td>
+    <td>${{info.display_t(hgm.t)}}$</td>
     <td>${{info.factorint(hgm.cond)}}$</td>
 {% endif %}
 <td>${{hgm.degree}}$</td>
 <td>${{hgm.weight}}$</td>
-<td>${{hgm.hodge}}$</td>
+<td>${{hgm.famhodge}}$</td>
 </tr>
 
 {% endfor %}
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
-{% endif %}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

@@ -1,157 +1,139 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb import base
-import pymongo
-from lmfdb.lfunctions import logger
-from lmfdb.lfunctions.Lfunctionutilities import string2number
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from lmfdb import db
 
-# This function should be removed as part of resolving issue #1456
-def getLmaassByDatabaseId(dbid):
-    collList = [('Lfunction','LemurellMaassHighDegree'),
-                ('Lfunction','FarmerMaass'),
-                ('Lfunction','LemurellTest')]
-    dbName = ''
-    dbColl = ''
-    dbEntry = None
-    i = 0
-    # Go through all collections to find a Maass form with correct id
-    while i < len(collList) and dbEntry is None:
-        connection = base.getDBConnection()
-        db = pymongo.database.Database(connection, collList[i][0])
-        collection = pymongo.collection.Collection(db, collList[i][1])
-        logger.debug(str(collection))
-        logger.debug(dbid)
-        
-        dbEntry = collection.find_one({'_id': dbid})
-        if dbEntry is None:
-            i += 1
-        else:
-            (dbName,dbColl) = collList[i]
-
-    return [dbName, dbColl, dbEntry]
-
-def getEllipticCurveData(label):
-    connection = base.getDBConnection()
-    curves = connection.elliptic_curves.curves
-    return curves.find_one({'lmfdb_label': label})
-
-def checkInstanceLdata(label,label_type="url"):
-    """
-    Checks whether L-function data for the instance specified by label is available.
-    Currently label is either the URL of an LMFDB object (e.g. Character/Dirichlet/7000/3 or EllipticCurve/Q/11/a) or an Lhash.
-    (the definition of an Lhash depends on the type of L-function but is meant to uniquely identify the L-function within the LMFDB).
-    """
-    db = base.getDBConnection().Lfunctions
-    if label_type == "url":
-        return True if db.instances.find_one({'url':label},{'_id':True}) else False
-    elif label_type == "Lhash":
-        return True if db.Lfunctions.find_one({'Lhash':label},{'_id':True}) else False
-    else:
-        raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
-
-def getInstanceLdata(label,label_type="url"):
-    db = base.getDBConnection().Lfunctions
-    try:
-        if label_type == "url":
-            Lpointer = db.instances.find_one({'url': label})
-            if not Lpointer:
-                return None
-            Lhash = Lpointer['Lhash']
-            Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
-            # do not ignore this error, if the instances record exists the Lhash should be there and we want to know if it is not
-            if not Ldata:
-                raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (label, Lhash))
-        elif label_type == "Lhash":
-            Ldata = db.Lfunctions.find_one({'Lhash': label})
-            # just return what we have, because
-            # we are just filling in the dual data  
-            return Ldata
-        else:
-            raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
-            
-        if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
-            central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
-        else:
-            central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
-        if 'values' not in Ldata:
-            Ldata['values'] = [ central_value ]
-        else:
-            Ldata['values'] += [ central_value ]
-
-        pos_plot = [ 
-                  [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
-                          for j in range(min(200, len(Ldata['plot_values'])))]
-
-        if Ldata['self_dual']:
-            neg_zeros = ["-" + str(pos_zero) for pos_zero in Ldata['positive_zeros']]
-            root_number = string2number(Ldata['root_number'])
-            neg_plot = [ [-1*pt[0], root_number * pt[1]] for pt in pos_plot ][1:]
-
-        else:   # can't happen for genus 2 curves
-            dual_L_label = Ldata['conjugate']
-            dual_L_data = getInstanceLdata(dual_L_label, label_type="Lhash")
-            neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
-
-            neg_plot = [
-                  [-1 * j * dual_L_data['plot_delta'], dual_L_data['plot_values'][j]]
-                          for j in range(1,min(200,len(dual_L_data['plot_values'])))]
-#        if label.startswith('Character'):  # because those temporarily are missing the plot
-#            Ldata['plot'] = ""
-#        else:
-#        pos_plot = [
-#                  [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
-#                          for j in range(len(Ldata['plot_values']))]
-#        if Ldata['self_dual']:
-#            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
-#            neg_plot.reverse()
-#        else:
-#            pass  # need to add this case
-#        Ldata['plot'] = neg_plot[:] + pos_plot[:]
-
-        neg_zeros.reverse()
-        Ldata['zeros'] = neg_zeros[:]
-        Ldata['zeros'] += [0 for _ in range(Ldata['order_of_vanishing'])]
-        Ldata['zeros'] += [str(pos_zero) for pos_zero in Ldata['positive_zeros']]
-
-        neg_plot.reverse()
-        Ldata['plot'] = neg_plot[:] + pos_plot[:]
-        #print "Ldata['plot']",Ldata['plot']
-
-    except ValueError:
-        Ldata = None
+def get_lfunction_by_Lhash(Lhash, **kwargs):
+    Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, **kwargs)
+    if Ldata is None:
+        raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
     return Ldata
 
-def getGenus2IsogenyClass(label):
-    connection = base.getDBConnection()
-    g2 = connection.genus2_curves
-    try:
-        iso = g2.isogeny_classes.find_one({'label': label})
-    except:
-        iso = None
-    return iso
-    
-def getHmfData(label):
-    connection = base.getDBConnection()
-    try:
-        f = connection.hmfs.forms.find_one({'label': label})
-        F_hmf = connection.hmfs.fields.find_one({'label': f['field_label']})
-    except:
-        f = None
-        F_hmf = None
-    return (f, F_hmf)
+def get_instances_by_Lhash(Lhash):
+    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=[]))
 
-def getMaassDb():
-    # NB although base.getDBConnection().PORT works it gives the
-    # default port number of 27017 and not the actual one!
-    if pymongo.version_tuple[0] < 3:
-        host = base.getDBConnection().host
-        port = base.getDBConnection().port
-    else:
-        host, port = base.getDBConnection().address
-    return MaassDB(host=host, port=port)
-    
+def get_multiples_by_Lhash(Lhash):
+    return list(db.lfunc_instances.search({'Lhash_array': {'$contains': Lhash.split(',')}}, sort=[]))
+
+
+# a temporary fix while we don't replace the old Lhash (=trace_hash)
+# there are trace hash collisions out there, we need the degree to distinguish them
+def get_instances_by_trace_hash(degree, trace_hash):
+    # this is only relevant to find L-funs for ECQ or G2C
+    if degree not in [2, 4]:
+        return []
+    def ECNF_convert_old_url(oldurl):
+        from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
+        # EllipticCurve/2.0.4.1/[4160,64,8]/a/
+        if '[' not in oldurl:
+            return oldurl
+        ec, fld, cond, iso =  oldurl.rstrip('/').split('/')
+        assert ec == 'EllipticCurve'
+        if cond[0] == '[' and cond[-1] == ']':
+            cond = convert_IQF_label(fld, cond)
+            return '/'.join([ec, fld, cond, iso])
+        else:
+            return oldurl
+
+    res = []
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection='Lhash', sort=[]):
+        for elt in get_instances_by_Lhash(Lhash):
+            if elt['type'] == 'ECQP':
+                continue
+            if elt['type'] == 'ECNF':
+                elt['url'] = ECNF_convert_old_url(elt['url'])
+            if elt not in res:
+                res.append(elt)
+    return res
+
+
+def get_instances_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
+    instances = get_instances_by_Lhash(Lhash)
+    if trace_hash:
+        instances += get_instances_by_trace_hash(degree, trace_hash)
+    return instances
+
+def get_multiples_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
+    instances = [elt for elt in get_multiples_by_Lhash(Lhash)
+                 if elt['Lhash'] != Lhash]
+
+    if trace_hash:
+        # is usually a number
+        trace_hash = str(trace_hash)
+        # use trace_hash as an Lhash
+        instances += [elt for elt in get_multiples_by_Lhash(trace_hash)
+                      if elt['Lhash'] != Lhash and elt['Lhash'] !=trace_hash ]
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        # the only thing that we might be missing are genus 2 L-functions
+        # hence, self.degree = 2, self.type = CMF
+        if degree == 2:
+            # our only hope is to find the missing genus 2 curve with a CMF
+            for Lhash in set(elt['Lhash'] for elt in instances
+                             if elt['type'] == 'CMF'):
+                other_trace_hash = db.lfunc_lfunctions.lucky(
+                    {'Lhash': Lhash, 'degree': 4}, 'trace_hash')
+                if other_trace_hash is not None:
+                    # names_and_urls will remove duplicates
+                    instances.extend(get_instances_by_trace_hash(
+                        4, str(other_trace_hash)))
+
+    return instances
+
+def get_factors_instances(Lhash, degree, trace_hash):
+        # objects for the factors
+        instances = []
+        if "," in Lhash:
+            for factor_Lhash in set(Lhash.split(",")):
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash},
+                                                ['trace_hash', 'degree'])
+                # names_and_urls will remove duplicates
+                instances.extend(
+                        get_instances_by_Lhash_and_trace_hash(factor_Lhash,
+                            elt['degree'],
+                            elt.get('trace_hash', None)))
+        # try to get factors as EC, this only arises for G2C
+        for elt in db.lfunc_instances.search(
+                {'Lhash': Lhash, 'type':'ECQP'}, 'url'):
+                if '|' in elt:
+                    for url in elt.split('|'):
+                        url = url.rstrip('/')
+                        # Lhash = trace_hash
+                        instances.extend(get_instances_by_trace_hash(2, db.lfunc_instances.lucky({'url': url}, 'Lhash')))
+
+        # or we need to use the trace_hash to find other factorizations
+        if str(trace_hash) == Lhash:
+            for elt in db.lfunc_lfunctions.search(
+                    {'trace_hash': trace_hash, 'degree': degree}, 'Lhash'):
+                instances.extend(get_factors_instances(elt, None, None))
+        return instances
+
+
+
+
+def get_instance_by_url(url):
+    return db.lfunc_instances.lucky({'url': url})
+
+def get_lfunction_by_url(url, **kwargs):
+    instance = get_instance_by_url(url)
+    if not instance:
+        return None
+    Lhash = instance['Lhash']
+    Ldata = get_lfunction_by_Lhash(Lhash, **kwargs)
+    if not Ldata:
+        raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
+    return Ldata
+
+
+
+def getEllipticCurveData(label):
+    return db.ec_curves.lucky({'lmfdb_label': label})
+
+def getHmfData(label):
+    from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field
+    # return (None,None) if nothing is found i.e. if for does not exist in the database
+    f = get_hmf(label)
+    if f:
+        return (f, get_hmf_field(f['field_label']))
+    return (None, None)
+
 def getHgmData(label):
-    connection = base.getDBConnection()
-    return connection.hgm.motives.find_one({'label': label})
-    
+    return db.hgm_motives.lookup(label)

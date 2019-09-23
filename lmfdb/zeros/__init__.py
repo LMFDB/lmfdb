@@ -1,4 +1,4 @@
-from lmfdb.base import app
+from lmfdb.app import app
 
 import main
 import zeta.zetazeros

@@ -1,0 +1,56 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_control.js') }}"></script>
+
+<script type="text/javascript">
+var dest = '{{ url_for('inventory_app.trigger_control_functions') }}';
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+Inventory Control Panel
+{% endblock title_block %}
+
+{% block main_body %}
+  <div id='dialog'></div>
+  <div class='listing'>
+  <div class='unbreaking'>
+      {% if user_is_authenticated %}
+      <h2>General Inventory Control</h2>
+        <input type='button' id = 'genreport' title = 'Generate a report on the inventory state' value ='Generate Inventory Report' onclick='sendControlRequest("gen_report")'>
+        </p>
+        <input type='button' id = 'markgone' title = 'Check which collections are gone and mark' value ='Mark Collections Gone' onclick='sendControlRequest("mark_gone")'>
+        </p>
+        <input type='button' id = 'cleangone' title = 'Check which collections are marked gone and remove' value ='Cleanup Removed Collections' onclick='sendControlRequest("clean_gone")'>
+      <h2>Inventory Editing Control</h2>
+        <input type='button' id = 'lockedit' title = 'Lock ALL inventory editing' value ='Lock Editing' onclick='sendControlRequest("lock_edit")'>
+        </p>
+        <input type='button' id = 'unlockedit' title = 'Unlock inventory editing' value ='Unlock Editing' onclick='sendControlRequest("unlock_edit")'>
+      <h2>Inventory Rescraping Control</h2>
+        <input type='button' id = 'cleanscrape' title = 'Cancel expired failed scrape processes' value ='Cleanup Scraping' onclick='sendControlRequest("clean_scrapes")'>
+      </p>
+        <input type='button' id = 'downloadorph' title = 'Download all orphaned key data as json' value ='Download Orphan Data' onclick='sendControlRequest("download_orphans")'>
+      {% else %}
+      <h2>General Inventory Control</h2>
+        <input type='button' value = 'Generate Inventory Report' title ='Please login for controls' disabled class=disabledbutton>
+        </p>
+        <input type='button' value ='Mark Collections Gone' title ='Please login for controls' disabled class=disabledbutton>
+        </p>
+        <input type='button' value ='Cleanup Removed Collections' title ='Please login for controls' disabled class=disabledbutton>
+
+      <h2>Inventory Editing Control</h2>
+        <input type='button' value ='Lock Editing' title ='Please login for controls' disabled class=disabledbutton>
+        </p>
+        <input type='button' value ='Unlock Editing' title ='Please login for controls' disabled class=disabledbutton>
+
+      <h2>Inventory Rescraping Control</h2>
+        <input type='button' value ='Cleanup Scraping' title ='Please login for controls' disabled class=disabledbutton>
+      </p>
+        <input type='button' value ='Download Orphan Data' title ='Please login for controls' disabled class=disabledbutton>
+      {% endif %}
+
+  </div>
+</div>
+{% endblock main_body %}

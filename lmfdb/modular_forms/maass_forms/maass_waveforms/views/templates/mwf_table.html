@@ -11,7 +11,7 @@ Weight: {{wt}}
     {% if k==wt %}
     {%  if table.data[(k,N,x)] is defined %}
         {% set n,nc=table.data[(k,N,x)] %}
-        <td> 
+        <td>
            <a href="{{url_for('mwf.render_maass_waveforms',level=N,weight=k,character=x)}}">
              {{ N }}/{{x}}:{{n}}  {# |{{nc}} #}
           </a> </td>

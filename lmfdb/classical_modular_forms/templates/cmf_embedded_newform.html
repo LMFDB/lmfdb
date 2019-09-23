@@ -1,0 +1,210 @@
+{% extends 'cmf_newform_common.html' %}
+
+{% block subcontent %}
+<a name="coefficient_data"></a>
+<h2>Coefficient data</h2>
+
+For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
+{{ KNOWL('cmf.satake_parameters',title='Satake parameters') }} \(\alpha_p\),
+and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
+
+
+<script>
+  function show_primes_all_n(n, cl) {
+    // hide everything
+    $('.all').hide();
+    $('.primes').hide();
+    // set colors
+    $('.dark'+cl+'.' + n).removeClass("dark");
+    $('.light'+cl+'.' + n).removeClass("light");
+    $('.dark'+cl+'.' + n).addClass("dark");
+    $('.light'+cl+'.' + n).addClass("light");
+    // swap header
+    $('.header.' + cl).show();
+    // swap noptions
+    $('.noptions.' + cl).show();
+    $('.' + cl+'.' + n).show();
+  }
+</script>
+
+{% set class_n = [50, 250, 1000] %}
+{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
+{% set default_class = [50,'primes'] %}
+{% macro render_display_options(href) %}
+<div>
+  {% for s in subsets %}
+    {% set extra = 'nodisplay' %}
+    {% if s[0] == default_class[1] %}
+      {% set extra = '' %}
+    {% endif %}
+    <span class="noptions {{s[0]}} {{extra}}">
+    Display {{s[2]}} up to:
+    {% for k in class_n %}
+    <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="{{href}}">{{k}}</a>
+    {% endfor %} {# for k in class_n #}
+    </span>
+    {% for n in class_n %}
+      {% set extra = 'nodisplay' %}
+      {% if n == default_class[0] and s[0] == default_class[1] %}
+        {% set extra = '' %}
+      {% endif %}
+
+      {# deals with the other options #}
+      <span class="{{s[0]}} {{n|string}} {{extra}}" >
+      {% for ns in subsets %}
+       {% if ns != s %}
+       (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="{{href}}">See {{ns[1]}}</a>)
+       {% endif %}
+      {% endfor %} {# for ns in subsets #}
+      </span>
+    {% endfor %} {# for n in class_n #}
+  {% endfor %} {# for s in subsets #}
+</div>
+{% endmacro %}
+<br><br>
+{{ render_display_options("javascript:;") }}
+
+<form id='complex_embeddings'>
+  <table>
+    <tr>
+      <td>{{ KNOWL('dq.cmf.cc_prec', title='Significant digits') }}: </td>
+      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
+      <td><button id="refresh_complex">Refresh table</button></td>
+    </tr>
+  </table>
+</form>
+
+{% set colspan_an = 1 if newform.one_column_display else 3 %}
+{# we need to fix the coloring #}
+<div class="table-scroll-wrapper">
+  <table class="ntdata complex-cols">
+    <thead>
+      <tr class="header all nodisplay">
+        <th>
+          \(n\)
+        </th>
+        <th class='center' colspan='{{colspan_an}}'>
+          \(a_n\)
+        </th>
+          <th class='center' colspan='{{colspan_an}}'>
+          \(a_n / n^{(k-1)/2}\)
+        </th>
+        <th class='center' colspan='3'>
+          \( \alpha_n \)
+        </th>
+        <th class='center'>
+          \( \theta_n \)
+        </th>
+      </tr>
+      <tr class="header primes">
+        <th>
+          \(p\)
+        </th>
+        <th class='center' colspan='{{colspan_an}}'>
+          \(a_p\)
+        </th>
+        <th class='center' colspan='{{colspan_an}}'>
+          \(a_p / p^{(k-1)/2}\)
+        </th>
+        <th class='center' colspan='3'>
+          \( \alpha_p\)
+        </th>
+        <th class='center'>
+          \( \theta_p \)
+        </th>
+      </tr>
+      <tr class="display" style="padding:0px; height:0px">
+        <th colspan="11" style="padding:0px; height:0px" ></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set m = newform.embedding_m %}
+      {% set pindex = [1] %}
+      {% for n in range(2, 1000) %}
+        {% set classes = ["all"] %}
+        {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
+          {% set rowspan = 2 %}
+          {% do classes.append("primes") %}
+          {% if pindex[0] is divisibleby(2) %}
+            {% set shadep = 'darkprimes' %}
+            {% set shade = 'dark' %}
+          {% else %}
+            {% set shadep = 'lightprimes' %}
+            {% set shade = 'light' %}
+          {% endif %}
+          {% if pindex.append(pindex.pop() + 1) %}{% endif %} {# kludge because of stupid jinja scoping rules #}
+        {% else %}
+          {% set shadep = 'noshadeprimes' %}
+          {% set shade = 'light' %}
+          {% set rowspan = 1 %}
+          {% do classes.append("nodisplay") %}
+        {% endif %}
+        {% if loop.index is divisibleby(2) %}
+          {% set shaden = 'darkall' %}
+        {% else %}
+          {% set shaden = 'lightall' %}
+        {% endif %}
+        {% set allshades = shade + ' ' + shaden + ' ' + shadep %}
+        {% for cn in class_n %}
+          {% if n <= cn %}
+            {% do classes.append(cn|string) %}
+          {% endif %}
+        {% endfor %} {# cn in class_n #}
+        {% if n > default_class[0] %}
+          {% do classes.append("nodisplay") %}
+        {% endif %}
+
+        {% set class = classes|join(" ") %}
+
+        <tr class="{{class}} {{allshades}}">
+          <td rowspan="{{rowspan}}">
+            \({{n}}\)
+          </td>
+          {% set an_formats = ['embed', 'analytic_embed'] %}
+          {% for format in an_formats %}
+            {% if newform.one_column_display %}
+              <td rowspan="{{rowspan}}" class="nowrap real">
+                {{ newform.embedding(m, n, prec=info.emb_prec, format=format) | safe }}
+              </td>
+            {% else %}
+              <td rowspan="{{rowspan}}" class="nowrap real">
+                {{ newform.embedding_re(m, n, prec=info.emb_prec, format=format) | safe }}
+              </td>
+              <td rowspan="{{rowspan}}" class="op">
+                {{ newform.embedding_op(m, n, prec=info.emb_prec) | safe }}
+              </td>
+              <td rowspan="{{rowspan}}" class="nowrap imag">
+                {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
+               </td>
+            {% endif %}
+          {% endfor %} {# format in an_formats #}
+          {% if rowspan == 2 %} {# if n is prime #}
+           {% for i in [0,1] %}
+            {% if i == 1 %}
+              <tr class="{{class}} {{allshades}}">
+            {% endif %}
+            <td class="nowrap real">
+              {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}
+            </td>
+            <td class="op">
+              {{ newform.satake_op(m,n,i) | safe }}
+            </td>
+            <td class="nowrap imag">
+              {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
+            </td>
+            <td class="nowrap right">
+              {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}
+            </td>
+            </tr>
+           {% endfor %} {# i in [0,1] #}
+           {% else %}
+            <td colspan=4></td>
+            </tr>
+          {% endif %}
+    {% endfor %} {# n in range(2, 1000) #}
+    </tbody>
+  </table>
+</div>
+{{ render_display_options("#coefficient_data") }}
+
+{% endblock %}

@@ -1,8 +1,7 @@
-{% import 'color.css' as color %}
 {%- for key, heading, value in sidebar.data -%}
 {%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
-{% if user_is_authenticated or BETA or key != '9Know' %}
+{% if user_is_authenticated or BETA or key != '9Inv' %}
 {{heading | safe}}
 
 {% if value.type == 'L' %}
@@ -32,7 +31,7 @@
   {%- if entry.status -%}
     {%- if BETA -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
-        <tr bgcolor="{{color.sidebar_background_off}}">
+        <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
       {%- else -%}
         <tr>
       {%- endif -%}{# end alternating colours #}
@@ -79,7 +78,7 @@
     {%- endif -%}{# this concludes the BETA flag #}
   {%- else -%}{# this look through entries with status not set #}
     {%- if loop.index is even -%}{# want alternating colours here #}
-      <tr bgcolor="{{color.sidebar_background_off}}">
+      <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
     {%- else -%}
       <tr>
     {%- endif -%}
@@ -177,7 +176,10 @@
   {%- if entry.part2 -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
-      {%- if BETA or not pt2.status -%}
+      {%- if BETA and pt2.status == "notonbeta" -%}
+      {%- elif not BETA and pt2.status == "notonbeta" -%}
+          <span class="subtitle">{{ pt2.url | safe }}</span>
+      {%- elif BETA or not pt2.status -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
       {%- endif -%}
       {%- if pt2.part3 -%}

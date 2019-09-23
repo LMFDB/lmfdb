@@ -1,0 +1,67 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<table>
+    <tr><td align=right>{{ KNOWL('cmf.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}:</td><td><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=info.base_lab)}}">{{info.orbit_label}}</a></td></tr>
+    <tr><td align=right>Number of $\Z_{ {{info.ell}} }$ orbits:</td><td>${{info.num_l_adic_orbits}}$</td></tr>
+</table>
+
+</br>
+
+{% for j in info.l_adic_orbits %}
+    <hr>
+    <p>Orbit index: {{j.index}}</p>
+    <h3>{{info.ell}}-adic data</h3>
+
+
+    <table cellpadding=3 >
+    {% if j.idempotent_display == [] %}
+        <tr><td align= right valign= top>Idempotent:</td><td>Download the idempotent for {% for e in j.download_id %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+    {% else %}
+        <tr rowspan=2><td align= right valign= top>Idempotent:</td><td>${{j.idempotent_display}}$</td></tr>
+        <tr><td></td><td>Download the idempotent for {% for e in j.download_id %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+    {% endif %}
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td>{{j.gorenstein}}</td></tr>
+    </table>
+    <p>Number of $\Q_{ {{info.ell}} }$ orbits:</p>
+    <p>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ orbits:</p>
+
+
+    <h3>mod {{info.ell}} data</h3>
+
+    <table cellpadding=3 >
+    <tr><td align= right>Residue field:</td><td>
+    {% if j.deg > 1 %}
+    $\F_{ {{info.ell}}^{{j.deg}} }\cong \F_{ {{info.ell}} }[a]$ where $a$ satisfies ${{j.field_poly}}=0$
+    {% else %}
+    $\F_{ {{info.ell}} }$
+    {% endif %}</td></tr>
+    {% if j.operators_mod_l_display == [] %}
+            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td><td>Download Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+    {% else %}
+        <tr rowspan=2><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td><td>
+        {% for m in j.operators_mod_l_display %}
+            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% endif %}
+        {% endfor %}</td></tr>
+        <tr><td></td><td>Download Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+    {% endif %}
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein defect')}}:</td><td>{{j.gorenstein_def}}</td></tr>
+    {% if j.dim == 1 %}
+        <tr><td align= right>Presentation as {% if j.deg > 1 %}$\F_{ {{info.ell}} }[a]${% else %}$\F_{ {{info.ell}} }${% endif %} algebra:</td><td>Dimension: {{j.dim}}</td></tr>
+    {% else %}
+        <tr><td align= right rowspan=5 bgcolor=#efe>Presentation as {% if j.deg > 1 %}$\F_{ {{info.ell}} }[a]${% else %}$\F_{ {{info.ell}} }${% endif %} algebra:</td><td>Dimension: {{j.dim}}</td></tr>
+        <tr><td>Number of generators: {{j.num_gen}}</td></tr>
+        <tr><td>Generators: {% for m in j.gens %} $x_{ {{m[0]}} }={{m[1]}}$ {% if not loop.last %},  {% endif %} {% endfor %}</td></tr>
+        <tr><td>Relations: {% for n in j.rel %} ${{n}}$ {% if not loop.last %},  {% endif %} {% endfor %}</td></tr>
+        <tr><td>Dimensions of the {{KNOWL('hecke_algebras.grading', title='graded pieces')}}: {{j.grading}}</td></tr>
+    {% endif %}
+    </table>
+
+{% endfor %}
+
+
+
+{% endblock %}

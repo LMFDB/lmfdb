@@ -29,8 +29,29 @@ function show_code(system) {
         </div>
 -->
 
+<div>
+  <h2>  Base field   {{ cl.field.knowl()|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ cl.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ {{cl.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
+ }} \({{cl.field.class_number()}}\).
+</p>
+    {{ place_code('field') }}
+</div>
 
 <h2>Elliptic curves in class {{cl.short_class_label}} over   {{ cl.field_knowl|safe }}</h2>
+<p>
+Isogeny class {{cl.short_class_label}} contains
+{% if cl.class_size==1 %}
+only one elliptic curve.
+{% else %}
+{{cl.class_size}} curves linked by isogenies of
+{% if cl.one_deg %}degree {% else %}degrees dividing {% endif %}
+{{cl.class_deg}}.
+{% endif %}
+</p>
 <table>
 <tr>
 <th>{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>

@@ -12,22 +12,30 @@ of the form
 \]
 and satisfies a
 {{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form
-\begin{equation}
+\[\begin{aligned}
 \Lambda(s,f) = N^{s/2} \Gamma_{\R}
 \left(s + \delta + iR \right) \Gamma_{\R}
 \left(s + \delta - iR \right) \cdot L(s, f) =
 \varepsilon \Lambda(1-s,f),
-\end{equation}
+\end{aligned}\]
 where $N$ is the {{ KNOWL("mf.maass.mwf.level",title="level")}},
 $R$ the {{ KNOWL("mf.maass.mwf.eigenvalue",title="eigenvalue")}} of the
-Maass cusp form, $\varepsilon$ is the {{ KNOWL('lfunction.sign', title='sign')}} and $\delta$ is 1 (or 0) when $f$ is odd (or even).
+Maass cusp form, $\varepsilon$ is the {{ KNOWL('lfunction.sign', title='sign')}}, and $\delta$ is 1 (or 0) 
+when $f$ is odd (or even).
 </div>
-
-{{contents[0]|safe}}
-
 <br>
 <div>
-The eigenvalue is labelled with an 'e' or an 'o' depending on whether the corresponding Maass cusp form is even or odd.
+The dots in the plot correspond to L-functions with trivial character and
+$(R, N)$ as in the functional equation.
+The color shows whether the functional equation has <b><font color="{{colorplus1}}">sign&nbsp;+1</font></b>
+or
+<b><font color="{{colorminus1}}">sign&nbsp;-1</font></b>.
+These have been found by a computer search.
+Click on any of the dots for details about the L-function.
 </div>
+
+<br>
+
+{{gl2spectrum0[0]|safe}}
 
 {% endblock %}

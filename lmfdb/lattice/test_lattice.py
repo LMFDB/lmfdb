@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class HomePageTest(LmfdbTest):
 
@@ -80,7 +80,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
         L = self.tc.get("/Lattice/random", follow_redirects=True)
-        assert 'Normalized minimal vectors:' in L.data # check redirection
+        assert 'Normalized minimal vectors' in L.data # check redirection
 
     def test_downloadstring(self):
         L = self.tc.get("/Lattice/5.648.12.1.1").data
@@ -101,4 +101,20 @@ class HomePageTest(LmfdbTest):
     def test_download_genus(self):
         L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").data
         assert ']~)' in L 
+
+
+    def test_favorite(self):
+        for elt in ['A2', 'Z2', 'D3', 'D3*', '3.1942.3884.56.1', 'A5',
+                    'E8', 'A14', 'Leech']:
+            L = self.tc.get(
+                    "/Lattice/?label={}".format(elt),
+                    follow_redirects=True)
+            assert elt in L.data
+            L = self.tc.get(
+                    "/Lattice/{}".format(elt),
+                    follow_redirects=True)
+            assert elt in L.data
+
+
+
 

@@ -1,31 +1,22 @@
 # -*- coding: utf-8 -*-
+import ast, re, StringIO, time
 
-import re
-import pymongo
-ASC = pymongo.ASCENDING
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-
-from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
-
+from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
+from lmfdb.utils import (
+    web_latex_split_on_pm, flash_error,
+    parse_ints, parse_list, parse_count, parse_start, clean_input,
+    search_wrap)
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
 from lmfdb.lattice.isom import isom
+from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 
-from markupsafe import Markup
+lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
-import time
-import ast
-import StringIO
+# Database connection
 
-lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
-
-
+from lmfdb import db
 
 # utilitary functions for displays 
 
@@ -73,29 +64,29 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
-#        counts = get_stats().counts()
+        maxs=lattice_summary_data()
         dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
-#        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
-        info['counts'] = get_stats().counts()
-        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+        info['summary'] = lattice_summary()
+        info['max_cn']=maxs[0]
+        info['max_dim']=maxs[1]
+        info['max_det']=maxs[2]
+        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
-        return lattice_search(**args)
+        return lattice_search(args)
 
 # Random Lattice
 @lattice_page.route("/random")
 def random_lattice():
-    res = random_object_from_collection( getDBConnection().Lattices.lat )
-    return redirect(url_for(".render_lattice_webpage", label=res['label']), 307)
+    return redirect(url_for(".render_lattice_webpage", label=db.lat_lattices.random()), 307)
 
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
@@ -103,154 +94,128 @@ lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
-def lattice_by_label_or_name(lab, C):
+def lattice_by_label_or_name(lab):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
-        result= C.Lattices.lat.find({'$or':[{'label': l}, {'name': l}]})
-        if result.count()>0:
-            lab=result[0]['label']
-            return redirect(url_for(".render_lattice_webpage", label=lab))
+        label = db.lat_lattices.lucky(
+                {'$or':
+                    [{'label': l},
+                     {'name': {'$contains': [l]}}]},
+                    'label')
+        if label is not None:
+            return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".lattice_render_webpage"))
 
-def lattice_search(**args):
-    C = getDBConnection()
-    info = to_dict(args)  # what has been entered in the search boxes
+#download
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
-    if 'download' in info:
-        return download_search(info)
+def download_search(info):
+    lang = info["Submit"]
+    filename = 'integral_lattices' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
 
-    if 'label' in info and info.get('label'):
-        return lattice_by_label_or_name(info.get('label'), C)
+    res = list(db.lat_lattices.search(ast.literal_eval(info["query"]), 'gram'))
 
-    query = {}
-    try:
-        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
-                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
-            parse_ints(info, query, field, name)
-        # Check if length of gram is triangular
-        gram = info.get('gram')
-        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
-            raise ValueError
-        parse_list(info, query, 'gram', process=vect_to_sym)
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info)
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the gram matrix
+    s += ",\\\n".join([entry(gram) for gram in res])
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    count = parse_count(info,50)
-    start = parse_start(info)
+lattice_search_projection = ['label','dim','det','level','class_number','aut','minimum']
+def lattice_search_isometric(res, info, query):
+    """
+    We check for isometric lattices if the user enters a valid gram matrix
+    but not one stored in the database
 
-#    count_default = 50
-#    if info.get('count'):
-#        try:
-#            count = int(info['count'])
-#        except:
-#            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
-#            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
-#            info['err'] = str(err)
-#            return search_input_error(info)
-#    else:
-#        info['count'] = count_default
-#        count = count_default
+    This may become slow in the future: at the moment we compare against
+    a list of stored matrices with same dimension and determinant
+    (just compare with respect to dimension is slow)
+    """
+    if info['number'] == 0 and info.get('gram'):
+        A = query['gram']
+        n = len(A[0])
+        d = matrix(A).determinant()
+        for gram in db.lat_lattices.search({'dim': n, 'det': int(d)}, 'gram'):
+            if isom(A, gram):
+                query['gram'] = gram
+                proj = lattice_search_projection
+                count = parse_count(info)
+                start = parse_start(info)
+                res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
+                break
 
-#    start_default = 0
-#    if info.get('start'):
-#        try:
-#            start = int(info['start'])
-#            if(start < 0):
-#                start += (1 - (start + 1) / count) * count
-#        except:
-#            start = start_default
-#    else:
-#        start = start_default
-
-    info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
-    nres = res.count()
-
-    # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
-
-    if nres==0 and info.get('gram'):
-        A=query['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            result=result[0]['gram']
-            query_gram={ 'gram' : result }
-            query.update(query_gram)
-            res = C.Lattices.lat.find(query)
-            nres = res.count()
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['number'] = nres
-    info['start'] = int(start)
-    info['more'] = int(start + count < nres)
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres == 0:
-            info['report'] = 'no matches'
-        else:
-            if nres > count or start != 0:
-                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-            else:
-                info['report'] = 'displaying all %s matches' % nres
-
-    res_clean = []
     for v in res:
-        v_clean = {}
-        v_clean['label']=v['label']
-        v_clean['dim']=v['dim']
-        v_clean['det']=v['det']
-        v_clean['level']=v['level']
-        v_clean['gram']=vect_to_matrix(v['gram'])
-        res_clean.append(v_clean)
+        v['min'] = v.pop('minimum')
+    return res
 
-    info['lattices'] = res_clean
-
-    t = 'Integral Lattices Search Results'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
-    properties = []
-    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
-
-def search_input_error(info, bread=None):
-    t = 'Integral Lattices Search Error'
-    if bread is None:
-        bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
-    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
+@search_wrap(template="lattice-search.html",
+             table=db.lat_lattices,
+             title='Integral Lattices Search Results',
+             err_title='Integral Lattices Search Error',
+             shortcuts={'download':download_search,
+                        'label':lambda info:lattice_by_label_or_name(info.get('label'))},
+             projection=lattice_search_projection,
+             postprocess=lattice_search_isometric,
+             bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')],
+             learnmore=learnmore_list,
+             properties=lambda: [])
+def lattice_search(info, query):
+    for field, name in [('dim','Dimension'),('det','Determinant'),('level',None),
+                        ('minimum','Minimal vector length'), ('class_number',None),
+                        ('aut','Group order')]:
+        parse_ints(info, query, field, name)
+    # Check if length of gram is triangular
+    gram = info.get('gram')
+    if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
+        raise ValueError
+    parse_list(info, query, 'gram', process=vect_to_sym)
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
-    C = getDBConnection()
-    data = None
+    f = None
     if 'label' in args:
         lab = clean_input(args.get('label'))
         if lab != args.get('label'):
             return redirect(url_for('.render_lattice_webpage', label=lab), 301)
-        data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
-    if data is None:
+        f = db.lat_lattices.lucky({'$or':[{'label': lab }, {'name': {'$contains': [lab]}}]})
+    if f is None:
         t = "Integral Lattices Search Error"
-        bread = [('Lattice', url_for(".lattice_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        bread = [('Lattices', url_for(".lattice_render_webpage"))]
+        flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
-    info.update(data)
+    info.update(f)
 
     info['friends'] = []
 
-    bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % f['label'], ' ')]
     credit = lattice_credit
-    f = C.Lattices.lat.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
     info['dim']= int(f['dim'])
     info['det']= int(f['det'])
     info['level']=int(f['level'])
@@ -333,7 +298,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):
@@ -359,8 +324,7 @@ def theta_display(label, number):
         number = 30
     if number > 150:
         number = 150
-    C = getDBConnection()
-    data = C.Lattices.lat.find_one({'label': label})
+    data = db.lat_lattices.lookup(label, projection=['theta_series'])
     coeff=[data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
 
@@ -368,16 +332,16 @@ def theta_display(label, number):
 #data quality pages
 @lattice_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the integral lattice data'
+    t = 'Completeness of the Integral Lattice Data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
-    return render_template("single.html", kid='dq.lattice.extent',
+    return render_template("single.html", kid='dq.lattice.completeness',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @lattice_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the integral lattice data'
+    t = 'Source of the Integral Lattice Data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit
@@ -386,7 +350,7 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'Label of an integral lattice'
+    t = 'Label of an Integral Lattice'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
@@ -395,48 +359,12 @@ def labels_page():
 
 @lattice_page.route("/History")
 def history_page():
-    t = 'A brief history of lattices'
+    t = 'A Brief History of Lattices'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
-             ('Histoy', '')]
+             ('History', '')]
     credit = lattice_credit
     return render_template("single.html", kid='lattice.history',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
-
-#download
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
-download_assignment_end = {'magma':';','sage':'','gp':''}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
-
-def download_search(info):
-    lang = info["submit"]
-    filename = 'integral_lattices' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-
-    res = getDBConnection().Lattices.lat.find(ast.literal_eval(info["query"]))
-
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, res.count())
-    # The list entries are matrices of different sizes.  Sage and gp
-    # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
-    s += download_assignment_start[lang] + list_start + '\\\n'
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-    # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(r['gram']) for r in res])
-    s += list_end
-    s += download_assignment_end[lang]
-    s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
 
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
@@ -451,9 +379,8 @@ def render_lattice_webpage_download(**args):
 
 
 def download_lattice_full_lists_v(**args):
-    C = getDBConnection()
     label = str(args['label'])
-    res = C.Lattices.lat.find_one({'label': label})
+    res = db.lat_lattices.lookup(label)
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -471,9 +398,8 @@ def download_lattice_full_lists_v(**args):
 
 
 def download_lattice_full_lists_g(**args):
-    C = getDBConnection()
     label = str(args['label'])
-    res = C.Lattices.lat.find_one({'label': label})
+    res = db.lat_lattices.lookup(label, projection=['genus_reps'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -490,4 +416,3 @@ def download_lattice_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-

@@ -1,0 +1,34 @@
+{# requires info to contain number (number of results), count (max number of results possible), start (where to start in the list of results) and exact_count (boolean, indicating whether the count is exact) #}
+
+{% if info.err is defined %}
+<h2>Error</h2>
+<div>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
+{% if info.number == 'infinity' or info.number >= info.start + info.count %}
+  {% set upper_count = info.start + info.count %}
+{% else %}
+  {% set upper_count = info.number %}
+{% endif %}
+{% if info.number == 0 %}
+<h2> No matches </h2>
+{% else %}
+<h2> Results ({% if info.number==1 -%}
+    unique match)
+  {% elif info.number==2 -%}
+    displaying both matches)
+  {% elif info.number=='infinity' -%}
+    displaying matches {{ info.start + 1 }}-{{ upper_count }})
+  {% elif info.number <= info.count and info.start == 0 -%}
+    displaying all {{ info.number }} matches)
+  {% elif info.exact_count -%}
+    displaying matches {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }})
+  {% else -%}
+    displaying matches {{ info.start + 1 }}-{{ upper_count }} of
+    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>)
+  {% endif %}
+{% include 'forward_back.html' %}
+</h2>
+{% endif %}
+{% endif %}

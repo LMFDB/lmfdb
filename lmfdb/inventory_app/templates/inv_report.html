@@ -1,0 +1,121 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript">
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+    Latest Inventory Report
+{% endblock title_block %}
+
+{% block main_body %}
+
+<p> Inventory report generated on {{rept.scan_date}}</p>
+
+  <div>
+<div>
+    <h2>General Status</h2>
+<p>
+Inventory is
+    {% if rept.report.connection.can_write %}
+       writeable
+    {% else %}
+      not writeable
+    {% endif %}
+</p>
+<p>
+Inventory structure is
+    {% if rept.report.connection.inv_ok %}
+      OK
+    {% else %}
+      not OK
+    {% endif %}
+</p>
+<p>
+    {% if rept.report.connection.lockout_set %}
+      Global
+    {% else %}
+      No global
+    {% endif %}
+    lockout is set
+</p>
+
+</div>
+<div>
+  <h2>Fields (Keys) Data</h2>
+
+<p>
+    {% if rept.report.fields.table_match.num > 0 %}
+      There were errors in tables. The following items were malformed
+      {% for item in rept.report.fields.table_match['items'] %}
+       <p> {{item[0]}} : <br/>
+         {% for key in item[4] %}
+          &nbsp  {{key}} <br/>
+         {% endfor %}
+       </p>
+      {% endfor %}
+
+    {%else %}
+      There were no table errors
+    {% endif %}
+</p>
+
+<p>
+    {% if rept.report.fields.human_missing.num > 0 %}
+     There were missing data entries in key descriptions
+
+     {% for item in rept.report.fields.human_missing['items'] %}
+      <p> {{item[0]}} : <br/>
+        {% for key in item[2] %}
+         &nbsp  {{key[0].name}} is missing entry for {{key[1]}}  <br/>
+        {% endfor %}
+      </p>
+     {% endfor %}
+
+
+    {%else %}
+      Key descriptions OK
+    {% endif %}
+</p>
+</div>
+
+<div>
+  <h2>Rescrape Data</h2>
+
+<p>
+  Latest scrape of an LMFDB collection was
+  {{rept.report.latest.latest_scan.nice_name}} on {{rept.report.latest.latest_scan.scan_date}}
+</p>
+</div>
+
+<div>
+  <h2>Removed Collections</h2>
+  <p>
+      {% if rept.report.gone.colls_gone.num > 0 %}
+       {{rept.report.gone.colls_gone.num}} collections have been removed
+      {%else %}
+      No collections have been removed
+      {% endif %}
+  </p>
+</div>
+
+<div>
+  <h2>Rescraping</h2>
+  <p>
+      {% if rept.report.scrapes.scrapes_hung %}
+      There are hung scrape records
+      {% endif %}
+  </p>
+  <p>
+      {% if rept.report.scrapes.scrapes_run > 0 %}
+       {{rept.report.scrapes.scrapes_run}} scrapes have been completed in the last 30 days
+      {%else %}
+      No completed scrapes in the last 30 days
+      {% endif %}
+  </p>
+
+</div>
+
+</div>
+{% endblock main_body %}

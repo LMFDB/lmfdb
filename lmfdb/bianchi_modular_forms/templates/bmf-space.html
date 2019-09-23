@@ -1,0 +1,123 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if 'err' in info %}
+{{info.err}}
+{% else %}
+
+<div>
+  <h2>  Base field   {{ info.field_knowl|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ info.field_gen }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{info.field_poly}}\); {{ KNOWL('nf.class_number', 'class number')
+ }} \({{info.nf.class_number()}}\).
+</p>
+    {{ place_code('field') }}
+</div>
+
+
+
+<h2>  {{ KNOWL('mf.bianchi.level', title='Level')}} {{ info.level_label }}  </h2>
+
+<p>
+<table>
+<tr><td> Norm:<td> {{ info.level_norm }} </tr>
+<tr><td> Ideal:<td> \(({{ info.level_gen }}) = {{info.level_fact}} \) </tr>
+<tr><td> {{ KNOWL('nf.ideal_labels', title='Label') }}:<td> {{ info.level_label }} </tr>
+</table>
+</p>
+
+<h2> {{ KNOWL('mf.bianchi.spaces', title='Modular form spaces') }} </h2>
+
+<p>
+<table border=1>
+<tr>
+<th>{{ KNOWL('mf.bianchi.weight', title='Weight') }}</th>
+{% for w in info.weights %}
+<th> {{w}} </th>
+{% endfor %}
+</tr>
+<tr>
+<td> Dimension of cuspidal subspace:
+{% for w in info.weights %}
+<td> {{ info.dim_data[w].cuspidal_dim }} </td>
+{% endfor %}
+</tr>
+<tr>
+<td> Dimension of new cuspidal subspace:
+{% for w in info.weights %}
+<td> {{ info.dim_data[w].new_dim }} </td>
+{% endfor %}
+</tr>
+</table>
+</p>
+
+
+<h2> Newforms </h2>
+
+<p>
+{%if info.nnewforms > 0 %}
+This space contains the following
+{%if info.nnewforms == 1 %}
+newform.
+{%else%}
+newforms.
+{%endif%}
+{%if info.nnf_missing>0 %}
+Newforms of higher dimension are not yet in the database.
+{%endif%}
+
+{#
+There
+{%if info.nnewforms == 1 %}
+is one newform
+{%else%}
+are {{info.nnewforms}} newforms
+{%endif%}
+at this level,
+{%if info.nnf2 == 0 %}
+{%if info.nnf1 == 1 %}which has{%else%}all of which have{%endif%} rational coefficients.
+{%elif info.nnf1 == 0 %}
+{%if info.nnf2 == 1 %}which has{%else%}all of which have{%endif%} quadratic coefficients.
+{%else%}
+{{info.nnf1}} with rational coefficients and
+{{info.nnf2}} with quadratic coefficients.
+{%endif%}
+#}
+<table border=1 class="ntdata">
+  <tr>
+    <th>{{ KNOWL('mf.bianchi.labels', title='label') }}
+    <th>{{ KNOWL('mf.bianchi.weight', title='weight') }}
+    <th>{{ KNOWL('mf.bianchi.newform', title='dimension') }}
+    <th>{{ KNOWL('mf.bianchi.sign', title='sign') }}
+    <th>{{ KNOWL('mf.bianchi.base_change', title='base change') }}
+    <th>{{ KNOWL('mf.bianchi.cm', title='CM') }}
+  </tr>
+{%for nf in info.nfdata %}
+  <tr>
+    <td><a href={{nf.url}}>{{nf.label}}</a>
+      <td align='center'>{{nf.wt}}
+      <td align='center'>{{nf.dim}}
+      <td align='center'>{{nf.sfe}}</td>
+      <td align='center'>{{nf.bc}}
+      <td align='center'>{{nf.cm}}
+  </tr>
+  {% endfor%}
+</table>
+{%else %}
+There are no newforms at this{%if info.nnf_missing > 0 %} level in the database.{%else%} level.{%endif%}
+{%endif %}
+</p>
+
+{%endif %}
+
+{%if DEBUG %}
+<div>
+<hr>
+ {{ info }}
+</div>
+{%endif%}
+
+{%endblock%}

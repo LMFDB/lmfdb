@@ -1,0 +1,41 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='index_viewer.js') }}"></script>
+<script type="text/javascript">
+    //Create a js object of the fields from server.
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var index_fields = {{index_fields | safe}};
+
+</script>
+<script type="text/javascript">
+    //Put in initial text and fit boxes to content
+
+    function onReady() {
+      console.log( "Ready!" );
+    }
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
+      fetchAndPopulateData(mainBlockList, populateIndexViewerPage, startVisible=true);//Start fetching
+    });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} Showing <span id=nicename>{{nice_name}}</span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>The following is the list of all indices on this collection (last refreshed on <span id=scandate></span>) </p>
+    <p>Each entry has a name, a set of keys, and the ordering for each key, where -1: descending, 1: ascending, 2d: using 2d ordering
+</div>
+<div id = 'dataDiv'>
+</div>
+<p></p>
+<input type="button" class = "button" id="downloadbutt" value="Download Data" onclick="this.blur();fetchAndDownloadData('indices')" title="Download Page Data"/>
+{% endblock main_body %}

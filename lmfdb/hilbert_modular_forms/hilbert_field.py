@@ -6,20 +6,8 @@ Initial version (University of Warwick 2015) Aurel Page and John Cremona
 """
 
 from sage.all import ZZ
-from lmfdb.base import getDBConnection
-from lmfdb.WebNumberField import WebNumberField
-
-hmf_nfdb = None
-
-
-def db_hmfnf():
-    """
-    Return the fields collection from the HMF database
-    """
-    global hmf_nfdb
-    if hmf_nfdb is None:
-        hmf_nfdb = getDBConnection().hmfs.fields
-    return hmf_nfdb
+from lmfdb import db
+from lmfdb.number_fields.web_number_field import WebNumberField
 
 def findvar(L):
     """
@@ -108,7 +96,7 @@ class HilbertNumberField(WebNumberField):
     database.
     """
     def __init__(self, label):
-        self.Fdata = db_hmfnf().find_one({'label':label})
+        self.Fdata = db.hmf_fields.lookup(label)
         self.ideals = self.Fdata['ideals']
         self.primes = self.Fdata['primes']
         self.var = findvar(self.ideals)

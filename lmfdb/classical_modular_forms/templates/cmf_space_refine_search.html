@@ -1,0 +1,140 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2>Refine search </h2>
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="hst" value="{{info.search_type}}"/>
+{% if info.search_type == 'SpaceDimensions' %}
+<input type="hidden" name="all_spaces" value="{{info.all_spaces}}"/>
+{% endif %}
+
+<table>
+  <tr>
+    <td>{{ KNOWL('cmf.level', title='Level') }}
+      <div class="float-right">
+        <select name='level_type'>
+          <option value="">unrestricted</option>
+          <option value="prime"{% if info.level_type == 'prime' %} selected='yes'{% endif %}>prime</option>
+          <option value="prime_power"{% if info.level_type == 'prime_power' %} selected='yes'{% endif %}>prime power</option>
+          <option value="square"{% if info.level_type == 'square' %} selected='yes'{% endif %}>square</option>
+          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squarefree</option>
+        </select>
+      </div>
+    </td>
+    <td>{{ KNOWL('cmf.weight', title='Weight') }}
+      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+        <option value="">any parity</option>
+        <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
+        <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
+      </select></div>
+    </td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
+    <td>{{ KNOWL('cmf.nk2', title='\(Nk^2\)') }}</td>
+    {% if info.search_type != 'SpaceDimensions' %}
+    <td>{{ KNOWL('cmf.dimension', title='Dim.') }}
+      <div class="float-right"><select name="dim_type" style="min-width: 105px;">
+          <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
+          <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
+        </select>
+      </div>
+    </td>
+    {% endif %}
+  </tr>
+
+  <tr>
+    <td><input type='text' style="width: 160px;" name='level' placeholder='4' value='{{info.level}}'></td>
+    <td><input type='text' style="width: 160px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
+    <td><input type='text' style="width: 160px;" name='analytic_conductor' placeholder='1' value='{{info.analytic_conductor}}'></td>
+    <td><input type='text' style="width: 160px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
+    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 160px;" name='dim' placeholder='1-4' value='{{info.dim}}'></td>
+  </tr>
+
+  <tr>
+    <td>{{ KNOWL('cmf.bad_prime',title='Bad \(p\)') }}
+      <div class="float-right">
+        <select name='prime_quantifier'>
+          <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+          <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
+          <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+        </select>
+      </div>
+    </td>
+    <td>{{ KNOWL('cmf.character', title='Char.') }}
+      <div class="float-right">
+        <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
+          <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
+        </select>
+      </div>
+    </td>
+    <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
+    <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
+    {% if info.search_type != 'SpaceDimensions' %}
+    <td>Num. {{ KNOWL('cmf.newform', title='newforms') }}</td>
+    {% endif %}
+  </tr>
+
+  <tr>
+    <td><input type='text' name='level_primes' example='2,3' style="width: 160px" value="{{info.level_primes}}"></td>
+    <td><input type='text' style="width: 160px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
+    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 160px;" name='num_forms' placeholder='3' value='{{info.num_forms}}'></td>
+  </tr>
+
+  {% set search_types = [('Spaces', 'List'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random')] %}
+  <tr style="height: 20px;"></tr>
+  {% if info.search_type != 'SpaceDimensions' %}
+  <tr>
+    <td>{{ KNOWL('cmf.include_all_spaces', title='Scope') }}
+      <div class="float-right">
+        <select name='all_spaces'>
+          <option value=""{{ "selected" if info.all_spaces == ''}}>split spaces</option>
+          <option value="yes"{{ "selected" if info.all_spaces == 'yes'}}>all spaces</option>
+        </select>
+      </div>
+    </td>
+    {% for type, desc in search_types %}
+    {% if info.search_type != type %}
+    <td></td>
+    {% endif %}
+    {% endfor %}
+    <td>{{ KNOWL('cmf.sort_order', title='Sort order') }}</td>
+  </tr>
+  {% else %}
+  <tr style="height: 22px;"></tr>
+  {% endif %}
+  <tr>
+    <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 170px;" onclick='resetStart()'>Search again</button></td>
+    {% for type, desc in search_types %}
+    {% if info.search_type != type %}
+    <td><button type='submit' name='search_type' value='{{ type }}' style="width: 170px;">{{ desc }}</button></td>
+    {% endif %}
+    {% endfor %}
+    {% if info.search_type != 'SpaceDimensions' %}
+    <td>
+      <select name='sort_order' style="width: 170px;">
+        <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>
+        <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
+        <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
+        <option value='N'{% if info.sort_order=='N' %} selected{% endif %}>level</option>
+        <option value='k'{% if info.sort_order=='k' %} selected{% endif %}>weight</option>
+      </select>
+    </td>
+  </tr>
+  {% endif %}
+  {% if info.search_type == 'SpaceTraces' %}
+  {% include 'cmf_trace_search_options.html' %}
+  {% endif %}
+</table>
+</form>
+
+{% block show_results %}{% endblock %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

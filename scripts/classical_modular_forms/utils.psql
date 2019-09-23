@@ -1,0 +1,178 @@
+CREATE OR REPLACE FUNCTION to_base26(IN n integer) RETURNS varchar AS $$
+DECLARE
+    s varchar;
+    m integer;
+BEGIN
+    m := n;
+    IF m < 0 THEN
+        s := 'NULL';
+    ELSIF m = 0 THEN
+        s := 'a';
+    ELSE
+        s := '';
+        WHILE m != 0 LOOP
+            s := chr(m%26+97) || s;
+            m := m/26;
+        END LOOP;
+    END IF;
+
+    RETURN s;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION from_base26(IN s varchar) RETURNS integer AS $$
+DECLARE
+    k integer[];
+    m integer := 0;
+    p integer := 1;
+BEGIN
+    k := array(SELECT ascii(unnest(regexp_split_to_array(reverse(s),''))) - 97);
+    FOR l in 1 .. array_length(k,1) LOOP
+        m := m + p*k[l];
+        p := p*26;
+    END LOOP;
+    return m;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION from_newform_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
+DECLARE
+    v text[];
+BEGIN
+    v := string_to_array(s, '.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint + (from_base26(v[4])::bit(64)<<52)::bigint;
+END;
+$$ LANGUAGE plpgsql;
+
+//we could have only one function, but then we would pay heavily for the if statement
+CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
+DECLARE
+    v text[];
+BEGIN
+    v := string_to_array(s, '.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION prod_factorization(IN fact ANYARRAY, IN dummy ANYELEMENT = NULL) RETURNS ANYELEMENT AS $$
+DECLARE
+    prod dummy%TYPE := 1;
+BEGIN
+    IF array_length(fact, 1) != 0 THEN
+        FOR l in 1 .. array_length(fact, 1) LOOP
+            prod := prod * (fact[l][1]^fact[l][2]);
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION prod(IN list ANYARRAY, IN dummy ANYELEMENT = NULL) RETURNS ANYELEMENT AS $$
+DECLARE
+    prod dummy%TYPE := 1;
+BEGIN
+    IF array_length(list, 1) != 0 THEN
+        prod := list[1];
+        FOR i in 2 .. array_length(list, 1) LOOP
+            prod := prod * list[i];
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION prod2(IN list ANYARRAY, IN dummy ANYELEMENT = NULL) RETURNS ANYELEMENT AS $$
+DECLARE
+    prod dummy%TYPE := 1;
+BEGIN
+    IF array_length(list, 1) != 0 THEN
+        FOR i in 1 .. array_length(list, 1) LOOP
+            prod := prod * list[i][2];
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION check_cc_prod(IN am double precision[], IN an double precision[], IN amn double precision[]) RETURNS bool AS $$
+BEGIN
+    return @((am[1][1]*an[1][1] - am[1][2]*an[1][2]) - amn[1][1]) < 1e-13 AND @((am[1][1]*an[1][2] + am[1][2]*an[1][1]) - amn[1][2]) < 1e-13;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION traces(IN ans double precision[]) returns double precision[] AS $$
+DECLARE
+  res double precision[];
+  x double precision[];
+BEGIN
+  res := array_fill(0, ARRAY[array_length(ans, 2)]);
+  FOREACH x SLICE 2 IN ARRAY ans LOOP
+    FOR i in 1 .. array_length(x, 1) LOOP
+      res[i] := res[i] + x[i][1];
+    END LOOP;
+  END LOOP;
+  return res;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION compare_traces(IN an_int anyarray, IN an_cc double precision[], IN normalization double precision) returns bool AS $$
+BEGIN
+  FOR i in 1 .. array_length(an_int, 1) LOOP
+    IF @((an_int[i] * (i^normalization)::numeric)::double precision - an_cc[i]) > 1e-11 THEN
+      raise notice 'i: %', i;
+      raise notice 'i^normalization: %', i^normalization;
+      raise notice 'normalization: %', normalization;
+      raise notice 'an_int[i] : %', (an_int[i] * (i^normalization)::numeric;
+      raise notice 'a_cc[i] : %', an_cc[i];
+      raise notice 'diff : %', @((an_int[i] * (i^normalization)::numeric)::double precision - an_cc[i]);
+      return false;
+    END IF;
+  END LOOP;
+  return true;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION unnest_2d_1d(ANYARRAY, OUT a ANYARRAY)
+  RETURNS SETOF ANYARRAY AS
+$func$
+BEGIN
+   FOREACH a SLICE 1 IN ARRAY $1 LOOP
+      RETURN NEXT;
+   END LOOP;
+END
+$func$  LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION unnest_2d_1d_2(IN m ANYARRAY, OUT a ANYARRAY)
+  RETURNS SETOF ANYARRAY AS
+$func$
+BEGIN
+   FOREACH a SLICE 2 IN ARRAY m LOOP
+      RETURN NEXT;
+   END LOOP;
+END
+$func$  LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION array_max(anyarray)
+RETURNS anyelement LANGUAGE SQL IMMUTABLE AS $$
+SELECT max(x) FROM unnest($1) as x;
+$$;
+
+CREATE OR REPLACE FUNCTION array_min(anyarray)
+RETURNS anyelement LANGUAGE SQL IMMUTABLE AS $$
+SELECT min(x) FROM unnest($1) as x;
+$$;
+
+CREATE OR REPLACE FUNCTION jsonb_arr2numeric_arr(_js jsonb) RETURNS numeric[] LANGUAGE SQL IMMUTABLE AS
+'SELECT ARRAY(SELECT jsonb_array_elements_text(_js))::numeric[]';
+
+
+CREATE OR REPLACE FUNCTION join6dot(IN a text[]) RETURNS text LANGUAGE SQL IMMUTABLE AS $$
+SELECT a[1] || '.' || a[2] || '.' || a[3] || '.' || a[4] || '.' || a[5] || '.' || a[6];
+$$;
