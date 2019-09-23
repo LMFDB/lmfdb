@@ -12,7 +12,7 @@ from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
-    parse_restricted, integer_options, parse_range2rat, search_wrap,
+    parse_restricted, integer_options, search_wrap,
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
