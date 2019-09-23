@@ -497,12 +497,8 @@ def parse_pandt(info, family):
 
     try:
         if info.get('t'):
-            ts = parse_range2rat(info.get('t'), 'doesntmatter', lambda x: QQ(x))
-            if ts[0] == '$or':
-                # ts[1] is a list of dict {'doesntmatter': rational}
-                info['ts'] = [elt['doesntmatter'] for elt in ts[1]]
-            else:
-                info['ts'] = ts[1]
+            info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+            info['t'] = ",".join(map(str, info['ts']))
         else:
             info['ts'] = None
     except (ValueError, TypeError) as err:
