@@ -3537,7 +3537,7 @@ class PostgresTable(PostgresBase):
         #    self.revert_indexes()
         #    print "Reverted %s to its previous state" % (self.search_table,)
 
-    def cleanup_from_reload(self, old = True):
+    def cleanup_from_reload(self, keep_old=0):
         """
         Drop the ``_tmp`` and ``_old*`` tables that are created during ``reload``.
 
@@ -3545,26 +3545,39 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``commit`` -- a boolean, default `True`, if to commit the changes to the database
         - ``old`` -- a boolean, default `True`, if to drop `_old*` tables
         """
         to_remove = []
+        to_swap = []
         for suffix in ['', '_extras', '_stats', '_counts']:
-            tablename = "{0}{1}_tmp".format(self.search_table, suffix)
+            head = self.search_table + suffix
+            tablename = head + "_tmp"
             if self._table_exists(tablename):
                 to_remove.append(tablename)
             backup_number = 1
-            while old and True:
-                tablename = "{0}{1}_old{2}".format(self.search_table, suffix, backup_number)
+            tails = []
+            while True:
+                tail = "_old{0}".format(backup_number)
+                tablename = head + tail
                 if self._table_exists(tablename):
-                    to_remove.append(tablename)
+                    tails.append(tail)
                 else:
                     break
                 backup_number += 1
+            if keep_old > 0:
+                for new_number, tail in enumerate(tails[-keep_old:], 1):
+                    newtail = "_old{0}".format(new_number)
+                    if newtail != tail: # we might be keeping everything
+                        to_swap.append((head, tail, newtail))
+                tails = tails[:-keep_old]
+            to_remove.extend([head + tail for tail in tails])
         with DelayCommit(self, silence=True):
             for table in to_remove:
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
+            for head, cur_tail, new_tail in to_swap:
+                self._swap([head], cur_tail, new_tail)
+                print "Swapped {0} to {1}".format(head + cur_tail, head + new_tail)
 
     def max_id(self, table = None):
         if table is None:
