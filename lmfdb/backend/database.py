@@ -3545,7 +3545,7 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``old`` -- a boolean, default `True`, if to drop `_old*` tables
+        - ``keep_old`` -- the number of old tables to keep (they will be renamed so that they start at 1)
         """
         to_remove = []
         to_swap = []
