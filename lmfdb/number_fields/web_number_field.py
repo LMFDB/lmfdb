@@ -5,7 +5,7 @@ import os, yaml
 from flask import url_for
 from sage.all import (
     gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
-    QQ, NumberField, PolynomialRing, latex, pari, cached_function)
+    QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
@@ -16,6 +16,7 @@ wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 dnc = 'data not computed'
+
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -782,7 +783,7 @@ class WebNumberField:
             # cc is list, each has methods group, size, order, representative
             ccreps = [x.representative() for x in cc]
             ccns = [int(x.size()) for x in cc]
-            ccreps = [x.cycle_string() for x in ccreps]
+            ccreps = [Permutation(x).cycle_string() for x in ccreps]
             ccgen = '['+','.join(ccreps)+']'
             ar = nfgg.artin_representations() # list of artin reps from db
             arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
