@@ -676,14 +676,14 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     
     fs = open(searchfile, 'w')
     fe = open(extrafile, 'w')
-    curves._write_header_lines(fs, ["id"]+curves._search_cols)
-    curves._write_header_lines(fe, ["id"]+curves._extra_cols)
+    curves._write_header_lines(fs, ["id"]+curves.search_cols)
+    curves._write_header_lines(fe, ["id"]+curves.extra_cols)
 
     id = id0
     for c in records:
-        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves._search_cols]))
+        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves.search_cols]))
         fs.write("\n")
-        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves._extra_cols]))
+        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves.extra_cols]))
         fe.write("\n")
         id +=1
     fs.close()
