@@ -3311,6 +3311,8 @@ class PostgresTable(PostgresBase):
                 if table.endswith("_counts") or table.endswith("_stats"):
                     self._db.grant_insert(table)
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
+        if backup_number > 1: # There are multiple backup tables
+            print "WARNING: there are now {1} backup tables for {0}\nYou should probably run `db.{0}.cleanup_from_reload()` to save disc space".format(self.search_table, backup_number)
 
     def _check_file_input(self, searchfile, extrafile, kwds):
         """
