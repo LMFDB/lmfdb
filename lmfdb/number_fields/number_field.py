@@ -37,7 +37,7 @@ nfields = None
 max_deg = None
 init_nf_flag = False
 
-# For imaginary quadratic field class group data
+# For imaginary quadratic field class group data 
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 
 def init_nf_count():
