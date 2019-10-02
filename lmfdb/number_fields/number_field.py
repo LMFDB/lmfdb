@@ -4,7 +4,7 @@ import ast, os, re, StringIO, time
 
 import flask
 from flask import render_template, request, url_for, redirect, send_file, make_response
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
 from lmfdb.app import app

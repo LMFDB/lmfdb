@@ -4,7 +4,7 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
+    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
