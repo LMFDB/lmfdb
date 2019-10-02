@@ -630,21 +630,9 @@ class WebNumberField:
         return self.gen_name
 
     def root_of_1_order(self):
-        if 'torsion_order' not in self._data:
-            if self.degree()== 1:
-                self._data['torsion_order'] = int(2)
-                self._data['torsion_gen'] = r'\(-1\)'
-            else:
-                gpK = self.gpK()
-                rootof1coeff = gpK.nfrootsof1()
-                self._data['torsion_order'] = int(rootof1coeff[0])
-                rootof1coeff = rootof1coeff[1]
-                self._data['torsion_gen'] = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a')))
         return self._data['torsion_order']
 
     def root_of_1_gen(self):
-        if 'torsion_gen' not in self._data:
-            self.root_of_1_order() # fills in the data
         return self._data['torsion_gen']
 
     def unit_rank(self):
@@ -747,9 +735,7 @@ class WebNumberField:
         return ''
 
     def frobs(self):
-        if 'frobs' in self._data:
-            return self._data['frobs']
-        return False
+        return self._data['frobs']
 
     def conductor(self):
         """ Computes the conductor if the extension is abelian.
