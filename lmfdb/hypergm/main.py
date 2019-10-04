@@ -484,26 +484,27 @@ def render_hgm_webpage(label):
 
 def parse_pandt(info, family):
     errs = []
-    try:
-        info['ps'] = [elt for elt in
-                integer_options(info.get('p', family.default_prange), family.maxp)
-                if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
-    except (ValueError, TypeError) as err:
-        info['ps'] = family.defaultp
-        if err.args and err.args[0] == 'Too many options':
-            errs.append(r"Only p up to %s are available" % (family.maxp))
-        else:
-            errs.append("<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
+    if family.euler_factors.keys():
+        try:
+            info['ps'] = [elt for elt in
+                    integer_options(info.get('p', family.default_prange), family.maxp)
+                    if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
+        except (ValueError, TypeError) as err:
+            info['ps'] = family.defaultp
+            if err.args and err.args[0] == 'Too many options':
+                errs.append(r"Only p up to %s are available" % (family.maxp))
+            else:
+                errs.append("<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
 
-    try:
-        if info.get('t'):
-            info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
-            info['t'] = ",".join(map(str, info['ts']))
-        else:
+        try:
+            if info.get('t'):
+                info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+                info['t'] = ",".join(map(str, info['ts']))
+            else:
+                info['ts'] = None
+        except (ValueError, TypeError) as err:
             info['ts'] = None
-    except (ValueError, TypeError) as err:
-        info['ts'] = None
-        errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
+            errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs
 
 def render_hgm_family_webpage(label):
