@@ -80,6 +80,7 @@
         {% endif %}
       {% endfor %}
 </table>
+{% if family.defaultp %}
 <p>
 <h2>Good Euler factors</h2>
 <form id='euler_factors'>
@@ -98,7 +99,7 @@
   <button id="refresh_euler">Refresh table</button>
 </form>
 
-{% for var, value, col_var, euler_factors in family.table_euler_factors_generic(info.ps, info.ts) %}
+  {% for var, value, col_var, euler_factors in family.table_euler_factors_generic(info.ps, info.ts) %}
   <h3>${{var}}={{value}}$</h3>
   <table class='ntdata'>
     <thead>
@@ -156,5 +157,6 @@
     </tbody>
   </table>
 {% endfor %}
+{% endif %}
 
 {% endblock %}
