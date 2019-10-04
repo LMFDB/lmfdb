@@ -4,7 +4,7 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
+    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -629,6 +629,12 @@ class WebNumberField:
         # For consistency with Sage number fields
         return self.gen_name
 
+    def root_of_1_order(self):
+        return self._data['torsion_order']
+
+    def root_of_1_gen(self):
+        return self._data['torsion_gen']
+
     def unit_rank(self):
         if not self.haskey('unit_rank'):
             sig = self.signature()
@@ -728,31 +734,17 @@ class WebNumberField:
             return '<span style="font-size: x-small">(GRH)</span>'
         return ''
 
+    def frobs(self):
+        return self._data['frobs']
+
     def conductor(self):
         """ Computes the conductor if the extension is abelian.
             It raises an exception if the field is not abelian.
         """
-        if not self.is_abelian():
+        cond = self._data['conductor']
+        if cond == 0: # Code for not an abelian field
             raise Exception('Invalid field for conductor')
-        D = self.disc()
-        plist = self.ramified_primes()
-        K = self.K()
-        f = ZZ(1)
-        for p in plist:
-            e = K.factor(p)[0][0].ramification_index()
-            if p == ZZ(2):
-                e = K.factor(p)[0][0].ramification_index()
-                # ramification index must be a power of 2
-                f *= e * 2
-                c = D.valuation(p)
-                res_deg = ZZ(self.degree() / e)
-                # adjust disc expo for unramified part
-                c = ZZ(c / res_deg)
-                if is_odd(c):
-                    f *= 2
-            else:
-                f *= p ** (e.valuation(p) + 1)
-        return f
+        return ZZ(cond)
 
     def artin_reps(self, nfgg=None):
         if nfgg is not None:
@@ -813,44 +805,8 @@ class WebNumberField:
 
         return []
 
-    def dirichlet_group(self, prime_bound=10000):
-        f = self.conductor()
-        if f == 1:  # To make the trivial case work correctly
-            return [1]
-        if euler_phi(f) > dir_group_size_bound:
-            return []
-        # Can do quadratic fields directly
-        if self.degree() == 2:
-            if is_odd(f):
-                return [1, f-1]
-            f1 = f/4
-            if is_odd(f1):
-                return [1, f-1]
-            # we now want f with all powers of 2 removed
-            f1 = f1/2
-            if is_even(f1):
-                raise Exception('Invalid conductor')
-            if (self.disc()/8) % 4 == 3:
-                return [1, 4*f1-1]
-            # Finally we want congruent to 5 mod 8 and -1 mod f1
-            if (f1 % 4) == 3:
-                return [1, 2*f1-1]
-            return [1, 6*f1-1]
-
-        from dirichlet_conrey import DirichletGroup_conrey
-        G = DirichletGroup_conrey(f)
-        K = self.K()
-        S = Set(G[1].kernel()) # trivial character, kernel is whole group
-
-        for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
-            a = P.norm() % f
-            if gcd(a,f)>1:
-                continue
-            S = S.intersection(Set(G[a].kernel()))
-            if len(S) == self.degree():
-                return list(S)
-
-        raise Exception('Failure in dirichlet group for K=%s using prime bound %s' % (K,prime_bound))
+    def dirichlet_group(self):
+        return self._data['dirichlet_group']
 
     def full_dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
