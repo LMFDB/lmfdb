@@ -10,7 +10,7 @@ from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Sp
 class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
-    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces']
+    data_format = ['N=level', 'k=weight', 'dim', 'analytic conductor', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces - a2,a3,a5,a7']
     columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
 
     def _get_hecke_nf(self, label):
