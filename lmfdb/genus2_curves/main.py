@@ -10,7 +10,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, comma, flash_error, display_knowl,
-    parse_bool, parse_ints, parse_bracketed_posints,
+    parse_bool, parse_ints, parse_bracketed_posints, parse_primes,
     search_wrap,
     Downloader,
     StatsDisplay, formatters)
@@ -306,6 +306,14 @@ def genus2_curve_search(info, query):
         query['class'] = info['class']
     for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
+    if info.get('bad_quantifier') == 'exactly':
+        mode = 'exact'
+    elif info.get('bad_quantifier') == 'include':
+        mode = 'append'
+    else:
+        mode = 'complement'
+    parse_primes(info, query, 'bad_primes', name='bad primes',
+                 qfield='bad_primes',mode=mode)
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
 
