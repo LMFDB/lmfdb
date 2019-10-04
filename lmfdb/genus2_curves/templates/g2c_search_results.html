@@ -115,13 +115,34 @@
 
 <tr>
 <td>{{ KNOWL('ag.geom_simple', title='\(\overline{\mathbb Q}\)-simple') }}</td>
+<td align=left colspan=2>{{KNOWL('g2c.good_reduction', title='Bad primes')}}</td>
 </tr>
+
+
 <tr>
 <td><select name='is_simple_geom' style="width: 110px">
   <option ></option>
   <option value="True" {{ "selected" if info.is_simple_geom == 'True'}}>True</option>
   <option value="False" {{ "selected" if info.is_simple_geom == 'False'}}>False</option>
 </select></td>
+<td align=left colspan=2>
+  <select name='bad_quantifier'>
+{% if info.bad_quantifier=='exactly' %}
+  <option value='include'>include</option>
+  <option value='exclude'>exclude</option>
+  <option selected value='exactly'>exactly</option>
+{% elif info.bad_quantifier=='exclude' %}
+  <option value='include'>include</option>
+  <option selected value='exclude'>exclude</option>
+  <option value='exactly'>exactly</option>
+{% else %}
+  <option selected value='include'>include</option>
+  <option value='exclude'>exclude</option>
+  <option value='exactly'>exactly</option>
+{% endif %}
+  </select>
+<input type='text' name='bad_primes' placeholder="2,3" size=10  value={{info.bad_primes}}>
+</td>
 </tr>
 <tr>
 <td class="button"><button type='submit' value='refine' style='min-width: 110px' onclick='resetStart()'>Search again</button></td>
