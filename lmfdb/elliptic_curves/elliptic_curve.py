@@ -270,6 +270,14 @@ def elliptic_curve_search(info, query):
         mode = 'append'
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
+    if info.get('bad_quantifier') == 'exactly':
+        mode = 'exact'
+    elif info.get('bad_quantifier') == 'include':
+        mode = 'append'
+    else:
+        mode = 'complement'
+    parse_primes(info, query, 'bad_primes', name='bad primes',
+                 qfield='bad_primes',mode=mode)
     # The button which used to be labelled Optimal only no/yes"
     # (default no) has been renamed "Curves per isogeny class all/one"
     # (default one) but the only change in behavious is that we no

@@ -270,6 +270,7 @@ def modules2string(n, t, modlist):
             modlist[j][1] -= 1
     return ans
 
+@cached_function
 def nf_display_knowl(label, name=None):
     if not name:
         name = "Global Number Field %s" % label
