@@ -3,7 +3,7 @@
 
 <h2> Further refine search </h2>
 
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 {% include 'hidden_search_inputs.html' %}
 
 <table border="0">
@@ -21,15 +21,15 @@
 <td><input type='text' name='disc' placeholder='1..100'  size=10 value={{info.disc}}>
 <td><select name='cm'>
 {% if info.cm == "only" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude">exclude</option>
        <option value="only" selected="yes">only</option>
 {% elif info.cm == "exclude" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude" selected="yes">exclude</option>
        <option value="only">only</option>
 {% else %}
-       <option value="include" selected="yes">include</option>
+       <option value="" selected="yes">include</option>
        <option value="exclude">exclude</option>
        <option value="only">only</option>
 {% endif %}
@@ -49,15 +49,15 @@
 <td><input type='text' name='dimension' placeholder='1' size=10 value={{info.dimension}}>
 <td><select name='bc'>
 {% if info.bc == "only" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude">exclude</option>
        <option value="only" selected>only</option>
 {% elif info.bc == "exclude" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude" selected>exclude</option>
        <option value="only">only</option>
 {% else %}
-       <option value="include" selected>include</option>
+       <option value="" selected>include</option>
        <option value="exclude">exclude</option>
        <option value="only">only</option>
 {% endif %}

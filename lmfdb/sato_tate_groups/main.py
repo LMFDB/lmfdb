@@ -234,7 +234,7 @@ def search(**args):
     # if user clicked refine search always restart at 0
     if 'refine' in info:
         start = 0
-    ratonly = True if info.get('rational_only','no').strip().lower() == 'yes' else False
+    ratonly = True if info.get('include_irrational','no').strip().lower() == 'no' else False
     query = {'rational':True} if ratonly else {}
     try:
         parse_ints(info,query,'weight','weight')
