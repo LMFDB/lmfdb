@@ -169,6 +169,25 @@ class Genus2Test(LmfdbTest):
                 ('M_2(CM)', '2916.b.11664.1')]:
             L = self.tc.get('/Genus2Curve/Q/?geom_end_alg={}'.format(endo))
             assert text in L.data
+
+
+    # tests for searching by geometric invariants
+    def test_igusa_clebsch_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_clebsch_inv&geometric_invariants=[1824%2C179520%2C140795904%2C207474688]')
+        assert '1369.a.50653.1' in L.data
+        assert '169.a.169.1' not in L.data
+
+    def test_igusa_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_inv&geometric_invariants=[228%2C296%2C-98568%2C-5640280%2C50653]')
+        assert '1369.a.50653.1' in L.data
+        assert '169.a.169.1' not in L.data
+
+    def test_G2_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=g2_inv&geometric_invariants=[616132666368%2F50653%2C94818816%2F1369%2C-3742848%2F37]')
+        assert '1369.a.50653.1' in L.data
+        assert '169.a.169.1' not in L.data
+
+
             
     def test_badprimes_search(self):
         L = self.tc.get('/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3')
@@ -184,6 +203,7 @@ class Genus2Test(LmfdbTest):
         assert '450.a.2700.1' in L.data
         assert not('169.a.169.1' in L.data)
         
+
     def test_related_objects(self):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
