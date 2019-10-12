@@ -169,7 +169,21 @@ class Genus2Test(LmfdbTest):
                 ('M_2(CM)', '2916.b.11664.1')]:
             L = self.tc.get('/Genus2Curve/Q/?geom_end_alg={}'.format(endo))
             assert text in L.data
-
+            
+    def test_badprimes_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3')
+        assert '324.a.648.1' in L.data
+        assert not('450.a.2700.1' in L.data)
+        assert not('169.a.169.1' in L.data)
+        L = self.tc.get('/Genus2Curve/Q/?bad_quantifier=exclude&bad_primes=2%2C3')
+        assert not('324.a.648.1' in L.data)
+        assert not('450.a.2700.1' in L.data)
+        assert '169.a.169.1' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?bad_quantifier=include&bad_primes=2%2C3')
+        assert '324.a.648.1' in L.data
+        assert '450.a.2700.1' in L.data
+        assert not('169.a.169.1' in L.data)
+        
     def test_related_objects(self):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
