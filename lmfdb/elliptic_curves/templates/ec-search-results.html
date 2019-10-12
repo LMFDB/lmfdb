@@ -143,6 +143,9 @@ table td.params {
 {% if info.surj_primes or info.nonsurj_primes  %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
+{% if info.num_int_pts %}
+  <th class="center">Number of {{KNOWL('ec.q.integral_points', title='integral points')}}</th>
+{% endif %}
 </tr>
 {% for curve in info.results: %}
 <tr>
@@ -155,6 +158,9 @@ table td.params {
 <td class="center">{{curve.torsion}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
+{% endif %}
+{% if info.num_int_pts %}
+<td class="center">{{curve.num_int_pts}}</td>
 {% endif %}
 </tr>
 {% endfor %}
