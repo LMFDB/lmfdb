@@ -92,8 +92,6 @@ def by_url_belyi_search_group_triple(group, abc):
     info['abc_list'] = abc
     return belyi_search(info)
 
-
-
 @belyi_page.route("/<smthorlabel>")
 def by_url_belyi_search_url(smthorlabel):
     split = smthorlabel.split('-')
@@ -124,7 +122,12 @@ def by_url_belyi_search_group(group):
     info['group'] = group
     return belyi_search(info)
 
-
+# TODO: finish download stuff
+#@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>/download/<download_type>")
+#def belyi_galmap_code_download(**args):
+#    response = make_response(ec_code(**args))
+#    response.headers['Content-type'] = 'text/plain'
+#    return response
 
 
 def render_belyi_galmap_webpage(label):
