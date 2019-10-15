@@ -272,10 +272,10 @@ def elliptic_curve_search(info, query):
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     if info.get('bad_quantifier') == 'exactly':
         mode = 'exact'
-    elif info.get('bad_quantifier') == 'include':
-        mode = 'append'
+    elif info.get('bad_quantifier') == 'exclude':
+    	mode = 'complement'
     else:
-        mode = 'complement'
+        mode = 'append'
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=mode)
     # The button which used to be labelled Optimal only no/yes"

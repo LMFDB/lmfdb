@@ -9,7 +9,7 @@
 <table>
 <td>{{ KNOWL('st_group.weight', title='Weight') }}</td>
 <td>{{ KNOWL('st_group.degree', title='Degree')}}</td>
-<td>{{ KNOWL('st_group.rational', title='Rational only') }}</td>
+<td>{{ KNOWL('st_group.rational', title='Include irrational') }}</td>
 <td>{{ KNOWL('st_group.identity_component', title='$\mathrm{ST}^0$') }}</td>
 <td>{{ KNOWL('st_group.components', title='Components')}}</td>
 <td>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[a_1=0]$')}}</td>
@@ -18,13 +18,13 @@
 <tr>
 <td><input type='text' name='weight' placeholder='1' style="width: 100px" value="{{info.weight}}"></td>
 <td><input type='text' name='degree' placeholder='4' style="width: 100px" value="{{info.degree}}"></td>
-<td><select name='rational_only' style="width: 110px" >
-    {% if info.rational_only == 'yes' %}
+<td><select name='include_irrational' style="width: 110px" >
+    {% if info.include_irrational == 'yes' %}
+        <option value=''>no</option>
         <option value='yes' selected>yes</option>
-        <option value='no'>no</option>
     {% else %}
+        <option value='' selected>no</option>
         <option value='yes'>yes</option>
-        <option value='no' selected>no</option>
     {% endif %}
 </select></td>
 <td><select name='identity_component' style="width: 110px" >
@@ -42,7 +42,7 @@
 </tr>
 
 <tr>
-<td class="button"><button type='submit' name='refine' value='1' style="width: 110px" onclick='resetStart()'>Search again</button></td>
+<td class="button"><button type='submit' style="width: 110px" onclick='resetStart()'>Search again</button></td>
 </tr>
 
 </table>
