@@ -1290,14 +1290,35 @@ opt_man_data = {} # to keep pyflakes happy
 #
 # before using the following function for rewriting
 
+def make_integral_points(e):
+    a1, a2, a3, a4, a6 = e.ainvs
+    num_int_pts = 0
+    int_pts_str = ""
+    for x in xcoord_integral_points:
+        f = ((x + a2) * x + a4) * x + a6
+        b = (a1*x + a3)
+        d = (b*b + 4*f).sqrt()
+        y = ZZ((-b+d)/2)
+        if y == 0:
+            num_int_pts += 1
+            int_pts_str += "({},{}),".format(x,y)
+        else:
+            num_int_pts += 2
+            int_pts_str += "({},\\pm{}),".format(x,y)
+        int_pts_str = int_pts_str[:len(int_pts_str)-1]
+    return num_int_pts, int_pts_str
+
+
 def add_opt_man(c):
     lab = c['label']
     if lab in opt_man_data:
         c.update(opt_man_data[lab])
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
-    c['num_int_pts'] = len(c['xcoord_integral_points'])
-    return c
+    #c['num_int_pts'] = len(c['xcoord_integral_points'])
+    m, _ = make_integral_points(c)
+    c['num_int_pts'] =m
+    return 
 
 # Sage translation of the Magma function TraceHash(), just for elliptic curves /Q
 

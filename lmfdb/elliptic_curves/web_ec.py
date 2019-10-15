@@ -9,6 +9,7 @@ from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
+# need to import make_integral_points...
 
 from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
@@ -367,18 +368,33 @@ class WebEC(object):
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
 
+
     def make_mw(self):
         mw = self.mw = {}
         mw['rank'] = self.rank
         mw['int_points'] = ''
-        if self.xintcoords:
-            a1, a2, a3, a4, a6 = self.ainvs
-            def lift_x(x):
+        # should import this from import_ec_data.py
+        def make_integral_points(e):
+            a1, a2, a3, a4, a6 = e.ainvs
+            num_int_pts = 0
+            int_pts_str = ""
+            for x in xcoord_integral_points:
                 f = ((x + a2) * x + a4) * x + a6
                 b = (a1*x + a3)
                 d = (b*b + 4*f).sqrt()
-                return (x, (-b+d)/2)
-            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
+                y = ZZ((-b+d)/2)
+                if y == 0:
+                    num_int_pts += 1
+                    int_pts_str += "({},{}),".format(x,y)
+                else:
+                    num_int_pts += 2
+                    int_pts_str += "({},\\pm{}),".format(x,y)
+                    int_pts_str = int_pts_str[:len(int_pts_str)-1]
+            return num_int_pts, int_pts_str
+        if self.xintcoords:
+            _, int_pts_str = make_integral_points(self)
+            mw['int_points'] = int_pts_str
+            #mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
         mw['heights'] = []
