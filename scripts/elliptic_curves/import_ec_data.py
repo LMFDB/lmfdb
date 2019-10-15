@@ -676,14 +676,14 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     
     fs = open(searchfile, 'w')
     fe = open(extrafile, 'w')
-    curves._write_header_lines(fs, ["id"]+curves._search_cols)
-    curves._write_header_lines(fe, ["id"]+curves._extra_cols)
+    curves._write_header_lines(fs, ["id"]+curves.search_cols)
+    curves._write_header_lines(fe, ["id"]+curves.extra_cols)
 
     id = id0
     for c in records:
-        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves._search_cols]))
+        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves.search_cols]))
         fs.write("\n")
-        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves._extra_cols]))
+        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves.extra_cols]))
         fe.write("\n")
         id +=1
     fs.close()
@@ -734,15 +734,16 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     write to a file with correct headers (written but only partially
     tested); then use curves.copy_from() to do the upload.
     """
-    allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
-    allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
-    intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
-    alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
-    alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
-    galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
-    twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
-    allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
-    opt_man_filename = 'opt_man/opt_man.%s-%s' % (min_N, max_N)
+    Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+    allbsd_filename = 'allbsd/allbsd.{}'.format(Nrange)
+    allgens_filename = 'allgens/allgens.{}'.format(Nrange)
+    intpts_filename = 'intpts/intpts.{}'.format(Nrange)
+    alldegphi_filename = 'alldegphi/alldegphi.{}'.format(Nrange)
+    alllabels_filename = 'alllabels/alllabels.{}'.format(Nrange)
+    galreps_filename = 'galrep/galrep.{}'.format(Nrange)
+    twoadic_filename = '2adic/2adic.{}'.format(Nrange)
+    allisog_filename = 'allisog/allisog.{}'.format(Nrange)
+    opt_man_filename = 'opt_man/opt_man.{}'.format(Nrange)
     file_list = [alllabels_filename, allgens_filename, allbsd_filename, intpts_filename, alldegphi_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
     #    file_list = [twoadic_filename]
     #    file_list = [allgens_filename]
@@ -853,7 +854,8 @@ def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     if min_N==0:
         f = 'allisog/allisog.00000-09999'
     else:
-        f = 'allisog/allisog.%s-%s' % (min_N, max_N)
+        Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+        f = 'allisog/allisog.{}'.format(Nrange)
     h = open(os.path.join(base_path, f))
     print("Opened {}".format(os.path.join(base_path, f)))
     data = {}
@@ -1409,3 +1411,30 @@ def TraceHashClass(iso, E):
         th = TH_dict[iso] = TraceHash(E)
         return th
 
+
+def fix_opt(iso, test=True):
+    """Given an isogeny class of 2 or more curves, fixes the 'optimality'
+    column, so that the first has value 1 and the others 0.  Use for
+    certain special cases or after determining that curve #1 is
+    optimal in some range.
+    """
+    for c in curves.search({'iso':iso}, projection=['label', 'number', 'optimality']):
+        old_opt = c['optimality']
+        label = c['label']
+        if old_opt:
+            c['optimality'] = new_opt = int(c['number']==1)
+
+            # Now do the updates:
+
+            print("Updating optimality for {} from {} to {}".format(label, old_opt, new_opt))
+            if not test:
+                curves.upsert({'label':label},c)
+                print("changes made")
+            else:
+                print("Taking no further action")
+        else:
+            print("No action for curve {} whose optimality code is 0".format(label))
+
+opt_fixes = ['260116a', '280916a', '285172a', '291664a', '300368a', '302516a',
+             '306932a', '329492a', '343412a', '345808a', '367252a', '377012b',
+             '384464d', '391892a', '401972a', '425168b', '446288a', '481652a']

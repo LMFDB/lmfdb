@@ -270,6 +270,14 @@ def elliptic_curve_search(info, query):
         mode = 'append'
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
+    if info.get('bad_quantifier') == 'exactly':
+        mode = 'exact'
+    elif info.get('bad_quantifier') == 'exclude':
+    	mode = 'complement'
+    else:
+        mode = 'append'
+    parse_primes(info, query, 'bad_primes', name='bad primes',
+                 qfield='bad_primes',mode=mode)
     # The button which used to be labelled Optimal only no/yes"
     # (default no) has been renamed "Curves per isogeny class all/one"
     # (default one) but the only change in behavious is that we no
@@ -285,6 +293,7 @@ def elliptic_curve_search(info, query):
         # Instead, we use this more complicated query:
         # query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
+    info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])

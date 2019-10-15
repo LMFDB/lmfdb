@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones
+# Author: John Jones, Edgar Costa
 
 import re
 
 from flask import render_template, request, url_for, redirect, abort
 from sage.all import (
-    ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd, divisors)
+    is_prime, ZZ, QQ, latex, valuation, PolynomialRing, gcd, divisors)
 
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
-    clean_input, parse_ints, parse_bracketed_posints, parse_rational, 
-    parse_restricted, search_wrap, web_latex)
-from base64 import b64encode
-from urllib import quote
+    clean_input, parse_ints, parse_bracketed_posints, parse_rational,
+    parse_restricted, integer_options, search_wrap,
+    to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
+from web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
@@ -39,7 +39,7 @@ GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
 def dogapthing(m1):
     mnew = str(m1[2])
-    mnew = mnew.replace(' ','')
+    mnew = mnew.replace(' ', '')
     if GAP_ID_RE.match(mnew):
         mnew = mnew[1:-1]
         two = mnew.split(',')
@@ -54,14 +54,14 @@ def dogapthing(m1):
         m1[2] = '$%s$'% m1[2]
     return m1
 
-def getgroup(m1,ell):
-    pind = {2: 0,3:1,5:2,7:3,11:4,13:5}
-    if len(m1[3][2])==0:
+def getgroup(m1, ell):
+    pind = {2: 0, 3: 1, 5: 2, 7: 3, 11: 4, 13: 5}
+    if not m1[3][2]:
         return [m1[2], m1[0]]
-    myA = list2string(m1[3][0])
-    myB = list2string(m1[3][1])
-    if len(myA)==0 and len(myB)==0:
-        return [small_group_display_knowl(1,1), 1]
+    myA = m1[3][0]
+    myB = m1[3][1]
+    if not myA and not myB:  # myA = myB = []
+        return [small_group_display_knowl(1, 1), 1]
     mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
     if mono is None:
         return ['??', 1]
@@ -100,7 +100,6 @@ def incdict(d, v):
         d[v] += 1
     else:
         d[v] = 1
-
 def subdict(d, v):
     if d[v]>1:
         d[v] -= 1
@@ -139,7 +138,7 @@ def cyc_to_QZ(A):
     return alpha
 
 # A and B are lists, tn and td are num/den for t
-def ab_label(A,B):
+def ab_label(A, B):
     return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
 
 def list2Cnstring(li):
@@ -172,8 +171,8 @@ def splitint(a,p):
     return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
 
 
-def make_abt_label(A,B,t):
-    AB_str = ab_label(A,B)
+def make_abt_label(A, B, t):
+    AB_str = ab_label(A, B)
     t = QQ(t)
     t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
@@ -183,7 +182,9 @@ def make_t_label(t):
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
-    bc = [("Motives", url_for("motive.index")), ("Hypergeometric", url_for("motive.index2")), ("$\Q$", url_for(".index"))]
+    bc = [("Motives", url_for("motive.index")),
+          ("Hypergeometric", url_for("motive.index2")),
+          ("$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -258,7 +259,13 @@ def index():
     if len(request.args) != 0:
         return hgm_search(request.args)
     info = {'count': 50}
-    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=get_bread(), credit=HGM_credit, info=info, learnmore=learnmore_list())
+    return render_template(
+            "hgm-index.html",
+            title="Hypergeometric Motives over $\Q$",
+            bread=get_bread(),
+            credit=HGM_credit,
+            info=info,
+            learnmore=learnmore_list())
 
 def hgm_family_circle_plot_data(AB):
     A,B = AB.split("_")
@@ -322,13 +329,13 @@ def hgm_jump(info):
     return redirect(url_for(".index"))
 
 @search_wrap(template="hgm-search.html",
-             table=db.hgm_motives, # overridden if family search
+             table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
              per_page=50,
-             shortcuts={'jump_to':hgm_jump},
-             bread=lambda:get_bread([("Search Results", '')]),
-             credit=lambda:HGM_credit,
+             shortcuts={'jump_to': hgm_jump},
+             bread=lambda: get_bread([("Search Results", '')]),
+             credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     family_search = False
@@ -339,21 +346,21 @@ def hgm_search(info, query):
         query['__table__'] = db.hgm_families
 
     queryab = {}
-    p = info.get('p','2')
+    p = info.get('p', '2')
     for param in ['A', 'B']:
-        parse_bracketed_posints(info, queryab, param, split=True, 
+        parse_bracketed_posints(info, queryab, param, split=True,
                                 keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
-    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p,split=True, 
+    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p, split=True,
                             keepbrackets=True,
                             listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
@@ -472,93 +479,55 @@ def render_hgm_webpage(label):
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
     return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
+
+
+
+def parse_pandt(info, family):
+    errs = []
+    if family.euler_factors.keys():
+        try:
+            info['ps'] = [elt for elt in
+                    integer_options(info.get('p', family.default_prange), family.maxp)
+                    if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
+        except (ValueError, TypeError) as err:
+            info['ps'] = family.defaultp
+            if err.args and err.args[0] == 'Too many options':
+                errs.append(r"Only p up to %s are available" % (family.maxp))
+            else:
+                errs.append("<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
+
+        try:
+            if info.get('t'):
+                info['ts'] = sorted(list(set(map(QQ, info.get('t').split(",")))))
+                info['t'] = ",".join(map(str, info['ts']))
+            else:
+                info['ts'] = None
+        except (ValueError, TypeError) as err:
+            info['ts'] = None
+            errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
+    return errs
+
 def render_hgm_family_webpage(label):
-    data = None
-    info = {}
-    data = db.hgm_families.lookup(label)
-    if data is None:
-        abort(404, "Hypergeometric motive family " + label + " was not found in the database.")
-    title = 'Hypergeometric Motive Family:' + label
-    A = data['A']
-    B = data['B']
-    alpha = cyc_to_QZ(A)
-    beta = cyc_to_QZ(B)
-    gammas = ab2gammas(A,B)
-    hodge = data['famhodge']
-    mydet = data['det']
-    detexp = QQ(data['weight']*data['degree'])
-    detexp = -detexp/2
-    mydet = r'\Q(%s)\otimes\Q(\sqrt{'%str(detexp)
-    if int(data['det'][0]) != 1:
-        mydet += str(data['det'][0])
-    if len(data['det'][1])>0:
-        mydet += data['det'][1]
-    if int(data['det'][0]) == 1 and len(data['det'][1])==0:
-        mydet += '1'
-    mydet += '})'
-    bezoutmat = matrix(data['bezout'])
-    bezoutdet = bezoutmat.det()
-    bezoutmat = latex(bezoutmat)
-    snf = data['snf']
-    snf = list2Cnstring(snf)
-    typee = 'Orthogonal'
-    if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
-        typee = 'Symplectic'
-    ppart = [[2, [data['A2'],data['B2'],data['C2']]],
-        [3, [data['A3'],data['B3'],data['C3']]],
-        [5, [data['A5'],data['B5'],data['C5']]],
-        [7, [data['A7'],data['B7'],data['C7']]]]
-    plot = hgm_family_circle_plot_data("A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))
-    plot = "data:image/png;base64," + quote(b64encode(plot))
-    plot_link = '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(plot)
-    prop2 = [
-        ('Label', '%s' % data['label']),
-        (None, plot_link),
-        ('A', '\(%s\)' % A),
-        ('B', '\(%s\)' % B),
-        ('Degree', '\(%s\)' % data['degree']),
-        ('Weight',  '\(%s\)' % data['weight']),
-        ('Type', '%s' % typee)
-    ]
-    mono = [m for m in data['mono'] if m[1] != 0]
-    mono = [[m[0], dogapthing(m[1]),
-      getgroup(m[1],m[0]),
-      latex(ZZ(m[1][0]).factor())] for m in mono]
-    mono = [[m[0], m[1], m[2][0], splitint(m[1][0]/m[2][1],m[0]), m[3]] for m in mono]
-    info.update({
-                'A': A,
-                'B': B,
-                'alpha': web_latex(alpha),
-                'beta': web_latex(beta),
-                'gammas': gammas,
-                'degree': data['degree'],
-                'weight': data['weight'],
-                'hodge': hodge,
-                'det': mydet,
-                'snf': snf,
-                'bezoutmat': bezoutmat,
-                'bezoutdet': bezoutdet,
-                'mono': mono,
-                'rotation_number': data['imprim'],
-                'ppart': ppart,
-                'type': typee,
-                'junk': small_group_display_knowl(18,2),
-                'showlist': showlist
-                })
-    friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]
-#    if unramfriend != '':
-#        friends.append(('Unramified subfield', unramfriend))
-#    if rffriend != '':
-#        friends.append(('Discriminant root field', rffriend))
+    try:
+        family = WebHyperGeometricFamily.by_label(label)
+    except (KeyError, ValueError) as err:
+        return abort(404, err.args)
+    info = to_dict(request.args)
+    errs = parse_pandt(info, family)
+    if errs:
+        flash_error("<br>".join(errs))
 
-    AB = 'A = '+str(A)+', B = '+str(B)
-    bread = get_bread([('family '+str(AB), ' ')])
 
-    info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-    info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-    info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-
-    return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template("hgm_family.html",
+                           info=info,
+                           family=family,
+                           properties2=family.properties,
+                           credit=HGM_credit,
+                           bread=family.bread,
+                           title=family.title,
+                           friends=family.friends,
+                           KNOWL_ID="hgm.%s" % label,
+                           learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -569,18 +538,18 @@ def show_slopes(sl):
 @hypergm_page.route("/random_family")
 def random_family():
     label = db.hgm_families.random()
-    return redirect(url_for(".by_family_label", label= label))
+    return redirect(url_for(".by_family_label", label=label))
 
 @hypergm_page.route("/random_motive")
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label= s[0], t='t'+s[1]))
+    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Hypergeometric Motive Data over $\Q$'
-    bread = get_bread(('Completeness',''))
+    bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
