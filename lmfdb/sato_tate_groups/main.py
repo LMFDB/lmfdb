@@ -293,8 +293,8 @@ def search(**args):
                 results.append(v)
     else:
         info['number'] = 'infinity'
-        info['start'] = start
-        info['count'] = count
+    info['start'] = start
+    info['count'] = count
 
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
