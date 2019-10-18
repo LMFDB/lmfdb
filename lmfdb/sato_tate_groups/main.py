@@ -229,7 +229,7 @@ def search(**args):
                      'learnmore':learnmore_list()}
     title = 'Sato-Tate Group Search Results'
     err_title = 'Sato-Tate Groups Search Input Error'
-    count = parse_count(info, 25)
+    count = parse_count(info, 50)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
     if 'refine' in info:

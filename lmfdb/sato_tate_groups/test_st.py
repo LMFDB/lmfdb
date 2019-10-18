@@ -49,6 +49,8 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'matches 1001-1025' in L.data
         L = self.tc.get('SatoTateGroup/?degree=1')
         assert 'both matches' in L.data
+        L = self.tc.get('SatoTateGroup/?count=47')
+        assert '1-47' in L.data
 
     def test_moments(self):
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
