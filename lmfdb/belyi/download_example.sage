@@ -1,5 +1,4 @@
 from lmfdb import db
-
 belyi = db.belyi
 s = ""
 label = '5T4-[5,3,3]-5-311-311-g0-a'
@@ -11,13 +10,24 @@ if rec['base_field'] == [-1,1]:
 else:
     s += "R<T> := PolynomialRing(Rationals());\nK<nu> := NumberField(R!%s)\n\n" % rec['base_field']
 s += "// Define the curve\n"
-if rec['g'] == 0:
+if rec['g'] == '0':
     s += "X := Curve(ProjectiveSpace(PolynomialRing(%s, 2)));\n" % K
-elif: rec['g'] == 1:
-    _<x> := PolynomialRing(K);
+    s += "// Define the map\n"
+    s += "KX<x> := FunctionField(X);\n";
+    s += "phi := %s;\n" % rec['map']
+elif rec['g'] == '1':
+    s += "_<x> := PolynomialRing(K);"
     curve_poly = rec['curve'].split("=")[1]   
     s += "X := EllipticCurve(%s) % curve_poly;\n"
-else:
-    _<x> := PolynomialRing(K);
+    s += "// Define the map\n"
+    s += "KX<x,y> := FunctionField(X);\n";
+    s += "phi := %s;\n" % rec['map']
+elif rec['g'] == '2':
+    s += "_<x> := PolynomialRing(K);"
     curve_poly = rec['curve'].split("=")[1]   
     s += "X := HyperellipticCurve(%s) % curve_poly;\n" # need to worry about cross-term maybe...
+    s += "// Define the map\n"
+    s += "KX<x,y> := FunctionField(X);\n";
+    s += "phi := %s;\n" % rec['map']
+else:
+    print("Sorry, not implemented yet! :(")
