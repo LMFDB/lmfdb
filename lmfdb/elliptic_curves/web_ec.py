@@ -99,6 +99,32 @@ def EC_ainvs(E):
     """
     return [int(a) for a in E.ainvs()]
 
+def make_y_coord(as,x):
+    f = ((x + a2) * x + a4) * x + a6
+    b = (a1*x + a3)
+    d = (b*b + 4*f).sqrt()
+    y = ZZ((-b+d)/2)
+
+
+def make_integral_points(self):
+    a1, a2, a3, a4, a6 = self.ainvs
+    num_int_pts = 0
+    int_pts_str = ""
+    for x in xcoord_integral_points:
+        f = ((x + a2) * x + a4) * x + a6
+        b = (a1*x + a3)
+        d = (b*b + 4*f).sqrt()
+        y = ZZ((-b+d)/2)
+        if y == 0:
+            num_int_pts += 1
+            int_pts_str += "({},{}),".format(x,y)
+        else:
+            num_int_pts += 2
+            int_pts_str += "({},\\pm{}),".format(x,y)
+            int_pts_str = int_pts_str[:len(int_pts_str)-1]
+    return num_int_pts, int_pts_str
+
+
 class WebEC(object):
     """
     Class for an elliptic curve over Q
@@ -374,23 +400,6 @@ class WebEC(object):
         mw['rank'] = self.rank
         mw['int_points'] = ''
         # should import this from import_ec_data.py
-        def make_integral_points(e):
-            a1, a2, a3, a4, a6 = e.ainvs
-            num_int_pts = 0
-            int_pts_str = ""
-            for x in xcoord_integral_points:
-                f = ((x + a2) * x + a4) * x + a6
-                b = (a1*x + a3)
-                d = (b*b + 4*f).sqrt()
-                y = ZZ((-b+d)/2)
-                if y == 0:
-                    num_int_pts += 1
-                    int_pts_str += "({},{}),".format(x,y)
-                else:
-                    num_int_pts += 2
-                    int_pts_str += "({},\\pm{}),".format(x,y)
-                    int_pts_str = int_pts_str[:len(int_pts_str)-1]
-            return num_int_pts, int_pts_str
         if self.xintcoords:
             _, int_pts_str = make_integral_points(self)
             mw['int_points'] = int_pts_str

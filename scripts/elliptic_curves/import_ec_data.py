@@ -1317,8 +1317,8 @@ def add_opt_man(c):
         print("No new optimality/Manin data for curve {}".format(lab))
     #c['num_int_pts'] = len(c['xcoord_integral_points'])
     m, _ = make_integral_points(c)
-    c['num_int_pts'] =m
-    return 
+    c['num_int_pts'] = m
+    return
 
 # Sage translation of the Magma function TraceHash(), just for elliptic curves /Q
 
