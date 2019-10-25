@@ -151,6 +151,7 @@ import re, os
 import time
 from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, pari
 from lmfdb.utils import web_latex
+from lmfdb.elliptic_curves.web_ec import make_y_coord
 from lmfdb import db
 print "setting curves"
 curves = db.ec_curves
@@ -1290,24 +1291,20 @@ opt_man_data = {} # to keep pyflakes happy
 #
 # before using the following function for rewriting
 
-def make_integral_points(e):
-    a1, a2, a3, a4, a6 = e.ainvs
+def count_integral_points(c):
+    ainvs = c['ainvs']
     num_int_pts = 0
-    int_pts_str = ""
+    #int_pts_str = ""
     for x in xcoord_integral_points:
-        f = ((x + a2) * x + a4) * x + a6
-        b = (a1*x + a3)
-        d = (b*b + 4*f).sqrt()
-        y = ZZ((-b+d)/2)
+        y = make_y_coord(ainvs,x)
         if y == 0:
             num_int_pts += 1
-            int_pts_str += "({},{}),".format(x,y)
+            #int_pts_str += "({},{}),".format(x,y)
         else:
             num_int_pts += 2
-            int_pts_str += "({},\\pm{}),".format(x,y)
-        int_pts_str = int_pts_str[:len(int_pts_str)-1]
-    return num_int_pts, int_pts_str
-
+            #int_pts_str += "({},\\pm{}),".format(x,y)
+        #int_pts_str = int_pts_str[:len(int_pts_str)-1]
+    return num_int_pts
 
 def add_opt_man(c):
     lab = c['label']
@@ -1316,7 +1313,7 @@ def add_opt_man(c):
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
     #c['num_int_pts'] = len(c['xcoord_integral_points'])
-    m, _ = make_integral_points(c)
+    m = count_integral_points(c)
     c['num_int_pts'] = m
     return
 

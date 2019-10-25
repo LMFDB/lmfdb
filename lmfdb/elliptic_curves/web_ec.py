@@ -9,7 +9,6 @@ from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
-# need to import make_integral_points...
 
 from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
@@ -99,22 +98,20 @@ def EC_ainvs(E):
     """
     return [int(a) for a in E.ainvs()]
 
-def make_y_coord(as,x):
+def make_y_coord(ainvs,x):
+    a1, a2, a3, a4, a6 = ainvs
     f = ((x + a2) * x + a4) * x + a6
     b = (a1*x + a3)
     d = (b*b + 4*f).sqrt()
     y = ZZ((-b+d)/2)
-
+    return y
 
 def make_integral_points(self):
-    a1, a2, a3, a4, a6 = self.ainvs
+    ainvs = self.ainvs
     num_int_pts = 0
     int_pts_str = ""
     for x in xcoord_integral_points:
-        f = ((x + a2) * x + a4) * x + a6
-        b = (a1*x + a3)
-        d = (b*b + 4*f).sqrt()
-        y = ZZ((-b+d)/2)
+        y = make_y_coord(ainvs,x)
         if y == 0:
             num_int_pts += 1
             int_pts_str += "({},{}),".format(x,y)
