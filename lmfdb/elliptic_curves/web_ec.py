@@ -10,7 +10,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
 
-from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RR
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -102,7 +102,7 @@ def make_y_coord(ainvs,x):
     a1, a2, a3, a4, a6 = ainvs
     f = ((x + a2) * x + a4) * x + a6
     b = (a1*x + a3)
-    d = (b*b + 4*f).sqrt()
+    d = (RR(b*b + 4*f)).sqrt()
     y = ZZ((-b+d)/2)
     return y
 
@@ -110,6 +110,7 @@ def make_integral_points(self):
     ainvs = self.ainvs
     num_int_pts = 0
     int_pts_str = ""
+    xcoord_integral_points = self.xintcoords 
     for x in xcoord_integral_points:
         y = make_y_coord(ainvs,x)
         if y == 0:
@@ -391,7 +392,6 @@ class WebEC(object):
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
 
-
     def make_mw(self):
         mw = self.mw = {}
         mw['rank'] = self.rank
@@ -399,7 +399,7 @@ class WebEC(object):
         # should import this from import_ec_data.py
         if self.xintcoords:
             _, int_pts_str = make_integral_points(self)
-            mw['int_points'] = int_pts_str
+            mw['int_points'] = web_latex(int_pts_str)
             #mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
