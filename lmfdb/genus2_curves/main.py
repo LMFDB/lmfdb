@@ -294,7 +294,7 @@ def genus2_curve_search(info, query):
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
-    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch')
+    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch_inv')
     if 'geometric_invariants' in info:
         query[geom_inv_type] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
 
