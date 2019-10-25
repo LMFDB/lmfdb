@@ -10,7 +10,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, comma, flash_error, display_knowl,
-    parse_bool, parse_ints, parse_bracketed_posints, parse_primes,
+    parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
     StatsDisplay, formatters)
@@ -295,9 +295,13 @@ def genus2_curve_search(info, query):
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
     geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch_inv')
-    if 'geometric_invariants' in info:
-        query[geom_inv_type] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
-
+    if geom_inv_type == 'igusa_clebsch_inv':
+        invlength = 4
+    elif geom_inv_type == 'igusa_inv':
+        invlength = 5
+    else:
+        invlength = 3
+    parse_bracketed_rats(info,query,'geometric_invariants',qfield=geom_inv_type,exactlength=invlength,split=False,keepbrackets=True)
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)

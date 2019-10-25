@@ -14,6 +14,7 @@ LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
+BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
 QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
@@ -515,6 +516,55 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         else:
             inp = '[%s]'%','.join([str(a) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
+            
+@search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, keepbrackets=False, extractor=None):
+    if (not BRACKETED_RAT_RE.match(inp) or
+        (maxlength is not None and inp.count(',') > maxlength - 1) or
+        (exactlength is not None and inp.count(',') != exactlength - 1) or
+        (exactlength is not None and inp == '[]' and exactlength > 0)):
+        if exactlength == 2:
+            lstr = "pair of rational numbers"
+            example = "[2,3/2] or [3,3]"
+        elif exactlength == 1:
+            lstr = "list of 1 rational number"
+            example = "[2/5]"
+        elif exactlength is not None:
+            lstr = "list of %s rational numbers" % exactlength
+            example = str(range(2,exactlength+2)).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
+        elif maxlength is not None:
+            lstr = "list of at most %s rational numbers" % maxlength
+            example = str(range(2,maxlength+2)).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
+        else:
+            lstr = "list of rational numbers"
+            example = "[1/7,2,3] or [5,6/71]"
+        raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
+    else:
+        if inp == '[]': # fixes bug in the code below (split never returns an empty list)
+            if split:
+                query[qfield] = []
+            else:
+                query[qfield] = ''
+            return
+        L = [QQ(a) for a in inp[1:-1].split(',')]
+        if process is not None:
+            L = [process(a) for a in L]
+        if listprocess is not None:
+            L = listprocess(L)
+        if extractor is not None:
+            for qf, v in zip(qfield, extractor(L)):
+                if qf in query and query[qf] != v:
+                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
+                query[qf] = v
+        elif split:
+            query[qfield] = L
+        else:
+            inp = '[%s]'%','.join([str(a) for a in L])
+            if keepbrackets:
+                inp = inp.replace("[","['").replace("]","']").replace(",","','")
+                query[qfield] = inp
+            else:
+                query[qfield] = inp[1:-1]
 
 def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
