@@ -770,6 +770,63 @@ def render_passport(args):
                                credit=credit)
 
 
+#Generate topological webpage
+@higher_genus_w_automorphisms_page.route("/<fam>/<cc>") 
+def topological_action(fam, cc):
+    br_g, br_gp, br_sign = split_family_label(fam)
+    cc_list = cc_to_list(cc)
+    representative = fam + '.' + cc[2:]
+
+     #Get the equivalence class
+    topo_class = list(db.hgcwa_passports.search({'label': fam, 'topological': cc_list}))
+
+    g = topo_class[0]['genus']
+    GG = ast.literal_eval(topo_class[0]['group'])
+    gn = GG[0]
+    gt = GG[1]
+
+    gp_string=str(gn) + '.' + str(gt)
+    pretty_group=sg_pretty(gp_string)
+
+    bread_sign = label_to_breadcrumbs(br_sign)
+    bread_gp = label_to_breadcrumbs(br_gp)
+
+    bread = get_bread([(br_g, '../?genus='+br_g),('$'+pretty_group+'$','../?genus='+br_g + '&group='+bread_gp),
+                            (bread_sign, '../'+fam),
+                            ('Topological Orbit for ' + str(cc_list[0]) + ', ' + str(cc_list[1]), ' ') ])
+
+    title = 'One Orbit Under Topological Action'
+
+    downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=representative, download_type='rep_magma')),
+                      ('Download Gap code', url_for(".hgcwa_code_download", label=representative, download_type='rep_gap'))]
+
+    Lbraid={}
+
+    for element in topo_class:
+       if str(element['braid']) in Lbraid:
+           Lbraid[str(element['braid'])].append([element['passport_label'],
+                                              element['total_label'],
+                                              cc_display(ast.literal_eval(element['con']))])
+       else:
+           Lbraid[str(element['braid'])] = [[element['passport_label'],
+                                         element['total_label'],
+                                         cc_display(ast.literal_eval(element['con']))]]
+
+    # Sort braid ascending
+    sorted_braid = []
+    braid_key = Lbraid.keys()
+    key_for_sorted = list(map(lambda key: ast.literal_eval(key), braid_key))
+    key_for_sorted.sort()
+
+    for key in key_for_sorted:
+        sorted_braid.append(Lbraid[str(key)])
+
+    info = {'topological_class': sorted_braid, 'representative': representative, 'braid_num': len(braid_key)}
+
+    return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread, downloads=downloads)
+
+    
+
 
 def search_input_error(info, bread):
     return render_template("hgcwa-search.html", info=info, title='Families of Higher Genus Curve Search Input Error', bread=bread, credit=credit)
@@ -895,6 +952,14 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
 
+    # Add braid and topological tag for each entry
+    if lang == args['download_type'] and 'braid' in data[0]:
+        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+
+    if args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
+        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
+    
     # extended formatting template for when signH is present
     signHfmt = stdfmt
     signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'

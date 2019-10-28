@@ -4,6 +4,13 @@
 {% block content %}
 
 
+<style>
+.tab button.active {
+    background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
+}
+</style>
+<!-- add in style.css -->
+
 
 <h2> Family Information</h2>
 
@@ -85,23 +92,127 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   {% endfor %}
  </p>
 
- <p>
-  {% if info.numb >= 2 %}
- <form>
-  <table>
-    <tr>
-      <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
-      <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
-    </tr>
-    <tr>
-      <td colspan=3><button type='submit' value='display'>Display</button></td>
-    </tr>
-  </table>
-</form>
-{% endif %} </p>
+ 
+<p>
+{% if info.numb >= 2 and info.braid_numb == 0 %}
+  <p>
+  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+  </p>
+
+  <p>
+  {% for cdata in info.genvects %}
+    {{cdata[0]}}
+    <table>{% for perm in cdata[3] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
+  </p>
+
+  <p>
+  <form>
+    <table>
+      <tr>
+        <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+        <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+      </tr>
+      <tr>
+        <td colspan=3><button type='submit' value='display'>Display</button></td>
+      </tr>
+    </table>
+  </form>
+  </p>
+{% endif %}
+    
+{% if info.numb >= 2 and info.braid_numb >= 0 %}
+  <div class="tab">
+    <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen">
+      Vectors up to Braid Equivalence</button>    
+    <button type="submit" class="tablinks" onclick="openData(event, 'all')">
+      All Vectors</button> 
+  </div>
+
+  <div id="all" class="tabcontent">
+    <p>
+      Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    </p>
+
+    <p>
+    {% for cdata in info.genvects %}
+      {{cdata[0]}}
+      <table>{% for perm in cdata[3] %}
+        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
+    {% endfor %}
+    </p>
+
+    <p>
+    <form>
+      <table>
+        <tr>
+          <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+          <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+        </tr>
+        <tr>
+          <td colspan=3><button type='submit' value='display'>Display</button></td>
+        </tr>
+      </table>
+    </form> 
+    </p>  
+  </div>
+
+  <div id="braid" class="tabcontent">
+    <p>
+    {% if info.braid_numb == 1 %}
+      Displaying the unique representative of this
+      {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
+    {% else %}
+      Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
+      {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
+    {% endif %}
+    </p>
+
+    <p>
+    {% for braid_rep in info.braid %}
+    &nbsp; {{braid_rep[0]}}
+    <table>{% for perm in braid_rep[1] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
+    {% endfor %}
+    </p>
 
 
+    {% if info.braid_numb >= 2 %}
+    <form>
+      <table>
+        <tr>
+          <td>Display number of braid equivalence representatives:</td>
+          <td><input type='text' name='numbraidreps' placeholder='20' size=10></td>
+        </tr>
+        <tr>
+          <td colspan=3><button type='submit' value='display'>Display</button></td>
+        </tr>
+      </table>
+    </form>
+    {% endif %}
+  </div>
+{% endif %}
 
+<script>
+function openData(evt, dataType) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(dataType).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+document.getElementById("defaultOpen").click();
+</script>
 
- {% endblock %}
+{% endblock %}
  

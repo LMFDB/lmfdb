@@ -24,10 +24,6 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
         assert 'both matches' in L.data
 
 
-    def test_random(self):
-        L = self.tc.get('/HigherGenus/C/Aut/random',follow_redirects=True)
-        assert 'Dimension of the corresponding' in L.data
-
     def test_magma_download(self):
         L = self.tc.get('/HigherGenus/C/Aut/5.32-27.0.2-2-2-4.1/download/magma')
         assert '// Here we add an action to data.' in L.data
@@ -44,11 +40,9 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
         L = self.tc.get('/HigherGenus/C/Aut/stats')
         assert 'unique groups' in L.data
 
-
     def test_unique_groups_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats/groups_per_genus/5')
         assert 'Distribution of groups in curves of genus 5' in L.data
-
         
     def test_quo_genus_gt_0(self):
         L = self.tc.get('/HigherGenus/C/Aut/3.2-1.2.0.1')
