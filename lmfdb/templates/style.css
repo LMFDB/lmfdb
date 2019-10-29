@@ -2234,3 +2234,13 @@ ul.horizontal-list li:after {
 input.color_selecter {
     margin: 10px;
 }
+
+/* the button to show advanced search options */
+.advance {
+    margin-left: 20px;
+}
+
+/* the advanced search options themselves, hidden by default */
+.advanced {
+    display: none;
+}

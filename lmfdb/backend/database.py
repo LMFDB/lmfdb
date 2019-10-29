@@ -2132,7 +2132,7 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, values)
         return [res[0] for res in cur]
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -2152,7 +2152,7 @@ class PostgresTable(PostgresBase):
             sage: nf.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        return self.stats.count(query, record=record)
+        return self.stats.count(query, groupby=groupby, record=record)
 
     ##################################################################
     # Indexes and performance analysis                               #
@@ -4353,7 +4353,7 @@ class PostgresStatsTable(PostgresBase):
             # counts for {} when data is updated.
             self._execute(updater, [count, self.search_table])
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -4361,10 +4361,13 @@ class PostgresStatsTable(PostgresBase):
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
         - ``record`` -- (default True) whether to record the number of results in the counts table.
+        - ``groupby`` -- (default None) a list of columns
 
         OUTPUT:
 
-        The number of records satisfying the query.
+        If ``grouby`` is None, the number of records satisfying the query.
+        Otherwise, a dictionary with keys the distinct tuples of values taken on by the columns
+        in ``groupby``, and values the number of rows with those values.
 
         EXAMPLES::
 
@@ -4373,12 +4376,25 @@ class PostgresStatsTable(PostgresBase):
             sage: nf.stats.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        if not query:
-            return self.total
-        nres = self.quick_count(query)
-        if nres is None:
-            nres = self._slow_count(query, record=record)
-        return int(nres)
+        if groupby is None:
+            print "HERE"
+            if not query:
+                return self.total
+            nres = self.quick_count(query)
+            if nres is None:
+                nres = self._slow_count(query, record=record)
+            return int(nres)
+        else:
+            # We don't currently support caching groupby counts
+            qstr, values = self.table._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+            else:
+                qstr = SQL(" WHERE ") + qstr
+            selecter = SQL("SELECT COUNT(*), {0} FROM {1}{2} GROUP BY {0}").format(SQL(", ").join(map(Identifier, groupby)), Identifier(self.search_table), qstr)
+            print selecter
+            cur = self._execute(selecter, values)
+            return {tuple(rec[1:]): int(rec[0]) for rec in cur}
 
     def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
         """

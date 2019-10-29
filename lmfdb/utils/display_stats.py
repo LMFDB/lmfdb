@@ -46,6 +46,13 @@ class proportioners(object):
     ##################################################################
 
     @classmethod
+    def per_total(cls, grid, row_headers, col_headers, stats):
+        total = sum(D['count'] for row in grid for D in row)
+        for row in grid:
+            for D in row:
+                D['proportion'] = _format_percentage(D['count'], total)
+
+    @classmethod
     def per_row_total(cls, grid, row_headers, col_headers, stats):
         """
         Total is determined as the sum of the current row.

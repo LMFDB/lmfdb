@@ -544,6 +544,16 @@ function debounce(func, wait, immediate){
 	return debounced;
 };
 
+/* Showing advanced search boxes */
+
+function show_advanced_search() {
+  $('.advanced').show();
+  $('.advance').hide();
+  location.href = "#"; // work around bug in WebKit
+  location.href = "#search_h2";
+  return false;
+}
+
 /* Contracting and expanding statistics displays */
 
 function show_stats_rows(hsh, to_show) {
