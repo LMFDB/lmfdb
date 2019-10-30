@@ -3,11 +3,11 @@ from .utilities import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 
 class TdElt(object):
-    def td(self, colspan=1, info=None):
+    def td(self, colspan=1):
         keys = []
         if colspan != 1:
             keys.append(' colspan=%s' % colspan)
-        if self.advanced and (info is None or not info.get('advanced_search')):
+        if self.advanced:
             keys.append(' class="advanced"')
         return '<td%s>' % (''.join(keys))
 
@@ -22,7 +22,7 @@ class BasicSpacer(Spacer):
         self.msg = msg
 
     def html(self, info=None):
-        return self.td(self.colspan, info) + self.msg + '</td>'
+        return self.td(self.colspan) + self.msg + '</td>'
 
 class CheckboxSpacer(Spacer):
     def __init__(self, checkbox, colspan=1, advanced=False):
@@ -30,7 +30,7 @@ class CheckboxSpacer(Spacer):
         self.checkbox = checkbox
 
     def html(self, info=None):
-        return self.td(self.colspan, info) + self.checkbox._label(info) + " " + self.checkbox._input(info) + "</td>"
+        return self.td(self.colspan) + self.checkbox._label(info) + " " + self.checkbox._input(info) + "</td>"
 
 class SearchBox(TdElt):
     """
@@ -58,11 +58,11 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, info) + self._label(info) + "</td>"
+        return self.td(colspan) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
-        return self.td(colspan, info) + self._input(info) + '</td>'
+        return self.td(colspan) + self._input(info) + '</td>'
 
     def example_html(self, info=None):
         if self.example_col:
@@ -109,7 +109,7 @@ class TextBox(SearchBox):
 
     def example_html(self, info=None):
         if self.example_col:
-            return self.td(info=info) + '<span class="formexample">e.g. %s</span></td>' % self.example_span
+            return self.td() + '<span class="formexample">e.g. %s</span></td>' % self.example_span
 
 class SelectBox(SearchBox):
     def __init__(self, name=None, label=None, options=[], knowl=None, colspan=(1,1,1), width=107, short_width=105, short_label=None, advanced=False, example_col=False, qfield=None):
@@ -158,7 +158,7 @@ class TextBoxWithSelect(TextBox):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, info) + self._label(info) + '<div class="float-right">' + self.select_box._input(info) + "</div></td>"
+        return self.td(colspan) + self._label(info) + '<div class="float-right">' + self.select_box._input(info) + "</div></td>"
 
 class SearchArray(UniqueRepresentation):
     def __init__(self, browse_array, refine_array):

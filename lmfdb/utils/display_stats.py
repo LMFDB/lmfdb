@@ -394,7 +394,7 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _dynamic_cols(self):
-        return [('none', 'None')] + [(col, self._short_display[col].capitalize()) for col in self.dynamic_cols]
+        return [('none', 'None')] + [(col, self._short_display[col]) for col in self.dynamic_cols]
 
     @property
     def _default_buckets(self):

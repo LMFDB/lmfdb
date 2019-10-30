@@ -182,21 +182,24 @@ class AbvarSearchArray(SearchArray):
         g = TextBox('g', 'Dimension', 'ag.dimension', example='2', example_span='2 or 3-5')
         p_rank = TextBox('p_rank', '$p$-rank', 'av.fq.p_rank', example='2')
         angle_rank = TextBox('angle_rank', 'Angle rank', 'av.fq.angle_rank', example='3', advanced=True)
-        newton_polygon = TextBox('newton_polygon', 'Slopes of Newton polygon', 'lf.newton_polygon', example='[0,0,1/2]', colspan=(1,3,1), width=40, short_label='slopes')
-        initial_coefficients = TextBox('initial_coefficients', 'Initial coefficients', 'av.fq.initial_coefficients', example='[2, -1, 3, 9]', colspan=(1,3,1), width=40, advanced=True)
+        newton_polygon = TextBox('newton_polygon', 'Slopes of Newton polygon', 'lf.newton_polygon', example='[0,0,1/2]', colspan=(1,3,1), width=40, short_label='slopes', advanced=True)
+        initial_coefficients = TextBox('initial_coefficients', 'Initial coefficients', 'av.fq.initial_coefficients', example='[2, -1, 3, 9]')
         abvar_point_count = TextBox('abvar_point_count', 'Point counts of the abelian variety', knowl='ag.fq.point_counts', example='[75,7125]', colspan=(1,3,1), width=40, short_label='points on variety', advanced=True)
         curve_point_count = TextBox('curve_point_count', 'Point counts of the curve', 'av.fq.curve_point_counts', example='[9,87]', colspan=(1,3,1), width=40, short_label='points on curve', advanced=True)
-        number_field = TextBox('number_field', 'Number field', 'av.fq.number_field', example='4.0.29584.2', example_span='4.0.29584.2 or Qzeta8', colspan=(1,3,1), width=40, advanced=True)
-        galois_group = TextBox('galois_group', 'Galois group', 'nf.galois_group', example='4T3', example_span='C4, or 8T12, a list of ' + display_knowl('nf.galois_group.name','group labels'), colspan=(1,3,1), width=40, short_label='Galois group', advanced=True)
+        def nbsp(knowl, label):
+            return '&nbsp;&nbsp;&nbsp;&nbsp;' + display_knowl(knowl, label)
+        number_field = TextBox('number_field', label=nbsp('av.fq.number_field', 'Number field'), short_label=display_knowl('av.fq.number_field', 'number field'), example='4.0.29584.2', example_span='4.0.29584.2 or Qzeta8', colspan=(1,3,1), width=40, advanced=True)
+        galois_group = TextBox('galois_group', label=nbsp('nf.galois_group', 'Galois group'), short_label=display_knowl('nf.galois_group', 'Galois group'), example='4T3', example_span='C4, or 8T12, a list of ' + display_knowl('nf.galois_group.name','group labels'), colspan=(1,3,1), width=40, advanced=True)
         size = TextBox('size', 'Isogeny class size', 'av.fq.isogeny_class_size', example='1', example_col=False, advanced=True)
         gdshort = display_knowl('av.endomorphism_field', 'End.') + ' degree'
         gdlong = 'Degree of ' + display_knowl('av.endomorphism_field', 'endomorphism_field')
         geom_deg = TextBox('geom_deg', label=gdlong, short_label=gdshort, example='168', example_span='6-12, 168')
         jac_cnt = TextBox('jac_cnt', 'Number of Jacobians', 'av.jacobian_count', example='6', short_label='# Jacobians', advanced=True)
-        hyp_cnt = TextBox('hyp_cnt', 'Number of Hyperelliptic Jacobians', 'av.hyperelliptic_count', example='6', short_label='# Hyp. Jacobians', advanced=True)
+        hyp_cnt = TextBox('hyp_cnt', 'Number of Hyperelliptic Jacobians', 'av.hyperelliptic_count', example='6', example_col=False, short_label='# Hyp. Jacobians', advanced=True)
         tcshort = display_knowl('av.twist', '# twists')
         tclong = 'Number of ' + display_knowl('av.twist', 'twists')
-        twist_count = TextBox('twist_count', label=tclong, short_label=tcshort, example='390', example_col=False, advanced=True)
+        twist_count = TextBox('twist_count', label=tclong, short_label=tcshort, example='390', advanced=True)
+        max_twist_degree = TextBox('max_twist_degree', label='Max twist degree', knowl='av.twist', example='16', example_col=False, advanced=True)
         simple = SelectBox('simple', 'Simple', [('yes', 'yes'), ('', 'unrestricted'), ('no', 'no')], knowl='av.simple')
         geom_simple = SelectBox('geom_simple', 'Geometrically simple', [('yes', 'yes'), ('', 'unrestricted'), ('no', 'no')], knowl='av.geometrically_simple', short_label='geom. simple')
         primitive = SelectBox('primitive', 'Primitive', [('yes', 'yes'), ('', 'unrestricted'), ('no', 'no')], knowl='ag.primitive')
@@ -208,7 +211,7 @@ class AbvarSearchArray(SearchArray):
         use_geom_index = CheckboxSpacer(use_geom_decomp, colspan=4, advanced=True)
         use_geom_refine = CheckboxSpacer(use_geom_decomp, colspan=5, advanced=True)
         def long_label(d):
-            return '&nbsp;&nbsp;&nbsp;&nbsp;' + display_knowl('av.decomposition', 'Dimension %s factors'%d)
+            return nbsp('av.decomposition', 'Dimension %s factors'%d)
         def short_label(d):
             return display_knowl('av.decomposition', 'dim %s factors'%d)
         dim1 = TextBox('dim1_factors', label=long_label(1), example='1-3', example_col=False, short_label=short_label(1), advanced=True)
@@ -221,21 +224,23 @@ class AbvarSearchArray(SearchArray):
         dim5 = TextBox('dim5_factors', label=long_label(5), example='2', example_col=False, short_label=short_label(5), advanced=True)
         dim4d = dim5d = SkipBox(example_span='0 or 1', advanced=True)
         simple_quantifier = SelectBox('simple_quantifier', options=[('contained', 'subset of'), ('exactly', 'exactly'), ('', 'superset of')])
-        simple_factors = TextBoxWithSelect('simple_factors', 'Simple factors', simple_quantifier, knowl='av.decomposition', colspan=(1,3,2), width=40, short_width=20, example='1.2.b,1.2.b,2.2.a_b', advanced=True)
+        simple_factors = TextBoxWithSelect('simple_factors', 'Simple factors', simple_quantifier, knowl='av.decomposition', colspan=(1,3,2), width=40, short_width=25, example='1.2.b,1.2.b,2.2.a_b', advanced=True)
         count = TextBox('count', 'Maximum number of isogeny classes to display', colspan=(2,1,1), width=10)
         refine_array = [
-            [q, g, p_rank, geom_deg, newton_polygon],
-            [initial_coefficients, abvar_point_count, curve_point_count, number_field, galois_group],
-            [angle_rank, size, jac_cnt, hyp_cnt, twist_count],
+            [q, g, p_rank, geom_deg, initial_coefficients],
+            [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
+            [size, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
+            [angle_rank],
             [simple, geom_simple, primitive, polarizable, jacobian],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
-            [dim1d, dim2d, dim3d, simple_factors]]
+            [dim1d, dim2d, dim3d, number_field, galois_group]]
         browse_array = [
             [q, primitive], [g, simple], [p_rank, geom_simple],
-            [geom_deg, polarizable], [jac_cnt, jacobian],
-            [hyp_cnt, size], [angle_rank, twist_count],
-            [newton_polygon], [initial_coefficients], [abvar_point_count],
+            [geom_deg, polarizable], [initial_coefficients, jacobian],
+            [jac_cnt, hyp_cnt],
+            [angle_rank, size], [twist_count, max_twist_degree],
+            [newton_polygon], [abvar_point_count],
             [curve_point_count], [simple_factors], use_geom_index,
             [dim1, dim1d], [dim2, dim2d], [dim3, dim3d], [dim4, dim4d],
             [dim5, dim5d], [number_field], [galois_group], [count]]
@@ -268,14 +273,18 @@ def common_parse(info, query):
         parse_submultiset(info,query,'simple_factors',mode='append')
     if info.get('use_geom_decomp') == 'on':
         dimstr = 'geom_dim'
+        nf_qfield = 'geometric_number_fields'
+        gal_qfield = 'geometric_galois_groups'
     else:
         dimstr = 'dim'
+        nf_qfield = 'number_fields'
+        gal_qfield = 'galois_groups'
     for n in range(1,6):
         parse_ints(info,query,'dim%s_factors'%n, qfield='%s%s_factors'%(dimstr,n))
     for n in range(1,4):
         parse_ints(info,query,'dim%s_distinct'%n, qfield='%s%s_distinct'%(dimstr,n))
-    parse_nf_string(info,query,'number_field',qfield='number_fields')
-    parse_galgrp(info,query,'galois_group',qfield='galois_groups')
+    parse_nf_string(info,query,'number_field',qfield=nf_qfield)
+    parse_galgrp(info,query,'galois_group',qfield=gal_qfield)
     # Determine whether to show advanced search boxes:
     info['advanced_search'] = False
     for search_box in info['search_array'].all_search:
@@ -334,11 +343,12 @@ def abelian_variety_count(info, query):
     info['url_func'] = url_generator
 
 favorite_isocls_labels = [[
-    ('6.2.ag_r_abd_bg_ay_u', 'Large endomorphism degree'),
-    ('6.2.ak_cb_ahg_sy_abme_ciq', 'Largest twist class'),
-    ('2.167.a_hi', 'Most Jacobians'),
     ('2.64.a_abp', 'Most isomorphism classes'),
-    ('4.2.ad_c_a_b', 'Jacobian of function field with claa number 1')]]
+    ('2.167.a_hi', 'Most Jacobians'),
+    ('4.2.ad_c_a_b', 'Jacobian of function field with claa number 1'),
+    ('6.2.ak_cb_ahg_sy_abme_ciq', 'Largest twist class'),
+    ('6.2.ag_r_abd_bg_ay_u', 'Large endomorphism degree'),
+]]
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
@@ -359,7 +369,7 @@ def statistics():
     title = 'Abelian Varity Isogeny Classes: Statistics'
     return render_template("display_stats.html", info=AbvarFqStats(), credit=abvarfq_credit, title=title, bread=get_bread(('Statistics', '.')), learnmore=learnmore_list())
 
-@abvarfq_page.route("dynamic_stats")
+@abvarfq_page.route("/dynamic_stats")
 def dynamic_statistics():
     if len(request.args) > 0:
         info = to_dict(request.args)
