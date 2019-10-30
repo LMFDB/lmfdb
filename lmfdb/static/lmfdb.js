@@ -549,8 +549,6 @@ function debounce(func, wait, immediate){
 function show_advanced_search() {
   $('.advanced').show();
   $('.advance').hide();
-  location.href = "#"; // work around bug in WebKit
-  location.href = "#search_h2";
   return false;
 }
 
