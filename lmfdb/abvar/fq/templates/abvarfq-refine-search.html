@@ -26,9 +26,7 @@ function set_buckets(col_selecter, bucket_id) {
 {% set search_header = 'Refine search' %}
 {% endif %}
 <h2 id='search_h2'>{{search_header}}
-  {% if not info.advanced_search %}
   <button id="advancedtoggle" href="#">Advanced search options</button>
-  {% endif %}
 </h2>
 
 <form id='re-search' onsubmit="cleanSubmit(this.id)">
@@ -51,6 +49,7 @@ function set_buckets(col_selecter, bucket_id) {
     {% endif %}
   </table>
 </form>
+<script> show_advancedQ(); </script>
 {% if info.search_type == 'DynStats' %}
 <p>Note that the abelian varieties in the database may not be {{ KNOWL('dq.av.fq.reliability', title='representative') }}.</p>
 {% endif %}

@@ -546,11 +546,6 @@ function debounce(func, wait, immediate){
 
 /* Showing advanced search boxes */
 
-function show_advanced_search() {
-  $('.advanced').show();
-  $('.advance').hide();
-  return false;
-}
 
 $(document).ready(function () {
   $('#advancedtoggle').click(
@@ -567,17 +562,19 @@ $(document).ready(function () {
       }
       return false;
     });
+});
 
+function show_advancedQ () {
   var values = $('select.advanced, input.advanced');
   for(var i = 0; i < values.length; i++) {
     if( values[i].value != "" ) {
-      console.log("clicking");
-      $('#advancedtoggle').click();
+      $('.advanced').show();
+      $('#advancedtoggle').text('Hide advanced search options');
       break;
     }
   }
+};
 
-});
 
 /* Contracting and expanding statistics displays */
 
