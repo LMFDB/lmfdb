@@ -61,7 +61,7 @@ function loadconstants(save_history) {
     }
     argstring = '?start='+startstr+"&limit="+limit;
     if(save_history) {
-        history.pushState({'start' : start, 'limit' : limit}, "stieltjes constatns", displayconstants_url + argstring);
+        history.pushState({'start' : start, 'limit' : limit}, "stieltjes constants", displayconstants_url + argstring);
     }
     request.open('GET', listconstants_url + argstring, true);
     request.send(null);

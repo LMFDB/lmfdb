@@ -40,23 +40,16 @@
     {% endif %}
    <div>
     Roots:
-    {#
-    <center>
-      <table class="ntdata">
-      <tbody>
+      <center>
+      <table>
         {% for root in object.number_field_galois_group().computation_roots()%}
-          <tr> <td>$r_{{loop.index}}$</td><td>${{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td></tr>
+        <tr>
+          <td> $r_{ {{loop.index}} }$</td>
+          <td> $=$ </td>
+          <td>${{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td>
         {% endfor %}
-        
-      </tbody>
-      </table>
+        </table>
       </center>
-      #}
-      \[ \begin{aligned}
-        {% for root in object.number_field_galois_group().computation_roots()%}
-          r_{ {{loop.index}} } &= {{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
-        {% endfor %}
-        \end{aligned}\]
     </div>
     
     <h3>Generators of the action on the roots 

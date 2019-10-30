@@ -184,7 +184,7 @@ class AbvarSearchArray(SearchArray):
         angle_rank = TextBox('angle_rank', 'Angle rank', 'av.fq.angle_rank', example='3', advanced=True)
         newton_polygon = TextBox('newton_polygon', 'Slopes of Newton polygon', 'lf.newton_polygon', example='[0,0,1/2]', colspan=(1,3,1), width=40, short_label='slopes', advanced=True)
         initial_coefficients = TextBox('initial_coefficients', 'Initial coefficients', 'av.fq.initial_coefficients', example='[2, -1, 3, 9]')
-        abvar_point_count = TextBox('abvar_point_count', 'Point counts of the abelian variety', knowl='ag.fq.point_counts', example='[75,7125]', colspan=(1,3,1), width=40, short_label='points on variety', advanced=True)
+        abvar_point_count = TextBox('abvar_point_count', 'Point counts of the variety', knowl='ag.fq.point_counts', example='[75,7125]', colspan=(1,3,1), width=40, short_label='points on variety', advanced=True)
         curve_point_count = TextBox('curve_point_count', 'Point counts of the curve', 'av.fq.curve_point_counts', example='[9,87]', colspan=(1,3,1), width=40, short_label='points on curve', advanced=True)
         def nbsp(knowl, label):
             return '&nbsp;&nbsp;&nbsp;&nbsp;' + display_knowl(knowl, label)
@@ -269,7 +269,7 @@ def common_parse(info, query):
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
     elif info.get('simple_quantifier') == 'exactly':
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
-    elif info.get('simple_quantifier') == '':
+    else:
         parse_submultiset(info,query,'simple_factors',mode='append')
     if info.get('use_geom_decomp') == 'on':
         dimstr = 'geom_dim'

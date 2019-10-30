@@ -229,7 +229,7 @@ def patch_up_old_inventory(data, table_name):
 
     table = db[table_name]
     result = {}
-    for el in table._search_cols:
+    for el in table.search_cols:
         try:
             result[el] = data[el]
         except KeyError:

@@ -41,14 +41,16 @@ class SatoTateGroupTest(LmfdbTest):
     def test_browse(self):
         L = self.tc.get('/SatoTateGroup/?identity_component=U(1)')
         assert 'both matches' in L.data
-        L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&&components=48')
+        L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&include_irrational=yes&components=48')
         assert 'unique match' in L.data
-        L = self.tc.get('SatoTateGroup/?components=48')
+        L = self.tc.get('SatoTateGroup/?components=48&include_irrational=yes')
         assert 'both matches' in L.data
-        L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25')
+        L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25&include_irrational=yes')
         assert 'matches 1001-1025' in L.data
-        L = self.tc.get('SatoTateGroup/?degree=1&rational_only=yes')
+        L = self.tc.get('SatoTateGroup/?degree=1')
         assert 'both matches' in L.data
+        L = self.tc.get('SatoTateGroup/?count=47')
+        assert '1-47' in L.data
 
     def test_moments(self):
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
@@ -84,7 +86,7 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
             assert label in L.data and 'Moment Statistics' in L.data
-        L = self.tc.get('/SatoTateGroup/?components=999999999')
+        L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
         assert 'unique match'  in L.data and 'mu(999999999)' in L.data
 
     def test_trace_zero_density(self):

@@ -4,7 +4,7 @@ import ast, os, re, StringIO, time
 
 import flask
 from flask import render_template, request, url_for, redirect, send_file, make_response
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
 from lmfdb.app import app
@@ -37,7 +37,7 @@ nfields = None
 max_deg = None
 init_nf_flag = False
 
-# For imaginary quadratic field class group data
+# For imaginary quadratic field class group data 
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 
 def init_nf_count():
@@ -419,7 +419,10 @@ def render_field_webpage(args):
         data['discriminant'] = "\(%s\)" % str(D)
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
-    data['frob_data'], data['seeram'] = frobs(nf)
+    if nf.frobs():
+        data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
+    else: # fallback in case we haven't computed them in a case
+        data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
     data['rd'] = ('$%s$' % fixed_prec(nf.rd(),2)).replace(',','{,}')
     # Bad prime information
@@ -472,15 +475,7 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    if nf.degree() > 1:
-        gpK = nf.gpK()
-        rootof1coeff = gpK.nfrootsof1()
-        rootofunityorder = int(rootof1coeff[1])
-        rootof1coeff = rootof1coeff[2]
-        rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
-        rootofunity += ' (order $%d$)' % rootofunityorder
-    else:
-        rootofunity = web_latex(Ra('-1'))+ ' (order $2$)'
+    rootofunity = '%s (order $%d$)' % (nf.root_of_1_gen(),nf.root_of_1_order())
 
     info.update({
         'label': pretty_label,
@@ -586,7 +581,7 @@ def render_field_webpage(args):
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         arts = [z.label() for z in info["tim_number_field"].artin_representations()]
-        print arts
+        #print arts
         for ar in arts:
             info['friends'].append(('Artin representation '+str(ar), 
                 url_for("artin_representations.render_artin_representation_webpage", label=ar)))
@@ -761,39 +756,52 @@ def number_field_search(info, query):
     info['gg_display'] = group_pretty_and_nTj
 
 def residue_field_degrees_function(nf):
-    """ Given a WebNumberField, returns a function that has
+    """ Given the result of pari(nfinit(...)), returns a function that has
             input: a prime p
             output: the residue field degrees at the prime p
     """
-    k1 = nf.gpK()
     D = nf.disc()
-    return main_work(k1,D,'pari')
 
-def sage_residue_field_degrees_function(nf):
-    """ Version of above which takes a sage number field
-        Used by Artin representation code when the Artin field is not
-        in the database.
-    """
-    D = nf.disc()
-    return main_work(pari(nf),D,'sage')
-
-def main_work(k1, D, typ):
-    # Difference for sage vs pari array indexing
-    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
-            dec = k1.idealprimedec(p)
-            dec = [z[ind] for z in dec]
-            return dec
+            return [z[3] for z in nf.idealprimedec(p)]
         else:
             raise ValueError("Expecting a prime not dividing D")
+
     return decomposition
 
+# Format Frobenius cycle types coming from the database
+def see_frobs(frob_data):
+    ans = []
+    seeram = False
+    plist = [p for p in primes(2, 60)]
+    for i in range(len(plist)):
+        p = plist[i]
+        dec = frob_data[i][1]
+        if dec[0] == 0:
+            ans.append([p, 'R'])
+            seeram = True
+        else:
+            s = '$'
+            firstone = True
+            for j in dec:
+                if firstone == False:
+                    s += '{,}\,'
+                if j[0]<15:
+                    s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
+                        label="%d.%d.0.1"%(p,j[0])), j[0])
+                else:
+                    s += str(j[0])
+                if j[1] > 1:
+                    s += '^{' + str(j[1]) + '}'
+                firstone = False
+            s += '$'
+            ans.append([p, s])
+    return ans, seeram
+
 # Compute Frobenius cycle types, returns string nicely presenting this
-
-
 def frobs(nf):
-    frob_at_p = residue_field_degrees_function(nf)
+    frob_at_p = residue_field_degrees_function(nf.gpK())
     D = nf.disc()
     ans = []
     seeram = False
@@ -848,10 +856,6 @@ def nf_download(**args):
 
 def nf_data(**args):
     label = args['nf']
-    print ""
-    print ""
-    print label
-    print ""
     nf = WebNumberField(label)
     data = '/* Data is in the following format\n'
     data += '   Note, if the class group has not been computed, it, the class number, the fundamental units, regulator and whether grh was assumed are all 0.\n'
