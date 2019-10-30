@@ -4419,7 +4419,7 @@ class PostgresStatsTable(PostgresBase):
         taken on by that column.  If cols is a list of strings, then the keys will
         be tuples of values taken on by the dictionary.
 
-        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).
+        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).  However, we omit entries where D contains only keys starting with ``$``, since these are used to encode queries.
         """
         if isinstance(cols, basestring):
             cols = [cols]
@@ -4449,12 +4449,14 @@ class PostgresStatsTable(PostgresBase):
         else:
             _make_tuple = make_tuple
         if constraint is None:
-            return {_make_tuple(rec[0]): rec[1] for rec in cur}
+            # We need to remove counts that aren't the actual value,
+            # but instead part of a query
+            return {_make_tuple(rec[0]): rec[1] for rec in cur if not any(isinstance(val, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val) for val in rec[0])}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
             column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
             def satisfies_constraint(val):
-                return all(val[i] == c for i,c in constraint_list)
+                return all(val[i] == c for i,c in constraint_list) and not any(isinstance(val[i], dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val[i]) for i in column_indexes)
             def remove_constraint(val):
                 return [val[i] for i in column_indexes]
             return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}

@@ -337,7 +337,8 @@ favorite_isocls_labels = [[
     ('6.2.ag_r_abd_bg_ay_u', 'Large endomorphism degree'),
     ('6.2.ak_cb_ahg_sy_abme_ciq', 'Largest twist class'),
     ('2.167.a_hi', 'Most Jacobians'),
-    ('2.64.a_abp', 'Most isomorphism classes')]]
+    ('2.64.a_abp', 'Most isomorphism classes'),
+    ('4.2.ad_c_a_b', 'Jacobian of function field with claa number 1')]]
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
