@@ -95,6 +95,8 @@ class TextBox(SearchBox):
 
     def _input(self, info):
         keys = ['type="text"', 'name="%s"' % self.name]
+        if self.advanced:
+            keys.append('class="advanced"')
         if self.example is not None:
             keys.append('example="%s"' % self.example)
         if info is None:
@@ -121,6 +123,8 @@ class SelectBox(SearchBox):
 
     def _input(self, info):
         keys = ['name="%s"' % self.name]
+        if self.advanced:
+            keys.append('class="advanced"')
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -142,7 +146,10 @@ class SelectBox(SearchBox):
 
 class CheckBox(SearchBox):
     def _input(self, info=None):
-        return '<input type="checkbox" name="%s">' % self.name
+        keys = ['name="%s"' % self.name]
+        if self.advanced:
+            keys.append('class="advanced"')
+        return '<input type="checkbox" %s>' % (' '.join(keys),)
 
 class SkipBox(TextBox):
     def _input(self, info=None):
