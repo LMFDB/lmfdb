@@ -23,7 +23,7 @@ def _get_db_records(table):
 
     """ Routine to get the keys for a specified table """
 
-    results = db[table]._search_cols
+    results = db[table].search_cols
     return results
 
 def _jsonify_record(name, record, parse_jsonb = False, inferred = False):

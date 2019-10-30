@@ -3,7 +3,7 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR
+from sage.all import PolynomialRing, QQ, RR, latex
 
 from lmfdb import db
 from lmfdb.app import app
@@ -15,6 +15,8 @@ from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+from lmfdb.number_fields.web_number_field import (
+    WebNumberField, string2list, nf_display_knowl)
 
 import re
 
@@ -41,6 +43,14 @@ def display_poly(coeffs):
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
+
+def lf_formatfield(coef):
+    coef = string2list(coef)
+    thefield = WebNumberField.from_coeffs(coef)
+    thepoly = '$%s$' % latex(coeff_to_poly(coef))
+    if thefield._data is None:
+        return thepoly
+    return nf_display_knowl(thefield.get_label(),thepoly)
 
 def local_algebra_data(labels):
     labs = labels.split(',')
@@ -73,7 +83,7 @@ def local_field_data(label):
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = f['gal']
     gn = f['n']
-    ans += 'Degree: %s<br>' % str(gt)
+    ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
@@ -241,7 +251,7 @@ def render_field_webpage(args):
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
-            gsm = web_latex(coeff_to_poly(gsm))
+            gsm = lf_formatfield(','.join([str(b) for b in gsm]))
 
 
         info.update({

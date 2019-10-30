@@ -700,6 +700,13 @@ table.ntdata > tbody > tr:nth-child(even),
 table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
 }
+table.ntdata tr.toggle { font-size: 80%; text-align: left; }
+table.ntdata tr.toggle:nth-child(2n) { 
+    background: {{color.table_ntdata_background_c1}};
+}
+table.ntdata tr.toggle a:hover {
+  background: {{color.table_ntdata_background_c1}};
+}
 
 table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};

@@ -301,16 +301,28 @@ white-space: pre in order to keep line breaks! #}
         <tr>
         <td>{{ KNOWL('ec.q.optimal', title='\( \Gamma_0(N) \)-optimal') }}:</td>
         <td>
-	  {% if data.data.Gamma0optimal %}yes{% else %}no{% endif %}{% if not data.data.optimality_known %}<sup>*</sup>{% endif %}
+	  {% if data.data.optimality_code==1 %}yes{% elif data.data.optimality_code==0 %}no{% else %}unknown<sup>*</sup> (one of {{ data.data.optimality_code }} curves in this isogeny class which might be optimal){% endif %}
         </td>
         </tr>
         <tr>
         <td>{{ KNOWL('ec.q.manin_constant', title='Manin constant') }}:</td>
-	<td>{% if data.data.Gamma0optimal %}1{% else %}not computed{% endif %}</td>
+	<td>{{ data.data.manin_constant }} {% if not data.data.manin_known %} (conditional<sup>*</sup>){% endif %}</td>
         </tr>
 	</table>
 
-	{% if not data.data.optimality_known %}<sup>*</sup>optimality has not been proved rigorously in all cases for conductors over {{ data.data.optimality_bound }}, but the Manin constant is correct where given{% endif %}
+	{% if not data.data.optimality_known or not data.data.manin_known %}
+	<sup>*</sup>
+
+	{% if not data.data.optimality_known %} The optimal curve in
+	each isogeny class has not been determined in all cases for
+	conductors over {{ data.data.optimality_bound }}.{% endif %}
+
+	{% if not data.data.manin_known %}
+	The Manin constant is correct provided that {% if
+	data.data.number ==1 %} this curve {% else %} curve {{
+	data.data.optimal_label }} {% endif %} is optimal.{% endif %}
+
+	{% endif %}
 	</p>
 
 	{#
@@ -554,7 +566,8 @@ No Iwasawa invariant data is available for this curve.
 </p>
 {% endif %}
 
-    <h2> Isogenies </h2>
+
+<h2>{{ KNOWL('ec.isogeny', title='Isogenies') }} </h2>
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
 {% if data.data.isogeny_degrees %}

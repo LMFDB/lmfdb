@@ -612,3 +612,10 @@ $(document).ready(function () {
       return false;
     });
 });
+
+function show_moreless(ml) {
+  $('.more').hide();
+  $('.less').hide();
+  $('.'+ml).show();
+}
+
