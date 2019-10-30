@@ -29,17 +29,21 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
 
+
 def maxq(g, p):
     # This should eventually move to stats
-    maxspec = {2: {1:1024, 2:1024, 3:16, 4:4, 5:2, 6:2},
-               3: {1:729, 2:729, 3:9, 4:3, 5:3},
-               5: {1:625, 2:625, 3:25, 4:5},
-               7: {1:343, 2:343, 3:7}}
-    maxgen = {1:500, 2:211, 3:25}
+    maxspec = {
+        2: {1: 1024, 2: 1024, 3: 16, 4: 4, 5: 2, 6: 2},
+        3: {1: 729, 2: 729, 3: 9, 4: 3, 5: 3},
+        5: {1: 625, 2: 625, 3: 25, 4: 5},
+        7: {1: 343, 2: 343, 3: 7},
+    }
+    maxgen = {1: 500, 2: 211, 3: 25}
     if p < 10:
         return maxspec[p][g]
     else:
         return maxgen[g]
+
 
 logger = make_logger("abvarfq")
 
@@ -49,9 +53,11 @@ logger = make_logger("abvarfq")
 
 
 def validate_label(label):
-    parts = label.split('.')
+    parts = label.split(".")
     if len(parts) != 3:
-        raise ValueError("it must be of the form g.q.iso, with g a dimension and q a prime power")
+        raise ValueError(
+            "it must be of the form g.q.iso, with g a dimension and q a prime power"
+        )
     g, q, iso = parts
     try:
         g = int(g)
@@ -65,20 +71,26 @@ def validate_label(label):
         raise ValueError("it must be of the form g.q.iso, where g is a prime power")
     coeffs = iso.split("_")
     if len(coeffs) != g:
-        raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components" % (g))
+        raise ValueError(
+            "the final part must be of the form c1_c2_..._cg, with g=%s components"
+            % (g)
+        )
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
-        raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
+        raise ValueError(
+            "the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters"
+        )
 
 
 class AbvarFq_isoclass(object):
     """
     Class for an isogeny class of abelian varieties over a finite field
     """
+
     def __init__(self, dbdata):
-        if 'size' not in dbdata:
-            dbdata['size'] = None
-        if 'jacobian_count' not in dbdata:
-            dbdata['jacobian_count'] = None
+        if "size" not in dbdata:
+            dbdata["size"] = None
+        if "jacobian_count" not in dbdata:
+            dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -94,9 +106,13 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(zip(self.simple_distinct,self.simple_multiplicities))
+        self.decompositioninfo = decomposition_display(
+            zip(self.simple_distinct, self.simple_multiplicities)
+        )
         self.basechangeinfo = self.basechange_display()
-        self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari='x')
+        self.formatted_polynomial = list_to_factored_poly_otherorder(
+            self.polynomial, galois=False, vari="x"
+        )
 
     @property
     def p(self):
@@ -126,9 +142,9 @@ class AbvarFq_isoclass(object):
         else:
             p, r = Integer(q).is_prime_power(get_data=True)
         if r == 1:
-            return '\F_{%s}' % p
+            return "\F_{%s}" % p
         else:
-            return '\F_{%s^{%s}}' % (p, r)
+            return "\F_{%s^{%s}}" % (p, r)
 
     def nf(self):
         if self.is_simple:
@@ -156,13 +172,19 @@ class AbvarFq_isoclass(object):
             P = pts[i]
             Q = pts[i + 1]
             for x in range(P[0], Q[0] + 1):
-                L += line([(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))], color="grey")
+                L += line(
+                    [(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))],
+                    color="grey",
+                )
             for y in range(P[1], Q[1]):
-                L += line([(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)], color="grey")
+                L += line(
+                    [(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)],
+                    color="grey",
+                )
         L += line(pts, thickness=2)
         L.axes(False)
         L.set_aspect_ratio(1)
-        return encode_plot(L, pad=0, pad_inches=0, bbox_inches='tight')
+        return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
 
     def circle_plot(self):
         pts = []
@@ -175,9 +197,9 @@ class AbvarFq_isoclass(object):
                 pts.append((c, s))
             else:
                 pts.extend([(c, s), (c, -s)])
-        P = circle((0, 0), 1, color='black', thickness=2.5)
+        P = circle((0, 0), 1, color="black", thickness=2.5)
         P[0].set_zorder(-1)
-        P += points(pts, size=300, rgbcolor='darkblue')
+        P += points(pts, size=300, rgbcolor="darkblue")
         P.axes(False)
         P.set_aspect_ratio(1)
         return encode_plot(P, pad=0, pad_inches=None, transparent=True, axes_pad=0.04)
@@ -185,28 +207,29 @@ class AbvarFq_isoclass(object):
     def _make_jacpol_property(self):
         ans = []
         if self.has_principal_polarization == 1:
-            ans.append((None, 'Principally polarizable'))
+            ans.append((None, "Principally polarizable"))
         elif self.has_principal_polarization == -1:
-            ans.append((None, 'Not principally polarizable'))
+            ans.append((None, "Not principally polarizable"))
         if self.has_jacobian == 1:
-            ans.append((None, 'Contains a Jacobian'))
+            ans.append((None, "Contains a Jacobian"))
         elif self.has_jacobian == -1:
-            ans.append((None, 'Does not contain a Jacobian'))
+            ans.append((None, "Does not contain a Jacobian"))
         return ans
 
     def properties(self):
-        props = [('Label', self.label),
-                 (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
-                 ('Base Field', '$%s$' % (self.field(self.q))),
-                 ('Dimension', '$%s$' % (self.g)),
-                 #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-                 ('Ordinary', 'Yes' if self.is_ordinary == 1 else 'No'),
-                 ('$p$-rank', '$%s$' % (self.p_rank)),
-                 ]
+        props = [
+            ("Label", self.label),
+            (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
+            ("Base Field", "$%s$" % (self.field(self.q))),
+            ("Dimension", "$%s$" % (self.g)),
+            # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
+            ("Ordinary", "Yes" if self.is_ordinary == 1 else "No"),
+            ("$p$-rank", "$%s$" % (self.p_rank)),
+        ]
         if self.is_pp != 0:
-            props += [('Principally polarizable', 'Yes' if self.is_pp == 1 else 'No')]
+            props += [("Principally polarizable", "Yes" if self.is_pp == 1 else "No")]
         if self.is_jac != 0:
-            props += [('Contains a Jacobian', 'Yes' if self.is_jac == 1 else 'No')]
+            props += [("Contains a Jacobian", "Yes" if self.is_jac == 1 else "No")]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
@@ -218,19 +241,19 @@ class AbvarFq_isoclass(object):
     #        if ans != "":
     #            ans += ", "
     #        ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
-        #ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
+    # ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
     #    return ans
 
     def frob_angles(self):
-        ans = ''
+        ans = ""
         eps = 0.00000001
         for angle in self.angles:
-            if ans != '':
-                ans += ', '
+            if ans != "":
+                ans += ", "
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r'$\pm' + str(angle) + '$'
+                angle = r"$\pm" + str(angle) + "$"
             else:
-                angle = '$' + str(angle) + '$'
+                angle = "$" + str(angle) + "$"
             ans += angle
         return ans
 
@@ -238,10 +261,10 @@ class AbvarFq_isoclass(object):
         return self.p_rank == self.g
 
     def is_supersingular(self):
-        return all(slope == '1/2' for slope in self.polygon_slopes)
+        return all(slope == "1/2" for slope in self.polygon_slopes)
 
     def display_slopes(self):
-        return '[' + ', '.join(self.polygon_slopes) + ']'
+        return "[" + ", ".join(self.polygon_slopes) + "]"
 
     def length_A_counts(self):
         return len(self.abvar_counts)
@@ -252,14 +275,16 @@ class AbvarFq_isoclass(object):
     def display_number_field(self):
         if self.is_simple:
             if self.nf():
-                return nf_display_knowl(self.nf(),field_pretty(self.nf()))
+                return nf_display_knowl(self.nf(), field_pretty(self.nf()))
             else:
                 return "The number field of this isogeny class is not in the database."
         else:
             return "The class is not simple"
 
     def display_galois_group(self):
-        if not hasattr(self, 'galois_groups') or not self.galois_groups[0]: #the number field was not found in the database
+        if (
+            not hasattr(self, "galois_groups") or not self.galois_groups[0]
+        ):  # the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
             group = (self.galois_groups[0]).split("T")
@@ -267,113 +292,128 @@ class AbvarFq_isoclass(object):
 
     def decomposition_display_search(self):
         if self.is_simple:
-            return 'simple'
-        ans = ''
+            return "simple"
+        ans = ""
         for simp, e in zip(self.simple_distinct, self.simple_multiplicities):
-            url = url_for('abvarfq.by_label',label=simp)
-            if ans != '':
-                ans += '$\\times$ '
+            url = url_for("abvarfq.by_label", label=simp)
+            if ans != "":
+                ans += "$\\times$ "
             if e == 1:
-                ans += '<a href="{1}">{0}</a>'.format(simp,url)
-                ans += ' '
+                ans += '<a href="{1}">{0}</a>'.format(simp, url)
+                ans += " "
             else:
-                ans += '<a href="{1}">{0}</a>'.format(simp,url) + '<sup> {0} </sup> '.format(e)
+                ans += '<a href="{1}">{0}</a>'.format(
+                    simp, url
+                ) + "<sup> {0} </sup> ".format(e)
         return ans
 
     def alg_clo_field(self):
         if self.r == 1:
-            return '\\overline{\F}_{%s}' % (self.p)
+            return "\\overline{\F}_{%s}" % (self.p)
         else:
-            return '\\overline{\F}_{%s^{%s}}' % (self.p, self.r)
+            return "\\overline{\F}_{%s^{%s}}" % (self.p, self.r)
 
-    def ext_field(self,s):
-        n = s*self.r
+    def ext_field(self, s):
+        n = s * self.r
         if n == 1:
-            return '\F_{%s}' % (self.p)
+            return "\F_{%s}" % (self.p)
         else:
-            return '\F_{%s^{%s}}' % (self.p, n)
+            return "\F_{%s^{%s}}" % (self.p, n)
 
     @cached_method
     def endo_extensions(self):
-        return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
+        return list(db.av_fq_endalg_factors.search({"base_label": self.label}))
 
     def relevant_degs(self):
         return Integer(self.geometric_extension_degree).divisors()[1:-1]
 
-    def endo_extension_by_deg(self,degree):
-        return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
+    def endo_extension_by_deg(self, degree):
+        return [
+            [factor["extension_label"], factor["multiplicity"]]
+            for factor in self.endo_extensions()
+            if factor["extension_degree"] == degree
+        ]
 
-    def display_endo_info(self,degree,do_describe=True):
-        #When degree > 1 we find the factorization by looking at the extension database
+    def display_endo_info(self, degree, do_describe=True):
+        # When degree > 1 we find the factorization by looking at the extension database
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
             if factors == []:
-                return 'The data at degree %s is missing.' % degree, do_describe
-            ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
+                return "The data at degree %s is missing." % degree, do_describe
+            ans = "The base change of $A$ to ${0}$ is ".format(self.ext_field(degree))
         else:
-            factors = zip(self.simple_distinct,self.simple_multiplicities)
+            factors = zip(self.simple_distinct, self.simple_multiplicities)
             if self.is_simple:
-                ans = 'The endomorphism algebra of this simple isogeny class is '
+                ans = "The endomorphism algebra of this simple isogeny class is "
             else:
-                ans = 'The isogeny class factors as '
+                ans = "The isogeny class factors as "
         dec_display = decomposition_display(factors)
-        if dec_display == 'simple':
-            end_alg = describe_end_algebra(self.p,factors[0][0])
+        if dec_display == "simple":
+            end_alg = describe_end_algebra(self.p, factors[0][0])
             if end_alg is None:
                 return no_endo_data(), do_describe
             if degree > 1:
-                ans += 'the simple isogeny class '
+                ans += "the simple isogeny class "
                 ans += av_display_knowl(factors[0][0])
-                ans += ' and its endomorphism algebra is '
+                ans += " and its endomorphism algebra is "
             ans += end_alg[1]
         elif len(factors) == 1:
-            end_alg = describe_end_algebra(self.p,factors[0][0])
+            end_alg = describe_end_algebra(self.p, factors[0][0])
             if end_alg is None:
                 return no_endo_data(), do_describe
-            ans += dec_display + ' and its endomorphism algebra is '
-            ans += matrix_display(factors[0],end_alg)
+            ans += dec_display + " and its endomorphism algebra is "
+            ans += matrix_display(factors[0], end_alg)
         else:
             ans += dec_display
             if do_describe:
-                ans += ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor'
+                ans += " and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor"
                 do_describe = False
-            ans += '. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
+            ans += (
+                ". The endomorphism algebra for each factor is: \n"
+                + non_simple_loop(self.p, factors)
+            )
         return ans, do_describe
 
     def all_endo_info_display(self):
         do_describe = False
         base_endo_info, do_describe = self.display_endo_info(1)
-        ans = g2_table(self.field(),base_endo_info,True)
+        ans = g2_table(self.field(), base_endo_info, True)
         if self.geometric_extension_degree != 1:
-            geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree,do_describe)
-            ans += g2_table(self.alg_clo_field(),geometric_endo_info,True)
-        ans += 'All geometric endomorphisms are defined over ${0}$.\n'.format(self.ext_field(self.geometric_extension_degree))
+            geometric_endo_info, do_describe = self.display_endo_info(
+                self.geometric_extension_degree, do_describe
+            )
+            ans += g2_table(self.alg_clo_field(), geometric_endo_info, True)
+        ans += "All geometric endomorphisms are defined over ${0}$.\n".format(
+            self.ext_field(self.geometric_extension_degree)
+        )
         if self.relevant_degs() != []:
-            ans += '<br>\n<b>Remainder of endomorphism lattice by field</b>\n'
-            ans += '<ul>\n'
+            ans += "<br>\n<b>Remainder of endomorphism lattice by field</b>\n"
+            ans += "<ul>\n"
             for deg in self.relevant_degs():
-                ans += '<li>'
+                ans += "<li>"
                 new_endo_info, do_describe = self.display_endo_info(deg, do_describe)
-                ans += g2_table(self.ext_field(deg),new_endo_info,False)
-                ans += '</li>\n'
-            ans += '</ul>\n'
+                ans += g2_table(self.ext_field(deg), new_endo_info, False)
+                ans += "</li>\n"
+            ans += "</ul>\n"
         return ans
 
     def basechange_display(self):
         if self.is_primitive:
-            return 'primitive'
+            return "primitive"
         else:
             models = self.primitive_models
             ans = '<table class = "ntdata">\n'
-            ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
+            ans += "<tr><td>Subfield</td><td>Primitive Model</td></tr>\n"
             for model in models:
-                ans += '  <tr><td class="center">${0}$</td><td>'.format(self.field(model.split('.')[1]))
-                ans += av_display_knowl(model) + ' '
-                ans += '</td></tr>\n'
-            ans += '</table>\n'
+                ans += '  <tr><td class="center">${0}$</td><td>'.format(
+                    self.field(model.split(".")[1])
+                )
+                ans += av_display_knowl(model) + " "
+                ans += "</td></tr>\n"
+            ans += "</table>\n"
             return ans
 
-    def twist_display(self,show_all):
+    def twist_display(self, show_all):
         if self.num_twists() == 0:
             return "This isogeny class has no twists."
         if show_all:
@@ -381,155 +421,205 @@ class AbvarFq_isoclass(object):
         else:
             ans = "Below are some of the twists of this isogeny class."
         ans += '<table class = "ntdata">\n'
-        ans += '<tr><td>Twist</td><td>Extension Degree</td><td>Common base change</td></tr>\n'
+        ans += "<tr><td>Twist</td><td>Extension Degree</td><td>Common base change</td></tr>\n"
         i = 0
         for twist in self.twists:
             if twist[2] <= 3 or show_all or i < 3:
-                if self.q**twist[2] <= maxq(self.g, self.p):
+                if self.q ** twist[2] <= maxq(self.g, self.p):
                     bc = av_display_knowl(twist[1])
                 else:
-                    bc = '(not in LMFDB)'
-                ans += '<tr><td>' + av_display_knowl(twist[0]) + '</td><td>$' + str(twist[2]) + '$</td><td>' + bc + '</td></tr>\n'
+                    bc = "(not in LMFDB)"
+                ans += (
+                    "<tr><td>"
+                    + av_display_knowl(twist[0])
+                    + "</td><td>$"
+                    + str(twist[2])
+                    + "$</td><td>"
+                    + bc
+                    + "</td></tr>\n"
+                )
                 i += 1
-        ans += '</table>\n'
+        ans += "</table>\n"
         return ans
 
     def curve_display(self):
-        if hasattr(self, 'curves') and self.curves:
-            s = '\n<ul>\n'
+        if hasattr(self, "curves") and self.curves:
+            s = "\n<ul>\n"
             cutoff = 20 if len(self.curves) > 30 else len(self.curves)
             for cv in self.curves[:cutoff]:
-                cv = cv.replace('*', '')
-                if '=' not in cv:
-                    cv = cv + '=0'
-                s += '  <li>$%s$</li>\n' % cv
+                cv = cv.replace("*", "")
+                if "=" not in cv:
+                    cv = cv + "=0"
+                s += "  <li>$%s$</li>\n" % cv
             if cutoff < len(self.curves):
-                s += '  <li>and %s more</li>\n' % (len(self.curves) - cutoff)
-            s += '</ul>\n'
+                s += "  <li>and %s more</li>\n" % (len(self.curves) - cutoff)
+            s += "</ul>\n"
             return s
         else:
-            return ''
+            return ""
+
 
 @app.context_processor
 def ctx_decomposition():
-    return {'av_data': av_data}
+    return {"av_data": av_data}
+
 
 def signed_class_to_int(code):
-    if code == 'a':
+    if code == "a":
         return ZZ(0)
-    elif code.startswith('a'):
+    elif code.startswith("a"):
         return -ZZ(class_to_int(code[1:]))
     else:
         return ZZ(class_to_int(code))
 
+
 def Ppoly_irred(label):
-    g, q, coeffs = label.split('.')
+    g, q, coeffs = label.split(".")
     g, q = ZZ(g), ZZ(q)
-    polylist = map(signed_class_to_int, coeffs.split('_'))
-    polylist = [ZZ(1)] + polylist + [q**i * c for (i, c) in enumerate(reversed(polylist[:-1]), 1)] + [q**g]
+    polylist = map(signed_class_to_int, coeffs.split("_"))
+    polylist = (
+        [ZZ(1)]
+        + polylist
+        + [q ** i * c for (i, c) in enumerate(reversed(polylist[:-1]), 1)]
+        + [q ** g]
+    )
     from sage.all import latex
+
     polylist.reverse()
-    ZZx = PolynomialRing(ZZ,'x')
+    ZZx = PolynomialRing(ZZ, "x")
     poly = ZZx(polylist)
     factor = poly.factor()[0][0]
     return latex(factor)
 
-def describe_end_algebra(p,extension_label):
+
+def describe_end_algebra(p, extension_label):
     # This should eventually be done with a join, but okay for now
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
     if factor_data == None:
         return None
-    center = factor_data['center']
-    divalg_dim = factor_data['divalg_dim']
-    places = factor_data['places']
-    brauer_invariants = factor_data['brauer_invariants']
-    ans = ['','']
-    if center == '1.1.1.1' and divalg_dim == 4:
-        ans[0] = 'B'
-        ans[1] = 'the quaternion algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
-    elif int(center.split('.')[1]) > 0:
-        ans[0] = 'B'
+    center = factor_data["center"]
+    divalg_dim = factor_data["divalg_dim"]
+    places = factor_data["places"]
+    brauer_invariants = factor_data["brauer_invariants"]
+    ans = ["", ""]
+    if center == "1.1.1.1" and divalg_dim == 4:
+        ans[0] = "B"
+        ans[1] = (
+            "the quaternion algebra over "
+            + nf_display_knowl(center, field_pretty(center))
+            + " ramified at ${0}$ and $\infty$".format(p)
+            + "."
+        )
+    elif int(center.split(".")[1]) > 0:
+        ans[0] = "B"
         if divalg_dim == 4:
             ans[1] = "the quaternion algebra"
         else:
-            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
-        ans[1] += ' over {0} ramified at both real infinite places.'.format(nf_display_knowl(center,field_pretty(center)))
+            ans[1] = "the division algebra of dimension " + str(divalg_dim)
+        ans[1] += " over {0} ramified at both real infinite places.".format(
+            nf_display_knowl(center, field_pretty(center))
+        )
     elif divalg_dim == 1:
-        ans[0] = 'K'
-        ans[1] = nf_display_knowl(center,field_pretty(center)) + '.'
+        ans[0] = "K"
+        ans[1] = nf_display_knowl(center, field_pretty(center)) + "."
     else:
-        ans[0] = 'B'
+        ans[0] = "B"
         if divalg_dim == 4:
             ans[1] = "the quaternion algebra"
         else:
-            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
-        ans[1] += ' over ' + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean places:'.format(p)
-        ans[1]  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
+            ans[1] = "the division algebra of dimension " + str(divalg_dim)
+        ans[1] += (
+            " over "
+            + nf_display_knowl(center, field_pretty(center))
+            + " with the following ramification data at primes above ${0}$, and unramified at all archimedean places:".format(
+                p
+            )
+        )
+        ans[1] += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
-            ans[1] += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
-        ans[1] += '</tr><tr><td>$\operatorname{inv}_v$</td>'
+            ans[1] += '<td class="center"> {0} </td>'.format(
+                primeideal_display(p, prime)
+            )
+        ans[1] += "</tr><tr><td>$\operatorname{inv}_v$</td>"
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
-        ans[1] += '</tr></table>\n'
-        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(Ppoly_irred(extension_label))
+        ans[1] += "</tr></table>\n"
+        ans[1] += "where $\pi$ is a root of ${0}$.\n".format(
+            Ppoly_irred(extension_label)
+        )
     return ans
 
 
-def primeideal_display(p,prime_ideal):
-    ans = '($ {0} $'.format(p)
-    if prime_ideal == ['0']:
-        ans += ')'
+def primeideal_display(p, prime_ideal):
+    ans = "($ {0} $".format(p)
+    if prime_ideal == ["0"]:
+        ans += ")"
         return ans
     else:
-        ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
+        ans += "," + web_latex(coeff_to_poly(prime_ideal, "pi")) + ")"
         return ans
 
 
 def decomposition_display(factors):
     if len(factors) == 1 and factors[0][1] == 1:
-        return 'simple'
-    factor_str = ''
+        return "simple"
+    factor_str = ""
     for factor in factors:
-        if factor_str != '':
-            factor_str += ' $\\times$ '
+        if factor_str != "":
+            factor_str += " $\\times$ "
         factor_str += av_display_knowl(factor[0])
         if factor[1] > 1:
-            factor_str += '<sup> {0} </sup>'.format(factor[1])
+            factor_str += "<sup> {0} </sup>".format(factor[1])
     return factor_str
+
 
 def no_endo_data():
     return "The endomorphism data for this class is not currently in the database."
 
-def g2_table(field,entry,is_bold):
+
+def g2_table(field, entry, is_bold):
     if is_bold:
-        ans = '<b>Endomorphism algebra over ${0}$</b>\n'.format(field)
+        ans = "<b>Endomorphism algebra over ${0}$</b>\n".format(field)
     else:
-        ans = 'Endomorphism algebra over ${0}$\n'.format(field)
-    ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
+        ans = "Endomorphism algebra over ${0}$\n".format(field)
+    ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(
+        entry
+    )
     return ans
 
-def matrix_display(factor,end_alg):
-    if end_alg[0] == 'K' and end_alg[1] != factor[0] + '.':
-        ans = '$\mathrm{M}_' + str(factor[1]) + '($' + end_alg[1][:-1] + '$)$'
+
+def matrix_display(factor, end_alg):
+    if end_alg[0] == "K" and end_alg[1] != factor[0] + ".":
+        ans = "$\mathrm{M}_" + str(factor[1]) + "($" + end_alg[1][:-1] + "$)$"
     else:
-        ans = '$\mathrm{M}_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+        ans = (
+            "$\mathrm{M}_"
+            + str(factor[1])
+            + "("
+            + end_alg[0]
+            + ")$, where $"
+            + end_alg[0]
+            + "$ is "
+            + end_alg[1]
+        )
     return ans
 
-def non_simple_loop(p,factors):
+
+def non_simple_loop(p, factors):
     ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'
     for factor in factors:
-        ans += '<li>'
+        ans += "<li>"
         ans += av_display_knowl(factor[0])
         if factor[1] > 1:
-           ans += '<sup> {0} </sup>'.format(factor[1])
-        ans += ' : '
-        end_alg = describe_end_algebra(p,factor[0])
+            ans += "<sup> {0} </sup>".format(factor[1])
+        ans += " : "
+        end_alg = describe_end_algebra(p, factor[0])
         if end_alg == None:
             ans += no_endo_data()
         elif factor[1] == 1:
             ans += end_alg[1]
         else:
-            ans += matrix_display(factor,end_alg)
-        ans += '</li>\n'
-    ans += '</ul>\n'
+            ans += matrix_display(factor, end_alg)
+        ans += "</li>\n"
+    ans += "</ul>\n"
     return ans
