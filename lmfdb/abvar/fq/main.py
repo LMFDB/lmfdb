@@ -687,7 +687,7 @@ def completeness_page():
     bread = get_bread(("Completeness", "."))
     return render_template(
         "single.html",
-        kid="dq.av.fq.extent",
+        kid="rcs.cande.av.fq",
         credit=abvarfq_credit,
         title=t,
         bread=bread,
@@ -700,7 +700,7 @@ def reliability_page():
     bread = get_bread(("Reliability", "."))
     return render_template(
         "single.html",
-        kid="dq.av.fq.reliability",
+        kid="rcs.rigor.av.fq",
         credit=abvarfq_credit,
         title=t,
         bread=bread,
@@ -713,7 +713,7 @@ def how_computed_page():
     bread = get_bread(("Source", "."))
     return render_template(
         "single.html",
-        kid="dq.av.fq.source",
+        kid="rcs.source.av.fq",
         credit=abvarfq_credit,
         title=t,
         bread=bread,

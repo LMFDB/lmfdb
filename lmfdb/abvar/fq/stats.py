@@ -9,7 +9,7 @@ from sage.misc.lazy_attribute import lazy_attribute
 logger = make_logger("abvarfq")
 
 class AbvarFqStats(StatsDisplay):
-    extent_knowl = "dq.av.fq.extent"
+    extent_knowl = "rcs.cande.av.fq"
     table = db.av_fq_isog
     baseurl_func = ".abelian_varieties"
     buckets = {
