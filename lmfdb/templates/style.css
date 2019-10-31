@@ -2243,7 +2243,7 @@ input.color_selecter {
 }
 
 /* the button to show advanced search options */
-.advance {
+#advancedtoggle {
     margin-left: 20px;
 }
 

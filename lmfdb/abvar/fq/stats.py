@@ -8,24 +8,12 @@ from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("abvarfq")
 
-
 class AbvarFqStats(StatsDisplay):
     extent_knowl = "dq.av.fq.extent"
     table = db.av_fq_isog
     baseurl_func = ".abelian_varieties"
     buckets = {
-        "q": [
-            "2",
-            "3",
-            "4",
-            "5-8",
-            "9-16",
-            "17-32",
-            "37-64",
-            "67-128",
-            "131-211",
-            "223-1024",
-        ],
+        "q": ["2", "3", "4", "5-8", "9-16", "17-32", "37-64", "67-128", "131-211", "223-1024"],
         "geometric_extension_degree": ["1", "2", "3-8", "9-24", "25-64", "65-168"],
         "jacobian_count": ["0", "1", "2", "3-16", "17-256", "257-6375"],
         "hyp_count": ["0", "1", "2", "3-16", "17-256", "257-6375"],
@@ -68,42 +56,24 @@ class AbvarFqStats(StatsDisplay):
         "max_twist_degree": "max twist degree",
     }
     stat_list = [
-        {
-            "cols": ["g", "q"],
-            "proportioner": proportioners.per_total,
-            "totaler": totaler(),
-        },
-        {
-            "cols": ["g", "twist_count"],
-            "proportioner": proportioners.per_row_total,
-            "totaler": totaler(),
-        },
-        {
-            "cols": ["g", "max_twist_degree"],
-            "proportioner": proportioners.per_row_total,
-            "totaler": totaler(),
-        },
+        {"cols": ["g", "q"],
+         "proportioner": proportioners.per_total,
+         "totaler": totaler()},
+        {"cols": ["g", "twist_count"],
+         "proportioner": proportioners.per_row_total,
+         "totaler": totaler()},
+        {"cols": ["g", "max_twist_degree"],
+         "proportioner": proportioners.per_row_total,
+         "totaler": totaler()},
     ]
 
     @staticmethod
     def dynamic_parse(info, query):
         from lmfdb.abvar.fq.main import common_parse
-
         common_parse(info, query)
 
     dynamic_parent_page = "abvarfq-refine-search.html"
-    dynamic_cols = [
-        "q",
-        "g",
-        "p_rank",
-        "angle_rank",
-        "size",
-        "geometric_extension_degree",
-        "jacobian_count",
-        "hyp_count",
-        "twist_count",
-        "max_twist_degree",
-    ]
+    dynamic_cols = ["q", "g", "p_rank", "angle_rank", "size", "geometric_extension_degree", "jacobian_count", "hyp_count", "twist_count", "max_twist_degree"]
 
     @lazy_attribute
     def _counts(self):
@@ -127,27 +97,21 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return (
-            r"The database currently contains %s %s of %s of dimension up to %s over finite fields."
-            % (
-                self.counts["nclasses_c"],
-                self.isogeny_knowl,
-                self.abvar_knowl,
-                max(self.gs),
-            )
+        return r"The database currently contains %s %s of %s of dimension up to %s over finite fields." % (
+            self.counts["nclasses_c"],
+            self.isogeny_knowl,
+            self.abvar_knowl,
+            max(self.gs),
         )
 
     @lazy_attribute
     def summary(self):
-        return (
-            r"The database currently contains %s %s of %s of dimension up to %s over finite fields.  In addition to the statistics below, you can also <a href='%s'>create your own</a>."
-            % (
-                self.counts["nclasses_c"],
-                self.isogeny_knowl,
-                self.abvar_knowl,
-                max(self.gs),
-                url_for("abvarfq.dynamic_statistics"),
-            )
+        return r"The database currently contains %s %s of %s of dimension up to %s over finite fields.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (
+            self.counts["nclasses_c"],
+            self.isogeny_knowl,
+            self.abvar_knowl,
+            max(self.gs),
+            url_for("abvarfq.dynamic_statistics"),
         )
 
     @lazy_attribute

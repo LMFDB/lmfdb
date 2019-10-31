@@ -53,23 +53,14 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can change the table range
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4",
-            "6409",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?table_field_range=4..7&table_dimension_range=2..4",
-            "2953",
-        )
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4", "6409")
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=4..7&table_dimension_range=2..4", "2953")
         # and that it deals with invalid input
         self.check_args(
             "/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=1%2C3%2C5",
             "Error: You cannot use commas in the table ranges.",
         )
-        self.check_args(
-            "/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=x",
-            "not a valid input",
-        )
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=x", "not a valid input")
 
     def test_search_dimension(self):
         r"""
@@ -127,62 +118,36 @@ class AVHomeTest(LmfdbTest):
         # [0,1] from browse page
         self.check_args("/Variety/Abelian/Fq/?newton_polygon=%5B0%2C1%5D", "1.2.ab")
         # 1/3 from browse page, doesn't currently work
-        self.check_args(
-            "/Variety/Abelian/Fq/?newton_polygon=1%2F3",
-            "You cannot specify slopes on their own",
-        )
+        self.check_args("/Variety/Abelian/Fq/?newton_polygon=1%2F3", "You cannot specify slopes on their own")
         # 1/5 from refine search, doesn't currently work
-        self.check_args(
-            "/Variety/Abelian/Fq/?newton_polygon=1%2F5",
-            "You cannot specify slopes on their own",
-        )
+        self.check_args("/Variety/Abelian/Fq/?newton_polygon=1%2F5", "You cannot specify slopes on their own")
         # slope not a rational number
         self.check_args("/Variety/Abelian/Fq/?newton_polygon=t", "is not a valid input")
         # slopes are not increasing
-        self.check_args(
-            "/Variety/Abelian/Fq/?start=&count=&newton_polygon=%5B1%2C1%2F2%2C0%5D",
-            "Slopes must be increasing",
-        )
+        self.check_args("/Variety/Abelian/Fq/?start=&count=&newton_polygon=%5B1%2C1%2F2%2C0%5D", "Slopes must be increasing")
 
     def test_search_initcoeffs(self):
         r"""
         Check that we can search by initial coefficients of the polynomial
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D",
-            "4.3.b_ab_d_j",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D",
-            "4.3.b_ab_d_j",
-        )
+        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
+        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         # there should be only one match, if ranges were supported
-        self.check_args(
-            "/Variety/Abelian/Fq/?angle_ranks=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D",
-            "Ranges not supported",
-        )
+        self.check_args("/Variety/Abelian/Fq/?angle_ranks=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D", "Ranges not supported")
 
     def test_search_pointcountsav(self):
         r"""
         Check that we can search by the point counts of the abelian variety
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/?abvar_point_count=%5B75%2C7125%5D", "2.9.ab_d"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?abvar_point_count=%5B75%2C7125%5D", "2.9.ab_d"
-        )
+        self.check_args("/Variety/Abelian/Fq/?abvar_point_count=%5B75%2C7125%5D", "2.9.ab_d")
+        self.check_args("/Variety/Abelian/Fq/?abvar_point_count=%5B75%2C7125%5D", "2.9.ab_d")
 
     def test_search_pointcountscurve(self):
         r"""
         Check that we can search by the point counts of the curve
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/?curve_point_count=%5B9%2C87%5D", "3.9.ab_d_abs"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?curve_point_count=%5B9%2C87%5D", "3.9.ab_d_abs"
-        )
+        self.check_args("/Variety/Abelian/Fq/?curve_point_count=%5B9%2C87%5D", "3.9.ab_d_abs")
+        self.check_args("/Variety/Abelian/Fq/?curve_point_count=%5B9%2C87%5D", "3.9.ab_d_abs")
 
     def test_search_anglerank(self):
         r"""
@@ -190,41 +155,25 @@ class AVHomeTest(LmfdbTest):
         """
         self.check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.ag_p_au_y")
         self.check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.ag_p_au_y")
-        self.not_check_args(
-            "/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr"
-        )
-        self.not_check_args(
-            "/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr"
-        )
+        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr")
+        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr")
 
     def test_search_isogfactor(self):
         r"""
         Check that we can search by decomposition into isogeny factors
         """
         # [3.5.ah_y_ach,*]
-        self.check_args(
-            "/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach",
-            "4.5.ak_by_agk_qb",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1",
-            "6.2.ag_p_aw_bh_acu_ey",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "all 5 matches"
-        )
+        self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_qb")
+        self.check_args("/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1", "6.2.ag_p_aw_bh_acu_ey")
+        self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "all 5 matches")
 
     def test_search_numberfield(self):
         r"""
         Check that we can search by number field
         """
         # 4.0.9726525.1
-        self.check_args(
-            "/Variety/Abelian/Fq/?number_field=4.0.9726525.1", "2.193.ax_tn"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?number_field=4.0.9726525.1", "2.193.ax_tn"
-        )
+        self.check_args("/Variety/Abelian/Fq/?number_field=4.0.9726525.1", "2.193.ax_tn")
+        self.check_args("/Variety/Abelian/Fq/?number_field=4.0.9726525.1", "2.193.ax_tn")
 
     def test_search_jacobian(self):
         r"""
@@ -241,12 +190,8 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         # unknowns
-        self.check_args(
-            "/Variety/Abelian/Fq/?g=3&jacobian=not_yes&polarizable=yes", "3.3.a_ad_a"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c"
-        )
+        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=not_yes&polarizable=yes", "3.3.a_ad_a")
+        self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c")
 
     def test_search_princpol(self):
         r"""
@@ -263,21 +208,10 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ab_f")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ab_f")
         # unknowns
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_yes",
-            "2.17.ae_ab",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_no", "2.17.aj_cc"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=3&g=3&jacobian=no&polarizable=not_no",
-            "3.3.ag_v_abs",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no&polarizable=not_no",
-            "3.2.c_e_g",
-        )
+        self.check_args("/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_yes", "2.17.ae_ab")
+        self.check_args("/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_no", "2.17.aj_cc")
+        self.check_args("/Variety/Abelian/Fq/?q=3&g=3&jacobian=no&polarizable=not_no", "3.3.ag_v_abs")
+        self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no&polarizable=not_no", "3.2.c_e_g")
 
     def test_search_galois(self):
         self.check_args("/Variety/Abelian/Fq/?galois_group=4T3", "2.4.ab_f")
@@ -303,52 +237,21 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.ad_b")
         self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.af_o")
         # dimension, base field and initial coefficients
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=25&g=2&initial_coefficients=%5B1%2C-13%5D",
-            "2.25.b_an",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=25&g=2&initial_coefficients=%5B1%2C-13%5D",
-            "2.25.b_an",
-        )
+        self.check_args("/Variety/Abelian/Fq/?q=25&g=2&initial_coefficients=%5B1%2C-13%5D", "2.25.b_an")
+        self.check_args("/Variety/Abelian/Fq/?q=25&g=2&initial_coefficients=%5B1%2C-13%5D", "2.25.b_an")
         # dimension, base field and point counts of the abelian variety
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=25&g=2&abvar_point_count=%5B373%2C391277%5D",
-            "2.25.an_dh",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=25&g=2&abvar_point_count=%5B373%2C391277%5D",
-            "2.25.an_dh",
-        )
+        self.check_args("/Variety/Abelian/Fq/?q=25&g=2&abvar_point_count=%5B373%2C391277%5D", "2.25.an_dh")
+        self.check_args("/Variety/Abelian/Fq/?q=25&g=2&abvar_point_count=%5B373%2C391277%5D", "2.25.an_dh")
         # dimension, base field and point counts of the curve
-        self.check_args(
-            "/Variety/Abelian/Fq/?q=3&g=4&curve_point_count=%5B0%2C4%2C15%5D",
-            "4.3.ae_f_ad_e",
-        )
+        self.check_args("/Variety/Abelian/Fq/?q=3&g=4&curve_point_count=%5B0%2C4%2C15%5D", "4.3.ae_f_ad_e")
         # dimension, base field and maximum number to display
         self.check_args("/Variety/Abelian/Fq/?q=25&g=2&count=100", "2.25.an_do")
         # p-rank and initial coefficients
-        self.check_args(
-            "/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D",
-            "4.3.b_ab_d_j",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D",
-            "4.3.b_ab_d_j",
-        )
+        self.check_args("/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
+        self.check_args("/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         # initial coefficients and point counts of the abelian variety
-        self.check_args(
-            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D",
-            "No matches",
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D",
-            "No matches",
-        )
+        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D", "No matches")
+        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D", "No matches")
         # Combining unknown fields on Jacobian and Principal polarization.
-        self.check_args(
-            "/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=not_no", "3.2.a_a_ae"
-        )
-        self.check_args(
-            "/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", "3.2.a_ac_a"
-        )
+        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=not_no", "3.2.a_a_ae")
+        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", "3.2.a_ac_a")

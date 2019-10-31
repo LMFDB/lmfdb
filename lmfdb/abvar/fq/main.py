@@ -13,26 +13,10 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
-    to_dict,
-    flash_error,
-    integer_options,
-    SearchArray,
-    TextBox,
-    SelectBox,
-    TextBoxWithSelect,
-    BasicSpacer,
-    SkipBox,
-    CheckBox,
-    CheckboxSpacer,
-    parse_ints,
-    parse_string_start,
-    parse_subset,
-    parse_submultiset,
-    parse_bool,
-    parse_bool_unknown,
-    display_knowl,
-    search_wrap,
-    count_wrap,
+    to_dict, flash_error, integer_options, display_knowl,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, BasicSpacer, SkipBox, CheckBox, CheckboxSpacer,
+    parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
+    search_wrap, count_wrap,
 )
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
@@ -45,7 +29,6 @@ logger = make_logger("abvarfq")
 #    Top level
 #########################
 
-
 def get_bread(*breads):
     bc = [
         ("Abelian Varieties", url_for(".abelian_varieties")),
@@ -54,14 +37,11 @@ def get_bread(*breads):
     map(bc.append, breads)
     return bc
 
-
 abvarfq_credit = "Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent"
-
 
 @app.route("/EllipticCurves/Fq")
 def ECFq_redirect():
     return redirect(url_for("abvarfq.abelian_varieties"), **request.args)
-
 
 def learnmore_list():
     return [
@@ -71,16 +51,13 @@ def learnmore_list():
         ("Labels", url_for(".labels_page")),
     ]
 
-
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return filter(lambda t: t[0].find(matchstring) < 0, learnmore_list())
 
-
 #########################
 #  Search/navigate
 #########################
-
 
 @abvarfq_page.route("/")
 def abelian_varieties():
@@ -88,9 +65,7 @@ def abelian_varieties():
     if args:
         info = to_dict(args)
         # hidden_search_type for prev/next buttons
-        info["search_type"] = search_type = info.get(
-            "search_type", info.get("hst", "List")
-        )
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
         info["search_array"] = AbvarSearchArray()
 
         if search_type == "List":
@@ -103,7 +78,6 @@ def abelian_varieties():
     else:
         return abelian_variety_browse(**args)
 
-
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
     D = to_dict(request.args)
@@ -111,7 +85,6 @@ def abelian_varieties_by_g(g):
         D["g"] = g
     D["bread"] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
     return abelian_variety_search(D)
-
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
 def abelian_varieties_by_gq(g, q):
@@ -125,7 +98,6 @@ def abelian_varieties_by_gq(g, q):
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
     )
     return abelian_variety_search(D)
-
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
@@ -157,7 +129,6 @@ def abelian_varieties_by_gqi(g, q, iso):
         KNOWL_ID="av.fq.%s" % label,
     )
 
-
 def url_for_label(label):
     label = label.replace(" ", "")
     try:
@@ -167,7 +138,6 @@ def url_for_label(label):
         return redirect(url_for(".abelian_varieties"))
     g, q, iso = split_label(label)
     return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
-
 
 def download_search(info):
     dltype = info["Submit"]
@@ -214,33 +184,42 @@ def download_search(info):
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
-    return send_file(
-        strIO, attachment_filename=filename, as_attachment=True, add_etags=False
-    )
-
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 class AbvarSearchArray(SearchArray):
     def __init__(self):
         qshort = display_knowl("ag.base_field", "base field")
-        qtext = "Cardinality of the %s" % (qshort)
         q = TextBox(
             "q",
-            label=qtext,
+            label="Cardinality of the %s" % (qshort),
             short_label=qshort,
             example="81",
             example_span="81 or 3-49",
         )
         g = TextBox(
-            "g", "Dimension", "ag.dimension", example="2", example_span="2 or 3-5"
+            "g",
+            label="Dimension",
+            knowl="ag.dimension",
+            example="2",
+            example_span="2 or 3-5"
         )
-        p_rank = TextBox("p_rank", "$p$-rank", "av.fq.p_rank", example="2")
+        p_rank = TextBox(
+            "p_rank",
+            label="$p$-rank",
+            knowl="av.fq.p_rank",
+            example="2"
+        )
         angle_rank = TextBox(
-            "angle_rank", "Angle rank", "av.fq.angle_rank", example="3", advanced=True
+            "angle_rank",
+            label="Angle rank",
+            knowl="av.fq.angle_rank",
+            example="3",
+            advanced=True
         )
         newton_polygon = TextBox(
             "newton_polygon",
-            "Slopes of Newton polygon",
-            "lf.newton_polygon",
+            label="Slopes of Newton polygon",
+            knowl="lf.newton_polygon",
             example="[0,0,1/2]",
             colspan=(1, 3, 1),
             width=40,
@@ -249,13 +228,13 @@ class AbvarSearchArray(SearchArray):
         )
         initial_coefficients = TextBox(
             "initial_coefficients",
-            "Initial coefficients",
-            "av.fq.initial_coefficients",
+            label="Initial coefficients",
+            knowl="av.fq.initial_coefficients",
             example="[2, -1, 3, 9]",
         )
         abvar_point_count = TextBox(
             "abvar_point_count",
-            "Point counts of the variety",
+            label="Point counts of the variety",
             knowl="ag.fq.point_counts",
             example="[75,7125]",
             colspan=(1, 3, 1),
@@ -265,18 +244,16 @@ class AbvarSearchArray(SearchArray):
         )
         curve_point_count = TextBox(
             "curve_point_count",
-            "Point counts of the curve",
-            "av.fq.curve_point_counts",
+            label="Point counts of the curve",
+            knowl="av.fq.curve_point_counts",
             example="[9,87]",
             colspan=(1, 3, 1),
             width=40,
             short_label="points on curve",
             advanced=True,
         )
-
         def nbsp(knowl, label):
             return "&nbsp;&nbsp;&nbsp;&nbsp;" + display_knowl(knowl, label)
-
         number_field = TextBox(
             "number_field",
             label=nbsp("av.fq.number_field", "Number field"),
@@ -300,16 +277,14 @@ class AbvarSearchArray(SearchArray):
         )
         size = TextBox(
             "size",
-            "Isogeny class size",
-            "av.fq.isogeny_class_size",
+            label="Isogeny class size",
+            knowl="av.fq.isogeny_class_size",
             example="1",
             example_col=False,
             advanced=True,
         )
         gdshort = display_knowl("av.endomorphism_field", "End.") + " degree"
-        gdlong = "Degree of " + display_knowl(
-            "av.endomorphism_field", "endomorphism_field"
-        )
+        gdlong = "Degree of " + display_knowl("av.endomorphism_field", "endomorphism_field")
         geom_deg = TextBox(
             "geom_deg",
             label=gdlong,
@@ -319,16 +294,16 @@ class AbvarSearchArray(SearchArray):
         )
         jac_cnt = TextBox(
             "jac_cnt",
-            "Number of Jacobians",
-            "av.jacobian_count",
+            label="Number of Jacobians",
+            knowl="av.jacobian_count",
             example="6",
             short_label="# Jacobians",
             advanced=True,
         )
         hyp_cnt = TextBox(
             "hyp_cnt",
-            "Number of Hyperelliptic Jacobians",
-            "av.hyperelliptic_count",
+            label="Number of Hyperelliptic Jacobians",
+            knowl="av.hyperelliptic_count",
             example="6",
             example_col=False,
             short_label="# Hyp. Jacobians",
@@ -353,21 +328,21 @@ class AbvarSearchArray(SearchArray):
         )
         simple = SelectBox(
             "simple",
-            "Simple",
-            [("yes", "yes"), ("", "unrestricted"), ("no", "no")],
+            label="Simple",
+            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.simple",
         )
         geom_simple = SelectBox(
             "geom_simple",
-            "Geometrically simple",
-            [("yes", "yes"), ("", "unrestricted"), ("no", "no")],
+            label="Geometrically simple",
+            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.geometrically_simple",
             short_label="geom. simple",
         )
         primitive = SelectBox(
             "primitive",
-            "Primitive",
-            [("yes", "yes"), ("", "unrestricted"), ("no", "no")],
+            label="Primitive",
+            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="ag.primitive",
         )
         uopts = [
@@ -379,29 +354,29 @@ class AbvarSearchArray(SearchArray):
         ]
         polarizable = SelectBox(
             "polarizable",
-            "Principally polarizable",
-            uopts,
+            label="Principally polarizable",
+            options=uopts,
             knowl="av.princ_polarizable",
             short_label="princ polarizable",
         )
-        jacobian = SelectBox("jacobian", "Jacobian", uopts, knowl="ag.jacobian")
-        uglabel = (
-            "Use "
-            + display_knowl("av.decomposition", "geometric decomposition")
-            + " in the following inputs"
+        jacobian = SelectBox(
+            "jacobian",
+            label="Jacobian",
+            options=uopts,
+            knowl="ag.jacobian"
         )
+        uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "geometric decomposition")
         use_geom_decomp = CheckBox(
-            "use_geom_decomp", label=uglabel, short_label=uglabel
+            "use_geom_decomp",
+            label=uglabel,
+            short_label=uglabel
         )
         use_geom_index = CheckboxSpacer(use_geom_decomp, colspan=4, advanced=True)
         use_geom_refine = CheckboxSpacer(use_geom_decomp, colspan=5, advanced=True)
-
         def long_label(d):
             return nbsp("av.decomposition", "Dimension %s factors" % d)
-
         def short_label(d):
             return display_knowl("av.decomposition", "dim %s factors" % d)
-
         dim1 = TextBox(
             "dim1_factors",
             label=long_label(1),
@@ -412,8 +387,8 @@ class AbvarSearchArray(SearchArray):
         )
         dim1d = TextBox(
             "dim1_distinct",
-            "Distinct factors",
-            "av.decomposition",
+            label="Distinct factors",
+            knowl="av.decomposition",
             example="1-2",
             example_span="2 or 1-3",
             short_label="(distinct)",
@@ -429,8 +404,8 @@ class AbvarSearchArray(SearchArray):
         )
         dim2d = TextBox(
             "dim2_distinct",
-            "Distinct factors",
-            "av.decomposition",
+            label="Distinct factors",
+            knowl="av.decomposition",
             example="1-2",
             example_span="2 or 1-3",
             short_label="(distinct)",
@@ -446,8 +421,8 @@ class AbvarSearchArray(SearchArray):
         )
         dim3d = TextBox(
             "dim3_distinct",
-            "Distinct factors",
-            "av.decomposition",
+            label="Distinct factors",
+            knowl="av.decomposition",
             example="1",
             example_span="2 or 0-1",
             short_label="(distinct)",
@@ -472,16 +447,12 @@ class AbvarSearchArray(SearchArray):
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
         simple_quantifier = SelectBox(
             "simple_quantifier",
-            options=[
-                ("contained", "subset of"),
-                ("exactly", "exactly"),
-                ("", "superset of"),
-            ],
+            options=[("contained", "subset of"), ("exactly", "exactly"), ("", "superset of")],
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",
-            "Simple factors",
-            simple_quantifier,
+            label="Simple factors",
+            select_box=simple_quantifier,
             knowl="av.decomposition",
             colspan=(1, 3, 2),
             width=40,
@@ -491,7 +462,7 @@ class AbvarSearchArray(SearchArray):
         )
         count = TextBox(
             "count",
-            "Maximum number of isogeny classes to display",
+            label="Maximum number of isogeny classes to display",
             colspan=(2, 1, 1),
             width=10,
         )
@@ -530,7 +501,6 @@ class AbvarSearchArray(SearchArray):
         ]
         SearchArray.__init__(self, browse_array, refine_array)
 
-
 def common_parse(info, query):
     parse_ints(info, query, "q", name="base field")
     parse_ints(info, query, "g", name="dimension")
@@ -542,38 +512,18 @@ def common_parse(info, query):
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
     parse_ints(info, query, "p_rank")
     parse_ints(info, query, "angle_rank")
-    parse_ints(
-        info, query, "jac_cnt", qfield="jacobian_count", name="Number of Jacobians"
-    )
-    parse_ints(
-        info,
-        query,
-        "hyp_cnt",
-        qfield="hyp_count",
-        name="Number of Hyperelliptic Jacobians",
-    )
+    parse_ints(info, query, "jac_cnt", qfield="jacobian_count", name="Number of Jacobians")
+    parse_ints(info, query, "hyp_cnt", qfield="hyp_count", name="Number of Hyperelliptic Jacobians")
     parse_ints(info, query, "twist_count")
     parse_ints(info, query, "size")
     parse_newton_polygon(info, query, "newton_polygon", qfield="slopes")
-    parse_string_start(
-        info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"]
-    )
+    parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])
     parse_string_start(info, query, "abvar_point_count", qfield="abvar_counts_str")
-    parse_string_start(
-        info,
-        query,
-        "curve_point_count",
-        qfield="curve_counts_str",
-        first_field="curve_count",
-    )
+    parse_string_start(info, query, "curve_point_count", qfield="curve_counts_str", first_field="curve_count")
     if info.get("simple_quantifier") == "contained":
-        parse_subset(
-            info, query, "simple_factors", qfield="simple_distinct", mode="subsets"
-        )
+        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="subsets")
     elif info.get("simple_quantifier") == "exactly":
-        parse_subset(
-            info, query, "simple_factors", qfield="simple_distinct", mode="exact"
-        )
+        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="exact")
     else:
         parse_submultiset(info, query, "simple_factors", mode="append")
     if info.get("use_geom_decomp") == "on":
@@ -585,22 +535,11 @@ def common_parse(info, query):
         nf_qfield = "number_fields"
         gal_qfield = "galois_groups"
     for n in range(1, 6):
-        parse_ints(
-            info, query, "dim%s_factors" % n, qfield="%s%s_factors" % (dimstr, n)
-        )
+        parse_ints(info, query, "dim%s_factors" % n, qfield="%s%s_factors" % (dimstr, n))
     for n in range(1, 4):
-        parse_ints(
-            info, query, "dim%s_distinct" % n, qfield="%s%s_distinct" % (dimstr, n)
-        )
+        parse_ints(info, query, "dim%s_distinct" % n, qfield="%s%s_distinct" % (dimstr, n))
     parse_nf_string(info, query, "number_field", qfield=nf_qfield)
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
-    # Determine whether to show advanced search boxes:
-    info["advanced_search"] = False
-    for search_box in info["search_array"].all_search:
-        if search_box.advanced and search_box.name in info:
-            info["advanced_search"] = True
-            break
-
 
 @search_wrap(
     template="abvarfq-search-results.html",
@@ -618,7 +557,6 @@ def common_parse(info, query):
 )
 def abelian_variety_search(info, query):
     common_parse(info, query)
-
 
 @count_wrap(
     template="abvarfq-count-results.html",
@@ -653,29 +591,21 @@ def abelian_variety_count(info, query):
         info["col_heads"] = av_stats.qs
     if "p" in query:
         ps = integer_options(info["p"], contained_in=av_stats.qs)
-        info["col_heads"] = [
-            q for q in info["col_heads"] if any(q % p == 0 for p in ps)
-        ]
+        info["col_heads"] = [q for q in info["col_heads"] if any(q % p == 0 for p in ps)]
     if not info["col_heads"]:
         raise ValueError("Must include at least one base field")
-    info[
-        "na_msg"
-    ] = '"n/a" means that the isogeny classes of abelian varieties of this dimension over this field are not in the database yet.'
+    info["na_msg"] = '"n/a" means that the isogeny classes of abelian varieties of this dimension over this field are not in the database yet.'
     info["row_label"] = "Dimension"
     info["col_label"] = r"Cardinality of base field \(q\)"
     info["url_func"] = url_generator
 
-
-favorite_isocls_labels = [
-    [
-        ("2.64.a_abp", "Most isomorphism classes"),
-        ("2.167.a_hi", "Most Jacobians"),
-        ("4.2.ad_c_a_b", "Jacobian of function field with claa number 1"),
-        ("6.2.ak_cb_ahg_sy_abme_ciq", "Largest twist class"),
-        ("6.2.ag_r_abd_bg_ay_u", "Large endomorphism degree"),
-    ]
-]
-
+favorite_isocls_labels = [[
+    ("2.64.a_abp", "Most isomorphism classes"),
+    ("2.167.a_hi", "Most Jacobians"),
+    ("4.2.ad_c_a_b", "Jacobian of function field with claa number 1"),
+    ("6.2.ak_cb_ahg_sy_abme_ciq", "Largest twist class"),
+    ("6.2.ag_r_abd_bg_ay_u", "Large endomorphism degree"),
+]]
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
@@ -689,7 +619,6 @@ def abelian_variety_browse(**args):
         ]
         for sublist in favorite_isocls_labels
     ]
-
     return render_template(
         "abvarfq-index.html",
         title="Isogeny Classes of Abelian Varieties over Finite Fields",
@@ -698,7 +627,6 @@ def abelian_variety_browse(**args):
         bread=get_bread(),
         learnmore=learnmore_list(),
     )
-
 
 def search_input_error(info=None, bread=None):
     if info is None:
@@ -712,7 +640,6 @@ def search_input_error(info=None, bread=None):
         bread=bread,
     )
 
-
 @abvarfq_page.route("/stats")
 def statistics():
     title = "Abelian Varity Isogeny Classes: Statistics"
@@ -724,7 +651,6 @@ def statistics():
         bread=get_bread(("Statistics", ".")),
         learnmore=learnmore_list(),
     )
-
 
 @abvarfq_page.route("/dynamic_stats")
 def dynamic_statistics():
@@ -744,18 +670,15 @@ def dynamic_statistics():
         learnmore=learnmore_list(),
     )
 
-
 @abvarfq_page.route("/<label>")
 def by_label(label):
     return redirect(url_for_label(label))
-
 
 @abvarfq_page.route("/random")
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
-
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
@@ -770,7 +693,6 @@ def completeness_page():
         learnmore=learnmore_list_remove("Completeness"),
     )
 
-
 @abvarfq_page.route("/Reliability")
 def reliability_page():
     t = "Reliability of the Weil Polynomial Data"
@@ -783,7 +705,6 @@ def reliability_page():
         bread=bread,
         learnmore=learnmore_list_remove("Reliability"),
     )
-
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
@@ -798,7 +719,6 @@ def how_computed_page():
         learnmore=learnmore_list_remove("Source"),
     )
 
-
 @abvarfq_page.route("/Labels")
 def labels_page():
     t = "Labels for Isogeny Classes of Abelian Varieties"
@@ -812,13 +732,10 @@ def labels_page():
         learnmore=learnmore_list_remove("Labels"),
     )
 
-
 lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
-
 
 def split_label(lab):
     return lmfdb_label_regex.match(lab).groups()
-
 
 def abvar_label(g, q, iso):
     return "%s.%s.%s" % (g, q, iso)

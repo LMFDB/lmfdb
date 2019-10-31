@@ -13,9 +13,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the formatted polynomial displays correctly
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/2/9/aj_bl", "1 - 9 x + 37 x^{2} - 81 x^{3} + 81 x^{4}"
-        )
+        self.check_args("/Variety/Abelian/Fq/2/9/aj_bl", "1 - 9 x + 37 x^{2} - 81 x^{3} + 81 x^{4}")
 
     def test_display_field(self):
         r"""
@@ -61,9 +59,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that length_A_counts and length_C_counts work
         """
-        self.check_args(
-            "/Variety/Abelian/Fq/2/79/az_lj", "89648252036631997180633484850766696704"
-        )
+        self.check_args("/Variety/Abelian/Fq/2/79/az_lj", "89648252036631997180633484850766696704")
         self.check_args("/Variety/Abelian/Fq/2/79/az_lj", "9468276088941449902")
 
     def test_display_number_fld(self):
@@ -111,19 +107,9 @@ class AVTest(LmfdbTest):
         r"""
         Check that the property box displays.
         """
-        page = (
-            self.tc.get("/Variety/Abelian/Fq/2/4/ad_g")
-            .data.replace("\n", "")
-            .replace(" ", "")
-        )
-        assert (
-            '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>'
-            in page
-        )
-        assert (
-            '<tdclass="label">BaseField</td><td>$\F_{2^2}$</td></tr><tr><tdclass="label">Dimension</td><td>'
-            in page
-        )
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data.replace("\n", "").replace(" ", "")
+        assert '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
+        assert '<tdclass="label">BaseField</td><td>$\F_{2^2}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
         self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
     def test_split_Frobenius_angles(self):
@@ -137,18 +123,12 @@ class AVTest(LmfdbTest):
         r"""
         Test downloading on search results page.
         """
-        response = self.tc.get(
-            "Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D"
-        )
+        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
         self.assertTrue("Below is a list" in response.data)
         self.assertTrue("32*x^10" in response.data)
-        response = self.tc.get(
-            "Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D"
-        )
+        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
         self.assertTrue("Below is a list" in response.data)
         self.assertTrue("32*x^10" in response.data)
-        response = self.tc.get(
-            "Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D"
-        )
+        response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
         self.assertTrue("Below is a list" in response.data)
         self.assertTrue("32*x^10" in response.data)
