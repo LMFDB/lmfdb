@@ -515,6 +515,7 @@ def common_parse(info, query):
     parse_ints(info, query, "jac_cnt", qfield="jacobian_count", name="Number of Jacobians")
     parse_ints(info, query, "hyp_cnt", qfield="hyp_count", name="Number of Hyperelliptic Jacobians")
     parse_ints(info, query, "twist_count")
+    parse_ints(info, query, "max_twist_degree")
     parse_ints(info, query, "size")
     parse_newton_polygon(info, query, "newton_polygon", qfield="slopes")
     parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])

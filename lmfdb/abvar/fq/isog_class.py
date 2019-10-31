@@ -210,10 +210,10 @@ class AbvarFq_isoclass(object):
             ("Ordinary", "Yes" if self.is_ordinary == 1 else "No"),
             ("$p$-rank", "$%s$" % (self.p_rank)),
         ]
-        if self.is_pp != 0:
-            props += [("Principally polarizable", "Yes" if self.is_pp == 1 else "No")]
-        if self.is_jac != 0:
-            props += [("Contains a Jacobian", "Yes" if self.is_jac == 1 else "No")]
+        if self.has_principal_polarization != 0:
+            props += [("Principally polarizable", "Yes" if self.has_principal_polarization == 1 else "No")]
+        if self.has_jacobian != 0:
+            props += [("Contains a Jacobian", "Yes" if self.has_jacobian == 1 else "No")]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
@@ -387,7 +387,7 @@ class AbvarFq_isoclass(object):
             return ans
 
     def twist_display(self, show_all):
-        if self.num_twists() == 0:
+        if not self.twists:
             return "This isogeny class has no twists."
         if show_all:
             ans = "Below is a list of all twists of this isogeny class."
@@ -427,36 +427,10 @@ class AbvarFq_isoclass(object):
 def ctx_decomposition():
     return {"av_data": av_data}
 
-def signed_class_to_int(code):
-    if code == "a":
-        return ZZ(0)
-    elif code.startswith("a"):
-        return -ZZ(class_to_int(code[1:]))
-    else:
-        return ZZ(class_to_int(code))
-
-def Ppoly_irred(label):
-    g, q, coeffs = label.split(".")
-    g, q = ZZ(g), ZZ(q)
-    polylist = map(signed_class_to_int, coeffs.split("_"))
-    polylist = (
-        [ZZ(1)]
-        + polylist
-        + [q ** i * c for (i, c) in enumerate(reversed(polylist[:-1]), 1)]
-        + [q ** g]
-    )
-    from sage.all import latex
-
-    polylist.reverse()
-    ZZx = PolynomialRing(ZZ, "x")
-    poly = ZZx(polylist)
-    factor = poly.factor()[0][0]
-    return latex(factor)
-
 def describe_end_algebra(p, extension_label):
     # This should eventually be done with a join, but okay for now
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
-    if factor_data == None:
+    if factor_data is None:
         return None
     center = factor_data["center"]
     divalg_dim = factor_data["divalg_dim"]
@@ -490,7 +464,9 @@ def describe_end_algebra(p, extension_label):
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
-        ans[1] += "where $\pi$ is a root of ${0}$.\n".format(Ppoly_irred(extension_label))
+        center_poly = db.nf_fields.lookup(center, 'coeffs')
+        center_poly = latex.latex(ZZ["x"](center_poly))
+        ans[1] += "where $\pi$ is a root of ${0}$.\n".format(center_poly)
     return ans
 
 def primeideal_display(p, prime_ideal):
@@ -527,9 +503,9 @@ def g2_table(field, entry, is_bold):
 
 def matrix_display(factor, end_alg):
     if end_alg[0] == "K" and end_alg[1] != factor[0] + ".":
-        ans = "$\mathrm{M}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
+        ans = "$\mathrm{{M}}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
     else:
-        ans = "$\mathrm{M}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
+        ans = "$\mathrm{{M}}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
     return ans
 
 def non_simple_loop(p, factors):
@@ -541,7 +517,7 @@ def non_simple_loop(p, factors):
             ans += "<sup> {0} </sup>".format(factor[1])
         ans += " : "
         end_alg = describe_end_algebra(p, factor[0])
-        if end_alg == None:
+        if end_alg is None:
             ans += no_endo_data()
         elif factor[1] == 1:
             ans += end_alg[1]
