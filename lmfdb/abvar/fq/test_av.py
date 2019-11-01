@@ -19,7 +19,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the base field gets displayed correctly
         """
-        self.check_args("/Variety/Abelian/Fq/2/25/ac_b", "\F_{5^2}")
+        self.check_args("/Variety/Abelian/Fq/2/25/ac_b", "\F_{5^{2}}")
 
     def test_frob_angles(self):
         r"""
@@ -33,7 +33,7 @@ class AVTest(LmfdbTest):
         """
         self.check_args("/Variety/Abelian/Fq/4/3/ab_d_ad_g", "simple")
         self.check_args("/Variety/Abelian/Fq/3/4/e_q_bg", "1.4.a")
-        self.not_check_args("/Variety/Abelian/Fq/3/4/e_q_bg", "simple")
+        self.check_args("/Variety/Abelian/Fq/3/4/e_q_bg", 'not <a title="Simple abelian variety [av.simple]" knowl="av.simple" kwargs="">simple</a>')
 
     def test_is_ordinary(self):
         r"""
@@ -109,7 +109,7 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data.replace("\n", "").replace(" ", "")
         assert '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
-        assert '<tdclass="label">BaseField</td><td>$\F_{2^2}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
+        assert '<tdclass="label">BaseField</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
         self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
     def test_split_Frobenius_angles(self):

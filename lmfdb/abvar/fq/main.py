@@ -66,7 +66,6 @@ def abelian_varieties():
         info = to_dict(args)
         # hidden_search_type for prev/next buttons
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-        info["search_array"] = AbvarSearchArray()
 
         if search_type == "List":
             return abelian_variety_search(info)
@@ -502,6 +501,7 @@ class AbvarSearchArray(SearchArray):
         SearchArray.__init__(self, browse_array, refine_array)
 
 def common_parse(info, query):
+    info["search_array"] = AbvarSearchArray()
     parse_ints(info, query, "q", name="base field")
     parse_ints(info, query, "g", name="dimension")
     parse_ints(info, query, "geom_deg", qfield="geometric_extension_degree")
@@ -632,6 +632,7 @@ def abelian_variety_browse(**args):
 def search_input_error(info=None, bread=None):
     if info is None:
         info = {"err": "", "query": {}}
+    info["search_array"] = AbvarSearchArray()
     if bread is None:
         bread = get_bread(("Search Results", "."))
     return render_template(

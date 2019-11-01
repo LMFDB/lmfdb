@@ -17,7 +17,7 @@ class AVHomeTest(LmfdbTest):
         Check that the Variety/Abelian/Fq index page works
         """
         homepage = self.tc.get("/Variety/Abelian/Fq/").data
-        assert "The table below gives" in homepage
+        assert "Some interesting isogeny classes" in homepage
 
     def test_completeness_page(self):
         r"""
@@ -49,18 +49,17 @@ class AVHomeTest(LmfdbTest):
         """
         self.check_args("/Variety/Abelian/Fq/2/9/ak_bl", "is not in the database")
 
-    def test_table_range(self):
+    def test_count_table(self):
         r"""
-        Check that we can change the table range
+        Check that the count table works
         """
-        self.check_args("/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4", "6409")
-        self.check_args("/Variety/Abelian/Fq/?table_field_range=4..7&table_dimension_range=2..4", "2953")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts", "132839")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts&simple=yes", "106706")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=32-100&g=2-4", "6409")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=4..7&g=2..4", "2953")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=1%2C3%2C5", "30543")
         # and that it deals with invalid input
-        self.check_args(
-            "/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=1%2C3%2C5",
-            "Error: You cannot use commas in the table ranges.",
-        )
-        self.check_args("/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=x", "not a valid input")
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=x", "not a valid input")
 
     def test_search_dimension(self):
         r"""
@@ -153,10 +152,10 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can search by angle rank
         """
-        self.check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.ag_p_au_y")
-        self.check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.ag_p_au_y")
-        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr")
-        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&ang_rank=2", "4.3.am_co_aii_rr")
+        self.check_args("/Variety/Abelian/Fq/?q=3&g=4&angle_rank=2", "4.3.ag_p_au_y")
+        self.check_args("/Variety/Abelian/Fq/?q=3&g=4&angle_rank=2", "4.3.ag_p_au_y")
+        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&angle_rank=2", "4.3.am_co_aii_rr")
+        self.not_check_args("/Variety/Abelian/Fq/?q=3&g=4&angle_rank=2", "4.3.am_co_aii_rr")
 
     def test_search_isogfactor(self):
         r"""
@@ -190,7 +189,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=not_yes&polarizable=yes", "3.3.a_ad_a")
+        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ad_c_a_b")
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c")
 
     def test_search_princpol(self):
