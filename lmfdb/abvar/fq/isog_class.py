@@ -18,10 +18,9 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
-from sage.rings.all import Integer, QQ, RR, ZZ, PolynomialRing
+from sage.rings.all import Integer, QQ, RR, ZZ
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
-from sage.databases.cremona import class_to_int
 from sage.misc.cachefunc import cached_method
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex

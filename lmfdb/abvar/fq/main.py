@@ -6,7 +6,6 @@ import StringIO
 import time
 
 from flask import render_template, url_for, request, redirect, send_file
-from collections import defaultdict
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
@@ -14,7 +13,7 @@ from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, BasicSpacer, SkipBox, CheckBox, CheckboxSpacer,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap,
 )

@@ -4399,7 +4399,6 @@ class PostgresStatsTable(PostgresBase):
             244006
         """
         if groupby is None:
-            print "HERE"
             if not query:
                 return self.total
             nres = self.quick_count(query)
