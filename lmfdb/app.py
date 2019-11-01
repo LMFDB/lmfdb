@@ -195,16 +195,27 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+
 @app.before_request
 def force_www_and_ssl():
     """Redirect lmfdb.org requests to www.lmfdb.org and forces https"""
     from urlparse import urlparse, urlunparse
+
     urlparts = urlparse(request.url)
-    if (
-        urlparts.netloc == "www.lmfdb.org" and urlparts.scheme == "http"
-    ) or urlparts.netloc == "lmfdb.org":
+
+    if urlparts.netloc == "lmfdb.org":
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=301)
+
+    if (
+        urlparts.netloc == "www.lmfdb.org"
+        and request.headers.get("X-Forwarded-Proto", "http") != "https"
+        and request.url.startswith("http://")
+    ):
+        url = request.url.replace("http://", "https://", 1)
+        return redirect(url, code=301)
+
+
 
 
 def timestamp():
