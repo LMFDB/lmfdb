@@ -196,13 +196,16 @@ def urlencode(kwargs):
 ##############################
 
 @app.before_request
-def redirect_nonwww():
-    """Redirect lmfdb.org requests to www.lmfdb.org"""
+def force_www_and_ssl():
+    """Redirect lmfdb.org requests to www.lmfdb.org and forces https"""
     from urlparse import urlparse, urlunparse
     urlparts = urlparse(request.url)
-    if urlparts.netloc == 'lmfdb.org':
-        replaced = urlparts._replace(netloc='www.lmfdb.org')
+    if (
+        urlparts.netloc == "www.lmfdb.org" and urlparts.scheme == "http"
+    ) or urlparts.netloc == "lmfdb.org":
+        replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=301)
+
 
 def timestamp():
     return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

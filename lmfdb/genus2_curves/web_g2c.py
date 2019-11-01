@@ -562,6 +562,7 @@ class WebG2C(object):
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
+            data['real_period'] = curve['real_period']
             data['tama'] = ''
             for item in tama:
             	if item['tamagawa_number'] > 0:
