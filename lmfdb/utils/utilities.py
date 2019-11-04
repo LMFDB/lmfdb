@@ -719,7 +719,7 @@ def make_bigint(s, cutoff=20, max_width=70):
 
 
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
         lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
@@ -769,7 +769,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
     if cutoff:
         long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
