@@ -10,7 +10,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -480,7 +480,7 @@ def render_field_webpage(args):
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex_split_on_pm(nf.poly()),
+        'polynomial': web_latex(nf.poly()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
@@ -571,7 +571,7 @@ def render_field_webpage(args):
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_pretty_and_nTj(data['degree'], t))
+                   ('Galois group', group_pretty_and_nTj(data['degree'], t))
                    ]
     downloads = [('Stored data to gp', url_for('.nf_download', nf=label_orig, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
