@@ -280,7 +280,7 @@ class LfunctionTest(LmfdbTest):
             assert 'Modular form 207.2.i.b.%d.1' % c in L.data, 'Modular form 207.2.%d.d.1' % c
         assert '0.233961' in L.data
         assert '0.096070203083029088532433951629' in L.data
-        assert '1 -  T + T^{2} + 21 T^{3} - 219 T^{4} - 1365 T^{5} - 219 p T^{6} + 21 p^{2} T^{7} + p^{3} T^{8} -  p^{4} T^{9} + p^{5} T^{10}' in L.data
+        assert 'T + T^{2} + 21 T^{3} - 219 T^{4} - 1365 T^{5} - 219 p T^{6} + 21 p^{2} T^{7} + p^{3} T^{8}' in L.data
         assert 'Plot not available' in L.data
 
 

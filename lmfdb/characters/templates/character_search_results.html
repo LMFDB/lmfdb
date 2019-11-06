@@ -4,16 +4,15 @@
 <h2>Refine search</h2>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table border="0">
 <tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='primitive') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
 </tr>
 
 <tr>
@@ -36,10 +35,10 @@
 </td>
 </tr>
 <tr>
-<td colspan=2 align=left>maximum results to display</td>
+<td colspan=2 align=left>Maximum number of results to display</td>
 <td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td></tr>
 <tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" name='refine' value='1'>Search again</button>
+<td class="button"><button type='submit' width="170" style="width: 170px" name='refine' value='1' onclick='resetStart()'>Search again</button>
 </td> </tr>
 </table>
 

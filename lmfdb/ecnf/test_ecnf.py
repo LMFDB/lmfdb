@@ -96,6 +96,14 @@ class EllCurveTest(LmfdbTest):
         assert '2.0.11.1' in L.data
         assert '1681' in L.data
 
+    def test_isodeg(self):
+        r"""
+        Test that searching for isogeny degree works
+        """
+        L = self.tc.get('/EllipticCurve/?start=0&isodeg=2')
+        assert '27.2-a4' in L.data
+        L = self.tc.get('EllipticCurve/?start=0&torsion=1&isodeg=2')
+        assert 'No matches' in L.data
 
     def test_related_objects(self):
         for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',

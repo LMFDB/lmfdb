@@ -211,10 +211,14 @@
       url_for: "representations"
    parts:
     - title: "Characters:"
-      url_for: "characters.render_characterNavigation"
+      status: beta
       part2:
+         - title: Dirichlet Characters
+           url_for:  "characters.render_Dirichletwebpage"
+           status: notonbeta
          - title: Dirichlet
            url_for:  "characters.render_Dirichletwebpage"
+           status: beta
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
            status: future

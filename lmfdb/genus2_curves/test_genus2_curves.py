@@ -62,7 +62,7 @@ class Genus2Test(LmfdbTest):
         # Square over a quadratic extension that is CM over one extension and
         # multiplication by a quaternion algebra ramifying at infinity over another
         assert 'square of' in L.data and '2.2.8.1-64.1-a3'\
-            in L.data and r'\mathbf{H}' in L.data and '(CM)' in L.data
+            in L.data and r'\H' in L.data and '(CM)' in L.data
 
     def test_by_url_isogeny_class_discriminant(self):
         L = self.tc.get('/Genus2Curve/Q/15360/f/983040/')

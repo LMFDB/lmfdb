@@ -3,7 +3,7 @@
 
 <h2> Further refine search </h2>
 <form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
 <tr>
@@ -39,7 +39,7 @@
 </td><td><button type='button' id='more_modp_button'>more</button>
 </td></tr>
 <tr>
-<td class="button"><button type='submit' size=10  value='refine'>Search again</button>
+<td class="button"><button type='submit' size=10  value='refine' onclick='resetStart()'>Search again</button>
  </td>
 </tr>
 

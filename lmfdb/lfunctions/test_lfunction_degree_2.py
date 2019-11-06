@@ -85,7 +85,7 @@ class LfunctionTest(LmfdbTest):
                    "/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000033",
                    'Modular')
         self.check(homepage,
-                   "/L/ModularForm/GL2/Q/holomorphic/5/6/4/a/2/",
+                   "/L/ModularForm/GL2/Q/holomorphic/5/6/b/a/4/2/",
                    'Modular')
         self.check(homepage,
                    "/ModularForm/GL2/Q/holomorphic/5/6/b/a/",

@@ -34,7 +34,7 @@
 
 # Author: Paul-Olivier Dehaye
 
-from sage.all import Integer, lcm, PolynomialRing, Integers, FiniteField
+from sage.all import Integer, lcm, PolynomialRing, Integers, FiniteField, AlternatingGroup, Permutation
 
 
 def polynomial_conjugacy_class_matcher_fn(input):
@@ -133,7 +133,6 @@ def are_conjugate_in_alternating(rho, sigma):
 
 def alpha_alt_fn(data):
     try:
-        from sage.all import AlternatingGroup, Permutation
         alternating_group = AlternatingGroup(len(data))
         data_perm = Permutation(alternating_group(data))
     except TypeError:

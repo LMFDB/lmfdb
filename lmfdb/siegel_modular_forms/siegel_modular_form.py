@@ -4,8 +4,7 @@
 
 import StringIO
 
-from flask import render_template, url_for, request, send_file, flash, redirect
-from markupsafe import Markup
+from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
 
 from lmfdb import db
@@ -23,7 +22,7 @@ import sample
 ###############################################################################
 
 def find_samples(family, weight):
-    slist = db.smf_samples.search({'collection':{'$contains':[family]}, 'weight':int(weight)},'name')
+    slist = db.smf_samples.search({'collection': {'$contains': [family]}, 'weight': int(weight)}, 'name')
     ret = []
     for name in slist:
         url = url_for(".by_label", label=family+"."+name)
@@ -71,7 +70,7 @@ def by_label(label):
             if len(sam) > 0:
                 bread.append(('$'+family.latex_name+'$', url_for('.by_label',label=slabel[0])))
                 return render_sample_page(family, sam[0], request.args, bread)
-    flash_error ("No siegel modular form data for %s was found in the database.", label)
+    flash_error("No Siegel modular form data for %s was found in the database.", label)
     return redirect(url_for(".index"))
 
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
@@ -124,7 +123,7 @@ def Sp4Z_j():
     bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
-    info={'args':request.args}
+    info={'args': request.args}
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
     except ValueError:
@@ -135,7 +134,7 @@ def Sp4Z_j():
         try:
             info['table'] = dimensions.dimension_table_Sp4Z_j(dim_args['k_range'], dim_args['j_range'])
         except NotImplementedError as err:
-            flash(Markup(err), "error")
+            flash_error(err)
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
@@ -177,7 +176,7 @@ def build_dimension_table(info, fam, args):
                         raise NotImplementedError("Please specify a single value of <span style='color:black'>$j$</span> rather than a range of values.")
                     kwargs[arg] = dim_args['j_range'][0]
         except NotImplementedError as err:
-            flash(Markup(err), "error")
+            flash_error(err)
             info['error'] = True
         if not info.get('error'):
             info['kwargs'] = kwargs
@@ -185,8 +184,8 @@ def build_dimension_table(info, fam, args):
                 headers, table = fam.dimension(**kwargs)
                 info['headers'] = headers
                 info['table'] = table
-            except (ValueError,NotImplementedError) as err:
-                flash(Markup(err), "error")
+            except (ValueError, NotImplementedError) as err:
+                flash_error(err)
                 info['error'] = True
     return
 
@@ -256,10 +255,10 @@ def render_sample_page(family, sam, args, bread):
         if label:
             info['field_label'] = label
             info['field_url'] = url_for('number_fields.by_label', label=label)
-            info['field_href'] = '<a href="%s">%s</a>'%(info['field_url'], field_pretty(label))
-    
+            info['field_href'] = '<a href="%s">%s</a>' % (info['field_url'], field_pretty(label))
+
     bread.append((info['name'], ''))
-    title='Siegel Modular Forms Sample ' + info['full_name']
+    title = 'Siegel Modular Forms Sample ' + info['full_name']
     properties = [('Space', info['space_href']),
                   ('Name', info['name']),
                   ('Type', '<br>'.join(info['type'].split(','))),
