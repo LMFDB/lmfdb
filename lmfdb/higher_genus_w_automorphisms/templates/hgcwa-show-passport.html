@@ -74,75 +74,34 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 <h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
 
-<p>
-  {% if info.numb == 1 %}
-  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
 
-  {% else %}
-  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-
-  {% endif %}
-</p>
-
- <p>{% for cdata in info.genvects %}
-   {{cdata[0]}}
-     <table>{% for perm in cdata[3] %}
-	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-	  {% endfor %} </table> <br>
-  {% endfor %}
- </p>
-
- 
-<p>
-{% if info.numb >= 2 and info.braid_numb == 0 %}
+{% if info.numb == 1 %}
   <p>
-  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
   </p>
 
   <p>
-  {% for cdata in info.genvects %}
-    {{cdata[0]}}
-    <table>{% for perm in cdata[3] %}
-      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-    {% endfor %} </table> <br>
-  {% endfor %}
-  </p>
-
-  <p>
-  <form>
-    <table>
-      <tr>
-        <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
-        <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
-      </tr>
-      <tr>
-        <td colspan=3><button type='submit' value='display'>Display</button></td>
-      </tr>
-    </table>
-  </form>
-  </p>
-{% endif %}
-    
-{% if info.numb >= 2 and info.braid_numb >= 0 %}
-  <div class="tab">
-    <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen">
-      Vectors up to Braid Equivalence</button>    
-    <button type="submit" class="tablinks" onclick="openData(event, 'all')">
-      All Vectors</button> 
-  </div>
-
-  <div id="all" class="tabcontent">
-    <p>
-      Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-    </p>
-
-    <p>
     {% for cdata in info.genvects %}
       {{cdata[0]}}
       <table>{% for perm in cdata[3] %}
         <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
     {% endfor %}
+  </p>
+
+{% else %} <!-- info.numb >= 2 -->
+  {% if info.braid_numb == 0 %}
+    <p>
+      Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    </p>
+
+    <p>
+      {% for cdata in info.genvects %}
+        {{cdata[0]}}
+        <table>{% for perm in cdata[3] %}
+          <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+      {% endfor %}
     </p>
 
     <p>
@@ -153,49 +112,88 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
           <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
         </tr>
         <tr>
-          <td colspan=3><button type='submit' value='display'>Display</button></td>
+          <td colspan=3><button type='submit' value='display'>Display</button></t>
         </tr>
       </table>
     </form> 
     </p>  
-  </div>
 
-  <div id="braid" class="tabcontent">
-    <p>
-    {% if info.braid_numb == 1 %}
-      Displaying the unique representative of this
-      {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
-    {% else %}
-      Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
-      {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
-    {% endif %}
-    </p>
+  {% else %} <!-- info.braid_numb != 0 -->
+    <div class="tab">
+      <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen"> Vectors up to Braid Equivalence</button>    
+      <button type="submit" class="tablinks" onclick="openData(event, 'all')">
+        All Vectors</button> 
+    </div>
 
-    <p>
-    {% for braid_rep in info.braid %}
-    &nbsp; {{braid_rep[0]}}
-    <table>{% for perm in braid_rep[1] %}
-      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    <div id="all" class="tabcontent">
+      <p>
+        Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+      </p>
+
+      <p>
+      {% for cdata in info.genvects %}
+        {{cdata[0]}}
+        <table>{% for perm in cdata[3] %}
+          <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+      {% endfor %}
+      </p>
+
+      <p>
+      <form>
+        <table>
+          <tr>
+            <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+            <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+          </tr>
+          <tr>
+            <td colspan=3><button type='submit' value='display'>Display</button></t>
+          </tr>
+        </table>
+      </form> 
+      </p>  
+    </div>
+
+    <div id="braid" class="tabcontent">
+      <p>
+      {% if info.braid_numb == 1 %}
+        <p>
+          Displaying the unique representative of this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
+        </p>
+      {% else %}
+        <p>
+          Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='braid equivalence')}}.
+        </p>
+      {% endif %}
+      </p>
+
+      <p>
+      {% for braid_rep in info.braid %}
+        &nbsp; {{braid_rep[0]}}
+      <table>{% for perm in braid_rep[1] %}
+        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
-    {% endfor %}
-    </p>
+      {% endfor %}
+      </p>
 
 
-    {% if info.braid_numb >= 2 %}
-    <form>
-      <table>
-        <tr>
-          <td>Display number of braid equivalence representatives:</td>
-          <td><input type='text' name='numbraidreps' placeholder='20' size=10></td>
-        </tr>
-        <tr>
-          <td colspan=3><button type='submit' value='display'>Display</button></td>
-        </tr>
-      </table>
-    </form>
-    {% endif %}
-  </div>
+      {% if info.braid_numb >= 2 %}
+      <form>
+        <table>
+          <tr>
+            <td>Display number of braid equivalence representatives:</td>
+            <td><input type='text' name='numbraidreps' placeholder='20' size=10></t>
+          </tr>
+          <tr>
+            <td colspan=3><button type='submit' value='display'>Display</button></t>
+          </tr>
+        </table>
+      </form>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endif %}
+    
 
 <script>
 function openData(evt, dataType) {
