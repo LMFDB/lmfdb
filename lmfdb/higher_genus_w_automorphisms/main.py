@@ -533,7 +533,6 @@ def render_family(args):
             flash_error("No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data = dataz[0]
-        print data
         g = data['genus']
         g0 = data['g0']
         GG = ast.literal_eval(data['group'])
@@ -562,7 +561,8 @@ def render_family(args):
                     'g0': data['g0'],
                     'dim': data['dim'],
                     'r': data['r'],
-                    'gpid': smallgroup
+                    'gpid': smallgroup,
+                    'numb': len(dataz)
                    })
 
         if spname:
@@ -619,7 +619,7 @@ def render_family(args):
                     ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        if len(Ltopo_rep) == 0:
+        if len(Ltopo_rep) == 0 or len(dataz) == 1:
             downloads = [('Download Magma code', url_for(".hgcwa_code_download", label=label, download_type='magma')),
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
