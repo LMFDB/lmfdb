@@ -4,7 +4,7 @@ import os
 import yaml
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
@@ -493,7 +493,7 @@ class WebEC(object):
                     tg1['bc'] = bcc[0]
                     tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
             else:
-                field_data = web_latex_split_on_pm(coeff_to_poly(string2list(F)))
+                field_data = web_latex(coeff_to_poly(string2list(F)))
                 deg = F.count(",")
             tg1['d'] = deg
             tg1['f'] = field_data
