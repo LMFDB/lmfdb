@@ -229,12 +229,12 @@ def search(**args):
                      'learnmore':learnmore_list()}
     title = 'Sato-Tate Group Search Results'
     err_title = 'Sato-Tate Groups Search Input Error'
-    count = parse_count(info, 25)
+    count = parse_count(info, 50)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
     if 'refine' in info:
         start = 0
-    ratonly = True if info.get('rational_only','no').strip().lower() == 'yes' else False
+    ratonly = True if info.get('include_irrational','no').strip().lower() == 'no' else False
     query = {'rational':True} if ratonly else {}
     try:
         parse_ints(info,query,'weight','weight')
@@ -293,8 +293,8 @@ def search(**args):
                 results.append(v)
     else:
         info['number'] = 'infinity'
-        info['start'] = start
-        info['count'] = count
+    info['start'] = start
+    info['count'] = count
 
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict

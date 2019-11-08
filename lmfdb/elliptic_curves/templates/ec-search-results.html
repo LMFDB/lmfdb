@@ -75,10 +75,10 @@
 <td align=left colspan=2>
   <select name='surj_quantifier'>
 {% if info.surj_quantifier=='exactly' %}
-  <option value='include'>include</option>
+  <option value=''>include</option>
   <option selected value='exactly'>exactly</option>
 {% else %}
-  <option value='include'>include</option>
+  <option value=''>include</option>
   <option value='exactly'>exactly</option>
 {% endif %}
   </select>
@@ -94,15 +94,15 @@
 <td align=left colspan=2>
   <select name='bad_quantifier'>
 {% if info.bad_quantifier=='exactly' %}
-  <option value='include'>include</option>
+  <option value=''>include</option>
   <option value='exclude'>exclude</option>
   <option selected value='exactly'>exactly</option>
 {% elif info.bad_quantifier=='exclude' %}
-  <option value='include'>include</option>
+  <option value=''>include</option>
   <option selected value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
 {% else %}
-  <option selected value='include'>include</option>
+  <option selected value=''>include</option>
   <option value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
 {% endif %}

@@ -294,8 +294,9 @@ def genus2_curve_search(info, query):
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
+    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch')
     if 'geometric_invariants' in info:
-        query[info['geometric_invariants_type']] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
+        query[geom_inv_type] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
 
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
@@ -308,10 +309,10 @@ def genus2_curve_search(info, query):
         if info.get(fld): query[fld] = info[fld]
     if info.get('bad_quantifier') == 'exactly':
         mode = 'exact'
-    elif info.get('bad_quantifier') == 'include':
-        mode = 'append'
-    else:
+    elif info.get('bad_quantifier') == 'exclude':
         mode = 'complement'
+    else:
+        mode = 'append'
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=mode)
     info["curve_url"] = lambda label: url_for_curve_label(label)

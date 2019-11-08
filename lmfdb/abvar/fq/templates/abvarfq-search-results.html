@@ -56,7 +56,7 @@
                 <select name='simple_quantifier'>
                     <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
                     <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
-                    <option value='include' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
+                    <option value='' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
                 </select>
             </td>
         </tr>

@@ -184,7 +184,7 @@ def abelian_variety_search(info, query):
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
     elif info.get('simple_quantifier') == 'exactly':
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
-    elif info.get('simple_quantifier') == 'include':
+    else:
         parse_submultiset(info,query,'simple_factors',mode='append')
     for n in range(1,6):
         parse_ints(info,query,'dim%s_factors'%n)
