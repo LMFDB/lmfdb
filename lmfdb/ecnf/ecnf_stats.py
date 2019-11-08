@@ -126,7 +126,7 @@ class ECNF_stats(StatsDisplay):
                         self.nf_knowls, ' of ',
                         self.deg_knowl,
                         r' up to {}.'.format(self.maxdeg),
-                        ' This does not include elliptic curves defined over $\mathbb{Q}$, which are contained in a <a href="/EllipticCurve/Q/">separate database</a>.'])
+                        ' Elliptic curves defined over $\mathbb{Q}$ are contained in a <a href="/EllipticCurve/Q/">separate database</a>.'])
 
     @cached_method
     def field_summary(self, field):
