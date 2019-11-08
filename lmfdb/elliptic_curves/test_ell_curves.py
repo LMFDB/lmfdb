@@ -84,6 +84,7 @@ class EllCurveTest(LmfdbTest):
         assert not('30.a1' in L.data)
         assert not('11.a1' in L.data)
 
+# TODO: finish test
     #def test_num_int_pts_search(self):
 
     def test_isogeny_class(self):

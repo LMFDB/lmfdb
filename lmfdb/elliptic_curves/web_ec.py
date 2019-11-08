@@ -104,7 +104,7 @@ def make_y_coord(ainvs,x):
     b = (a1*x + a3)
     d = (RR(b*b + 4*f)).sqrt()
     y = ZZ((-b+d)/2)
-    return y
+    return y, ZZ(d)
 
 def make_integral_points(self):
     ainvs = self.ainvs
@@ -116,6 +116,18 @@ def make_integral_points(self):
     if len(xcoord_integral_points) != 0:
         int_pts_str = ', '.join(web_latex(el) for el in int_pts)
     return int_pts_str
+
+def count_integral_points(c):
+    ainvs = c['ainvs']
+    #xcoord_integral_points = c.xintcoords 
+    num_int_pts = 0
+    for x in c["xcoord_integral_points"]:
+        y, d = make_y_coord(ainvs,x)
+        if d == 0:
+            num_int_pts += 1
+        else:
+            num_int_pts += 2
+    return num_int_pts
 
 class WebEC(object):
     """
