@@ -392,12 +392,7 @@ class WebEC(object):
         mw['int_points'] = ''
         # should import this from import_ec_data.py
         if self.xintcoords:
-<<<<<<< HEAD
-            _, int_pts_str = make_integral_points(self)
-            mw['int_points'] = web_latex(int_pts_str)
-=======
             mw['int_points'] = make_integral_points(self)
->>>>>>> master
             #mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
