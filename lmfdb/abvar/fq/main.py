@@ -194,6 +194,14 @@ class AbvarSearchArray(SearchArray):
             example="81",
             example_span="81 or 3-49",
         )
+        pshort = display_knowl("ag.base_field", "base char.")
+        p = TextBox(
+            "p",
+            label="Characteristic of the %s" % (qshort),
+            short_label=pshort,
+            example="3",
+            example_span="3 or 2-5",
+        )
         g = TextBox(
             "g",
             label="Dimension",
@@ -207,12 +215,20 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.p_rank",
             example="2"
         )
+        p_rank_deficit = TextBox(
+            "p_rank_deficit",
+            label="$p$-rank deficit",
+            knowl="av.fq.p_rank",
+            example="2",
+            advanced=True,
+        )
         angle_rank = TextBox(
             "angle_rank",
             label="Angle rank",
             knowl="av.fq.angle_rank",
             example="3",
-            advanced=True
+            example_col=False,
+            advanced=True,
         )
         newton_polygon = TextBox(
             "newton_polygon",
@@ -289,6 +305,7 @@ class AbvarSearchArray(SearchArray):
             short_label=gdshort,
             example="168",
             example_span="6-12, 168",
+            advanced=True,
         )
         jac_cnt = TextBox(
             "jac_cnt",
@@ -349,6 +366,7 @@ class AbvarSearchArray(SearchArray):
             ("", "unrestricted"),
             ("not_yes", "no or unknown"),
             ("no", "no"),
+            ("unknown", "unknown"),
         ]
         polarizable = SelectBox(
             "polarizable",
@@ -465,10 +483,11 @@ class AbvarSearchArray(SearchArray):
             width=10,
         )
         refine_array = [
-            [q, g, p_rank, geom_deg, initial_coefficients],
+            [q, p, g, p_rank, initial_coefficients],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
-            [size, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
-            [angle_rank],
+            [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
+            [geom_deg, p_rank_deficit],
+            #[size],
             [simple, geom_simple, primitive, polarizable, jacobian],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
@@ -476,12 +495,13 @@ class AbvarSearchArray(SearchArray):
         ]
         browse_array = [
             [q, primitive],
-            [g, simple],
-            [p_rank, geom_simple],
-            [geom_deg, polarizable],
-            [initial_coefficients, jacobian],
+            [p, simple],
+            [g, geom_simple],
+            [initial_coefficients, polarizable],
+            [p_rank, jacobian],
+            [p_rank_deficit],
             [jac_cnt, hyp_cnt],
-            [angle_rank, size],
+            [geom_deg, angle_rank],
             [twist_count, max_twist_degree],
             [newton_polygon],
             [abvar_point_count],
@@ -502,6 +522,7 @@ class AbvarSearchArray(SearchArray):
 def common_parse(info, query):
     info["search_array"] = AbvarSearchArray()
     parse_ints(info, query, "q", name="base field")
+    parse_ints(info, query, "p", name="base cardinality")
     parse_ints(info, query, "g", name="dimension")
     parse_ints(info, query, "geom_deg", qfield="geometric_extension_degree")
     parse_bool(info, query, "simple", qfield="is_simple")
@@ -510,6 +531,7 @@ def common_parse(info, query):
     parse_bool_unknown(info, query, "jacobian", qfield="has_jacobian")
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
     parse_ints(info, query, "p_rank")
+    parse_ints(info, query, "p_rank_deficit")
     parse_ints(info, query, "angle_rank")
     parse_ints(info, query, "jac_cnt", qfield="jacobian_count", name="Number of Jacobians")
     parse_ints(info, query, "hyp_cnt", qfield="hyp_count", name="Number of Hyperelliptic Jacobians")
@@ -518,7 +540,7 @@ def common_parse(info, query):
     parse_ints(info, query, "size")
     parse_newton_polygon(info, query, "newton_polygon", qfield="slopes")
     parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])
-    parse_string_start(info, query, "abvar_point_count", qfield="abvar_counts_str")
+    parse_string_start(info, query, "abvar_point_count", qfield="abvar_counts_str", first_field="abvar_count")
     parse_string_start(info, query, "curve_point_count", qfield="curve_counts_str", first_field="curve_count")
     if info.get("simple_quantifier") == "contained":
         parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="subsets")

@@ -337,6 +337,7 @@ class StatsDisplay(UniqueRepresentation):
       dictionaries with the following keys (optional except ``cols``):
 
       - ``cols`` -- a list of columns to analyze.
+      - ``constraint`` -- a query dictionary, giving constraints on the items included.
       - ``buckets`` -- a dictionary with columns as keys and list of strings such as '2-10' as values.
       - ``table`` -- a PostgresStatsTable containing the columns.
       - ``top_title`` -- a list of pairs (text, knowl) for the header of this statistics block.

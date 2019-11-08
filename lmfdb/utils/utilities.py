@@ -1221,7 +1221,7 @@ def range_formatter(x):
         elif b is None:
             return "{0}-".format(a)
         elif a is None:
-            raise ValueError
+            return "..{0}".format(b)
         else:
             return "{0}-{1}".format(a,b)
     return str(x)
