@@ -115,11 +115,13 @@ def make_integral_points(self):
         y = make_y_coord(ainvs,x)
         if y == 0:
             num_int_pts += 1
-            int_pts_str += "({},{}),".format(x,y)
+            int_pts_str += "({},{}), ".format(x,y)
         else:
             num_int_pts += 2
-            int_pts_str += "({},\\pm{}),".format(x,y)
-            int_pts_str = int_pts_str[:len(int_pts_str)-1]
+            int_pts_str += "({},\\pm{}), ".format(x,y)
+    int_pts_str = int_pts_str[:len(int_pts_str)-1]
+    if num_int_pts:
+        int_pts_str = "$"+int_pts_str+"$"
     return num_int_pts, int_pts_str
 
 
