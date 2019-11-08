@@ -684,7 +684,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
             lng = r"\(%s\)" % lng
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
-        return r'\(%s\)'%n
+        return r'%s'%n
 def too_big(L, threshold):
     r"""
     INPUT:
@@ -714,7 +714,11 @@ def make_bigint(s, cutoff=20, max_width=70):
     """
     Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
     def knowl_replacer(M):
-        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
+        if a[0:2] == r'<a':
+            return r'\)' + a + r'\('
+        else:
+            return a
     return Zmatcher.sub(knowl_replacer, s)
 
 
@@ -878,8 +882,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         if abs(c) != 1:
             s += bigint_knowl(abs(c), bigint_cutoff) + " "
         s += varpow
-    if coeffs[0] == 0:
-        s += r"\)"
+    s += r"\)"
     if s.startswith(plus):
         return "\(" + s[len(plus):]
     else:
