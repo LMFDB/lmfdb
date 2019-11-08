@@ -125,7 +125,7 @@ class ECNF_stats(StatsDisplay):
                         r', over {} '.format(len(self.field_counts)),
                         self.nf_knowls, ' of ',
                         self.deg_knowl,
-                        r' up to {}.'.format(self.maxdeg),
+                        r' from 2 up to {}.'.format(self.maxdeg),
                         ' Elliptic curves defined over $\mathbb{Q}$ are contained in a <a href="/EllipticCurve/Q/">separate database</a>.'])
 
     @cached_method
