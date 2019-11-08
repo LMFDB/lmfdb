@@ -84,6 +84,8 @@ class EllCurveTest(LmfdbTest):
         assert not('30.a1' in L.data)
         assert not('11.a1' in L.data)
 
+    #def test_num_int_pts_search(self):
+
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.data

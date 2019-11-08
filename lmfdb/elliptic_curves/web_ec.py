@@ -10,7 +10,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
 
-from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RR
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -97,6 +97,25 @@ def EC_ainvs(E):
     """ Return the a-invariants of a Sage elliptic curve in the correct format for the database.
     """
     return [int(a) for a in E.ainvs()]
+
+def make_y_coord(ainvs,x):
+    a1, a2, a3, a4, a6 = ainvs
+    f = ((x + a2) * x + a4) * x + a6
+    b = (a1*x + a3)
+    d = (RR(b*b + 4*f)).sqrt()
+    y = ZZ((-b+d)/2)
+    return y
+
+def make_integral_points(self):
+    ainvs = self.ainvs
+    xcoord_integral_points = self.xintcoords 
+    int_pts = []
+    for x in xcoord_integral_points:
+        y = make_y_coord(ainvs,x)
+        int_pts.append((x, y))
+    if len(xcoord_integral_points) != 0:
+        int_pts_str = ', '.join(web_latex(el) for el in int_pts)
+    return int_pts_str
 
 class WebEC(object):
     """
@@ -267,7 +286,7 @@ class WebEC(object):
         # Column "manin_constant' is the correct Manin constant
         # assuming that the curve with (Cremona) number 1 in the class
         # is optimal.
-        
+
         data['optimality_code'] = self.optimality
         # The "or" clause in the next line is so that we can update
         # things by changing one line in this file even without
@@ -372,13 +391,8 @@ class WebEC(object):
         mw['rank'] = self.rank
         mw['int_points'] = ''
         if self.xintcoords:
-            a1, a2, a3, a4, a6 = self.ainvs
-            def lift_x(x):
-                f = ((x + a2) * x + a4) * x + a6
-                b = (a1*x + a3)
-                d = (b*b + 4*f).sqrt()
-                return (x, (-b+d)/2)
-            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
+            mw['int_points'] = make_integral_points(self)
+            #mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
         mw['heights'] = []

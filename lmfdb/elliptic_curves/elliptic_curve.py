@@ -246,11 +246,13 @@ def download_search(info):
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):
+    print info
     parse_rational(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
+    parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -272,10 +274,10 @@ def elliptic_curve_search(info, query):
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     if info.get('bad_quantifier') == 'exactly':
         mode = 'exact'
-    elif info.get('bad_quantifier') == 'exclude':
-    	mode = 'complement'
-    else:
+    elif info.get('bad_quantifier') == 'include':
         mode = 'append'
+    else:
+        mode = 'complement'
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=mode)
     # The button which used to be labelled Optimal only no/yes"

@@ -151,6 +151,7 @@ import re, os
 import time
 from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, pari
 from lmfdb.utils import web_latex
+from lmfdb.elliptic_curves.web_ec import make_y_coord
 from lmfdb import db
 print "setting curves"
 curves = db.ec_curves
@@ -1296,8 +1297,22 @@ def add_opt_man(c):
         c.update(opt_man_data[lab])
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
-    c['num_int_pts'] = len(c['xcoord_integral_points'])
-    return c
+    m = count_integral_points(c)
+    c['num_int_pts'] = m
+    return
+
+def count_integral_points(c):
+    ainvs = c['ainvs']
+    num_int_pts = 0
+    #int_pts_str = ""
+    for x in xcoord_integral_points:
+        y = make_y_coord(ainvs,x)
+        if y == 0:
+            num_int_pts += 1
+        else:
+            num_int_pts += 2
+    return num_int_pts
+
 
 # Sage translation of the Magma function TraceHash(), just for elliptic curves /Q
 
