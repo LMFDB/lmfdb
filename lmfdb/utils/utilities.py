@@ -719,7 +719,7 @@ def make_bigint(s, cutoff=20, max_width=70):
 
 
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
         lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
@@ -769,7 +769,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
     if cutoff:
         long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
@@ -830,8 +830,8 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
     - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
-    plus = r"\mathstrut +\mathstrut \) "
-    minus = r"\mathstrut -\mathstrut \) "
+    plus = r" + "
+    minus = r" - "
     m = len(coeffs)
     while m and coeffs[m-1] == 0:
         m -= 1
@@ -855,14 +855,14 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         c = coeffs[n]
         if n == 1:
             if superscript:
-                varpow = r"\(" + var
+                varpow = "" + var
             else:
-                varpow = r"\(%s_{1}"%var
+                varpow = r"%s_{1}"%var
         elif n > 1:
             if superscript:
-                varpow = r"\(%s^{%s}"%(var, n)
+                varpow = r"%s^{%s}"%(var, n)
             else:
-                varpow = r"\(%s_{%s}"%(var, n)
+                varpow = r"%s_{%s}"%(var, n)
         else:
             if c > 0:
                 s += plus + bigint_knowl(c, bigint_cutoff)
@@ -881,9 +881,9 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     if coeffs[0] == 0:
         s += r"\)"
     if s.startswith(plus):
-        return s[len(plus):]
+        return "\(" + s[len(plus):]
     else:
-        return r"\(-\)" + s[len(minus):]
+        return r"\(-" + s[len(minus):]
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):

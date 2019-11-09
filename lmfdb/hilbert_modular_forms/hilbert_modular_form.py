@@ -4,7 +4,7 @@ from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
     search_wrap)
@@ -385,10 +385,10 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(hecke_pol))
+    info['hecke_polynomial'] = "\(" + teXify_pol(hecke_pol) + "\)"
 
     if not AL_eigs: # empty list
-        if data['level_norm']==1: # OK, no bad primes
+        if data['level_norm'] == 1: # OK, no bad primes
             info['AL_eigs'] = 'none'
         else:                     # not OK, AL eigs are missing
             info['AL_eigs'] = 'missing'

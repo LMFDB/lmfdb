@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, web_latex_split_on_pm, flash_error,
+    web_latex, to_dict, flash_error,
     parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
     search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -413,7 +413,7 @@ def modular_form_display(label, number):
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
-    modform_string = web_latex_split_on_pm(modform)
+    modform_string = web_latex(modform)
     return modform_string
 
 # This function is now redundant since we store plots as

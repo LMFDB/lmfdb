@@ -65,7 +65,7 @@ from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_met
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.utils import web_latex
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -1660,7 +1660,7 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def nfpol(self):
         #return self.nf.web_poly()
-        return web_latex_split_on_pm(self.k.polynomial())
+        return web_latex(self.k.polynomial())
 
     @property
     def codegen(self):
