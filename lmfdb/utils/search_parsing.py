@@ -289,6 +289,13 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_posints(inp, query, qfield, parse_singleton=int):
+    if LIST_POSINT_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    else:
+        raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_floats(inp, query, qfield, allow_singletons=False):
     parse_endpoint = float
     if allow_singletons:
