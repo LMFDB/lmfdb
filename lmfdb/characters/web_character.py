@@ -589,7 +589,7 @@ class WebCharGroup(WebCharObject):
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
-            'properties2', 'friends', 'rowtruncate', 'coltruncate']
+            'properties', 'friends', 'rowtruncate', 'coltruncate']
 
     def __init__(self, **args):
         self._contents = None
@@ -643,7 +643,7 @@ class WebCharGroup(WebCharObject):
             self.add_row(c)
 
     @property
-    def properties2(self):
+    def properties(self):
         return [("Modulus", [self.modulus]),
                 ("Structure", [self.structure]),
                 ("Order", [self.order]),
@@ -680,7 +680,7 @@ class WebChar(WebCharObject):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def __init__(self, **args):
@@ -757,7 +757,7 @@ class WebChar(WebCharObject):
           return ''
 
     @property
-    def properties2(self):
+    def properties(self):
         f = [("Conductor", [self.conductor]),
                 ("Order", [self.order]),
                 ("Real", [self.isreal]),
@@ -1113,7 +1113,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
               'orbit_label', 'orbit_index']
 
@@ -1394,7 +1394,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
               'orbit_label', 'orbit_index']
 

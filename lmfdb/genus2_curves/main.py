@@ -179,7 +179,7 @@ def render_curve_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_curve.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
                            data=g2c.data,
@@ -196,7 +196,7 @@ def render_isogeny_class_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            data=g2c.data,
                            bread=g2c.bread,

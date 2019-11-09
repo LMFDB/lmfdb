@@ -422,7 +422,7 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties2 = [('Base field', '%s' % info['field'].field_pretty()),
+    properties = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '%s' % data['weight']),
                    ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
@@ -432,7 +432,7 @@ def render_hmf_webpage(**args):
                    ('Base change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties=properties, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
 
 #data quality pages
 @hmf_page.route("/Completeness")

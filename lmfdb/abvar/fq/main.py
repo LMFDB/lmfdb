@@ -103,7 +103,7 @@ def abelian_varieties_by_gqi(g, q, iso):
                       (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)))
 
     return render_template("show-abvarfq.html",
-                           properties2=cl.properties(),
+                           properties=cl.properties(),
                            credit=abvarfq_credit,
                            title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
                            bread=bread,

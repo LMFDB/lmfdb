@@ -307,7 +307,7 @@ def render_one_maass_waveform_wp(info, prec=9):
                   ]
     if dim > 1 and info['MF'].the_character() == "trivial":
         properties.append(("Possibly oldform", []))
-    info['properties2'] = properties
+    info['properties'] = properties
 
     # The precision in set_table indicates which coefficients to set to zero.
     # For instance, if the imaginary part is less than the precision in
