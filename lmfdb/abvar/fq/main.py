@@ -289,14 +289,14 @@ class AbvarSearchArray(SearchArray):
             width=40,
             advanced=True,
         )
-        size = TextBox(
-            "size",
-            label="Isogeny class size",
-            knowl="av.fq.isogeny_class_size",
-            example="1",
-            example_col=False,
-            advanced=True,
-        )
+        #size = TextBox(
+        #    "size",
+        #    label="Isogeny class size",
+        #    knowl="av.fq.isogeny_class_size",
+        #    example="1",
+        #    example_col=False,
+        #    advanced=True,
+        #)
         gdshort = display_knowl("av.endomorphism_field", "End.") + " degree"
         gdlong = "Degree of " + display_knowl("av.endomorphism_field", "endomorphism_field")
         geom_deg = TextBox(
