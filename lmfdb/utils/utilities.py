@@ -23,8 +23,7 @@ from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
 # DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
 from werkzeug.contrib.cache import SimpleCache
-# DeprecationWarning: The import 'werkzeug.cached_property' is deprecated and will be removed in Werkzeug 1.0. Use 'from werkzeug.utils import cached_property' instead.
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
