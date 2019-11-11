@@ -113,18 +113,18 @@ def abelian_varieties_by_gqi(g, q, iso):
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
-        (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)),
+        (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
     )
 
     return render_template(
         "show-abvarfq.html",
-        properties2=cl.properties(),
+        properties=cl.properties(),
         credit=abvarfq_credit,
-        title="Abelian Variety Isogeny Class %s over $%s$" % (label, cl.field()),
+        title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
         bread=bread,
         cl=cl,
         learnmore=learnmore_list(),
-        KNOWL_ID="av.fq.%s" % label,
+        KNOWL_ID='av.fq.%s'%label
     )
 
 def url_for_label(label):

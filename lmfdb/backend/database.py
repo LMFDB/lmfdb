@@ -1611,13 +1611,23 @@ class PostgresTable(PostgresBase):
             # no $or clause
             return [query]
         queries = []
+        def is_special(v):
+            return isinstance(v, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in v)
         for orc in ors:
             Q = dict(query)
             for key, val in orc.items():
                 if key in Q and val != Q[key]:
-                    raise ValueError("Error in LMFDB query construction")
-                Q[key] = val
-            queries.append(Q)
+                    if not is_special(val) and not is_special(Q[key]):
+                        # this branch of the or would assert that the value is equal to two different things
+                        break
+                    else:
+                        # It would be possible to try to merge queries, but we stick to a simple approach and just throw them in an $and
+                        Q[key] = {'$and': [val, Q[key]]}
+                else:
+                    Q[key] = val
+            else:
+                # There were no incompatibilities, so we add Q to the list of queries
+                queries.append(Q)
         if sort:
             col = sort[0]
             if isinstance(col, basestring):

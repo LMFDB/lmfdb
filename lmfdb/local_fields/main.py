@@ -286,7 +286,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
