@@ -21,8 +21,9 @@ from urllib import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
+# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
 from werkzeug.contrib.cache import SimpleCache
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
@@ -1221,7 +1222,7 @@ def range_formatter(x):
         elif b is None:
             return "{0}-".format(a)
         elif a is None:
-            raise ValueError
+            return "..{0}".format(b)
         else:
             return "{0}-{1}".format(a,b)
     return str(x)

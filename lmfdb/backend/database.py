@@ -2142,7 +2142,7 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, values)
         return [res[0] for res in cur]
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -2162,7 +2162,7 @@ class PostgresTable(PostgresBase):
             sage: nf.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        return self.stats.count(query, record=record)
+        return self.stats.count(query, groupby=groupby, record=record)
 
     ##################################################################
     # Indexes and performance analysis                               #
@@ -4385,7 +4385,7 @@ class PostgresStatsTable(PostgresBase):
             # counts for {} when data is updated.
             self._execute(updater, [count, self.search_table])
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -4393,10 +4393,13 @@ class PostgresStatsTable(PostgresBase):
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
         - ``record`` -- (default True) whether to record the number of results in the counts table.
+        - ``groupby`` -- (default None) a list of columns
 
         OUTPUT:
 
-        The number of records satisfying the query.
+        If ``grouby`` is None, the number of records satisfying the query.
+        Otherwise, a dictionary with keys the distinct tuples of values taken on by the columns
+        in ``groupby``, and values the number of rows with those values.
 
         EXAMPLES::
 
@@ -4405,12 +4408,24 @@ class PostgresStatsTable(PostgresBase):
             sage: nf.stats.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        if not query:
-            return self.total
-        nres = self.quick_count(query)
-        if nres is None:
-            nres = self._slow_count(query, record=record)
-        return int(nres)
+        if groupby is None:
+            if not query:
+                return self.total
+            nres = self.quick_count(query)
+            if nres is None:
+                nres = self._slow_count(query, record=record)
+            return int(nres)
+        else:
+            # We don't currently support caching groupby counts
+            qstr, values = self.table._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+            else:
+                qstr = SQL(" WHERE ") + qstr
+            selecter = SQL("SELECT COUNT(*), {0} FROM {1}{2} GROUP BY {0}").format(SQL(", ").join(map(Identifier, groupby)), Identifier(self.search_table), qstr)
+            print selecter
+            cur = self._execute(selecter, values)
+            return {tuple(rec[1:]): int(rec[0]) for rec in cur}
 
     def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
         """
@@ -4435,7 +4450,7 @@ class PostgresStatsTable(PostgresBase):
         taken on by that column.  If cols is a list of strings, then the keys will
         be tuples of values taken on by the dictionary.
 
-        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).
+        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).  However, we omit entries where D contains only keys starting with ``$``, since these are used to encode queries.
         """
         if isinstance(cols, basestring):
             cols = [cols]
@@ -4465,12 +4480,14 @@ class PostgresStatsTable(PostgresBase):
         else:
             _make_tuple = make_tuple
         if constraint is None:
-            return {_make_tuple(rec[0]): rec[1] for rec in cur}
+            # We need to remove counts that aren't the actual value,
+            # but instead part of a query
+            return {_make_tuple(rec[0]): rec[1] for rec in cur if not any(isinstance(val, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val) for val in rec[0])}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
             column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
             def satisfies_constraint(val):
-                return all(val[i] == c for i,c in constraint_list)
+                return all(val[i] == c for i,c in constraint_list) and not any(isinstance(val[i], dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val[i]) for i in column_indexes)
             def remove_constraint(val):
                 return [val[i] for i in column_indexes]
             return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
