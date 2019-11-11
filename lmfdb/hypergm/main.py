@@ -477,7 +477,7 @@ def render_hgm_webpage(label):
     t_data = str(QQ(data['t']))
 
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
-    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 
@@ -521,7 +521,7 @@ def render_hgm_family_webpage(label):
     return render_template("hgm_family.html",
                            info=info,
                            family=family,
-                           properties2=family.properties,
+                           properties=family.properties,
                            credit=HGM_credit,
                            bread=family.bread,
                            title=family.title,

@@ -386,7 +386,7 @@ def render_isogeny_class(iso_class):
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
-                           properties2=class_data.properties,
+                           properties=class_data.properties,
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
@@ -452,7 +452,7 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
-                         properties2=data.properties,
+                         properties=data.properties,
                          credit=ec_credit(),
                          data=data,
                          # set default show names but actually code snippets are filled in only when needed

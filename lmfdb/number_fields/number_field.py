@@ -563,7 +563,7 @@ def render_field_webpage(args):
     label_orig = label
     if len(label)>25:
         label = label[:16]+'...'+label[-6:]
-    properties2 = [('Label', label),
+    properties = [('Label', label),
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
@@ -594,7 +594,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
+    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))

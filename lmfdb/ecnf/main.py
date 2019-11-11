@@ -340,7 +340,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
-                           properties2=cl.properties,
+                           properties=cl.properties,
                            friends=cl.friends,
                            learnmore=learnmore_list())
 
@@ -377,7 +377,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            ec=ec,
                            code = code,
                            #        properties = ec.properties,
-                           properties2=ec.properties,
+                           properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,

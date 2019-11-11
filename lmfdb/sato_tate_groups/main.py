@@ -532,7 +532,7 @@ def render_st_group(info, portrait=None):
     ]
     title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
-                           properties2=prop2,
+                           properties=prop2,
                            credit=credit_string,
                            info=info,
                            bread=bread,

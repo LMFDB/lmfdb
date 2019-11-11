@@ -235,9 +235,9 @@ def render_artin_representation_webpage(label):
     info={} # for testing
 
     if case == 'rep':
-        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, info=info, learnmore=learnmore_list())
+        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties=properties, info=info, learnmore=learnmore_list())
     # else we have an orbit
-    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, info=info, learnmore=learnmore_list())
+    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, properties=properties, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():
