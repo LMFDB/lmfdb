@@ -646,28 +646,32 @@ table a[knowl] {
 table.ntdata a {
   display: block;
 }
+
 table.chardata a {
   display: inline;
 }
+
 table td.top {
   vertical-align:top;
 }
 table.ntdata td {
   white-space: nowrap;
+  border: 20px;
+  padding: 15px;
 }
 
 table a:hover {
     background: {{color.table_background_hover}};
 }
 
-
 table td.spacing {
   height: 20px;
 }
 
+
 table.ntdata {
   width: auto;
-  border: 0;
+  border: 3px;
   margin-top: 15px;
   margin-bottom: 15px;
 }
@@ -706,6 +710,10 @@ table.ntdata tr.line {
 }
 table.ntdata tr.endsection {
     border-bottom: 1px solid {{color.table_ntdata_border}};
+}
+
+table.ntdata td {
+  padding: 10;
 }
 
 table.right_align_table td {
@@ -935,6 +943,7 @@ td.right {
 table.ntdata .middle {
     vertical-align: middle;
 }
+
 table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
 }
