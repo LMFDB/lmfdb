@@ -111,7 +111,7 @@ def make_integral_points(self):
     xcoord_integral_points = self.xintcoords 
     int_pts = []
     for x in xcoord_integral_points:
-        y = make_y_coord(ainvs,x)
+        y, d = make_y_coord(ainvs,x)
         int_pts.append((x, y))
     if len(xcoord_integral_points) != 0:
         int_pts_str = ', '.join(web_latex(el) for el in int_pts)
