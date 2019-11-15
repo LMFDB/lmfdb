@@ -16,7 +16,7 @@
 {% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
-<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
+<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
 {% endif %}
 {% endfor %}
 {% endif %}
