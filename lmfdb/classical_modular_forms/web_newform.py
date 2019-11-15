@@ -636,7 +636,7 @@ class WebNewform(object):
             if paren:
                 return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
             else:
-                return r"%s\(/%s\(" % (num, make_bigint(web_latex(den, enclose=False)))
+                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
 
     @property
     def _nu_latex(self):
@@ -950,7 +950,7 @@ function switch_basis(btype) {
             if term != 0:
                 latexterm = latex(term)
                 if use_knowl:
-                    latexterm = make_bigint(latexterm)
+                    latexterm = make_bigint(latexterm, enclose=False)
                 if term.number_of_terms() > 1:
                     latexterm = r"(" +  latexterm + r")"
                 if j > 0:
