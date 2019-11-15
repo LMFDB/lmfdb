@@ -1774,7 +1774,6 @@ div.box {
 div.codebox {
     padding: 5px;
     text-padding: 10px;
-    overflow: auto;
     border: 1px solid {{color.knowl_thin_border}};
     border-radius: 5px;
     background-color: {{color.knowl_background}};
