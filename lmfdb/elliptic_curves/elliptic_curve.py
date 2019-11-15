@@ -101,7 +101,7 @@ def rational_elliptic_curves(err_args=None):
 
 @ec_page.route("/random")
 def random_curve():
-    label = db.ec_curves.random(projection=1)['lmfdb_label']
+    label = db.ec_temp.random(projection=1)['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
     return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
@@ -110,7 +110,7 @@ def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    label = db.ec_curves.lucky({'number': 1}, offset = n)
+    label = db.ec_temp.lucky({'number': 1}, offset = n)
     #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
@@ -186,7 +186,7 @@ def elliptic_curve_jump(info):
             E = EllipticCurve(labvec).minimal_model()
             # Now we do have a valid curve over Q, but it might
             # not be in the database.
-            lmfdb_label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+            lmfdb_label = db.ec_temp.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
             if lmfdb_label is None:
                 info['conductor'] = E.conductor()
                 return elliptic_curve_jump_error(label, info, missing_curve=True)
@@ -222,7 +222,7 @@ def download_search(info):
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
-    res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
+    res = db.ec_temp.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
     strIO = StringIO.StringIO()
@@ -234,7 +234,7 @@ def download_search(info):
                      add_etags=False)
 
 @search_wrap(template="ec-search-results.html",
-             table=db.ec_curves,
+             table=db.ec_temp,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
@@ -349,7 +349,7 @@ def by_ec_label(label):
         else:
             label_type = 'iso'
 
-        data = db.ec_curves.lucky({label_type: label}, projection=1)
+        data = db.ec_temp.lucky({label_type: label}, projection=1)
         if data is None:
             return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
@@ -373,7 +373,7 @@ def by_weierstrass(eqn):
     except TypeError:
         return elliptic_curve_jump_error(eqn, {})
     E = EllipticCurve(ainvs).global_minimal_model()
-    label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)},'lmfdb_label')
+    label = db.ec_temp.lucky({'ainvs': EC_ainvs(E)},'lmfdb_label')
     if label is None:
         N = E.conductor()
         return elliptic_curve_jump_error(eqn, {'conductor':N}, missing_curve=True)
@@ -410,7 +410,7 @@ def modular_form_display(label, number):
         number = 10
     if number > 1000:
         number = 1000
-    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+    ainvs = db.ec_temp.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -422,7 +422,7 @@ def modular_form_display(label, number):
 # base64-encoded pngs.
 @ec_page.route("/plot/<label>")
 def plot_ec(label):
-    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+    ainvs = db.ec_temp.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -496,9 +496,9 @@ def padic_data():
 def download_EC_qexp(label, limit):
     N, iso, number = split_lmfdb_label(label)
     if number:
-        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+        ainvs = db.ec_temp.lookup(label, 'ainvs', 'lmfdb_label')
     else:
-        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
+        ainvs = db.ec_temp.lookup(label, 'ainvs', 'lmfdb_iso')
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
@@ -512,12 +512,12 @@ def download_EC_all(label):
     except (ValueError,AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
-        data = db.ec_curves.lookup(label, label_col='lmfdb_label')
+        data = db.ec_temp.lookup(label, label_col='lmfdb_label')
         if data is None:
             return elliptic_curve_jump_error(label, {})
         data_list = [data]
     else:
-        data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
+        data_list = list(db.ec_temp.search({'lmfdb_iso': label}, projection=2, sort=['number']))
         if len(data_list) == 0:
             return elliptic_curve_jump_error(label, {})
 
