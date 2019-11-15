@@ -950,7 +950,7 @@ function switch_basis(btype) {
             if term != 0:
                 latexterm = latex(term)
                 if use_knowl:
-                    latexterm = make_bigint(latexterm, enclose=False)
+                    latexterm = make_bigint(latexterm)
                 if term.number_of_terms() > 1:
                     latexterm = r"(" +  latexterm + r")"
                 if j > 0:
