@@ -634,9 +634,9 @@ class WebNewform(object):
                 return "%s\(/%s\)" % (num, den)
         else:
             if paren:
-                return r"\((\)%s\()/\)%s" % (num, bigint_knowl(den))
+                return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
             else:
-                return r"%s\(/\)%s" % (num, bigint_knowl(den))
+                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
 
     @property
     def _nu_latex(self):
