@@ -447,8 +447,7 @@ def hgcwa_code_download_search(info):
 
 #Similar to parse_ints in lmfdb/utils
 #Add searching with genus variable for group orders
-def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None):
-    instance = 1
+def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, instance=1):
     if parse_endpoint is None:
         parse_endpoint = parse_singleton
     if type(arg) == str:
@@ -457,7 +456,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None):
         return [key, arg]
     if ',' in arg:
         instance = len(arg.split(','))
-        tmp = [parse_range2_extend(a, key, parse_singleton, parse_endpoint) for a in arg.split(',')]
+        tmp = [parse_range2_extend(a, key, parse_singleton, parse_endpoint, instance) for a in arg.split(',')]
         ret = []
         for a in tmp:
             if a[0] == key:
