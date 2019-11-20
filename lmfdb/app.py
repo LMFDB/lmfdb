@@ -203,11 +203,13 @@ def force_www_and_ssl():
 
     urlparts = urlparse(request.url)
 
-    if urlparts.netloc == "lmfdb.org":
+    if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=301)
-
-    if (
+    elif urlparts.netloc == "beta.lmfdb.com":
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=301)
+    elif (
         urlparts.netloc == "www.lmfdb.org"
         and request.headers.get("X-Forwarded-Proto", "http") != "https"
         and request.url.startswith("http://")

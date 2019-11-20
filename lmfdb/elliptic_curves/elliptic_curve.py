@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, web_latex_split_on_pm, flash_error,
+    web_latex, to_dict, flash_error,
     parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
     search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -386,7 +386,7 @@ def render_isogeny_class(iso_class):
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
-                           properties2=class_data.properties,
+                           properties=class_data.properties,
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
@@ -413,7 +413,7 @@ def modular_form_display(label, number):
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
-    modform_string = web_latex_split_on_pm(modform)
+    modform_string = web_latex(modform)
     return modform_string
 
 # This function is now redundant since we store plots as
@@ -452,7 +452,7 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
-                         properties2=data.properties,
+                         properties=data.properties,
                          credit=ec_credit(),
                          data=data,
                          # set default show names but actually code snippets are filled in only when needed

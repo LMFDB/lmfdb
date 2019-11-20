@@ -266,7 +266,7 @@ def render_hecke_algebras_webpage(**args):
     else:
         info['friends'] = []
     t = "Hecke Algebra %s" % info['label']
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
 
@@ -362,7 +362,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
 
     t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
-    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
+    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
 
 
 

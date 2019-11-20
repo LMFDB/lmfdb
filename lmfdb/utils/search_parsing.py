@@ -243,22 +243,24 @@ def parse_range3(arg, split0 = False):
     else:
         return [ZZ(str(arg))]
 
-def integer_options(arg, max_opts=None):
+def integer_options(arg, max_opts=None, contained_in=None):
     intervals = parse_range3(arg)
-    if max_opts is not None and len(intervals) > max_opts:
+    check = max_opts is not None and contained_in is None
+    if check and len(intervals) > max_opts:
         raise ValueError("Too many options.")
     ans = set()
     for interval in intervals:
         if isinstance(interval, list):
             a,b = interval
-            if max_opts is not None and len(ans) + b - a + 1 > max_opts:
+            if check and len(ans) + b - a + 1 > max_opts:
                 raise ValueError("Too many options")
             for n in range(a,b+1):
-                ans.add(n)
-        elif max_opts is not None and len(ans) == max_opts:
-            raise ValueError("Too many options")
+                if contained_in is None or n in contained_in:
+                    ans.add(n)
         else:
             ans.add(int(interval))
+        if max_opts is not None and len(ans) >= max_opts:
+            raise ValueError("Too many options")
     return sorted(list(ans))
 
 def collapse_ors(parsed, query):
@@ -287,6 +289,13 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_posints(inp, query, qfield, parse_singleton=int):
+    if LIST_POSINT_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    else:
+        raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_floats(inp, query, qfield, allow_singletons=False):
