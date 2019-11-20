@@ -14,6 +14,7 @@ from lmfdb.utils import (
     flash_error,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap)
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
@@ -21,6 +22,9 @@ from collections import defaultdict
 
 logger = make_logger("hgcwa")
 
+#Parsing group order
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d+)(\(g-1\))))(,(\d+|(\d*-(\d+)?)|((\d+)(\(g-1\)))))*$')
+GENUS_RE = re.compile(r'^(\d+)(\(g-1\))$')
 
 # Determining what kind of label
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-?[^\.]*$)')
@@ -37,7 +41,6 @@ def label_is_one_passport(lab):
 
 def split_family_label(lab):
     return family_label_regex.match(lab).groups()
-
 
 def split_passport_label(lab):
     return passport_label_regex.match(lab).groups()
@@ -442,6 +445,63 @@ def hgcwa_code_download_search(info):
                      add_etags=False)
 
 
+#Similar to parse_ints in lmfdb/utils
+#Add searching with genus variable for group orders
+def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None):
+    instance = 1
+    if parse_endpoint is None:
+        parse_endpoint = parse_singleton
+    if type(arg) == str:
+        arg = arg.replace(' ', '')
+    if type(arg) == parse_singleton:
+        return [key, arg]
+    if ',' in arg:
+        instance = len(arg.split(','))
+        tmp = [parse_range2_extend(a, key, parse_singleton, parse_endpoint) for a in arg.split(',')]
+        ret = []
+        for a in tmp:
+            if a[0] == key:
+                ret.append({a[0]:a[1]})
+            else:
+                for i in range(0, len(a)):
+                    ret.append({a[i][0]: a[i][1]})
+        #tmp = [{a[0]: a[1]} if a[0] == key else {a[i][0]: a[i][1]} for i in range(0,len(a)) for a in tmp]
+        return ['$or', ret]
+    elif 'g' in arg[1:]:
+        num = int(GENUS_RE.match(arg).groups()[0])
+        genus_list = db.hgcwa_passports.distinct('genus')
+        genus_list.sort()
+        min_genus = genus_list[0]
+        max_genus = genus_list[-1]
+        group_orders = []
+        for g in range(min_genus,max_genus+1):
+            group_order = num * (g - 1)
+            group_orders.append(group_order)
+        if instance == 1: #If there is only one search value which is num*(g-1)
+            return ['$or', [{key: group_order} for group_order in group_orders]]
+        else:
+            return [[key, group_order] for group_order in group_orders] #Nested list
+    elif '-' in arg[1:] and 'g' not in arg[1:]:
+        ix = arg.index('-', 1)
+        start, end = arg[:ix], arg[ix + 1:]
+        q = {}
+        if start:
+            q['$gte'] = parse_endpoint(start)
+        if end:
+            q['$lte'] = parse_endpoint(end)
+        return [key, q]
+    else:
+        return [key, parse_singleton(arg)]
+
+
+@search_parser(clean_info=True, prep_ranges=True)
+def parse_group_order(inp, query, qfield, parse_singleton=int):
+    if LIST_RE.match(inp):
+        collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
+    else:
+        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+
 @search_wrap(template="hgcwa-search.html",
         table=db.hgcwa_passports,
         title='Families of Higher Genus Curves with Automorphisms Search Results',
@@ -463,7 +523,9 @@ def higher_genus_w_automorphisms_search(info, query):
     parse_ints(info,query,'g0')
     parse_ints(info,query,'genus')
     parse_ints(info,query,'dim')
-    parse_ints(info,query,'group_order')
+    parse_group_order(info,query,'group_order')
+
+
     if 'inc_hyper' in info:
         if info['inc_hyper'] == 'exclude':
             query['hyperelliptic'] = False
