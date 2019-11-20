@@ -122,7 +122,8 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table cellpadding=3 class="ntdata">
+<table class="ntdata">
+<thead>
 <tr>
     <th>{{ KNOWL('g2c.label', title='Label') }}</th>
     <th>{{ KNOWL('g2c.isogeny_class', title='Class') }}</th>
@@ -132,6 +133,7 @@
     <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)') }}</th>
     <th>{{ KNOWL('g2c.analytic_rank', title='Rank*') }}</th>
 </tr>
+</thead>
 {% for curve in info.results: %}
 <tr>
     <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>

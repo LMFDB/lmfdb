@@ -656,8 +656,7 @@ table td.top {
 }
 table.ntdata td {
   white-space: nowrap;
-  border: 20px;
-  padding: 15px;
+  padding: 3px;
 }
 
 table a:hover {
@@ -712,8 +711,8 @@ table.ntdata tr.endsection {
     border-bottom: 1px solid {{color.table_ntdata_border}};
 }
 
-table.ntdata td {
-  padding: 10;
+table.ntdata th {
+  padding: 3;
 }
 
 table.right_align_table td {

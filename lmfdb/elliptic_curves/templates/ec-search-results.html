@@ -103,7 +103,8 @@ table td.params {
 }
 </style>
 
-<table border=0 cellpadding=3 class=ntdata>
+<table class=ntdata>
+<thead>
   <tr>
     <th class="center" colspan=2>Curve</th>
     <th class="center" colspan=2>{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
@@ -120,6 +121,7 @@ table td.params {
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
 </tr>
+</thead>
 {% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url_LMFDB(curve)}}">{{curve.lmfdb_label}}</a></td>
