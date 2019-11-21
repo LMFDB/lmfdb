@@ -10,7 +10,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, comma, flash_error, display_knowl,
-    parse_bool, parse_ints, parse_bracketed_posints,
+    parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
     StatsDisplay, formatters)
@@ -179,7 +179,7 @@ def render_curve_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_curve.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
                            data=g2c.data,
@@ -196,7 +196,7 @@ def render_isogeny_class_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            data=g2c.data,
                            bread=g2c.bread,
@@ -294,6 +294,14 @@ def genus2_curve_search(info, query):
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
+    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch_inv')
+    if geom_inv_type == 'igusa_clebsch_inv':
+        invlength = 4
+    elif geom_inv_type == 'igusa_inv':
+        invlength = 5
+    else:
+        invlength = 3
+    parse_bracketed_rats(info,query,'geometric_invariants',qfield=geom_inv_type,exactlength=invlength,split=False,keepbrackets=True)
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -303,6 +311,14 @@ def genus2_curve_search(info, query):
         query['class'] = info['class']
     for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
+    if info.get('bad_quantifier') == 'exactly':
+        mode = 'exact'
+    elif info.get('bad_quantifier') == 'exclude':
+        mode = 'complement'
+    else:
+        mode = 'append'
+    parse_primes(info, query, 'bad_primes', name='bad primes',
+                 qfield='bad_primes',mode=mode)
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
 

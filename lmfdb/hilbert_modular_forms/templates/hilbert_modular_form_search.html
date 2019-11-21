@@ -3,7 +3,7 @@
 
 <h2> Further refine search </h2>
 
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 {% include 'hidden_search_inputs.html' %}
 
 <table border="0">
@@ -16,20 +16,20 @@
 </tr>
 
 <tr>
-<td><input type='text' name='field_label' size=10 value={{info.field_label}}>
-<td><input type='text' name='deg' size=10 value={{info.deg}}>
-<td><input type='text' name='disc' size=10 value={{info.disc}}>
+<td><input type='text' name='field_label' placeholder="2.2.5.1" size=10 value={{info.field_label}}>
+<td><input type='text' name='deg' placeholder='2' size=10 value={{info.deg}}>
+<td><input type='text' name='disc' placeholder='1..100'  size=10 value={{info.disc}}>
 <td><select name='cm'>
 {% if info.cm == "only" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude">exclude</option>
        <option value="only" selected="yes">only</option>
 {% elif info.cm == "exclude" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude" selected="yes">exclude</option>
        <option value="only">only</option>
 {% else %}
-       <option value="include" selected="yes">include</option>
+       <option value="" selected="yes">include</option>
        <option value="exclude">exclude</option>
        <option value="only">only</option>
 {% endif %}
@@ -44,20 +44,20 @@
 <td>{{ KNOWL('mf.base_change',title="Base Change") }}</td>
 </tr>
 <tr>
-<td><input type='text' name='weight' size=10 value={{info.weight}}>
-<td><input type='text' name='level_norm' size=10 value={{info.level_norm}}>
-<td><input type='text' name='dimension' size=10 value={{info.dimension}}>
+<td><input type='text' name='weight' placeholder='[2,2]' size=10 value={{info.weight}}>
+<td><input type='text' name='level_norm' placeholder='1'  size=10 value={{info.level_norm}}>
+<td><input type='text' name='dimension' placeholder='1' size=10 value={{info.dimension}}>
 <td><select name='bc'>
 {% if info.bc == "only" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude">exclude</option>
        <option value="only" selected>only</option>
 {% elif info.bc == "exclude" %}
-       <option value="include">include</option>
+       <option value="">include</option>
        <option value="exclude" selected>exclude</option>
        <option value="only">only</option>
 {% else %}
-       <option value="include" selected>include</option>
+       <option value="" selected>include</option>
        <option value="exclude">exclude</option>
        <option value="only">only</option>
 {% endif %}

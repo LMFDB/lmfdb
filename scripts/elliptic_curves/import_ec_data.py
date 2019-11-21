@@ -185,6 +185,13 @@ whitespace = re.compile(r'\s+')
 def split(line):
     return whitespace.split(line.strip())
 
+# Two dicts: the first has lmfdb labels as keys and the corresponding
+# Cremona labels as values; the second is the other way round.  These
+# are filled by alllabels() and used by allgens().
+
+lmfdb_label_to_label = {}
+label_to_lmfdb_label = {}
+    
 
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
@@ -248,9 +255,18 @@ def allgens(line):
 
     20202 i 2 [1,0,0,-298389,54947169] 1 [2,4] [-570:6603:1] [-622:311:1] [834:19239:1]
     """
+    global lmfdb_label_to_label
+    global label_to_lmfdb_label
+
     data = split(line)
     iso = data[0] + data[1]
     label = iso + data[2]
+    try:
+        lmfdb_label = label_to_lmfdb_label[label]
+    except AttributeError:
+        print("Label {} not found in label_to_lmfdb_label dict!".format(label))
+        lmfdb_label = ""
+
     global nallgens
     nallgens += 1
     if nallgens%100==0:
@@ -289,12 +305,11 @@ def allgens(line):
 
     Etw, Dtw = E.minimal_quadratic_twist()
     if Etw.conductor()==N:
-        min_quad_twist = {'label':label, 'disc':int(1)}
+        min_quad_twist = {'label':label, 'lmfdb_label':lmfdb_label, 'disc':int(1)}
     else:
-        minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
-        r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
-        minq_label = "" if r is None else r['label']
-        min_quad_twist = {'label':minq_label, 'disc':int(Dtw)}
+        minq_ainvs = Etw.ainvs()
+        r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs}, projection=['label','lmfdb_label'])
+        min_quad_twist = {'label': r['label'], 'lmfdb_label':r['lmfdb_label'], 'disc':int(Dtw)}
     
     #print("computing hash")    
     #trace_hash = ZZ(magma.TraceHash(E))
@@ -416,11 +431,14 @@ def alldegphi(line):
         'degree': int(data[4])
     }
 
-
 def alllabels(line):
     r""" Parses one line from an alllabels file.  Returns the label
     and a dict containing seven fields, 'conductor', 'iso', 'number',
     'lmfdb_label', 'lmfdb_iso', 'iso_nlabel', 'lmfdb_number', being strings or ints.
+
+    Also populates two global dictionaries lmfdb_label_to_label and
+    label_to_lmfdb_label, allowing other upload functions to look
+    these up.
 
     Input line fields:
 
@@ -431,6 +449,8 @@ def alllabels(line):
     57 c 2 57 b 1
 
     """
+    global lmfdb_label_to_label
+    global label_to_lmfdb_label
     data = split(line)
     if data[0] != data[3]:
         raise ValueError("Inconsistent data in alllabels file: %s" % line)
@@ -438,6 +458,10 @@ def alllabels(line):
     lmfdb_label = data[3] + '.' + data[4] + data[5]
     lmfdb_iso = data[3] + '.' + data[4]
     iso_nlabel = numerical_iso_label(lmfdb_iso)
+
+    lmfdb_label_to_label[lmfdb_label] = label
+    label_to_lmfdb_label[label] = lmfdb_label
+
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
@@ -576,27 +600,25 @@ def opt_man(line):
 
     Input line fields:
 
-    label opt mc
+    N iso num ainvs opt mc
 
-    where label = full curve label, opt = (0 if not optimal, 1 if
-    optimal, n>1 if one of n possibly optimal curves in the isogeny
-    class), and mc = Manin constant *conditional* on curve #1 in the
-    lcass being the optimal one.
+    where opt = (0 if not optimal, 1 if optimal, n>1 if one of n
+    possibly optimal curves in the isogeny class), and mc = Manin
+    constant *conditional* on curve #1 in the lcass being the optimal
+    one.
 
     Sample input lines with comments added:
 
-    250002e1 1 1 # optimal, mc=1
-    250002f1 1 1 # optimal, mc=1
-    250002f2 0 1 # not optimal, mc=1
-    250002g1 3 1 #
-    250002g2 3 1 # 3 possible optimal curves in class g, mc=1 for all whichever is optimal
-    250002g3 3 1 #
-    250002g4 0 1 # not optimal, mc=1
-    250002h1 1 1 # optimal, mc=1
-    250002i1 2 1 #
-    250002i2 2 1 # 2 possible optimal curves in class i, mc=1 for all whichever is optimal
+    11 a 1 [0,-1,1,-10,-20] 1 1       # optimal, mc=1
+    11 a 2 [0,-1,1,-7820,-263580] 0 1 # not optimal, mc=1
+    11 a 3 [0,-1,1,0,0] 0 5           # not optimal, mc=5
+    499992 a 1 [0,-1,0,4481,148204] 3 1       # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 2 [0,-1,0,-29964,1526004] 3 1    # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 3 [0,-1,0,-446624,115024188] 3 1 # one of 3 possible optimal curves in class g, mc=1 for all whichever is optimal
+    499992 a 4 [0,-1,0,-164424,-24344100] 0 1 # not optimal, mc=1
     """
-    label, opt, mc = split(line)
+    N, iso, num, ainvs, opt, mc = split(line)
+    label = N+iso+num
     opt = int(opt)
     mc = int(mc)
     return label, {
@@ -621,9 +643,6 @@ def fix_isogeny_degrees(C):
     C['isogeny_degrees'] = new_isodegs
     return C
     
-
-filename_base_list = ['allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
-
 
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
@@ -657,14 +676,14 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     
     fs = open(searchfile, 'w')
     fe = open(extrafile, 'w')
-    curves._write_header_lines(fs, ["id"]+curves._search_cols)
-    curves._write_header_lines(fe, ["id"]+curves._extra_cols)
+    curves._write_header_lines(fs, ["id"]+curves.search_cols)
+    curves._write_header_lines(fe, ["id"]+curves.extra_cols)
 
     id = id0
     for c in records:
-        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves._search_cols]))
+        fs.write("\t".join([str(id)]+[encode(c[k]) for k in curves.search_cols]))
         fs.write("\n")
-        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves._extra_cols]))
+        fe.write("\t".join([str(id)]+[encode(c[k]) for k in curves.extra_cols]))
         fe.write("\n")
         id +=1
     fs.close()
@@ -672,10 +691,8 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     if verbose:
         print("Wrote {} lines to {} and {}".format(id-id0, searchfile, extrafile))
     
-# To run this go into the top-level lmfdb directory, run sage and give
-# the command
-# %runfile lmfdb/elliptic_curves/import_ec_data.py
 #
+
 
 def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     r""" Uses insert_many() if insert=True, which is faster but will create
@@ -690,18 +707,44 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     In case mode=='dump', files ec_curves.<N1>-<N2> and
     ec_curves.extras.<N1>-<N2> will be written, suitable for reading
     in using copy_from *after* prepending three header lines to each.
-    
+
+    NB The allgens() function requires the labels dics to be populated to alllabels must be read before allgens
+
+    To run this go into the top-level lmfdb directory, run sage and give
+    the command
+    sage: %runfile lmfdb/elliptic_curves/import_ec_data.py
+
+    The a typical command would be
+
+    sage: v = upload_to_db("/scratch/jcremona/ecdata/", 490000, 499999, mode='test')
+
+    to test that all is OK using input files in ~/ecdata/*/*.490000-499999
+
+    or
+
+    sage: upload_to_db("/scratch/jcremona/ecdata/", 490000, 499999, mode='upload')
+
+    to actually upload data.  NB In the default insert==True it is
+    important that the curves being uploaded are *not* already in
+    the database.  To clear out the range about to be uploaded (if necessary) do
+
+    sage: curves.delete({'conductor': {'$gte':490000, '$lte': 499999}})
+
+    Future plans: run with mode='dump' to do all the processing and
+    write to a file with correct headers (written but only partially
+    tested); then use curves.copy_from() to do the upload.
     """
-    allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
-    allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
-    intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
-    alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
-    alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
-    galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
-    twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
-    allisog_filename = 'allisog/allisog.%s-%s' % (min_N, max_N)
-    opt_man_filename = 'opt_man.%s-%s' % (min_N, max_N)
-    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
+    Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+    allbsd_filename = 'allbsd/allbsd.{}'.format(Nrange)
+    allgens_filename = 'allgens/allgens.{}'.format(Nrange)
+    intpts_filename = 'intpts/intpts.{}'.format(Nrange)
+    alldegphi_filename = 'alldegphi/alldegphi.{}'.format(Nrange)
+    alllabels_filename = 'alllabels/alllabels.{}'.format(Nrange)
+    galreps_filename = 'galrep/galrep.{}'.format(Nrange)
+    twoadic_filename = '2adic/2adic.{}'.format(Nrange)
+    allisog_filename = 'allisog/allisog.{}'.format(Nrange)
+    opt_man_filename = 'opt_man/opt_man.{}'.format(Nrange)
+    file_list = [alllabels_filename, allgens_filename, allbsd_filename, intpts_filename, alldegphi_filename, galreps_filename,twoadic_filename,allisog_filename,opt_man_filename]
     #    file_list = [twoadic_filename]
     #    file_list = [allgens_filename]
 
@@ -811,7 +854,8 @@ def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     if min_N==0:
         f = 'allisog/allisog.00000-09999'
     else:
-        f = 'allisog/allisog.%s-%s' % (min_N, max_N)
+        Nrange = str(min_N) if min_N==max_N else "{}-{}".format(min_N,max_N)
+        f = 'allisog/allisog.{}'.format(Nrange)
     h = open(os.path.join(base_path, f))
     print("Opened {}".format(os.path.join(base_path, f)))
     data = {}
@@ -1196,6 +1240,23 @@ def add_an(e, verbose=False):
         e['aplist'] = aplist
     return e
 
+def fix_quad_twist(c):
+    mqt = c['min_quad_twist']
+    if mqt['label'] == '':
+        if mqt['lmfdb_label'] == '':
+            ainvs = [ZZ(a) for a in EllipticCurve(c['ainvs']).quadratic_twist(mqt['disc']).ainvs()]
+            ct = curves.lucky({'ainvs':ainvs}, projection=['label', 'lmfdb_label'])
+        else:
+            ct = curves.lucky({'lmfdb_label':mqt['lmfdb_label']}, projection=['label', 'lmfdb_label'])
+        if ct==None:
+            print("failed to find curve (twist of {})".format(c['label']))
+        else:
+            mqt['label'] = ct['label']
+            if mqt['lmfdb_label'] == '':
+                mqt['lmfdb_label'] = ct['lmfdb_label']
+    return c    
+        
+
 # Rewrite function to add optimality and manin constant data.
 #
 # Run when the max conductor was 409999 and optimality was known for
@@ -1210,20 +1271,12 @@ def add_an(e, verbose=False):
 
 def read_opt_man_data():
     opt_man_dict = {}
-    for N in range(25):
-        fname = "/scratch/home/jcremona/ecdata/tmanin.{}0000-{}9999".format(N,N)
+    for N in range(50):
+        fname = "/scratch/home/jcremona/ecdata/opt_man/opt_man.{}0000-{}9999".format(N,N)
         print("Reading from {}".format(fname))
         for line in open(fname):
-            N, iso, num, ai, mc = line.split()
+            N, iso, num, ainvs, opt, mc = line.split()
             label = N+iso+num
-            mc = int(mc)
-            opt = 1 if num=='1' else 0
-            opt_man_dict[label] = {'optimality': opt, 'manin_constant': mc}
-    for N in range(25,41):
-        fname = "/scratch/home/jcremona/ecdata/opt_man.{}0000-{}9999".format(N,N)
-        print("Reading from {}".format(fname))
-        for line in open(fname):
-            label, opt, mc = line.split()
             mc = int(mc)
             opt = int(opt)
             opt_man_dict[label] = {'optimality': opt, 'manin_constant': mc}
@@ -1358,3 +1411,30 @@ def TraceHashClass(iso, E):
         th = TH_dict[iso] = TraceHash(E)
         return th
 
+
+def fix_opt(iso, test=True):
+    """Given an isogeny class of 2 or more curves, fixes the 'optimality'
+    column, so that the first has value 1 and the others 0.  Use for
+    certain special cases or after determining that curve #1 is
+    optimal in some range.
+    """
+    for c in curves.search({'iso':iso}, projection=['label', 'number', 'optimality']):
+        old_opt = c['optimality']
+        label = c['label']
+        if old_opt:
+            c['optimality'] = new_opt = int(c['number']==1)
+
+            # Now do the updates:
+
+            print("Updating optimality for {} from {} to {}".format(label, old_opt, new_opt))
+            if not test:
+                curves.upsert({'label':label},c)
+                print("changes made")
+            else:
+                print("Taking no further action")
+        else:
+            print("No action for curve {} whose optimality code is 0".format(label))
+
+opt_fixes = ['260116a', '280916a', '285172a', '291664a', '300368a', '302516a',
+             '306932a', '329492a', '343412a', '345808a', '367252a', '377012b',
+             '384464d', '391892a', '401972a', '425168b', '446288a', '481652a']

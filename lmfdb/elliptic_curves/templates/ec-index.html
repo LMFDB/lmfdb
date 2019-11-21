@@ -77,7 +77,6 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 </form>
 
 <h2> Search </h2>
-Please enter a value or leave blank:
 <p></p>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
@@ -149,15 +148,15 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 4 </span>
           </td>
-          <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
+          <td>{{ KNOWL('ec.isogeny_class',title="Curves per isogeny class") }}</td>
           <td>
              <select name='optimal', style="width: 155px">
     {% if optimal=='on' %}
-               <option value="">No</option>
-               <option value="on" selected="yes">Yes</option>
+               <option value="">all</option>
+               <option value="on" selected="yes">one</option>
     {% else %}
-               <option value="">No</option>
-               <option value="on">Yes</option>
+               <option value="">all</option>
+               <option value="on">one</option>
     {% endif %}
              </select>
           </td>
@@ -170,7 +169,7 @@ Please enter a value or leave blank:
 <td align=left>
 {{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}} 
   <select name='surj_quantifier'>
-  <option value='include'>include</option>
+  <option value=''>include</option>
   <option value='exactly'>exactly</option>
   </select>
 </td>
@@ -189,6 +188,16 @@ Please enter a value or leave blank:
         <td>
         <span class="formexample"> e.g. 16 </span>
         </td>
+        <td align=left>
+{{KNOWL('ec.q.reduction_type', title='Bad primes')}} 
+        <select name='bad_quantifier'>
+        <option value=''>include</option>
+        <option value="exclude">exclude</option>
+        <option value='exactly'>exactly</option>
+        </select>
+        </td>
+        <td><input type='text' name='bad_primes' size=10 example='5,13'></td>
+        <td><span class="formexample"> e.g. 5,13</span></td>
     </tr>
 
 <tr>

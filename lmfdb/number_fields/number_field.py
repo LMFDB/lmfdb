@@ -4,13 +4,13 @@ import ast, os, re, StringIO, time
 
 import flask
 from flask import render_template, request, url_for, redirect, send_file, make_response
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -37,7 +37,7 @@ nfields = None
 max_deg = None
 init_nf_flag = False
 
-# For imaginary quadratic field class group data
+# For imaginary quadratic field class group data 
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 
 def init_nf_count():
@@ -419,7 +419,10 @@ def render_field_webpage(args):
         data['discriminant'] = "\(%s\)" % str(D)
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
-    data['frob_data'], data['seeram'] = frobs(nf)
+    if nf.frobs():
+        data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
+    else: # fallback in case we haven't computed them in a case
+        data['frob_data'], data['seeram'] = frobs(nf)
     # This could put commas in the rd, we don't want to trigger spaces
     data['rd'] = ('$%s$' % fixed_prec(nf.rd(),2)).replace(',','{,}')
     # Bad prime information
@@ -472,20 +475,12 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    if nf.degree() > 1:
-        gpK = nf.gpK()
-        rootof1coeff = gpK.nfrootsof1()
-        rootofunityorder = int(rootof1coeff[0])
-        rootof1coeff = rootof1coeff[1]
-        rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
-        rootofunity += ' (order $%d$)' % rootofunityorder
-    else:
-        rootofunity = web_latex(Ra('-1'))+ ' (order $2$)'
+    rootofunity = '%s (order $%d$)' % (nf.root_of_1_gen(),nf.root_of_1_order())
 
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex_split_on_pm(nf.poly()),
+        'polynomial': web_latex(nf.poly()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
@@ -568,7 +563,7 @@ def render_field_webpage(args):
     label_orig = label
     if len(label)>25:
         label = label[:16]+'...'+label[-6:]
-    properties2 = [('Label', label),
+    properties = [('Label', label),
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
@@ -576,7 +571,7 @@ def render_field_webpage(args):
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_pretty_and_nTj(data['degree'], t))
+                   ('Galois group', group_pretty_and_nTj(data['degree'], t))
                    ]
     downloads = [('Stored data to gp', url_for('.nf_download', nf=label_orig, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
@@ -599,7 +594,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
+    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))
@@ -775,9 +770,36 @@ def residue_field_degrees_function(nf):
 
     return decomposition
 
+# Format Frobenius cycle types coming from the database
+def see_frobs(frob_data):
+    ans = []
+    seeram = False
+    plist = [p for p in primes(2, 60)]
+    for i in range(len(plist)):
+        p = plist[i]
+        dec = frob_data[i][1]
+        if dec[0] == 0:
+            ans.append([p, 'R'])
+            seeram = True
+        else:
+            s = '$'
+            firstone = True
+            for j in dec:
+                if firstone == False:
+                    s += '{,}\,'
+                if j[0]<15:
+                    s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
+                        label="%d.%d.0.1"%(p,j[0])), j[0])
+                else:
+                    s += str(j[0])
+                if j[1] > 1:
+                    s += '^{' + str(j[1]) + '}'
+                firstone = False
+            s += '$'
+            ans.append([p, s])
+    return ans, seeram
+
 # Compute Frobenius cycle types, returns string nicely presenting this
-
-
 def frobs(nf):
     frob_at_p = residue_field_degrees_function(nf.gpK())
     D = nf.disc()

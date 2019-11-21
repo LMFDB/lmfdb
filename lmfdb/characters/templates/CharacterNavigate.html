@@ -35,16 +35,14 @@
 </p>
 
 <h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }} or {{KNOWL('character.dirichlet.modulus', title="modulus") }} </h2>
+  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
 <form>
     <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
     <button type='submit' name='lookup' value='1'> Find  </button>
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13.</span>
+    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
 </form>
 
 <h2> Search for characters </h2>
-Enter criteria into one or more boxes to restrict the search.
-<p></p>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
@@ -89,7 +87,7 @@ Enter criteria into one or more boxes to restrict the search.
     </table>
     <p></p>
     <td>
-        <button type='submit' name='search' value='1' > Search </button>
+        <button type='submit' > Search </button>
     </td>
 </form>
 

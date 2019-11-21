@@ -25,8 +25,8 @@
 </tr>
 
 <tr>
-<td><input type='text' name='field' size=10 value="{{info.field}}" /></td>
-<td align=left><input type='text' name='conductor_norm' size=10
+<td><input type='text' name='field' placeholder='2.2.5.1' size=10 value="{{info.field}}" /></td>
+<td align=left><input type='text' name='conductor_norm' placeholder='31' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
 {% if info.query.number %}
@@ -93,16 +93,16 @@
 </tr>
 <tr>
           <td>
-          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
+          <input type='text' name='torsion' placeholder='2' size=10 value="{{info.torsion}}" />
           </td>
           <td>
-          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
+          <input type='text' name='isodeg' size=5 placeholder='16' value={{info.isodeg}}>
           </td>
           <td>
             {{ tor_struct_search_nf(info.torsion_structure)| safe }}
           </td>
           <td colspan=2>
-          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
+          <input type='text' name='jinv' placeholder='105474/49+a*34213/49' size=20 value="{{info.jinv}}" />
           </td>
 
 </tr>

@@ -44,7 +44,6 @@ Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') 
 
 <h2> Search </h2>
 
-<p>Please enter a value or leave blank:</p>
 <form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
@@ -58,10 +57,10 @@ Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') 
 <td><span class="formexample"> e.g. 4 or 1-6</td>
 </tr>
 <tr>
-<td>{{KNOWL('st_group.rational',title='Rational only')}}</td>
-<td><select name='rational_only' width="155" style="width: 155px">
-        <option value='yes' selected>yes</option>
-        <option value='no'>no</option>
+<td>{{KNOWL('st_group.rational',title='Include irrational')}}</td>
+<td><select name='include_irrational' width="155" style="width: 155px">
+        <option value='' selected>no</option>
+        <option value='yes'>yes</option>
 </select></td>
 <td><span class="formexample"> e.g. yes or no</td>
 </tr>
@@ -87,8 +86,7 @@ Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') 
 </tr>
 <tr
 ><td>Results to display</td>
-<td><input type='text' name='count' value=25 size=10 /></td>
-<td><span class="formexample"> e.g. 25 or 50</td>
+<td><input type='text' name='count' value=50 size=10 /></td>
 </tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button>

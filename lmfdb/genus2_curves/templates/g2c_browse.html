@@ -134,9 +134,16 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>Results to display</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
+<td>
+{{KNOWL('g2c.geometric_invariants', title='Geometric invariants')}} 
+  <select name='geometric_invariants_type'>
+  <option value=''>Igusa-Clebsch</option>
+  <option value='igusa_inv'>Igusa</option>
+  <option value='g2_inv'>G2</option>
+  </select>
+</td>
+<td><input type='text' name='geometric_invariants' size=10 example='[8,3172,30056,-692224]'></td>
+<td><span class="formexample"> e.g. [8,3172,30056,-692224]</span></td>
 <td>{{ KNOWL('ag.geom_simple', title='Geometrically simple') }}</td>
 <td><select name='is_simple_geom' width="122" style="width: 122px">
                    <option ></option>
@@ -144,9 +151,30 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
                    <option value='False'>False</option>
 </select></td>
 </tr>
+
+<tr>
+<td align=left>
+{{KNOWL('g2c.good_reduction', title='Bad primes')}} 
+  <select name='bad_quantifier'>
+  <option value=''>include</option>
+  <option value="exclude">exclude</option>
+  <option value='exactly'>exactly</option>
+  </select>
+</td>
+<td><input type='text' name='bad_primes' size=10 example='5,13'></td>
+<td><span class="formexample"> e.g. 5,13</span></td>
+
+</tr>
+
+<tr>
+<td>Results to display</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
+</tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button></td>
 </tr>
+
 </table>
 
 </form>

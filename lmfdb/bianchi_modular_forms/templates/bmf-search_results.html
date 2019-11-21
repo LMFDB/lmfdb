@@ -3,7 +3,7 @@
 
 <h2> Further refine search </h2>
 
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 {% include 'hidden_search_inputs.html' %}
 <table>
 <tr>
@@ -20,15 +20,15 @@
 <td><input type='text' name='dimension' placeholder='1' size=3  value={{info.dimension}}>
 <td> <select name='sfe'>
     {% if info.sfe == "any" %}
-    <option value="any" selected>any</option>
+    <option value="" selected>any</option>
     <option value="+1">+1</option>
     <option value="-1">-1</option>
     {% elif info.sfe == "+1" %}
-    <option value="any">any</option>
+    <option value="">any</option>
     <option value="+1" selected>+1</option>
     <option value="-1">-1</option>
     {% else %}
-    <option value="any">any</option>
+    <option value="">any</option>
     <option value="+1">+1</option>
     <option value="-1" selected>-1</option>
     {% endif %}
@@ -36,24 +36,24 @@
 <td> <select name='include_base_change'>
     {% if info.include_base_change == "off" %}
     <option value="off" selected>exclude</option>
-    <option value="on" >include</option>
+    <option value="" >include</option>
     {% else %}
     <option value="off">exclude</option>
-    <option value="on" selected>include</option>
+    <option value="" selected>include</option>
     {% endif %}
   </select>
 <td>
   <select name='include_cm'>
     {% if info.include_cm == "only" %}
-    <option value="include">include</option>
+    <option value="">include</option>
     <option value="exclude">exclude</option>
     <option value="only" selected>only</option>
     {% elif info.include_cm == "exclude" %}
-    <option value="include">include</option>
+    <option value="">include</option>
     <option value="exclude" selected>exclude</option>
     <option value="only">only</option>
     {% else %}
-    <option value="include" selected>include</option>
+    <option value="" selected>include</option>
     <option value="exclude">exclude</option>
     <option value="only">only</option>
     {% endif %}
