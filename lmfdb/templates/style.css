@@ -663,6 +663,8 @@ table a:hover {
     background: {{color.table_background_hover}};
 }
 
+
+
 table td.spacing {
   height: 20px;
 }
@@ -719,12 +721,43 @@ table.ntdata tr.endsection {
 }
 
 table.ntdata th {
-  padding: 3;
+  padding: 3px;
 }
 
 table.right_align_table td {
   text-align: right;
 }
+
+
+
+
+table.number_table td
+{
+text-align:right;
+border:0px;
+cellpadding:3px;
+
+}
+
+
+table.number_table {border-collapse:collapse;}
+
+table.number_table tr:nth-child(even) {
+    background: {{color.table_ntdata_background_cn}};
+}
+
+table.number_table thead th {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table thead th:first-child{
+border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table tbody th  {
+  border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
 
 /* TODO: where? */
 div.literature {
