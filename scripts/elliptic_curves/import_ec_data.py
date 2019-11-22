@@ -1291,11 +1291,13 @@ opt_man_data = {} # to keep pyflakes happy
 # before using the following function for rewriting
 
 def add_opt_man(c):
+    from lmfdb.elliptic_curves.web_ec import count_integral_points
     lab = c['label']
     if lab in opt_man_data:
         c.update(opt_man_data[lab])
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
+    c['num_int_pts'] = count_integral_points(c)
     return c
 
 def update_num_int_pts(rec):
