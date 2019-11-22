@@ -563,6 +563,10 @@ class WebG2C(object):
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = curve['real_period']
+            if (curve['regulator'] > -0.5):
+                data['regulator'] = curve['regulator']
+            else:
+                data['regulator'] = 'not computed yet'
             data['tama'] = ''
             for item in tama:
             	if item['tamagawa_number'] > 0:
