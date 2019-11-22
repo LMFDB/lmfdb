@@ -143,7 +143,7 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
-  <th class="center">{{ KNOWL('ec.torsion_order', title='Torsion order') }}</th>
+  <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
@@ -159,7 +159,7 @@ table td.params {
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
 <td class="params">{{info.curve_ainvs(curve)}}</td>
 <td class="center">{{curve.rank}}</td>
-<td class="center">{{curve.torsion}}</td>
+<td class="center">{{curve.torsion_structure}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
 {% endif %}

@@ -24,10 +24,6 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
         assert 'both matches' in L.data
 
 
-    def test_random(self):
-        L = self.tc.get('/HigherGenus/C/Aut/random',follow_redirects=True)
-        assert 'Dimension of the corresponding' in L.data
-
     def test_magma_download(self):
         L = self.tc.get('/HigherGenus/C/Aut/5.32-27.0.2-2-2-4.1/download/magma')
         assert '// Here we add an action to data.' in L.data

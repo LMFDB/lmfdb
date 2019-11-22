@@ -134,7 +134,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
           '<td class="center">[1, -1, 1, -1568, -4669]</td>',
-          '<td align="center">6</td>',
+          '<td align="center">[6]</td>',
           '<td align="center">',
           '1728</td>',
           '<td>\(\Gamma_0(N)\)-optimal</td>'

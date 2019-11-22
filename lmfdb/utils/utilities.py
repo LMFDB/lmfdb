@@ -21,8 +21,9 @@ from urllib import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
+# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
 from werkzeug.contrib.cache import SimpleCache
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
@@ -714,12 +715,16 @@ def make_bigint(s, cutoff=20, max_width=70):
     """
     Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
     def knowl_replacer(M):
-        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
+        if a[0:2] == r'<a':
+            return r'\)' + a + r'\('
+        else:
+            return a
     return Zmatcher.sub(knowl_replacer, s)
 
 
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
         lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
@@ -769,7 +774,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
     if cutoff:
         long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
@@ -830,8 +835,8 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
     - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
-    plus = r"\mathstrut +\mathstrut \) "
-    minus = r"\mathstrut -\mathstrut \) "
+    plus = r" + "
+    minus = r" - "
     m = len(coeffs)
     while m and coeffs[m-1] == 0:
         m -= 1
@@ -855,19 +860,19 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         c = coeffs[n]
         if n == 1:
             if superscript:
-                varpow = r"\(" + var
+                varpow = "" + var
             else:
-                varpow = r"\(%s_{1}"%var
+                varpow = r"%s_{1}"%var
         elif n > 1:
             if superscript:
-                varpow = r"\(%s^{%s}"%(var, n)
+                varpow = r"%s^{%s}"%(var, n)
             else:
-                varpow = r"\(%s_{%s}"%(var, n)
+                varpow = r"%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c, bigint_cutoff)
+                s += plus + str(c)
             elif c < 0:
-                s += minus + bigint_knowl(-c, bigint_cutoff)
+                s += minus + str(-c)
             break
         if c > 0:
             s += plus
@@ -876,14 +881,13 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c), bigint_cutoff) + " "
+            s += str(abs(c)) + " "
         s += varpow
-    if coeffs[0] == 0:
-        s += r"\)"
+    s += r"\)"
     if s.startswith(plus):
-        return s[len(plus):]
+        return "\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
-        return r"\(-\)" + s[len(minus):]
+        return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
@@ -1221,7 +1225,7 @@ def range_formatter(x):
         elif b is None:
             return "{0}-".format(a)
         elif a is None:
-            raise ValueError
+            return "..{0}".format(b)
         else:
             return "{0}-{1}".format(a,b)
     return str(x)

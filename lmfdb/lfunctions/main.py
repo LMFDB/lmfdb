@@ -489,7 +489,7 @@ def initLfunction(L, args, request):
     '''
     info = L.info
     info['args'] = args
-    info['properties2'] = set_gaga_properties(L)
+    info['properties'] = set_gaga_properties(L)
 
     set_bread_and_friends(info, L, request)
 

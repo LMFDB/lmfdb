@@ -322,4 +322,4 @@ def render_sample_page(family, sam, args, bread):
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
         
-    return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties2=properties, info=info)
+    return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)

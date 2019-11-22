@@ -133,7 +133,7 @@ def render_belyi_galmap_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("belyi_galmap.html",
-                           properties2=belyi_galmap.properties,
+                           properties=belyi_galmap.properties,
                            credit=credit_string,
                            info={},
                            data=belyi_galmap.data,
@@ -150,7 +150,7 @@ def render_belyi_passport_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("belyi_passport.html",
-                           properties2=belyi_passport.properties,
+                           properties=belyi_passport.properties,
                            credit=credit_string,
                            data=belyi_passport.data,
                            bread=belyi_passport.bread,
