@@ -163,14 +163,14 @@ class WebEC(object):
         """
         try:
             N, iso, number = split_lmfdb_label(label)
-            data = db.ec_temp.lucky({"lmfdb_label" : label})
+            data = db.ec_curves.lucky({"lmfdb_label" : label})
             if not data:
                 return "Curve not found" # caller must catch this and raise an error
             data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
-                data = db.ec_temp.lucky({"label" : label})
+                data = db.ec_curves.lucky({"label" : label})
                 if not data:
                     return "Curve not found" # caller must catch this and raise an error
                 data['label_type'] = 'Cremona'
@@ -227,7 +227,7 @@ class WebEC(object):
             data['an'] = self.anlist
             data['ap'] = self.aplist
         except AttributeError:
-            r = db.ec_temp.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
+            r = db.ec_curves.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
 
@@ -312,7 +312,7 @@ class WebEC(object):
         # known when its optimality code s >1 we need to look at the
         # code for the curve with 'number'==1.  Here we also record
         # the label of that curve for the template.
-        opt_curve = db.ec_temp.lucky({'iso':self.iso, 'number':3 if self.iso=='990h' else 1},projection=['label','lmfdb_label','optimality'])
+        opt_curve = db.ec_curves.lucky({'iso':self.iso, 'number':3 if self.iso=='990h' else 1},projection=['label','lmfdb_label','optimality'])
         data['manin_known'] = self.optimality==1 or (opt_curve['optimality']==1)
         data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
         data['p_adic_data_exists'] = False
@@ -538,7 +538,7 @@ class WebEC(object):
                 lastd = d
 
         ## Hard-code this for now.  While something like
-        ## max(db.ec_temp.search({},projection='tor_degs')) might
+        ## max(db.ec_curves.search({},projection='tor_degs')) might
         ## work, since 'tor_degs' is in the extra table it is very
         ## slow.  Note that the *only* place where this number is used
         ## is in the ec-curve template where it says "The number
