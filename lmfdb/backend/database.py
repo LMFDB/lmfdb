@@ -1369,7 +1369,7 @@ class PostgresTable(PostgresBase):
             elif key == '$like':
                 cmd = SQL("{0} LIKE %s")
             elif key == '$regex':
-                cmd = SQL("{0} ~ '%s'")
+                cmd = SQL("{0} ~ %s")
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if col_type == 'jsonb':
