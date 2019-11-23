@@ -151,7 +151,7 @@ import re, os
 import time
 from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, pari
 from lmfdb.utils import web_latex
-from lmfdb.elliptic_curves.web_ec import make_y_coord, count_integral_points
+from lmfdb.elliptic_curves.web_ec import count_integral_points
 from lmfdb import db
 print "setting curves"
 curves = db.ec_curves
