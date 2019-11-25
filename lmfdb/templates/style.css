@@ -656,7 +656,10 @@ table td.top {
 }
 table.ntdata td {
   white-space: nowrap;
-  padding: 3px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-right: 5px;
+  padding-left: 5px;
 }
 
 table a:hover {
@@ -696,6 +699,10 @@ table.ntdata > tbody > tr:first-child
 table.ntdata > thead > tr:first-child {
     background: {{color.table_ntdata_background_c1}};
 }
+
+table.ntdata > tbody > tr:last-child {
+    border-bottom:  2px solid {{ color.table_ntdata_border }};
+} 
 
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
