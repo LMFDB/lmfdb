@@ -88,6 +88,7 @@
 
 <tr>
 <td align=left colspan=2>{{KNOWL('ec.q.reduction_type', title='Bad primes')}}</td>
+<td>Number of {{ KNOWL('ec.q.integral_points',title="integral points") }}</td>
 </tr>
 
 <tr>
@@ -108,6 +109,9 @@
 {% endif %}
   </select>
 <input type='text' name='bad_primes' placeholder="2,3" size=10  value={{info.bad_primes}}>
+</td>
+<td>
+<input type='text' name='num_int_pts' example="2" size=10 value={{info.num_int_pts}}>
 </td>
 </tr>
 
@@ -143,6 +147,9 @@ table td.params {
 {% if info.surj_primes or info.nonsurj_primes  %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
+{% if info.num_int_pts %}
+  <th class="center">Number of {{KNOWL('ec.q.integral_points', title='integral points')}}</th>
+{% endif %}
 </tr>
 {% for curve in info.results: %}
 <tr>
@@ -155,6 +162,9 @@ table td.params {
 <td class="center">{{curve.torsion_structure}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
+{% endif %}
+{% if info.num_int_pts %}
+<td class="center">{{curve.num_int_pts}}</td>
 {% endif %}
 </tr>
 {% endfor %}

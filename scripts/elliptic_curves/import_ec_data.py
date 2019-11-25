@@ -151,6 +151,7 @@ import re, os
 import time
 from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, pari
 from lmfdb.utils import web_latex
+from lmfdb.elliptic_curves.web_ec import count_integral_points
 from lmfdb import db
 print "setting curves"
 curves = db.ec_curves
@@ -191,7 +192,6 @@ def split(line):
 
 lmfdb_label_to_label = {}
 label_to_lmfdb_label = {}
-    
 
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
@@ -285,7 +285,7 @@ def allgens(line):
     N = E.conductor()
     bad_p = N.prime_factors() # will be sorted
     num_bad_p = len(bad_p)
-    
+
     local_data = [{'p': int(ld.prime().gen()),
                            'ord_cond':int(ld.conductor_valuation()),
                            'ord_disc':int(ld.discriminant_valuation()),
@@ -310,14 +310,14 @@ def allgens(line):
         minq_ainvs = Etw.ainvs()
         r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs}, projection=['label','lmfdb_label'])
         min_quad_twist = {'label': r['label'], 'lmfdb_label':r['lmfdb_label'], 'disc':int(Dtw)}
-    
-    #print("computing hash")    
+
+    #print("computing hash")
     #trace_hash = ZZ(magma.TraceHash(E))
     #trace_hash = ZZ(magma.eval("TraceHash(EllipticCurve({}));".format(data[3])))
     trace_hash = TraceHashClass(iso, E)
     #trace_hash = ZZ(0)
-    #print("done")    
-        
+    #print("done")
+
     return label,  {
         'conductor': int(data[0]),
         'iso': iso,
@@ -570,7 +570,7 @@ def allisog(line, lmfdb_order=True):
     data = split(line)
     isomat = data[5]
     isomat = [[int(d) for d in row.split(",")] for row in isomat[2:-2].split("],[")]
-    
+
     # This dict stores the degrees of (cyclic) isogenies from each
     # curve.  We must compute this *before* the optional (but default)
     # reordering of the rows/cols.  The value for key n (=1,2,3,...)
@@ -642,7 +642,7 @@ def fix_isogeny_degrees(C):
     #print("changing isogeny_degrees for {} ({}) from {} to {}".format(C['label'],C['lmfdb_label'],old_isodegs,new_isodegs))
     C['isogeny_degrees'] = new_isodegs
     return C
-    
+
 
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
@@ -673,7 +673,7 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
         print("Writing records to {} and {}".format(searchfile, extrafile))
 
     # NB since records might be a generator object we only pass through it once.
-    
+
     fs = open(searchfile, 'w')
     fe = open(extrafile, 'w')
     curves._write_header_lines(fs, ["id"]+curves.search_cols)
@@ -690,7 +690,7 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     fe.close()
     if verbose:
         print("Wrote {} lines to {} and {}".format(id-id0, searchfile, extrafile))
-    
+
 #
 
 
@@ -822,7 +822,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     else:
         print("Some records have missing keys, no uploading")
         return
-    
+
     if insert:
         if mode=='test':
             print("(not) inserting all data")
@@ -1029,7 +1029,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
 
     tor_gro_keys = ['tor_gro', 'tor_degs', 'tor_fields']
     tor_gro_bound = 400000
-    
+
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
@@ -1122,7 +1122,7 @@ def update_stats(recount=True, verbose=True):
         ncu = ec_count({'sha':s**2})
         if verbose and ncu:
             print("{} curves have Sha order {}^2".format(ncu,s))
-    
+
 def update_torsion_growth_stats(verbose=True):
     # torsion growth:
     if verbose:
@@ -1254,8 +1254,8 @@ def fix_quad_twist(c):
             mqt['label'] = ct['label']
             if mqt['lmfdb_label'] == '':
                 mqt['lmfdb_label'] = ct['lmfdb_label']
-    return c    
-        
+    return c
+
 
 # Rewrite function to add optimality and manin constant data.
 #
@@ -1296,8 +1296,11 @@ def add_opt_man(c):
         c.update(opt_man_data[lab])
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
-    c['num_int_pts'] = len(c['xcoord_integral_points'])
     return c
+
+def update_num_int_pts(rec):
+    rec['num_int_pts'] = count_integral_points(rec)
+    return rec
 
 # Sage translation of the Magma function TraceHash(), just for elliptic curves /Q
 
