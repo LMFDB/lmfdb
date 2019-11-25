@@ -246,7 +246,6 @@ def download_search(info):
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):
-    print info
     parse_rational(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
     parse_ints(info,query,'torsion','torsion order')
