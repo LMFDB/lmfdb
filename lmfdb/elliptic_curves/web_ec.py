@@ -14,7 +14,7 @@ from sage.all import EllipticCurve, latex, ZZ, QQ, RR, prod, Factorization, Powe
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 300000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -291,30 +291,50 @@ class WebEC(object):
         # isogeny class, obviously) and expected for all N.
 
         # Column 'optimality' is 1 for certainly optimal curves, 0 for
-        # non-optimal curves, and is n>1 if the curve is one of n in
-        # the isogeny class which may be optimal given current
+        # certainly non-optimal curves, and is n>1 if the curve is one
+        # of n in the isogeny class which may be optimal given current
         # knowledge.
 
         # Column "manin_constant' is the correct Manin constant
-        # assuming that the curve with (Cremona) number 1 in the class
-        # is optimal.
+        # assuming that the optimal curve in the class is known, or
+        # otherwise if it is the curve with (Cremona) number 1.
 
-        data['optimality_code'] = self.optimality
-        # The "or" clause in the next line is so that we can update
-        # things by changing one line in this file even without
-        # changing the data:
-        data['optimality_known'] = (self.optimality < 2) or (N<OPTIMALITY_BOUND)
+        # The code here allows us to update the display correctly by
+        # changing one line in this file (defining OPTIMALITY_BOUND)
+        # without changing the data.
+
         data['optimality_bound'] = OPTIMALITY_BOUND
-        # (conditional on data['optimality_known'])
-        data['manin_constant'] = self.manin_constant
+        data['manin_constant'] = self.manin_constant # (conditional on data['optimality_known'])
 
-        # To detect whether the optimal curve in this curve's class is
-        # known when its optimality code s >1 we need to look at the
-        # code for the curve with 'number'==1.  Here we also record
-        # the label of that curve for the template.
-        opt_curve = db.ec_curves.lucky({'iso':self.iso, 'number':3 if self.iso=='990h' else 1},projection=['label','lmfdb_label','optimality'])
-        data['manin_known'] = self.optimality==1 or (opt_curve['optimality']==1)
-        data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
+        if N<OPTIMALITY_BOUND:
+
+            data['optimality_code'] = int(self.number == (3 if self.iso=='990h' else 1))
+            data['optimality_known'] = True
+            data['manin_known'] = True
+            if self.label_type=='Cremona':
+                data['optimal_label'] = '990h3' if self.iso=='990h' else self.iso+'1'
+            else:
+                data['optimal_label'] = '990.i3' if self.lmfdb_iso=='990.i' else self.lmfdb_iso+'1'
+
+        else:
+
+            data['optimality_code'] = self.optimality
+            data['optimality_known'] = (self.optimality < 2)
+
+            if self.optimality==1:
+                data['manin_known'] = True
+                data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+            else:
+                if self.number==1:
+                    data['manin_known'] = False
+                    data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+                else:
+                    # find curve #1 in this class and its optimailty code:
+                    opt_curve = db.ec_curves.lucky({'iso': self.iso, 'number': 1},
+                                                   projection=['label','lmfdb_label','optimality'])
+                    data['manin_known'] = (opt_curve['optimality']==1)
+                    data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
+
         data['p_adic_data_exists'] = False
         if data['optimality_code']==1:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
