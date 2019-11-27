@@ -658,8 +658,8 @@ table.ntdata td {
   white-space: nowrap;
   padding-top: 3px;
   padding-bottom: 3px;
-  padding-right: 5px;
-  padding-left: 5px;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table a:hover {
@@ -679,13 +679,20 @@ table.ntdata {
   margin-top: 15px;
   margin-bottom: 15px;
 }
-table.ntdata thead tr {
+table.ntdata thead th {
   background: {{ color.table_ntdata_background }};
+}
+table.ntdata > thead > tr:last-child {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
 table.ntdata th {
   text-align: left;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table.ntdata > tr.odd,
@@ -725,10 +732,6 @@ table.ntdata tr.line {
 }
 table.ntdata tr.endsection {
     border-bottom: 1px solid {{color.table_ntdata_border}};
-}
-
-table.ntdata th {
-  padding: 3px;
 }
 
 table.right_align_table td {
