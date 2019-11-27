@@ -1805,10 +1805,6 @@ class PostgresTable(PostgresBase):
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
-            if raw_sort:
-                primary_sort = raw_sort[0][0]
-            else:
-                primary_sort = None
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
         nres = None if limit is None else self.stats.quick_count(query)
@@ -1844,9 +1840,6 @@ class PostgresTable(PostgresBase):
                 total = 0
                 prelimit = max(limit + offset, self._count_cutoff) if nres is None else limit + offset
                 exact_count = True # updated below if we have a subquery hitting the prelimit
-                # short_circuit determines whether we execute all queries; not all are needed
-                # if we reach the limit and the queries all include the primary sort key
-                short_circuit = primary_sort is None or all(primary_sort in Q for Q in queries)
                 for Q in queries:
                     cur = run_one_query(Q, prelimit, 0)
                     if cur.rowcount == prelimit and nres is None:
@@ -1856,12 +1849,8 @@ class PostgresTable(PostgresBase):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(list(self._search_iterator(cur, search_cols,
-                                                              extra_cols, projection=1)))
-                    if short_circuit and total >= prelimit:
-                        if nres is None:
-                            exact_count = False
-                        break
+                    results.extend(self._search_iterator(cur, search_cols,
+                                                         extra_cols, projection=1))
                 if all((asc == 1 or self.col_type[col] in number_types) for col, asc in raw_sort):
                     # every key is in increasing order or numeric so we can just use a tuple as a sort key
                     if raw_sort:
