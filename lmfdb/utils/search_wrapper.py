@@ -16,13 +16,13 @@ def use_split_ors(info, query, split_ors, offset, table):
 
     - ``info`` -- the info dictionary passed in from the front end
     - ``query`` -- the processed query dictionary for passage to postgres
-    - ``split_ors`` -- either None (never split ors), or a list of fields in ``info`` whose presence will lead to splitting ors.
+    - ``split_ors`` -- either None (never split ors), or a list of fields in ``query['$or']`` whose presence will lead to splitting ors.
     - ``offset`` -- the current offset for the query
     - ``table`` -- the search table on which the query will be executed
     """
     return (split_ors is not None and
-            any(field in info for field in split_ors) and
             len(query.get('$or',[])) > 1 and
+            any(field in opt for field in split_ors for opt in query['$or']) and
             # We don't support large offsets since sorting in Python requires
             #fetching all records, starting from 0
             offset < table._count_cutoff)
