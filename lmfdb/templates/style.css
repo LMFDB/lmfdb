@@ -679,8 +679,13 @@ table.ntdata {
   margin-top: 15px;
   margin-bottom: 15px;
 }
-table.ntdata thead tr {
+table.ntdata thead th {
   background: {{ color.table_ntdata_background }};
+}
+table.ntdata > thead > tr:last-child {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
