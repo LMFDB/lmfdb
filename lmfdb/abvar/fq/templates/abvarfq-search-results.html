@@ -14,7 +14,8 @@ table td.params {
     font-family: monospace;
 }
 </style>
-<table>
+<table class=ntdata>
+<thead>
   <tr>
     <th class="center">{{ KNOWL('av.fq.lmfdb_label',title="LMFDB label") }}</th>
     <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
@@ -23,6 +24,7 @@ table td.params {
     <th class="center">{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</th>
     <th align="left">{{ KNOWL('av.decomposition',title="isogeny factors") }}</th>
   </tr>
+</thead>
   {% for abvar in info.results: %}
   <tr>
     <td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
@@ -36,7 +38,6 @@ table td.params {
   </tr>
   {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}
