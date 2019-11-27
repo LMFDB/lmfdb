@@ -1805,10 +1805,6 @@ class PostgresTable(PostgresBase):
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
-            if raw_sort:
-                primary_sort = raw_sort[0][0]
-            else:
-                primary_sort = None
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
         nres = None if limit is None else self.stats.quick_count(query)
