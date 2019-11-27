@@ -86,3 +86,6 @@ class NumberFieldTest(LmfdbTest):
     def test_split_ors(self):
         self.check_args('/NumberField/?signature=%5B0%2C3%5D&galois_group=S3', '6.0.177147.2')
         self.check_args('/NumberField/?signature=%5B3%2C0%5D&galois_group=S3', '3.3.229.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=3%2C6','4.4.1311025.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=6%2C3','4.4.1311025.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=5-6%2C3','4.4.485809.1')
