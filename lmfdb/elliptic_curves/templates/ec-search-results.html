@@ -131,10 +131,12 @@ table td.params {
 }
 </style>
 
-<table>
+<table class='ntdata'>
+<thead>
   <tr>
     <th class="center" colspan=2>Curve</th>
     <th class="center" colspan=2>{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
+    <th colspan=3></th>
 </tr>
 <tr>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -151,6 +153,7 @@ table td.params {
   <th class="center">Number of {{KNOWL('ec.q.integral_points', title='integral points')}}</th>
 {% endif %}
 </tr>
+</thead>
 {% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url_LMFDB(curve)}}">{{curve.lmfdb_label}}</a></td>
@@ -169,7 +172,6 @@ table td.params {
 </tr>
 {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}
