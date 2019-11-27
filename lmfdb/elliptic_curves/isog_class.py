@@ -76,7 +76,6 @@ class ECisog_class(object):
         self.optimal_label = self.label if self.label_type == 'Cremona' else self.lmfdb_label
 
         if N<OPTIMALITY_BOUND:
-            print("N={}, bound={}".format(N,OPTIMALITY_BOUND))
             for c in self.curves:
                 c['optimal'] = (c['number'] == (3 if self.iso=='990h' else 1))
                 c['optimality_known'] = True
