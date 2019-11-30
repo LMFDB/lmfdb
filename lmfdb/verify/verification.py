@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
@@ -263,7 +263,7 @@ class TableChecker(object):
             if scount:
                 reports.append(pluralize(scount, sname))
         status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
-        print "%s.%s %s in %.2fs\n" % (self.__class__.__name__, check, status, time.time() - start)
+        print("%s.%s %s in %.2fs\n" % (self.__class__.__name__, check, status, time.time() - start))
 
     def run(self, typ, logdir, label=None):
         self._cur_label = label
@@ -310,7 +310,7 @@ class TableChecker(object):
         if verbose:
             if msg is None:
                 msg = "{0} != {1}"
-            print msg.format(a, b)
+            print(msg.format(a, b))
         return False
 
     def _make_sql(self, s, tablename=None):

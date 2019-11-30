@@ -13,7 +13,7 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 ########################################################################
-
+from __future__ import print_function
 
 from sage.structure.sage_object import SageObject
 import sage.rings.all
@@ -153,7 +153,7 @@ def symmetricEulerFactor(E, m, p):
     t = R('t')
     F = 1
 
-    print type(F)
+    print(type(F))
 
     for i in range(0, (m - 1) / 2 + 1):
         s = m - 2 * i
