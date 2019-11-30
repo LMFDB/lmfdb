@@ -1,4 +1,5 @@
 #!/usr/local/bin/sage -python
+from __future__ import print_function
 import sys, os
 import re
 import json
@@ -55,7 +56,7 @@ def artrepload(l):
   if ar1 is not None:
     old += 1
     if (count+old) % 100==0:
-      print "%s new, %s old" %(str(count),str(old))
+      print("%s new, %s old" %(str(count),str(old)))
     return 
   l['Conductor'] = ZZ(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
@@ -72,7 +73,7 @@ def artrepload(l):
   count +=1
   outrecs.append(l)
   if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+    print("%s new, %s old" %(str(count),str(old)))
   return
 
 def nfgalload(l):
@@ -83,7 +84,7 @@ def nfgalload(l):
   if ff is not None:
     old += 1
     if (count+old) % 100==0:
-      print "%s new, %s old" %(str(count),str(old))
+      print("%s new, %s old" %(str(count),str(old)))
     return 
 
   artreps=l['ArtinReps']
@@ -94,13 +95,13 @@ def nfgalload(l):
   outrecs.append(l)
   count +=1
   if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+    print("%s new, %s old" %(str(count),str(old)))
   return
 
 
 # processing file names
 for path in sys.argv[1:]:
-    print path
+    print(path)
     count = 0
     old = 0
     filename = os.path.basename(path)
@@ -113,15 +114,15 @@ for path in sys.argv[1:]:
         line = line.strip()
         if re.match(r'\S',line):
             l = json.loads(line)
-	    if case == 'nfgal':
-	      nfgalload(l)
-	    if case == 'art rep':
-	      artrepload(l)
+            if case == 'nfgal':
+              nfgalload(l)
+            if case == 'art rep':
+              artrepload(l)
     if outrecs:
         if case == 'nfgal':
           nfgal.insert_many(outrecs)
         if case == 'art rep':
           rep.insert_many(outrecs)
-    print "%s new, %s old" %(str(count),str(old))
+    print("%s new, %s old" %(str(count),str(old)))
     fn.close()
 

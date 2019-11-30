@@ -1,4 +1,5 @@
 # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_euler_factors.py 40 ::: {0..39}
+from __future__ import print_function
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
@@ -48,7 +49,7 @@ def fix_euler(idnumber, an_list_bound = 11):
     lfun = db.lfunc_lfunctions.lucky({'id':idnumber}, sort = [])
     euler_factors = lfun['euler_factors'] # up to 30 euler factors
     bad_lfactors = lfun['bad_lfactors']
-    print lfun['origin']
+    print(lfun['origin'])
     assert lfun['origin'][:len(start_origin)] == start_origin, lfun['origin']
     label = lfun['origin'][len(start_origin):].replace('/','.')
     newform = db.mf_newforms.lucky({'label':label}, ['hecke_orbit_code', 'level'])
@@ -120,8 +121,8 @@ if len(sys.argv) == 3:
     for j, i in enumerate(ids):
         fix_euler(i)
         if j % int(len(ids)*0.01) == 0:
-            print '%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids)))
+            print('%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids))))
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])
