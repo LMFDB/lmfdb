@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
@@ -17,7 +18,7 @@ def ynu(t):
     elif t in [-1, "no"]:
         return "no"
     else:
-        print t
+        print(t)
         raise RuntimeError
 
 class AbvarFqStats(StatsDisplay):
