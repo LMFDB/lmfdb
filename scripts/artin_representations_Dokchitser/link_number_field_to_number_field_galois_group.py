@@ -6,19 +6,20 @@
 
 # This could be improved by working in two passes: one to compute the polredabs and store it, one to link to the other database. 
 # This would be at the expense of further deviating from Tim's original data submission
+from __future__ import print_function
 
 import sys
 LMFDB_FOLDER = "../../../"
 sys.path.append(LMFDB_FOLDER)
 
-print "Importing sage in base"
+print("Importing sage in base")
 import lmfdb.base as base
 from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup as NF
-print "Sage loaded"
+print("Sage loaded")
 
-print "getting connection"
+print("getting connection")
 base._init(37010, "")
-print "I have it"
+print("I have it")
 
 base.getDBConnection()
 
@@ -29,7 +30,7 @@ for degree in range(1,100):
 
     for nf_dict in NF.collection().find({"TransitiveDegree":degree, "label": {"$exists": False}}).sort("QpRts-p", -1):
         tmp += 1
-        print tmp, " out of ", total, " at degree ", degree, " (with QpRts-p ", nf_dict["QpRts-p"], ")"
+        print(tmp, " out of ", total, " at degree ", degree, " (with QpRts-p ", nf_dict["QpRts-p"], ")")
         from copy import deepcopy
         nf_dict2 = deepcopy(nf_dict)
         nf = NF(data=nf_dict)
@@ -38,10 +39,10 @@ for degree in range(1,100):
             # This is needed to avoid a bug that appears sometimes with pari(x^8-45).polredabs()
             # It looks like this bug was fixed upstream in an upcoming release of pari
             if nf.label():
-                print nf.polynomial(), nf.polredabs(), nf.label()
+                print(nf.polynomial(), nf.polredabs(), nf.label())
                 nf_dict2["label"] = nf.label()
                 NF.collection().save(nf_dict2)
             else:
-                print nf.polynomial(), "No label added!"
+                print(nf.polynomial(), "No label added!")
 
-print "Done, in ", NF.collection()
+print("Done, in ", NF.collection())

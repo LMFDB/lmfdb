@@ -1,3 +1,4 @@
+from __future__ import print_function
 from sage.all import ZZ,QQ,PolynomialRing,EllipticCurve,pari
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.nfutils.psort import ideal_label
@@ -28,7 +29,7 @@ def EllipticCurve_from_hoeij_data(line):
     if y_rel.degree()==1:
         y = - y_rel[0]
     else:
-        #print "needing an extension!!!!"
+        #print("needing an extension!!!!")
         L = K.extension(y_rel,'y')
         y = L.gen(0)
         K = L
@@ -66,9 +67,9 @@ def to_polredabs(K):
     g = pari(f).polredabs(1)
     g,h = g[0].sage(locals={'x':x}),g[1].lift().sage(locals={'x':x})
     if debug:
-        print 'f',f
-        print 'g',g
-        print 'h',h
+        print('f', f)
+        print('g', g)
+        print('h', h)
     M = QQ.extension(g,'w')
     m2 = L.hom([h(M.gen(0))])
     return m2*m1
