@@ -23,8 +23,8 @@ from collections import defaultdict
 logger = make_logger("hgcwa")
 
 #Parsing group order
-LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d+)(\(g-1\))))(,(\d+|(\d*-(\d+)?)|((\d+)(\(g-1\)))))*$')
-GENUS_RE = re.compile(r'^(\d+)(\(g-1\))$')
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d+)\**(\(g-1\)|g-\d+)))(,(\d+|(\d*-(\d+)?)|((\d+)\**(\(g-1\)|g-\d+))))*$')
+GENUS_RE = re.compile(r'^(\d+)\**(\(g-1\)|g-(\d+))$')
 
 # Determining what kind of label
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-?[^\.]*$)')
@@ -448,6 +448,8 @@ def hgcwa_code_download_search(info):
 #Similar to parse_ints in lmfdb/utils
 #Add searching with genus variable for group orders
 def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, instance=1):
+    print 'HEREEEE'
+    print arg
     if parse_endpoint is None:
         parse_endpoint = parse_singleton
     if type(arg) == str:
@@ -460,27 +462,38 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
         ret = []
         for a in tmp:
             if a[0] == key:
-                ret.append({a[0]:a[1]})
+                if len(a) == 3:
+                    ret.append({a[0]:a[1], 'genus': a[2]})
+                else:
+                    ret.append({a[0]:a[1]})
             else:
                 for i in range(0, len(a)):
-                    ret.append({a[i][0]: a[i][1]})
-        #tmp = [{a[0]: a[1]} if a[0] == key else {a[i][0]: a[i][1]} for i in range(0,len(a)) for a in tmp]
+                    ret.append({a[i][0]: a[i][1], 'genus': a[i][2]})
         return ['$or', ret]
-    elif 'g' in arg[1:]:
+    elif 'g' in arg:
+        print GENUS_RE.match(arg).groups()
         num = int(GENUS_RE.match(arg).groups()[0])
+        # Check if the equation is in correct form
+        if '(' not in arg: #84g-84
+            if num != int(GENUS_RE.match(arg).groups()[-1]):
+                raise ValueError("It needs to be an integer (such as 25), \
+                    a range of integers (such as 2-10 or 2..10), \
+                    an equation with a variable g for genus (such as 84*(g-1), 84(g-1), 84*g-84 or 84g-84), \
+                    or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        
         genus_list = db.hgcwa_passports.distinct('genus')
         genus_list.sort()
         min_genus = genus_list[0]
         max_genus = genus_list[-1]
-        group_orders = []
+        queries = []
         for g in range(min_genus,max_genus+1):
             group_order = num * (g - 1)
-            group_orders.append(group_order)
+            queries.append((group_order, g))
         if instance == 1: #If there is only one search value which is num*(g-1)
-            return ['$or', [{key: group_order} for group_order in group_orders]]
+            return ['$or', [{key: group_order, 'genus': g} for (group_order,g) in queries]]
         else:
-            return [[key, group_order] for group_order in group_orders] #Nested list
-    elif '-' in arg[1:] and 'g' not in arg[1:]:
+            return [[key, group_order, g] for (group_order,g) in queries] #Nested list
+    elif '-' in arg and 'g' not in arg:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
@@ -498,8 +511,10 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
     else:
-        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
-
+        raise ValueError("It needs to be an integer (such as 25), \
+                    a range of integers (such as 2-10 or 2..10), \
+                    an equation with a variable g for genus (such as 84*(g-1), 84(g-1), 84*g-84 or 84g-84), \
+                    or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_wrap(template="hgcwa-search.html",
         table=db.hgcwa_passports,
