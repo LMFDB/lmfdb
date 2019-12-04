@@ -598,6 +598,7 @@ def render_family(args):
         info.update({'topological_num': len(Ltopo_rep)})
 
         info.update({'passport': Lall})
+        info.update({'passport_num': len(Lall)})
 
 
         g2List = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']

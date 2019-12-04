@@ -39,7 +39,7 @@
 
 
 <p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
-{% if info.numb == 1%}
+{% if info.passport_num == 1%} <!-- one passport -->
   <table>
     <tr>
       <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -53,9 +53,8 @@
     </tr>
     {% endfor %}
   </table>
-{% else %} <!-- info.numb > 1 -->
-
-  {% if info.topological_num <= 1 %}  
+{% else %} <!-- multiple passports -->
+  {% if info.topological_num < 1 %}  
     <table>
       <tr>
         <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -70,7 +69,7 @@
       {% endfor %}
     </table>
   
-  {% else %} <!-- info.topological_num > 1 -->
+  {% else %} <!-- info.topological_num >= 1 -->
     <div class="tab">
       <button type="submit" class="tablinks" 
         onclick="openData(event,'representative')"id="defaultOpen">
