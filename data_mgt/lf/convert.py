@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # the purpose of this demo is to read in the yaml file
 # and produce the protobuf output.
+from __future__ import print_function
 
 import os, sys
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
@@ -21,13 +22,13 @@ data_pb = lf.LFunction()
 for field in ['logsign', 'arithmetic', 'self_dual', 'primitive',
               'degree', 'level', 'character_mod', 'character_nr', 'Gamma_factor_precision']:
     d = data[field]
-    print "%s => %s" % (field, d)
+    print("%s => %s" % (field, d))
     setattr(data_pb, field, d)
 
 for field in ['character', 'signature', 'real_shiftsR', 'real_shiftsC', 'imaginary_shiftsR', 'imaginary_shiftsC']:
     # .append if just one value
     d = data[field]
-    print "%s => %s" % (field, d)
+    print("%s => %s" % (field, d))
     getattr(data_pb, field).extend(d)
 
 cdeci = data_pb.coefficients_decimal
