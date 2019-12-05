@@ -46,6 +46,13 @@ class proportioners(object):
     ##################################################################
 
     @classmethod
+    def per_total(cls, grid, row_headers, col_headers, stats):
+        total = sum(D['count'] for row in grid for D in row)
+        for row in grid:
+            for D in row:
+                D['proportion'] = _format_percentage(D['count'], total)
+
+    @classmethod
     def per_row_total(cls, grid, row_headers, col_headers, stats):
         """
         Total is determined as the sum of the current row.
@@ -330,6 +337,7 @@ class StatsDisplay(UniqueRepresentation):
       dictionaries with the following keys (optional except ``cols``):
 
       - ``cols`` -- a list of columns to analyze.
+      - ``constraint`` -- a query dictionary, giving constraints on the items included.
       - ``buckets`` -- a dictionary with columns as keys and list of strings such as '2-10' as values.
       - ``table`` -- a PostgresStatsTable containing the columns.
       - ``top_title`` -- a list of pairs (text, knowl) for the header of this statistics block.
@@ -387,7 +395,7 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _dynamic_cols(self):
-        return [('none', 'None')] + [(col, self._short_display[col].capitalize()) for col in self.dynamic_cols]
+        return [('none', 'None')] + [(col, self._short_display[col]) for col in self.dynamic_cols]
 
     @property
     def _default_buckets(self):

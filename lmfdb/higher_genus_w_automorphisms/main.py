@@ -666,7 +666,7 @@ def render_family(args):
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2, friends=friends,
+                               properties=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads, credit=credit)
 
 
@@ -838,7 +838,7 @@ def render_passport(args):
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2, friends=friends,
+                               properties=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads,
                                credit=credit)
 

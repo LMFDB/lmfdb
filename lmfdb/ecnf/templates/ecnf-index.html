@@ -57,7 +57,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 
 
 <h2> Search </h2>
-Please enter a value or leave blank:
+
 <p></p>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
@@ -163,17 +163,10 @@ Please enter a value or leave blank:
       </td>
       <td colspan=3>&nbsp;</td>
     </tr>
- <tr>
-<td>Results to display</td><td> <input type='text' name='count' value=50 size='10'></td>
- </tr>
-
-  </table>
-<p></p>
-<td><button type='submit' value='Search'>Search</button></td>
-<p></p>
+<tr><td>Results to display</td><td> <input type='text' name='count' value=50 size='10'></td></tr>
+<tr><td><button type='submit' value='Search'>Search</button></td></tr>
+</table>
 </form>
-
-
 
 
 {% if DEBUG %}

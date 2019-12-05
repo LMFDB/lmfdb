@@ -28,6 +28,7 @@ This file will coordinate uploading among multiple processes.
 As processes begin uploading, they will claim g and q, changing
 the yaml file, and eventually marking them as completed.
 """
+from __future__ import print_function
 
 import os
 import sys, time, datetime
@@ -66,7 +67,7 @@ def do_import(ll, db, saving):
     if saving:
         db.update({'label': label} , {"$set": data}, upsert=True)
     else:
-        print data
+        print(data)
 
 class lock_yaml(object):
     """
@@ -130,7 +131,7 @@ def do_import_one(g, q, db, status_file, datadir):
                             if not line_all[2:line_all.find(',')-1].startswith(line_prog.strip()):
                                 raise RuntimeError("Label mismatch")
                         if cur_line % 1000 == 0:
-                            print "Skipping previously uploaded (%s/%s)"%(cur_line, num_lines)
+                            print("Skipping previously uploaded (%s/%s)"%(cur_line, num_lines))
                         continue
                     if start_line is None:
                         start_line = cur_line
@@ -152,10 +153,10 @@ def do_import_one(g, q, db, status_file, datadir):
                             lower_bound = datetime.timedelta(seconds=int(lower_bound))
                             upper_bound = datetime.timedelta(seconds=int(upper_bound))
                             to_print += "  %s to %s remaining."%(lower_bound, upper_bound)
-                        print to_print
+                        print(to_print)
                     Fwrite.write(data[0] + '\n')
     os.unlink(progress_file)
-    print "Upload (g=%s, q=%s) finished."%(g, q)
+    print("Upload (g=%s, q=%s) finished."%(g, q))
     sys.stdout.flush()
     with lock_yaml():
         with open(status_file) as F:
@@ -239,7 +240,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
             with open(status_file + '.tmpreset', 'w') as F:
                 yaml.dump(status, F)
             shutil.move(status_file + '.tmpreset', status_file)
-        print "Status file reset"
+        print("Status file reset")
         return
     port_file = os.path.join(rootdir, 'curport')
     if port is None:
@@ -269,7 +270,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
         db.create_index('known_jacobian')
         db.create_index('principally_polarizable')
         db.create_index('decomposition')
-        print "finished indices"
+        print("finished indices")
 
         while True:
             with lock_yaml():
@@ -279,7 +280,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
                 if not in_progress:
                     ready = status.get('B_ready_to_upload', [])
                     if not ready:
-                        print "No more data to upload"
+                        print("No more data to upload")
                         break
                     in_progress = status['D_uploading_%s'%(pid)] = ready.pop(0)
                     with open(status_file + '.tmp%s'%pid, 'w') as F:
@@ -316,7 +317,7 @@ def update_stats(port = 37010, datadir = None):
             counts[str(q)] = [0]
             found_zero = False
             for g in range(1, maxg+1):
-                print "Counting g=%s, q=%s..."%(g, q),
+                print("Counting g=%s, q=%s..."%(g, q),)
                 try:
                     n = db.find({'g': g, 'q': q}).count()
                 except KeyError:
@@ -330,54 +331,54 @@ def update_stats(port = 37010, datadir = None):
                 if n == 0:
                     found_zero = True
                     if num_lines:
-                        print "File not uploaded!"
+                        print("File not uploaded!")
                         mismatches.append((g, q, 0, num_lines))
                     else:
-                        print "OK."
+                        print("OK.")
                 else:
                     if found_zero:
-                        print "Nonzero count after zero count!",
+                        print("Nonzero count after zero count!", end=" ")
                         mismatches.append((g, q, None, None))
                     if num_lines:
                         with open(filename) as F:
                             for num_lines, line in enumerate(F, 1):
                                 pass
                         if num_lines == n:
-                            print "OK."
+                            print("OK.")
                             counts[str(q)].append(n)
                         else:
-                            print "Count mismatch!"
+                            print("Count mismatch!")
                             mismatches.append((g, q, n, num_lines))
                     else:
-                        print "Extra data in database!"
+                        print("Extra data in database!")
                         mismatches.append((g, q, n, None))
-        print "Checking for missing files...."
+        print("Checking for missing files....")
         missing = False
         for filename in os.listdir(datadir):
             match = allmatcher.match(filename)
             if match:
                 g, q = map(int, match.groups())
                 if g not in gs or q not in qs:
-                    print filename, "not uploaded!"
+                    print(filename, "not uploaded!")
                     missing = True
                     mismatches.append((g, q, None, -1))
         if not missing:
-            print "No files missing."
+            print("No files missing.")
         if mismatches:
-            print "There were errors:"
+            print("There were errors:")
             for g, q, n, num_lines in mismatches:
-                print "g=%s, q=%s,"%(g, q),
+                print("g=%s, q=%s,"%(g, q),)
                 if n is None and num_lines is None:
-                    print "nonzero count after zero count."
+                    print("nonzero count after zero count.")
                 elif n == 0:
-                    print "file not uploaded."
+                    print("file not uploaded.")
                 elif num_lines is None:
-                    print "extra data in database."
+                    print("extra data in database.")
                 else:
-                    print "mismatched count (%s in database, %s in file)"%(n, num_lines)
+                    print("mismatched count (%s in database, %s in file)"%(n, num_lines))
         else:
             stats_collection.update({'label': 'counts'} , {"$set": {'label': 'counts', 'counts': counts}}, upsert=True)
-            print "Counts updated!"
+            print("Counts updated!")
     finally:
         port_forwarder.kill()
 
@@ -394,9 +395,9 @@ def label_progress(filename, label):
             if line.startswith(startcheck):
                 found = counter
     if found is None:
-        print "Label %s not found" % label
+        print("Label %s not found" % label)
     else:
-        print "Label %s is at %s/%s"%(label, found, counter)
+        print("Label %s is at %s/%s"%(label, found, counter))
 
 #if __name__ == '__main__':
 #    do_import_yaml()

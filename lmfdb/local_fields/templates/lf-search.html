@@ -8,21 +8,21 @@
 
 <tr>
 <td align=left>{{KNOWL('lf.degree',title='Degree')}}</td>
-<td align=left> <input type='text' name='n' size=3 value="{{info.n}}"></td>
+<td align=left> <input type='text' name='n' placeholder='6' size=3 value="{{info.n}}"></td>
 <td align=left> {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent $c$')}}</td>
-<td align=left> <input type="text" name="c" size="3" value="{{info.c}}" ></td>
+<td align=left> <input type="text" name="c" placeholder='8' size="3" value="{{info.c}}" ></td>
 <td align=left> {{KNOWL('nf.galois_group',title='Galois group')}}</td>
-<td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" ></td>
+<td align=left> <input type="text" name="gal" placeholder='5T3' size="8" value="{{info.gal}}" ></td>
 </tr>
 
 <tr>
 <td align=left> {{KNOWL('lf.qp',title='Prime $p$')}}</td>
-<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
+<td align=left> <input type="text" name="p" placeholder='3' size="3" value="{{info.p}}" ></td>
 <td align=left> {{KNOWL('lf.ramification_index',title='Ramification index $e$')}}</td>
-<td align=left> <input type="text" name="e" size="3" value="{{info.e}}" ></td>
+<td align=left> <input type="text" name="e" placeholder='3' size="3" value="{{info.e}}" ></td>
 
 <td align=left> {{KNOWL('lf.top_slope',title='Top slope')}}</td>
-<td align=left> <input type="text" name="topslope" size="8" value="{{info.topslope}}"></td>
+<td align=left> <input type="text" name="topslope" placeholder='4/3' size="8" value="{{info.topslope}}"></td>
 </tr>
 
 <tr>
@@ -52,9 +52,10 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table border=1 cellpadding=5 class="ntdata">
+<table class="ntdata">
 <thead>
 <tr>
+<th>{{KNOWL('lf.field.label',title='Label')}}</th>
 <th>Polynomial</th>
 <th>$p$</th>
 <th>{{KNOWL('lf.ramification_index',title='$e$')}}</th>
@@ -68,7 +69,8 @@
 
 {% for field in info.results: %}
 <tr>
-<td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
+<td><a href="/LocalNumberField/{{field.label}}"> {{field.label}} </a></td>
+<td align='left'>{{info.display_poly(field.coeffs)|safe}}</td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
@@ -81,7 +83,6 @@
 
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

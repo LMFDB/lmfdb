@@ -11,7 +11,7 @@ from sage.all import (
 from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
     list_factored_to_factored_poly_otherorder)
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import group_display_knowl_C1_as_trivial
 from lmfdb.lfunctions import logger
 
 ###############################################################
@@ -91,9 +91,11 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
             if coeff == "I":
                 rp = 0
                 ip = 1
+                coeff = CDF(I)
             elif coeff == "-I":
                 rp = 0
                 ip = -1
+                coeff = CDF(-I)
             else:
                 coeff = string2number(coeff)
         if type(coeff) == complex:
@@ -334,7 +336,7 @@ def lfuncEPtex(L, fmt):
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt):
+def lfuncEPhtml(L, fmt):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -393,9 +395,9 @@ def lfuncEPhtml(L,fmt):
     elif all(None in elt for elt in (L.localfactors + L.bad_lfactors)):
         display_galois = False
 
-    def pretty_poly(poly, prec = None):
+    def pretty_poly(poly, prec=None):
         out = "1"
-        for i,elt in enumerate(poly):
+        for i, elt in enumerate(poly):
             if elt is None or (i == prec and prec != len(poly) - 1):
                 out += "+O(%s)" % (seriesvar(i, "polynomial"),)
                 break
@@ -413,11 +415,6 @@ def lfuncEPhtml(L,fmt):
     eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
-    def group_display_knowl_C1_as_trivial(n,k):
-        if [n,k] == [1,1]:
-            return group_display_knowl(n, k, '$C_1$')
-        else:
-            return group_display_knowl(n, k)
     def row(trclass, goodorbad, p, poly):
         if isinstance(poly[0], list):
             galois_pretty_factors = list_factored_to_factored_poly_otherorder

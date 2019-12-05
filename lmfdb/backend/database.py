@@ -1093,17 +1093,17 @@ class PostgresTable(PostgresBase):
         PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
-        self._search_cols = []
+        self.search_cols = []
         if has_extras:
             self.extra_table = search_table + "_extras"
-            self._extra_cols, self.col_type, _ = self._column_types(
+            self.extra_cols, self.col_type, _ = self._column_types(
                                                         self.extra_table,
                                                         data_types=data_types)
         else:
             self.extra_table = None
-            self._extra_cols = []
+            self.extra_cols = []
 
-        self._search_cols, extend_coltype, self.has_id = self._column_types(
+        self.search_cols, extend_coltype, self.has_id = self._column_types(
                                                         search_table,
                                                         data_types=data_types)
         self.col_type.update(extend_coltype)
@@ -1195,22 +1195,22 @@ class PostgresTable(PostgresBase):
         elif not projection:
             raise ValueError("You must specify at least one key.")
         if projection == 1:
-            return tuple(self._search_cols), ()
+            return tuple(self.search_cols), ()
         elif projection == 2:
-            return tuple(self._search_cols), tuple(self._extra_cols)
+            return tuple(self.search_cols), tuple(self.extra_cols)
         elif projection == 3:
-            return tuple(["id"] + self._search_cols), tuple(self._extra_cols)
+            return tuple(["id"] + self.search_cols), tuple(self.extra_cols)
         elif isinstance(projection, dict):
             projvals = set(bool(val) for val in projection.values())
             if len(projvals) > 1:
                 raise ValueError("You cannot both include and exclude.")
             including = projvals.pop()
             include_id = projection.pop("id", False)
-            for col in self._search_cols:
+            for col in self.search_cols:
                 if (col in projection) == including:
                     search_cols.append(col)
                 projection.pop(col, None)
-            for col in self._extra_cols:
+            for col in self.extra_cols:
                 if (col in projection) == including:
                     extra_cols.append(col)
                 projection.pop(col, None)
@@ -1222,9 +1222,9 @@ class PostgresTable(PostgresBase):
             include_id = False
             for col in projection:
                 colname = col.split('[',1)[0]
-                if colname in self._search_cols:
+                if colname in self.search_cols:
                     search_cols.append(col)
-                elif colname in self._extra_cols:
+                elif colname in self.extra_cols:
                     extra_cols.append(col)
                 elif col == 'id':
                     include_id = True
@@ -1369,7 +1369,7 @@ class PostgresTable(PostgresBase):
             elif key == '$like':
                 cmd = SQL("{0} LIKE %s")
             elif key == '$regex':
-                cmd = SQL("{0} ~ '%s'")
+                cmd = SQL("{0} ~ %s")
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if col_type == 'jsonb':
@@ -1463,7 +1463,7 @@ class PostgresTable(PostgresBase):
                         path = [SQL("[{0}]").format(Literal(p)) for p in path[1:]]
                 else:
                     path = None
-                if key != 'id' and key not in self._search_cols:
+                if key != 'id' and key not in self.search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 # Have to determine whether key is jsonb before wrapping it in Identifier
                 col_type = self.col_type[key]
@@ -1611,13 +1611,23 @@ class PostgresTable(PostgresBase):
             # no $or clause
             return [query]
         queries = []
+        def is_special(v):
+            return isinstance(v, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in v)
         for orc in ors:
             Q = dict(query)
             for key, val in orc.items():
                 if key in Q and val != Q[key]:
-                    raise ValueError("Error in LMFDB query construction")
-                Q[key] = val
-            queries.append(Q)
+                    if not is_special(val) and not is_special(Q[key]):
+                        # this branch of the or would assert that the value is equal to two different things
+                        break
+                    else:
+                        # It would be possible to try to merge queries, but we stick to a simple approach and just throw them in an $and
+                        Q[key] = {'$and': [val, Q[key]]}
+                else:
+                    Q[key] = val
+            else:
+                # There were no incompatibilities, so we add Q to the list of queries
+                queries.append(Q)
         if sort:
             col = sort[0]
             if isinstance(col, basestring):
@@ -1795,10 +1805,6 @@ class PostgresTable(PostgresBase):
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
-            if raw_sort:
-                primary_sort = raw_sort[0][0]
-            else:
-                primary_sort = None
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
         nres = None if limit is None else self.stats.quick_count(query)
@@ -1834,9 +1840,6 @@ class PostgresTable(PostgresBase):
                 total = 0
                 prelimit = max(limit + offset, self._count_cutoff) if nres is None else limit + offset
                 exact_count = True # updated below if we have a subquery hitting the prelimit
-                # short_circuit determines whether we execute all queries; not all are needed
-                # if we reach the limit and the queries all include the primary sort key
-                short_circuit = primary_sort is None or all(primary_sort in Q for Q in queries)
                 for Q in queries:
                     cur = run_one_query(Q, prelimit, 0)
                     if cur.rowcount == prelimit and nres is None:
@@ -1846,12 +1849,8 @@ class PostgresTable(PostgresBase):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(list(self._search_iterator(cur, search_cols,
-                                                              extra_cols, projection=1)))
-                    if short_circuit and total >= prelimit:
-                        if nres is None:
-                            exact_count = False
-                        break
+                    results.extend(self._search_iterator(cur, search_cols,
+                                                         extra_cols, projection=1))
                 if all((asc == 1 or self.col_type[col] in number_types) for col, asc in raw_sort):
                     # every key is in increasing order or numeric so we can just use a tuple as a sort key
                     if raw_sort:
@@ -2132,7 +2131,7 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, values)
         return [res[0] for res in cur]
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -2152,7 +2151,7 @@ class PostgresTable(PostgresBase):
             sage: nf.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        return self.stats.count(query, record=record)
+        return self.stats.count(query, groupby=groupby, record=record)
 
     ##################################################################
     # Indexes and performance analysis                               #
@@ -2363,7 +2362,7 @@ class PostgresTable(PostgresBase):
                 if key not in _valid_storage_params[type]:
                     raise ValueError("Invalid storage parameter %s"%key)
         for col in columns:
-            if col != "id" and col not in self._search_cols:
+            if col != "id" and col not in self.search_cols:
                 raise ValueError("%s not a column"%(col))
         if name is None:
             # Postgres has a maximum name length of 64 bytes
@@ -2611,11 +2610,11 @@ class PostgresTable(PostgresBase):
         for col in columns:
             if col == "id":
                 continue
-            if col in self._search_cols:
+            if col in self.search_cols:
                 if search is False:
                     raise ValueError("Cannot mix search and extra columns")
                 search = True
-            elif col in self._extra_cols:
+            elif col in self.extra_cols:
                 if search is True:
                     raise ValueError("Cannot mix search and extra columns")
                 search = False
@@ -2652,7 +2651,7 @@ class PostgresTable(PostgresBase):
         elif cur.rowcount == 0:
             raise ValueError("Constraint %s does not exist in meta_constraints"%(name,))
         type, columns, check_func = cur.fetchone()
-        search = (columns[0] in self._search_cols)
+        search = (columns[0] in self.search_cols)
         table = self.search_table + suffix if search else self.extra_table + suffix
         return type, columns, check_func, table
 
@@ -2789,12 +2788,12 @@ class PostgresTable(PostgresBase):
             ....:     return rec
             sage: db.artin_reps.rewrite(add_signs)
         """
-        search_cols = ["id"] + self._search_cols
+        search_cols = ["id"] + self.search_cols
         if self.extra_table is None:
             projection = search_cols
         else:
-            projection = search_cols + self._extra_cols
-            extra_cols = ["id"] + self._extra_cols
+            projection = search_cols + self.extra_cols
+            extra_cols = ["id"] + self.extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
         # to give func access to the data to process. 
         # An alternative approach would be to use COPY TO and have func and filter both
@@ -2867,10 +2866,10 @@ class PostgresTable(PostgresBase):
                 raise ValueError("You must specify a column that is contained in the datafile and uniquely specifies each row")
         with open(datafile) as F:
             tables = [self.search_table]
-            columns = self._search_cols
+            columns = self.search_cols
             if self.extra_table is not None:
                 tables.append(self.extra_table)
-                columns.extend(self._extra_cols)
+                columns.extend(self.extra_cols)
             columns = self._check_header_lines(F, tables, set(columns), sep=sep, prohibit_missing=False)
             if columns[0] != label_col:
                 raise ValueError("%s must be the first column in the data file" % label_col)
@@ -2904,9 +2903,9 @@ class PostgresTable(PostgresBase):
                     Identifier(label_col))
                 self._execute(idadder)
             # don't include the label col
-            scols = [col for col in columns[1:] if col in self._search_cols]
+            scols = [col for col in columns[1:] if col in self.search_cols]
             if self.extra_table is not None:
-                ecols = [col for col in columns[1:] if col in self._extra_cols]
+                ecols = [col for col in columns[1:] if col in self.extra_cols]
             suffix = '' if inplace else '_tmp'
             stable = self.search_table + suffix
             etable = None if self.extra_table is None else self.extra_table + suffix
@@ -2983,7 +2982,7 @@ class PostgresTable(PostgresBase):
 
     def update(self, query, changes, resort=True, restat=True, commit=True):
         for col in changes:
-            if col in self._extra_cols:
+            if col in self.extra_cols:
                 # Have to find the ids using the query, then update....
                 raise NotImplementedError
         with DelayCommit(self, commit):
@@ -3037,20 +3036,20 @@ class PostgresTable(PostgresBase):
         if "id" in data:
             raise ValueError("Cannot set id")
         for col in query:
-            if col != "id" and col not in self._search_cols:
+            if col != "id" and col not in self.search_cols:
                 raise ValueError("%s is not a column of %s"%(col, self.search_table))
         if self.extra_table is None:
             search_data = dict(data)
             for col in data:
-                if col not in self._search_cols:
+                if col not in self.search_cols:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
         else:
             search_data = {}
             extras_data = {}
             for col, val in data.items():
-                if col in self._search_cols:
+                if col in self.search_cols:
                     search_data[col] = val
-                elif col in self._extra_cols:
+                elif col in self.extra_cols:
                     extras_data[col] = val
                 else:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
@@ -3141,8 +3140,8 @@ class PostgresTable(PostgresBase):
         if not data:
             raise ValueError("No data provided")
         if self.extra_table is not None:
-            search_cols = [col for col in self._search_cols if col in data[0]]
-            extra_cols = [col for col in self._extra_cols if col in data[0]]
+            search_cols = [col for col in self.search_cols if col in data[0]]
+            extra_cols = [col for col in self.extra_cols if col in data[0]]
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
         else:
@@ -3221,7 +3220,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 search_table, extra_table = self._identify_tables(search_table, extra_table)
                 newid = "newid"
-                while newid in self._search_cols or newid in self._extra_cols:
+                while newid in self.search_cols or newid in self.extra_cols:
                     newid += "_"
                 newid = Identifier(newid)
                 oldid = Identifier("id")
@@ -3269,7 +3268,7 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``F`` -- a writable open file handle, at the beginning of the file.
-        - ``cols`` -- a list of columns to write (either self._search_cols or self._extra_cols)
+        - ``cols`` -- a list of columns to write (either self.search_cols or self.extra_cols)
         - ``sep`` -- a string giving the column separator.  You should not use comma.
         """
         if cols and cols[0] != "id":
@@ -3311,6 +3310,8 @@ class PostgresTable(PostgresBase):
                 if table.endswith("_counts") or table.endswith("_stats"):
                     self._db.grant_insert(table)
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
+        if backup_number > 1: # There are multiple backup tables
+            print "WARNING: there are now {1} backup tables for {0}\nYou should probably run `db.{0}.cleanup_from_reload()` to save disc space".format(self.search_table, backup_number)
 
     def _check_file_input(self, searchfile, extrafile, kwds):
         """
@@ -3373,8 +3374,8 @@ class PostgresTable(PostgresBase):
 
         tables = []
         counts = {}
-        tabledata = [(self.search_table, self._search_cols, True, searchfile),
-                     (self.extra_table, self._extra_cols, True, extrafile),
+        tabledata = [(self.search_table, self.search_cols, True, searchfile),
+                     (self.extra_table, self.extra_cols, True, extrafile),
                      (self.stats.counts, _counts_cols, False, countsfile),
                      (self.stats.stats, _stats_cols, False, statsfile)]
         addedid = None
@@ -3537,7 +3538,7 @@ class PostgresTable(PostgresBase):
         #    self.revert_indexes()
         #    print "Reverted %s to its previous state" % (self.search_table,)
 
-    def cleanup_from_reload(self, old = True):
+    def cleanup_from_reload(self, keep_old=0):
         """
         Drop the ``_tmp`` and ``_old*`` tables that are created during ``reload``.
 
@@ -3545,26 +3546,39 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``commit`` -- a boolean, default `True`, if to commit the changes to the database
-        - ``old`` -- a boolean, default `True`, if to drop `_old*` tables
+        - ``keep_old`` -- the number of old tables to keep (they will be renamed so that they start at 1)
         """
         to_remove = []
+        to_swap = []
         for suffix in ['', '_extras', '_stats', '_counts']:
-            tablename = "{0}{1}_tmp".format(self.search_table, suffix)
+            head = self.search_table + suffix
+            tablename = head + "_tmp"
             if self._table_exists(tablename):
                 to_remove.append(tablename)
             backup_number = 1
-            while old and True:
-                tablename = "{0}{1}_old{2}".format(self.search_table, suffix, backup_number)
+            tails = []
+            while True:
+                tail = "_old{0}".format(backup_number)
+                tablename = head + tail
                 if self._table_exists(tablename):
-                    to_remove.append(tablename)
+                    tails.append(tail)
                 else:
                     break
                 backup_number += 1
+            if keep_old > 0:
+                for new_number, tail in enumerate(tails[-keep_old:], 1):
+                    newtail = "_old{0}".format(new_number)
+                    if newtail != tail: # we might be keeping everything
+                        to_swap.append((head, tail, newtail))
+                tails = tails[:-keep_old]
+            to_remove.extend([head + tail for tail in tails])
         with DelayCommit(self, silence=True):
             for table in to_remove:
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
+            for head, cur_tail, new_tail in to_swap:
+                self._swap([head], cur_tail, new_tail)
+                print "Swapped {0} to {1}".format(head + cur_tail, head + new_tail)
 
     def max_id(self, table = None):
         if table is None:
@@ -3607,9 +3621,9 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, kwds)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self.search_cols, True, kwds)
             if extrafile is not None:
-                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self.extra_cols, True, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
                     raise ValueError("Different number of rows in searchfile and extrafile")
@@ -3634,7 +3648,7 @@ class PostgresTable(PostgresBase):
         Efficiently copy data from the database to a file.
 
         The result will have one line per row of the table, tab separated and in order
-        given by self._search_cols and self._extra_cols.
+        given by self.search_cols and self.extra_cols.
 
         INPUT:
 
@@ -3653,8 +3667,8 @@ class PostgresTable(PostgresBase):
 
         tabledata = [
                 # tablename, cols, addid, write_header, filename
-                (self.search_table, self._search_cols, True, True, searchfile),
-                (self.extra_table, self._extra_cols, True, True, extrafile),
+                (self.search_table, self.search_cols, True, True, searchfile),
+                (self.extra_table, self.extra_cols, True, True, extrafile),
                 (self.stats.counts, _counts_cols, False, False, countsfile),
                 (self.stats.stats, _stats_cols, False, False, statsfile)
                 ]
@@ -3733,7 +3747,7 @@ class PostgresTable(PostgresBase):
         - ``label_col`` -- a search column of this table, or ``None``.
           If ``None``, the current label column will be cleared without a replacement.
         """
-        if not (label_col is None or label_col in self._search_cols):
+        if not (label_col is None or label_col in self.search_cols):
             raise ValueError("%s is not a search column" % label_col)
         modifier = SQL("UPDATE meta_tables SET label_col = %s WHERE name = %s")
         self._execute(modifier, [label_col, self.search_table])
@@ -3758,9 +3772,9 @@ class PostgresTable(PostgresBase):
         - ``label`` -- whether this column should be set as the label column for this table
           (used in the ``lookup`` method for example).
         """
-        if name in self._search_cols:
+        if name in self.search_cols:
             raise ValueError("%s already has column %s"%(self.search_table, name))
-        if name in self._extra_cols:
+        if name in self.extra_cols:
             raise ValueError("%s already has column %s"%(self.extra_table, name))
         if label and extra:
             raise ValueError("label must be a search column")
@@ -3780,9 +3794,9 @@ class PostgresTable(PostgresBase):
             modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
             self._execute(modifier)
             if extra and name != 'id':
-                self._extra_cols.append(name)
+                self.extra_cols.append(name)
             elif not extra and name != 'id':
-                self._search_cols.append(name)
+                self.search_cols.append(name)
             if label:
                 self.set_label(name)
             self.log_db_change("add_column", name=name, datatype=datatype)
@@ -3795,7 +3809,7 @@ class PostgresTable(PostgresBase):
         if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         with DelayCommit(self, commit, silence=True):
-            if name in self._search_cols:
+            if name in self.search_cols:
                 table = self.search_table
                 counts_table = table + "_counts"
                 stats_table = table + "_stats"
@@ -3807,10 +3821,10 @@ class PostgresTable(PostgresBase):
                 self._execute(deleter, [jname])
                 deleter = SQL("DELETE FROM {0} WHERE cols @> %s OR constraint_cols @> %s").format(Identifier(stats_table))
                 self._execute(deleter, [jname, jname])
-                self._search_cols.remove(name)
-            elif name in self._extra_cols:
+                self.search_cols.remove(name)
+            elif name in self.extra_cols:
                 table = self.extra_table
-                self._extra_cols.remove(name)
+                self.extra_cols.remove(name)
             else:
                 raise ValueError("%s is not a column of %s"%(name, self.search_table))
             modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
@@ -3863,7 +3877,7 @@ class PostgresTable(PostgresBase):
                     if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
                         raise RuntimeError("%s is not a valid type"%(typ))
                 vars.append((col, typ))
-            self._extra_cols = []
+            self.extra_cols = []
             vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
             creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
             self._execute(creator)
@@ -4360,7 +4374,7 @@ class PostgresStatsTable(PostgresBase):
             # counts for {} when data is updated.
             self._execute(updater, [count, self.search_table])
 
-    def count(self, query={}, record=True):
+    def count(self, query={}, groupby=None, record=True):
         """
         Count the number of results for a given query.
 
@@ -4368,10 +4382,13 @@ class PostgresStatsTable(PostgresBase):
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
         - ``record`` -- (default True) whether to record the number of results in the counts table.
+        - ``groupby`` -- (default None) a list of columns
 
         OUTPUT:
 
-        The number of records satisfying the query.
+        If ``grouby`` is None, the number of records satisfying the query.
+        Otherwise, a dictionary with keys the distinct tuples of values taken on by the columns
+        in ``groupby``, and values the number of rows with those values.
 
         EXAMPLES::
 
@@ -4380,12 +4397,24 @@ class PostgresStatsTable(PostgresBase):
             sage: nf.stats.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        if not query:
-            return self.total
-        nres = self.quick_count(query)
-        if nres is None:
-            nres = self._slow_count(query, record=record)
-        return int(nres)
+        if groupby is None:
+            if not query:
+                return self.total
+            nres = self.quick_count(query)
+            if nres is None:
+                nres = self._slow_count(query, record=record)
+            return int(nres)
+        else:
+            # We don't currently support caching groupby counts
+            qstr, values = self.table._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+            else:
+                qstr = SQL(" WHERE ") + qstr
+            selecter = SQL("SELECT COUNT(*), {0} FROM {1}{2} GROUP BY {0}").format(SQL(", ").join(map(Identifier, groupby)), Identifier(self.search_table), qstr)
+            print selecter
+            cur = self._execute(selecter, values)
+            return {tuple(rec[1:]): int(rec[0]) for rec in cur}
 
     def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
         """
@@ -4410,7 +4439,7 @@ class PostgresStatsTable(PostgresBase):
         taken on by that column.  If cols is a list of strings, then the keys will
         be tuples of values taken on by the dictionary.
 
-        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).
+        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).  However, we omit entries where D contains only keys starting with ``$``, since these are used to encode queries.
         """
         if isinstance(cols, basestring):
             cols = [cols]
@@ -4440,12 +4469,14 @@ class PostgresStatsTable(PostgresBase):
         else:
             _make_tuple = make_tuple
         if constraint is None:
-            return {_make_tuple(rec[0]): rec[1] for rec in cur}
+            # We need to remove counts that aren't the actual value,
+            # but instead part of a query
+            return {_make_tuple(rec[0]): rec[1] for rec in cur if not any(isinstance(val, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val) for val in rec[0])}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
             column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
             def satisfies_constraint(val):
-                return all(val[i] == c for i,c in constraint_list)
+                return all(val[i] == c for i,c in constraint_list) and not any(isinstance(val[i], dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val[i]) for i in column_indexes)
             def remove_constraint(val):
                 return [val[i] for i in column_indexes]
             return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
@@ -4534,7 +4565,7 @@ class PostgresStatsTable(PostgresBase):
         if col == "id":
             # We just use the count in this case
             return self.count()
-        if col not in self.table._search_cols:
+        if col not in self.table.search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
         ccols, cvals = self._split_dict(constraint)
         m = self._quick_max(col, ccols, cvals)
@@ -5083,7 +5114,7 @@ class PostgresStatsTable(PostgresBase):
 
         - ``col`` -- a
         """
-        if col not in self.table._search_cols:
+        if col not in self.table.search_cols:
             raise ValueError("Column %s not a search column for %s"%(col, self.search_table))
         selecter = SQL("""SELECT v.{0}, (c.reltuples * freq)::int as estimate_ct
 FROM pg_stats s
@@ -5103,7 +5134,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         Returns a list of columns where the most common value has a count of at least the given threshold.
         """
         common_cols = []
-        for col in self.table._search_cols:
+        for col in self.table.search_cols:
             most_common = self._approx_most_common(col, 1)
             if most_common and most_common[0][1] >= threshold:
                 common_cols.append(col)
@@ -5568,6 +5599,8 @@ class PostgresDatabase(PostgresBase):
             privileges = ['INSERT', 'SELECT', 'UPDATE']
             knowls_tables = ['kwl_knowls']
             cur = sorted(list(self._execute(SQL("SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN (" + ",".join(['%s']*len(knowls_tables)) + ") AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user] +  knowls_tables + privileges)))
+#            print cur
+#            print sorted([(table, priv) for table in knowls_tables for priv in privileges])
             self._read_and_write_knowls = cur == sorted([(table, priv) for table in knowls_tables for priv in privileges])
 
             cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
@@ -5838,8 +5871,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if isinstance(table, basestring):
             table = self[table]
-        search_columns = {typ: [col for col in table._search_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
-        extra_columns = {typ: [col for col in table._extra_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
+        search_columns = {typ: [col for col in table.search_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
+        extra_columns = {typ: [col for col in table.extra_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
         # Remove empty lists
         for D in [search_columns, extra_columns]:
             for typ, cols in list(D.items()):
@@ -5848,11 +5881,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if not extra_columns:
             extra_columns = extra_order = None
         else:
-            extra_order = table._extra_cols
+            extra_order = table.extra_cols
         label_col = table._label_col
         sort = table._sort_orig
         id_ordered = table._id_ordered
-        search_order = table._search_cols
+        search_order = table.search_cols
         self.create_table(new_name, search_columns, label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
 
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):

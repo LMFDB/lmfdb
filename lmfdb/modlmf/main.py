@@ -6,7 +6,7 @@ from flask import render_template, request, url_for, make_response, redirect, se
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
 from lmfdb import db
-from lmfdb.utils import web_latex_split_on_pm, parse_ints, search_wrap, flash_error
+from lmfdb.utils import web_latex, parse_ints, search_wrap, flash_error
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 
@@ -15,10 +15,10 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 # utilitary functions for displays
 
 def print_q_expansion(list):
-    list=[str(c) for c in list]
-    Qb=PolynomialRing(QQ,'b')
-    Qq=PowerSeriesRing(Qb['a'],'q')
-    return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
+    list = [str(c) for c in list]
+    Qb = PolynomialRing(QQ,'b')
+    Qq = PowerSeriesRing(Qb['a'],'q')
+    return web_latex(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
     ss = ""
@@ -210,7 +210,7 @@ def render_modlmf_webpage(**args):
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Weight grading', '%s' %info['weight_grading'])]
-    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
+    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
 
 
 

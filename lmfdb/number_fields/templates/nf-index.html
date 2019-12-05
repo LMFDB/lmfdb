@@ -115,7 +115,7 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 {{KNOWL('nf.ramified_primes', title='Ramified primes')}} 
 <select name='ram_quantifier'>
   <option value='contained'>subset of</option>
-  <option value='exactly' selected='yes'>equal to</option>
+  <option value='' selected='yes'>equal to</option>
   <option value='include'>superset of</option>
   </select>
   <td><input type='text' name='ram_primes' size=10 example='2,3'>
@@ -129,8 +129,9 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 <tr>
 <td align="left">Results to display</td><td> <input type='text' name='count' value="{{info.count}}" size=10></td>
 <tr>
-<button type='submit'>Search</button></td>
-
+<tr>
+<td><button type='submit'>Search</button></td>
+</tr>
 
 </table>
 </form>
