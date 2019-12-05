@@ -14,7 +14,7 @@ def makeDBconnection():
     _C = pymongo.MongoClient("localhost:37010");
     #_C = pymongo.MongoClient("m0.lmfdb.xyz:27017");
     _C.admin.authenticate("lmfdb","lmfdb")
-	
+
 def getDBconnection():
     if _C is None:
         makeDBconnection()
