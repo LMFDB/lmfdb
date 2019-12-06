@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
@@ -9,7 +10,7 @@ def upsert_origin(id_row):
     assert len(url) == 1
     url = url[0]
     assert 'EllipticCurve/Q/' in url, "%s" % url
-    print url, Lhash
+    print(url, Lhash)
     db.lfunc_lfunctions.upsert({'id': id_row}, {'origin': url})
 
 import sys
@@ -20,7 +21,7 @@ if len(sys.argv) == 3:
         if (i % mod) == c:
             upsert_origin(i)
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])
 
