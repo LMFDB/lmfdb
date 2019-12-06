@@ -72,9 +72,9 @@ def import_all_data(n):
 
 
 def import_data(hmf_filename):
-    hmff = file(hmf_filename)
+    hmff = open(hmf_filename)
 
-    ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+    ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -290,7 +290,7 @@ def repair_fields(D):
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
     F['primes'] = primes
 
-    hmff = file("data_2_" + (4 - len(str(D))) * '0' + str(D))
+    hmff = open("data_2_" + (4 - len(str(D))) * '0' + str(D))
 
     # Parse field data
     for i in range(7):

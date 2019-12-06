@@ -47,10 +47,10 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
 def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, test=True):
     if fileprefix==None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_filename))
+    hmff = open(os.path.join(fileprefix,hmf_filename))
 
     if ferrors==None:
-        ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+        ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()

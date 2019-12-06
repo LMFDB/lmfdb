@@ -13,7 +13,8 @@ import lf_pb2 as lf
 fn = sys.argv[1]
 fn_new = os.path.splitext(fn)[0] + ".pb2"
 
-data = yaml.load(file(fn))
+with open(fn) as f:
+    data = yaml.load(f)
 #print data
 
 # create the new protobuf object
