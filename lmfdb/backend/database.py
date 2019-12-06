@@ -189,23 +189,23 @@ def IdentifierWrapper(name, convert = True):
     and coverts them (if desired) from the Python format to SQL,
     as SQL starts at 1, and it is inclusive at the end
 
-    Example:
+    EXAMPLES::
 
-        >>> IdentifierWrapper('name')
+        sage: IdentifierWrapper('name')
         Identifier('name')
-        >>> print IdentifierWrapper('name[:10]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[:10]').as_string(db.conn))
         "name"[:10]
-        >>> print IdentifierWrapper('name[1:10]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10]').as_string(db.conn))
         "name"[2:10]
-        >>> print IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn))
         "name"[1:10]
-        >>> print IdentifierWrapper('name[1:10:3]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10:3]').as_string(db.conn))
         "name"[2:10:3]
-        >>> print IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn))
         "name"[2:10:3][1:2]
-        >>> print IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn))
         "name"[2:10:3][1::1]
-        >>> print IdentifierWrapper('name[1:10:3][0]').as_string(db.conn)
+        sage: print(IdentifierWrapper('name[1:10:3][0]').as_string(db.conn))
         "name"[2:10:3][1]
     """
     if '[' not in name:
@@ -436,11 +436,32 @@ class PostgresBase(object):
         return cur
 
     def _table_exists(self, tablename):
+        """
+        Check whether the specified table exists
+
+        INPUT:
+
+        - ``tablename`` -- a string, the name of the table
+        """
         cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"),
                             [tablename], silent=True)
         return cur.fetchone() is not None
 
     def _index_exists(self, indexname, tablename=None):
+        """
+        Check whether the specified index exists
+
+        INPUT:
+
+        - ``indexname`` -- a string, the name of the index
+        - ``tablename`` -- (optional) a string
+
+        OUTPUT:
+
+        If ``tablename`` specified, returns a boolean.  If not, returns
+        ``False`` if there is no index with this name, or the corresponding tablename
+        as a string if there is.
+        """
         if tablename:
             cur = self._execute(
                     SQL("SELECT 1 FROM pg_indexes WHERE indexname = %s AND tablename = %s"),
@@ -456,10 +477,31 @@ class PostgresBase(object):
                 return table[0]
 
     def _relation_exists(self, name):
+        """
+        Check whether the specified relation exists.  Relations are indexes or constraints.
+
+        INPUT:
+
+        - ``name`` -- a string, the name of the relation
+        """
         cur = self._execute(SQL('SELECT 1 FROM pg_class where relname = %s'), [name])
         return cur.fetchone() is not None
 
     def _constraint_exists(self, constraintname, tablename=None):
+        """
+        Check whether the specified constraint exists
+
+        INPUT:
+
+        - ``constraintname`` -- a string, the name of the index
+        - ``tablename`` -- (optional) a string
+
+        OUTPUT:
+
+        If ``tablename`` specified, returns a boolean.  If not, returns
+        ``False`` if there is no constraint with this name, or the corresponding tablename
+        as a string if there is.
+        """
         if tablename:
             cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
             return cur.fetchone() is not None
@@ -473,14 +515,14 @@ class PostgresBase(object):
 
     def _list_indexes(self, tablename):
         """
-        Lists built indexes names on the search table `tablename`
+        Lists built index names on the search table `tablename`
         """
         cur = self._execute(SQL("SELECT indexname FROM pg_indexes WHERE tablename = %s"), [tablename],  silent=True)
         return [elt[0] for elt in cur]
 
     def _list_constraints(self, tablename):
         """
-        Lists constraints names on the search table `tablename`
+        Lists constraint names on the search table `tablename`
         """
         # if we look into information_schema.table_constraints
         # we also get internal constraints, I'm not sure why
@@ -499,11 +541,12 @@ class PostgresBase(object):
 
     def _rename_if_exists(self, name, suffix=""):
         """
-        Given:
-            -- `name` of an index or constraint,
-            -- `suffix` a suffix to append to `name`
-        if an index or constraint `name` + `suffix` already exists,
-        renames so it ends in _depN
+        Rename an index or constraint if it exists, appending ``_depN`` if so.
+
+        INPUT:
+
+        - ``name`` -- a string, the name of an index or constraint
+        - ``suffix`` -- a suffix to append to the name
         """
         if self._relation_exists(name + suffix):
             # First we determine its type
@@ -551,14 +594,19 @@ class PostgresBase(object):
 
     def _check_restricted_suffix(self, name, kind="Index", skip_dep=False):
         """
-        Given:
-            -- `name` of an index/constraint, and
-            -- `kind` in ["Index", "Constraint"] (only used for error msg)
-        checks that `name` doesn't end with:
-            - _tmp
-            _ _pkey
-            _ _oldN
-            - _depN
+        Checks to ensure that the given name doesn't end with one
+        of the following restricted suffixes:
+
+        - ``_tmp``
+        - ``_pkey``
+        - ``_oldN``
+        - ``_depN``
+
+        INPUT:
+
+        - ``name`` -- string, the name of an index or constraint
+        - ``kind`` -- either ``"Index"`` or ``"Constraint"`` (only used for error msg)
+        - ``skip_dep`` -- if true, allow ``_depN`` as a suffix
         """
         tests = [(r"_old[\d]+$", "_oldN"),
                  (r"_tmp$", "_tmp"),
@@ -597,6 +645,11 @@ class PostgresBase(object):
     def _column_types(self, table_name, data_types=None):
         """
         Returns the column list, column types (as a dict), and has_id for a given table_name or list of table names
+
+        INPUT:
+
+        - ``table_name`` -- a string or list of strings
+        - ``data_types`` -- (optional) a dictionary providing a list of column names and types for each table name.  If not provided, will be looked up from the database.
         """
         has_id = False
         col_list = []
@@ -622,7 +675,14 @@ class PostgresBase(object):
 
     def _copy_to_select(self, select, filename, header="", sep=None, silent=False):
         """
-        Using the copy_expert from psycopg2 exports the data from a select statement.
+        Using the copy_expert from psycopg2, exports the data from a select statement.
+
+        INPUT:
+
+        - ``select`` -- an SQL Composable object giving a select statement
+        - ``header`` -- An initial header to write to the file
+        - ``sep`` -- a separator, defaults to tab
+        - ``silent`` -- suppress reporting success
         """
         if sep:
             sep_clause = SQL(" (DELIMITER {0})").format(Literal(sep))
@@ -713,7 +773,6 @@ class PostgresBase(object):
         - ``table`` -- the table into which the data should be added
         - ``columns`` -- a list of columns to load (the file may contain them in
             a different order, specified by a header row)
-        - ``cur_count`` -- the current number of rows in the table
         - ``header`` -- whether the file has header rows ordering the columns.
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
@@ -758,6 +817,11 @@ class PostgresBase(object):
     def _clone(self, table, tmp_table):
         """
         Utility function: creates a table with the same schema as the given one.
+
+        INPUT:
+
+        - ``table`` -- string, the name of an existing table
+        - ``tmp_table`` -- string, the name of the new table to create
         """
         if self._table_exists(tmp_table):
             raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
@@ -788,6 +852,17 @@ class PostgresBase(object):
         """
         Utility function: creates a table with the schema specified in the header of the file.
         Returns column names found in the header
+
+        INPUT:
+
+        - ``filename`` -- a string, the filename to load the table from
+        - ``name`` -- the name fo the table
+        - ``sep`` -- the separator character, defaulting to tab
+        - ``addid`` -- if true, also adds an id column to the created table
+
+        OUTPUT:
+
+        The list of column names and types found in the header
         """
         if self._table_exists(name):
             error_msg = "Table %s already exists." % name
@@ -803,8 +878,6 @@ class PostgresBase(object):
 
         self._create_table(name, columns)
         return col_list
-
-
 
     def _swap(self, tables, source, target):
         """
@@ -958,7 +1031,6 @@ class PostgresBase(object):
         return res
 
     def _reload_meta(self, meta_name, filename, search_table):
-
         meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
         # the column which will match search_table
         table_name = _meta_table_name(meta_name)
@@ -1063,8 +1135,6 @@ class PostgresBase(object):
                         for i, elt in enumerate(row)]
                 self._execute(query, row)
                 self._execute(query_hist, row + [currentversion + 1,])
-
-
 
 
 
