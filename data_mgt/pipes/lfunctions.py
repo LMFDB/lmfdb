@@ -1,4 +1,6 @@
 from __future__ import print_function
+from six.moves import range
+
 from lmfdb.lfunctions.Lfunction import Lfunction_EC_Q, ArtinLfunction, Lfunction_Dirichlet, HypergeometricMotiveLfunction
 
 def lf_data(L):
@@ -54,7 +56,7 @@ def artin_l_iterator(signed = False, min_conductor = 1, max_conductor = 20):
 
 def dirichlet_l_iterator(min_conductor = 2,  max_conductor = 10**5):
     from dirichlet_conrey import DirichletGroup_conrey
-    for modulus in filter(lambda _:_%4 != 2, xrange(min_conductor, max_conductor)):
+    for modulus in filter(lambda _:_%4 != 2, range(min_conductor, max_conductor)):
         print(modulus)
         for c in DirichletGroup_conrey(modulus).primitive_characters():
             L_dirichlet = Lfunction_Dirichlet(charactermodulus = modulus, characternumber = c.number())

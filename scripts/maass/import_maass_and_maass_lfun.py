@@ -9,6 +9,7 @@ the command
 
 """
 from __future__ import print_function
+from six.moves import range
 import yaml
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 
@@ -30,7 +31,7 @@ print("authenticating on the L-functions and Maass forms database")
 ##maass_gl2 = C.MaassWaveForms.maass_gl2
 
 def insertMaassGL2FromFiles(base_path, min_N, max_N):
-    for N in xrange(min_N, max_N):
+    for N in range(min_N, max_N):
         fileName = base_path + str(N) + ".yaml"
         stream = open(fileName, "r")
         docs = yaml.load_all(stream)
