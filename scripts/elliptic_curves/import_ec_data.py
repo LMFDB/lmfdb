@@ -14,6 +14,7 @@ Evolved during 2012-2018
 
 Postgres table ec_curves has these columns (updated 2019-08-05):
 """
+from __future__ import print_function
 
 qcurves_col_type = {
     u'2adic_gens': 'jsonb',
@@ -153,7 +154,7 @@ from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, p
 from lmfdb.utils import web_latex
 from lmfdb.elliptic_curves.web_ec import count_integral_points
 from lmfdb import db
-print "setting curves"
+print("setting curves")
 curves = db.ec_curves
 
 def parse_tgens(s):
@@ -770,7 +771,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             continue
         t0=time.time()
         h = open(os.path.join(base_path, f))
-        print "opened %s" % os.path.join(base_path, f)
+        print("opened %s" % os.path.join(base_path, f))
 
         parse=parsing_dict[f]
         count = 0
@@ -841,7 +842,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             curves.upsert({'label': val['label']}, val)
             count += 1
             if count % 5000 == 0:
-                print "inserted %s" % (val['label'])
+                print("inserted %s" % (val['label']))
 
 def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     r""" Returns a dictionary whose keys are Cremona labels of individual

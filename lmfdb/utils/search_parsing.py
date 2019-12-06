@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+from six.moves import range
 
 import re
 from collections import defaultdict, Counter
@@ -99,7 +100,7 @@ def split_list(s):
     return []
 
 # This function can be used by modules to get a list of ints
-# or an iterator (xrange) that matches the results of parse_ints below
+# or an iterator (Python3 range) that matches the results of parse_ints below
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
@@ -116,11 +117,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):
@@ -254,7 +255,7 @@ def integer_options(arg, max_opts=None, contained_in=None):
             a,b = interval
             if check and len(ans) + b - a + 1 > max_opts:
                 raise ValueError("Too many options")
-            for n in range(a,b+1):
+            for n in range(a, b+1):
                 if contained_in is None or n in contained_in:
                     ans.add(n)
         else:
@@ -483,10 +484,10 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             example = "[2]"
         elif exactlength is not None:
             lstr = "list of %s integers" % exactlength
-            example = str(range(2,exactlength+2)).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
+            example = str(list(range(2,exactlength+2))).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
         elif maxlength is not None:
             lstr = "list of at most %s integers" % maxlength
-            example = str(range(2,maxlength+2)).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
+            example = str(list(range(2,maxlength+2))).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
         else:
             lstr = "list of integers"
             example = "[1,2,3] or [5,6]"
@@ -540,10 +541,10 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
             example = "[2/5]"
         elif exactlength is not None:
             lstr = "list of %s rational numbers" % exactlength
-            example = str(range(2,exactlength+2)).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
+            example = str(list(range(2,exactlength+2))).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
         elif maxlength is not None:
             lstr = "list of at most %s rational numbers" % maxlength
-            example = str(range(2,maxlength+2)).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
+            example = str(list(range(2,maxlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
         else:
             lstr = "list of rational numbers"
             example = "[1/7,2,3] or [5,6/71]"

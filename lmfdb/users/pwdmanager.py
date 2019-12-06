@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-
+from __future__ import print_function
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -350,7 +350,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
         return True
 
 if __name__ == "__main__":
-    print "Usage:"
-    print "add user"
-    print "remove user"
-    print "…"
+    print("Usage:")
+    print("add user")
+    print("remove user")
+    print("…")

@@ -15,6 +15,7 @@
 # On the remaining lines, the value is an index back into the list
 # of polynomials so that if the j-th of these lines is k, then
 # the local factor of the j-th prime is the k-th polynomial
+from __future__ import print_function
 
 import sys, time, os
 assert time
@@ -22,8 +23,8 @@ assert time
 # check arguments first
 
 if len(sys.argv) != 3:
-    print "I take two arguments, the label and a count"
-    print "Don't make me tell you again."
+    print("I take two arguments, the label and a count")
+    print("Don't make me tell you again.")
     sys.exit()
 
 argv=sys.argv
@@ -33,10 +34,10 @@ label=argv[1]
 try:
     bound=int(argv[2])
     if bound is None or bound<1:
-        print "Bound is not valid"
+        print("Bound is not valid")
         sys.exit()
 except:
-    print "Bound is not valid"
+    print("Bound is not valid")
     sys.exit()
 
 import re
@@ -113,7 +114,7 @@ nfcc = nf.conjugacy_classes()
 nfcc = [int(z.order()) for z in nfcc]
 nfcc = lcm(nfcc)
 if not cfz.divides(nfcc):
-    print "Failure "+str(cfz)+" divides "+str(nfcc)+" from "+label
+    print("Failure "+str(cfz)+" divides "+str(nfcc)+" from "+label)
     sys.exit()
 R,x = QQ['x'].objgen()
 pol1 = R.cyclotomic_polynomial(nfcc)

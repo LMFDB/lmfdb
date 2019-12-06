@@ -204,7 +204,7 @@ class ArtinRepresentation(object):
         return self._nf
 
     def galois_conjugacy_size(self):
-    	return len(self.GaloisConjugates())
+        return len(self.GaloisConjugates())
 
     def smallest_gal_t(self):
         try:
@@ -215,7 +215,7 @@ class ArtinRepresentation(object):
             tmp = bits[2]
             bits = tmp.split('t')
             self._small_nt = [int(z) for z in bits]
-    	return self._small_nt
+        return self._small_nt
 
     def smallest_gal_t_format(self):
         galnt = self.smallest_gal_t()
@@ -434,7 +434,7 @@ class ArtinRepresentation(object):
         # We are looking for the character value on the conjugacy class of complex conjugation.
         # This is always an integer, so we don't expect this to be a more general
         # algebraic integer, and we can simply convert to sage
-            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp
+            raise TypeError("Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp)
         return trace_complex
 
     def number_of_eigenvalues_plus_one_complex_conjugation(self):
@@ -532,7 +532,7 @@ class ArtinRepresentation(object):
         try:
             i = self.hard_primes().index(p)
         except:
-            raise IndexError, "Not a 'hard' prime%" % p
+            raise IndexError("Not a 'hard' prime%" % p)
         return self.hard_factors()[i]
 
     def nf(self):
@@ -857,9 +857,9 @@ class NumberFieldGaloisGroup(object):
         try:
             fn_to_use = dict_to_use[cycle_type]
         except KeyError:
-            raise KeyError, "Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
+            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
                 (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0]))
+                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):
@@ -869,7 +869,7 @@ class NumberFieldGaloisGroup(object):
         try:
             assert p not in self.all_bad_primes()
         except:
-            raise AssertionError, "Expecting a prime not dividing the discriminant", p
+            raise AssertionError("Expecting a prime not dividing the discriminant")
         return tuple(self.residue_field_degrees(p))
         # tuple allows me to use this for indexing of a dictionary
 

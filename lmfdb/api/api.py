@@ -219,9 +219,9 @@ def api_query(table, id = None):
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
-                    print qval
+                    print(qval)
                     qval = [int(_) for _ in qval[2:].split(DELIM)]
-                    print qval
+                    print(qval)
                 elif qval.startswith("lf"):
                     qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
@@ -265,7 +265,7 @@ def api_query(table, id = None):
         except QueryCanceledError:
             flash_error("Query %s exceeded time limit.", q)
             return flask.redirect(url_for(".api_query", table=table))
-        except KeyError, err:
+        except KeyError as err:
             flash_error("No key %s in table %s", err, table)
             return flask.redirect(url_for(".api_query", table=table))
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 import unittest2, socket
 
@@ -657,8 +657,8 @@ class CmfTest(LmfdbTest):
                 assert expected == magma_free(magma_code)
 
         except socket.timeout as err:
-            print "Connecting with magma.maths.usyd.edu.au timed out"
-            print err
+            print("Connecting with magma.maths.usyd.edu.au timed out")
+            print(err)
 
 
 

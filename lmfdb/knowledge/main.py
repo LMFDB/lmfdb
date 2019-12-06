@@ -787,7 +787,7 @@ def index():
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
-	    flash_error("The string %s is not a valid regular expression", keywords)
+            flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occured during knowl search", str(e))
 
