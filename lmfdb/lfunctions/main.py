@@ -466,7 +466,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 def render_lfunction_exception(err):
     try:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]

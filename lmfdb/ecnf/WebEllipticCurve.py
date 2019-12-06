@@ -334,9 +334,9 @@ class ECNF(object):
                 self.fact_mindisc = self.mindisc
                 self.fact_mindisc_norm = self.mindisc
             else:
-                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,mindisc_ords)])
+                Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
-                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,mindisc_ords)])
+                Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
                 self.fact_mindisc_norm = web_latex(Dminnormfac)
 
         j = self.field.parse_NFelt(self.jinv)
