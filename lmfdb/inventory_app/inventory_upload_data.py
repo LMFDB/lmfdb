@@ -1,3 +1,4 @@
+from __future__ import print_function
 import lmfdb_inventory as inv
 import inventory_db_core as invc
 import inventory_live_data as ild
@@ -196,11 +197,11 @@ def delete_collection_data(coll_id, tbl, dry_run=False):
         if not dry_run:
             lmfdb_db[fields_tbl].delete(rec_find)
         else:
-            print 'Finding '+str(rec_find)
-            print 'Operation would delete:'
+            print('Finding '+str(rec_find))
+            print('Operation would delete:')
             curs = lmfdb_db[fields_tbl].search(rec_find)
             for item in curs:
-                print item
+                print(item)
     except:
         pass
 

@@ -10,7 +10,7 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
-
+from __future__ import print_function
 from lmfdb.logger import info
 import lmfdb.app # So that we can set it running below
 from lmfdb.app import app
@@ -105,7 +105,7 @@ def main():
     flask_options = Configuration().get_flask();
 
     if "profiler" in flask_options and flask_options["profiler"]:
-        print "Profiling!"
+        print("Profiling!")
         from werkzeug.contrib.profiler import ProfilerMiddleware
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions = [30], sort_by=('cumulative','time','calls'))
         del flask_options["profiler"]
