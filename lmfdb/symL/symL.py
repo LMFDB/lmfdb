@@ -14,6 +14,7 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 ########################################################################
 from __future__ import print_function
+from six.moves import range
 
 from sage.structure.sage_object import SageObject
 import sage.rings.all
@@ -160,7 +161,7 @@ def symmetricEulerFactor(E, m, p):
         s2 = s // 2
         ap = E.ap(p)
 
-        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in xrange(0, s2 + 1)])
+        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(s2 + 1)])
 
         if s % 2 != 0:
             TI = ap * TI

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # HeckeCharacters.py
+from six.moves import range
 
 from sage.all import gp, xmrange, Integer, pari, gcd, LCM, prod
 from sage.misc.cachefunc import cached_method
@@ -195,7 +196,7 @@ class HeckeChar(DualAbelianGroupElement):
 
     def galois_orbit(self):
         order = self.multiplicative_order()
-        return [ self.__pow__(k) for k in xrange(order) if gcd(k,order) == 1 ]
+        return [ self.__pow__(k) for k in range(order) if gcd(k,order) == 1 ]
 
 """
 k.<a> = NumberField(x^4+7*x^2+13)
