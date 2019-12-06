@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import yaml
 from flask import url_for
@@ -256,7 +257,7 @@ class ECNF(object):
         data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
-        print "No such curve in the database: %s" % label
+        print("No such curve in the database: %s" % label)
 
     def make_E(self):
         #print("Creating ECNF object for {}".format(self.label))
