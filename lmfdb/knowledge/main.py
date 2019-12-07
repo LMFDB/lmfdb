@@ -754,7 +754,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
