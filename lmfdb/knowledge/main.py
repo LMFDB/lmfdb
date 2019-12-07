@@ -261,7 +261,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     # this, but not for the javascript markdown parser
     try:
         return render_template_string(render_me, **kwargs)
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 

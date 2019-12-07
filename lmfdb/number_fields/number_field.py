@@ -785,7 +785,7 @@ def see_frobs(frob_data):
             s = '$'
             firstone = True
             for j in dec:
-                if firstone == False:
+                if not firstone:
                     s += '{,}\,'
                 if j[0]<15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 

@@ -293,7 +293,7 @@ def _dir_knowl_data(label, orbit=False):
         def conrey_link(i):
             return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
         if len(numbers) <= 2:
-            numbers = map(conrey_link, numbers)
+            numbers = [conrey_link(k) for k in numbers]
         else:
             numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
     else:

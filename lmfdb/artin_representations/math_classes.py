@@ -123,7 +123,7 @@ class ArtinRepresentation(object):
         return int(self._data["Conductor"])
 
     def NFGal(self):
-        return  map(int, self._data["NFGal"]);
+        return [int(n) for n in self._data["NFGal"]]
 
     # If the dimension is 1, we want the result as a webcharacter
     # Otherwise, we want the label of it as an Artin rep.

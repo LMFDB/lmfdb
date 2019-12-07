@@ -514,7 +514,7 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, (str, unicode)):
         return x
-    if enclose == True:
+    if enclose:
         return "\( %s \)" % latex(x)
     return " %s " % latex(x)
 

@@ -844,7 +844,7 @@ def getLfunctionPlot(request, *args):
             hasattr(pythonL, 'primitive') and
             not pythonL.primitive):
             # we stored them ready to display
-            zeros = map(float, pythonL.positive_zeros.split(","))
+            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
             if len(zeros) >= 25:
                 zero_range = zeros[24]
             else:
@@ -868,7 +868,8 @@ def getLfunctionPlot(request, *args):
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
-    data = file(fn).read()
+    with open(fn) as f:
+        data = f.read()
     os.remove(fn)
     return data
 
