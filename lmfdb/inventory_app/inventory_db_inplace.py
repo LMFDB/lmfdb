@@ -75,7 +75,7 @@ def update_fields(diff, storeRollback=True):
         except Exception as e:
             raise UpdateFailed(str(e))
 
-    except Exception as e:
+    except Exception:
         #inv.log_dest.error("Error updating fields "+ str(e))
         pass
 

@@ -502,7 +502,7 @@ def parse_pandt(info, family):
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None
-        except (ValueError, TypeError) as err:
+        except (ValueError, TypeError):
             info['ts'] = None
             errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs

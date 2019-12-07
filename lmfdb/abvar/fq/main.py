@@ -107,7 +107,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         return search_input_error()
     try:
         cl = AbvarFq_isoclass.by_label(label)
-    except ValueError as err:
+    except ValueError:
         flash_error("%s is not in the database.", label)
         return search_input_error()
     bread = get_bread(
