@@ -130,7 +130,7 @@ class ArtinRepresentation(object):
     # Mostly, this is pulled from the database, but we can fall back
     # and compute it ourselves
     def determinant(self):
-        if len(self._data['Dets'])>0:
+        if self._data['Dets']:
             parts = self.label().split("c")
             thischar = str( self._data['Dets'][int(parts[1])-1] )
             if self.dimension()==1:
@@ -532,7 +532,7 @@ class ArtinRepresentation(object):
         try:
             i = self.hard_primes().index(p)
         except:
-            raise IndexError("Not a 'hard' prime%" % p)
+            raise IndexError("Not a 'hard' prime")
         return self.hard_factors()[i]
 
     def nf(self):
