@@ -320,7 +320,7 @@ def copy_dumps(inp, typ, recursing=False):
     - ``typ`` -- the Postgres type of the column in which this data is being stored.
     """
     if inp is None:
-        return ur'\N'
+        return u'\\N'
     elif typ in ('text', 'char', 'varchar'):
         if not isinstance(inp, basestring):
             inp = str(inp)
