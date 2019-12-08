@@ -145,9 +145,6 @@ def git_infos():
         return '-', '-', '-'
 
 
-def git_summary():
-    return "commit = %s\ndate = %s\nsummary = \n%s\n" % git_infos()
-
 git_rev, git_date, _  = git_infos()
 
 # Creates link to the source code at the most recent commit.
@@ -219,7 +216,7 @@ def force_www_and_ssl():
 
 
 def timestamp():
-    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):
