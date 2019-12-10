@@ -14,11 +14,11 @@ import re
 # for values (value a means e(a/n))
 def id_dirichlet(fun, N, n):
     N = Integer(N)
-    if N==1:
-        return (1,1)
+    if N == 1:
+        return (1, 1)
     p2 = valuation(N, 2)
     N2 = 2**p2
-    Nodd = N/N2
+    Nodd = N//N2
     Nfact = list(factor(Nodd))
     #print "n = "+str(n)
     #for j in range(20):
@@ -721,7 +721,6 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
-        import re
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
             mygalstring = wnf.galois_string()
