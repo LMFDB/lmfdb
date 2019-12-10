@@ -299,7 +299,7 @@ def validate_edits(diff):
     diffs = diff["diffs"]
     try:
         iter(diffs)
-    except TypeError as e:
+    except TypeError:
         raise DiffBadType("diffs (not iterable)")
     except Exception as e:
         raise DiffUnknownError(e.message)

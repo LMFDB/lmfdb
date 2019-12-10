@@ -3,7 +3,6 @@
 # Authors: Harald Schilly and John Cremona
 
 import ast, re, StringIO, time
-from operator import mul
 from urllib import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response
@@ -483,7 +482,10 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
-        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        t_o = 1
+        for n in query['torsion_structure']:
+            t_o *= int(n)
+        query['torsion_order'] = t_o
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
 
     if 'jinv' in info:
