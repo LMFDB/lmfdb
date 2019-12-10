@@ -341,8 +341,9 @@ class PostgresBase(object):
         - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
         - ``reissued`` -- used internally to prevent infinite recursion when attempting to
             reset the connection.
-        - ``buffered`` -- whether to create a server side cursor that must be
-            manually closed after using it, this implies ``commit=False``.
+        - ``buffered`` -- whether to create a server side cursor that must be manually
+            closed and connection committed  (to closed the transaction) after using it,
+            this implies ``commit=False``.
 
         .. NOTE:
 
@@ -1592,6 +1593,8 @@ class PostgresTable(PostgresBase):
         finally:
             if isinstance(cur, pg_cursor):
                 cur.close()
+                if cur.withhold:  # to assure that it is a buffered cursor
+                    cur.connection.commit()
 
     ##################################################################
     # Methods for querying                                           #
