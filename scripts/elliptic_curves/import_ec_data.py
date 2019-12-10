@@ -1136,7 +1136,7 @@ def update_torsion_growth_stats(verbose=True):
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
 
 def update_int_pts(filename, test=True, verbose=0, basepath=None):
-    if basepath==None:
+    if basepath is None:
         basepath = os.environ['HOME']
     int_pts_data = {}
     for L in open(os.path.join(basepath,filename)):
@@ -1249,7 +1249,7 @@ def fix_quad_twist(c):
             ct = curves.lucky({'ainvs':ainvs}, projection=['label', 'lmfdb_label'])
         else:
             ct = curves.lucky({'lmfdb_label':mqt['lmfdb_label']}, projection=['label', 'lmfdb_label'])
-        if ct==None:
+        if ct is None:
             print("failed to find curve (twist of {})".format(c['label']))
         else:
             mqt['label'] = ct['label']

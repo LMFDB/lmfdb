@@ -380,7 +380,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     args['modulus'] = modulus
     args['number'] = number
 
-    if number_field == None:
+    if number_field is None:
         info = WebHeckeExamples(**args).to_dict()
         return render_template('Hecke.html', **info)
     else:
@@ -388,13 +388,13 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         if WNF.is_null():
             return flask.abort(404, "Number field %s not found."%number_field)
 
-    if modulus == None:
+    if modulus is None:
         try:
             info = WebHeckeFamily(**args).to_dict()
         except (ValueError,KeyError,TypeError) as err:
             return flask.abort(404,err.args)
         return render_template('CharFamily.html', **info)
-    elif number == None:
+    elif number is None:
         try:
             info = WebHeckeGroup(**args).to_dict()
         except (ValueError,KeyError,TypeError):

@@ -31,7 +31,7 @@ w, e, x = P.gens()
 def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True):
     nstr = str(n)
 
-    if fileprefix == None:
+    if fileprefix is None:
         fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr 
     ff = open(fileprefix + "/dir.tmp", 'r')
     files = ff.readlines()
@@ -45,11 +45,11 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
 
 
 def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
+    if fileprefix is None:
         fileprefix="."
     hmff = open(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
+    if ferrors is None:
         ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data

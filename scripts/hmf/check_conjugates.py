@@ -201,7 +201,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
         return None
     print("Ideals precomputations...")
     data = fldlabel2conjdata(label)
-    if data == None:
+    if data is None:
         print("No nontrival automorphisms!")
         return
     print("...done.\n")
@@ -217,7 +217,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
             ig = auts.index(g)
             fg_label = conjform_label(f, ig, cideals)
             fgdb = forms.find_one({'label':fg_label})
-            if fgdb == None:
+            if fgdb is None:
                 print("Testing form %s: conjugate %s not present" % (f['label'], fg_label))
                 countmiss += 1
                 if buildform:

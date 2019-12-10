@@ -187,12 +187,13 @@ def primes_of_degree_iter(K, deg, condition=None, sort_key=prime_label, maxnorm=
     condition(p) holds will be returned.  For example,
     condition=lambda:not p.divides(6).
     """
-    for p in primes(2,stop=maxnorm):
-        if condition==None or condition(p):
-            make_keys(K,p)
+    for p in primes(2, stop=maxnorm):
+        if condition is None or condition(p):
+            make_keys(K, p)
             for P in K.primes_dict[p]:
                 if P.residue_class_degree()==deg and P.norm()<=maxnorm:
                     yield P
+
 
 def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     """Iterator through primes of K, sorted using the provided sort key,
