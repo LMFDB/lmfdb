@@ -268,45 +268,46 @@ def index():
             learnmore=learnmore_list())
 
 def hgm_family_circle_plot_data(AB):
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import circle_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
     P = G.plot()
     import tempfile, os
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
-    data = open(filename).read()
+    with open(filename) as f:
+        data = f.read()
     os.unlink(filename)
     return data
 
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import circle_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = circle_image(A, B)
     return image_callback(G)
 
 @hypergm_page.route("/plot/linear/<AB>")
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import piecewise_linear_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_linear_image(A, B)
     return image_callback(G)
 
 @hypergm_page.route("/plot/constant/<AB>")
 def hgm_family_constant_image(AB):
     # piecewise constant
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import piecewise_constant_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_constant_image(A, B)
     return image_callback(G)
 
@@ -502,7 +503,7 @@ def parse_pandt(info, family):
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None
-        except (ValueError, TypeError) as err:
+        except (ValueError, TypeError):
             info['ts'] = None
             errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs

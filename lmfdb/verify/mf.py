@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 from collections import defaultdict
 
 from sage.all import cached_function, psi, RR, Integer, prod
@@ -17,7 +17,7 @@ def analytic_conductor(level, weight):
 def check_analytic_conductor(level, weight, analytic_conductor_stored, verbose=False, threshold = 1e-12):
     success = (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
     if not success and verbose:
-        print "Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored
+        print("Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored)
     return success
 
 @cached_function
@@ -65,7 +65,7 @@ class MfChecker(TableChecker):
         if not success and verbose:
             for attr, a, b in zip(attributes, stored, computed):
                 if a != b:
-                    print attr, a, b
+                    print(attr, a, b)
         return success
 
     hecke_orbit_code = []

@@ -261,7 +261,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     # this, but not for the javascript markdown parser
     try:
         return render_template_string(render_me, **kwargs)
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 
@@ -754,7 +754,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
@@ -787,7 +787,7 @@ def index():
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
-	    flash_error("The string %s is not a valid regular expression", keywords)
+            flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occured during knowl search", str(e))
 

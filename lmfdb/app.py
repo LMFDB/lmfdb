@@ -139,14 +139,11 @@ def git_infos():
                 [git_contains_cmd, contains],
                 [git_reflog_cmd, reflog],
                 [git_graphlog_cmd, graphlog]]
-        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
-        cmd_output = rev, date,  summary
+        summary = "\n".join("$ %s\n%s" % (c, o) for c, o in pairs)
+        return rev, date, summary
     except Exception:
-        cmd_output = '-', '-', '-'
-    return cmd_output
+        return '-', '-', '-'
 
-def git_summary():
-    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
 
 git_rev, git_date, _  = git_infos()
 
@@ -183,7 +180,7 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
 # You can use this formatter to turn newlines in a string into HTML line breaks
 @app.template_filter("nl2br")
 def nl2br(s):
-    return s.replace('\n', '<br>\n')
+    return s.replace('\n', '<br/>\n')
 
 # You can use this formatter to encode a dictionary into a url string
 @app.template_filter('urlencode')
@@ -218,10 +215,8 @@ def force_www_and_ssl():
         return redirect(url, code=301)
 
 
-
-
 def timestamp():
-    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):

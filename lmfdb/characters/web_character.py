@@ -57,7 +57,7 @@ The design is the following:
 - the object classe ancestor triggers the __init__ method
 
 """
-
+from six.moves import range
 from flask import url_for
 
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -805,7 +805,7 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
 
     def first_moduli(self):
         """ restrict to conductors """
-        return ( m for m in xrange(2, self.maxrows) if m%4!=2 )
+        return (m for m in range(2, self.maxrows) if m % 4 != 2)
 
     def chargroup(self, mod):
         return WebDirichletGroup(modulus=mod,**self.args)

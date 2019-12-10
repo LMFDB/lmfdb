@@ -3,6 +3,7 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+from six.moves import range
 
 import cmath
 import math
@@ -513,7 +514,7 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, (str, unicode)):
         return x
-    if enclose == True:
+    if enclose:
         return "\( %s \)" % latex(x)
     return " %s " % latex(x)
 
@@ -856,7 +857,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         # this effectively disables the bigint
         bigint_cutoff = bigint_overallmin + 7
 
-    for n in reversed(xrange(m)):
+    for n in reversed(range(m)):
         c = coeffs[n]
         if n == 1:
             if superscript:

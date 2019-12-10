@@ -466,7 +466,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 def render_lfunction_exception(err):
     try:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
@@ -844,7 +844,7 @@ def getLfunctionPlot(request, *args):
             hasattr(pythonL, 'primitive') and
             not pythonL.primitive):
             # we stored them ready to display
-            zeros = map(float, pythonL.positive_zeros.split(","))
+            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
             if len(zeros) >= 25:
                 zero_range = zeros[24]
             else:
@@ -868,7 +868,8 @@ def getLfunctionPlot(request, *args):
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
-    data = file(fn).read()
+    with open(fn) as f:
+        data = f.read()
     os.remove(fn)
     return data
 

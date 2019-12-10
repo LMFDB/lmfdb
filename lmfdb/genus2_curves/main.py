@@ -2,7 +2,6 @@
 
 import re
 from ast import literal_eval
-from operator import mul
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
@@ -290,7 +289,10 @@ def genus2_curve_search(info, query):
     parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
     parse_ints(info,query,'torsion_order','torsion order')
     if 'torsion' in query and not 'torsion_order' in query:
-        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
+        t_o = 1
+        for n in query['torsion']:
+            t_o *= int(n)
+        query['torsion_order'] = t_o
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints

@@ -1,10 +1,11 @@
+from __future__ import print_function
 import sys
 
 def usage():
-    print ''' Usage: to change a password, type 'sage user-manager.py
+    print(''' Usage: to change a password, type 'sage user-manager.py
     changepassword username newpassword'.  You must have a file
     passwords.yaml in the current directory which holds the
-    authentication passwords.  '''
+    authentication passwords.  ''')
 
 def changepassword(username, newpassword):
     #import yaml
