@@ -344,7 +344,7 @@ class TableChecker(object):
         join2 = [self._make_sql(j, "t2") for j in join2]
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_query(self, condition=None, constraint={}, values=[], table=None, query=None, ratio=1):
+    def _run_query(self, condition=None, constraint={}, values=None, table=None, query=None, ratio=1):
         """
         Run a query to check a condition.
 
@@ -365,6 +365,8 @@ class TableChecker(object):
         - ``ratio`` -- the ratio of rows in the table to run this query on.
 
         """
+        if values is None:
+            values = []
         label_col = Identifier(self.label_col)
         if query is None:
             if table is None:
