@@ -452,7 +452,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         return
 
-    if outfilename==None:
+    if outfilename is None:
         return
 
     # Step 2: for each newform for which there was no curve, create a

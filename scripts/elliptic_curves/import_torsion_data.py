@@ -64,7 +64,7 @@ def find_field(pol, verbose=False):
     from lmfdb.number_fields.number_field import poly_to_field_label
     poly = Qx(coeffs)
     Flabel = poly_to_field_label(poly)
-    if Flabel==None:
+    if Flabel is None:
         print("********* field with polynomial {} is not in the database!".format(poly))
         K = NumberField(poly, 'a')
         poly = K.optimized_representation()[0].defining_polynomial()
@@ -293,7 +293,7 @@ def tor_data_update(N1, N2, base_path, maxlines=0):
 
 def tor_xdata_update(N1, N2, base_path, degrees=None, overwrite=False, maxlines=0):
     tordata = {}
-    if degrees == None:
+    if degrees is None:
         degrees = [str(d) for d in range(2,8)]
     else:
         degrees = [str(d) for d in degrees]
@@ -330,8 +330,9 @@ def tor_xdata_update(N1, N2, base_path, degrees=None, overwrite=False, maxlines=
         return C
     return tordata, update_function
 
+
 def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
-    if degrees == None:
+    if degrees is None:
         degrees = [str(d) for d in range(2,8)]
     else:
         degrees = [str(d) for d in degrees]

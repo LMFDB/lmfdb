@@ -32,7 +32,7 @@ w, e, x = P.gens()
 def import_all_data(n, fileprefix=None, ferrors=None, test=True):
     nstr = str(n)
 
-    if fileprefix == None:
+    if fileprefix is None:
         fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr + "/dir.tmp"
     ff = open(fileprefix, 'r')
     files = ff.readlines()
@@ -46,11 +46,11 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
 
 
 def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
+    if fileprefix is None:
         fileprefix="."
     hmff = open(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
+    if ferrors is None:
         ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data

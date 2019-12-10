@@ -20,7 +20,7 @@ def av_display_knowl(label):
 
 def av_data(label):
     abvar = db.av_fq_isog.lookup(label)
-    if abvar == None:
+    if abvar is None:
         return "This isogeny class is not in the database."
     inf = "<div>Dimension: " + str(abvar["g"]) + "<br />"
     if abvar["is_simple"]:

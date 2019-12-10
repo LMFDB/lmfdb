@@ -104,7 +104,7 @@ def split_list(s):
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
-    if arg == None:
+    if arg is None:
         return []
     s = str(arg)
     s = s.replace(' ','')

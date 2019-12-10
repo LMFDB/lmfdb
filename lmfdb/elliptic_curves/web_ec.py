@@ -566,10 +566,8 @@ class WebEC(object):
         
         tg['maxd'] = 7
 
-
-
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 
