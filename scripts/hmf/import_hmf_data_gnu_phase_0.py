@@ -65,13 +65,13 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
 def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     if fileprefix==None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_filename))
+    hmff = open(os.path.join(fileprefix,hmf_filename))
 
     if ferrors==None:
         if Dan_test:
-            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
+            ferrors = open('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
         else:
-            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+            ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -297,7 +297,7 @@ def repair_fields(D):
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
     F['primes'] = primes
 
-    hmff = file("data_2_" + (4 - len(str(D))) * '0' + str(D))
+    hmff = open("data_2_" + (4 - len(str(D))) * '0' + str(D))
 
     # Parse field data
     for i in range(7):
@@ -386,13 +386,13 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
     '''
     if ferrors==None:
         if Dan_test:
-            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
+            ferrors = open('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
         else:
-            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+            ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
     field_label = hmf_extra_filename.split('-')[0]
     if fileprefix==None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_extra_filename))
+    hmff = open(os.path.join(fileprefix,hmf_extra_filename))
 
     with hmff as infile:
         # assumes the input filename starts with the field label.
