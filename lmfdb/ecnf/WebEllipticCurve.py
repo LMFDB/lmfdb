@@ -419,9 +419,9 @@ class ECNF(object):
         # Q-curve / Base change
         try:
             qc = self.q_curve
-            if qc == True:
+            if qc is True:
                 self.qc = "yes"
-            elif qc == False:
+            elif qc is False:
                 self.qc = "no"
             else: # just in case
                 self.qc = "not determined"

@@ -6064,8 +6064,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
             # first rename indexes and constraints
-            icols = map(Identifier, ['index_name', 'table_name'])
-            ccols = map(Identifier, ['constraint_name', 'table_name'])
+            icols = [Identifier(s) for s in ['index_name', 'table_name']]
+            ccols = [Identifier(s) for s in ['constraint_name', 'table_name']]
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
             rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             for meta, mname, cols in [
