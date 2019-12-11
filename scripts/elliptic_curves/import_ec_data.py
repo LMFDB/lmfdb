@@ -647,7 +647,6 @@ def fix_isogeny_degrees(C):
 
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
-#    print lab1,lab2
     a, b, c = parse_cremona_label(lab1)
     id1 = int(a), class_to_int(b), int(c)
     a, b, c = parse_cremona_label(lab2)
@@ -658,14 +657,16 @@ def cmp_label(lab1, lab2):
 def comp_dict_by_label(d1, d2):
     return cmp_label(d1['label'], d2['label'])
 
+
 def encode(x):
     if x is None:
-        return '\N'
+        return '\\N'
     if x is True:
         return 't'
     if x is False:
         return 'f'
     return str(x)
+
 
 def copy_records_to_file(records, fname, id0=0, verbose=True):
     searchfile = fname+'.search'
