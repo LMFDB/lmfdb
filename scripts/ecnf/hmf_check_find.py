@@ -772,7 +772,7 @@ def magma_output_iter(infilename):
 
     while True:
         try:
-            L = infile.next()
+            L = next(infile)
         except StopIteration:
             raise StopIteration
 

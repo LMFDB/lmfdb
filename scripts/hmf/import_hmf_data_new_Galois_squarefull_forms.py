@@ -78,7 +78,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     field_label = None
     co = str(coeffs)[1:-1].replace(" ","")
     for i in range(cnt):
-        nf = fields_matching.next()
+        nf = next(fields_matching)
         print("Comparing coeffs %s with %s" % (nf['coeffs'], co))
         if nf['coeffs'] == co:
             field_label = nf['label']
@@ -261,7 +261,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             else:
                 hmf_forms.insert(info)
         else:
-            existing_form = existing_forms.next()
+            existing_form = next(existing_forms)
             assert info['hecke_polynomial'] == existing_form['hecke_polynomial']
             try:
                 assert info['hecke_eigenvalues'] == existing_form['hecke_eigenvalues']

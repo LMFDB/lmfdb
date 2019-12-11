@@ -77,7 +77,7 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
     field_label = None
     co = str(coeffs)[1:-1].replace(" ","")
     for i in range(cnt):
-        nf = fields_matching.next()
+        nf = next(fields_matching)
         print("Comparing coeffs %s with %s" % (nf['coeffs'], co))
         if nf['coeffs'] == co:
             field_label = nf['label']

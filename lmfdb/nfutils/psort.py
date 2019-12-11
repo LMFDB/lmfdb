@@ -213,11 +213,11 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
     # pop the first prime off each iterator (allowing for the
     # possibility that there may be none):
-    Ps = [0 for d in dlist]
-    ns = [Infinity for d in dlist]
-    for i,PP in enumerate(PPs):
+    Ps = [0 for _ in dlist]
+    ns = [Infinity for _ in dlist]
+    for i, PP in enumerate(PPs):
         try:
-            P = PP.next()
+            P = next(PP)
             Ps[i] = P
             ns[i] = P.norm()
         except StopIteration:
@@ -236,7 +236,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
         # pop the next prime off that sub-iterator, detecting if it has finished:
         try:
-            Ps[i] = PPs[i].next()
+            Ps[i] = next(PPs[i])
             ns[i] = Ps[i].norm()
         except StopIteration:
             # prevent i'th sub-iterator from being used again
