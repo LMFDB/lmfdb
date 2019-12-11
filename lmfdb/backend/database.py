@@ -185,6 +185,7 @@ _stats_jsonb_idx = jsonb_idx(_stats_cols, _stats_types)
 def IdentifierWrapper(name, convert = True):
     """
     Returns a composable representing an SQL identifer.
+
     This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
     and coverts them (if desired) from the Python format to SQL,
     as SQL starts at 1, and it is inclusive at the end
@@ -193,19 +194,19 @@ def IdentifierWrapper(name, convert = True):
 
         >>> IdentifierWrapper('name')
         Identifier('name')
-        >>> print IdentifierWrapper('name[:10]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[:10]').as_string(db.conn))
         "name"[:10]
-        >>> print IdentifierWrapper('name[1:10]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10]').as_string(db.conn))
         "name"[2:10]
-        >>> print IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn))
         "name"[1:10]
-        >>> print IdentifierWrapper('name[1:10:3]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10:3]').as_string(db.conn))
         "name"[2:10:3]
-        >>> print IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn))
         "name"[2:10:3][1:2]
-        >>> print IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn))
         "name"[2:10:3][1::1]
-        >>> print IdentifierWrapper('name[1:10:3][0]').as_string(db.conn)
+        >>> print(IdentifierWrapper('name[1:10:3][0]').as_string(db.conn))
         "name"[2:10:3][1]
     """
     if '[' not in name:
