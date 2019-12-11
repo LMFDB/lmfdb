@@ -646,16 +646,31 @@ def fix_isogeny_degrees(C):
 
 
 def cmp_label(lab1, lab2):
+    """
+    EXAMPLES::
+
+    cmp_label('24a5', '33a1')
+    -1
+    cmp_label('11a1', '11a1')
+    0
+    """
     from sage.databases.cremona import parse_cremona_label, class_to_int
     a, b, c = parse_cremona_label(lab1)
     id1 = int(a), class_to_int(b), int(c)
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
+    if id1 == id2:
+        return 0
+    return -1 if id1 < id2 else 1
 
 
-def comp_dict_by_label(d1, d2):
-    return cmp_label(d1['label'], d2['label'])
+def sorting_label(d1):
+    """
+    Provide a sorting key.
+    """
+    from sage.databases.cremona import parse_cremona_label, class_to_int
+    a, b, c = parse_cremona_label(d1["label"])
+    return (int(a), class_to_int(b), int(c))
 
 
 def encode(x):
@@ -793,7 +808,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
         print("finished reading {} lines from file in {}".format(count, time.time()-t0))
 
     vals = data_to_insert.values()
-    # vals.sort(cmp=comp_dict_by_label)
+    # vals.sort(key=sorting_label)
 
     if allisog_filename in file_list:
         isogmats = read1isogmats(base_path, min_N, max_N)
