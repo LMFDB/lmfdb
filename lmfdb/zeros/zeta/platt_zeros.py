@@ -184,6 +184,5 @@ def zeros_starting_at_N(N, number_of_zeros=1000):
 if __name__ == "__main__":
     t = float(sys.argv[1])
     count = int(sys.argv[2])
-    _print = int(sys.argv[3])
     c = sqlite3.connect(db_location).cursor()
-    zeros = zeros_starting_at_t(t, count, _print=_print)
+    zeros = zeros_starting_at_t(t, count)
