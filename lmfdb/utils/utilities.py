@@ -4,6 +4,7 @@
 # @cached()
 # def func(): ...
 from six.moves import range
+from six import integer_types as six_integers
 
 import cmath
 import math
@@ -292,8 +293,10 @@ def to_dict(args, exclude = []):
             d[key] = values
     return d
 
+
 def is_exact(x):
-    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
@@ -820,7 +823,8 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """

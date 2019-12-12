@@ -2,6 +2,8 @@
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
+from six import integer_types as six_integers
+
 from psycopg2.extras import register_json, Json as pgJson
 from psycopg2.extensions import adapt, register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
 from sage.functions.other import ceil
@@ -237,7 +239,7 @@ class Json(pgJson):
         elif isinstance(obj, datetime.datetime):
             return {'__datetime__': 0,
                     'data': "%s"%(obj)}
-        elif isinstance(obj, (basestring, int, long, bool, float)):
+        elif isinstance(obj, (basestring, bool, float) + six_integers):
             return obj
         else:
             raise ValueError("Unsupported type: %s"%(type(obj)))
@@ -354,7 +356,7 @@ def copy_dumps(inp, typ, recursing=False):
         return '{' + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + '}'
     elif isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (int, long, Integer, float, RealNumber)):
+    elif isinstance(inp, (Integer, float, RealNumber) + six_integers):
         return str(inp).replace('L','')
     elif typ=='boolean':
         return 't' if inp else 'f'
