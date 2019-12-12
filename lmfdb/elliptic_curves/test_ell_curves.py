@@ -70,6 +70,25 @@ class EllCurveTest(LmfdbTest):
     def test_NonSurjPrimes_search(self):
         self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]');
 
+    def test_BadPrimes_search(self):
+        L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=include&bad_primes=3%2C5')
+        assert '15.a1' in L.data
+        assert '30.a1' in L.data
+        assert not('11.a1' in L.data)
+        L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exclude&bad_primes=3%2C5')
+        assert not('15.a1' in L.data)
+        assert not('30.a1' in L.data)
+        assert '11.a1' in L.data
+        L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exactly&bad_primes=3%2C5')
+        assert '15.a1' in L.data
+        assert not('30.a1' in L.data)
+        assert not('11.a1' in L.data)
+
+    def test_num_int_pts_search(self):
+        L = self.tc.get('/EllipticCurve/Q/?num_int_pts=1')
+        assert '14.a2' in L.data
+        assert not('11.a1' in L.data)
+
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.data
@@ -115,7 +134,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
           '<td class="center">[1, -1, 1, -1568, -4669]</td>',
-          '<td align="center">6</td>',
+          '<td align="center">[6]</td>',
           '<td align="center">',
           '1728</td>',
           '<td>\(\Gamma_0(N)\)-optimal</td>'

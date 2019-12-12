@@ -44,7 +44,7 @@ def parse_interval(arg, name):
 
 def parse_limit (arg):
     if not arg:
-        return 25
+        return 50
     limit = -1
     arg = arg.replace  (' ','')
     if re.match('^[0-9]+$', arg):

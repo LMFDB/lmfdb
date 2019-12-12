@@ -57,7 +57,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 
 <h2> Search </h2>
 
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
 <td> {{ KNOWL('nf', title='Base field')}}</td> 
@@ -76,7 +76,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 <tr>
 <td>{{ KNOWL('mf.bianchi.sign', title='Sign') }}</td>
 <td>       <select name='sfe', style="width: 155px">
-           <option value="any" selected>any</option>
+           <option value="" selected>any</option>
            <option value="+1">+1</option>
            <option value="-1">-1</option>
          </select>
@@ -85,7 +85,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
   <td>
          <select name='include_base_change', style="width: 105px">
            <option value="off">exclude</option>
-           <option value="on" selected="yes">include</option>
+           <option value="" selected="yes">include</option>
          </select>
   </td>
    <td>
@@ -93,7 +93,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
     </td>
      <td>
          <select name='include_cm', style="width: 105px">
-           <option value="include" selected="yes">include</option>
+           <option value="" selected="yes">include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
          </select>

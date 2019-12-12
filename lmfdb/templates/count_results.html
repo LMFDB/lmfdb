@@ -1,0 +1,41 @@
+{% set has_na = [] %}
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">{{info.row_label}}</th>
+      <th class="level" colspan="{{info.col_heads|length}}">
+        <span style="display:block;float:left;margin-right:3px;">{{info.col_label}}</span>
+      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for col in info.col_heads  %}
+      <th class="center" text-align="center">{{col}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in info.row_heads  %}
+    <tr>
+      <th class="left">{{row}}</th>
+      {% for col in info.col_heads  %}
+      <td>
+        {% set size = info.results[row, col] %}
+        {% if size is none %}
+        {% do has_na.append(1) %}
+        <small style="color:gray">n/a</small>
+        {% else %}
+        {% set url = info.url_func(row, col) %}
+        <a href="{{url}}">{{size}}</a>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if has_na %}
+<small>
+  {{info.na_msg}}
+</small>
+{% endif %}

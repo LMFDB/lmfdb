@@ -56,7 +56,7 @@ Download all search results for&nbsp;
 
 
 
-<table class="ntdata">
+<table class="ntdata"><thead>
 <tr>
     <th>{{ KNOWL('belyi.label', title='Label') }}</th>
     <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
@@ -64,7 +64,7 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
     <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
     <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
-</tr>
+</tr></thead><tbody>
 {% for galmap in info.results: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
@@ -75,6 +75,7 @@ Download all search results for&nbsp;
     <td align=center> {{galmap.geomtype}} </td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 
 

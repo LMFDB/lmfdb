@@ -1,3 +1,4 @@
+from __future__ import print_function
 from lmfdb.lfunctions.Lfunction import Lfunction_EC_Q, ArtinLfunction, Lfunction_Dirichlet, HypergeometricMotiveLfunction
 
 def lf_data(L):
@@ -36,7 +37,7 @@ def ec_l_iterator(min_conductor = 10, max_conductor = 20, **kwargs):
     from elliptic_curves import ec_isogeny_label_iterator
     ec_labels = ec_isogeny_label_iterator(min_conductor, max_conductor)
     for ec_label in ec_labels:
-        print ec_label
+        print(ec_label)
         L_E = Lfunction_EC_Q(label = ec_label)
         yield L_E
 
@@ -48,13 +49,13 @@ def artin_l_iterator(signed = False, min_conductor = 1, max_conductor = 20):
         if signed:
             if L_artin.sign == 0:    # This means no sign is known
                 continue
-        print artin_label
+        print(artin_label)
         yield L_artin
 
 def dirichlet_l_iterator(min_conductor = 2,  max_conductor = 10**5):
     from dirichlet_conrey import DirichletGroup_conrey
     for modulus in filter(lambda _:_%4 != 2, xrange(min_conductor, max_conductor)):
-        print modulus
+        print(modulus)
         for c in DirichletGroup_conrey(modulus).primitive_characters():
             L_dirichlet = Lfunction_Dirichlet(charactermodulus = modulus, characternumber = c.number())
             yield L_dirichlet
@@ -62,7 +63,7 @@ def dirichlet_l_iterator(min_conductor = 2,  max_conductor = 10**5):
 def hypergeometric_l_iterator(min_conductor = 2, max_conductor = 10**5):
     from hypergeometric import hypergeometric_label_iterator
     for hgm_label in hypergeometric_label_iterator(min_conductor = min_conductor, max_conductor = max_conductor):
-        print hgm_label
+        print(hgm_label)
         L_hgm = HypergeometricMotiveLfunction(label = hgm_label)
         yield L_hgm
 

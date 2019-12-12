@@ -4,6 +4,7 @@ r""" Checking that knowls only cross-reference existing knowls
 Initial version (Bristol March 2016)
 
 """
+from __future__ import print_function
 from lmfdb.knowledge.knowl import knowldb
 from commands import getoutput
 
@@ -89,13 +90,13 @@ def find_knowl_links(id, base=None, all=True, verbose=False):
     /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-search-results.html:  <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
 
     """
-    if base==None:
+    if base is None:
         base = "~/lmfdb"
     found = False
     for L in getoutput('grep -r "{}" {}'.format(id, base)).splitlines():
         found = True
         if verbose:
-            print L
+            print(L)
         if not all or not verbose:
             return True
     return found

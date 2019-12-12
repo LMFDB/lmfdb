@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import time
 
 def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, filter=None, projection=None):
@@ -40,10 +41,10 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
 
     """
     if outcoll in db.collection_names():
-        print "Collection %s already exists in database %s, please drop it first" % (outcoll, db.name)
+        print("Collection %s already exists in database %s, please drop it first" % (outcoll, db.name))
         return
     if not incoll in db.collection_names():
-        print "Collection %s not found in database %s" % (incoll, db.name)
+        print("Collection %s not found in database %s" % (incoll, db.name))
         return
     start = time.time()
     inrecs = db[incoll].find(filter, projection)
@@ -60,15 +61,15 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
             outrecs.append(rec)
         if len(outrecs) >= batchsize:
             db[outcoll].insert_many(outrecs)
-            print "%d of %d records (%.1f percent) processed in %.3f secs" % (incnt, tot, 100.0*incnt/tot,time.time()-start)
+            print("%d of %d records (%.1f percent) processed in %.3f secs" % (incnt, tot, 100.0*incnt/tot,time.time()-start))
             outrecs=[]
     if outrecs:
         db[outcoll].insert_many(outrecs)
     assert db[outcoll].count() == outcnt
-    print "Inserted %d records of %d records in %.3f secs" % (outcnt, incnt, time.time()-start)
+    print("Inserted %d records of %d records in %.3f secs" % (outcnt, incnt, time.time()-start))
     if reindex:
         reindex_collection(db,incoll,outcoll)
-    print "Rewrote %s to %s, total time %.3f secs" % (incoll, outcoll, time.time()-start)
+    print("Rewrote %s to %s, total time %.3f secs" % (incoll, outcoll, time.time()-start))
 
 def reindex_collection(db, incoll, outcoll):
     """
@@ -92,7 +93,7 @@ def reindex_collection(db, incoll, outcoll):
         now = time.time()
         key = [(a[0],int(1) if a[1] > 0 else int(-1)) for a in keys[i][1]] # deal with legacy floats (1.0 vs 1)
         db[outcoll].create_index(key)
-        print "created index %s in %.3f secs" % (keys[i][0], time.time()-now)
+        print("created index %s in %.3f secs" % (keys[i][0], time.time()-now))
 
 def add_counter(rec=None):
     if not rec:
@@ -126,7 +127,7 @@ def create_random_object_index(db, coll, filter=None):
     """
     outcoll = coll+".rand"
     if outcoll in db.collection_names():
-        print "Dropping existing collection %s in db %s" % (outcoll,db.name)
+        print("Dropping existing collection %s in db %s" % (outcoll,db.name))
         db[outcoll].drop()
     add_counter() # reset counter
     rewrite_collection (db, coll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})

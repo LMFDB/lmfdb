@@ -1,4 +1,5 @@
 # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
+from __future__ import print_function
 from sage.all import matrix, vector, PolynomialRing, ZZ, NumberField, ComplexField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
@@ -88,8 +89,8 @@ if len(sys.argv) == 3:
     for j, i in enumerate(ids):
         upsert_embedding(i)
         if j % int(len(ids)*0.01) == 0:
-            print '%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids)))
+            print('%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids))))
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])

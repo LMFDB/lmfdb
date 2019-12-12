@@ -4,7 +4,7 @@ from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
     search_wrap)
@@ -385,10 +385,10 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(hecke_pol))
+    info['hecke_polynomial'] = "\(" + teXify_pol(hecke_pol) + "\)"
 
     if not AL_eigs: # empty list
-        if data['level_norm']==1: # OK, no bad primes
+        if data['level_norm'] == 1: # OK, no bad primes
             info['AL_eigs'] = 'none'
         else:                     # not OK, AL eigs are missing
             info['AL_eigs'] = 'missing'
@@ -422,7 +422,7 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties2 = [('Base field', '%s' % info['field'].field_pretty()),
+    properties = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '%s' % data['weight']),
                    ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
@@ -432,7 +432,7 @@ def render_hmf_webpage(**args):
                    ('Base change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties=properties, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
 
 #data quality pages
 @hmf_page.route("/Completeness")
