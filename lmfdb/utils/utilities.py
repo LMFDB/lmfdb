@@ -5,6 +5,7 @@
 # def func(): ...
 from six.moves import range
 from six import integer_types as six_integers
+from six import string_types
 
 import cmath
 import math
@@ -1249,7 +1250,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
+    if not isinstance(pol_str, string_types):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')

@@ -2,6 +2,7 @@
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 from six.moves import range
+from six import string_types
 
 import re
 from collections import defaultdict, Counter
@@ -304,7 +305,7 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
-            if isinstance(a, basestring) and '.' in a:
+            if isinstance(a, string_types) and '.' in a:
                 prec = len(a) - a.find('.') - 1
             else:
                 prec = 0

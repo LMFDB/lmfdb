@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 from __future__ import print_function
+from six import string_types
 from lmfdb import db
 from sage.all import Integer, loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
@@ -270,11 +271,13 @@ class MaassDB(object):
 
 maass_db = MaassDB()
 
+
 def lowercase_dict(data):
     for k in data.keys():
-        if isinstance(k, basestring):
+        if isinstance(k, string_types):
             data[k.lower()] = data.pop(k)
 
+            
 def arg_to_format_parameters(data={}, **kwds):
     res = {}
     if not isinstance(data, dict):
