@@ -30,13 +30,12 @@ def ec_credit():
 #   Utility functions
 #########################
 
-def cmp_label(lab1, lab2):
+def sorting_label(lab1):
+    """
+    Provide a sorting key.
+    """
     a, b, c = parse_cremona_label(lab1)
-    id1 = int(a), class_to_int(b), int(c)
-    a, b, c = parse_cremona_label(lab2)
-    id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
-
+    return (int(a), class_to_int(b), int(c))
 
 #########################
 #    Top level
@@ -251,6 +250,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
+    parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -273,7 +273,7 @@ def elliptic_curve_search(info, query):
     if info.get('bad_quantifier') == 'exactly':
         mode = 'exact'
     elif info.get('bad_quantifier') == 'exclude':
-    	mode = 'complement'
+        mode = 'complement'
     else:
         mode = 'append'
     parse_primes(info, query, 'bad_primes', name='bad primes',

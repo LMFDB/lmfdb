@@ -8,6 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
+from __future__ import print_function
 
 import re
 import json
@@ -29,7 +30,7 @@ saving = True
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def makels(li):
   li2 = [str(x) for x in li]
@@ -56,20 +57,20 @@ reps.create_index('conductor')
 reps.create_index('type')
 
 
-print "finished indices"
+print("finished indices")
 
 
 ## Main importing function
 
-label_dict={}
+label_dict = {}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-	n=label_dict[base_label]+1
-	label_dict[base_label]=n
-    	return n
+        n = label_dict[base_label]+1
+        label_dict[base_label]=n
+        return n
     label_dict[base_label]=1
-    return 1	
+    return 1
 
 
 def do_import(ll):
@@ -93,10 +94,10 @@ def do_import(ll):
     rep = reps.find_one({'label': label})
 
     if rep is None:
-        print "new mod l Galois representation"
+        print("new mod l Galois representation")
         rep = data
     else:
-        print "mod l Galois representation already in the database"
+        print("mod l Galois representation already in the database")
         rep.update(data)
     if saving:
         reps.update({'label': label} , {"$set": rep}, upsert=True)
@@ -106,7 +107,7 @@ def do_import(ll):
 # Loop over files
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     for line in fn.readlines():

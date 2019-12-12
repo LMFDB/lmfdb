@@ -191,13 +191,13 @@ def break_label(label):
     else:
         raise ValueError("the label must have 5 or 6 dashes")
 
-    abc = map(int, abc[1:-1].split(","))
+    abc = [int(z) for z in abc[1:-1].split(",")]
     lambdas = [l0, l1, l2]
     for i, elt in lambdas:
         if "," in elt:
-            elt = map(int, elt.split(","))
+            elt = [int(t) for t in elt.split(",")]
         else:
-            elt = map(int, list(elt))
+            elt = [int(t) for t in list(elt)]
     genus = int(genus[1:])
     return group, abc, lambdas, genus, gal
 

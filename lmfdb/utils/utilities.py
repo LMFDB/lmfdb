@@ -3,6 +3,9 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+from six.moves import range
+from six import integer_types as six_integers
+from six import string_types
 
 import cmath
 import math
@@ -291,8 +294,10 @@ def to_dict(args, exclude = []):
             d[key] = values
     return d
 
+
 def is_exact(x):
-    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
@@ -513,7 +518,7 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, (str, unicode)):
         return x
-    if enclose == True:
+    if enclose:
         return "\( %s \)" % latex(x)
     return " %s " % latex(x)
 
@@ -715,7 +720,11 @@ def make_bigint(s, cutoff=20, max_width=70):
     """
     Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
     def knowl_replacer(M):
-        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
+        if a[0:2] == r'<a':
+            return r'\)' + a + r'\('
+        else:
+            return a
     return Zmatcher.sub(knowl_replacer, s)
 
 
@@ -815,7 +824,8 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
@@ -852,7 +862,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         # this effectively disables the bigint
         bigint_cutoff = bigint_overallmin + 7
 
-    for n in reversed(xrange(m)):
+    for n in reversed(range(m)):
         c = coeffs[n]
         if n == 1:
             if superscript:
@@ -866,9 +876,9 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
                 varpow = r"%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c, bigint_cutoff)
+                s += plus + str(c)
             elif c < 0:
-                s += minus + bigint_knowl(-c, bigint_cutoff)
+                s += minus + str(-c)
             break
         if c > 0:
             s += plus
@@ -877,14 +887,13 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c), bigint_cutoff) + " "
+            s += str(abs(c)) + " "
         s += varpow
-    if coeffs[0] == 0:
-        s += r"\)"
+    s += r"\)"
     if s.startswith(plus):
-        return "\(" + s[len(plus):]
+        return "\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
-        return r"\(-" + s[len(minus):]
+        return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
@@ -1241,7 +1250,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
+    if not isinstance(pol_str, string_types):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')

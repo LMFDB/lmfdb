@@ -1,4 +1,4 @@
-
+from six.moves import range
 
 import ast, re, StringIO, time
 
@@ -52,9 +52,9 @@ def rep_galois_modl_render_webpage():
     if len(args) == 0:
         # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
-        dim_list= range(1, 11, 1)
+        dim_list= list(range(1, 11, 1))
         max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        class_number_list=list(range(1, max_class_number+1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
 #            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)

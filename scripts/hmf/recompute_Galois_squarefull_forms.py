@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os.path
 import sage.misc.preparser
 from sage.interfaces.magma import magma
@@ -30,5 +31,5 @@ def find_Galois_squarefull_forms():
                 magma.eval('NN := ideal<ZF | SequenceToSet(' + f['level_ideal'] + ')>;');
                 if magma('Min([2] cat [ff[2] : ff in Factorization(NN)]) ge 2;'):
                     forms_labels.append(f['label'])
-                    print f['label']
+                    print(f['label'])
     return forms_labels

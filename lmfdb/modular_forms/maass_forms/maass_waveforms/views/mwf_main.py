@@ -20,7 +20,7 @@ AUTHORS:
 
 
 """
-
+from __future__ import print_function
 import flask
 from flask import render_template, url_for, request, send_file
 import re
@@ -494,11 +494,11 @@ def render_browse_all_eigenvalues(**kwds):
                         'Coeff.', 'Fricke', 'Atkin-Lehner']
 
     if int(info.get('weight', 0)) == 1:
-        print "weight1=", info.get('weight', 0)
+        print("weight1=", info.get('weight', 0))
         info['wtis1'] = "selected"
         info['wtis0'] = ""
     else:
-        print "weight0=", info.get('weight', 0)
+        print("weight0=", info.get('weight', 0))
         info['wtis0'] = "selected"
         info['wtis1'] = ""
     return render_template("mwf_browse_all_eigenvalues.html", **info)

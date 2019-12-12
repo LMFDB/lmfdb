@@ -721,7 +721,7 @@ def number_field_jump(info):
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
-             split_ors=['galois_group'],
+             split_ors=['galt'],
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list)
@@ -785,7 +785,7 @@ def see_frobs(frob_data):
             s = '$'
             firstone = True
             for j in dec:
-                if firstone == False:
+                if not firstone:
                     s += '{,}\,'
                 if j[0]<15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 

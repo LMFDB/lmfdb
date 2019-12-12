@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-
+from six import string_types
 from collections import defaultdict
 import bisect, re
 
@@ -259,7 +259,7 @@ class WebNewform(object):
     def friends(self):
         # first newspaces
         res = []
-        base_label = map(str, [self.level, self.weight])
+        base_label = [str(s) for s in [self.level, self.weight]]
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
@@ -306,7 +306,7 @@ class WebNewform(object):
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
-                res = map(lambda elt : list(map(str, elt)), res)
+                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
                 return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
@@ -634,9 +634,9 @@ class WebNewform(object):
                 return "%s\(/%s\)" % (num, den)
         else:
             if paren:
-                return r"\((\)%s\()/\)%s" % (num, bigint_knowl(den))
+                return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
             else:
-                return r"%s\(/\)%s" % (num, bigint_knowl(den))
+                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
 
     @property
     def _nu_latex(self):
@@ -1036,7 +1036,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, basestring): # match object
+        if not isinstance(elabel, string_types): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

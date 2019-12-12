@@ -127,7 +127,8 @@ table td.params {
   font-family: monospace;
 }
 </style>
-<table>
+<table class="ntdata">
+<thead>
   <tr>
     <th class="center">{{ KNOWL('ec.curve_label',title = "Label") }}</th>
     <th class="center">{{ KNOWL('nf',title = "Base field") }}</th>
@@ -136,6 +137,7 @@ table td.params {
     <th class="center">{{ KNOWL('ec.isogeny_class',title = "Isogeny class")}}</th>
     <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
   </tr>
+</thead>
   {% for curve in info.results: %}
   <tr>
     <td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
@@ -149,7 +151,6 @@ table td.params {
   </tr>
   {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
-
+from __future__ import print_function
+from six import string_types
 from lmfdb import db
 from sage.all import Integer, loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
@@ -47,18 +48,18 @@ class MaassDB(object):
 
     def get_coefficients(self, data={}, verbose=0, **kwds):
         if verbose > 0:
-            print "data=", data
+            print("data=", data)
         maass_id = data.get('maass_id')
         if maass_id is None:
             raise ValueError
         if verbose > 0:
-            print "id=", maass_id
+            print("id=", maass_id)
         f = db.mwf_forms.lucky({'maass_id': maass_id})
         if f is None:
             return None
         nc = f.get('Numc', 0)
         if verbose > 0:
-            print "f=", f
+            print("f=", f)
         if nc == 0:
             return None
         cid = f.get('coeff_label', None)
@@ -206,7 +207,7 @@ class MaassDB(object):
 
     def set_table(self, refresh=False):
         self.table = db.mwf_tables.lucky({})
-        self.table['keylist'] = map(tuple, self.table['keylist'])
+        self.table['keylist'] = [tuple(k) for k in self.table['keylist']]
         self.table['data'] = {tuple(map(int, k.split(','))):tuple(v) for k,v in self.table['data'].iteritems()}
         #data = self.show_data()
         #table = {}
@@ -256,7 +257,7 @@ class MaassDB(object):
         else:
             s = ""
         if date == 1:
-            print "rdate=", rdate
+            print("rdate=", rdate)
             s += "{0:^7}{1:^7}{2:^7}{3:^20.15f}{4:^10}{5:^7}{6:^3.1e}{7:^15}{8:^20}{9} \n".format(
                 N, k, ch, R, st, dim, err, nc, evs, sdate)
         else:
@@ -266,15 +267,17 @@ class MaassDB(object):
 
     def show_last(self):
         last = db.mwf_forms.search({}, sort=[('date',-1)], limit=1)[0]
-        print self.display_one_record(last, date=1)
+        print(self.display_one_record(last, date=1))
 
 maass_db = MaassDB()
 
+
 def lowercase_dict(data):
     for k in data.keys():
-        if isinstance(k, basestring):
+        if isinstance(k, string_types):
             data[k.lower()] = data.pop(k)
 
+            
 def arg_to_format_parameters(data={}, **kwds):
     res = {}
     if not isinstance(data, dict):

@@ -89,7 +89,7 @@
 {% endif %}
 {% include 'matches.html' %}
 {% if info.number %}
-<table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>
+<table class="ntdata" id="fieldTab"`>
 <thead>
 <tr>
 <th>{{KNOWL('nf.label', 'Label')}}</th>
@@ -123,7 +123,6 @@
 {% endfor %}
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

@@ -8,11 +8,10 @@ class inventory_data:
 
   def rename_key(self, previous, new):
     try:
-	    key_data = self.orphans[previous]
-	    self.data[new] = key_data
+      key_data = self.orphans[previous]
+      self.data[new] = key_data
     except:
       pass
 
   def get_outdated_keys(self):
-	  return self.orphans.__keys__
-
+    return self.orphans.__keys__
