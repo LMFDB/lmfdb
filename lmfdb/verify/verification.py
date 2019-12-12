@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from six import integer_types as six_integers
 import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
@@ -9,7 +10,7 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 
-integer_types = (int, long, Integer)
+integer_types = six_integers + (Integer,)
 def accumulate_failures(L):
     """
     Accumulates a list of bad labels
