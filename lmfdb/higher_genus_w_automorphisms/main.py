@@ -23,8 +23,8 @@ from collections import defaultdict
 logger = make_logger("hgcwa")
 
 #Parsing group order
-LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d+)\**(\(g-1\)|g-\d+)))(,(\d+|(\d*-(\d+)?)|((\d+)\**(\(g-1\)|g-\d+))))*$')
-GENUS_RE = re.compile(r'^(\d+)\**(\(g-1\)|g-(\d+))$')
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\))))(,(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\)))))*$')
+GENUS_RE = re.compile(r'^(\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\))$')
 
 # Determining what kind of label
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-?[^\.]*$)')
@@ -468,28 +468,43 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                 for i in range(0, len(a)):
                     ret.append({a[i][0]: a[i][1], 'genus': a[i][2]})
         return ['$or', ret]
-    elif 'g' in arg:
-        num = int(GENUS_RE.match(arg).groups()[0])
-        # Check if the equation is in correct form
-        if '(' not in arg: #84g-84
-            if num != int(GENUS_RE.match(arg).groups()[-1]):
-                raise ValueError("It needs to be an integer (such as 25), \
-                    a range of integers (such as 2-10 or 2..10), \
-                    an equation with a variable g for genus (such as 84*(g-1), 84(g-1), 84*g-84 or 84g-84), \
-                    or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
-        
+    elif 'g' in arg: # linear function of variable g (ax+b)
+        a = GENUS_RE.match(arg).groups()[0]    
         genus_list = db.hgcwa_passports.distinct('genus')
         genus_list.sort()
         min_genus = genus_list[0]
         max_genus = genus_list[-1]
         queries = []
+
         for g in range(min_genus,max_genus+1):
-            group_order = num * (g - 1)
-            queries.append((group_order, g))
-        if instance == 1: #If there is only one search value which is num*(g-1)
-            return ['$or', [{key: group_order, 'genus': g} for (group_order,g) in queries]]
+        	if '(' in arg:
+        		b = int(GENUS_RE.match(arg).groups()[6])
+        		if '+' in arg: #a(g+b)
+        			group_order = int(a)*(g+b)
+        		elif '-' in arg: #a(g-b)
+        			group_order = int(a)*(g-b)
+        	else:
+        		if '+' in arg: 
+        			b = int(GENUS_RE.match(arg).groups()[4])
+        			if a == '': #g+b
+        				group_order = g+b
+        			else: #ag+b
+        				group_order = int(a)*g+b
+        		elif '-' in arg: 
+        			b = int(GENUS_RE.match(arg).groups()[4])
+        			if a == '': #g-b
+        				group_order = g-b
+        			else: #ag-b
+        				group_order = int(a)*g-b
+        		else: #ag
+        			group_order = int(a)*g
+
+        	queries.append((group_order, g))
+
+        if instance == 1: #If there is only one linear function 
+        	return ['$or', [{key: group_order, 'genus': g} for (group_order,g) in queries]]
         else:
-            return [[key, group_order, g] for (group_order,g) in queries] #Nested list
+        	return [[key, group_order, g] for (group_order,g) in queries] #Nested list
     elif '-' in arg and 'g' not in arg:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
@@ -505,12 +520,12 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
 
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_group_order(inp, query, qfield, parse_singleton=int):
-    if LIST_RE.match(inp):
-        collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
-    else:
-        raise ValueError("It needs to be an integer (such as 25), \
+	if LIST_RE.match(inp):
+		collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
+	else:
+		raise ValueError("It needs to be an integer (such as 25), \
                     a range of integers (such as 2-10 or 2..10), \
-                    an equation with a variable g for genus (such as 84*(g-1), 84(g-1), 84*g-84 or 84g-84), \
+                    a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_wrap(template="hgcwa-search.html",
