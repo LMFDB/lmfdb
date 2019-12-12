@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
@@ -633,7 +633,7 @@ class NumberFieldGaloisGroup(object):
         elif len(x) > 1:
             raise ValueError("Only one positional argument allowed")
         else:
-            if isinstance(x[0], basestring):
+            if isinstance(x[0], string_types):
                 if x[0]:
                     coeffs = x[0].split(',')
                 else:

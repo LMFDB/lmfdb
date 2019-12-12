@@ -1,5 +1,5 @@
 # Different helper functions.
-
+from six import string_types
 import math, re
 
 from flask import url_for
@@ -712,7 +712,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     else:
         lfunction_value_tex_analytic = ''
 
-    if isinstance(val, basestring):
+    if isinstance(val, string_types):
         Lval = val
     else:
         ccval = CDF(val)

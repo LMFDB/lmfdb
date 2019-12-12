@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 from __future__ import print_function
+from six import string_types
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -242,8 +243,8 @@ class LmfdbUser(UserMixin):
     properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
-        if not isinstance(uid, basestring):
-            raise Exception("Username is not a basestring")
+        if not isinstance(uid, string_types):
+            raise Exception("Username is not a string")
 
         self._uid = uid
         self._authenticated = False

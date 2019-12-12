@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
@@ -74,8 +74,9 @@ def split_full_label(lab):
     label_suffix = data[2]
     return (field_label, level_label, label_suffix)
 
+
 def hilbert_modular_form_by_label(lab):
-    if isinstance(lab, basestring):
+    if isinstance(lab, string_types):
         res = db.hmf_forms.lookup(lab, projection=0)
     else:
         res = lab
