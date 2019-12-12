@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
+from six import integer_types as six_integers
 import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
@@ -9,7 +10,7 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 
-integer_types = (int, long, Integer)
+integer_types = six_integers + (Integer,)
 def accumulate_failures(L):
     """
     Accumulates a list of bad labels
@@ -263,7 +264,7 @@ class TableChecker(object):
             if scount:
                 reports.append(pluralize(scount, sname))
         status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
-        print "%s.%s %s in %.2fs\n" % (self.__class__.__name__, check, status, time.time() - start)
+        print("%s.%s %s in %.2fs\n" % (self.__class__.__name__, check, status, time.time() - start))
 
     def run(self, typ, logdir, label=None):
         self._cur_label = label
@@ -310,7 +311,7 @@ class TableChecker(object):
         if verbose:
             if msg is None:
                 msg = "{0} != {1}"
-            print msg.format(a, b)
+            print(msg.format(a, b))
         return False
 
     def _make_sql(self, s, tablename=None):
@@ -344,7 +345,7 @@ class TableChecker(object):
         join2 = [self._make_sql(j, "t2") for j in join2]
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_query(self, condition=None, constraint={}, values=[], table=None, query=None, ratio=1):
+    def _run_query(self, condition=None, constraint={}, values=None, table=None, query=None, ratio=1):
         """
         Run a query to check a condition.
 
@@ -365,6 +366,8 @@ class TableChecker(object):
         - ``ratio`` -- the ratio of rows in the table to run this query on.
 
         """
+        if values is None:
+            values = []
         label_col = Identifier(self.label_col)
         if query is None:
             if table is None:

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import yaml
 from flask import url_for
@@ -256,7 +257,7 @@ class ECNF(object):
         data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
-        print "No such curve in the database: %s" % label
+        print("No such curve in the database: %s" % label)
 
     def make_E(self):
         #print("Creating ECNF object for {}".format(self.label))
@@ -333,9 +334,9 @@ class ECNF(object):
                 self.fact_mindisc = self.mindisc
                 self.fact_mindisc_norm = self.mindisc
             else:
-                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,mindisc_ords)])
+                Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
-                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,mindisc_ords)])
+                Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
                 self.fact_mindisc_norm = web_latex(Dminnormfac)
 
         j = self.field.parse_NFelt(self.jinv)
@@ -418,9 +419,9 @@ class ECNF(object):
         # Q-curve / Base change
         try:
             qc = self.q_curve
-            if qc == True:
+            if qc is True:
                 self.qc = "yes"
-            elif qc == False:
+            elif qc is False:
                 self.qc = "no"
             else: # just in case
                 self.qc = "not determined"
@@ -617,7 +618,7 @@ class ECNF(object):
             self.friends += [('L-function not available', "")]
 
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 

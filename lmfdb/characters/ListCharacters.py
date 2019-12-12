@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
+from six.moves import range
 
 import re
 from sage.all import lcm, factor, divisors
@@ -56,10 +57,10 @@ def parse_limit (arg):
 
 def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
-    headers = range(1, limit)
+    headers = list(range(1, limit))
     headers.append("more")
     entries = {}
-    rows = range(a, b + 1)
+    rows = list(range(a, b + 1))
     for row in rows:
         G = DirichletGroup_conrey(row)
         for chi in G:

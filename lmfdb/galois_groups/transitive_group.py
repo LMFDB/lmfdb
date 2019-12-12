@@ -182,11 +182,11 @@ class WebGaloisGroup:
             cc = ccc
             cc2 = [x.cycletype(n) for x in cc]
         cc2 = [str(x) for x in cc2]
-        cc2 = map(lambda x: re.sub("\[", '', x), cc2)
-        cc2 = map(lambda x: re.sub("\]", '', x), cc2)
+        cc2 = [re.sub("\[", '', x) for x in cc2]
+        cc2 = [re.sub("\]", '', x) for x in cc2]
         ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
         self._data['conjclasses'] = ans
-        return(ans)
+        return ans
 
     def sibling_bound(self):
         return self._data['bound_siblings']

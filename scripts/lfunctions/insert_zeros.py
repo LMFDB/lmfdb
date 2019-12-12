@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 from sage.all import DirichletGroup
@@ -13,7 +14,7 @@ first_zeros = db.first_zeros_testing
 first_zeros.drop()
 
 for q in range(3, 1500):
-    print q
+    print(q)
     sys.stdout.flush()
     G = DirichletGroup(q)
     for n in range(len(G)):

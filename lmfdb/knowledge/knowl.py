@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
+from __future__ import print_function
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
@@ -526,10 +527,10 @@ class KnowlBackend(PostgresBase):
         if execute:
             for kid in bad_names:
                 new_kid = kid.replace('-', '_')
-                print "Renaming %s -> %s" % (kid, new_kid)
+                print("Renaming %s -> %s" % (kid, new_kid))
                 self.rename(kid, new_kid)
         else:
-            print bad_names
+            print(bad_names)
 
     def broken_links_knowls(self):
         """

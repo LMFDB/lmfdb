@@ -14,6 +14,7 @@ Evolved during 2012-2018
 
 Postgres table ec_curves has these columns (updated 2019-08-05):
 """
+from __future__ import print_function
 
 qcurves_col_type = {
     u'2adic_gens': 'jsonb',
@@ -153,7 +154,7 @@ from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, p
 from lmfdb.utils import web_latex
 from lmfdb.elliptic_curves.web_ec import count_integral_points
 from lmfdb import db
-print "setting curves"
+print("setting curves")
 curves = db.ec_curves
 
 def parse_tgens(s):
@@ -645,26 +646,42 @@ def fix_isogeny_degrees(C):
 
 
 def cmp_label(lab1, lab2):
+    """
+    EXAMPLES::
+
+    cmp_label('24a5', '33a1')
+    -1
+    cmp_label('11a1', '11a1')
+    0
+    """
     from sage.databases.cremona import parse_cremona_label, class_to_int
-#    print lab1,lab2
     a, b, c = parse_cremona_label(lab1)
     id1 = int(a), class_to_int(b), int(c)
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
+    if id1 == id2:
+        return 0
+    return -1 if id1 < id2 else 1
 
 
-def comp_dict_by_label(d1, d2):
-    return cmp_label(d1['label'], d2['label'])
+def sorting_label(d1):
+    """
+    Provide a sorting key.
+    """
+    from sage.databases.cremona import parse_cremona_label, class_to_int
+    a, b, c = parse_cremona_label(d1["label"])
+    return (int(a), class_to_int(b), int(c))
+
 
 def encode(x):
     if x is None:
-        return '\N'
+        return '\\N'
     if x is True:
         return 't'
     if x is False:
         return 'f'
     return str(x)
+
 
 def copy_records_to_file(records, fname, id0=0, verbose=True):
     searchfile = fname+'.search'
@@ -770,7 +787,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             continue
         t0=time.time()
         h = open(os.path.join(base_path, f))
-        print "opened %s" % os.path.join(base_path, f)
+        print("opened %s" % os.path.join(base_path, f))
 
         parse=parsing_dict[f]
         count = 0
@@ -791,7 +808,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
         print("finished reading {} lines from file in {}".format(count, time.time()-t0))
 
     vals = data_to_insert.values()
-    # vals.sort(cmp=comp_dict_by_label)
+    # vals.sort(key=sorting_label)
 
     if allisog_filename in file_list:
         isogmats = read1isogmats(base_path, min_N, max_N)
@@ -841,7 +858,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             curves.upsert({'label': val['label']}, val)
             count += 1
             if count % 5000 == 0:
-                print "inserted %s" % (val['label'])
+                print("inserted %s" % (val['label']))
 
 def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     r""" Returns a dictionary whose keys are Cremona labels of individual
@@ -1135,7 +1152,7 @@ def update_torsion_growth_stats(verbose=True):
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
 
 def update_int_pts(filename, test=True, verbose=0, basepath=None):
-    if basepath==None:
+    if basepath is None:
         basepath = os.environ['HOME']
     int_pts_data = {}
     for L in open(os.path.join(basepath,filename)):
@@ -1248,7 +1265,7 @@ def fix_quad_twist(c):
             ct = curves.lucky({'ainvs':ainvs}, projection=['label', 'lmfdb_label'])
         else:
             ct = curves.lucky({'lmfdb_label':mqt['lmfdb_label']}, projection=['label', 'lmfdb_label'])
-        if ct==None:
+        if ct is None:
             print("failed to find curve (twist of {})".format(c['label']))
         else:
             mqt['label'] = ct['label']

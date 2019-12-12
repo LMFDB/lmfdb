@@ -22,7 +22,7 @@ for Flabel in fieldlabels:
     # sample Flabel  4.4.16448.2
     wanted_keys = ['label', 'level_ideal','is_CM','is_base_change','AL_eigenvalues','AL_eigenvalues_fixed']
     degree = Flabel.split('.')[0]
-    print 'Working on',Flabel,'forms.'
+    print('Working on {} forms.'.format(Flabel))
     with open('/Users/d_yasaki/Desktop/data/'+Flabel+'-extra-plus.txt','w') as outfile:
         query = {'field_label':Flabel}
         Fquery = {'label':Flabel}
@@ -54,6 +54,5 @@ for Flabel in fieldlabels:
                     change_ap.append([ALdata[0],-ALdata[1]])
             alldata = [clean(f[a]) for a in wanted_keys] + [clean(a) for a in change_ap]
             newdata = ':'.join(alldata)
-            print flabel
+            print(flabel)
             outfile.write(newdata + '\n')
-

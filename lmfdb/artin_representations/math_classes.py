@@ -14,11 +14,11 @@ import re
 # for values (value a means e(a/n))
 def id_dirichlet(fun, N, n):
     N = Integer(N)
-    if N==1:
-        return (1,1)
+    if N == 1:
+        return (1, 1)
     p2 = valuation(N, 2)
     N2 = 2**p2
-    Nodd = N/N2
+    Nodd = N//N2
     Nfact = list(factor(Nodd))
     #print "n = "+str(n)
     #for j in range(20):
@@ -123,14 +123,14 @@ class ArtinRepresentation(object):
         return int(self._data["Conductor"])
 
     def NFGal(self):
-        return  map(int, self._data["NFGal"]);
+        return [int(n) for n in self._data["NFGal"]]
 
     # If the dimension is 1, we want the result as a webcharacter
     # Otherwise, we want the label of it as an Artin rep.
     # Mostly, this is pulled from the database, but we can fall back
     # and compute it ourselves
     def determinant(self):
-        if len(self._data['Dets'])>0:
+        if self._data['Dets']:
             parts = self.label().split("c")
             thischar = str( self._data['Dets'][int(parts[1])-1] )
             if self.dimension()==1:
@@ -532,7 +532,7 @@ class ArtinRepresentation(object):
         try:
             i = self.hard_primes().index(p)
         except:
-            raise IndexError("Not a 'hard' prime%" % p)
+            raise IndexError("Not a 'hard' prime")
         return self.hard_factors()[i]
 
     def nf(self):
@@ -721,7 +721,6 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
-        import re
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
             mygalstring = wnf.galois_string()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import db
 import os, sys, inspect
 
@@ -20,8 +21,8 @@ for elt in ola:
 
 passports.insert_many(passports_upload);
 galmaps.insert_many(galmaps_upload);
-print passports.find().count(), len(passports_upload)
-print galmaps.find().count(), len(galmaps_upload)
+print(passports.find().count(), len(passports_upload))
+print(galmaps.find().count(), len(galmaps_upload))
 
 
 filename = inspect.getframeinfo(inspect.currentframe())[0];

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
@@ -20,7 +21,7 @@ def recompute_AL():
     S = S.sort("label")
 
     while True:
-        v = S.next()
+        v = next(S)
         NN_label = v["level_label"]
         v_label = v["label"]
 
@@ -28,14 +29,14 @@ def recompute_AL():
             if v["AL_eigenvalues_fixed"] == 'done' or v["AL_eigenvalues_fixed"] == 'working':
                 continue
         except KeyError:
-            print v_label
-            print "...new, computing!"
+            print(v_label)
+            print("...new, computing!")
             v["AL_eigenvalues_fixed"] = 'working'
             hmf_forms.save(v)
 
         if field_label is None or not field_label == v["field_label"]:
             field_label = v["field_label"]
-            print "...new field " + field_label
+            print("...new field " + field_label)
 
             F = fields.find_one({"label": field_label})
             F_hmf = hmf_fields.find_one({"label": field_label})
@@ -61,7 +62,7 @@ def recompute_AL():
 
         magma.eval('hecke_eigenvalues := [' + ','.join([st for st in v["hecke_eigenvalues"]]) + '];')
 
-        print "...Hecke eigenvalues loaded..."
+        print("...Hecke eigenvalues loaded...")
 
         magma.eval('s := 0; KT := []; '
                    'while KT cmpeq [] or Dimension(KT) gt 1 do '
@@ -79,7 +80,7 @@ def recompute_AL():
                    'end while;')
         magma.eval('assert Dimension(KT) eq 1;')
 
-        print "...dimension 1 subspace found..."
+        print("...dimension 1 subspace found...")
 
         magma.eval('NNfact := Factorization(NN);')
         magma.eval('f := Vector(Basis(KT)[1]); '
@@ -97,7 +98,7 @@ def recompute_AL():
 #                   '  T_ppf := f*ChangeRing(HeckeOperator(M, pp[1]),K); '\
 #                   '  if pp[2] ge 2 then assert T_ppf eq 0*f; else assert T_ppf eq -U_ppf; end if; '\
 
-        print "...AL eigenvalues computed!"
+        print("...AL eigenvalues computed!")
 
         AL_ind = eval(preparse(magma.eval('[Index(primes,pp[1])-1 : pp in NNfact]')))
         AL_eigenvalues_jv = eval(preparse(magma.eval('AL_eigenvalues')))
