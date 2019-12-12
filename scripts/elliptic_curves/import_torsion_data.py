@@ -140,13 +140,16 @@ def read_line(line, degree, debug=0):
     # Qt = str_to_list(fields[1]) # string representing list of ints of length <=2
 
     tordata = [onefieldtor(dat, degree) for dat in fields[2:]]
-    if debug: print("before degree check, tordata = {}".format(tordata))
-    tordata = [t for t in tordata if t!=None]
-    if debug: print("after  degree check, tordata = {}".format(tordata))
+    if debug:
+        print("before degree check, tordata = {}".format(tordata))
+    tordata = [t for t in tordata if t is not None]
+    if debug:
+        print("after  degree check, tordata = {}".format(tordata))
     data = dict(tordata)
 
     if debug: print("label {}, data {}".format(clabel,data))
     return clabel, data
+
 
 def read_xline(line, degree, debug=0):
     r""" Parses one line from input file.  Returns a dict containing ...

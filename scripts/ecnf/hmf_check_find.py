@@ -681,7 +681,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
                 print("!!! No curves for %s found (using %s ap) !!!" % (nf_label,len(aplist)))
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-        if E!=None:
+        if E is not None:
             ec = {}
             ec['field_label'] = field_label
             ec['conductor_label'] = form['level_label']
