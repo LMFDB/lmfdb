@@ -1042,7 +1042,7 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            lines = [line for line in csv.reader(F, delimiter = "|")]
             if len(lines) == 0:
                 return
             for line in lines:
@@ -2901,17 +2901,17 @@ class PostgresTable(PostgresBase):
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u'\t'.join(search_cols) + u'\n')
-                    searchfile.write(u'\t'.join(self.col_type.get(col) for col in search_cols) + u'\n\n')
+                    searchfile.write(u'|'.join(search_cols) + u'\n')
+                    searchfile.write(u'|'.join(self.col_type.get(col) for col in search_cols) + u'\n\n')
                     if self.extra_table is not None:
-                        extrafile.write(u'\t'.join(extra_cols) + u'\n')
-                        extrafile.write(u'\t'.join(self.col_type.get(col) for col in extra_cols) + u'\n\n')
+                        extrafile.write(u'|'.join(extra_cols) + u'\n')
+                        extrafile.write(u'|'.join(self.col_type.get(col) for col in extra_cols) + u'\n\n')
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
-                        searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
+                        searchfile.write(u'|'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
-                            extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
+                            extrafile.write(u'|'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
                         count += 1
                         if (count % progress_count) == 0:
                             print("%d of %d records (%.1f percent) dumped in %.3f secs" % (count, tot, 100.0*count/tot,time.time()-start))
@@ -3732,7 +3732,7 @@ class PostgresTable(PostgresBase):
         """
         Efficiently copy data from the database to a file.
 
-        The result will have one line per row of the table, tab separated and in order
+        The result will have one line per row of the table, separated by | characters and in order
         given by self.search_cols and self.extra_cols.
 
         INPUT:
@@ -6362,7 +6362,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter = "\t")]
+                        rows = [line for line in csv.reader(F, delimiter = "|")]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
