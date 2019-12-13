@@ -293,7 +293,7 @@ def _dir_knowl_data(label, orbit=False):
         def conrey_link(i):
             return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
         if len(numbers) <= 2:
-            numbers = map(conrey_link, numbers)
+            numbers = [conrey_link(k) for k in numbers]
         else:
             numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
     else:
@@ -361,7 +361,7 @@ def dc_calc(calc, modulus, number):
             return WebDirichletCharacter(**args).kloosterman_sum(val)
         else:
             return flask.abort(404)
-    except Warning, e:
+    except Warning as e:
         return "<span style='color:gray;'>%s</span>" % e
     except Exception:
         return "<span style='color:red;'>Error: bad input</span>"
@@ -380,7 +380,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     args['modulus'] = modulus
     args['number'] = number
 
-    if number_field == None:
+    if number_field is None:
         info = WebHeckeExamples(**args).to_dict()
         return render_template('Hecke.html', **info)
     else:
@@ -388,16 +388,16 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         if WNF.is_null():
             return flask.abort(404, "Number field %s not found."%number_field)
 
-    if modulus == None:
+    if modulus is None:
         try:
             info = WebHeckeFamily(**args).to_dict()
         except (ValueError,KeyError,TypeError) as err:
             return flask.abort(404,err.args)
         return render_template('CharFamily.html', **info)
-    elif number == None:
+    elif number is None:
         try:
             info = WebHeckeGroup(**args).to_dict()
-        except (ValueError,KeyError,TypeError) as err:
+        except (ValueError,KeyError,TypeError):
             # Typical failure case is a GP error inside bnrinit which we don't really want to display
             return flask.abort(404,'Unable to construct modulus %s for number field %s'%(modulus,number_field))
         m = info['modlabel']
@@ -411,7 +411,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     else:
         try:
             X = WebHeckeCharacter(**args)
-        except (ValueError,KeyError,TypeError) as err:
+        except (ValueError,KeyError,TypeError):
             return flask.abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.'%(number,modulus,number_field))
         info = X.to_dict()
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
@@ -434,7 +434,7 @@ def hc_calc(calc, number_field, modulus, number):
             return WebHeckeCharacter(**args).value(val)
         else:
             return flask.abort(404)
-    except Exception, e:
+    except Exception as e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
 ###############################################################################

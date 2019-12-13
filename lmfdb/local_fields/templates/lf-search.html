@@ -52,9 +52,10 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table border=1 cellpadding=5 class="ntdata">
+<table class="ntdata">
 <thead>
 <tr>
+<th>{{KNOWL('lf.field.label',title='Label')}}</th>
 <th>Polynomial</th>
 <th>$p$</th>
 <th>{{KNOWL('lf.ramification_index',title='$e$')}}</th>
@@ -68,7 +69,8 @@
 
 {% for field in info.results: %}
 <tr>
-<td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
+<td><a href="/LocalNumberField/{{field.label}}"> {{field.label}} </a></td>
+<td align='left'>{{info.display_poly(field.coeffs)|safe}}</td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
@@ -81,7 +83,6 @@
 
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

@@ -134,7 +134,7 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table border=1 cellpadding=5 class="ntdata">
+<table class="ntdata">
 <thead>
 <tr>
 
@@ -152,10 +152,10 @@
 <tr>
 
   <td align='left'><a href="/HigherGenus/C/Aut/{{field.passport_label}}">{{field.passport_label}}</a></td>
-    <td>{{field.genus}}</td>
-  <td>${{info.group_display(field.group)}}$</td>
-  <td>{{field.group_order}}</td>
-    <td>{{field.dim}}</td>
+    <td align='center'>{{field.genus}}</td>
+  <td align='center'>${{info.group_display(field.group)}}$</td>
+  <td align='center'>{{field.group_order}}</td>
+    <td align='center'>{{field.dim}}</td>
   <td>${{info.sign_display(field.signature)}}$</td>
 
 

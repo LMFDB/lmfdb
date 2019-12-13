@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -49,6 +50,8 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'matches 1001-1025' in L.data
         L = self.tc.get('SatoTateGroup/?degree=1')
         assert 'both matches' in L.data
+        L = self.tc.get('SatoTateGroup/?count=47')
+        assert '1-47' in L.data
 
     def test_moments(self):
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
@@ -68,7 +71,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '3 matches' in L.data
         data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(2)}, projection='label'))
         assert len(data) == 3
-        print ""
+        print("")
         for label in data:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()

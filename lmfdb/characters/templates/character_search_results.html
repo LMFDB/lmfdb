@@ -68,7 +68,8 @@ table td.params {
 {% endif %}
 </h2>
 
-<table>
+<table class=ntdata>
+<thead>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.galois_orbit_label', title='Orbit label')}}</th>
@@ -78,6 +79,7 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
+</thead>
 
 {% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>

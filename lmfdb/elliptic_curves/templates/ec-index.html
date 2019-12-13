@@ -178,37 +178,42 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 </tr>
 
 
-    <tr>
-        <td>
-        {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
-        </td>
-        <td>
-        <input type='text' name='isodeg' example="16" size=10 />
-        </td>
-        <td>
-        <span class="formexample"> e.g. 16 </span>
-        </td>
-        <td align=left>
-{{KNOWL('ec.q.reduction_type', title='Bad primes')}} 
-        <select name='bad_quantifier'>
-        <option value=''>include</option>
-        <option value="exclude">exclude</option>
-        <option value='exactly'>exactly</option>
-        </select>
-        </td>
-        <td><input type='text' name='bad_primes' size=10 example='5,13'></td>
-        <td><span class="formexample"> e.g. 5,13</span></td>
-    </tr>
-
 <tr>
-<td>Results to display</td><td> <input type='text' name='count' value=50 size=10></td>
+    <td>
+    {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
+    </td>
+    <td>
+    <input type='text' name='isodeg' example="16" size=10 />
+    </td>
+    <td>
+    <span class="formexample"> e.g. 16 </span>
+    </td>
+    <td align=left>
+{{KNOWL('ec.q.reduction_type', title='Bad primes')}} 
+    <select name='bad_quantifier'>
+    <option value=''>include</option>
+    <option value="exclude">exclude</option>
+    <option value='exactly'>exactly</option>
+    </select>
+    </td>
+    <td><input type='text' name='bad_primes' size=10 example='5,13'></td>
+    <td><span class="formexample"> e.g. 5,13</span></td>
+</tr>
+<tr>
+    <td>
+    Number of {{ KNOWL('ec.q.integral_points',title="integral points") }}
+    </td>
+    <td>
+    <input type='text' name='num_int_pts' example="2" size=10>
+    </td>
+    <td>
+    <span class="formexample"> e.g. 2 or 4-15</span>
+    </td>
 </tr>
 
-
-  </table>
-<p></p>
-<td><button type='submit' value='Search'>Search</button></td>
-
+<tr><td>Results to display</td><td> <input type='text' name='count' value=50 size=10></td></tr>
+<tr><td><button type='submit' value='Search'>Search</button></td></tr>
+</table>
 </form>
 
 {% endif %}

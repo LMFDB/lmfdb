@@ -57,7 +57,7 @@ The design is the following:
 - the object classe ancestor triggers the __init__ method
 
 """
-
+from six.moves import range
 from flask import url_for
 
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -65,7 +65,7 @@ from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_met
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.utils import web_latex
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -96,13 +96,13 @@ class WebCharObject:
         d = {}
         for k in self._keys:
             d[k] = getattr(self,k,None)
-            if d[k] == None:
+            if d[k] is None:
                 logger.debug('### key[%s] is None'%k)
         return d
 
     @staticmethod
     def texlogvalue(x, tag=False):
-        if x == None:
+        if x is None:
             return 0
         if not isinstance(x, Rational):
             return '1'
@@ -157,18 +157,18 @@ class WebDirichlet(WebCharObject):
     def _char_desc(self, c, mod=None, prim=None):
         """ usually num is the number, but can be a character """
         if isinstance(c, DirichletCharacter_conrey):
-            if prim == None:
+            if prim is None:
                 prim = c.is_primitive()
             mod = c.modulus()
             num = c.number()
-        elif mod == None:
+        elif mod is None:
             mod = self.modulus
             num = c
-            if prim == None:
+            if prim is None:
                 prim = self.charisprimitive(mod,num)
         else:
             num = c
-            if prim == None:
+            if prim is None:
                 prim = self.charisprimitive(mod, num)
         return (mod, num, self.char2tex(mod,num), prim)
 
@@ -438,10 +438,10 @@ class WebHecke(WebCharObject):
         """ c is a Hecke character of modulus self.modulus
             unless modlabel is specified
         """
-        if modlabel == None:
+        if modlabel is None:
             modlabel = self.modlabel
         numlabel = self.number2label( c.exponents() )
-        if prim == None:
+        if prim is None:
             prim = c.is_primitive()
         return (modlabel, numlabel, self.char2tex(c), prim )
 
@@ -589,7 +589,7 @@ class WebCharGroup(WebCharObject):
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
-            'properties2', 'friends', 'rowtruncate', 'coltruncate']
+            'properties', 'friends', 'rowtruncate', 'coltruncate']
 
     def __init__(self, **args):
         self._contents = None
@@ -643,7 +643,7 @@ class WebCharGroup(WebCharObject):
             self.add_row(c)
 
     @property
-    def properties2(self):
+    def properties(self):
         return [("Modulus", [self.modulus]),
                 ("Structure", [self.structure]),
                 ("Order", [self.order]),
@@ -656,7 +656,7 @@ class WebCharGroup(WebCharObject):
 
     @property
     def contents(self):
-        if self._contents == None:
+        if self._contents is None:
             self._contents = []
             self._fill_contents()
         return self._contents
@@ -680,7 +680,7 @@ class WebChar(WebCharObject):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def __init__(self, **args):
@@ -757,7 +757,7 @@ class WebChar(WebCharObject):
           return ''
 
     @property
-    def properties2(self):
+    def properties(self):
         f = [("Conductor", [self.conductor]),
                 ("Order", [self.order]),
                 ("Real", [self.isreal]),
@@ -805,7 +805,7 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
 
     def first_moduli(self):
         """ restrict to conductors """
-        return ( m for m in xrange(2, self.maxrows) if m%4!=2 )
+        return (m for m in range(2, self.maxrows) if m % 4 != 2)
 
     def chargroup(self, mod):
         return WebDirichletGroup(modulus=mod,**self.args)
@@ -1113,7 +1113,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
               'orbit_label', 'orbit_index']
 
@@ -1394,7 +1394,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
               'orbit_label', 'orbit_index']
 
@@ -1660,7 +1660,7 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def nfpol(self):
         #return self.nf.web_poly()
-        return web_latex_split_on_pm(self.k.polynomial())
+        return web_latex(self.k.polynomial())
 
     @property
     def codegen(self):

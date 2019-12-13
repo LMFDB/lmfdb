@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-
+from __future__ import print_function
+from six import string_types, text_type
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -71,7 +72,7 @@ class PostgresUserTable(PostgresBase):
         try:
             import bcrypt
             if not existing_hash:
-                existing_hash = unicode(bcrypt.gensalt())
+                existing_hash = text_type(bcrypt.gensalt())
             return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
         except Exception:
             logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
@@ -242,8 +243,8 @@ class LmfdbUser(UserMixin):
     properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
-        if not isinstance(uid, basestring):
-            raise Exception("Username is not a basestring")
+        if not isinstance(uid, string_types):
+            raise Exception("Username is not a string")
 
         self._uid = uid
         self._authenticated = False
@@ -350,7 +351,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
         return True
 
 if __name__ == "__main__":
-    print "Usage:"
-    print "add user"
-    print "remove user"
-    print "…"
+    print("Usage:")
+    print("add user")
+    print("remove user")
+    print("…")

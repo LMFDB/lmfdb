@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db
@@ -21,10 +22,9 @@ if len(sys.argv) == 3:
     C = int(sys.argv[2])
     assert M > C
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
-
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])
 
 
 def compare_floats(a, b, prec = 52):
@@ -42,34 +42,35 @@ def compare_row(a, b, verbose = True):
     for i,c in enumerate(cols):
         if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
             if a[i] != b[i]:
-                print c, a[i], b[i]
+                print(c, a[i], b[i])
                 return False
         elif c in ['embedding_root_real', 'embedding_root_imag']:
             if not compare_floats(a[i], b[i]):
-                print c, a[i], b[i], a[i] - b[i]
+                print(c, a[i], b[i], a[i] - b[i])
                 return False
         elif c == 'an':
             for j, ((ax, ay), (bx, by)) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(ax, bx):
-                    print c, j, ax, bx, ax-bx
+                    print(c, j, ax, bx, ax-bx)
                     if ax != 0:
-                        print RR(abs((ax - bx)/ax)).log(2)
+                        print(RR(abs((ax - bx)/ax)).log(2))
                     return False
                 if not compare_floats(ay, by):
-                    print c, j, ay, by, ay-by
+                    print(c, j, ay, by, ay-by)
                     if ay != 0:
-                        print RR(abs((ay - by)/ay)).log(2)
+                        print(RR(abs((ay - by)/ay)).log(2))
                     return False
         elif c == 'angles':
             for j, (at, bt) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(at, bt):
-                    print c, j, at, bt
+                    print(c, j, at, bt)
                     if None not in [at,bt]:
-                        print at - bt
+                        print(at - bt)
                         if at !=0:
-                            print RR(abs((at - bt)/at)).log(2)
+                            print(RR(abs((at - bt)/at)).log(2))
                     return False
     return True
+
 
 with open(filename, 'r') as F:
     linenumber = -1
@@ -78,7 +79,6 @@ with open(filename, 'r') as F:
         if linenumber < 3:
             if linenumber == 0:
                 assert line[:-1] == cols_header
-            pass
         elif linenumber % M == C:
             linesplit = line[:-1].split(':')
             del linesplit[10]
@@ -104,7 +104,7 @@ with open(filename, 'r') as F:
                 linesplit[1] = '.'.join(lfun_label)
             hc = db.mf_hecke_cc.lucky({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
             if hc is None:
-                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                print({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
                 assert False
             for c in ['an']:
                 hc[c] = [[float(x), float(y)] for x, y in hc[c]]
@@ -113,19 +113,19 @@ with open(filename, 'r') as F:
                 hc['embedding_root_imag'] = 0
                 hc['embedding_root_real'] = 0
             if sorted(hc.keys()) != sorted(cols):
-                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
-                print sorted(hc.keys())
-                print sorted(cols)
+                print({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
+                print(sorted(hc.keys()))
+                print(sorted(cols))
                 assert False
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
-                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
-                print hc_list[-1][:10]
-                print linesplit[-1][:10]
+                print({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
+                print(hc_list[-1][:10])
+                print(linesplit[-1][:10])
                 assert False
 
             if (linenumber - C)/M % int(float(num_lines)/(10*M)) == 0:
-                print '%.2f %%' % (100*linenumber/float(num_lines))
+                print('%.2f %%' % (100*linenumber/float(num_lines)))
 
 
 

@@ -378,7 +378,7 @@ def hgcwa_code_download_search(info):
     for row in res:
         res_label[row['label']].append(row)
 
-    for label, data in res_label.iteritems():
+    for label, data in res_label.items():
         code += s + " label = {}".format(label) + '\n'
         code += s + code_list['search_result_gp_comment'][lang] + '\n'
         code += code_list['group'][lang] + str(data[0]['group']) + ';\n'
@@ -593,7 +593,7 @@ def render_family(args):
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2, friends=friends,
+                               properties=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads, credit=credit)
 
 
@@ -765,7 +765,7 @@ def render_passport(args):
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2, friends=friends,
+                               properties=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads,
                                credit=credit)
 

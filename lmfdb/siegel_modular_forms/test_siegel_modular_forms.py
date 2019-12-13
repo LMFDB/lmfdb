@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -99,7 +100,7 @@ class HomePageTest(LmfdbTest):
         data = list(db.smf_samples.search({'collection':{'$exists':True},'name':{'$exists':True}},['collection','name']))
         assert len(data) >= 129
         n = 0
-        print ""
+        print("")
         import sys
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
@@ -109,11 +110,11 @@ class HomePageTest(LmfdbTest):
                 n = n+1
                 self.check(full_label,[full_label,'Hecke eigenform'])
             except:
-                print "\nError on page " + full_label
+                print("\nError on page " + full_label)
                 errors.append(full_label)
         if not errors:
-            print "\nTested %s SMF pages with no errors" % n
+            print("\nTested %s SMF pages with no errors" % n)
         else:
-            print "\nTested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
+            print("\nTested %d pages with %d errors occuring on the following pages:" %(n,len(errors)))
             for label in errors:
-                print label
+                print(label)

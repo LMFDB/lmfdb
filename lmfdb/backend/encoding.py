@@ -2,6 +2,9 @@
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
+from six import string_types
+from six import integer_types as six_integers
+
 from psycopg2.extras import register_json, Json as pgJson
 from psycopg2.extensions import adapt, register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
 from sage.functions.other import ceil
@@ -46,7 +49,7 @@ class LmfdbRealLiteral(RealLiteral):
     A real number that prints using the string used to construct it.
     """
     def __init__(self, parent, x=0, base=10):
-        if not isinstance(x, basestring):
+        if not isinstance(x, string_types):
             x = str(x)
         RealLiteral.__init__(self, parent, x, base)
     def __repr__(self):
@@ -160,8 +163,8 @@ class Json(pgJson):
             if obj and all(isinstance(k, (int, Integer)) for k in obj):
                 return {'__IntDict__': 0, # encoding version
                         'data': [[int(k), cls.prep(v, escape_backslashes)] for k, v in obj.items()]}
-            elif all(isinstance(k, basestring) for k in obj):
-                return {k:cls.prep(v, escape_backslashes) for k,v in obj.iteritems()}
+            elif all(isinstance(k, string_types) for k in obj):
+                return {k:cls.prep(v, escape_backslashes) for k,v in obj.items()}
             else:
                 raise TypeError("keys must be strings or integers")
         elif isinstance(obj, FreeModuleElement):
@@ -223,7 +226,7 @@ class Json(pgJson):
                     'base': cls.prep(obj.base_ring(), escape_backslashes),
                     'prec': 'inf' if obj.prec() is infinity else int(obj.prec()),
                     'data': data}
-        elif escape_backslashes and isinstance(obj, basestring):
+        elif escape_backslashes and isinstance(obj, string_types):
             # For use in copy_dumps below
             return obj.replace('\\','\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
         elif obj is None:
@@ -237,7 +240,7 @@ class Json(pgJson):
         elif isinstance(obj, datetime.datetime):
             return {'__datetime__': 0,
                     'data': "%s"%(obj)}
-        elif isinstance(obj, (basestring, int, long, bool, float)):
+        elif isinstance(obj, (string_types, bool, float) + six_integers):
             return obj
         else:
             raise ValueError("Unsupported type: %s"%(type(obj)))
@@ -320,9 +323,9 @@ def copy_dumps(inp, typ, recursing=False):
     - ``typ`` -- the Postgres type of the column in which this data is being stored.
     """
     if inp is None:
-        return ur'\N'
+        return u'\\N'
     elif typ in ('text', 'char', 'varchar'):
-        if not isinstance(inp, basestring):
+        if not isinstance(inp, string_types):
             inp = str(inp)
         inp = inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
         if recursing and ('{' in inp or '}' in inp):
@@ -354,7 +357,7 @@ def copy_dumps(inp, typ, recursing=False):
         return '{' + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + '}'
     elif isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (int, long, Integer, float, RealNumber)):
+    elif isinstance(inp, (Integer, float, RealNumber) + six_integers):
         return str(inp).replace('L','')
     elif typ=='boolean':
         return 't' if inp else 'f'

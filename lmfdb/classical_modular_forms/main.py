@@ -338,7 +338,7 @@ def render_newform_webpage(label):
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -370,7 +370,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -389,7 +389,7 @@ def render_space_webpage(label):
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -407,7 +407,7 @@ def render_full_gamma1_space_webpage(label):
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -506,8 +506,8 @@ def jump_box(info):
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
     #handle direct trace_hash search
-    if re.match(r'^\#\d+$',jump) and long(jump[1:]) < 2**61:
-        label = db.mf_newforms.lucky({'trace_hash': long(jump[1:].strip())}, projection="label")
+    if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
+        label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:

@@ -131,7 +131,7 @@ def render_belyi_galmap_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("belyi_galmap.html",
-                           properties2=belyi_galmap.properties,
+                           properties=belyi_galmap.properties,
                            credit=credit_string,
                            info={},
                            data=belyi_galmap.data,
@@ -149,7 +149,7 @@ def render_belyi_passport_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("belyi_passport.html",
-                           properties2=belyi_passport.properties,
+                           properties=belyi_passport.properties,
                            credit=credit_string,
                            data=belyi_passport.data,
                            bread=belyi_passport.bread,
@@ -190,13 +190,13 @@ def break_label(label):
     else:
         raise ValueError("the label must have 5 or 6 dashes")
 
-    abc = map(int, abc[1:-1].split(","))
+    abc = [int(z) for z in abc[1:-1].split(",")]
     lambdas = [l0, l1, l2]
     for i, elt in lambdas:
         if "," in elt:
-            elt = map(int, elt.split(","))
+            elt = [int(t) for t in elt.split(",")]
         else:
-            elt = map(int, list(elt))
+            elt = [int(t) for t in list(elt)]
     genus = int(genus[1:])
     return group, abc, lambdas, genus, gal
 

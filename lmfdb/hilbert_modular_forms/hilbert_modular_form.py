@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
     search_wrap)
@@ -74,8 +74,9 @@ def split_full_label(lab):
     label_suffix = data[2]
     return (field_label, level_label, label_suffix)
 
+
 def hilbert_modular_form_by_label(lab):
-    if isinstance(lab, basestring):
+    if isinstance(lab, string_types):
         res = db.hmf_forms.lookup(lab, projection=0)
     else:
         res = lab
@@ -166,7 +167,7 @@ def download_hmf_magma(**args):
     F_hmf = get_hmf_field(f['field_label'])
 
     hecke_pol  = f['hecke_polynomial']
-    hecke_eigs = map(str, f['hecke_eigenvalues'])
+    hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
     AL_eigs    = f['AL_eigenvalues']
 
     outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
@@ -232,7 +233,7 @@ def download_hmf_sage(**args):
         return "No such form"
 
     hecke_pol  = f['hecke_polynomial']
-    hecke_eigs = map(str, f['hecke_eigenvalues'])
+    hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
     AL_eigs    = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
@@ -363,7 +364,7 @@ def render_hmf_webpage(**args):
     info['numeigs'] = numeigs
 
     hecke_pol  = data['hecke_polynomial']
-    eigs       = map(str, data['hecke_eigenvalues'])
+    eigs       = [str(eig) for eig in data['hecke_eigenvalues']]
     eigs = eigs[:min(len(eigs), numeigs)]
     AL_eigs    = data['AL_eigenvalues']
 
@@ -385,10 +386,10 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(hecke_pol))
+    info['hecke_polynomial'] = "\(" + teXify_pol(hecke_pol) + "\)"
 
     if not AL_eigs: # empty list
-        if data['level_norm']==1: # OK, no bad primes
+        if data['level_norm'] == 1: # OK, no bad primes
             info['AL_eigs'] = 'none'
         else:                     # not OK, AL eigs are missing
             info['AL_eigs'] = 'missing'
@@ -422,7 +423,7 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties2 = [('Base field', '%s' % info['field'].field_pretty()),
+    properties = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '%s' % data['weight']),
                    ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
@@ -432,7 +433,7 @@ def render_hmf_webpage(**args):
                    ('Base change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties=properties, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
 
 #data quality pages
 @hmf_page.route("/Completeness")

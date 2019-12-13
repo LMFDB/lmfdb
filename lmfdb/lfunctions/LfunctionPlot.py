@@ -1,5 +1,5 @@
 # Code for creating plots for browsing L-functions
-
+from __future__ import print_function
 import math
 from flask import url_for
 from lmfdb import db
@@ -476,8 +476,8 @@ def paintSvgHoloNew(condmax):
         # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
-        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8))
-
+        return ["("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")"
+                for r,g,b in seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8)]
 
     radius = 3
 
@@ -601,7 +601,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numminuslabels = 0
             for newsp in newspaces:  # looping over Galois orbit
                 for MF in newsp[1]:
-                    print MF
+                    print(MF)
                     linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
                     numberwithlabel = MF['dim'] # number of forms in the Galois orbit
                     # frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
@@ -1204,7 +1204,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
-    for arg, val in urlinfo['space'].iteritems():   # this does things like: level=4&weight=8&character=0
+    for arg, val in urlinfo['space'].items():   # this does things like: level=4&weight=8&character=0
         if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
             urlbase += arg + "=" + str(val) + "&amp;"
 

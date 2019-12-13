@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-
+from six import string_types
 from collections import defaultdict
 import bisect, re
 
@@ -14,7 +14,7 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb import db
 from lmfdb.utils import (
     coeff_to_poly, coeff_to_power_series, web_latex,
-    web_latex_split_on_pm, web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls)
@@ -259,7 +259,7 @@ class WebNewform(object):
     def friends(self):
         # first newspaces
         res = []
-        base_label = map(str, [self.level, self.weight])
+        base_label = [str(s) for s in [self.level, self.weight]]
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
@@ -306,7 +306,7 @@ class WebNewform(object):
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
-                res = map(lambda elt : list(map(str, elt)), res)
+                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
                 return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
@@ -634,9 +634,9 @@ class WebNewform(object):
                 return "%s\(/%s\)" % (num, den)
         else:
             if paren:
-                return r"\((\)%s\()/\)%s" % (num, bigint_knowl(den))
+                return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
             else:
-                return r"%s\(/\)%s" % (num, bigint_knowl(den))
+                return r"%s\(/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
 
     @property
     def _nu_latex(self):
@@ -964,17 +964,17 @@ function switch_basis(btype) {
                         latexterm += ' q^{%d}' % j
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
-                s += '\(' + latexterm + '\) '
+                s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '\(+O(q^{%d})\)' % prec
+        return '\(' + s + '+O(q^{%d})\)' % prec
 
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
         prec = min(max(eigseq.keys()) + 1, prec_max)
         if prec == 0:
-            return 'O(1)'
-        s = '\(q\)'
+            return '\(O(1)\)'
+        s = '\(q'
         for j in range(2, prec):
             term = eigseq[j]
             latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
@@ -986,10 +986,10 @@ function switch_basis(btype) {
                 latexterm += ' q^{%d}' % j
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
-                s += '\(' + latexterm + '\) '
+                s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '\(+O(q^{%d})\)' % prec
+        return s + '+O(q^{%d})\)' % prec
 
 
     def q_expansion(self, prec_max=10):
@@ -999,7 +999,7 @@ function switch_basis(btype) {
         elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
             if self.dim == 1:
-                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=False))
+                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=True)
             else:
                 s = self.eigs_as_seqseq_to_qexp(prec)
             return s
@@ -1008,7 +1008,7 @@ function switch_basis(btype) {
 
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        s = web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
+        s = web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=True)
         if too_big(self.texp[:prec], 10**24):
             s = make_bigint(s)
         return s
@@ -1036,7 +1036,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, basestring): # match object
+        if not isinstance(elabel, string_types): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

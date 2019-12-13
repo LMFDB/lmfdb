@@ -33,7 +33,7 @@ class Lfunction(object):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
-	    from sage.functions.other import sqrt 
+            from sage.functions.other import sqrt 
             from sage.rings.all import Integer
             from math import pi
             self.Q_fe = float(sqrt(Integer(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
@@ -48,7 +48,7 @@ class Lfunction(object):
     ############################################################################
 
     def compute_web_zeros(self, time_allowed = 10, **kwargs):
-	""" A function that dispatches web computations to the correct tool"""
+        """ A function that dispatches web computations to the correct tool"""
         # Do not pass 0 to either lower bound or step_size
         # Not dependent on time actually
         # Manual tuning required
@@ -86,7 +86,7 @@ class Lfunction(object):
         if not hasattr(self,"fromDB"):
             self.fromDB = False
 
-        if via_N == True:
+        if via_N is True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
             if self.fromDB:

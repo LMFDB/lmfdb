@@ -1,5 +1,6 @@
 #!/usr/local/bin/sage -python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import sys
 import json
 import os
@@ -168,7 +169,7 @@ def do_addrec(F):
         #print "Have this one"
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     dat = fn.read().replace('\n', ' ')
