@@ -1143,15 +1143,43 @@ class PostgresTable(PostgresBase):
     This class is used to abstract a table in the LMFDB database
     on which searches are performed.  Technically, it may represent
     more than one table, since some tables are split in two for performance
-    reasons.
+    reasons (into a search table, with columns that can be used for searching,
+    and an extra table, with columns that cannot)
 
     INPUT:
 
-    - ``db`` -- an instance of ``PostgresDatabase``, currently just used to store the common connection ``conn``.
+    - ``db`` -- an instance of ``PostgresDatabase``
     - ``search_table`` -- a string, the name of the table in postgres.
     - ``label_col`` -- the column holding the LMFDB label, or None if no such column exists.
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
+    - ``id_ordered`` -- a boolean, whether the ids of the rows are in sort order.
+        Used for improving search performance
+    - ``out_of_order`` -- if the rows are supposed to be ordered by ID, this boolean value records
+        that they are currently out of order due to insertions or updates.
+    - ``has_extras`` -- boolean, whether this table is split into a search and extra table
+    - ``stats_valid`` -- whether the statistics tables are currently up to date
+    - ``total`` -- the total number of rows in the table; cached as a performance optimization
+    - ``data_types`` -- a dictionary holding the data types of the columns; see the ``_column_types`` method for more details
+
+    ATTRIBUTES:
+
+    The following public attributes are available on instances of this class
+
+    - ``search_table`` -- a string, the name of the associated postgres search table
+    - ``extra_table`` -- either None, or a string giving the name of the extra table in postgres (generally it will be the search table with "_extras" appended
+    - ``search_cols`` -- a list of column names in the search table.  Does not include the id column.
+    - ``extra_cols`` -- a list of column names in the extra table.  Does not include the id column.  Will be the empty list if no extra table.
+    - ``col_type`` -- a dictionary with keys the column names and values the postgres type of that column.
+    - ``stats`` -- the attached ``PostgresStatsTable`` instance
+
+    The following private attributes are sometimes also useful
+
+    - ``_label_col`` -- the column used by default in the ``lookup`` method
+    - ``_sort_org`` -- either None or a list of columns or pairs ``(col, direction)``
+    - ``_sort_keys`` -- a set of column names included in the sort order
+    - ``_primary_sort`` -- either None, a column name or a pair ``(col, direction)``, the most significant column when sorting
+    - ``_sort`` -- the psycopg2.sql.Composable object containing the default sort clause
     """
     def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types=None):
         self.search_table = search_table
@@ -1214,7 +1242,7 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``projection`` -- either 0, 1, 2, 3 a dictionary or list of column names.
+        - ``projection`` -- either 0, 1, 2, 3, a dictionary or list of column names.
 
           - If 0, projects just to the ``label``.  If the search table does not have a label column, raises a RuntimeError.
           - If 1, projects to all columns in the search table.
@@ -1457,6 +1485,7 @@ class PostgresTable(PostgresBase):
         Returns the values of dictionary parse accordingly to be used as values in ``_execute``
 
         INPUT:
+
         - ``D`` -- a dictionary, or a scalar if outer is set
 
         OUTPUT:
@@ -1746,11 +1775,11 @@ class PostgresTable(PostgresBase):
         - ``offset`` -- integer. allows retrieval of a later record rather than just first.
         - ``sort`` -- The sort order, from which the first result is returned.
             - None, Using the default sort order for the table
-                the query then the choice of the result is arbitrary.
             - a list of strings (which are interpreted as column names in the
                 ascending direction) or of pairs (column name, 1 or -1).
                 If not specified, will use the default sort order on the table.
             - [] (default), unsorted, thus if there is more than one match to
+                the query then the choice of the result is arbitrary.
 
         OUTPUT:
 
@@ -1821,8 +1850,6 @@ class PostgresTable(PostgresBase):
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``split_ors`` -- a boolean.  If true, executes one query per clause in the `$or` list, combining the results.  Only used when a limit is provided.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
-        - ``force_exact_count`` -- a boolean. If True exact count will always be given
-        - ``count_only`` -- a boolean. If True then the exact count is calculated and the info object is populated. The function returns None
 
         WARNING:
 
@@ -2026,6 +2053,14 @@ class PostgresTable(PostgresBase):
         return self.lucky(query, projection='id') is not None
 
     def label_exists(self, label, label_col=None):
+        """
+        Determines whether these exists a record with the given label.
+
+        INPUT:
+
+        - ``label`` -- a string, the label
+        - ``label_col`` -- the column holding the label (most tables have a default setting)
+        """
         if label_col is None:
             label_col = self._label_col
             if label_col is None:
@@ -2181,6 +2216,11 @@ class PostgresTable(PostgresBase):
         """
         The maximum value attained by the given column.
 
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``constraint`` -- a query dictionary constraining which rows are considered
+
         EXAMPLES::
 
             sage: from lmfdb import db
@@ -2192,6 +2232,11 @@ class PostgresTable(PostgresBase):
     def distinct(self, col, query={}):
         """
         Returns a list of the distinct values taken on by a given column.
+
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``query`` -- a query dictionary constraining which rows are considered
         """
         selecter = SQL("SELECT DISTINCT {0} FROM {1}").format(Identifier(col), Identifier(self.search_table))
         qstr, values = self._parse_dict(query)
@@ -2208,11 +2253,14 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
+        - ``groupby`` -- (default None) a list of columns
         - ``record`` -- (default True) whether to record the number of results in the counts table.
 
         OUTPUT:
 
-        The number of records satisfying the query.
+        If ``groupby`` is None, the number of records satisfying the query.
+        Otherwise, a dictionary with keys the distinct tuples of values taken on by the columns
+        in ``groupby``, and values the number of rows with those values.
 
         EXAMPLES::
 
@@ -2229,23 +2277,34 @@ class PostgresTable(PostgresBase):
 
     def analyze(self, query, projection=1, limit=1000, offset=0, sort=None, explain_only=False):
         """
+        Prints an analysis of how a given query is being executed, for use in optimizing searches.
+
+        INPUT:
+
+        - ``query`` -- a query dictionary
+        - ``projection`` -- outputs, as in the ``search`` method
+        - ``limit`` -- a maximum on the number of rows to return
+        - ``offset`` -- an offset starting point for results
+        - ``sort`` -- a string or list specifying a sort order
+        - ``explain_only`` -- whether to execute the query (if ``True`` then will only use Postgres' query planner rather than actually carrying out the query)
+
         EXAMPLES::
 
-        sage: from lmfdb import db
-        sage: nf = db.nf_fields
-        sage: nf.analyze({'degree':int(5)},limit=20)
-        SELECT label, coeffs, degree, r2, cm, disc_abs, disc_sign, disc_rad, ramps, galt, class_number, class_group, used_grh, oldpolredabscoeffs FROM nf_fields WHERE degree = 5 ORDER BY degree, disc_abs, disc_sign, label LIMIT 20
-        Limit  (cost=671790.56..671790.61 rows=20 width=305) (actual time=1947.351..1947.358 rows=20 loops=1)
-          ->  Sort  (cost=671790.56..674923.64 rows=1253232 width=305) (actual time=1947.348..1947.352 rows=20 loops=1)
-                Sort Key: disc_abs, disc_sign, label COLLATE "C"
-                Sort Method: top-N heapsort  Memory: 30kB
-                ->  Bitmap Heap Scan on nf_fields  (cost=28589.11..638442.51 rows=1253232 width=305) (actual time=191.837..1115.096 rows=1262334 loops=1)
-                      Recheck Cond: (degree = 5)
-                      Heap Blocks: exact=35140
-                      ->  Bitmap Index Scan on nfs_ddd  (cost=0.00..28275.80 rows=1253232 width=0) (actual time=181.789..181.789 rows=1262334 loops=1)
-                            Index Cond: (degree = 5)
-        Planning time: 2.880 ms
-        Execution time: 1947.655 ms
+            sage: from lmfdb import db
+            sage: nf = db.nf_fields
+            sage: nf.analyze({'degree':int(5)},limit=20)
+            SELECT label, coeffs, degree, r2, cm, disc_abs, disc_sign, disc_rad, ramps, galt, class_number, class_group, used_grh, oldpolredabscoeffs FROM nf_fields WHERE degree = 5 ORDER BY degree, disc_abs, disc_sign, label LIMIT 20
+            Limit  (cost=671790.56..671790.61 rows=20 width=305) (actual time=1947.351..1947.358 rows=20 loops=1)
+              ->  Sort  (cost=671790.56..674923.64 rows=1253232 width=305) (actual time=1947.348..1947.352 rows=20 loops=1)
+                    Sort Key: disc_abs, disc_sign, label COLLATE "C"
+                    Sort Method: top-N heapsort  Memory: 30kB
+                    ->  Bitmap Heap Scan on nf_fields  (cost=28589.11..638442.51 rows=1253232 width=305) (actual time=191.837..1115.096 rows=1262334 loops=1)
+                          Recheck Cond: (degree = 5)
+                          Heap Blocks: exact=35140
+                          ->  Bitmap Index Scan on nfs_ddd  (cost=0.00..28275.80 rows=1253232 width=0) (actual time=181.789..181.789 rows=1262334 loops=1)
+                                Index Cond: (degree = 5)
+            Planning time: 2.880 ms
+            Execution time: 1947.655 ms
         """
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
@@ -2274,7 +2333,17 @@ class PostgresTable(PostgresBase):
     def list_indexes(self, verbose=False):
         """
         Lists the indexes on the search table present in meta_indexes
-        Note:
+
+        INPUT:
+
+        - ``verbose`` -- if True, prints the indexes; if False, returns a dictionary
+
+        OUTPUT:
+
+        - If not verbose, returns a dictionary with keys the index names and values a dictionary containing the type, columns and modifiers.
+
+        NOTE:
+
          - not necessarily all built
          - not necessarily a supset of all the built indexes.
 
@@ -2312,6 +2381,9 @@ class PostgresTable(PostgresBase):
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
     def _create_counts_indexes(self, suffix="", warning_only=False):
+        """
+        A utility function for creating the default indexes on the counts tables
+        """
         tablename = self.search_table + "_counts"
         storage_params = {}
         with DelayCommit(self, silence=True):
@@ -2338,19 +2410,19 @@ class PostgresTable(PostgresBase):
 
     def _check_index_name(self, name, kind="Index"):
         """
-        Given:
-            -- `name` of an index/constraint, and
-            -- `kind` in ["Index", "Constraint"]
-        checks that `name` doesn't end with:
-            - _tmp
-            _ _pkey
-            _ _oldN
-            - _depN
-        and that doesn't clash with another relation.
+        Checks to ensure that the given name doesn't end with one
+        of the following restricted suffixes, and that it doesn't already exist
 
+        - ``_tmp``
+        - ``_pkey``
+        - ``_oldN``
+        - ``_depN``
+
+        INPUT:
+
+        - ``name`` -- string, the name of an index or constraint
+        - ``kind`` -- either ``"Index"`` or ``"Constraint"``
         """
-
-
         self._check_restricted_suffix(name, kind)
 
 
@@ -2472,9 +2544,6 @@ class PostgresTable(PostgresBase):
             dropper = SQL("DROP INDEX {0}").format(Identifier(name + suffix))
             self._execute(dropper)
         print("Dropped index %s in %.3f secs"%(name, time.time() - now))
-
-
-
 
     def restore_index(self, name, suffix=""):
         """
@@ -2603,9 +2672,20 @@ class PostgresTable(PostgresBase):
     def list_constraints(self, verbose=False):
         """
         Lists the constraints on the search table present in meta_constraints
-        Note:
+
+        INPUT:
+
+        - ``verbose`` -- if True, prints the constraints; if False, returns a dictionary
+
+        OUTPUT:
+
+        - If not verbose, returns a dictionary with keys the index names and values a dictionary containing the type, columns and the check_func
+
+        NOTE:
+
          - not necessarily all built
          - not necessarily a supset of all the built constraints.
+
         For the current built constraints on the search table, see _list_built_constraints
         """
         selecter = SQL("SELECT constraint_name, type, columns, check_func FROM meta_constraints WHERE table_name = %s")
@@ -2714,6 +2794,21 @@ class PostgresTable(PostgresBase):
         print("Constraint %s created in %.3f secs"%(name, time.time() - now))
 
     def _get_constraint_data(self, name, suffix):
+        """
+        Utility function for getting data on an existing constraint
+
+        INPUT:
+
+        - ``name`` -- the name of the constraint
+        - ``suffix`` -- a suffix to be added to the returned table name
+
+        OUTPUT:
+
+        - ``type`` -- the type of the constraint
+        - ``columns`` -- the columns of the constraint
+        - ``check_func`` -- the function implementing the constraint
+        - ``table`` -- the postgres table on which the constraint operates (with suffix appended)
+        """
         selecter = SQL("SELECT type, columns, check_func FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")
         cur = self._execute(selecter, [self.search_table, name])
         if cur.rowcount > 1:
@@ -2848,6 +2943,23 @@ class PostgresTable(PostgresBase):
 
         Note that if you want to add new columns, you must explicitly call add_column() first.
 
+        INPUT:
+
+        - ``func`` -- a function that takes a record (dictionary) as input and returns the modified record
+        - ``query`` -- a query dictionary; only rows satisfying this query will be changed
+        - ``resort`` -- whether to resort the table after running the rewrite
+        - ``reindex`` -- whether to reindex the table after running the rewrite
+        - ``restat`` -- whether to recompute statistics after running the rewrite
+        - ``tostr_func`` -- a function to be used when writing data to the temp file
+            defaults to copy_dumps from lmfdb.backend.encoding
+        - ``commit`` -- whether to actually execute the rewrite
+        - ``searchfile`` -- a filename to use for the temp file holding the search table
+        - ``extrafile`` -- a filename to use for the temp file holding the extra table
+        - ``progress_count`` -- (default 10000) how frequently to print out status reports as the rewrite proceeds
+        - ``**kwds`` -- any other keyword arguments are passed on to the ``reload`` method
+
+        EXAMPLES:
+
         For example, to add a new column to artin_reps that tracks the
         signs of the galois conjugates, you would do the following::
 
@@ -2865,7 +2977,7 @@ class PostgresTable(PostgresBase):
             projection = search_cols + self.extra_cols
             extra_cols = ["id"] + self.extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
-        # to give func access to the data to process. 
+        # to give func access to the data to process.
         # An alternative approach would be to use COPY TO and have func and filter both
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
@@ -2925,6 +3037,8 @@ class PostgresTable(PostgresBase):
         - ``resort`` -- whether this table should be resorted after updating (default is to resort when the sort columns intersect the updated columns)
         - ``reindex`` -- whether the indexes on this table should be dropped and recreated during update (default is to recreate only the indexes that touch the updated columns)
         - ``restat`` -- whether to recompute stats for the table
+        - ``commit`` -- whether to actually commit the changes
+        - ``log_change`` -- whether to log the update to the log table
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
         sep = kwds.get("sep", u"\t")
@@ -3028,6 +3142,12 @@ class PostgresTable(PostgresBase):
     def delete(self, query, resort=True, restat=True, commit=True):
         """
         Delete all rows matching the query.
+
+        INPUT:
+
+        - ``query`` -- a query dictionary; rows matching the query will be deleted
+        - ``resort`` -- whether to resort the table afterward
+        - ``restat`` -- whether to recreate statistics afterward
         """
         with DelayCommit(self, commit, silence=True):
             qstr, values = self._parse_dict(query)
@@ -3051,6 +3171,16 @@ class PostgresTable(PostgresBase):
             self.log_db_change("delete", query=query, nrows=nrows)
 
     def update(self, query, changes, resort=True, restat=True, commit=True):
+        """
+        Update a table using Postgres' update command
+
+        INPUT:
+
+        - ``query`` -- a query dictionary.  Only rows matching the query will be updated
+        - ``changes`` -- a dictionary.  The keys should be column names, the values should be constants.
+        - ``resort`` -- whether to resort the table afterward
+        - ``restat`` -- whether to recompute statistics afterward
+        """
         for col in changes:
             if col in self.extra_cols:
                 # Have to find the ids using the query, then update....
@@ -3093,6 +3223,7 @@ class PostgresTable(PostgresBase):
         - ``query`` -- a dictionary with key/value pairs specifying at most one row of the table.
           The most common case is that there is one key, which is either an id or a label.
         - ``data`` -- a dictionary containing key/value pairs to be set on this row.
+        - ``commit`` -- whether to actually execute the upsert.
 
         The keys of both inputs must be columns in either the search or extras table.
 
@@ -3425,9 +3556,11 @@ class PostgresTable(PostgresBase):
             is to refresh stats if either countsfile or statsfile is missing.
         - ``final_swap`` -- whether to perform the final swap exchanging the
             temporary table with the live one.
+        - ``silence_meta`` -- suppress the warning message when using a metafile
         - ``adjust_schema`` -- If True, it will create the new tables using the
             header columns, otherwise expects the schema specified by the files
             to match the current one
+        - ``log_change`` -- whether to log the reload to the log table
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
 
         .. NOTE:
@@ -3651,14 +3784,21 @@ class PostgresTable(PostgresBase):
                 print("Swapped {0} to {1}".format(head + cur_tail, head + new_tail))
 
     def max_id(self, table = None):
+        """
+        The largest id occuring in the given table.  Used in the random method.
+        """
         if table is None:
             table = self.search_table
         res = db._execute(SQL("SELECT MAX(id) FROM {}".format(table))).fetchone()[0]
         if res is None:
             res = -1
         return res
+
     #A temporary hack for RANDOM FIXME
     def min_id(self, table = None):
+        """
+        The smallest id occuring in the given table.  Used in the random method.
+        """
         if table is None:
             table = self.search_table
         res = db._execute(SQL("SELECT MIN(id) FROM {}".format(table))).fetchone()[0]
@@ -3679,6 +3819,7 @@ class PostgresTable(PostgresBase):
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
+        - ``restat`` -- whether to recreate statistics after reloading.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
 
         .. NOTE:
@@ -3729,7 +3870,7 @@ class PostgresTable(PostgresBase):
         - ``statsfile`` -- a string (optional), the filename to write the data into for the stats table.
         - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
         - ``constraintsfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_constraints table.
-        - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
+        - ``metafile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
@@ -3789,6 +3930,11 @@ class PostgresTable(PostgresBase):
     def set_sort(self, sort, resort=True, commit=True):
         """
         Change the default sort order for this table
+
+        INPUT:
+
+        - ``sort`` -- a list of columns or pairs (col, direction) where direction is 1 or -1.
+        - ``resort`` -- whether to resort the table ids after changing the sort.
         """
         self._set_sort(sort)
         with DelayCommit(self, commit, silence=True):
@@ -3872,6 +4018,15 @@ class PostgresTable(PostgresBase):
             self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True, force=False):
+        """
+        Drop a column and any data stored in it.
+
+        INPUT:
+
+        - ``name`` -- the name of the column
+        - ``commit`` -- whether to actually execute the change
+        - ``force`` -- if False, will ask for confirmation
+        """
         if not force:
             ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
             if not (ok and ok[0] in ['y','Y']):
@@ -3981,10 +4136,18 @@ class PostgresTable(PostgresBase):
     def log_db_change(self, operation, **data):
         """
         Log changes to search tables.
+
+        INPUT:
+
+        - ``operation`` -- a string, explaining what operation was performed
+        - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
     def _check_verifications_enabled(self):
+        """
+        Check whether verifications have been enabled in this session (by importing db from lmfdb.verify and implementing an appropriate file).
+        """
         if not self._db.is_verifying:
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
         if self._verifier is None:
@@ -5182,7 +5345,8 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``col`` -- a
+        - ``col`` -- a colum name
+        - ``n`` -- an integer
         """
         if col not in self.table.search_cols:
             raise ValueError("Column %s not a search column for %s"%(col, self.search_table))
@@ -5596,9 +5760,18 @@ class PostgresDatabase(PostgresBase):
 
     INPUT:
 
-    - ``tables`` -- the information needed to construct the table interfaces.
-      Namely, a list, each entry of which is either a string (the name of the search table)
-      or a tuple which is passed on to the PostgresTable constructor.
+    - ``**kwargs`` -- passed on to psycopg's connect method
+
+    ATTRIBUTES:
+
+    The following public attributes are stored on the db object.
+
+    - ``server_side_counter`` -- an integer tracking how many buffered connections have been created
+    - ``conn`` -- the psycopg2 connection object
+    - ``tablenames`` -- a list of tablenames in the database, as strings
+    - ``is_verifying`` -- whether this database has been configured with verifications (import from lmfdb.verify if you want this to be True)
+
+    Also, each tablename will be stored as an attribute, so that db.ec_curves works for example.
 
     EXAMPLES::
 
@@ -5613,6 +5786,9 @@ class PostgresDatabase(PostgresBase):
         Interface to Postgres table av_fqisog
     """
     def _new_connection(self, **kwargs):
+        """
+        Create a new connection to the postgres database.
+        """
         from lmfdb.utils.config import Configuration
         options = Configuration().get_postgresql()
         # overrides the options passed as keyword arguments
@@ -5643,6 +5819,9 @@ class PostgresDatabase(PostgresBase):
             obj.conn = conn
 
     def register_object(self, obj):
+        """
+        The datbase holds references to tables, etc so that connections can be refreshed if they fail.
+        """
         obj.conn = self.conn
         self._objects.append(obj)
 
@@ -5707,10 +5886,10 @@ class PostgresDatabase(PostgresBase):
     def __repr__(self):
         return "Interface to Postgres database"
 
-
     def cursor(self, buffered=False):
         """
         Returns a new cursor.
+
         If buffered, then it creates a server side cursor that must be manually
         closed after done using it.
         """
@@ -5719,7 +5898,6 @@ class PostgresDatabase(PostgresBase):
             return self.conn.cursor(str(self.server_side_counter), withhold=True)
         else:
             return self.conn.cursor()
-
 
     def login(self):
         """
@@ -5746,12 +5924,25 @@ class PostgresDatabase(PostgresBase):
     def log_db_change(self, operation, tablename=None, **data):
         """
         Log a change to the database.
+
+        INPUT:
+
+        - ``operation`` -- a string, explaining what operation was performed
+        - ``tablename`` -- the name of the table that the change is affecting
+        - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         uid = self.login()
         inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
         self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
 
     def fetch_userpassword(self, options):
+        """
+        Gets a password stored in a password file
+
+        INPUT:
+
+        - ``options`` -- a dictionary; 'user' and 'password' will be inserted.
+        """
         if 'user' not in options:
             options['user'] = 'lmfdb'
 
@@ -5772,6 +5963,9 @@ class PostgresDatabase(PostgresBase):
             options['user'], options['password'] = 'lmfdb', 'lmfdb'
 
     def _grant(self, action, table_name, users):
+        """
+        Utility function for granting permissions on tables.
+        """
         action = action.upper()
         if action not in ['SELECT', 'INSERT', 'UPDATE', 'DELETE']:
             raise ValueError("%s is not a valid action"%action)
@@ -5780,24 +5974,65 @@ class PostgresDatabase(PostgresBase):
             self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True)
 
     def grant_select(self, table_name, users=['lmfdb', 'webserver']):
+        """
+        Grant users the ability to run SELECT statements on a given table
+
+        INPUT:
+
+        - ``table_name`` -- a string, the name of the table
+        - ``users`` -- a list of users to grant this permission
+        """
         self._grant("SELECT", table_name, users)
 
     def grant_insert(self, table_name, users=['webserver']):
+        """
+        Grant users the ability to run INSERT statements on a given table
+
+        INPUT:
+
+        - ``table_name`` -- a string, the name of the table
+        - ``users`` -- a list of users to grant this permission
+        """
         self._grant("INSERT", table_name, users)
 
     def grant_update(self, table_name, users=['webserver']):
+        """
+        Grant users the ability to run UPDATE statements on a given table
+
+        INPUT:
+
+        - ``table_name`` -- a string, the name of the table
+        - ``users`` -- a list of users to grant this permission
+        """
         self._grant("UPDATE", table_name, users)
 
     def grant_delete(self, table_name, users=['webserver']):
+        """
+        Grant users the ability to run DELETE statements on a given table
+
+        INPUT:
+
+        - ``table_name`` -- a string, the name of the table
+        - ``users`` -- a list of users to grant this permission
+        """
         self._grant("DELETE", table_name, users)
 
     def is_read_only(self):
+        """
+        Whether this instance of the database is read only.
+        """
         return self._read_only
 
     def can_read_write_knowls(self):
+        """
+        Whether this instance of the database has permission to read and write to the knowl tables
+        """
         return self._read_and_write_knowls
 
     def can_read_write_userdb(self):
+        """
+        Whether this instance of the database has permission to read and write to the user info tables.
+        """
         return self._read_and_write_userdb
 
     def is_alive(self):
@@ -5813,6 +6048,9 @@ class PostgresDatabase(PostgresBase):
         return False
 
     def __getitem__(self, name):
+        """
+        Accesses a PostgresTable object by name.
+        """
         if name in self.tablenames:
             return getattr(self, name)
         else:
@@ -6100,6 +6338,19 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         print("Table %s created in %.3f secs"%(name, time.time()-now))
 
     def drop_table(self, name, commit=True, force=False):
+        """
+        Drop a table.
+
+        INPUT:
+
+        - ``name`` -- the name of the table
+        - ``commit`` -- whether to actually execute the drop command
+        - ``force`` -- refrain from asking for confirmation
+
+        NOTE:
+
+        You cannot drop a table that has been marked important.  You must first set it as not important if you want to drop it.
+        """
         table = self[name]
         selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
         if self._execute(selecter, [name]).fetchone()[0]:
@@ -6129,6 +6380,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             delattr(self, name)
 
     def rename_table(self, old_name, new_name, commit=True):
+        """
+        Rename a table.
+
+        INPUT:
+
+        - ``old_name`` -- the current name of the table, as a string
+        - ``new_name`` -- the new name of the table, as a string
+        """
         assert old_name != new_name
         assert new_name not in self.tablenames
         with DelayCommit(self, commit, silence=True):
@@ -6205,6 +6464,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.tablenames.sort()
 
     def copy_to(self, search_tables, data_folder, **kwds):
+        """
+        Copy a set of search tables to a folder on the disk.
+
+        INPUT:
+
+        - ``search_tables`` -- a list of strings giving names of tables to copy
+        - ``data_folder`` -- a path to a folder to save the data.  The folder must not currently exist.
+        - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
+        """
         if os.path.exists(data_folder):
             raise ValueError("The path {} already exists".format(data_folder))
         os.makedirs(data_folder)
@@ -6229,6 +6497,16 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             print("Failed to copy %s (not in tablenames)" % (", ".join(failures)))
 
     def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, **kwds):
+        """
+        Copy data to a folder from a postgres instance on another server.
+
+        INPUT:
+
+        - ``search_tables`` -- a list of strings giving names of tables to copy
+        - ``data_folder`` -- a path to a folder to save the data.  The folder must not currently exist.
+        - ``remote_opts`` -- options for the remote connection (passed on to psycopg2's connect method)
+        - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
+        """
         if remote_opts is None:
             from lmfdb.utils.config import Configuration
             remote_opts = Configuration().get_postgresql_default()
