@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from six import string_types
 
 import urllib2
 import re
@@ -14,11 +15,13 @@ from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
 
+
 def pluck(n, list):
     return [_[n] for _ in list]
 
+
 def quote_string(value):
-    if isinstance(value,unicode) or isinstance(value,str):
+    if isinstance(value, string_types):
         return repr(value)
     return value
 
