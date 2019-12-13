@@ -41,7 +41,7 @@ def curve_string_parser(rec):
         print("Sorry, not implemented yet! :(") # TODO: this should be an error
     #rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
     f = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
-    return [f,h]
+    return f,h
 
 def perm_maker_magma(rec):
     d = rec['deg']
@@ -69,7 +69,7 @@ def download_string_magma(rec):
     s += "\n// Group theoretic data\n\n"
     s += "d := %s;\n" % rec['deg']
     s += "i := %s;\n" % int(label.split('T')[1][0])
-    s += "G := TransitiveGroups(d)[i];\n" 
+    s += "G := TransitiveGroups(d)[i];\n"
     s += "sigmas := %s;\n" % perm_maker_magma(rec)
     s += "embeddings := %s;\n" % embedding_maker_magma(rec)
     s += "\n// Geometric data\n\n"
