@@ -25,6 +25,8 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 """
 from __future__ import print_function
+from six import string_types
+from six.moves import input  # in python2, this is raw_input
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 from itertools import islice
@@ -185,6 +187,7 @@ _stats_jsonb_idx = jsonb_idx(_stats_cols, _stats_types)
 def IdentifierWrapper(name, convert = True):
     """
     Returns a composable representing an SQL identifer.
+
     This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
     and coverts them (if desired) from the Python format to SQL,
     as SQL starts at 1, and it is inclusive at the end
@@ -341,8 +344,9 @@ class PostgresBase(object):
         - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
         - ``reissued`` -- used internally to prevent infinite recursion when attempting to
             reset the connection.
-        - ``buffered`` -- whether to create a server side cursor that must be
-            manually closed after using it, this implies ``commit=False``.
+        - ``buffered`` -- whether to create a server side cursor that must be manually
+            closed and connection committed  (to closed the transaction) after using it,
+            this implies ``commit=False``.
 
         .. NOTE:
 
@@ -634,7 +638,7 @@ class PostgresBase(object):
         """
         L = []
         for col in sort_list:
-            if isinstance(col, basestring):
+            if isinstance(col, string_types):
                 L.append(Identifier(col))
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
@@ -654,7 +658,7 @@ class PostgresBase(object):
         has_id = False
         col_list = []
         col_type = {}
-        if isinstance(table_name, basestring):
+        if isinstance(table_name, string_types):
             table_name = [table_name]
         for tname in table_name:
             if data_types is None or tname not in data_types:
@@ -1218,12 +1222,12 @@ class PostgresTable(PostgresBase):
         self._sort_keys = set([])
         if sort:
             for col in sort:
-                if isinstance(col, basestring):
+                if isinstance(col, string_types):
                     self._sort_keys.add(col)
                 else:
                     self._sort_keys.add(col[0])
             self._primary_sort = sort[0]
-            if not isinstance(self._primary_sort, basestring):
+            if not isinstance(self._primary_sort, string_types):
                 self._primary_sort = self._primary_sort[0]
             self._sort = self._sort_str(sort)
         else:
@@ -1314,8 +1318,8 @@ class PostgresTable(PostgresBase):
                 projection.pop(col, None)
             if projection: # there were more columns requested
                 raise ValueError("%s not column of %s"%(", ".join(projection), self.search_table))
-        else: # iterable or basestring
-            if isinstance(projection, basestring):
+        else: # iterable or string_types
+            if isinstance(projection, string_types):
                 projection = [projection]
             include_id = False
             for col in projection:
@@ -1503,7 +1507,8 @@ class PostgresTable(PostgresBase):
             [1, 2]
         """
 
-        return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
+        return [Json(val) if self.col_type[key] == 'jsonb' else val
+                for key, val in D.items()]
 
     def _parse_dict(self, D, outer=None, outer_type=None):
         """
@@ -1544,7 +1549,7 @@ class PostgresTable(PostgresBase):
         else:
             strings = []
             values = []
-            for key, value in D.iteritems():
+            for key, value in D.items():
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == '$':
@@ -1570,7 +1575,7 @@ class PostgresTable(PostgresBase):
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 else:
                     key = Identifier(key)
-                if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
+                if isinstance(value, dict) and all(k.startswith('$') for k in value):
                     sub, vals = self._parse_dict(value, key, outer_type=col_type)
                     if sub is not None:
                         strings.append(sub)
@@ -1683,7 +1688,7 @@ class PostgresTable(PostgresBase):
         # make fewer SQL queries here.
         try:
             for rec in cur:
-                if projection == 0 or isinstance(projection, basestring):
+                if projection == 0 or isinstance(projection, string_types):
                     yield rec[0]
                 else:
                     yield {k: v for k, v in zip(search_cols + extra_cols, rec)
@@ -1691,6 +1696,9 @@ class PostgresTable(PostgresBase):
         finally:
             if isinstance(cur, pg_cursor):
                 cur.close()
+                if (cur.withhold and # to assure that it is a buffered cursor
+                    self._db._nocommit_stack == 0): # and there is nothing to commmit
+                    cur.connection.commit()
 
     ##################################################################
     # Methods for querying                                           #
@@ -1711,7 +1719,7 @@ class PostgresTable(PostgresBase):
             return [query]
         queries = []
         def is_special(v):
-            return isinstance(v, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in v)
+            return isinstance(v, dict) and all(isinstance(k, string_types) and k.startswith('$') for k in v)
         for orc in ors:
             Q = dict(query)
             for key, val in orc.items():
@@ -1729,7 +1737,7 @@ class PostgresTable(PostgresBase):
                 queries.append(Q)
         if sort:
             col = sort[0]
-            if isinstance(col, basestring):
+            if isinstance(col, string_types):
                 asc = 1
             else:
                 col, asc = col
@@ -1818,7 +1826,7 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
             rec = cur.fetchone()
-            if projection == 0 or isinstance(projection, basestring):
+            if projection == 0 or isinstance(projection, string_types):
                 return rec[0]
             else:
                 return {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
@@ -1898,7 +1906,7 @@ class PostgresTable(PostgresBase):
         if split_ors:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
-            raw_sort = [((col, 1) if isinstance(col, basestring) else col) for col in raw_sort]
+            raw_sort = [((col, 1) if isinstance(col, string_types) else col) for col in raw_sort]
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
@@ -1920,7 +1928,7 @@ class PostgresTable(PostgresBase):
             for rec in islice(it, off, lim+off):
                 if projection == 0:
                     yield rec[self._label_col]
-                elif isinstance(projection, basestring):
+                elif isinstance(projection, string_types):
                     yield rec[projection]
                 else:
                     for col in sort_only:
@@ -2745,7 +2753,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         type = type.upper()
-        if isinstance(columns, basestring):
+        if isinstance(columns, string_types):
             columns = [columns]
         if type not in self._valid_constraint_types:
             raise ValueError("Unrecognized constraint type")
@@ -3352,7 +3360,7 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_pkeys()
                 self.drop_indexes()
-            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsonb']
+            jsonb_cols = [col for col, typ in self.col_type.items() if typ == 'jsonb']
             for i, SD in enumerate(search_data):
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
@@ -3950,7 +3958,7 @@ class PostgresTable(PostgresBase):
                 self.resort()
 
             # add an index for the default sort
-            if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
+            if not any([index["columns"] == sort for index_name, index in self.list_indexes().items()]):
                 self.create_index(sort)
             self.log_db_change("set_sort", sort=sort)
 
@@ -4028,7 +4036,7 @@ class PostgresTable(PostgresBase):
         - ``force`` -- if False, will ask for confirmation
         """
         if not force:
-            ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
+            ok = input("Are you sure you want to drop %s? (y/N) "%name)
             if not (ok and ok[0] in ['y','Y']):
                 return
         if name in self._sort_keys:
@@ -4674,7 +4682,7 @@ class PostgresStatsTable(PostgresBase):
 
         If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).  However, we omit entries where D contains only keys starting with ``$``, since these are used to encode queries.
         """
-        if isinstance(cols, basestring):
+        if isinstance(cols, string_types):
             cols = [cols]
             one_col = True
         else:
@@ -4704,12 +4712,12 @@ class PostgresStatsTable(PostgresBase):
         if constraint is None:
             # We need to remove counts that aren't the actual value,
             # but instead part of a query
-            return {_make_tuple(rec[0]): rec[1] for rec in cur if not any(isinstance(val, dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val) for val in rec[0])}
+            return {_make_tuple(rec[0]): rec[1] for rec in cur if not any(isinstance(val, dict) and all(isinstance(k, string_types) and k.startswith('$') for k in val) for val in rec[0])}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
             column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
             def satisfies_constraint(val):
-                return all(val[i] == c for i,c in constraint_list) and not any(isinstance(val[i], dict) and all(isinstance(k, basestring) and k.startswith('$') for k in val[i]) for i in column_indexes)
+                return all(val[i] == c for i,c in constraint_list) and not any(isinstance(val[i], dict) and all(isinstance(k, string_types) and k.startswith('$') for k in val[i]) for i in column_indexes)
             def remove_constraint(val):
                 return [val[i] for i in column_indexes]
             return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
@@ -4985,7 +4993,7 @@ class PostgresStatsTable(PostgresBase):
         - ``suffix`` -- if given, the counts will be performed on the table with the suffix appended.
         - ``commit`` -- if false, the results will not be committed to the database.
         """
-        if isinstance(grouping, basestring):
+        if isinstance(grouping, string_types):
             grouping = [grouping]
         else:
             grouping = sorted(grouping)
@@ -5084,7 +5092,7 @@ class PostgresStatsTable(PostgresBase):
         A dictionary with keys the possible values taken on the the columns in grouping.
         Each value is a dictionary with keys 'min', 'max', 'avg'
         """
-        if isinstance(grouping, basestring):
+        if isinstance(grouping, string_types):
             onegroup = True
             grouping = [grouping]
         else:
@@ -5792,7 +5800,7 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.utils.config import Configuration
         options = Configuration().get_postgresql()
         # overrides the options passed as keyword arguments
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             options[key] = value
         self.fetch_userpassword(options)
         self._user = options['user']
@@ -5913,7 +5921,7 @@ class PostgresDatabase(PostgresBase):
             print("Please provide your knowl username,")
             print("so that we can associate database changes with individuals.")
             print("Note that you can also do this by setting the editor field in the logging section of your config.ini file.")
-            uid = raw_input("Username: ")
+            uid = input("Username: ")
             selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
             if cur.rowcount == 0:
@@ -6177,7 +6185,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresTable object giving an existing table.
         """
-        if isinstance(table, basestring):
+        if isinstance(table, string_types):
             table = self[table]
         search_columns = {typ: [col for col in table.search_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
         extra_columns = {typ: [col for col in table.extra_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
@@ -6243,7 +6251,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if id_ordered is None:
             id_ordered = (sort is not None)
         for typ, L in search_columns.items():
-            if isinstance(L, basestring):
+            if isinstance(L, string_types):
                 search_columns[typ] = [L]
         valid_list = sum(search_columns.values(),[])
         valid_set = set(valid_list)
@@ -6280,7 +6288,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 if typ.lower() not in types_whitelist:
                     if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
                         raise ValueError("%s is not a valid type"%(typ))
-                if isinstance(cols, basestring):
+                if isinstance(cols, string_types):
                     cols = [cols]
                 for col in cols:
                     if col == 'id':
@@ -6356,7 +6364,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if self._execute(selecter, [name]).fetchone()[0]:
             raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
         if not force:
-            ok = raw_input("Are you sure you want to drop %s? (y/N) "%(name))
+            ok = input("Are you sure you want to drop %s? (y/N) "%(name))
             if not (ok and ok[0] in ['y','Y']):
                 return
         with DelayCommit(self, commit, silence=True):
@@ -6393,8 +6401,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
             # first rename indexes and constraints
-            icols = map(Identifier, ['index_name', 'table_name'])
-            ccols = map(Identifier, ['constraint_name', 'table_name'])
+            icols = [Identifier(s) for s in ['index_name', 'table_name']]
+            ccols = [Identifier(s) for s in ['constraint_name', 'table_name']]
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
             rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             for meta, mname, cols in [

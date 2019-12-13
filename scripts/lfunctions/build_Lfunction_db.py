@@ -117,5 +117,4 @@ if __name__ == "__main__":
     for n in range(1, 10):
         insert_EC_L_functions(n * 100, (n + 1) * 100)
         # insert_dirichlet_L_functions(n * 100, (n+1)*100)
-    pass
     # insert_dirichlet_L_functions(50)

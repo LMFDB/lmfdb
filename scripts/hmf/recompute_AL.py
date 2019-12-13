@@ -21,7 +21,7 @@ def recompute_AL():
     S = S.sort("label")
 
     while True:
-        v = S.next()
+        v = next(S)
         NN_label = v["level_label"]
         v_label = v["label"]
 

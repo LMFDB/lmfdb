@@ -479,7 +479,7 @@ class mf_newforms(MfChecker):
                 conductor_string = artin_label.split('.')[1]
                 conductor = 1
                 for elt in conductor_string.split('_'):
-                    pe = map(int, elt.split('e'))
+                    pe = [int(s) for s in elt.split('e')]
                     if len(pe) == 1:
                         conductor *= pe[0]
                     elif len(pe) == 2:
@@ -523,7 +523,7 @@ class mf_newforms(MfChecker):
             if verbose:
                 print("No projective image")
             return False
-        aid = map(ZZ, aimage.split('.'))
+        aid = [ZZ(n) for n in aimage.split('.')]
         if aid[0] != rec['artin_degree']:
             if verbose:
                 print("Artin degree mismatch", aid, rec['artin_degree'])

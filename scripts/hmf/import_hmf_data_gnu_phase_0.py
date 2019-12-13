@@ -50,7 +50,7 @@ w, e, x = P.gens()
 def import_all_data(n, fileprefix=None, ferrors=None, test=True):
     nstr = str(n)
 
-    if fileprefix == None:
+    if fileprefix is None:
         fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1.1/Data/" + nstr + "/dir.tmp"
     ff = open(fileprefix, 'r')
     files = ff.readlines()
@@ -63,15 +63,15 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
 
 
 def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
+    if fileprefix is None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_filename))
+    hmff = open(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
+    if ferrors is None:
         if Dan_test:
-            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
+            ferrors = open('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
         else:
-            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+            ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -98,7 +98,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     field_label = None
     co = str(coeffs)[1:-1].replace(" ","")
     for i in range(cnt):
-        nf = fields_matching.next()
+        nf = next(fields_matching)
         print("Comparing coeffs %s with %s" % (nf['coeffs'], co))
         if nf['coeffs'] == co:
             field_label = nf['label']
@@ -267,7 +267,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             else:
                 hmf_forms.insert_one(info)
         else:
-            existing_form = existing_forms.next()
+            existing_form = next(existing_forms)
             assert info['hecke_polynomial'] == existing_form['hecke_polynomial']
             try:
                 assert info['hecke_eigenvalues'] == existing_form['hecke_eigenvalues']
@@ -297,7 +297,7 @@ def repair_fields(D):
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
     F['primes'] = primes
 
-    hmff = file("data_2_" + (4 - len(str(D))) * '0' + str(D))
+    hmff = open("data_2_" + (4 - len(str(D))) * '0' + str(D))
 
     # Parse field data
     for i in range(7):
@@ -384,15 +384,15 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
     ''' 
     put in docstring!
     '''
-    if ferrors==None:
+    if ferrors is None:
         if Dan_test:
-            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
+            ferrors = open('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
         else:
-            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+            ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
     field_label = hmf_extra_filename.split('-')[0]
-    if fileprefix==None:
+    if fileprefix is None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_extra_filename))
+    hmff = open(os.path.join(fileprefix, hmf_extra_filename))
 
     with hmff as infile:
         # assumes the input filename starts with the field label.

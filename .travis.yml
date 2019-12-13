@@ -53,7 +53,7 @@ install:
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log
     # assert that we have GAP
-    - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print G'
+    - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print(G)'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
 

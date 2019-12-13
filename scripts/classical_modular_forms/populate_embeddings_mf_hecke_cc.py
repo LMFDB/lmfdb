@@ -34,7 +34,7 @@ def upsert_embedding(id_number, skip = True):
     elif newform['weight'] == 1:
         return
     elif newform.get('field_poly', None) is None:
-	    return
+        return
     else:
         # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")

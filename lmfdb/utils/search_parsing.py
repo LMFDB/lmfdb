@@ -1,6 +1,8 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+from six.moves import range
+from six import string_types
 
 import re
 from collections import defaultdict, Counter
@@ -99,11 +101,11 @@ def split_list(s):
     return []
 
 # This function can be used by modules to get a list of ints
-# or an iterator (xrange) that matches the results of parse_ints below
+# or an iterator (Python3 range) that matches the results of parse_ints below
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
-    if arg == None:
+    if arg is None:
         return []
     s = str(arg)
     s = s.replace(' ','')
@@ -116,11 +118,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):
@@ -254,7 +256,7 @@ def integer_options(arg, max_opts=None, contained_in=None):
             a,b = interval
             if check and len(ans) + b - a + 1 > max_opts:
                 raise ValueError("Too many options")
-            for n in range(a,b+1):
+            for n in range(a, b+1):
                 if contained_in is None or n in contained_in:
                     ans.add(n)
         else:
@@ -303,7 +305,7 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
-            if isinstance(a, basestring) and '.' in a:
+            if isinstance(a, string_types) and '.' in a:
                 prec = len(a) - a.find('.') - 1
             else:
                 prec = 0
@@ -483,10 +485,10 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             example = "[2]"
         elif exactlength is not None:
             lstr = "list of %s integers" % exactlength
-            example = str(range(2,exactlength+2)).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
+            example = str(list(range(2,exactlength+2))).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
         elif maxlength is not None:
             lstr = "list of at most %s integers" % maxlength
-            example = str(range(2,maxlength+2)).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
+            example = str(list(range(2,maxlength+2))).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
         else:
             lstr = "list of integers"
             example = "[1,2,3] or [5,6]"
@@ -540,10 +542,10 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
             example = "[2/5]"
         elif exactlength is not None:
             lstr = "list of %s rational numbers" % exactlength
-            example = str(range(2,exactlength+2)).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
+            example = str(list(range(2,exactlength+2))).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
         elif maxlength is not None:
             lstr = "list of at most %s rational numbers" % maxlength
-            example = str(range(2,maxlength+2)).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
+            example = str(list(range(2,maxlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
         else:
             lstr = "list of rational numbers"
             example = "[1/7,2,3] or [5,6/71]"
@@ -604,7 +606,7 @@ def parse_galgrp(inp, query, qfield):
                     query[tfield] = {'$in': gcsdict[n]}
             else:
                 options = []
-                for n, T in gcsdict.iteritems():
+                for n, T in gcsdict.items():
                     if len(T) == 1:
                         options.append({nfield: n, tfield: T[0]})
                     else:
@@ -612,6 +614,7 @@ def parse_galgrp(inp, query, qfield):
                 collapse_ors(['$or', options], query)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:

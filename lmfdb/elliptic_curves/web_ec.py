@@ -197,7 +197,6 @@ class WebEC(object):
         data['j_inv_factor'] = latex(0)
         if data['j_invariant']: # don't factor 0
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
-        data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
 
         # extract data about MW rank, generators, heights and torsion:
@@ -566,10 +565,8 @@ class WebEC(object):
         
         tg['maxd'] = 7
 
-
-
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 

@@ -156,7 +156,7 @@ class Configuration(object):
         del default_arguments_dict['config_file']
 
         self.default_args = {}
-        for key, val in default_arguments_dict.iteritems():
+        for key, val in default_arguments_dict.items():
             sec, opt = key.split('_', 1)
             if sec not in self.default_args:
                 self.default_args[sec] = {}
@@ -182,8 +182,8 @@ class Configuration(object):
             _cfgp.add_section('logging')
 
 
-            for sec, options in self.default_args.iteritems():
-                for opt, val in options.iteritems():
+            for sec, options in self.default_args.items():
+                for opt, val in options.items():
                     _cfgp.set(sec, opt, str(val))
 
             with open(args.config_file, 'wb') as configfile:
@@ -204,7 +204,7 @@ class Configuration(object):
 
         all_set = all()
 
-        for key, val in default_arguments_dict.iteritems():
+        for key, val in default_arguments_dict.items():
             # if a nondefault value was passed through command line arguments set it
             # or if a default value was not set in the config file
             if args_dict[key] != val or key not in all_set:

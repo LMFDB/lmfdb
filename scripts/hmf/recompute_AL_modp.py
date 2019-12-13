@@ -25,7 +25,7 @@ def recompute_AL(field_label=None, skip_odd=False):
 
     magma.eval('SetVerbose("ModFrmHil", 1);')
 
-    v = S.next()
+    v = next(S)
     while True:
         NN_label = v["level_label"]
         v_label = v["label"]
@@ -53,7 +53,7 @@ def recompute_AL(field_label=None, skip_odd=False):
         if skip_odd and F["degree"] % 2 == 1 and v["level_norm"] > 300:
             print("...level norm > 300, skipping!")
             try:
-                v = S.next()
+                v = next(S)
                 continue
             except StopIteration:
                 break
@@ -148,4 +148,4 @@ def recompute_AL(field_label=None, skip_odd=False):
         v["AL_eigenvalues_fixed"] = 'done'
         hmf_forms.save(v)
 
-        v = S.next()
+        v = next(S)
