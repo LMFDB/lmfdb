@@ -359,7 +359,7 @@ def curves(line, verbose=False):
         if verbose:
             print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
-        if len(E1list):
+        if E1list:
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
             if verbose:
                 print("%s is base change of %s" % (label, base_change))
@@ -391,7 +391,7 @@ def curves(line, verbose=False):
                    'ord_cond': int(ld.conductor_valuation()),
                    'ord_disc': int(ld.discriminant_valuation()),
                    'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'red': None if ld.bad_reduction_type() is None else int(ld.bad_reduction_type()),
                    'rootno': local_root_number(ld),
                    'kod': str(latex(ld.kodaira_symbol())),
                    'cp': int(ld.tamagawa_number())}
@@ -935,7 +935,7 @@ def add_root_number_to_local_data(field_label, ainvs, ld):
     # ld is a list with one dict for each prime ideal dividing the
     # discriminant of the stored model, which will be empty for a
     # global minimal model of a curve with everywhere good reduction.
-    if len(ld)==0:
+    if not ld:
         return ld
     if all(['rootno' in ldp for ldp in ld]): # already have root numbers
         if not any([ldp['rootno']=='?' for ldp in ld]):
@@ -1177,11 +1177,12 @@ def update_stats(verbose=True):
 def make_IQF_ideal_table(infile, insert=False):
     items = []
     n = 0
-    for L in file(infile).readlines():
-        n += 1
-        f, old, new = L.split()
-        item = {'fld':f, 'old':old, 'new':new}
-        items.append(item)
+    with open(infile) as fil:
+        for L in fil.readlines():
+            n += 1
+            f, old, new = L.split()
+            item = {'fld':f, 'old':old, 'new':new}
+            items.append(item)
     print("read {} lines from {}".format(n,infile))
     if insert:
         print("inserting into IQF_labels collection")

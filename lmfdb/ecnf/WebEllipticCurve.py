@@ -419,9 +419,9 @@ class ECNF(object):
         # Q-curve / Base change
         try:
             qc = self.q_curve
-            if qc == True:
+            if qc is True:
                 self.qc = "yes"
-            elif qc == False:
+            elif qc is False:
                 self.qc = "no"
             else: # just in case
                 self.qc = "not determined"
@@ -618,7 +618,7 @@ class ECNF(object):
             self.friends += [('L-function not available', "")]
 
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 

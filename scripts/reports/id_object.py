@@ -59,7 +59,7 @@ def is_collection(object):
     if type(object) is list:
         for el in object:
             t = get_object_id(el)
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:
@@ -74,7 +74,7 @@ def is_collection(object):
     if type(object) is tuple:
         for el in object:
             t = get_object_id(el)
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:
@@ -89,7 +89,7 @@ def is_collection(object):
     if type(object) is dict:
         for el in object:
             t = get_object_id(object[el])
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:

@@ -86,7 +86,7 @@ class Lfunction(object):
         if not hasattr(self,"fromDB"):
             self.fromDB = False
 
-        if via_N == True:
+        if via_N is True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
             if self.fromDB:

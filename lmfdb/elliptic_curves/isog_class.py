@@ -99,7 +99,7 @@ class ECisog_class(object):
         from sage.matrix.all import Matrix
         if self.label_type == 'Cremona':
             # permute rows/cols
-            perm = lambda i: (c for c in self.curves if c['number']==i+1).next()['lmfdb_number']-1
+            perm = lambda i: next(c for c in self.curves if c['number']==i+1)['lmfdb_number']-1
             self.isogeny_matrix = [[self.isogeny_matrix[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         self.isogeny_matrix = Matrix(self.isogeny_matrix)

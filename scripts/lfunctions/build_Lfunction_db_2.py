@@ -25,8 +25,8 @@ def Lfunction_iterator(dirichlet_max=100):
     yield RiemannZeta()
     for L in Dirichlet_Lfunctions_iterator(dirichlet_max):
         yield L
-    for curve in EC_iterator():
-        yield L
+    for L_of_curve in EC_iterator():
+        yield L_of_curve
 
 
 def inject_Lfunctions(it):

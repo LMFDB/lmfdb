@@ -39,7 +39,7 @@ def show():
     assert request.method == "GET", "request.method is assumed to be GET"
     data = str(request.args.get('data', ''))
     try:
-        data = map(Integer, data.split('.'))
+        data = [Integer(z) for z in data.split('.')]
         p = Permutation(data)
     except (TypeError, ValueError):
         logger.info("Impossible to create a permutation from input.")
