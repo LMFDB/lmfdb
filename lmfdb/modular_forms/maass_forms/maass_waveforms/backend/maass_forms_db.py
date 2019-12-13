@@ -45,6 +45,19 @@ class MaassDB(object):
     def maassform_has_plot(self, maass_id):
         return db.mwf_plots.exists({'maass_id':maass_id})
 
+    def find_coeffs_from_dict(self, d, dictType):
+        if type(d) == dictType:
+            for i in d.keys():
+                x = self.find_coeffs_from_dict(d[i], dictType)
+                if x != None:
+                    if (x == 0) or (x == 1):
+                        return x + 1
+                    if (x == 2):
+                        return d
+                    return x
+            return None
+        return 0
+
     def get_coefficients(self, data={}, verbose=0, **kwds):
         if verbose > 0:
             print "data=", data
@@ -63,7 +76,21 @@ class MaassDB(object):
             return None
         cid = f.get('coeff_label', None)
         if cid is None:
+            R = f.get('Eigenvalue', None)
+            if R is None:
+                return f.get('Coefficients', None)
+            R = round(R, 9)
+            searchcoeffs = db.mwf_coeffs.search({'label':{'$regex': str(R)}})
+            for res in searchcoeffs:
+                c = res['coefficients'];
+                d = loads(str(c));
+                if type(d) == type([]):
+                    d = { i : d[i] for i in range(0, len(d)) }
+                e = self.find_coeffs_from_dict(d, type(d))
+                if (e <> None):
+                    return e
             return f.get('Coefficients', None)
+
         ff = db.mwf_coeffs.lucky({'label':cid}, 'coefficients')
         return None if ff is None else loads(str(ff))
 
