@@ -42,3 +42,64 @@ def curve_string_parser(rec):
     #rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
     f = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
     return [f,h]
+
+def perm_maker_magma(rec):
+    d = rec['deg']
+    perms = []
+    triples = rec['triples']
+    for triple in triples:
+        pref = "[Sym(%s) | " % d
+        s_trip = "%s" % triple
+        s_trip = pref + s_trip[1:]
+        perms.append(s_trip)
+    return '[' + ', '.join(perms) + ']'
+
+def embedding_maker_magma(rec):
+    emb_list = []
+    embeddings = rec['embeddings']
+    for z in embeddings:
+        z_str = "ComplexField()!%s" % z
+        emb_list.append(z_str)
+    return '[' + ', '.join(emb_list) + ']'
+
+def download_string_magma(rec):
+    s = ""
+    label = rec['label']
+    s += "// Magma code for Belyi map with label %s\n\n" % label
+    s += "\n// Group theoretic data\n\n"
+    s += "d := %s;\n" % rec['deg']
+    s += "i := %s;\n" % int(label.split('T')[1][0])
+    s += "G := TransitiveGroups(d)[i];\n" 
+    s += "sigmas := %s;\n" % perm_maker_magma(rec)
+    s += "embeddings := %s;\n" % embedding_maker_magma(rec)
+    s += "\n// Geometric data\n\n"
+    s += "// Define the base field\n"
+    if rec['base_field'] == [-1,1]:
+        s += "K<nu> := RationalsAsNumberField();\n"
+    else:
+        s += "R<T> := PolynomialRing(Rationals());\nK<nu> := NumberField(R!%s);\n\n" % rec['base_field']
+    s += "// Define the curve\n"
+    if rec['g'] == 0:
+        s += "X := Curve(ProjectiveSpace(PolynomialRing(K, 2)));\n"
+        s += "// Define the map\n"
+        s += "KX<x> := FunctionField(X);\n";
+        s += "phi := %s;\n" % rec['map']
+    elif rec['g'] == 1:
+        s += "_<x> := PolynomialRing(K);\n"
+        #curve_poly = rec['curve'].split("=")[1]
+        #s += "X := EllipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
+        s += "X := EllipticCurve(%s);\n" % curve_string_parser(rec);
+        s += "// Define the map\n"
+        s += "KX<x,y> := FunctionField(X);\n";
+        s += "phi := %s;\n" % rec['map']
+    elif rec['g'] == 2:
+        s += "_<x> := PolynomialRing(K);\n"
+        #curve_poly = rec['curve'].split("=")[1]
+        #s += "X := HyperellipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
+        s += "X := HyperellipticCurve(%s);\n" % curve_string_parser(rec);
+        s += "// Define the map\n"
+        s += "KX<x,y> := FunctionField(X);\n";
+        s += "phi := %s;\n" % rec['map']
+    else:
+        print("Sorry, not implemented yet! :(") # TODO: should be an error
+    return(s)

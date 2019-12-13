@@ -8,12 +8,14 @@ s = ""
 label = '7T5-[7,7,4]-7-7-421-g2-a'
 rec = belyi.lookup(label)
 s += "// Magma code for Belyi map with label %s\n\n" % label
-s += "// Group theoretic data\n\n"
-s += "d := %s;\n", % rec['deg']
+s += "\n// Group theoretic data\n\n"
+s += "d := %s;\n" % rec['deg']
 label = rec['label']
-s += "i := %s;\n", % int(label.split('T')[1][0])
+s += "i := %s;\n" % int(label.split('T')[1][0])
 s += "G := TransitiveGroups(d)[i];\n" 
-s += "// Geometric data\n\n"
+s += "sigmas := %s;\n" % perm_maker_magma(rec)
+s += "embeddings := %s;\n" % embedding_maker_magma(rec)
+s += "\n// Geometric data\n\n"
 s += "// Define the base field\n"
 if rec['base_field'] == [-1,1]:
     s += "K<nu> := RationalsAsNumberField();\n"
@@ -40,7 +42,10 @@ elif rec['g'] == 2:
     s += "X := HyperellipticCurve(%s);\n" % curve_string_parser(rec);
     s += "// Define the map\n"
     s += "KX<x,y> := FunctionField(X);\n";
-    s += "phi := %s;\n\n" % rec['map']
+    s += "phi := %s;\n" % rec['map']
 else:
     print("Sorry, not implemented yet! :(")
-print(s)
+#print(s)
+f = open("lmfdb/belyi/download_example-output.m", "a")
+f.write(s)
+f.close()
