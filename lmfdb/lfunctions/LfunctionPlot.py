@@ -1204,7 +1204,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
-    for arg, val in urlinfo['space'].iteritems():   # this does things like: level=4&weight=8&character=0
+    for arg, val in urlinfo['space'].items():   # this does things like: level=4&weight=8&character=0
         if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
             urlbase += arg + "=" + str(val) + "&amp;"
 

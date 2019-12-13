@@ -141,7 +141,7 @@ def info():
 @login_page.route("/info", methods=['POST'])
 @login_required
 def set_info():
-    for k, v in request.form.iteritems():
+    for k, v in request.form.items():
         setattr(current_user, k, v)
     current_user.save()
     flask.flash(Markup("Thank you for updating your details!"))

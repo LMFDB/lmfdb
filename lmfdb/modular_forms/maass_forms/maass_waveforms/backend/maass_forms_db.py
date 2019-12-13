@@ -208,7 +208,8 @@ class MaassDB(object):
     def set_table(self, refresh=False):
         self.table = db.mwf_tables.lucky({})
         self.table['keylist'] = [tuple(k) for k in self.table['keylist']]
-        self.table['data'] = {tuple(map(int, k.split(','))):tuple(v) for k,v in self.table['data'].iteritems()}
+        self.table['data'] = {tuple(map(int, k.split(','))): tuple(v)
+                              for k, v in self.table['data'].items()}
         #data = self.show_data()
         #table = {}
         #table['weights'] = data.keys()
