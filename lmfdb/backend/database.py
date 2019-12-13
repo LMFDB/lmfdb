@@ -1407,7 +1407,8 @@ class PostgresTable(PostgresBase):
             [1, 2]
         """
 
-        return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
+        return [Json(val) if self.col_type[key] == 'jsonb' else val
+                for key, val in D.items()]
 
     def _parse_dict(self, D, outer=None, outer_type=None):
         """
@@ -1448,7 +1449,7 @@ class PostgresTable(PostgresBase):
         else:
             strings = []
             values = []
-            for key, value in D.iteritems():
+            for key, value in D.items():
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == '$':
@@ -1474,7 +1475,7 @@ class PostgresTable(PostgresBase):
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 else:
                     key = Identifier(key)
-                if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
+                if isinstance(value, dict) and all(k.startswith('$') for k in value):
                     sub, vals = self._parse_dict(value, key, outer_type=col_type)
                     if sub is not None:
                         strings.append(sub)
@@ -3157,7 +3158,7 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_pkeys()
                 self.drop_indexes()
-            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsonb']
+            jsonb_cols = [col for col, typ in self.col_type.items() if typ == 'jsonb']
             for i, SD in enumerate(search_data):
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
@@ -3740,7 +3741,7 @@ class PostgresTable(PostgresBase):
                 self.resort()
 
             # add an index for the default sort
-            if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
+            if not any([index["columns"] == sort for index_name, index in self.list_indexes().items()]):
                 self.create_index(sort)
             self.log_db_change("set_sort", sort=sort)
 
@@ -5552,7 +5553,7 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.utils.config import Configuration
         options = Configuration().get_postgresql()
         # overrides the options passed as keyword arguments
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             options[key] = value
         self.fetch_userpassword(options)
         self._user = options['user']
