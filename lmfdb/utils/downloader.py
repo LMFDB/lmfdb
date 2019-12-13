@@ -94,7 +94,7 @@ class Downloader(object):
     def to_lang(self, lang, inp, level = 0, prepend = ''):
         if inp is None:
             return self.none[lang]
-        if isinstance(inp, str) or isinstance(inp, unicode):
+        if isinstance(inp, string_types):
             return '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)

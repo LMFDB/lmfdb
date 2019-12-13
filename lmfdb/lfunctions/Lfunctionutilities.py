@@ -87,7 +87,7 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
     try:
-        if isinstance(coeff,str) or isinstance(coeff,unicode):
+        if isinstance(coeff, string_types):
             if coeff == "I":
                 rp = 0
                 ip = 1
