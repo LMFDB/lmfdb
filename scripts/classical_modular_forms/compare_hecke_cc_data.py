@@ -71,6 +71,7 @@ def compare_row(a, b, verbose = True):
                     return False
     return True
 
+
 with open(filename, 'r') as F:
     linenumber = -1
     for line in F:
@@ -78,7 +79,6 @@ with open(filename, 'r') as F:
         if linenumber < 3:
             if linenumber == 0:
                 assert line[:-1] == cols_header
-            pass
         elif linenumber % M == C:
             linesplit = line[:-1].split(':')
             del linesplit[10]

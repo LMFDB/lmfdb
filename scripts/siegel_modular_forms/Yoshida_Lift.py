@@ -15,8 +15,8 @@
 from sage.all import prime_range
 
 
-def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
-    weight = (hweight[1] + 2)/2
+def Yoshida_Lift(F, hhecke_evals, hlevel, hweight=[2, 2], primeprec=100):
+    weight = (hweight[1] + 2)//2
     level = F.disc()**2*hlevel.norm()
     lam = {}
     mu = {}
