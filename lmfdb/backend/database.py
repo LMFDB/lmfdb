@@ -445,7 +445,7 @@ class PostgresBase(object):
         return cur.fetchone() is not None
 
     def _get_locks(self):
-        return self._execute(SQL("SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) FROM pg_locks l JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid WHERE t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"))
+        return self._execute(SQL("SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) FROM pg_locks l JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"))
 
     def _table_locked(self, tablename, types='all'):
         """
@@ -2822,7 +2822,7 @@ class PostgresTable(PostgresBase):
         if locks:
             typelen = max(len(locktype) for (locktype, pid) in locks) + 3
             for locktype, pid in locks:
-                print locktype + ' '*(typelen - len(locktype)) + str(pid)
+                print(locktype + ' '*(typelen - len(locktype)) + str(pid))
             raise LockError("Table is locked.  Please resolve the lock by killing the above processes and try again")
 
     def _break_stats(self):
@@ -3993,21 +3993,35 @@ class PostgresTable(PostgresBase):
             self.log_db_change("create_extra_table", columns=columns)
 
     def _move_column(self, column, src, target, commit):
+        """
+        This function moves a column between two tables, copying the data accordingly.
+
+        The two tables must have corresponding id columns, so this is most useful for moving
+        columns between search and extra tables.
+        """
         self._check_locks()
         with DelayCommit(self, commit, silence=True):
             datatype = self.col_type[column]
             self._check_col_datatype(datatype)
             modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(target), Identifier(column))
             self._execute(modifier)
-            print "%s column created in %s; moving data" % (column, target)
+            print("%s column created in %s; moving data" % (column, target))
             datamove = SQL("UPDATE {0} SET {1} = {2}.{1} FROM {2} WHERE {0}.id = {2}.id").format(Identifier(target), Identifier(column), Identifier(src))
             self._execute(datamove)
             modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(src), Identifier(column))
             self._execute(modifier)
-            print "%s column successfully moved from %s to %s" % (column, src, target)
+            print("%s column successfully moved from %s to %s" % (column, src, target))
             self.log_db_change("move_column", name=column, dest=target)
 
     def move_column_to_extra(self, column, commit=True):
+        """
+        Move a column from a search table to an extra table.
+
+        INPUT:
+
+        - ``column`` -- the name of the column to move
+        - ``commit`` -- whether to commit the change
+        """
         if column not in self.search_cols:
             raise ValueError("%s not a search column"%(column))
         if self.extra_table is None:
@@ -4019,6 +4033,14 @@ class PostgresTable(PostgresBase):
         self.search_cols.remove(column)
 
     def move_column_to_search(self, column, commit=True):
+        """
+        Move a column from an extra table to a search table.
+
+        INPUT:
+
+        - ``column`` -- the name of the column to move
+        - ``commit`` -- whether to commit the change
+        """
         if column not in self.extra_cols:
             raise ValueError("%s not an extra column"%(column))
         self._move_column(column, self.extra_table, self.search_table, commit)
@@ -6537,10 +6559,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if locks:
             namelen = max(len(name) for (name, locktype, pid, t) in locks) + 3
             typelen = max(len(locktype) for (name, locktype, pid, t) in locks) + 3
+            pidlen = max(len(str(pid)) for (name, locktype, pid, t) in locks) + 3
             for name, locktype, pid, t in locks:
-                print name + ' '*(namelen - len(name)) + locktype + ' '*(typelen - len(locktype)) + str(pid) + ' %ss' % t
+                print(name + ' '*(namelen - len(name)) + locktype + ' '*(typelen - len(locktype)) + 'pid %s' % pid + ' '*(pidlen - len(str(pid))) + 'age %s' % t)
         else:
-            print "No locks currently held"
+            print("No locks currently held")
 
 
 
