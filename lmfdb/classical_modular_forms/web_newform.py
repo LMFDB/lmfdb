@@ -158,6 +158,11 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
+                print "read q expansion: ", self.qexp
+                m = self.field_poly_root_of_unity
+                print "m = ", m
+                if m != 0:
+                    self.convert_qexp_to_cyclotomic(m)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
@@ -241,6 +246,32 @@ class WebNewform(object):
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
+    def convert_qexp_to_cyclotomic(self,  m):
+        from sage.all import CyclotomicField
+        F = CyclotomicField(m)
+        d = F.degree() # phi(m)
+        zeta = F.gens()[0]
+        ret = []
+        print "numerators = ", self.hecke_ring_numerators
+        print "denominators = ", self.hecke_ring_denominators
+        betas = [F(self.hecke_ring_numerators[i]) /
+                 self.hecke_ring_denominators[i] for i in range(d)]
+        write_in_powers = zeta.coordinates_in_terms_of_powers()
+        for coeffs in self.qexp:
+            elt = sum([coeffs[i] * betas[i] for i in range(d)])
+            ret.append(write_in_powers(elt))
+            # poly = elt.polynomial()
+            # x = poly.parent().gens()[0]
+            # ret.append([[poly.monomial_coefficient(x**e),e] for
+            #            e in poly.exponents()])
+        print ret
+        self.single_generator = True
+        # self.hecke_ring_cyclotomic_generator = m
+        self.hecke_ring_power_basis = True
+        # self.field_poly_is_cyclotomic = True
+        self.qexp = ret
+        return ret
+    
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -867,6 +898,8 @@ function switch_basis(btype) {
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
         vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
         for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
+            print "g = ", g
+            print "chi_g = ", g
             if self.embedding_label is None:
                 term = self._elt(chi_g)
                 latexterm = latex(term)
@@ -945,8 +978,10 @@ function switch_basis(btype) {
         eigseq = self.qexp[:prec]
         use_knowl = too_big(eigseq, 10**24)
         s = ''
+        print "In eigs_as_seqseq_to_qexp"
         for j in range(len(eigseq)):
             term = self._elt(eigseq[j])
+            print "term = ", term
             if term != 0:
                 latexterm = latex(term)
                 if use_knowl:
