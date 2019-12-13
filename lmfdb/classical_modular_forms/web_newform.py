@@ -161,9 +161,9 @@ class WebNewform(object):
                 # print "read q expansion: ", self.qexp
                 m = self.field_poly_root_of_unity
                 # print "m = ", m
-                if m != 0:
-                    self.convert_qexp_to_cyclotomic(m)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+                if (m != 0) and (not self.single_generator):
+                    self.convert_qexp_to_cyclotomic(m)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
             hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
