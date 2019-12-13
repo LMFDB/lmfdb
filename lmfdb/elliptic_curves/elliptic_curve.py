@@ -30,13 +30,12 @@ def ec_credit():
 #   Utility functions
 #########################
 
-def cmp_label(lab1, lab2):
+def sorting_label(lab1):
+    """
+    Provide a sorting key.
+    """
     a, b, c = parse_cremona_label(lab1)
-    id1 = int(a), class_to_int(b), int(c)
-    a, b, c = parse_cremona_label(lab2)
-    id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
-
+    return (int(a), class_to_int(b), int(c))
 
 #########################
 #    Top level

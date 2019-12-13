@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 import re
 
 from flask import render_template, url_for, request, redirect
@@ -332,7 +332,7 @@ def bianchi_modular_form_by_label(lab):
     if lab == '':
         # do nothing: display the top page
         return redirect(url_for(".index"))
-    if isinstance(lab, basestring):
+    if isinstance(lab, string_types):
         res = db.bmf_forms.lookup(lab)
     else:
         res = lab

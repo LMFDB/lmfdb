@@ -30,7 +30,7 @@ def qexpansion(field_label=None):
 
     field_label = None
 
-    v = S.next()
+    v = next(S)
     while True:
         # NN_label = v["level_label"] # never used
         v_label = v["label"]
@@ -38,7 +38,7 @@ def qexpansion(field_label=None):
         print(v_label)
 
         if v.get('q_expansion') is not None:
-            v = S.next()
+            v = next(S)
             continue
 
         if field_label is None or not field_label != v["field_label"]:
@@ -124,4 +124,4 @@ def qexpansion(field_label=None):
         # UPDATES DON'T WORK
         #db.hmf_forms.save(v)
 
-        v = S.next()
+        v = next(S)

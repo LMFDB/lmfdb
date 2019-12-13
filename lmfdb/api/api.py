@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from six import string_types
 
 import urllib2
 import re
@@ -14,11 +15,13 @@ from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
 
+
 def pluck(n, list):
     return [_[n] for _ in list]
 
+
 def quote_string(value):
-    if isinstance(value,unicode) or isinstance(value,str):
+    if isinstance(value, string_types):
         return repr(value)
     return value
 
@@ -39,7 +42,7 @@ def hidden_collection(c):
 #    input: cursor for the collection
 #    output: a set with all the keys indexed
 #    """
-#    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().iteritems() if name!='_id_'],[])])
+#    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().items() if name!='_id_'],[])])
 
 def get_database_info(show_hidden=False):
     info = defaultdict(list)
@@ -205,7 +208,7 @@ def api_query(table, id = None):
     else:
         single_object = False
 
-        for qkey, qval in request.args.iteritems():
+        for qkey, qval in request.args.items():
             from ast import literal_eval
             try:
                 if qkey.startswith("_"):
@@ -279,10 +282,10 @@ def api_query(table, id = None):
     # fixup data for display and json/yaml encoding
     if 'bytea' in coll.col_type.values():
         for row in data:
-            for key, val in row.iteritems():
+            for key, val in row.items():
                 if type(val) == buffer:
                     row[key] = "[binary data]"
-        #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.iteritems() ]) for row in data]
+        #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.items() ]) for row in data]
     data = Json.prep(data)
 
     # preparing the datastructure

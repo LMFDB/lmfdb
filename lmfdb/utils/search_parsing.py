@@ -2,6 +2,7 @@
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 from six.moves import range
+from six import string_types
 
 import re
 from collections import defaultdict, Counter
@@ -104,7 +105,7 @@ def split_list(s):
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
-    if arg == None:
+    if arg is None:
         return []
     s = str(arg)
     s = s.replace(' ','')
@@ -304,7 +305,7 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
-            if isinstance(a, basestring) and '.' in a:
+            if isinstance(a, string_types) and '.' in a:
                 prec = len(a) - a.find('.') - 1
             else:
                 prec = 0
@@ -605,7 +606,7 @@ def parse_galgrp(inp, query, qfield):
                     query[tfield] = {'$in': gcsdict[n]}
             else:
                 options = []
-                for n, T in gcsdict.iteritems():
+                for n, T in gcsdict.items():
                     if len(T) == 1:
                         options.append({nfield: n, tfield: T[0]})
                     else:
@@ -613,6 +614,7 @@ def parse_galgrp(inp, query, qfield):
                 collapse_ors(['$or', options], query)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:

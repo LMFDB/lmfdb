@@ -10,7 +10,7 @@ from sage.groups.abelian_gps.dual_abelian_group import DualAbelianGroup_class, D
 
 class RayClassGroup(AbelianGroup_class):
     def __init__(self, number_field, mod_ideal = 1, mod_archimedean = None):
-        if mod_archimedean == None:
+        if mod_archimedean is None:
             mod_archimedean = [0] * len(number_field.real_places())
         mod_ideal = number_field.ideal( mod_ideal )
 
