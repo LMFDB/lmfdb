@@ -139,6 +139,7 @@ def render_belyi_galmap_webpage(label):
                            bread=belyi_galmap.bread,
                            learnmore=learnmore_list(),
                            title=belyi_galmap.title,
+                           downloads=belyi_galmap.downloads,
                            friends=belyi_galmap.friends,
                            KNOWL_ID="belyi.%s"%label)
 
@@ -309,7 +310,7 @@ class Belyi_download(Downloader):
         emb_list = []
         embeddings = rec['embeddings']
         for z in embeddings:
-            z_str = "ComplexField()!%s" % z
+            z_str = "ComplexField(15)!%s" % z
             emb_list.append(z_str)
         return '[' + ', '.join(emb_list) + ']'
 
