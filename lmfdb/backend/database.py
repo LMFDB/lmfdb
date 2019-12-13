@@ -26,6 +26,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 from __future__ import print_function
 from six import string_types
+from six.moves import input  # in python2, this is raw_input
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 from itertools import islice
@@ -3810,7 +3811,7 @@ class PostgresTable(PostgresBase):
 
     def drop_column(self, name, commit=True, force=False):
         if not force:
-            ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
+            ok = input("Are you sure you want to drop %s? (y/N) "%name)
             if not (ok and ok[0] in ['y','Y']):
                 return
         if name in self._sort_keys:
@@ -5672,7 +5673,7 @@ class PostgresDatabase(PostgresBase):
             print("Please provide your knowl username,")
             print("so that we can associate database changes with individuals.")
             print("Note that you can also do this by setting the editor field in the logging section of your config.ini file.")
-            uid = raw_input("Username: ")
+            uid = input("Username: ")
             selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
             if cur.rowcount == 0:
@@ -6042,7 +6043,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if self._execute(selecter, [name]).fetchone()[0]:
             raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
         if not force:
-            ok = raw_input("Are you sure you want to drop %s? (y/N) "%(name))
+            ok = input("Are you sure you want to drop %s? (y/N) "%(name))
             if not (ok and ok[0] in ['y','Y']):
                 return
         with DelayCommit(self, commit, silence=True):
