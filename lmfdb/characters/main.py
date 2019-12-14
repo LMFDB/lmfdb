@@ -135,7 +135,7 @@ def render_DirichletNavigation():
        info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
 
-@characters_page.route("/Labels")
+@characters_page.route("/Dirichlet/Labels")
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet Character Labels'
@@ -144,7 +144,7 @@ def labels_page():
     info['learnmore'] = learn('labels')
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
-@characters_page.route("/Source")
+@characters_page.route("/Dirichlet/Source")
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet Character Data'
@@ -153,7 +153,7 @@ def how_computed_page():
     info['learnmore'] = learn('source')
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
-@characters_page.route("/Reliability")
+@characters_page.route("/Dirichlet/Reliability")
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet Character Data'
@@ -162,7 +162,7 @@ def reliability():
     info['learnmore'] = learn('reliability')
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
-@characters_page.route("/Completeness")
+@characters_page.route("/Dirichlet/Completeness")
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet Character Data'
