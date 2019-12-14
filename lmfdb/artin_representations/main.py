@@ -63,10 +63,10 @@ def parse_artin_label(label):
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
     if rec:
+        num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
         for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
             s = r['url'].split('/')
-            # only friend embedded CMFs
-            if r['type'] == 'CMF' and len(s) == 10:
+            if r['type'] == 'CMF' and len(s) == num:
                 cmf_label = '.'.join(s[4:])
                 url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                 friends.append(("Modular form " + cmf_label, url))
@@ -227,6 +227,8 @@ def render_artin_representation_webpage(label):
         friends.append(("Galois orbit "+orblabel,
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
+        add_lfunction_friends(friends,label)
+        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'c'+str(j)
             friends.append(("Artin representation "+newlabel,

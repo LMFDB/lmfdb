@@ -303,7 +303,7 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+            if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
                 res = [list(map(str, elt)) for elt in res]
