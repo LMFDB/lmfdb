@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 from sage.all import Integer, euler_phi
 
 from lmfdb import db
@@ -52,19 +52,19 @@ class char_dir_values(TableChecker):
         val_gens_dict = dict(val_gens)
         if len(vals) != min(12, euler_phi(N)) or len(val_gens) != ngens:
             if verbose:
-                print "Length failure", len(vals), euler_phi(N), len(val_gens), ngens
+                print("Length failure", len(vals), euler_phi(N), len(val_gens), ngens)
             return False
         if N > 2 and (vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]):
             if verbose:
-                print "Initial value failure", N, rec['order'], vals[:2]
+                print("Initial value failure", N, rec['order'], vals[:2])
             return False
         if any(N.gcd(g) > 1 for g, gval in val_gens+vals):
             if verbose:
-                print "gcd failure", [g for g, gval in val_gens+vals if N.gcd(g) > 1]
+                print("gcd failure", [g for g, gval in val_gens+vals if N.gcd(g) > 1])
             return False
         for g, val in vals:
             if g in val_gens_dict and val != val_gens_dict[g]:
                 if verbose:
-                    print "Mismatch failure", g, val, val_gens_dict[g]
+                    print("Mismatch failure", g, val, val_gens_dict[g])
                 return False
         return True

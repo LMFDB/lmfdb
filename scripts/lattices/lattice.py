@@ -8,7 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
-
+from __future__ import print_function
 import sys
 import re
 import json
@@ -30,7 +30,7 @@ saving = True
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def makels(li):
   li2 = [str(x) for x in li]
@@ -57,7 +57,7 @@ lat.create_index('level')
 lat.create_index('aut')
 lat.create_index('class_number')
 
-print "finished indices"
+print("finished indices")
 
 
 ## Main importing function
@@ -88,20 +88,21 @@ def do_import(ll):
     lattice = lat.find_one({'label': label})
 
     if lattice is None:
-        print "new lattice"
-        print "***********"
-        print "check for isometries..."
-        A=data['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            print "... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram'])
-            print "***********"
+        print("new lattice")
+        print("***********")
+        print("check for isometries...")
+        A = data['gram']
+        n = len(A[0])
+        d = matrix(A).determinant()
+        result = [B for B in lat.find({'dim': int(n), 'det': int(d)})
+                  if isom(A, B['gram'])]
+        if result:
+            print("... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram']))
+            print("***********")
         else:
             lattice = data
     else:
-        print "lattice already in the database"
+        print("lattice already in the database")
         lattice.update(data)
     if saving:
         lat.update({'label': label} , {"$set": lattice}, upsert=True)
@@ -111,7 +112,7 @@ def do_import(ll):
 # Loop over files
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     for line in fn.readlines():

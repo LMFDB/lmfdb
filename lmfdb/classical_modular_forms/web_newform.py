@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-
+from six import string_types
 from collections import defaultdict
 import bisect, re
 
@@ -158,7 +158,13 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
+                m = self.field_poly_root_of_unity
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+                # This is not enough, for some reason
+                #if (m != 0) and (not self.single_generator):
+                # This is the only thing I could make work:
+                if (m != 0) and (self.hecke_ring_numerators is not None):
+                    self.convert_qexp_to_cyclotomic(m)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
             hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
@@ -241,6 +247,23 @@ class WebNewform(object):
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
+    def convert_qexp_to_cyclotomic(self,  m):
+        from sage.all import CyclotomicField
+        F = CyclotomicField(m)
+        zeta = F.gens()[0]
+        ret = []
+        l = len(self.hecke_ring_numerators)
+        betas = [F(self.hecke_ring_numerators[i]) /
+                 self.hecke_ring_denominators[i] for i in range(l)]
+        write_in_powers = zeta.coordinates_in_terms_of_powers()
+        for coeffs in self.qexp:
+            elt = sum([coeffs[i] * betas[i] for i in range(l)])
+            ret.append(write_in_powers(elt))
+        self.single_generator = True
+        self.hecke_ring_power_basis = True
+        self.qexp = ret
+        return ret
+    
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -259,7 +282,7 @@ class WebNewform(object):
     def friends(self):
         # first newspaces
         res = []
-        base_label = map(str, [self.level, self.weight])
+        base_label = [str(s) for s in [self.level, self.weight]]
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
@@ -303,10 +326,10 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+            if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
-                res = map(lambda elt : list(map(str, elt)), res)
+                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
                 return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
@@ -1036,7 +1059,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, basestring): # match object
+        if not isinstance(elabel, string_types): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

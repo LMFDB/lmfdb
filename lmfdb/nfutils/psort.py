@@ -187,12 +187,13 @@ def primes_of_degree_iter(K, deg, condition=None, sort_key=prime_label, maxnorm=
     condition(p) holds will be returned.  For example,
     condition=lambda:not p.divides(6).
     """
-    for p in primes(2,stop=maxnorm):
-        if condition==None or condition(p):
-            make_keys(K,p)
+    for p in primes(2, stop=maxnorm):
+        if condition is None or condition(p):
+            make_keys(K, p)
             for P in K.primes_dict[p]:
                 if P.residue_class_degree()==deg and P.norm()<=maxnorm:
                     yield P
+
 
 def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     """Iterator through primes of K, sorted using the provided sort key,
@@ -212,11 +213,11 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
     # pop the first prime off each iterator (allowing for the
     # possibility that there may be none):
-    Ps = [0 for d in dlist]
-    ns = [Infinity for d in dlist]
-    for i,PP in enumerate(PPs):
+    Ps = [0 for _ in dlist]
+    ns = [Infinity for _ in dlist]
+    for i, PP in enumerate(PPs):
         try:
-            P = PP.next()
+            P = next(PP)
             Ps[i] = P
             ns[i] = P.norm()
         except StopIteration:
@@ -235,7 +236,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
         # pop the next prime off that sub-iterator, detecting if it has finished:
         try:
-            Ps[i] = PPs[i].next()
+            Ps[i] = next(PPs[i])
             ns[i] = Ps[i].norm()
         except StopIteration:
             # prevent i'th sub-iterator from being used again

@@ -506,8 +506,8 @@ def jump_box(info):
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
     #handle direct trace_hash search
-    if re.match(r'^\#\d+$',jump) and long(jump[1:]) < 2**61:
-        label = db.mf_newforms.lucky({'trace_hash': long(jump[1:].strip())}, projection="label")
+    if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
+        label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:

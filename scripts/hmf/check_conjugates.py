@@ -11,7 +11,7 @@ Note that labels contain no information about weight.
 Initial version (University of Warwick 2015) Aurel Page
 
 """
-
+from __future__ import print_function
 import sys
 sys.path.append("../..");
 from copy import copy
@@ -21,7 +21,7 @@ from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
 from sage.all import oo
 
 from lmfdb.base import getDBConnection
-print "getting connection"
+print("getting connection")
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
@@ -30,7 +30,7 @@ C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by defau
 # necessary password.yaml file.
 
 def authenticate():
-    print "authenticating on the hmfs database"
+    print("authenticating on the hmfs database")
     import yaml
     import os
     pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
@@ -38,7 +38,7 @@ def authenticate():
     password = pw_dict['data']['password']
     C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
-print "setting hmfs, fields and forms"
+print("setting hmfs, fields and forms")
 hmfs = C.hmfs
 forms = hmfs.forms
 fields = hmfs.fields
@@ -201,7 +201,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
         return None
     print("Ideals precomputations...")
     data = fldlabel2conjdata(label)
-    if data == None:
+    if data is None:
         print("No nontrival automorphisms!")
         return
     print("...done.\n")
@@ -217,7 +217,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
             ig = auts.index(g)
             fg_label = conjform_label(f, ig, cideals)
             fgdb = forms.find_one({'label':fg_label})
-            if fgdb == None:
+            if fgdb is None:
                 print("Testing form %s: conjugate %s not present" % (f['label'], fg_label))
                 countmiss += 1
                 if buildform:
@@ -251,7 +251,7 @@ def check_multiplicity_one(label):
             for j in range(i+1,n):
                 if forms_equal(Lf[i],Lf[j]):
                     count += 1
-                    print "duplicates: "+Lf[i]['label']+" and "+Lf[j]['label']
+                    print("duplicates: "+Lf[i]['label']+" and "+Lf[j]['label'])
     print("Found "+str(count)+" duplicate forms.")
 
 def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):

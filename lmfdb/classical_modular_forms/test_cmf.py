@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 import unittest2, socket
 
@@ -657,8 +657,8 @@ class CmfTest(LmfdbTest):
                 assert expected == magma_free(magma_code)
 
         except socket.timeout as err:
-            print "Connecting with magma.maths.usyd.edu.au timed out"
-            print err
+            print("Connecting with magma.maths.usyd.edu.au timed out")
+            print(err)
 
 
 
@@ -862,15 +862,19 @@ class CmfTest(LmfdbTest):
 
     def test_artin(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
-        assert 'Artin representation 2.3_5_197.8t11.1c1' in page.data
+        assert 'Artin representation 2.3_5_197.8t11.1' in page.data
         assert 'D_4:C_2' in page.data
         assert '8.0.1964705625.1' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
-        assert 'Artin representation 2.2e2_281.4t3.2c1' in page.data
+        assert 'Artin representation 2.2e2_281.4t3.2' in page.data
         assert '4.0.4496.1' in page.data
         assert 'D_4' in page.data
 
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/124/1/i/a/67/1/')
+        assert 'Artin representation 2.2e2_31.16t60.1c3' in page.data
+        assert 'SL(2,3):C_2' in page.data
+        assert '4.0.15376.1' in page.data
 
     def test_AL_search(self):
         r"""

@@ -3,6 +3,9 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+from six.moves import range
+from six import integer_types as six_integers
+from six import string_types
 
 import cmath
 import math
@@ -291,8 +294,10 @@ def to_dict(args, exclude = []):
             d[key] = values
     return d
 
+
 def is_exact(x):
-    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
@@ -511,9 +516,9 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
-    if enclose == True:
+    if enclose:
         return "\( %s \)" % latex(x)
     return " %s " % latex(x)
 
@@ -553,7 +558,7 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)
@@ -617,7 +622,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     def insert_latex(s):
         return s.group(1) + '\) \('
 
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)
@@ -819,7 +824,8 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
@@ -856,7 +862,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         # this effectively disables the bigint
         bigint_cutoff = bigint_overallmin + 7
 
-    for n in reversed(xrange(m)):
+    for n in reversed(range(m)):
         c = coeffs[n]
         if n == 1:
             if superscript:
@@ -1244,7 +1250,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
+    if not isinstance(pol_str, string_types):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')

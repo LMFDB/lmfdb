@@ -46,7 +46,7 @@ ACKNOWLEDGEMENT (from sympow readme):
 #
 #                  http://www.gnu.org/licenses/
 ########################################################################
-
+from __future__ import print_function
 import os
 
 from sage.structure.sage_object import SageObject
@@ -139,7 +139,7 @@ class SympowLMFDB(SageObject):
         v = self('-sp %sp%s %s' % (n, prec, self._curve_str(E)))
         i = v.rfind(': ')
         if i == -1:
-            print self._fix_err(v)
+            print(self._fix_err(v))
             raise RuntimeError("failed to compute symmetric power")
         x = v[i + 2:]
         return x
@@ -208,7 +208,7 @@ class SympowLMFDB(SageObject):
 
         EXAMPLES::
 
-            sage: print sympow.Lderivs(EllipticCurve('11a'), 1, 16, 2)  # not tested
+            sage: print(sympow.Lderivs(EllipticCurve('11a'), 1, 16, 2))  # not tested
             ...
              1n0: 2.538418608559107E-01
              1w0: 2.538418608559108E-01
@@ -259,7 +259,7 @@ class SympowLMFDB(SageObject):
         s = 'Modular Degree is '
         i = v.find(s)
         if i == -1:
-            print self._fix_err(v)
+            print(self._fix_err(v))
             raise RuntimeError("failed to compute modular degree")
         return sage.rings.all.Integer(v[i + len(s):])
 
@@ -317,7 +317,7 @@ class SympowLMFDB(SageObject):
         s = 'Analytic Rank is '
         i = v.rfind(s)
         if i == -1:
-            print self._fix_err(v)
+            print(self._fix_err(v))
             raise RuntimeError("failed to compute analytic rank")
         j = v.rfind(':')
         r = sage.rings.all.Integer(v[i + len(s):j])
@@ -330,7 +330,7 @@ class SympowLMFDB(SageObject):
         Pre-compute data files needed for computation of n-th symmetric
         powers.
         """
-        print self('-new_data %s' % n)
+        print(self('-new_data %s' % n))
 
     def help(self):
         h = """
