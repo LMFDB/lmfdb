@@ -96,9 +96,12 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                     flash_error("Only the trivial character can be specified in combination with a range of levels.", info['character'])
                     return render_template('mwf_navigate.html', **info)
                 if re.match(POSINT_RE, info['character']):
-                    n = int(s[1])
+                    if N==0:
+                        flash_error("Character %s is ambiguous. Please either specify the level or use a character label of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                        return render_template('mwf_navigate.html', **info)
+                    n = int(info['character'])
                     if not gcd(N,n):
-                        flash_error("Character number %s is not coprime to the level %s.", info['character'], str(N))
+                        flash_error("Character %s is not coprime to the level %s.", info['character'], str(N))
                         return render_template('mwf_navigate.html', **info)
                 else:
                     if  not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
