@@ -68,7 +68,9 @@ FLOAT_RE = re.compile(r'^(\d+|\d+\.\d)$')
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-    info["credit"] = ""
+    info["credit"] = "Data computed by Stefan Lemurell and Fredrik Str\u00f6mberg."
+    info["bread"] = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
     mwf_logger.debug("method=%s" % request.method)
@@ -189,7 +191,7 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Maass Waveforms', url_for('.render_maass_waveforms'))]
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
 
@@ -251,7 +253,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     info['MF'] = MF
     info['title'] = "Maass Form"
     info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms'))]
+                     ('Maass Forms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
         info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
@@ -539,7 +541,7 @@ def get_table():
 def source():
     t = 'Source of Maass forms data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Source", '')]
+                     ('Maass Forms', url_for('.render_maass_waveforms')), ("Source", '')]
     learnmore = learnmore_list_remove('Source')
     return render_template("single.html", kid='rcs.source.maass',
                            title=t, bread=bread,
@@ -549,7 +551,7 @@ def source():
 def reliability():
     t = 'Reliability of Maass forms data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Reliability", '')]
+                     ('Maass Forms', url_for('.render_maass_waveforms')), ("Reliability", '')]
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.maass',
                            title=t, bread=bread,
