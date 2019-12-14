@@ -158,11 +158,12 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
-                # print "read q expansion: ", self.qexp
                 m = self.field_poly_root_of_unity
-                # print "m = ", m
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-                if (m != 0) and (not self.single_generator):
+                # This is not enough, for some reason
+                #if (m != 0) and (not self.single_generator):
+                # This is the only thing I could make work:
+                if (m != 0) and (self.hecke_ring_numerators is not None):
                     self.convert_qexp_to_cyclotomic(m)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
@@ -249,26 +250,17 @@ class WebNewform(object):
     def convert_qexp_to_cyclotomic(self,  m):
         from sage.all import CyclotomicField
         F = CyclotomicField(m)
-        d = F.degree() # phi(m)
         zeta = F.gens()[0]
         ret = []
-        # print "numerators = ", self.hecke_ring_numerators
-        # print "denominators = ", self.hecke_ring_denominators
+        l = len(self.hecke_ring_numerators)
         betas = [F(self.hecke_ring_numerators[i]) /
-                 self.hecke_ring_denominators[i] for i in range(d)]
+                 self.hecke_ring_denominators[i] for i in range(l)]
         write_in_powers = zeta.coordinates_in_terms_of_powers()
         for coeffs in self.qexp:
-            elt = sum([coeffs[i] * betas[i] for i in range(d)])
+            elt = sum([coeffs[i] * betas[i] for i in range(l)])
             ret.append(write_in_powers(elt))
-            # poly = elt.polynomial()
-            # x = poly.parent().gens()[0]
-            # ret.append([[poly.monomial_coefficient(x**e),e] for
-            #            e in poly.exponents()])
-        # print ret
         self.single_generator = True
-        # self.hecke_ring_cyclotomic_generator = m
         self.hecke_ring_power_basis = True
-        # self.field_poly_is_cyclotomic = True
         self.qexp = ret
         return ret
     
@@ -898,8 +890,6 @@ function switch_basis(btype) {
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
         vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
         for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
-            # print "g = ", g
-            # print "chi_g = ", g
             if self.embedding_label is None:
                 term = self._elt(chi_g)
                 latexterm = latex(term)
@@ -978,10 +968,8 @@ function switch_basis(btype) {
         eigseq = self.qexp[:prec]
         use_knowl = too_big(eigseq, 10**24)
         s = ''
-        # print "In eigs_as_seqseq_to_qexp"
         for j in range(len(eigseq)):
             term = self._elt(eigseq[j])
-            # print "term = ", term
             if term != 0:
                 latexterm = latex(term)
                 if use_knowl:
