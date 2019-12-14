@@ -606,7 +606,7 @@ def parse_galgrp(inp, query, qfield):
                     query[tfield] = {'$in': gcsdict[n]}
             else:
                 options = []
-                for n, T in gcsdict.iteritems():
+                for n, T in gcsdict.items():
                     if len(T) == 1:
                         options.append({nfield: n, tfield: T[0]})
                     else:
@@ -614,6 +614,7 @@ def parse_galgrp(inp, query, qfield):
                 collapse_ors(['$or', options], query)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:
