@@ -97,7 +97,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                     return render_template('mwf_navigate.html', **info)
                 if re.match(POSINT_RE, info['character']):
                     if N==0:
-                        flash_error("Character %s is ambiguous. Please either specify the level or use a character label of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                        flash_error("Character %s is ambiguous. Please either specify a level or use a character label of the form <span style='color:black'>q.n</span>, where q specifies the level.", info['character'])
                         return render_template('mwf_navigate.html', **info)
                     n = int(info['character'])
                     if not gcd(N,n):
@@ -107,16 +107,16 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                     if  not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
                         flash_error("%s is not a valid label for a Dirichlet character.  It should be either be 1 (for the trivial character) or of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                         return render_template('mwf_navigate.html', **info)
-                s = info['character'].split('.')
-                q,n = int(s[0]), int(s[1])
-                if n > q or gcd(q,n) != 1:
-                    flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
-                    return render_template('mwf_navigate.html', **info)
-                if  N > 0 and q != N:
-                    flash_error("The specified character %s is not compatible with the level %s.", info['character'], info['level'])
-                    return render_template('mwf_navigate.html', **info)
-                info['level_range'] = str(q)
-                info['character'] = str(n)
+                    s = info['character'].split('.')
+                    q,n = int(s[0]), int(s[1])
+                    if n > q or gcd(q,n) != 1:
+                        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                        return render_template('mwf_navigate.html', **info)
+                    if  N > 0 and q != N:
+                        flash_error("The specified character %s is not compatible with the level %s.", info['character'], info['level'])
+                        return render_template('mwf_navigate.html', **info)
+                    info['level_range'] = str(q)
+                    info['character'] = str(n)
         if info['weight'] != -1:
             if not re.match(INT_RE, info['weight']):
                 flash_error("%s is not a valid weight.  It should be a nonnegative integer.", info['weight'])
