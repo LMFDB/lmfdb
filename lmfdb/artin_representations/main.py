@@ -62,6 +62,7 @@ def parse_artin_label(label):
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
+    printf "add_lfunction_friends",label,rec
     if rec:
         for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
             s = r['url'].split('/')
