@@ -65,8 +65,7 @@ def add_lfunction_friends(friends, label):
     if rec:
         for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
             s = r['url'].split('/')
-            # only friend embedded CMFs
-            if r['type'] == 'CMF' and len(s) == 10:
+            if r['type'] == 'CMF':
                 cmf_label = '.'.join(s[4:])
                 url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                 friends.append(("Modular form " + cmf_label, url))
@@ -227,6 +226,7 @@ def render_artin_representation_webpage(label):
         friends.append(("Galois orbit "+orblabel,
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
+        add_lfunction_friends(friends,label)
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'c'+str(j)
             friends.append(("Artin representation "+newlabel,
