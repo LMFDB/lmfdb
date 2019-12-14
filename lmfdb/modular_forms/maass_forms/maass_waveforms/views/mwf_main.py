@@ -95,7 +95,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                 except:
                     flash_error("Only the trivial character can be specified in combination with a range of levels.", info['character'])
                     return render_template('mwf_navigate.html', **info)
-                if re.match(POSINT_RE, info['character']:
+                if re.match(POSINT_RE, info['character']):
                     n = int(s[1])
                     if not gcd(N,n):
                         flash_error("Character number %s is not coprime to the level %s.", info['character'], str(N))
