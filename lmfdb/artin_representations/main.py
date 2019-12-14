@@ -228,6 +228,7 @@ def render_artin_representation_webpage(label):
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
         add_lfunction_friends(friends,label)
+        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'c'+str(j)
             friends.append(("Artin representation "+newlabel,
