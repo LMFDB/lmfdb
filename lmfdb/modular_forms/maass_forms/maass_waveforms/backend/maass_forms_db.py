@@ -50,7 +50,7 @@ class MaassDB(object):
         if type(d) == dictType:
             for i in d.keys():
                 x = self.find_coeffs_from_dict(d[i], dictType)
-                if x != None:
+                if x is not None:
                     if (x == 0) or (x == 1):
                         return x + 1
                     if (x == 2):
@@ -88,7 +88,7 @@ class MaassDB(object):
                 if type(d) == type([]):
                     d = { i : d[i] for i in range(0, len(d)) }
                 e = self.find_coeffs_from_dict(d, type(d))
-                if (e <> None):
+                if e is not None:
                     return e
             return f.get('Coefficients', None)
 
