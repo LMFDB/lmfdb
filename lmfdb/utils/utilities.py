@@ -516,7 +516,7 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     if enclose:
         return "\( %s \)" % latex(x)
@@ -558,7 +558,7 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)
@@ -622,7 +622,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     def insert_latex(s):
         return s.group(1) + '\) \('
 
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)

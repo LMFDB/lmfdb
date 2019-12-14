@@ -75,7 +75,7 @@ def get_character_modulus(a, b, limit=7):
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
-    for k, v in entries.iteritems():
+    for k, v in entries.items():
         l = []
         v = sorted(v)
         while v:
