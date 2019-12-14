@@ -874,7 +874,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/124/1/i/a/67/1/')
         assert 'Artin representation 2.2e2_31.16t60.1c3' in page.data
         assert 'SL(2,3):C_2' in page.data
-        assert '4.0.15376,1' in page.data
+        assert '4.0.15376.1' in page.data
 
     def test_AL_search(self):
         r"""
