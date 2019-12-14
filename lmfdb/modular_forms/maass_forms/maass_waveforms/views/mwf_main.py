@@ -100,7 +100,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                         flash_error("Character %s is ambiguous. Please either specify a level or use a character label of the form <span style='color:black'>q.n</span>, where q specifies the level.", info['character'])
                         return render_template('mwf_navigate.html', **info)
                     n = int(info['character'])
-                    if not gcd(N,n):
+                    if gcd(N,n) != 1:
                         flash_error("Character %s is not coprime to the level %s.", info['character'], str(N))
                         return render_template('mwf_navigate.html', **info)
                 else:
