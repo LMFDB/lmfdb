@@ -68,7 +68,7 @@ FLOAT_RE = re.compile(r'^(\d+|\d+\.\d)$')
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-    info["credit"] = "Data computed by Stefan Lemurell and Fredrik Str\u00f6mberg."
+    info["credit"] = u"Data computed by Stefan Lemurell and Fredrik Str\u00f6mberg."
     info["bread"] = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Maass Forms', url_for('.render_maass_waveforms'))]
     info["learnmore"] = learnmore_list()
