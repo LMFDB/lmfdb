@@ -70,7 +70,7 @@ class MaassDB(object):
         f = db.mwf_forms.lucky({'maass_id': maass_id})
         if f is None:
             return None
-        nc = f.get('Numc', 0)
+        #nc = f.get('Numc', 0)
         if verbose > 0:
             print("f=", f)
         #if nc == 0:
