@@ -84,7 +84,7 @@ assert higher_genus_w_automorphisms
 from . import abvar
 assert abvar
 from .abvar import fq
-assert abvar.fq
+assert fq
 from . import modlmf
 assert modlmf
 from . import rep_galois_modl
