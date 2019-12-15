@@ -3,8 +3,9 @@
 # This version writes the data to a file, deletes all records from the database,
 # then reloads from the files. 
 from __future__ import print_function
-
-import sys, os
+from six import text_type
+import sys
+import os
 import re
 import json
 
@@ -161,7 +162,7 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    if isinstance(ent[kk], unicode):
+                    if isinstance(ent[kk], text_type):
                         ent[kk] = str(ent[kk])
                     if not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
@@ -177,7 +178,7 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    if isinstance(ent[kk], unicode):
+                    if isinstance(ent[kk], text_type):
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
@@ -195,4 +196,3 @@ if nottest:
         nfgal.reload('nfgal.dump', sep='|')
     if k == 'art':
         rep.reload('art.dump', sep='|')
-
