@@ -1,6 +1,6 @@
 // This is the snap.svg script way of controlling the files.
 var s = Snap("#lmdfb_map");
-var svg_desc = "svg_description" // CSS selector for description div box
+var svg_desc = "svg_description"; // CSS selector for description div box
 var svg_examples = "svg_examples";
 var svg_element_currently_clicked = 0;
 var svg_element_currently_clicked_ID = "";
@@ -92,8 +92,7 @@ var fillNewInformation = function ( description_text, description_list, descript
       //      temp_string = temp_string + "<a href=\"" + split_list_links[i] + "\">\n" + "<li>" + split_list[i] + "</li>\n" + "</a>\n";
             temp_string = temp_string + "<li>" + split_list[i] + "</li>\n";
         };
-        list_html.innerHTML += "<ul>" + temp_string + "</ul>"
-
+        list_html.innerHTML += "<ul>" + temp_string + "</ul>";
     }
     else
     {

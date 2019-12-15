@@ -139,7 +139,7 @@ cpdef besselk_dp(double R,double x,double prec=1e-14,int pref=0):
     else:
         RR=R
     if(x<0):
-        raise ValueError," Need x>0! Got x=%s" % x
+        raise ValueError(" Need x>0! Got x=%s" % x)
 
     if(x<R*0.7):
         try:
@@ -197,12 +197,12 @@ cdef double besselk_dp_rec(double R,double x,double prec=1e-14,int pref=0):   # 
 
     """
     if(x<0):
-        raise ValueError,"X<0"
+        raise ValueError("X<0")
     #! To make a specific test is time-consuming
     cdef double p=0.25+R*R
     cdef double q=2.0*(x-1.0)
     cdef double t=0.0 #/*arbitrary*/
-    cdef double k=d_one #/*arbitrary*/;
+    cdef double k=d_one #/*arbitrary*/
     cdef double err=d_one
     cdef int NMAX=5000
     cdef int n_start=1 #128
@@ -239,14 +239,14 @@ cdef double besselk_dp_rec(double R,double x,double prec=1e-14,int pref=0):   # 
             mr=mr_m1
         if(k==0.0):
             s='the K-bessel routine failed (k large) for x,R=%s,%s, value=%s' 
-            raise ValueError,s%(x,R,k)
-        k=d_one/k;
+            raise ValueError(s%(x,R,k))
+        k=d_one/k
     if( k > 1E30 ): #something big... 
         s='the K-bessel routine failed (k large) for x,R=%s,%s, value=%s' 
-        raise ValueError,s%(x,R,k)
+        raise ValueError(s%(x,R,k))
     if(nn>=NMAX):
         s='the K-bessel routine failed (too many iterations) for x,R=%s,%s, value=%s' 
-        raise ValueError,s%(x,R,k)
+        raise ValueError(s%(x,R,k))
     #!k= exp( pi*r/2) * K_ir( x) !
     if(pref==1):
         return k
@@ -344,7 +344,7 @@ cdef double besselk_dp_pow(double R,double x,double prec=1E-12,int pref=0):
         ck1=ck
     if(k>=N_max):
         s="Maximum numbber of iterations reached x,R=%s,%s val=%s"
-        raise ValueError,s%(x,R,summa)
+        raise ValueError(s % (x, R, summa))
         stat=1  #! We reached end of loop
     if(pref==1):
         res=summa*exp_Pih_R

@@ -46,7 +46,7 @@ def check_orbit_data(orbit_label, ll, fix=False):
         if 'Zbasis' not in orb.keys():
             print("NOT stored")
             if fix:
-                d=do_import(ll);
+                d = do_import(ll)
                 hecke_orb.update({"_id": orb["_id"]}, {"$set":{'Zbasis':d['Zbasis'],'discriminant':d['discriminant'],'disc_fac':d['disc_fac'],'Qbasis':d['Qbasis'],'Qalg_gen':d['Qalg_gen']}}, upsert=True)
                 print("Fixed orbit label %s" % (orbit_label))
         else:

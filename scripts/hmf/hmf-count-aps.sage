@@ -5,7 +5,7 @@ Initial version Dan Yasaki, modified by Aurel Page (2017)
 """
 
 import os
-sys.path.append("../..");
+sys.path.append("../..")
 from pymongo.mongo_client import MongoClient
 from lmfdb.WebNumberField import WebNumberField
 

@@ -98,7 +98,8 @@ def Sp4Z_j_space(k,j):
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
-                           info=info);
+                           info=info)
+
 
 @smf_page.route('/Sp4Z/<int:k>')
 @smf_page.route('/Sp4Z/<int:k>/')

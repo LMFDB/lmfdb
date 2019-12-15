@@ -102,7 +102,7 @@ if db.is_verifying:
 def main():
     info("main: ...done.")
     from lmfdb.utils.config import Configuration
-    flask_options = Configuration().get_flask();
+    flask_options = Configuration().get_flask()
 
     if "profiler" in flask_options and flask_options["profiler"]:
         print("Profiling!")
@@ -112,7 +112,3 @@ def main():
 
     lmfdb.app.set_running()
     app.run(**flask_options)
-
-
-
-
