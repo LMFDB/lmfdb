@@ -2,8 +2,7 @@
 
 import ast, os, re, StringIO, time
 
-import flask
-from flask import render_template, request, url_for, redirect, send_file, make_response
+from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
@@ -47,14 +46,17 @@ def init_nf_count():
         max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
+
 def group_cclasses_data(n, t):
-    return flask.Markup(group_cclasses_knowl_guts(n, t))
+    return Markup(group_cclasses_knowl_guts(n, t))
+
 
 def group_character_table_data(n, t):
-    return flask.Markup(group_character_table_knowl_guts(n, t))
+    return Markup(group_character_table_knowl_guts(n, t))
+
 
 def number_field_data(label):
-    return flask.Markup(nf_knowl_guts(label))
+    return Markup(nf_knowl_guts(label))
 
 #def na_text():
 #    return "Not computed"
@@ -101,11 +103,6 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
-
-@app.route("/NF")
-@app.route("/NF/")
-def NF_redirect():
-    return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
 @nf_page.route("/Source")
 def source():

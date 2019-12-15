@@ -158,7 +158,13 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
+                m = self.field_poly_root_of_unity
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+                # This is not enough, for some reason
+                #if (m != 0) and (not self.single_generator):
+                # This is the only thing I could make work:
+                if (m != 0) and (self.hecke_ring_numerators is not None):
+                    self.convert_qexp_to_cyclotomic(m)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
             hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
@@ -241,6 +247,23 @@ class WebNewform(object):
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
+    def convert_qexp_to_cyclotomic(self,  m):
+        from sage.all import CyclotomicField
+        F = CyclotomicField(m)
+        zeta = F.gens()[0]
+        ret = []
+        l = len(self.hecke_ring_numerators)
+        betas = [F(self.hecke_ring_numerators[i]) /
+                 self.hecke_ring_denominators[i] for i in range(l)]
+        write_in_powers = zeta.coordinates_in_terms_of_powers()
+        for coeffs in self.qexp:
+            elt = sum([coeffs[i] * betas[i] for i in range(l)])
+            ret.append(write_in_powers(elt))
+        self.single_generator = True
+        self.hecke_ring_power_basis = True
+        self.qexp = ret
+        return ret
+    
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
