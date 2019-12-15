@@ -307,7 +307,7 @@ def info():
     from socket import gethostname
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
-    output += "# PostgreSQL info\n";
+    output += "# PostgreSQL info\n"
     from lmfdb import db
     if not db.is_alive():
         output += "db is offline\n"
@@ -318,11 +318,11 @@ def info():
         output += "Read only: %s\n" % db._read_only
         output += "Read and write to userdb: %s\n" % db._read_and_write_userdb
         output += "Read and write to knowls: %s\n" % db._read_and_write_knowls
-    output += "\n# GIT info\n";
+    output += "\n# GIT info\n"
     output += git_infos()[-1]
-    output += "\n\n";
-    
+    output += "\n\n"
     return output.replace("\n", "<br>")
+
 
 @app.route("/acknowledgment")
 def acknowledgment():

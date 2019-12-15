@@ -106,7 +106,7 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data.get('Lhash');
+    L.Lhash = data.get('Lhash')
     L.algebraic = data.get('algebraic')
     L.degree = data.get('degree')
     L.level = int(data.get('conductor'))
@@ -223,14 +223,14 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
-        count = 0;
+        count = 0
         for i, elt in enumerate(L.dirichlet_coefficients_arithmetic):
             if elt != 0:
-                count += 1;
+                count += 1
                 if count > L.numcoeff:
                     L.dirichlet_coefficients_arithmetic = \
-                        L.dirichlet_coefficients_arithmetic[:i];
-                    break;
+                        L.dirichlet_coefficients_arithmetic[:i]
+                    break
     else:
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)]
 
@@ -249,13 +249,13 @@ def makeLfromdata(L):
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
     L.positive_zeros_raw = map(str, data['positive_zeros'])
-    L.accuracy = data.get('accuracy', None);
+    L.accuracy = data.get('accuracy', None)
 
     def convert_zeros(accuracy, list_zeros):
-        two_power = 2 ** L.accuracy;
+        two_power = 2 ** L.accuracy
         # the zeros were stored with .str(truncate = false)
         # we recover all the bits
-        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros];
+        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
         return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
 
@@ -270,7 +270,7 @@ def makeLfromdata(L):
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
-        L.dual_accuracy = dual_L_data.get('accuracy', None);
+        L.dual_accuracy = dual_L_data.get('accuracy', None)
         L.negative_zeros_raw = map(str, dual_L_data['positive_zeros'])
         if L.dual_accuracy is not None:
             L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)

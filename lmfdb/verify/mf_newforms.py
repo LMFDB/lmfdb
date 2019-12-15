@@ -313,7 +313,7 @@ class mf_newforms(MfChecker):
         if present, check that field_disc_factorization matches field_disc
         """
         # TIME about 3s
-        return self._run_query(SQL('field_disc != prod_factorization(field_disc_factorization)'), {'field_disc':{'$exists':True}});
+        return self._run_query(SQL('field_disc != prod_factorization(field_disc_factorization)'), {'field_disc':{'$exists':True}})
 
     @overall
     def check_hecke_ring_index_factorization(self):
@@ -321,7 +321,7 @@ class mf_newforms(MfChecker):
         if present, verify that hecke_ring_index_factorization matches hecke_ring_index
         """
         # TIME about 2s
-        return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}});
+        return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}})
 
 
     @overall(max_failures=1000)

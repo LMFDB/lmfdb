@@ -36,7 +36,7 @@ def add_lattice_nf(ll):
     n_field,gram_input = ll
     gram_input=[[int(i) for i in l] for l in gram_input] 
 
-    R = PolynomialRing(QQ, 'x');
+    R = PolynomialRing(QQ, 'x')
     nf_label = poly_to_field_label(R(n_field))
 
     lattice = l1.find_one({'gram': gram_input })
