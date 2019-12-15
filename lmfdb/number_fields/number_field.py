@@ -104,11 +104,6 @@ def poly_to_field_label(pol):
     except:
         return None
 
-@app.route("/NF")
-@app.route("/NF/")
-def NF_redirect():
-    return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
-
 @nf_page.route("/Source")
 def source():
     learnmore = learnmore_list_remove('Source')
