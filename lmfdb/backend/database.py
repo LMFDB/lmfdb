@@ -250,6 +250,8 @@ def IdentifierWrapper(name, convert = True):
 
         return SQL('{0}{1}').format(Identifier(name), SQL(sql_slicer))
 
+class LockError(RuntimeError):
+    pass
 
 class QueryLogFilter(object):
     """
@@ -450,6 +452,72 @@ class PostgresBase(object):
         cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"),
                             [tablename], silent=True)
         return cur.fetchone() is not None
+
+    def _get_locks(self):
+        return self._execute(SQL("SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) FROM pg_locks l JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"))
+
+    def _table_locked(self, tablename, types='all'):
+        """
+        Tests whether a table is locked.
+
+        INPUT:
+
+        - tablename -- a string, the name of the table
+        - types -- either a string describing the operation being performed
+          (which is translated to a list of lock types with which that operation conflicts)
+          or a list of lock types.
+
+        The valid strings are:
+
+        - 'update'
+        - 'delete'
+        - 'insert'
+        - 'index'
+        - 'all' (includes all locks)
+
+        The valid lock types to filter on are:
+
+        - 'AccessShareLock'
+        - 'RowShareLock'
+        - 'RowExclusiveLock'
+        - 'ShareUpdateExclusiveLock'
+        - 'ShareLock'
+        - 'ShareRowExclusiveLock'
+        - 'ExclusiveLock'
+        - 'AccessExclusiveLock'
+
+        OUTPUT:
+
+        A list of pairs (locktype, pid) where locktype is a string as above,
+        and pid is the process id of the postgres transaction holding the lock.
+        """
+        if isinstance(types, string_types):
+            if types in ['update', 'delete', 'insert']:
+                types = ['ShareLock',
+                         'ShareRowExclusiveLock',
+                         'ExclusiveLock',
+                         'AccessExclusiveLock']
+            elif types == 'index':
+                types = ['RowExclusiveLock',
+                         'ShareUpdateExclusiveLock',
+                         'ShareRowExclusiveLock',
+                         'ExclusiveLock',
+                         'AccessExclusiveLock']
+            elif types != 'all':
+                raise ValueError("Invalid lock type")
+        if types != 'all':
+            good_types = ['AccessShareLock',
+                          'RowShareLock',
+                          'RowExclusiveLock',
+                          'ShareUpdateExclusiveLock',
+                          'ShareLock',
+                          'ShareRowExclusiveLock',
+                          'ExclusiveLock',
+                          'AccessExclusiveLock']
+            bad_types = [locktype for locktype in types if locktype not in good_types]
+            if bad_types:
+                raise ValueError("Invalid lock type(s): %s" % (', '.join(bad_types)))
+        return [(locktype, pid) for (name, locktype, pid, t) in self._get_locks() if name == tablename and (types == 'all' or locktype in types)]
 
     def _index_exists(self, indexname, tablename=None):
         """
@@ -677,7 +745,7 @@ class PostgresBase(object):
                     has_id = True
         return col_list, col_type, has_id
 
-    def _copy_to_select(self, select, filename, header="", sep=None, silent=False):
+    def _copy_to_select(self, select, filename, header="", sep='|', silent=False):
         """
         Using the copy_expert from psycopg2, exports the data from a select statement.
 
@@ -688,7 +756,7 @@ class PostgresBase(object):
         - ``sep`` -- a separator, defaults to tab
         - ``silent`` -- suppress reporting success
         """
-        if sep:
+        if sep != '\t':
             sep_clause = SQL(" (DELIMITER {0})").format(Literal(sep))
         else:
             sep_clause = SQL("")
@@ -705,7 +773,7 @@ class PostgresBase(object):
                 if not silent:
                     print("Created file %s" % filename)
 
-    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t", prohibit_missing=True):
+    def _check_header_lines(self, F, table_name, columns_set, sep=u"|", prohibit_missing=True):
         """
         Reads the header lines from a file (row of column names, row of column
         types, blank line), checking if these names match the columns set and
@@ -781,7 +849,7 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"\t")
+        sep = kwds.get("sep", u"|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -832,6 +900,11 @@ class PostgresBase(object):
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator)
 
+    def _check_col_datatype(self, typ):
+        if typ.lower() not in types_whitelist:
+            if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                raise RuntimeError("%s is not a valid type"%(typ))
+
     def _create_table(self, name, columns):
         """
         Utility function: creates a table with the schema specified by `columns`
@@ -844,10 +917,7 @@ class PostgresBase(object):
         """
         #FIXME make the code use this
         for col, typ in columns:
-            if typ not in types_whitelist:
-                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                    raise RuntimeError("%s is not a valid type"%(typ))
-
+            self._check_col_datatype(typ)
         table_col = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in columns)
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
         self._execute(creator)
@@ -966,7 +1036,7 @@ class PostgresBase(object):
 
 
 
-    def _read_header_lines(self, F, sep=u"\t"):
+    def _read_header_lines(self, F, sep=u"|"):
         """
         Reads the header lines from a file
         (row of column names, row of column types, blank line).
@@ -1046,7 +1116,7 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            lines = [line for line in csv.reader(F, delimiter = "|")]
             if len(lines) == 0:
                 return
             for line in lines:
@@ -2918,6 +2988,14 @@ class PostgresTable(PostgresBase):
     # Insertion and updating data                                    #
     ##################################################################
 
+    def _check_locks(self, types='all'):
+        locks = self._table_locked(self.search_table, types) + self._table_locked(self.extra_table, types)
+        if locks:
+            typelen = max(len(locktype) for (locktype, pid) in locks) + 3
+            for locktype, pid in locks:
+                print(locktype + ' '*(typelen - len(locktype)) + str(pid))
+            raise LockError("Table is locked.  Please resolve the lock by killing the above processes and try again")
+
     def _break_stats(self):
         """
         This function should be called when the statistics are invalidated by an insertion or update.
@@ -3011,17 +3089,17 @@ class PostgresTable(PostgresBase):
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u'\t'.join(search_cols) + u'\n')
-                    searchfile.write(u'\t'.join(self.col_type.get(col) for col in search_cols) + u'\n\n')
+                    searchfile.write(u'|'.join(search_cols) + u'\n')
+                    searchfile.write(u'|'.join(self.col_type.get(col) for col in search_cols) + u'\n\n')
                     if self.extra_table is not None:
-                        extrafile.write(u'\t'.join(extra_cols) + u'\n')
-                        extrafile.write(u'\t'.join(self.col_type.get(col) for col in extra_cols) + u'\n\n')
+                        extrafile.write(u'|'.join(extra_cols) + u'\n')
+                        extrafile.write(u'|'.join(self.col_type.get(col) for col in extra_cols) + u'\n\n')
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
-                        searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
+                        searchfile.write(u'|'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
-                            extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
+                            extrafile.write(u'|'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
                         count += 1
                         if (count % progress_count) == 0:
                             print("%d of %d records (%.1f percent) dumped in %.3f secs" % (count, tot, 100.0*count/tot,time.time()-start))
@@ -3049,7 +3127,8 @@ class PostgresTable(PostgresBase):
         - ``log_change`` -- whether to log the update to the log table
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
-        sep = kwds.get("sep", u"\t")
+        self._check_locks()
+        sep = kwds.get("sep", u"|")
         print("Updating %s from %s..." % (self.search_table, datafile))
         now = time.time()
         if label_col is None:
@@ -3157,6 +3236,7 @@ class PostgresTable(PostgresBase):
         - ``resort`` -- whether to resort the table afterward
         - ``restat`` -- whether to recreate statistics afterward
         """
+        self._check_locks('delete')
         with DelayCommit(self, commit, silence=True):
             qstr, values = self._parse_dict(query)
             if qstr is None:
@@ -3240,6 +3320,7 @@ class PostgresTable(PostgresBase):
         - ``new_row`` -- whether a new row was inserted
         - ``row_id`` -- the id of the found/new row
         """
+        self._check_locks('update')
         if not query or not data:
             raise ValueError("Both query and data must be nonempty")
         if "id" in data:
@@ -3346,6 +3427,7 @@ class PostgresTable(PostgresBase):
         If the search table has an id, the dictionaries will be updated with the ids of the inserted records,
         though note that those ids will change if the ids are resorted.
         """
+        self._check_locks('insert')
         if not data:
             raise ValueError("No data provided")
         if self.extra_table is not None:
@@ -3424,6 +3506,7 @@ class PostgresTable(PostgresBase):
         """
         print("resorting disabled")
         return
+        self._check_locks()
         with DelayCommit(self, silence=True):
             if self._id_ordered and (search_table is not None or self._out_of_order):
                 now = time.time()
@@ -3469,7 +3552,7 @@ class PostgresTable(PostgresBase):
 
 
 
-    def _write_header_lines(self, F, cols, sep=u"\t"):
+    def _write_header_lines(self, F, cols, sep=u"|"):
         """
         Writes the header lines to a file
         (row of column names, row of column types, blank line).
@@ -3599,7 +3682,7 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 if adjust_schema and header:
                     # read the header and create the tmp_table accordingly
-                    sep = kwds.get("sep", u"\t")
+                    sep = kwds.get("sep", u"|")
                     cols = self._create_table_from_header(filename, tmp_table, sep)
                 else:
                     self._clone(table, tmp_table)
@@ -3866,7 +3949,7 @@ class PostgresTable(PostgresBase):
         """
         Efficiently copy data from the database to a file.
 
-        The result will have one line per row of the table, tab separated and in order
+        The result will have one line per row of the table, separated by | characters and in order
         given by self.search_cols and self.extra_cols.
 
         INPUT:
@@ -3882,7 +3965,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        sep = kwds.get("sep", u"\t")
+        sep = kwds.get("sep", u"|")
 
         tabledata = [
                 # tablename, cols, addid, write_header, filename
@@ -4002,9 +4085,8 @@ class PostgresTable(PostgresBase):
             raise ValueError("%s already has column %s"%(self.extra_table, name))
         if label and extra:
             raise ValueError("label must be a search column")
-        if datatype.lower() not in types_whitelist:
-            if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
-                raise ValueError("%s is not a valid type"%(datatype))
+        self._check_locks()
+        self._check_col_datatype(datatype)
         self.col_type[name] = datatype
         if extra:
             if self.extra_table is None:
@@ -4035,6 +4117,8 @@ class PostgresTable(PostgresBase):
         - ``commit`` -- whether to actually execute the change
         - ``force`` -- if False, will ask for confirmation
         """
+        self._check_locks()
+
         if not force:
             ok = input("Are you sure you want to drop %s? (y/N) "%name)
             if not (ok and ok[0] in ['y','Y']):
@@ -4077,6 +4161,7 @@ class PostgresTable(PostgresBase):
         - ``ordered`` -- whether the id column should be kept in sorted
             order based on the default sort order stored in meta_tables.
         """
+        self._check_locks()
         if self.extra_table is not None:
             raise ValueError("Extra table already exists")
         with DelayCommit(self, commit, silence=True):
@@ -4106,9 +4191,7 @@ class PostgresTable(PostgresBase):
                 if col in self._sort_keys:
                     raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
                 typ = self.col_type[col]
-                if typ not in types_whitelist:
-                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                        raise RuntimeError("%s is not a valid type"%(typ))
+                self._check_col_datatype(typ)
                 vars.append((col, typ))
             self.extra_cols = []
             vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
@@ -4140,6 +4223,61 @@ class PostgresTable(PostgresBase):
                 self._execute(updater)
             self.restore_pkeys()
             self.log_db_change("create_extra_table", columns=columns)
+
+    def _move_column(self, column, src, target, commit):
+        """
+        This function moves a column between two tables, copying the data accordingly.
+
+        The two tables must have corresponding id columns, so this is most useful for moving
+        columns between search and extra tables.
+        """
+        self._check_locks()
+        with DelayCommit(self, commit, silence=True):
+            datatype = self.col_type[column]
+            self._check_col_datatype(datatype)
+            modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(target), Identifier(column))
+            self._execute(modifier)
+            print("%s column created in %s; moving data" % (column, target))
+            datamove = SQL("UPDATE {0} SET {1} = {2}.{1} FROM {2} WHERE {0}.id = {2}.id").format(Identifier(target), Identifier(column), Identifier(src))
+            self._execute(datamove)
+            modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(src), Identifier(column))
+            self._execute(modifier)
+            print("%s column successfully moved from %s to %s" % (column, src, target))
+            self.log_db_change("move_column", name=column, dest=target)
+
+    def move_column_to_extra(self, column, commit=True):
+        """
+        Move a column from a search table to an extra table.
+
+        INPUT:
+
+        - ``column`` -- the name of the column to move
+        - ``commit`` -- whether to commit the change
+        """
+        if column not in self.search_cols:
+            raise ValueError("%s not a search column"%(column))
+        if self.extra_table is None:
+            raise ValueError("Extras table does not exist.  Use create_extra_table")
+        if column == self._label_col:
+            raise ValueError("Cannot move the label column to extra")
+        self._move_column(column, self.search_table, self.extra_table, commit)
+        self.extra_cols.append(column)
+        self.search_cols.remove(column)
+
+    def move_column_to_search(self, column, commit=True):
+        """
+        Move a column from an extra table to a search table.
+
+        INPUT:
+
+        - ``column`` -- the name of the column to move
+        - ``commit`` -- whether to commit the change
+        """
+        if column not in self.extra_cols:
+            raise ValueError("%s not an extra column"%(column))
+        self._move_column(column, self.extra_table, self.search_table, commit)
+        self.search_cols.append(column)
+        self.extra_cols.remove(column)
 
     def log_db_change(self, operation, **data):
         """
@@ -6176,7 +6314,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_tables_hist created")
 
-    def create_table_like(self, new_name, table, commit=True):
+    def create_table_like(self, new_name, table, data=False, commit=True):
         """
         Copies the schema from an existing table, but none of the data, indexes or stats.
 
@@ -6203,6 +6341,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         id_ordered = table._id_ordered
         search_order = table.search_cols
         self.create_table(new_name, search_columns, label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
+        if data:
+            self._execute(SQL('INSERT INTO {0} SELECT * FROM {1}').format(Identifier(new_name), Identifier(table.search_table)), commit=commit)
+            if extra_columns:
+                self._execute(SQL('INSERT INTO {0} SELECT * FROM {1}').format(Identifier(new_name + '_extras'), Identifier(table.extra_table)), commit=commit)
 
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
         """
@@ -6285,9 +6427,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             hasid = False
             dictorder = []
             for typ, cols in coldict.items():
-                if typ.lower() not in types_whitelist:
-                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                        raise ValueError("%s is not a valid type"%(typ))
+                self._check_col_datatype(typ)
                 if isinstance(cols, string_types):
                     cols = [cols]
                 for col in cols:
@@ -6577,7 +6717,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter = "\t")]
+                        rows = [line for line in csv.reader(F, delimiter = "|")]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
@@ -6765,5 +6905,21 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 pipe.send_signal(signal.SIGTERM)
         else:
             return pipe
+
+    def show_locks(self):
+        """
+        Prints information on all locks currently held on any table.
+        """
+        locks = sorted(self._get_locks())
+        if locks:
+            namelen = max(len(name) for (name, locktype, pid, t) in locks) + 3
+            typelen = max(len(locktype) for (name, locktype, pid, t) in locks) + 3
+            pidlen = max(len(str(pid)) for (name, locktype, pid, t) in locks) + 3
+            for name, locktype, pid, t in locks:
+                print(name + ' '*(namelen - len(name)) + locktype + ' '*(typelen - len(locktype)) + 'pid %s' % pid + ' '*(pidlen - len(str(pid))) + 'age %s' % t)
+        else:
+            print("No locks currently held")
+
+
 
 db = PostgresDatabase()
