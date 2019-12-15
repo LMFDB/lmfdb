@@ -38,10 +38,6 @@ def get_bread(*breads):
 
 abvarfq_credit = "Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent"
 
-@app.route("/EllipticCurves/Fq")
-def ECFq_redirect():
-    return redirect(url_for("abvarfq.abelian_varieties"), **request.args)
-
 def learnmore_list():
     return [
         ("Completeness of the data", url_for(".completeness_page")),
