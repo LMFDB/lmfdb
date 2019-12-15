@@ -48,7 +48,7 @@ function getNiceLabelFromURL(loc)  {
   if (loc.href.indexOf('EllipticCurve')!=-1) {
     if (loc.href.indexOf('label=')!=-1) {
       // seems that ell curve has been referenced by a label, extract it
-      var base = 'EllipticCurve/Q/'
+      var base = 'EllipticCurve/Q/';
       var endLab = loc.href.split('label=')[1].split('&')[0];
       return base.concat(endLab);
     }
