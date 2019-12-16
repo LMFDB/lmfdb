@@ -236,6 +236,7 @@ def belyi_jump(info):
             flash_error("%s is not a valid Belyi map or passport label", jump)
     return redirect(url_for(".index"))
 
+# TODO: make downloads for sage, too
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
     title = 'Belyi maps'
@@ -272,7 +273,7 @@ class Belyi_download(Downloader):
             K = NumberField(poly, "nu")
         return K
 
-    # could use static method
+    # could use static method instead of adding self
     def curve_string_parser(self,rec):
         curve_str = rec['curve']
         curve_str = curve_str.replace("^","**")
@@ -335,7 +336,7 @@ class Belyi_download(Downloader):
             s += "X := Curve(ProjectiveSpace(PolynomialRing(K, 2)));\n"
             s += "// Define the map\n"
             s += "KX<x> := FunctionField(X);\n";
-            s += "phi := %s;\n" % rec['map']
+            s += "phi := %s;" % rec['map']
         elif rec['g'] == 1:
             s += "S<x> := PolynomialRing(K);\n"
             #curve_poly = rec['curve'].split("=")[1]
@@ -344,7 +345,7 @@ class Belyi_download(Downloader):
             s += "X := EllipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n";
-            s += "phi := %s;\n" % rec['map']
+            s += "phi := %s;" % rec['map']
         elif rec['g'] == 2:
             s += "S<x> := PolynomialRing(K);\n"
             #curve_poly = rec['curve'].split("=")[1]
@@ -353,7 +354,7 @@ class Belyi_download(Downloader):
             s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n";
-            s += "phi := %s;\n" % rec['map']
+            s += "phi := %s;" % rec['map']
         else:
             print("Sorry, not implemented yet! :(") # TODO: should be an error
         return self._wrap(s,label,lang=lang)
