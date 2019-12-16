@@ -711,10 +711,6 @@ table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
 }
 
-table.sticky-embeddings > tbody > tr:last-child {
-    border-bottom:  2px solid {{ color.table_ntdata_border }};
-}
-
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
 table.ntdata > thead > tr.even,

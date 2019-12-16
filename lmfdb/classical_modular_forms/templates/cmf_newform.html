@@ -129,6 +129,9 @@ function get_all_embeddings(num_embeddings) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
+    <tr style="max-height: 0px;" class="border-bottom"> {# Add a bottom border #}
+      <td style="max-height: 0px;margin: 0px;padding: 0px;" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}"></td>
+    </tr>
     {% if info.CC_m[0] == 1 and (info.CC_m | length) < 100 and (info.CC_m | length) < newform.dim %}
     <tr>
       <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}">
