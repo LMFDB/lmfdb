@@ -10,7 +10,7 @@ class CocalcWrap(object):
 
     def __init__(self, app):
         self.app = app
-        from .utils.config import Configuration
+        from .config import Configuration
         flask_options = Configuration().get_flask()
         self.app_root = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
 
