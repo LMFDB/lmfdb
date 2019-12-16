@@ -205,7 +205,10 @@ class WebBelyiGalmap(object):
         self.friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
         # Downloads
-        self.downloads = [('Code to Magma', url_for('.belyi_galmap_code_download', label = data['label']))]
+        if galmap['g'] <= 2:
+            self.downloads = [('Code to Magma', url_for('.belyi_galmap_code_download', label = data['label']))]
+        else:
+            self.downloads = []
 
         # Breadcrumbs
         groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-")
