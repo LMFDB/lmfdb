@@ -15,7 +15,7 @@ def changepassword(username, newpassword):
     #C['userdb'].authenticate(pw_dict['data']['username'],
     #                         pw_dict['data']['password'])
 
-    from .lmfdb.users.pwdmanager import userdb
+    from .users.pwdmanager import userdb
     userdb.change_password(username, newpassword)
 
 
