@@ -269,7 +269,7 @@ def alive():
     """
     a basic health check
     """
-    from .lmfdb import db
+    from . import db
     if db.is_alive():
         return "LMFDB!"
     else:
@@ -280,7 +280,7 @@ def statshealth():
     """
     a health check on the stats pages
     """
-    from .lmfdb import db
+    from . import db
     if db.is_alive():
         tc = app.test_client()
         for url in ['/NumberField/stats',
@@ -311,7 +311,7 @@ def info():
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
     output += "# PostgreSQL info\n"
-    from .lmfdb import db
+    from . import db
     if not db.is_alive():
         output += "db is offline\n"
     else:
