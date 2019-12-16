@@ -90,7 +90,7 @@ class proportioners(object):
         """
         Total is determined as the sum of the current column.
         """
-        cls.per_row_total(zip(*grid), col_headers, row_headers, stats)
+        cls.per_row_total(list(zip(*grid)), col_headers, row_headers, stats)
 
     @classmethod
     def per_col_query(cls, query):
@@ -109,7 +109,7 @@ class proportioners(object):
         A function for use as a proportioner.
         """
         def inner(grid, row_headers, col_headers, stats):
-            cls.per_row_query(query)(zip(*grid), col_headers, row_headers, stats)
+            cls.per_row_query(query)(list(zip(*grid)), col_headers, row_headers, stats)
         return inner
 
     @classmethod
@@ -289,7 +289,7 @@ class totaler(object):
         if col_counts:
             row_headers.append(col_total_label)
             if recursive_prop:
-                total_grid_cols = zip(*stats._total_grid)
+                total_grid_cols = list(zip(*stats._total_grid))
             row = []
             for i, col in enumerate(zip(*grid)):
                 # We've already totaled rows, so have to skip if we don't want the corner
@@ -576,8 +576,9 @@ class StatsDisplay(UniqueRepresentation):
                 proportioner(grid, row_headers, col_headers, self)
             if totaler:
                 totaler(grid, row_headers, col_headers, self)
-            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
-        elif len(cols) == 0:
+            return {'grid': list(zip(row_headers, grid)),
+                    'col_headers': col_headers}
+        elif not cols:
             return {}
         else:
             raise NotImplementedError

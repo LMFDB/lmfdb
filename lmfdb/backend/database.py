@@ -1058,8 +1058,8 @@ class PostgresBase(object):
         if blank.strip():
             raise ValueError("The third line must be blank")
         if len(names) != len(types):
-            raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
-        return zip(names, types)
+            raise ValueError("The first line specifies %s columns, while the second specifies %s" % (len(names), len(types)))
+        return list(zip(names, types))
 
 
     ##################################################################
@@ -5024,10 +5024,9 @@ class PostgresStatsTable(PostgresBase):
         A utility function for splitting a dictionary into parallel lists of keys and values.
         """
         if D:
-            ans = zip(*sorted(D.items()))
+            return [Json(t) for t in zip(*sorted(D.items()))]
         else:
-            ans = [], []
-        return map(Json, ans)
+            return [Json([[], []])]
 
     def _join_dict(self, ccols, cvals):
         """

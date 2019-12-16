@@ -83,7 +83,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
         # casting from ZZT -> ZZpT
         if p is None:
-            gtoprint = dict(zip(zip([0]*len(g), range(len(g))), g))
+            gtoprint = {(0, i): gi for i, gi in enumerate(g)}
         else:
             gtoprint = {}
             for i, elt in enumerate(g):

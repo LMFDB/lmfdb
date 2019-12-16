@@ -63,11 +63,11 @@ def learnmore_list_remove(matchstring):
 @lattice_page.route("/")
 def lattice_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         maxs=lattice_summary_data()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        dim_list = list(range(1, 11, 1))
+        max_class_number = 20
+        class_number_list = list(range(1, max_class_number + 1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
