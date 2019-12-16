@@ -89,7 +89,7 @@ class MaassDB(object):
                     if type(d) == type([]):
                         d = { i : d[i] for i in range(0, len(d)) }
                     e = self.find_coeffs_from_dict(d, type(d))
-                    if (e <> None):
+                    if (e is not None):
                         return e
             return f.get('Coefficients', None)
 
