@@ -827,7 +827,7 @@ class WebNumberField:
                 palgstr = [
                     list2string([int(c) for c in pol.coefficients(sparse=False)])
                     for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for fc in c.split(',')]}) for c in palgstr]
+                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
                 return [
                     [
                         LF['label'],
