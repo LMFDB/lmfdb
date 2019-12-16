@@ -121,16 +121,13 @@ def main():
         flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
         stars = "\n" + "*" * 80
-        lines = "\n" + "-" * (len("https://cocalc.com") + len(app.wsgi_app.app_root) + 6)
         info(stars +
-             "\n \033[1mCocalc\033[0m environment detected!\n" +
-             "Visit" +
-             lines +
-             "\n| \033[1m https://cocalc.com" +
+             "\n\t\033[1mCocalc\033[0m environment detected!\n" +
+             "\tVisit" +
+             "\n  \033[1m https://cocalc.com" +
              app.wsgi_app.app_root +
-             " \033[0m |" +
-             lines +
-             "\n to access this LMFDB instance" +
+             " \033[0m" +
+             "\n\tto access this LMFDB instance" +
              stars
              )
 
