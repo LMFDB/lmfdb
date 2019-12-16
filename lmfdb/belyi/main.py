@@ -261,7 +261,7 @@ class Belyi_download(Downloader):
             else:
                 s += "R.<T> = PolynomialRing(QQ)\nK.<nu> := NumberField(R(%s))\n\n" % rec['base_field']
         else:
-            print("Sorry, not implemented! :(") # TODO: this should be an error
+            raise NotImplementedError("for genus > 2")
         return s
 
     def make_base_field(self,rec):
@@ -291,7 +291,7 @@ class Belyi_download(Downloader):
         elif len(lhs_cs) == 2: # if there is a cross-term
             h = lhs_poly.coefficients()[0]
         else:
-            print("Sorry, not implemented yet! :(") # TODO: this should be an error
+            raise NotImplementedError("for genus > 2")
         #rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
         f = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
         return f, h
@@ -356,7 +356,7 @@ class Belyi_download(Downloader):
             s += "KX<x,y> := FunctionField(X);\n";
             s += "phi := %s;" % rec['map']
         else:
-            print("Sorry, not implemented yet! :(") # TODO: should be an error
+            raise NotImplementedError("for genus > 2")
         return self._wrap(s,label,lang=lang)
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
