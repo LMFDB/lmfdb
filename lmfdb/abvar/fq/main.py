@@ -9,7 +9,6 @@ from flask import render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
-from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl,
@@ -37,10 +36,6 @@ def get_bread(*breads):
     return bc
 
 abvarfq_credit = "Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent"
-
-@app.route("/EllipticCurves/Fq")
-def ECFq_redirect():
-    return redirect(url_for("abvarfq.abelian_varieties"), **request.args)
 
 def learnmore_list():
     return [

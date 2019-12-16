@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from six import string_types
 import os
 import sage
 from sage.repl import preparse
@@ -326,11 +327,11 @@ def attach_new_label(f):
 
     P = PolynomialRing(Rationals(), 'w')
     # P is used implicitly in the eval() calls below.  When these are
-    # removed, this will not longer be neceesary, but until then the
+    # removed, this will not longer be necessary, but until then the
     # assert statement is for pyflakes.
     assert P
 
-    if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
+    if isinstance(f['level_ideal'], string_types):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']

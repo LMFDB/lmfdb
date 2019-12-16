@@ -2,8 +2,7 @@
 
 from lmfdb.app import app
 import re
-import flask
-from flask import render_template, url_for, request, redirect
+from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, randint, euler_phi
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.characters.utils import url_character
@@ -136,7 +135,7 @@ def render_DirichletNavigation():
        info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
 
-@characters_page.route("/Labels")
+@characters_page.route("/Dirichlet/Labels")
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet Character Labels'
@@ -145,7 +144,7 @@ def labels_page():
     info['learnmore'] = learn('labels')
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
-@characters_page.route("/Source")
+@characters_page.route("/Dirichlet/Source")
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet Character Data'
@@ -154,7 +153,7 @@ def how_computed_page():
     info['learnmore'] = learn('source')
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
-@characters_page.route("/Reliability")
+@characters_page.route("/Dirichlet/Reliability")
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet Character Data'
@@ -163,7 +162,7 @@ def reliability():
     info['learnmore'] = learn('reliability')
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
-@characters_page.route("/Completeness")
+@characters_page.route("/Dirichlet/Completeness")
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet Character Data'
@@ -349,7 +348,7 @@ def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
     args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     if not val:
-        return flask.abort(404)
+        return abort(404)
     try:
         if calc == 'value':
             return WebDirichletCharacter(**args).value(val)
@@ -360,7 +359,7 @@ def dc_calc(calc, modulus, number):
         elif calc == 'kloosterman':
             return WebDirichletCharacter(**args).kloosterman_sum(val)
         else:
-            return flask.abort(404)
+            return abort(404)
     except Warning as e:
         return "<span style='color:gray;'>%s</span>" % e
     except Exception:
@@ -386,20 +385,20 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     else:
         WNF = WebNumberField(number_field)
         if WNF.is_null():
-            return flask.abort(404, "Number field %s not found."%number_field)
+            return abort(404, "Number field %s not found." % number_field)
 
     if modulus is None:
         try:
             info = WebHeckeFamily(**args).to_dict()
         except (ValueError,KeyError,TypeError) as err:
-            return flask.abort(404,err.args)
+            return abort(404, err.args)
         return render_template('CharFamily.html', **info)
     elif number is None:
         try:
             info = WebHeckeGroup(**args).to_dict()
         except (ValueError,KeyError,TypeError):
             # Typical failure case is a GP error inside bnrinit which we don't really want to display
-            return flask.abort(404,'Unable to construct modulus %s for number field %s'%(modulus,number_field))
+            return abort(404, 'Unable to construct modulus %s for number field %s' % (modulus, number_field))
         m = info['modlabel']
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Hecke', url_for(".render_Heckewebpage")),
@@ -412,7 +411,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         try:
             X = WebHeckeCharacter(**args)
         except (ValueError,KeyError,TypeError):
-            return flask.abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.'%(number,modulus,number_field))
+            return abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.' % (number,modulus,number_field))
         info = X.to_dict()
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
                          ('Hecke',  url_for(".render_Heckewebpage")),
@@ -428,12 +427,12 @@ def hc_calc(calc, number_field, modulus, number):
     val = request.args.get("val", [])
     args = {'type':'Hecke', 'number_field':number_field, 'modulus':modulus, 'number':number}
     if not val:
-        return flask.abort(404)
+        return abort(404)
     try:
         if calc == 'value':
             return WebHeckeCharacter(**args).value(val)
         else:
-            return flask.abort(404)
+            return abort(404)
     except Exception as e:
         return "<span style='color:red;'>ERROR: %s</span>" % e
 
@@ -463,7 +462,7 @@ def dirichlet_group_table(**args):
         char_number_list = [int(a) for a in char_number_list.split(',')]
         info['poly'] = request.args.get("poly", '???')
     else:
-        return flask.abort(404, 'grouptable needs char_number_list argument')
+        return abort(404, 'grouptable needs char_number_list argument')
     h, c = get_group_table(modulus, char_number_list)
     info['headers'] = h
     info['contents'] = c

@@ -5,14 +5,14 @@ import urllib2
 import re
 import yaml
 import json
-import flask
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, url_for, current_app
+from flask import (render_template, request, url_for, current_app,
+                   abort, redirect, Response)
 from lmfdb.api import api_page, api_logger
 
 
@@ -137,7 +137,6 @@ def stats():
     return render_template('api-stats.html', info=info)
 
 
-
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
     if id == 'schema':
@@ -149,18 +148,19 @@ def api_query_id(table, id):
         <tr>
         <th> name </th><th>type</th>
         </tr>
-        """;
+        """
         for c in sorted(col_type.keys()):
             out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
         return out
     else:
         return api_query(table, id = id)
 
+
 @api_page.route("/<table>")
 @api_page.route("/<table>/")
 def api_query(table, id = None):
     #if censored_table(table):
-    #    return flask.abort(404)
+    #    return abort(404)
 
     # parsing the meta parameters _format and _offset
     format = request.args.get("_format", "html")
@@ -179,26 +179,26 @@ def api_query(table, id = None):
 
     if offset > 10000:
         if format != "html":
-            flask.abort(404)
+            abort(404)
         else:
             flash_error("offset %s too large, please refine your query.", offset)
-            return flask.redirect(url_for(".api_query", table=table))
+            return redirect(url_for(".api_query", table=table))
 
     # preparing the actual database query q
     try:
         coll = getattr(db, table)
     except AttributeError:
         if format != "html":
-            flask.abort(404)
+            abort(404)
         else:
             flash_error("table %s does not exist", table)
-            return flask.redirect(url_for(".index"))
+            return redirect(url_for(".index"))
     q = {}
 
     # if id is set, just go and get it, ignore query parameeters
     if id is not None:
         if offset:
-            return flask.abort(404)
+            return abort(404)
         single_object = True
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
@@ -248,7 +248,7 @@ def api_query(table, id = None):
         # however, this doesn't assure that the query will be fast... 
         #if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(coll))) == 0:
         #    flash_error("no key in the query %s is indexed.", q)
-        #    return flask.redirect(url_for(".api_query", table=table))
+        #    return redirect(url_for(".api_query", table=table))
 
         # sort = [('fieldname1', 1 (ascending) or -1 (descending)), ...]
         if sortby is not None:
@@ -267,17 +267,17 @@ def api_query(table, id = None):
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
             flash_error("Query %s exceeded time limit.", q)
-            return flask.redirect(url_for(".api_query", table=table))
+            return redirect(url_for(".api_query", table=table))
         except KeyError as err:
             flash_error("No key %s in table %s", err, table)
-            return flask.redirect(url_for(".api_query", table=table))
+            return redirect(url_for(".api_query", table=table))
 
     if single_object and not data:
         if format != 'html':
-            flask.abort(404)
+            abort(404)
         else:
             flash_error("no document with id %s found in table %s.", id, table)
-            return flask.redirect(url_for(".api_query", table=table))
+            return redirect(url_for(".api_query", table=table))
 
     # fixup data for display and json/yaml encoding
     if 'bytea' in coll.col_type.values():
@@ -318,7 +318,7 @@ def api_query(table, id = None):
                       default_flow_style=False,
                       canonical=False,
                       allow_unicode=True)
-        return flask.Response(y, mimetype='text/plain')
+        return Response(y, mimetype='text/plain')
     else:
         # sort displayed records by key (as jsonify and yaml_dump do)
         data["pretty"] = pretty_document

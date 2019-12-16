@@ -83,8 +83,7 @@ class ECstats(object):
         # rank distribution
         
         rank_counts = []
-        ranks = range(counts['max_rank']+1)
-        for r in ranks:
+        for r in range(counts['max_rank'] + 1):
             ncu = ecdb.count({'rank':r})
             ncl = ecdb.count({'rank':r, 'number':1})
             prop = format_percentage(ncl,counts['nclasses'])

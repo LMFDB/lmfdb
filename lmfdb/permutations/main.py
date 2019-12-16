@@ -2,17 +2,18 @@
 # This Blueprint is about Permutations
 # Author: Sebastien Labbe
 
-import flask
 from flask import render_template, request, url_for, redirect
 from lmfdb.permutations import permutations_page, logger
 from sage.all import Permutation, Integer
 from lmfdb.utils import flash_error
+
 
 def get_bread(breads=[]):
     bc = [("Permutations", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
+
 
 @permutations_page.route("/show", methods = ["POST"])
 def parse_and_redirect():
@@ -26,8 +27,9 @@ def parse_and_redirect():
     """
     assert request.method == "POST", "request.method is assumed to be POST"
     data = str(request.form.get('data', ''))
-    data = data.replace(',','.')
+    data = data.replace(',', '.')
     return redirect(url_for(".show", data=data))
+
 
 @permutations_page.route("/show", methods = ["GET"])
 def show():
@@ -44,7 +46,7 @@ def show():
     except (TypeError, ValueError):
         logger.info("Impossible to create a permutation from input.")
         flash_error("Ooops, impossible to create a permutation from given input!")
-        return flask.redirect(url_for(".index"))
+        return redirect(url_for(".index"))
     return render_template("permutations.html", permutation=p,
             rankbread=get_bread())
 

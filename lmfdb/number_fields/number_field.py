@@ -2,8 +2,7 @@
 
 import ast, os, re, StringIO, time
 
-import flask
-from flask import render_template, request, url_for, redirect, send_file, make_response
+from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
@@ -47,14 +46,17 @@ def init_nf_count():
         max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
+
 def group_cclasses_data(n, t):
-    return flask.Markup(group_cclasses_knowl_guts(n, t))
+    return Markup(group_cclasses_knowl_guts(n, t))
+
 
 def group_character_table_data(n, t):
-    return flask.Markup(group_character_table_knowl_guts(n, t))
+    return Markup(group_character_table_knowl_guts(n, t))
+
 
 def number_field_data(label):
-    return flask.Markup(nf_knowl_guts(label))
+    return Markup(nf_knowl_guts(label))
 
 #def na_text():
 #    return "Not computed"
@@ -101,11 +103,6 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
-
-@app.route("/NF")
-@app.route("/NF/")
-def NF_redirect():
-    return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
 @nf_page.route("/Source")
 def source():
@@ -316,15 +313,15 @@ def number_field_render_webpage():
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
-    if len(args) == 0:
+    if not args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000]
         discriminant_list = ["%s..%s" % (start, end - 1) for start, end in zip(
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-            'degree_list': range(1, max_deg + 1),
+            'degree_list': list(range(1, max_deg + 1)),
             'signature_list': sig_list,
-            'class_number_list': range(1, 6) + ['6..10'],
+            'class_number_list': list(range(1, 6)) + ['6..10'],
             'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,

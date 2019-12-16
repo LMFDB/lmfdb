@@ -98,7 +98,8 @@ def Sp4Z_j_space(k,j):
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
-                           info=info);
+                           info=info)
+
 
 @smf_page.route('/Sp4Z/<int:k>')
 @smf_page.route('/Sp4Z/<int:k>/')
@@ -238,9 +239,10 @@ def render_dimension_table_page(args, bread):
     bread.append(('Dimensions', 'dimensions'))
     return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel Modular Forms Dimension Tables', bread=bread, info=info)
 
+
 def render_sample_page(family, sam, args, bread):
     info = { 'args': to_dict(args), 'sam': sam, 'latex': latex, 'type':sam.type(), 'name':sam.name(), 'full_name': sam.full_name(), 'weight':sam.weight(), 'fdeg':sam.degree_of_field(), 'is_eigenform':sam.is_eigenform(), 'field_poly': sam.field_poly()}
-    if sam.is_integral() != None:
+    if sam.is_integral() is not None:
         info['is_integral'] = sam.is_integral()
     if 'Sp4Z' in sam.collection():
         info['space_url'] = url_for('.Sp4Z_j_space', k=info['weight'], j=0)

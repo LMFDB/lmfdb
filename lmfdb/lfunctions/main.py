@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import flask
-from flask import render_template, url_for, request, make_response
+from flask import (render_template, url_for, request, make_response,
+                   abort, redirect)
 
 from sage.all import srange, spline, line, latex, is_prime,  factor
 
@@ -43,7 +43,7 @@ def get_degree(degree_string):
 @l_function_page.route("/")
 def l_function_top_page():
     # Don't duplicate the code in app.py
-    return flask.redirect(url_for('l_functions'),301)
+    return redirect(url_for('l_functions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():
@@ -93,7 +93,7 @@ def l_function_degree4_browse_page():
 def l_function_degree_page(degree):
     degree = get_degree(degree)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
@@ -106,7 +106,7 @@ def l_function_degree_page(degree):
 def l_function_cuspform_browse_page(degree):
     deg = get_degree(degree)
     if deg < 0:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(0.501),LfunctionPlot.getOneGraphHtmlHolo(1)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_1(N)\)', **info)
@@ -139,10 +139,10 @@ def l_function_ec_browse_page():
 def l_function_maass_gln_browse_page(degree):
     degree = get_degree(degree)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree)
     if not contents:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(degree, [("Maass Form", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
     info["contents"] = contents
@@ -189,10 +189,10 @@ def l_function_browse_page(degree, gammasignature):
     degree = get_degree(degree)
     nice_gammasignature = parse_codename(gammasignature)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)
     if not contents:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(degree, [(gammasignature, url_for('.l_function_browse_page',
                                             degree='degree' + str(degree), gammasignature=gammasignature))])}
     info["contents"] = contents
@@ -214,7 +214,7 @@ def l_function_riemann_page():
 @l_function_page.route("/Character/Dirichlet/1/1/")
 @l_function_page.route("/NumberField/1.1.1.1/")
 def l_function_riemann_redirect():
-    return flask.redirect(url_for('.l_function_riemann_page'), code=301)
+    return redirect(url_for('.l_function_riemann_page'), code=301)
 
 
 # L-function of Dirichlet character ############################################
@@ -237,7 +237,7 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return flask.redirect(url_for('.l_function_ec_page', conductor_label = conductor,
+        return redirect(url_for('.l_function_ec_page', conductor_label = conductor,
                                       isogeny_class_label = isogeny), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
@@ -264,16 +264,16 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
         conrey_index = '.'.join(map(str, [level, weight, character, hecke_orbit]))
         newform_label = convert_newformlabel_from_conrey(conrey_index)
         level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
-        return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+        return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
-        return flask.abort(404, 'Invalid character label')
+        return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -287,7 +287,7 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -307,7 +307,7 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -318,12 +318,12 @@ def l_function_cmf_redirect_a1(level, weight, character):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
 def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
-    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+    return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
 def l_function_cmf_orbit_redirecit_aa(level, weight):
-    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+    return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
@@ -344,13 +344,13 @@ def l_function_hmf_page(field, label, character, number):
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
 def l_function_hmf_redirect_1(field, label, character):
-    return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
+    return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
 def l_function_hmf_redirect_2(field, label):
-    return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
+    return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
 
 
@@ -372,7 +372,7 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 # L-function of Siegel modular form    #########################################
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
 def l_function_siegel_specimen_page(weight, orbit, number):
-    return flask.redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
+    return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
 def l_function_siegel_page(weight, orbit, number):
@@ -410,7 +410,7 @@ def l_function_ec_sym_page(power, conductor, isogeny):
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return flask.redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
+        return redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
                                       isogeny = isogeny, power = power), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
@@ -443,7 +443,7 @@ def l_function_by_trace_hash_page(trace_hash):
     if lhash is None:
         errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
         return render_lfunction_exception(errmsg)
-    return flask.redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
+    return redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
 
 
 ################################################################################
@@ -822,7 +822,7 @@ def render_plotLfunction(request, *args):
             return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return flask.abort(404)
+        return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
@@ -892,7 +892,7 @@ def render_zerosLfunction(request, *args):
             return render_lfunction_exception(err)
 
     if not L:
-        return flask.abort(404)
+        return abort(404)
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"

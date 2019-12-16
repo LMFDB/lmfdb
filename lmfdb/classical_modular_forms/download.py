@@ -181,7 +181,7 @@ class CMF_download(Downloader):
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
                 basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                basis_data += self.assign(lang,  'basis_data ', zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators']))
+                basis_data += self.assign(lang,  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
                 func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
 
