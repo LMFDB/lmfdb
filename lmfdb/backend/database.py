@@ -120,12 +120,12 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
 def jsonb_idx(cols, cols_type):
     return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsonb")
 
-_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered",
-                     "out_of_order", "has_extras", "stats_valid", "label_col", "total", "important")
-_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total", "important") # 1000, true, 0, false
+_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered", "out_of_order", "has_extras",
+                     "stats_valid", "label_col", "total", "important", "include_nones")
+_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total", "important", "include_nones") # 1000, true, 0, false, false
 _meta_tables_types = dict(zip(_meta_tables_cols,
     ("text", "jsonb", "smallint", "boolean",
-        "boolean", "boolean", "boolean", "text", "bigint", "boolean")))
+        "boolean", "boolean", "boolean", "text", "bigint", "boolean", "boolean")))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
 _meta_indexes_cols = ("index_name", "table_name", "type", "columns", "modifiers", "storage_params")
@@ -1255,13 +1255,14 @@ class PostgresTable(PostgresBase):
     - ``_primary_sort`` -- either None, a column name or a pair ``(col, direction)``, the most significant column when sorting
     - ``_sort`` -- the psycopg2.sql.Composable object containing the default sort clause
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types=None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, include_nones=False, data_types=None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
         self._id_ordered = id_ordered
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
+        self._include_nones = include_nones
         PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
@@ -1762,7 +1763,7 @@ class PostgresTable(PostgresBase):
                     yield rec[0]
                 else:
                     yield {k: v for k, v in zip(search_cols + extra_cols, rec)
-                           if v is not None}
+                           if (self._include_nones or v is not None)}
         finally:
             if isinstance(cur, pg_cursor):
                 cur.close()
@@ -3771,7 +3772,7 @@ class PostgresTable(PostgresBase):
                 self.reload_meta(metafile)
 
         # Reinitialize object
-        tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
+        tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
         table = PostgresTable(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
@@ -6017,7 +6018,7 @@ class PostgresDatabase(PostgresBase):
                  data_types[table_name] = []
             data_types[table_name].append((column_name, regtype))
 
-        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
+        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -6300,14 +6301,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, version integer)"))
+            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, include_nones boolean, version integer)"))
             version = 0
 
             # copy data from meta_tables
-            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables "))
+            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
             self.grant_select('meta_tables_hist')
 
@@ -6603,7 +6604,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     print("Renamed {0} to {1}".format(old_name_tmp, new_name_old))
 
             # initialized table
-            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
+            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
             table = PostgresTable(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)
