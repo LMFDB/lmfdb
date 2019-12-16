@@ -797,7 +797,7 @@ class PostgresBase(object):
         col_list, col_type, _ = self._column_types(table_name)
         columns_set.discard("id")
         if not (columns_set <= set(col_list)):
-            raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
+            raise ValueError("{} is not a subset of {}".format(columns_set, list(col_type)))
         header_cols = self._read_header_lines(F, sep=sep)
         names = [elt[0] for elt in header_cols]
         names_set = set(names)
@@ -2481,7 +2481,7 @@ class PostgresTable(PostgresBase):
                                                        index["columns"],
                                                        [[]] * len(index["columns"]),
                                                        storage_params)
-                self._execute(creator, storage_params.values())
+                self._execute(creator, list(storage_params.values()))
                 print("Index {} created in {:.3f} secs".format(index["name"].format(self.search_table), time.time() - now))
 
 
@@ -2599,7 +2599,7 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, silence=True):
             self._check_index_name(name, "Index")
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
             self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), storage_params])
         print("Index %s created in %.3f secs"%(name, time.time() - now))
@@ -2644,7 +2644,7 @@ class PostgresTable(PostgresBase):
             creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
             # this avoids clashes with deprecated indexes/constraints
             self._rename_if_exists(name, suffix)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
         print("Created index %s in %.3f secs"%(name, time.time() - now))
 
     def _indexes_touching(self, columns):
@@ -3370,7 +3370,7 @@ class PostgresTable(PostgresBase):
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
                     updater = updater.format(Identifier(table),
-                                             SQL(", ").join(map(Identifier, dat.keys())),
+                                             SQL(", ").join(map(Identifier, list(dat))),
                                              SQL(", ").join(Placeholder() * len(dat)),
                                              SQL("id = %s"))
                     dvalues = self._parse_values(dat)
@@ -3397,7 +3397,7 @@ class PostgresTable(PostgresBase):
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
                                     Identifier(table),
-                                    SQL(", ").join(map(Identifier, dat.keys())),
+                                    SQL(", ").join(map(Identifier, list(dat.keys))),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))
                 self._break_order()

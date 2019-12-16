@@ -271,7 +271,7 @@ def makeLfromdata(L):
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
         L.dual_accuracy = dual_L_data.get('accuracy', None)
-        L.negative_zeros_raw = map(str, dual_L_data['positive_zeros'])
+        L.negative_zeros_raw = [str(z) for z in dual_L_data['positive_zeros']]
         if L.dual_accuracy is not None:
             L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)
     L.negative_zeros = L.negative_zeros_raw[:zero_truncation]
@@ -360,7 +360,7 @@ def apply_coeff_info(L, coeff_info):
     convert_euler_Lpoly = lambda poly_coeffs: [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
-    L.localfactors = map(convert_euler_Lpoly, L.localfactors)
+    L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
     L.coefficient_field = "CDF"
 
 
@@ -1781,7 +1781,8 @@ class HypergeometricMotiveLfunction(Lfunction):
         try:
             self.arith_coeffs = self.motive["coeffs"]
         except:
-            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
+            self.arith_coeffs = [Integer(k)
+                                 for k in self.motive["coeffs_string"]]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.)
                                        for n, x in enumerate(self.arith_coeffs)]
         self.sign = self.motive["sign"]
