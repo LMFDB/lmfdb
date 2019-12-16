@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from six import string_types
+import sys
+if sys.version_info > (3,):
+    memoryview = buffer
 
 import urllib2
 import re
@@ -283,7 +286,7 @@ def api_query(table, id = None):
     if 'bytea' in coll.col_type.values():
         for row in data:
             for key, val in row.items():
-                if type(val) == buffer:
+                if type(val) == memoryview:
                     row[key] = "[binary data]"
         #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.items() ]) for row in data]
     data = Json.prep(data)
