@@ -116,7 +116,7 @@ def main():
         del flask_options["profiler"]
 
     if "COCALC_PROJECT_ID" in os.environ:
-        info("Cocalc environment detected!")
+        info("*" * 80 + "\nCocalc environment detected!")
         from .utils.cocalcwrap import CocalcWrap
         # we must accept external connections
         flask_options["host"] = "0.0.0.0"
