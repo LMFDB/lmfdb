@@ -23,6 +23,8 @@ addons:
             - openssl
             - libssl-dev
             # needed for pyflakes
+            - python3-pip
+            # needed for coveralls
             - python-pip
             # to run nosetests in parallel
             - parallel
