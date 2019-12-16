@@ -107,7 +107,7 @@ def main():
     flask_options = Configuration().get_flask()
 
     if "profiler" in flask_options and flask_options["profiler"]:
-        print("Profiling!")
+        info("Profiling!")
         from werkzeug.contrib.profiler import ProfilerMiddleware
 
         app.wsgi_app = ProfilerMiddleware(
@@ -116,7 +116,7 @@ def main():
         del flask_options["profiler"]
 
     if "COCALC_PROJECT_ID" in os.environ:
-        print("Cocalc environment detected")
+        info("Cocalc environment detected")
         from .utils.cocalcwrap import CocalcWrap
         # we must accept external connections
         flask_options["host"] = "0.0.0.0"
