@@ -70,8 +70,8 @@ def rational_elliptic_curves(err_args=None):
     conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    rank_list = range(counts['max_rank'] + 1)
-    torsion_list = range(1,11) + [12, 16]
+    rank_list = list(range(counts['max_rank'] + 1))
+    torsion_list = list(range(1, 11)) + [12, 16]
     info = {
         'rank_list': rank_list,
         'torsion_list': torsion_list,

@@ -37,8 +37,8 @@ def learnmore_list_remove(matchstring):
 @hecke_algebras_page.route("/")
 def hecke_algebras_render_webpage():
     args = request.args
-    if len(args) == 0:
-        weight_list= range(2, 20, 2)
+    if not args:
+        weight_list = list(range(2, 20, 2))
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
         favourite_list = ["1.12.1","139.2.1","239.2.1","9.16.1"]
