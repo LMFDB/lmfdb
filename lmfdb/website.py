@@ -116,12 +116,12 @@ def main():
         del flask_options["profiler"]
 
     if "COCALC_PROJECT_ID" in os.environ:
-        info("Cocalc environment detected")
+        info("Cocalc environment detected!")
         from .utils.cocalcwrap import CocalcWrap
         # we must accept external connections
         flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
-        info("Visit https://cocalc.com" + app.wsgi_app.app_root + " to access this LMFDB instance")
+        info("Visit \033[1m https://cocalc.com" + app.wsgi_app.app_root + " \033[0m to access this LMFDB instance")
 
     set_running()
     app.run(**flask_options)
