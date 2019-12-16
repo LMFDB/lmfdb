@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from six import string_types
-import sy
+import sys
 if sys.version_info > (3,):
     buffer = memoryview
 
