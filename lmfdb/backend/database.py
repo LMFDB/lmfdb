@@ -5026,7 +5026,7 @@ class PostgresStatsTable(PostgresBase):
         if D:
             return [Json(t) for t in zip(*sorted(D.items()))]
         else:
-            return [Json([[], []])]
+            return [Json([]), Json([])]
 
     def _join_dict(self, ccols, cvals):
         """
