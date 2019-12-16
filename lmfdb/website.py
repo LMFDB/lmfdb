@@ -121,6 +121,7 @@ def main():
         # we must accept external connections
         flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
+        info("Visit https://cocalc.com" + app.wsgi_app.app_root + " to access this LMFDB instance")
 
     set_running()
     app.run(**flask_options)
