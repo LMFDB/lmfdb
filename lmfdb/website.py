@@ -123,9 +123,9 @@ def main():
         stars = "\n" + "*" * 80
         lines = "\n" + "*" * 80
         info(stars +
-             "\n \033Cocalc\033[ environment detected!"
-             + "Visit" +
-             + lines +
+             "\n \033Cocalc\033[ environment detected!" +
+             "Visit" +
+             lines +
              " | \033[1m https://cocalc.com" +
              app.wsgi_app.app_root +
              " \033[0m |" +
