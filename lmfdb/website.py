@@ -121,12 +121,12 @@ def main():
         flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
         stars = "\n" + "*" * 80
-        lines = "\n" + "*" * 80
+        lines = "\n" + "-" * 80
         info(stars +
-             "\n \033Cocalc\033[ environment detected!" +
+             "\n \033[1mCocalc\033[0m environment detected!" +
              "Visit" +
              lines +
-             " | \033[1m https://cocalc.com" +
+             "\n| \033[1m https://cocalc.com" +
              app.wsgi_app.app_root +
              " \033[0m |" +
              lines +
