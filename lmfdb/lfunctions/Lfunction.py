@@ -106,7 +106,7 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data.get('Lhash');
+    L.Lhash = data.get('Lhash')
     L.algebraic = data.get('algebraic')
     L.degree = data.get('degree')
     L.level = int(data.get('conductor'))
@@ -204,15 +204,15 @@ def makeLfromdata(L):
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
         pairtoCC = lambda x: CC(*tuple(x))
-        L.localfactors = map(lambda x: map(pairtoCC, x), L.localfactors)
-        L.bad_lfactors = [ [p, map(pairtoCC, elt)] for p, elt in L.bad_lfactors]
+        L.localfactors = [[pairtoCC(q) for q in x] for x in L.localfactors]
+        L.bad_lfactors = [[p, [pairtoCC(q) for q in elt]]
+                          for p, elt in L.bad_lfactors]
 
     # add missing bad factors
     known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
     for p in sorted([elt[0] for elt in L.level_factored]):
         if p not in known_bad_lfactors:
             L.bad_lfactors.append([p, [1, None]])
-
 
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
@@ -223,14 +223,14 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
-        count = 0;
+        count = 0
         for i, elt in enumerate(L.dirichlet_coefficients_arithmetic):
             if elt != 0:
-                count += 1;
+                count += 1
                 if count > L.numcoeff:
                     L.dirichlet_coefficients_arithmetic = \
-                        L.dirichlet_coefficients_arithmetic[:i];
-                    break;
+                        L.dirichlet_coefficients_arithmetic[:i]
+                    break
     else:
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)]
 
@@ -248,14 +248,14 @@ def makeLfromdata(L):
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
-    L.positive_zeros_raw = map(str, data['positive_zeros'])
-    L.accuracy = data.get('accuracy', None);
+    L.positive_zeros_raw = [str(z) for z in data['positive_zeros']]
+    L.accuracy = data.get('accuracy', None)
 
     def convert_zeros(accuracy, list_zeros):
-        two_power = 2 ** L.accuracy;
+        two_power = 2 ** L.accuracy
         # the zeros were stored with .str(truncate = false)
         # we recover all the bits
-        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros];
+        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
         return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
 
@@ -270,7 +270,7 @@ def makeLfromdata(L):
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
-        L.dual_accuracy = dual_L_data.get('accuracy', None);
+        L.dual_accuracy = dual_L_data.get('accuracy', None)
         L.negative_zeros_raw = map(str, dual_L_data['positive_zeros'])
         if L.dual_accuracy is not None:
             L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)
@@ -357,17 +357,11 @@ def apply_coeff_info(L, coeff_info):
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
 
-
-
-    convert_euler_Lpoly = lambda poly_coeffs: map(lambda c: convert_coefficient(c, base_power_int)[1], poly_coeffs)
-    L.bad_lfactors = [ [p, convert_euler_Lpoly(poly)] for p, poly in L.bad_lfactors]
+    convert_euler_Lpoly = lambda poly_coeffs: [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+    L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
+                      for p, poly in L.bad_lfactors]
     L.localfactors = map(convert_euler_Lpoly, L.localfactors)
     L.coefficient_field = "CDF"
-
-
-
-
-
 
 
 def generateSageLfunction(L):
@@ -702,13 +696,12 @@ class Lfunction_from_db(Lfunction):
                 lang = 'text',
                 title = 'Dirichlet coefficients of %s' % self.url)
 
-
     def download(self):
         filename = self.url.replace('/','_')
         data  = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
-                data[k] = map(str, data[k])
+                data[k] = list(map(str, data[k]))
             else:
                 data[k] = str(data[k])
         data.pop('level_factored')
@@ -717,9 +710,6 @@ class Lfunction_from_db(Lfunction):
                 filename + '.lfunction',
                 lang = 'text',
                 title = 'The L-function object of %s' % self.url)
-
-
-
 
     @lazy_attribute
     def chilatex(self):
@@ -965,13 +955,12 @@ class Lfunction_EC(Lfunction_from_db):
         """base_field of the EC"""
         return self.field_label
 
-
     def _parse_labels(self):
         """Set field, conductor, isogeny information from labels."""
         (self.field_degree,
             self.field_real_signature,
             self.field_absdisc,
-            self.field_index)  = map(int, self.field_label.split("."))
+            self.field_index) = list(map(int, self.field_label.split(".")))
         #field_signature = [self.field_real_signature,
         #        (self.field_degree - self.field_real_signature) // 2]
         # number of actual Gamma functions
@@ -1887,7 +1876,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe
-        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
+        pairs_fe = list(zip(self.kappa_fe, self.lambda_fe))
         self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
         self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)

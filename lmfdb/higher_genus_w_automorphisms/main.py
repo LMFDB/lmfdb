@@ -138,7 +138,7 @@ def index():
     if request.args:
         return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
-    genus_list = range(2, genus_max+1)
+    genus_list = list(range(2, genus_max + 1))
     info = {'count': 50,
             'genus_list': genus_list,
             'stats': HGCWAstats().stats()}

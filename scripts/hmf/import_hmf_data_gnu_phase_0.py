@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from six import string_types
 Dan_test = True
 import os.path
 
@@ -337,7 +338,7 @@ def attach_new_label(f):
     # assert statement is for pyflakes.
     assert P
 
-    if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
+    if isinstance(f['level_ideal'], string_types):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']

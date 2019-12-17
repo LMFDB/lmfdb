@@ -137,7 +137,6 @@ def stats():
     return render_template('api-stats.html', info=info)
 
 
-
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
     if id == 'schema':
@@ -149,12 +148,13 @@ def api_query_id(table, id):
         <tr>
         <th> name </th><th>type</th>
         </tr>
-        """;
+        """
         for c in sorted(col_type.keys()):
             out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
         return out
     else:
         return api_query(table, id = id)
+
 
 @api_page.route("/<table>")
 @api_page.route("/<table>/")

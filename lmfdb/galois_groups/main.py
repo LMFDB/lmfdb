@@ -86,7 +86,7 @@ def index():
     if len(request.args) != 0:
         return galois_group_search(request.args)
     info = {'count': 50}
-    info['degree_list'] = range(48)[2:]
+    info['degree_list'] = list(range(2, 48))
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing

@@ -46,8 +46,10 @@ def padded_list(c,k):
         a = c.list(start_val=0)
     return a[:k] + [ZZ(0)]* (k-len(a))
 
+
 def ZpX_key(k):
-    return lambda f: [f.degree()] + flatten(zip(*[padded_list(c,k) for c in f.list()]))
+    return lambda f: [f.degree()] + flatten(list(zip(*[padded_list(c, k)
+                                                       for c in f.list()])))
 
 ###################################################
 #

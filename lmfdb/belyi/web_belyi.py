@@ -158,9 +158,9 @@ class WebBelyiGalmap(object):
             pol = PolynomialRing(QQ, 'x')(fld_coeffs)
             data['base_field'] = latex(pol)
         else:
-            data['in_LMFDB'] = True 
+            data['in_LMFDB'] = True
             if F.poly().degree()==1:
-                data['isQQ'] = True 
+                data['isQQ'] = True
             F.latex_poly = web_latex(F.poly())
             data['base_field'] = F
         crv_str = galmap['curve']
@@ -203,6 +203,12 @@ class WebBelyiGalmap(object):
 
         # Friends
         self.friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
+
+        # Downloads
+        if galmap['g'] <= 2:
+            self.downloads = [('Code to Magma', url_for('.belyi_galmap_code_download', label = data['label']))]
+        else:
+            self.downloads = []
 
         # Breadcrumbs
         groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-")

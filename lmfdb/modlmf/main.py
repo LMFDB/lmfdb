@@ -56,10 +56,10 @@ def modlmf_render_webpage():
         counts = get_stats().counts()
         characteristic_list= [2,3,5,7,11]
         max_lvl=min(counts['max_level'],150)
-        level_list_endpoints = range(1, max_lvl+1, 10)
+        level_list_endpoints = list(range(1, max_lvl + 1, 10))
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
         max_wt=min(counts['max_weight'], 10)
-        weight_list= range(1, max_wt+1)
+        weight_list = list(range(1, max_wt + 1))
         label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
