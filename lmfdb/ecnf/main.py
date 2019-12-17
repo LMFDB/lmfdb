@@ -113,8 +113,10 @@ ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren
 
 def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
-    map(bc.append, breads)
+    for x in breads:
+        bc.append(x)
     return bc
+
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -168,7 +170,7 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    if len(request.args) > 0:
+    if request.args:
         return elliptic_curve_search(request.args)
     bread = get_bread()
 

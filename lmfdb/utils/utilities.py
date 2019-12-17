@@ -118,8 +118,10 @@ def try_int(foo):
     except Exception:
         return foo
 
+
 def key_for_numerically_sort(elt, split="[\s\.\-]"):
-    return map(try_int, re.split(split, elt))
+    return tuple(try_int(k) for k in re.split(split, elt))
+
 
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=QQ):

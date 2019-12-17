@@ -870,7 +870,7 @@ def set_rows_cols(info, query):
         primes = info.get('level_primes','').strip()
         if primes:
             try:
-                rad = prod(map(ZZ, primes.split(',')))
+                rad = prod(ZZ(p) for p in primes.split(','))
                 if info['prime_quantifier'] == 'subsets':
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] == 'append':

@@ -671,7 +671,7 @@ class NumberFieldGaloisGroup(object):
 
     def polredabs(self):
         # polynomials are all polredabs'ed now
-        return PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        return PolynomialRing(QQ, 'x')([str(m) for m in self.polynomial()])
         #if "polredabs" in self._data.keys():
         #    return self._data["polredabs"]
         #else:
@@ -837,7 +837,7 @@ class NumberFieldGaloisGroup(object):
     def nfinit(self):
         from sage.all import pari
         X = PolynomialRing(QQ, "x")
-        pol = X(map(str,self.polynomial()))
+        pol = X([str(m) for m in self.polynomial()])
         return pari("nfinit([%s,%s])" % (str(pol), self.all_hard_primes()))
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
@@ -845,7 +845,7 @@ class NumberFieldGaloisGroup(object):
             dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
             import cyc_alt_res_engine
-            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(map(str,self.polynomial()), self.Frobenius_resolvents())
+            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict([str(m) for m in self.polynomial()], self.Frobenius_resolvents())
             # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
             # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
@@ -886,13 +886,13 @@ class NumberFieldGaloisGroup(object):
         except AttributeError:
             from lmfdb.number_fields.number_field import residue_field_degrees_function
             fn_with_pari_output = residue_field_degrees_function(self.nfinit())
-            self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
+            self._residue_field_degrees = lambda p: [Integer(k) for k in fn_with_pari_output(p)]
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
 
     def __str__(self):
         try:
-            tmp = "The Galois group of the number field  Q[x]/(%s)" % map(str,self.polynomial())
+            tmp = "The Galois group of the number field  Q[x]/(%s)" % [str(m) for m in self.polynomial()]
         except:
             tmp = "The Galois group of a number field"
         return tmp
