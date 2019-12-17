@@ -175,20 +175,27 @@ function show_invs(invstyle) {
 
 <table>
     <tr>
-        <td colspan="6">
+        <td colspan="5">
             {{place_code('aut')}}
         </td>
     </tr>
     <tr>
-        <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ info.aut_grp_dict[data.aut_grp_id]}} \)</td> <td>(GAP id : {{data.aut_grp_id}})</td>
+        <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td>
+        <td>\({{ info.aut_grp_dict[data.aut_grp_id]}} \)</td>
+        <td>(GAP id : {{data.aut_grp_id}})</td>
+        <!-- a hack so that that the table doesn't expand with code blurbls -->
+        <!-- TODO: use javascript to adapt the width -->
+        <td style="width: 420px;"></td>
     </tr>
     <tr>
-        <td colspan="6">
+        <td colspan="5">
             {{place_code('autQbar')}}
         </td>
     </tr>
     <tr>
-        <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td> <td>\({{ info.geom_aut_grp_dict[data.geom_aut_grp_id]}} \) </td> <td>(GAP id : {{data.geom_aut_grp_id}})</td>
+        <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>
+        <td>\({{ info.geom_aut_grp_dict[data.geom_aut_grp_id]}} \)</td>
+        <td>(GAP id : {{data.geom_aut_grp_id}})</td>
     </tr>
 </table>
 
