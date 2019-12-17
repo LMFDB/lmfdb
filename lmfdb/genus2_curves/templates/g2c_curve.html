@@ -40,21 +40,12 @@ function show_invs(invstyle) {
 
 <table>
     <tr>
-        <td colspan="6">
-            {{place_code('cond')}}
-        </td>
-    </tr>
-    <tr>
         <td> \( N \) </td>
         <td>&nbsp;=&nbsp;</td>
         <td>\( {{ data.cond }} \)</td>
         <td>&nbsp;=&nbsp;</td>
         <td>{{ data.cond_factor_latex }}</td>
-    </tr>
-    <tr>
-        <td colspan="6">
-            {{place_code('disc')}}
-        </td>
+        <td>{{place_code('cond')}}</td>
     </tr>
     <tr>
         <td> \( \Delta \) </td>
@@ -62,6 +53,7 @@ function show_invs(invstyle) {
         <td>\({{ data.disc }}\)</td>
         <td>&nbsp;=&nbsp;</td>
         <td>{{ data.disc_factor_latex }}</td>
+        <td>{{place_code('disc')}}</td>
     </tr>
 </table>
 
