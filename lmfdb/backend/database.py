@@ -716,12 +716,38 @@ class PostgresBase(object):
 
     def _column_types(self, table_name, data_types=None):
         """
-        Returns the column list, column types (as a dict), and has_id for a given table_name or list of table names
+        Returns the
+            -column list,
+            - column types (as a dict), and
+            - has_id for a given table_name or list of table names
 
         INPUT:
 
         - ``table_name`` -- a string or list of strings
-        - ``data_types`` -- (optional) a dictionary providing a list of column names and types for each table name.  If not provided, will be looked up from the database.
+        - ``data_types`` -- (optional) a dictionary providing a list of column names and
+        types for each table name.  If not provided, will be looked up from the database.
+
+        EXAMPLE:
+        sage: db._column_types('non_existant')
+        ([], {}, False)
+        sage: db._column_types('test_table')
+        ([u'dim',
+          u'label',
+          u'discriminant',
+          u'bad_primes',
+          u'new_column1',
+          u'new_label',
+          u'bar'],
+         {u'bad_primes': 'jsonb',
+          u'bar': 'text',
+          u'dim': 'smallint',
+          u'discriminant': 'numeric',
+          u'id': 'bigint',
+          u'label': 'text',
+          u'new_column1': 'text',
+          u'new_label': 'text'},
+         True)
+
         """
         has_id = False
         col_list = []
@@ -797,7 +823,7 @@ class PostgresBase(object):
         col_list, col_type, _ = self._column_types(table_name)
         columns_set.discard("id")
         if not (columns_set <= set(col_list)):
-            raise ValueError("{} is not a subset of {}".format(columns_set, list(col_type)))
+            raise ValueError("{} is not a subset of {}".format(columns_set, col_list))
         header_cols = self._read_header_lines(F, sep=sep)
         names = [elt[0] for elt in header_cols]
         names_set = set(names)
@@ -3397,7 +3423,7 @@ class PostgresTable(PostgresBase):
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
                                     Identifier(table),
-                                    SQL(", ").join(map(Identifier, list(dat.keys))),
+                                    SQL(", ").join(map(Identifier, list(dat))),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))
                 self._break_order()
