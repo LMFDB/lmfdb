@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -14,7 +15,7 @@ def body_class():
     return {"body_class": "belyi"}
 
 
-import main
+from . import main
 assert main  # silence pyflakes
 
 app.register_blueprint(belyi_page, url_prefix="/Belyi")
