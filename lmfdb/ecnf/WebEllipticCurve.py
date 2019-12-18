@@ -454,17 +454,17 @@ class ECNF(object):
 
         # Generators
         try:
-            gens = [parse_point(K,P) for P in self.gens]
-            self.gens = ", ".join([web_point(P) for P in gens])
+            gens = [parse_point(K, P) for P in self.gens]
+            self.gens = ", ".join(web_point(P) for P in gens)
             if self.rk == "?":
                 self.reg = "not available"
             else:
                 if gens:
                     try:
-                        self.reg = self.reg
+                        self.reg
                     except AttributeError:
                         self.reg = "not available"
-                    pass # self.reg already set
+                    # self.reg already set
                 else:
                     self.reg = 1  # otherwise we only get 1.00000...
 

@@ -252,21 +252,21 @@ def set_lockout_state(state):
     """Swap state of lockout. If record exists, toggle, else create"""
     try:
         assert(state is True or state is False)
-        rec_set = {'lockout':state}
+        rec_set = {'lockout': state}
         idc.add_to_ops_table(rec_set)
     except:
         pass
+
 
 def get_lockout_state():
     """Get global lockout status"""
     res = None
     try:
-        rec_find = {'lockout':{"$exists":True}}
-        #Get latest lockout record
+        rec_find = {'lockout': {"$exists": True}}
+        # Get latest lockout record
         res = idc.search_ops_table(rec_find).sort('_id', -1).limit(1)
     except:
         res = None
-        pass
     if res is None:
         return False
     else:
