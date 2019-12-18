@@ -5,8 +5,6 @@
 {% block content %}
 
 
-
-
 <style>
 .tab button.active {
     background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
@@ -41,71 +39,86 @@
 
 
 <p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
-
-{% if info.topological_num == 0 %}
-  
-<table>
-  <tr>
-     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
- 
-</tr>
-{% for itm in info.passport %}
-<tr>
-  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
-  <td class="center">{{itm[0]}}</td>
-
-</tr>
-{% endfor %}
-</table>
-  
-
-</p>
-  
-{% else %}
-  <div class="tab">
-    <button type="submit" class="tablinks"
-          onclick="openData(event,'representative')"id="defaultOpen">
-      Topologically Inequivalent Representatives</button>
-    <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
-      By Conjugacy Class</button>
-  </div>
-
-  <div id="passports" class="tabcontent">
-    <p>
-      <table>
-        <tr>
-          <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-          <th>Conjugacy Classes</th>
-        </tr>
-
-        {% for itm in info.passport %}
-        <tr>
-          <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
-          <td class="center">{{itm[0]}}</td>
-        </tr>
-        {% endfor %}
-      
-      </table>
-    </p>
-  </div>
-
-  <div id="representative" class="tabcontent">
-    <p>
-    {% if info.topological_num == 1%}
-      Displaying the representative for the unique action up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='topological equivalence')}}.
-    {% else %}
-      Displaying representatives for {{info.topological_num}} topologically inequivalent actions.
-    {% endif %}
-    </p>
-
-    {% for topo_rep in info.topological_rep %}
-      <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
-      <table>{% for perm in topo_rep[1] %}
-        <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
-      {% endfor %} </table> <br>
+{% if info.passport_num == 1%} <!-- one passport -->
+  <table>
+    <tr>
+      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+      <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+    </tr>
+    
+    {% for itm in info.passport %}
+    <tr>
+      <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+      <td class="center">{{itm[0]}}</td>
+    </tr>
     {% endfor %}
-  </div>
+  </table>
+{% else %} <!-- multiple passports -->
+  {% if info.topological_num < 1 %}  
+    <table>
+      <tr>
+        <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+        <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+      </tr>
+    
+      {% for itm in info.passport %}
+      <tr>
+        <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+        <td class="center">{{itm[0]}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  
+  {% else %} <!-- info.topological_num >= 1 -->
+    <div class="tab">
+      <button type="submit" class="tablinks" 
+        onclick="openData(event,'representative')"id="defaultOpen">
+        Topologically Inequivalent Representatives</button>
+      <button type="submit" class="tablinks" 
+        onclick="openData(event, 'passports')">
+        By Conjugacy Class</button>
+    </div>
+
+    <div id="passports" class="tabcontent">
+      <p>
+        <table>
+          <tr>
+            <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+            <th>Conjugacy Classes</th>
+          </tr>
+
+          {% for itm in info.passport %}
+          <tr>
+            <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
+            <td class="center">{{itm[0]}}</td>
+          </tr>
+          {% endfor %}
+      
+        </table>
+      </p>
+    </div>
+
+    <div id="representative" class="tabcontent">
+      <p>
+      {% if info.topological_num == 1%}
+        <p>
+          Displaying the representative for the unique action up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='topological equivalence')}}.
+        </p>
+      {% else %}
+        <p>
+          Displaying representatives for {{info.topological_num}} topologically inequivalent actions.
+        </p>
+      {% endif %}
+      </p>
+
+      {% for topo_rep in info.topological_rep %}
+        <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
+        <table>{% for perm in topo_rep[1] %}
+          <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endif %}
 
 <script>
