@@ -93,7 +93,7 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(zip(self.simple_distinct, self.simple_multiplicities))
+        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
 
@@ -322,7 +322,8 @@ class AbvarFq_isoclass(object):
                 return "The data at degree %s is missing." % degree, do_describe
             ans = "The base change of $A$ to ${0}$ is ".format(self.ext_field(degree))
         else:
-            factors = zip(self.simple_distinct, self.simple_multiplicities)
+            factors = list(zip(self.simple_distinct,
+                               self.simple_multiplicities))
             if self.is_simple:
                 ans = "The endomorphism algebra of this simple isogeny class is "
             else:

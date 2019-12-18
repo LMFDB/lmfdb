@@ -562,12 +562,10 @@ def group_alias_table():
         ntlist = aliases[j]
         #ntlist = filter(lambda x: x[0] < 12, ntlist)
         ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
-        ntstring = string.join(ntstrings, ", ")
+        ntstring = ", ".join(ntstrings)
         ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += '</tbody></table>'
     return ans
-
-
 
 
 def complete_group_code(code):

@@ -63,8 +63,8 @@ def make_keywords(content, kid, title):
     kws += hashtag_keywords.findall(content)
     kws = [k.lower() for k in kws]
     kws = set(kws)
-    kws = filter(lambda _: _ not in common_words, kws)
-    return kws
+    return [w for w in kws if w not in common_words]
+
 
 def extract_cat(kid):
     if not hasattr(kid, 'split'):
@@ -212,7 +212,7 @@ class KnowlBackend(PostgresBase):
                 restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
                 values.extend([keywords, keywords, keywords])
             else:
-                keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
+                keywords = [w for w in keywords.split(" ") if len(w) >= 3]
                 if keywords:
                     restrictions.append(SQL("_keywords @> %s"))
                     values.append(keywords)

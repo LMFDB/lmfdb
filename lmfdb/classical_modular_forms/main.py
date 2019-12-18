@@ -43,7 +43,7 @@ def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 @cached_function

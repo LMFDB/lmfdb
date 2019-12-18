@@ -481,8 +481,9 @@ def learnmore_list(path, remove=None):
         ('Source of the data', url_for('.source', prepath=prepath)),
         ('Reliability of the data', url_for('.reliability', prepath=prepath))]
     if remove:
-        return filter(lambda t:t[0].find(remove) <0, learnmore)
+        return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
+
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
