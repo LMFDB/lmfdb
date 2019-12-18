@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from six import string_types
+import sys
+if sys.version_info > (3,):
+    buffer = memoryview
 
 import urllib2
 import re
