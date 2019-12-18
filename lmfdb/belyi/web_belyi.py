@@ -153,14 +153,14 @@ class WebBelyiGalmap(object):
         data['isQQ'] = False
         data['in_LMFDB'] = False
         F = belyi_base_field(galmap)
-        if F._data == None:
+        if F._data is None:
             fld_coeffs = galmap['base_field']
             pol = PolynomialRing(QQ, 'x')(fld_coeffs)
             data['base_field'] = latex(pol)
         else:
-            data['in_LMFDB'] = True 
+            data['in_LMFDB'] = True
             if F.poly().degree()==1:
-                data['isQQ'] = True 
+                data['isQQ'] = True
             F.latex_poly = web_latex(F.poly())
             data['base_field'] = F
         crv_str = galmap['curve']
@@ -204,10 +204,16 @@ class WebBelyiGalmap(object):
         # Friends
         self.friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
+        # Downloads
+        if galmap['g'] <= 2:
+            self.downloads = [('Code to Magma', url_for('.belyi_galmap_code_download', label = data['label']))]
+        else:
+            self.downloads = []
+
         # Breadcrumbs
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-");
-        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
-        lambdasgstr = lambdasstr + "-" + gstr;
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-")
+        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo)
+        lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [
                 ('Belyi Maps', url_for(".index")),
                 (groupstr,
@@ -240,7 +246,7 @@ class WebBelyiGalmap(object):
                         g = gstr,
                         letnum = letnum)
                     ),
-                ];
+                ]
 
         # Title
         self.title = "Belyi map " + data['label']
@@ -303,16 +309,16 @@ class WebBelyiPassport(object):
         for galmap in galmaps_for_plabel:
             # wrap number field nonsense
             F = belyi_base_field(galmap)
-            # inLMFDB = False;
-            field = {};
-            if F._data == None:
+            # inLMFDB = False
+            field = {}
+            if F._data is None:
                 field['in_LMFDB'] = False;
                 fld_coeffs = galmap['base_field']
                 pol = PolynomialRing(QQ, 'x')(fld_coeffs)
                 field['base_field'] = latex(pol)
-                field['isQQ'] = False;
+                field['isQQ'] = False
             else:
-                field['in_LMFDB'] = True;
+                field['in_LMFDB'] = True
                 if F.poly().degree()==1:
                     field['isQQ'] = True
                 F.latex_poly = web_latex(F.poly())

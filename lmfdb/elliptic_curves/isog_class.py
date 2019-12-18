@@ -52,7 +52,7 @@ class ECisog_class(object):
     def make_class(self):
         self.CM = self.cm
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
-        self.conductor = int(N)
+        self.conductor = N = int(N)
         # Extract the size of the isogeny class from the database
         self.ncurves = ncurves = self.class_size
         # Create a list of the curves in the class from the database
@@ -64,12 +64,27 @@ class ECisog_class(object):
         # number 1 except in one case which is labeled differently in
         # the Cremona tables.  We know which curve is optimal iff the
         # optimality code for curve #1 is 1 (except for class 990h).
-        self.optimality_known = (self.optimality==1) or (self.iso=='990h')
+
+        # Note that self is actually an elliptic curve, with number=1.
+
+        # The code here allows us to update the display correctly by
+        # changing one line in this file (defining OPTIMALITY_BOUND)
+        # without changing the data.
+
         self.optimality_bound = OPTIMALITY_BOUND
+        self.optimality_known = (N<OPTIMALITY_BOUND) or (self.optimality==1) or (self.iso=='990h')
         self.optimal_label = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+
+        if N<OPTIMALITY_BOUND:
+            for c in self.curves:
+                c['optimal'] = (c['number'] == (3 if self.iso=='990h' else 1))
+                c['optimality_known'] = True
+        else:
+            for c in self.curves:
+                c['optimal'] = (c['optimality']>0) # this curve possibly optimal
+                c['optimality_known'] = (c['optimality']==1) # this curve certainly optimal
+
         for c in self.curves:
-            c['optimal'] = (c['optimality']!=0)
-            c['optimality_known'] = (c['optimality']<2)
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['label'])
@@ -84,7 +99,7 @@ class ECisog_class(object):
         from sage.matrix.all import Matrix
         if self.label_type == 'Cremona':
             # permute rows/cols
-            perm = lambda i: (c for c in self.curves if c['number']==i+1).next()['lmfdb_number']-1
+            perm = lambda i: next(c for c in self.curves if c['number']==i+1)['lmfdb_number']-1
             self.isogeny_matrix = [[self.isogeny_matrix[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         self.isogeny_matrix = Matrix(self.isogeny_matrix)
@@ -236,5 +251,5 @@ def make_graph(M, vertex_labels=None):
     if vertex_labels:
         G.relabel(vertex_labels)
     else:
-        G.relabel(range(1,n+1))
+        G.relabel(list(range(1, n + 1)))
     return G

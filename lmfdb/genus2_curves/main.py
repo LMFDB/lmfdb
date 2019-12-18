@@ -2,7 +2,6 @@
 
 import re
 from ast import literal_eval
-from operator import mul
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
@@ -10,7 +9,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, comma, flash_error, display_knowl,
-    parse_bool, parse_ints, parse_bracketed_posints, parse_primes,
+    parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
     StatsDisplay, formatters)
@@ -179,7 +178,7 @@ def render_curve_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_curve.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
                            data=g2c.data,
@@ -196,7 +195,7 @@ def render_isogeny_class_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
-                           properties2=g2c.properties,
+                           properties=g2c.properties,
                            credit=credit_string,
                            data=g2c.data,
                            bread=g2c.bread,
@@ -290,14 +289,21 @@ def genus2_curve_search(info, query):
     parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
     parse_ints(info,query,'torsion_order','torsion order')
     if 'torsion' in query and not 'torsion_order' in query:
-        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
+        t_o = 1
+        for n in query['torsion']:
+            t_o *= int(n)
+        query['torsion_order'] = t_o
     if 'torsion' in query:
         query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
         query.pop('torsion') # search using string key, not array of ints
-    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch')
-    if 'geometric_invariants' in info:
-        query[geom_inv_type] = (str(info['geometric_invariants']).replace(" ", "")).replace(",","','").replace("[","['").replace("]","']")
-
+    geom_inv_type = info.get('geometric_invariants_type', 'igusa_clebsch_inv')
+    if geom_inv_type == 'igusa_clebsch_inv':
+        invlength = 4
+    elif geom_inv_type == 'igusa_inv':
+        invlength = 5
+    else:
+        invlength = 3
+    parse_bracketed_rats(info,query,'geometric_invariants',qfield=geom_inv_type,exactlength=invlength,split=False,keepbrackets=True)
     parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     parse_ints(info,query,'analytic_rank','analytic rank')
     # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -416,28 +422,28 @@ def statistics():
 
 
 
-@g2c_page.route("/Completeness")
+@g2c_page.route("/Q/Completeness")
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
     return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@g2c_page.route("/Source")
+@g2c_page.route("/Q/Source")
 def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
     return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@g2c_page.route("/Reliability")
+@g2c_page.route("/Q/Reliability")
 def reliability_page():
     t = 'Reliability of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
     return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
-@g2c_page.route("/Labels")
+@g2c_page.route("/Q/Labels")
 def labels_page():
     t = 'Labels for Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Labels',''))

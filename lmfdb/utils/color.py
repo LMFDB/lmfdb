@@ -375,6 +375,7 @@ class JohnBlue(YellowKnowls):
     col_main_d  = c.black # ?00
     knowl_hyper_text = '#1565C0' # P1-800
     knowl_shadow = '#0D47A1' # P1-900
+    table_ntdata_background = c.white
 
 class SteelBlue(GreyKnowls):
     code = 19
@@ -409,6 +410,7 @@ class SteelBlue(GreyKnowls):
     knowl_error = '#006d05'
     chi_table_background = '#E3F2FD'
     chitable_imprimitive = c.black
+    table_ntdata_background = c.white
 
 class IndigoHair(YellowKnowls):
     code = 18

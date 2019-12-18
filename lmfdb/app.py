@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-import os, time
+from __future__ import absolute_import
+import os
+import time
 
-from flask import Flask, g, render_template, request, make_response, redirect, url_for, current_app, abort
+from flask import (Flask, g, render_template, request, make_response,
+                   redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 
-from lmfdb.logger import logger_file_handler, critical
-from lmfdb.homepage import load_boxes, contribs
+from .logger import logger_file_handler, critical
+from .homepage import load_boxes, contribs
 
 LMFDB_VERSION = "LMFDB Release 1.1"
 
@@ -108,7 +111,7 @@ def ctx_proc_userdata():
 # so instead we do this to ensure that the sidebar content is available to every page:
 @app.context_processor
 def inject_sidebar():
-    from lmfdb.homepage import get_sidebar
+    from .homepage import get_sidebar
     return dict(sidebar=get_sidebar())
 
 ##############################
@@ -139,14 +142,11 @@ def git_infos():
                 [git_contains_cmd, contains],
                 [git_reflog_cmd, reflog],
                 [git_graphlog_cmd, graphlog]]
-        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
-        cmd_output = rev, date,  summary
+        summary = "\n".join("$ %s\n%s" % (c, o) for c, o in pairs)
+        return rev, date, summary
     except Exception:
-        cmd_output = '-', '-', '-'
-    return cmd_output
+        return '-', '-', '-'
 
-def git_summary():
-    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
 
 git_rev, git_date, _  = git_infos()
 
@@ -183,29 +183,43 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
 # You can use this formatter to turn newlines in a string into HTML line breaks
 @app.template_filter("nl2br")
 def nl2br(s):
-    return s.replace('\n', '<br>\n')
+    return s.replace('\n', '<br/>\n')
 
 # You can use this formatter to encode a dictionary into a url string
 @app.template_filter('urlencode')
 def urlencode(kwargs):
-    import urllib
-    return urllib.urlencode(kwargs)
+    from six.moves.urllib.parse import urlencode
+    return urlencode(kwargs)
 
 ##############################
 #    Redirects and errors    #
 ##############################
 
+
 @app.before_request
-def redirect_nonwww():
-    """Redirect lmfdb.org requests to www.lmfdb.org"""
-    from urlparse import urlparse, urlunparse
+def force_www_and_ssl():
+    """Redirect lmfdb.org requests to www.lmfdb.org and forces https"""
+    from six.moves.urllib.parse import urlparse, urlunparse
+
     urlparts = urlparse(request.url)
-    if urlparts.netloc == 'lmfdb.org':
-        replaced = urlparts._replace(netloc='www.lmfdb.org')
+
+    if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
+        replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=301)
+    elif urlparts.netloc == "beta.lmfdb.com":
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=301)
+    elif (
+        urlparts.netloc == "www.lmfdb.org"
+        and request.headers.get("X-Forwarded-Proto", "http") != "https"
+        and request.url.startswith("http://")
+    ):
+        url = request.url.replace("http://", "https://", 1)
+        return redirect(url, code=301)
+
 
 def timestamp():
-    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -255,7 +269,7 @@ def alive():
     """
     a basic health check
     """
-    from lmfdb import db
+    from . import db
     if db.is_alive():
         return "LMFDB!"
     else:
@@ -266,7 +280,7 @@ def statshealth():
     """
     a health check on the stats pages
     """
-    from lmfdb import db
+    from . import db
     if db.is_alive():
         tc = app.test_client()
         for url in ['/NumberField/stats',
@@ -296,8 +310,8 @@ def info():
     from socket import gethostname
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
-    output += "# PostgreSQL info\n";
-    from lmfdb import db
+    output += "# PostgreSQL info\n"
+    from . import db
     if not db.is_alive():
         output += "db is offline\n"
     else:
@@ -307,11 +321,11 @@ def info():
         output += "Read only: %s\n" % db._read_only
         output += "Read and write to userdb: %s\n" % db._read_and_write_userdb
         output += "Read and write to knowls: %s\n" % db._read_and_write_knowls
-    output += "\n# GIT info\n";
+    output += "\n# GIT info\n"
     output += git_infos()[-1]
-    output += "\n\n";
-    
+    output += "\n\n"
     return output.replace("\n", "<br>")
+
 
 @app.route("/acknowledgment")
 def acknowledgment():
@@ -471,7 +485,10 @@ def root_static_file(name):
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
-map(root_static_file, ['favicon.ico'])
+
+
+for fn in ['favicon.ico']:
+    root_static_file(fn)
 
 
 @app.route("/robots.txt")
@@ -501,7 +518,7 @@ def add_colors():
     #       - from the config file
     # - remove cookie at logout (see line 307 of users/main)
     # - add cookie at login or when a color change happens (see line 175 of users/main)
-    from lmfdb.utils.color import all_color_schemes
+    from .utils.color import all_color_schemes
     color = request.args.get('color')
     if color and color.isdigit():
         color = int(color)
@@ -511,12 +528,12 @@ def add_colors():
         from flask_login import current_user
         userid = current_user.get_id()
         if userid is not None:
-            from lmfdb.users.pwdmanager import userdb
+            from .users.pwdmanager import userdb
             color = userdb.lookup(userid).get('color_scheme')
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from lmfdb.utils.config import Configuration
+            from .utils.config import Configuration
             color = Configuration().get_color()
     return dict(color=all_color_schemes[color].dict())
 

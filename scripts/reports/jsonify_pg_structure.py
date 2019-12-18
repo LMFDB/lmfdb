@@ -75,8 +75,8 @@ def _jsonify_collection_info(table, parse_jsonb = False):
         rls = dbtools.get_pg_sample_record(table, str(doc))
         try:
             merge_dicts(json_db_data['fields'], _jsonify_record(str(doc), rls[doc], parse_jsonb = parse_jsonb))
-	except:
- 	    pass
+        except:
+            pass
 
     indices = db[table].list_indexes()
     json_db_data['indices'] = {}

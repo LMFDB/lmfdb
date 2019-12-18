@@ -107,10 +107,11 @@ def list():
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
     n = len(users)/COLS
-    user_rows = zip(*[users[i*n:(i+1)*n] for i in range(COLS)])
+    user_rows = list(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
+
 
 @login_page.route("/change_colors/<int:scheme>")
 @login_required
@@ -141,7 +142,7 @@ def info():
 @login_page.route("/info", methods=['POST'])
 @login_required
 def set_info():
-    for k, v in request.form.iteritems():
+    for k, v in request.form.items():
         setattr(current_user, k, v)
     current_user.save()
     flask.flash(Markup("Thank you for updating your details!"))

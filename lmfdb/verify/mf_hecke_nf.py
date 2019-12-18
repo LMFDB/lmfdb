@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 from sage.all import prime_pi, mod, euler_phi, prime_range
 
 from lmfdb.backend.database import db, SQL
@@ -93,17 +93,17 @@ class mf_hecke_nf(MfChecker):
         an = rec['an']
         if len(an) != 100:
             if verbose:
-                print "Length an", len(an)
+                print("Length an", len(an))
             return False
         ap = rec['ap']
         maxp = rec['maxp']
         if len(ap) != prime_pi(maxp):
             if verbose:
-                print "Length ap", len(ap), prime_pi(maxp)
+                print("Length ap", len(ap), prime_pi(maxp))
             return False
         if maxp < 997:
             if verbose:
-                print "Maxp", maxp
+                print("Maxp", maxp)
             return False
         m = rec['hecke_ring_cyclotomic_generator']
         d = rec['hecke_ring_rank']
@@ -126,23 +126,23 @@ class mf_hecke_nf(MfChecker):
             if verbose:
                 for n, a in enumerate(an, 1):
                     if not check_val(a):
-                        print "Check an failure (m=%s, d=%s)"%(m, d), n, a
+                        print("Check an failure (m=%s, d=%s)"%(m, d), n, a)
             return False
         if not all(check_val(a) for a in ap):
             if verbose:
                 for p, a in zip(prime_range(maxp), ap):
                     if not check_val(a):
-                        print "Check ap failure (m=%s, d=%s)"%(m, d), p, a
+                        print("Check ap failure (m=%s, d=%s)"%(m, d), p, a)
             return False
         for p, a in zip(prime_range(100), ap):
             if a != an[p-1]:
                 if verbose:
-                    print "Match failure", p, a, an[p-1]
+                    print("Match failure", p, a, an[p-1])
                 return False
         if rec['char_orbit_index'] != 1:
             if rec.get('hecke_ring_character_values') is None:
                 if verbose:
-                    print "No hecke_ring_character_values"
+                    print("No hecke_ring_character_values")
                 return False
             N = rec['level']
             total_order = 1
@@ -150,10 +150,10 @@ class mf_hecke_nf(MfChecker):
                 total_order *= mod(g, N).multiplicative_order()
                 if not check_val(val):
                     if verbose:
-                        print "Bad character val (m=%s, d=%s)"%(m, d), g, val
+                        print("Bad character val (m=%s, d=%s)"%(m, d), g, val)
                     return False
             success = (total_order == euler_phi(N))
             if not success and verbose:
-                print "Generators failed", total_order, euler_phi(N)
+                print("Generators failed", total_order, euler_phi(N))
             return success
         return True

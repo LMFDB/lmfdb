@@ -272,9 +272,9 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         for k in dct:
             dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]       
 
-        headers = ps.keys()
-        headers.sort(reverse = True)
-        headers.insert(0,'All')
+        headers = list(ps)
+        headers.sort(reverse=True)
+        headers.insert(0, 'All')
 
     elif 'Gamma0(2)' == group:
         headers = ['Total', 'Non cusp', 'Cusp']

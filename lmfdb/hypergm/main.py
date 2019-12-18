@@ -113,9 +113,9 @@ def ab2gammas(A,B):
         incdict(ab[0], x)
     for x in B:
         incdict(ab[1], x)
-    gamma = [[],[]]
-    while ab[0] != {} or ab[1] != {}:
-        m = max(ab[0].keys() + ab[1].keys())
+    gamma = [[], []]
+    while ab[0] or ab[1]:
+        m = max(list(ab[0]) + list(ab[1]))
         wh = 0 if m in ab[0] else 1
         gamma[wh].append(m)
         subdict(ab[wh],m)
@@ -268,45 +268,46 @@ def index():
             learnmore=learnmore_list())
 
 def hgm_family_circle_plot_data(AB):
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import circle_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
     P = G.plot()
     import tempfile, os
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
-    data = open(filename).read()
+    with open(filename) as f:
+        data = f.read()
     os.unlink(filename)
     return data
 
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import circle_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = circle_image(A, B)
     return image_callback(G)
 
 @hypergm_page.route("/plot/linear/<AB>")
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import piecewise_linear_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_linear_image(A, B)
     return image_callback(G)
 
 @hypergm_page.route("/plot/constant/<AB>")
 def hgm_family_constant_image(AB):
     # piecewise constant
-    A,B = AB.split("_")
+    A, B = AB.split("_")
     from plot import piecewise_constant_image
-    A = map(int,A[1:].split("."))
-    B = map(int,B[1:].split("."))
+    A = [int(n) for n in A[1:].split(".")]
+    B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_constant_image(A, B)
     return image_callback(G)
 
@@ -477,7 +478,7 @@ def render_hgm_webpage(label):
     t_data = str(QQ(data['t']))
 
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
-    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 
@@ -502,7 +503,7 @@ def parse_pandt(info, family):
                 info['t'] = ",".join(map(str, info['ts']))
             else:
                 info['ts'] = None
-        except (ValueError, TypeError) as err:
+        except (ValueError, TypeError):
             info['ts'] = None
             errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs
@@ -521,7 +522,7 @@ def render_hgm_family_webpage(label):
     return render_template("hgm_family.html",
                            info=info,
                            family=family,
-                           properties2=family.properties,
+                           properties=family.properties,
                            credit=HGM_credit,
                            bread=family.bread,
                            title=family.title,

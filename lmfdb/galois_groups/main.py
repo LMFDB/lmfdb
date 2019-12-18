@@ -86,7 +86,7 @@ def index():
     if len(request.args) != 0:
         return galois_group_search(request.args)
     info = {'count': 50}
-    info['degree_list'] = range(48)[2:]
+    info['degree_list'] = list(range(2, 48))
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
@@ -237,7 +237,7 @@ def render_group_webpage(args):
             data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
 
 
 def search_input_error(info, bread):

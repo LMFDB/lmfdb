@@ -51,7 +51,8 @@
 {% include 'matches.html' %}
 {% if info.number %}
 <table class="ntdata">
-<tr>
+<thead>
+  <tr>
     <th>{{ KNOWL('st_group.label', title='Label') }}</th>
     <th>{{ KNOWL('st_group.weight', title='Wt') }}</th>
     <th>{{ KNOWL('st_group.degree', title='Deg') }}</th>
@@ -62,7 +63,9 @@
     <th>{{ KNOWL('st_group.components', title='$\#\mathrm{G}/\mathrm{G^0}$') }}</th>
     <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[t\!=\!0]$') }}</th>
     <th colspan="11">{{ KNOWL('st_group.trace_moments', title='Trace moments') }}</th>
-</tr>
+  </tr>
+</thead>
+<tbody>
 {% for group in info.results: %}
 <tr>
     <td> <a href = "{{info.stgroup_url(group)}}"> {{group.label}} </a> </td>
@@ -79,8 +82,8 @@
     {% endfor %}
 </tr>
 {% endfor %}
+</tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'dummy_download_search_results.html' %}
 {% endif %}

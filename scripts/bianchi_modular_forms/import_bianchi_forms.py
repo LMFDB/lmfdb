@@ -43,24 +43,25 @@ NB 1. Both AL_eigs and hecke_eigs are indexed by the primes in standard order
      (i) sfe does not exist for HMFs
      (j) Lratio does not exist for HMFs
 """
+from __future__ import print_function
 from sage.all import polygen, QQ, ZZ, NumberField, PolynomialRing
 import re
 import os
 
 from lmfdb.base import getDBConnection
-print "getting connection"
+print("getting connection")
 C= getDBConnection()
-print "authenticating on the elliptic_curves database"
+print("authenticating on the elliptic_curves database")
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['bmfs'].authenticate(username, password)
-print "setting bmfs"
+print("setting bmfs")
 bmfs = C.bmfs
-print "setting dims"
+print("setting dims")
 dims = bmfs.dimensions
-print "setting forms"
+print("setting forms")
 forms = bmfs.forms
 
 whitespace = re.compile(r'\s+')
@@ -117,7 +118,7 @@ def field_from_label(lab):
     assert t in [0,1]
     pol = x**2 - t*x + (t-d)//4
     K = NumberField(pol, 'a')
-    print "Created field from label %s: %s" % (lab,K)
+    print("Created field from label %s: %s" % (lab,K))
     the_fields[lab] = K
     return K
 
@@ -194,7 +195,6 @@ def newforms(line):
         'label_suffix': label_suffix,
         'label_nsuffix': label_nsuffix,
         'short_label': short_label,
-        'label': label,
         'dimension': dimension,
         'hecke_poly': hecke_poly,
         'weight': weight,
@@ -214,7 +214,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
 
     for f in file_list:
         h = open(os.path.join(base_path, f))
-        print "opened %s" % os.path.join(base_path, f)
+        print("opened %s" % os.path.join(base_path, f))
 
         parse = globals()[f[:f.find('.')]]
 
@@ -226,7 +226,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             if label=='':
                 continue
             if count%1000==0:
-                print "read %s" % label
+                print("read %s" % label)
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
@@ -240,7 +240,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
                         raise RuntimeError("Inconsistent data for %s" % label)
                 else:
                     old_data[key] = data[key]
-        print "finished reading %s lines from file" % count
+        print("finished reading %s lines from file" % count)
 
     vals = data_to_insert.values()
     if insert:
@@ -254,7 +254,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             forms.update_one({'label': val['label']}, {"$set": val}, upsert=True)
             count += 1
             if count % 100 == 0:
-                print "inserted %s" % (val['label'])
+                print("inserted %s" % (val['label']))
 
 def make_indices():
     from pymongo import ASCENDING
@@ -286,7 +286,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
     # first check numbers
     norm_range = {}
     norm_range['$gte'] = min_norm
-    if max_norm!=None:
+    if max_norm is not None:
         norm_range['$lte'] = max_norm
     print("Checking field {}, norm range {}".format(fld, norm_range))
     form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}

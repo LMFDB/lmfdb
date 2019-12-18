@@ -2,9 +2,10 @@
 
 # This version writes the data to a file, deletes all records from the database,
 # then reloads from the files. 
-
-
-import sys, os
+from __future__ import print_function
+from six import text_type
+import sys
+import os
 import re
 import json
 
@@ -80,24 +81,24 @@ def artrepload(l):
   ar1 = rep.lucky({'Baselabel': l['Baselabel'],'NFGal': l['NFGal']})
   if ar1 is not None:
     if 'Dets' not in ar1:
-        print ar1
+        print(ar1)
         l['Dets'] = []
     else:
         l['Dets'] = [str(z) for z in ar1['Dets']]
         #print "type "+str(type(l['Dets']))
     l['Is_Even'] = ar1['Is_Even']
     if iseven != l['Is_Even']:
-      print "Is even mismatch: %s from %d and %d" % (str(l['Baselabel']), dim, chival)
+      print("Is even mismatch: %s from %d and %d" % (str(l['Baselabel']), dim, chival))
   else:
     l['Is_Even'] = iseven
     l['Dets'] = []
   #print str(l)
   if not isinstance(l['Dets'], list):
-    print "Type error "+str(l['Baselabel'])+" , "+str(l['Dets'])+" "+str(type(l['Dets']))
+    print("Type error "+str(l['Baselabel'])+" , "+str(l['Dets'])+" "+str(type(l['Dets'])))
   count +=1
   outrecs.append(l)
   if count % 10000==0:
-    print "Count %s" % count
+    print("Count %s" % count)
   return
 
 def nfgalload(l):
@@ -112,7 +113,7 @@ def nfgalload(l):
   outrecs.append(l)
   count +=1
   if count % 10000==0:
-    print "Count %s" % count
+    print("Count %s" % count)
   return
 
 def strx(val, k):
@@ -133,7 +134,7 @@ def fixlist(d):
 reloadme = []
 # processing file names
 for path in sys.argv[1:]:
-    print path
+    print(path)
     count = 0
     outrecs = []
     filename = os.path.basename(path)
@@ -146,10 +147,10 @@ for path in sys.argv[1:]:
         line = line.strip()
         if re.match(r'\S',line):
             l = json.loads(line)
-	    if case == 'nfgal':
-	      nfgalload(l)
-	    if case == 'art rep':
-	      artrepload(l)
+            if case == 'nfgal':
+                nfgalload(l)
+            if case == 'art rep':
+                artrepload(l)
     # We have loaded the file, now dump it
     if outrecs:
         if case == 'nfgal':
@@ -161,7 +162,7 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    if isinstance(ent[kk], unicode):
+                    if isinstance(ent[kk], text_type):
                         ent[kk] = str(ent[kk])
                     if not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
@@ -177,7 +178,7 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    if isinstance(ent[kk], unicode):
+                    if isinstance(ent[kk], text_type):
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
@@ -186,7 +187,7 @@ for path in sys.argv[1:]:
                 fnout.write('|'.join([ent[z] for z in head1])+'\n')
             fnout.close()
             reloadme.append('art')
-    print "%s entries" % count
+    print("%s entries" % count)
     fn.close()
 
 if nottest:
@@ -195,4 +196,3 @@ if nottest:
         nfgal.reload('nfgal.dump', sep='|')
     if k == 'art':
         rep.reload('art.dump', sep='|')
-

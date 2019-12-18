@@ -19,6 +19,9 @@ types (with examples).  Here the base field is K=Q(w) of degree d.
 NB see ec_nfcurves.col_type for an up-to-date list.
 
 """
+from __future__ import print_function
+from six import text_type
+
 ec_nfcurves_col_types = {
  u'abs_disc': 'bigint',
  u'ainvs': 'text',
@@ -139,7 +142,7 @@ from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
 from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, make_galrep_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
-print "setting nfcurves and qcurves"
+print("setting nfcurves and qcurves")
 nfcurves = db.ec_nfcurves
 qcurves = db.ec_curves
 
@@ -157,7 +160,7 @@ def nf_lookup(label):
     Returns a NumberField from its label, caching the result.
     """
     global nf_lookup_table, special_names
-    #print "Looking up number field with label %s" % label
+    #print("Looking up number field with label %s" % label)
     if label in nf_lookup_table:
         #print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
@@ -289,7 +292,7 @@ def curves(line, verbose=False):
     # Parse the line and form the full label:
     data = split(line)
     if len(data) != 13:
-        print "line %s does not have 13 fields, skipping" % line
+        print("line %s does not have 13 fields, skipping" % line)
     field_label = data[0]       # string
     IQF_flag = field_label.split(".")[:2] == ['2','0']
     K = nf_lookup(field_label) if IQF_flag else None
@@ -323,7 +326,7 @@ def curves(line, verbose=False):
     if cm == '?':
         cm = get_cm(j)
         if cm:
-            print "cm=%s for j=%s" % (cm, j)
+            print("cm=%s for j=%s" % (cm, j))
 
     q_curve = data[12]   # 0, 1 or ?.  If unknown we'll determine this below.
     if q_curve in ['0','1']: # already set -- easy
@@ -357,10 +360,10 @@ def curves(line, verbose=False):
         if verbose:
             print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
-        if len(E1list):
+        if E1list:
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
             if verbose:
-                print "%s is base change of %s" % (label, base_change)
+                print("%s is base change of %s" % (label, base_change))
         else:
             base_change = []
             # print "%s is a Q-curve, but not base-change..." % label
@@ -389,7 +392,7 @@ def curves(line, verbose=False):
                    'ord_cond': int(ld.conductor_valuation()),
                    'ord_disc': int(ld.discriminant_valuation()),
                    'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'red': None if ld.bad_reduction_type() is None else int(ld.bad_reduction_type()),
                    'rootno': local_root_number(ld),
                    'kod': str(latex(ld.kodaira_symbol())),
                    'cp': int(ld.tamagawa_number())}
@@ -474,7 +477,7 @@ def isoclass(line):
     # Parse the line and form the full label:
     data = split(line)
     if len(data) < 5:
-        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
+        print("isoclass line %s does not have 5 fields (excluding gens), skipping" % line)
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     # convert label (does nothing except for imaginary quadratic)
@@ -639,20 +642,20 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
             continue
         try:
             h = open(os.path.join(base_path, f))
-            print "opened %s" % os.path.join(base_path, f)
+            print("opened %s" % os.path.join(base_path, f))
         except IOError:
-            print "No file %s exists" % os.path.join(base_path, f)
+            print("No file %s exists" % os.path.join(base_path, f))
             continue  # in case not all prefixes exist
 
         parse = globals()[f[:f.find('.')]]
 
         count = 0
-        print "Starting to read lines from file %s" % f
+        print("Starting to read lines from file %s" % f)
         for line in h.readlines():
             #if count==20: break # for testing
             label, data = parse(line)
             if count % 100 == 0:
-                print "read %s from %s (%s so far)" % (label, f, count)
+                print("read %s from %s (%s so far)" % (label, f, count))
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
@@ -663,7 +666,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
                         raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
                 else:
                     curve[key] = data[key]
-        print "finished reading %s lines from file %s" % (count, f)
+        print("finished reading %s lines from file %s" % (count, f))
 
     vals = data_to_insert.values()
     print("adding heights of gens")
@@ -700,7 +703,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
             nfcurves.upsert({'label': val['label']}, val)
             count += 1
             if count % 100 == 0:
-                print "inserted %s" % (val['label'])
+                print("inserted %s" % (val['label']))
 
 #
 #
@@ -778,7 +781,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
     """
-    str_type = type(unicode('abc'))
+    str_type = text_type
     int_type = type(int(1))
     float_type = type(float(1))
     list_type = type([1,2,3])
@@ -933,7 +936,7 @@ def add_root_number_to_local_data(field_label, ainvs, ld):
     # ld is a list with one dict for each prime ideal dividing the
     # discriminant of the stored model, which will be empty for a
     # global minimal model of a curve with everywhere good reduction.
-    if len(ld)==0:
+    if not ld:
         return ld
     if all(['rootno' in ldp for ldp in ld]): # already have root numbers
         if not any([ldp['rootno']=='?' for ldp in ld]):
@@ -1175,11 +1178,12 @@ def update_stats(verbose=True):
 def make_IQF_ideal_table(infile, insert=False):
     items = []
     n = 0
-    for L in file(infile).readlines():
-        n += 1
-        f, old, new = L.split()
-        item = {'fld':f, 'old':old, 'new':new}
-        items.append(item)
+    with open(infile) as fil:
+        for L in fil.readlines():
+            n += 1
+            f, old, new = L.split()
+            item = {'fld':f, 'old':old, 'new':new}
+            items.append(item)
     print("read {} lines from {}".format(n,infile))
     if insert:
         print("inserting into IQF_labels collection")
@@ -1467,7 +1471,7 @@ def read_qcurve_flags(filename, base_path="."):
     for line in open(os.path.join(base_path, filename)).readlines():
         data = split(line)
         if len(data) != 13:
-            print "line %s does not have 13 fields, skipping" % line
+            print("line %s does not have 13 fields, skipping" % line)
         field_label = data[0]
         conductor_label = data[1]
         iso_label = data[2]

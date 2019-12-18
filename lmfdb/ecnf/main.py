@@ -3,7 +3,6 @@
 # Authors: Harald Schilly and John Cremona
 
 import ast, re, StringIO, time
-from operator import mul
 from urllib import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response
@@ -114,8 +113,10 @@ ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren
 
 def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
-    map(bc.append, breads)
+    for x in breads:
+        bc.append(x)
     return bc
+
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -169,7 +170,7 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    if len(request.args) > 0:
+    if request.args:
         return elliptic_curve_search(request.args)
     bread = get_bread()
 
@@ -185,7 +186,7 @@ def index():
     fields_by_sig = ECNF_stats().fields_by_sig
     data['fields'] = []
     # Rationals
-    data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
+    # data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)]) # Removed due to ambiguity
 
     # Real quadratics (sample)
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
@@ -340,7 +341,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
-                           properties2=cl.properties,
+                           properties=cl.properties,
                            friends=cl.friends,
                            learnmore=learnmore_list())
 
@@ -377,7 +378,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            ec=ec,
                            code = code,
                            #        properties = ec.properties,
-                           properties2=ec.properties,
+                           properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
@@ -483,7 +484,10 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
-        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        t_o = 1
+        for n in query['torsion_structure']:
+            t_o *= int(n)
+        query['torsion_order'] = t_o
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
 
     if 'jinv' in info:

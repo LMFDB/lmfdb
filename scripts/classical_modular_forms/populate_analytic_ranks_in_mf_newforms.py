@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db
@@ -37,7 +38,7 @@ def upsert_rank(id_number, skip = False):
         else:
             assert rank == rankL
     assert rank is not None
-    print newform['label'], rank
+    print(newform['label'], rank)
     db.mf_newforms.upsert({'id': id_number}, {'analytic_rank' : rank})
 
 import sys
@@ -50,6 +51,6 @@ if len(sys.argv) == 3:
     for i in ids:
         upsert_rank(i)
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])

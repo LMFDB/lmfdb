@@ -157,6 +157,7 @@ class WebMaassForm(object):
                 else:
                     mwf_logger.debug("setting C!")
                     self.coeffs = C
+                    self.num_coeff = len(C[0][0])
         ## Make sure that self.coeffs is only the current coefficients
         if self._get_coeffs and isinstance(self.coeffs, dict) and not self._get_dirichlet_c_only:
             if not isinstance(self.coeffs, dict):

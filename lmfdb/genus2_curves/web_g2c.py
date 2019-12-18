@@ -164,13 +164,13 @@ def eqn_list_to_curve_plot(L,rat_pts):
     ymin=min([R[2] for R in plotzones])
     ymax=max([R[3] for R in plotzones])
     for P in rat_pts:
-    	(x,y,z)=eval(P.replace(':',','))
+        (x,y,z)=eval(P.replace(':',','))
         z=ZZ(z)
-     	if z: # Do not attempt to plot points at infinity
-      		x=ZZ(x)/z
-      		y=ZZ(y)/z**3
-      		if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
-       			plot += point((x,y),color='red',size=40,zorder=2)
+        if z: # Do not attempt to plot points at infinity
+            x=ZZ(x)/z
+            y=ZZ(y)/z**3
+            if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+                plot += point((x,y),color='red',size=40,zorder=2)
     return plot
 
 ###############################################################################
@@ -562,13 +562,18 @@ class WebG2C(object):
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
+            data['real_period'] = curve['real_period']
+            if (curve['regulator'] > -0.5):
+                data['regulator'] = curve['regulator']
+            else:
+                data['regulator'] = 'not computed yet'
             data['tama'] = ''
             for item in tama:
-            	if item['tamagawa_number'] > 0:
-            	    tamgwnr = str(item['tamagawa_number'])
-            	else:
-            	    tamgwnr = 'N/A'
-            	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
+                if item['tamagawa_number'] > 0:
+                    tamgwnr = str(item['tamagawa_number'])
+                else:
+                    tamgwnr = 'N/A'
+                data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
             data['tama'] = data['tama'][:-2] # trim last ", "
             if ratpts:
                 if len(ratpts['rat_pts']):

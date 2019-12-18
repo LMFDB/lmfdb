@@ -77,10 +77,10 @@ def show():
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
 
-            properties2 = [('Root number', '$'+str(tp.root_number()).replace('*','').replace('I','i')+'$'),
+            properties = [('Root number', '$'+str(tp.root_number()).replace('*','').replace('I','i')+'$'),
                            ('Dimension', '$'+str(tp.dimension())+'$'),
                            ('Conductor', '$'+str(tp.cond())+'$')]
-            info['properties2'] = properties2
+            info['properties'] = properties
 
             if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
                 info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)

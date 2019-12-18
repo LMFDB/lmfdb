@@ -5,7 +5,7 @@
 #
 # In particular this code assumes that all the data for one HMF is in
 # a single collection, which is no longer the case.
-
+from six import text_type
 from sage.all import QQ, polygen
 
 from lmfdb import db
@@ -79,7 +79,7 @@ class WebHMF(object):
             F = HilbertNumberField(label)
             if not F:
                 raise ValueError("No Hilbert number field with label %s is in the database" % label)
-        elif label_or_field == None:
+        elif label_or_field is None:
             raise ValueError("Must specify a valid field label")
         else: # we were passed a HilbertNumberField already
             F = label_or_field
@@ -139,7 +139,7 @@ class WebHMF(object):
         i = L.rfind("[")
         j = L.rfind("]")
         data['hecke_eigenvalues'] = L[i+1:j].replace(" ","").split(",")
-        data['hecke_eigenvalues'] = [unicode(s) for s in data['hecke_eigenvalues']]
+        data['hecke_eigenvalues'] = [text_type(s) for s in data['hecke_eigenvalues']]
         #print("hecke_eigenvalues = %s..." % data['hecke_eigenvalues'][:20])
 
         # Find (some of the) AL-eigenvalues
@@ -161,14 +161,13 @@ class WebHMF(object):
         data['is_CM'] = '?'
         data['is_base_change'] = '?'
 
-
     def compare_with_db(self, field=None):
         lab = self.dbdata['label']
         f = WebHMF.by_label(lab)
-        if f==None:
+        if f is None:
             print("No Hilbert newform in the database has label %s" % lab)
             return False
-        if field==None:
+        if field is None:
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
         for key in self.dbdata.keys():

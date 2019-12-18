@@ -262,7 +262,7 @@ def parse_n(info, newform, primes_only):
     try:
         info['CC_n'] = integer_options(nrange, newform.an_cc_bound)
     except (ValueError, TypeError) as err:
-        info['CC_n'] = range(2,maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
@@ -280,7 +280,7 @@ def parse_n(info, newform, primes_only):
             info['CC_n'] = [n for n in prime_range(maxp+1) if newform.level % n != 0]
     elif len(info['CC_n']) == 0:
         errs.append("No n in specified range; resetting to default")
-        info['CC_n'] = range(2, maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
     return errs
 
 def parse_m(info, newform):
@@ -299,7 +299,7 @@ def parse_m(info, newform):
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
-        info['CC_m'] = range(1, maxm+1)
+        info['CC_m'] = list(range(1, maxm + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
@@ -338,7 +338,7 @@ def render_newform_webpage(label):
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -370,7 +370,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -389,7 +389,7 @@ def render_space_webpage(label):
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -407,7 +407,7 @@ def render_full_gamma1_space_webpage(label):
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -506,8 +506,8 @@ def jump_box(info):
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
     #handle direct trace_hash search
-    if re.match(r'^\#\d+$',jump) and long(jump[1:]) < 2**61:
-        label = db.mf_newforms.lucky({'trace_hash': long(jump[1:].strip())}, projection="label")
+    if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
+        label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:
@@ -870,7 +870,7 @@ def set_rows_cols(info, query):
         primes = info.get('level_primes','').strip()
         if primes:
             try:
-                rad = prod(map(ZZ, primes.split(',')))
+                rad = prod(ZZ(p) for p in primes.split(','))
                 if info['prime_quantifier'] == 'subsets':
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] == 'append':

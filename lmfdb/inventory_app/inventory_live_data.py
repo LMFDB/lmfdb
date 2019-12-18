@@ -251,7 +251,7 @@ def check_orphan_empty(entry):
 def set_lockout_state(state):
     """Swap state of lockout. If record exists, toggle, else create"""
     try:
-        assert(state == True or state == False)
+        assert(state is True or state is False)
         rec_set = {'lockout':state}
         idc.add_to_ops_table(rec_set)
     except:

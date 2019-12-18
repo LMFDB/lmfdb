@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from lmfdb.backend.database import PostgresDatabase
 from sage.parallel.decorate import parallel
@@ -33,8 +34,8 @@ class CMFTest(LmfdbTest):
                 assert 'Embeddings' in page.data
             return (load, url)
         except Exception as err:
-            print "Error on page "+url
-            print str(err)
+            print("Error on page " + url)
+            print(str(err))
             print_exc()
             return (None, url)
 
@@ -54,9 +55,9 @@ class CMFTest(LmfdbTest):
                 errors.append(r[1])
 
         if errors:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
-                print url
+                print(url)
 
         return res
 
@@ -98,9 +99,9 @@ class CMFTest(LmfdbTest):
             res.append((load, url))
 
         except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
@@ -124,9 +125,9 @@ class CMFTest(LmfdbTest):
                 assert space_dim == dim
                 res.append((load, url))
             except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
@@ -144,17 +145,17 @@ class CMFTest(LmfdbTest):
                 assert "even" in page.data
                 res.append((load, url))
             except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
 
         if errors:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
-                print url
+                print(url)
 
         return res
 
@@ -185,11 +186,11 @@ class CMFTest(LmfdbTest):
                     res.extend(o)
 
         if errors == []:
-            print "No errors while running the tests!"
+            print("No errors while running the tests!")
         else:
-            print "Unexpected errors occurring while running:"
+            print("Unexpected errors occurring while running:")
             for e in errors:
-                print e
+                print(e)
 
         broken_urls = [ u for l, u in res  if u is None ]
         working_urls = [ (l, u) for l, u in res if u is not None]
@@ -197,16 +198,16 @@ class CMFTest(LmfdbTest):
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
         if broken_urls == []:
-            print "All the pages passed the tets"
+            print("All the pages passed the tets")
             if total > 0:
-                print "Average loading time: %.2f" % (sum(just_times)/total,)
-                print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
-                print "Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]])
-                print "Slowest pages:"
+                print("Average loading time: %.2f" % (sum(just_times)/total,))
+                print("Min: %.2f Max %.2f" % (just_times[0], just_times[-1]))
+                print("Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]]))
+                print("Slowest pages:")
                 for t, u in working_urls[-10:]:
-                    print "%.2f - %s" % (t,u)
+                    print("%.2f - %s" % (t,u))
             if total > 2:
-                print "Histogram"
+                print("Histogram")
                 h = 0.5
                 nbins = (just_times[-1] - just_times[0])/h
                 while  nbins < 50:
@@ -221,17 +222,8 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d
+                    print('%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
         else:
-            print "These pages didn't pass the tests:"
+            print("These pages didn't pass the tests:")
             for u in broken_urls:
-                print u
-
-
-
-
-
-
-
-
-
+                print(u)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 from sage.all import DirichletGroup
@@ -16,10 +17,10 @@ def remove_all():
 
 
 def insert_dirichlet_L_functions(start, end):
-    print "Putting Dirichlet L-functions into database."
+    print("Putting Dirichlet L-functions into database.")
     start = max(3, start)
     for q in range(start, end):
-        print "Working on modulus", q
+        print("Working on modulus", q)
         sys.stdout.flush()
         G = DirichletGroup(q)
         for n in range(len(G)):
@@ -71,7 +72,7 @@ def update_entries():
 def insert_EC_L_functions(start=1, end=100):
     curves = C.ellcurves.curves
     for N in range(start, end):
-        print "Processing conductor", N
+        print("Processing conductor", N)
         sys.stdout.flush()
         query = curves.find({'conductor': N, 'number': 1})
         for curve in query:
@@ -80,7 +81,7 @@ def insert_EC_L_functions(start=1, end=100):
             first_zeros = L.find_zeros_via_N(curve['rank'] + 1)
             if len(first_zeros) > 1:
                 if not first_zeros[-2] == 0:
-                    print "problem"
+                    print("problem")
 
             z = float(first_zeros[-1])
 
@@ -116,5 +117,4 @@ if __name__ == "__main__":
     for n in range(1, 10):
         insert_EC_L_functions(n * 100, (n + 1) * 100)
         # insert_dirichlet_L_functions(n * 100, (n+1)*100)
-    pass
     # insert_dirichlet_L_functions(50)

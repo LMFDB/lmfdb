@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -70,7 +71,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '3 matches' in L.data
         data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(2)}, projection='label'))
         assert len(data) == 3
-        print ""
+        print("")
         for label in data:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()

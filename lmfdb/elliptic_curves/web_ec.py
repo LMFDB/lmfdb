@@ -4,17 +4,17 @@ import os
 import yaml
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
 
-from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, latex, ZZ, QQ, RR, prod, Factorization, PowerSeriesRing, prime_range
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
-OPTIMALITY_BOUND = 300000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
+OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -98,6 +98,37 @@ def EC_ainvs(E):
     """
     return [int(a) for a in E.ainvs()]
 
+def make_y_coord(ainvs,x):
+    a1, a2, a3, a4, a6 = ainvs
+    f = ((x + a2) * x + a4) * x + a6
+    b = (a1*x + a3)
+    d = (RR(b*b + 4*f)).sqrt()
+    y = ZZ((-b+d)/2)
+    return y, ZZ(d)
+
+def make_integral_points(self):
+    ainvs = self.ainvs
+    xcoord_integral_points = self.xintcoords 
+    int_pts = []
+    for x in xcoord_integral_points:
+        y, d = make_y_coord(ainvs,x)
+        int_pts.append((x, y))
+    if len(xcoord_integral_points) != 0:
+        int_pts_str = ', '.join(web_latex(el) for el in int_pts)
+    return int_pts_str
+
+def count_integral_points(c):
+    ainvs = c['ainvs']
+    #xcoord_integral_points = c.xintcoords 
+    num_int_pts = 0
+    for x in c["xcoord_integral_points"]:
+        y, d = make_y_coord(ainvs,x)
+        if d == 0:
+            num_int_pts += 1
+        else:
+            num_int_pts += 2
+    return num_int_pts
+
 class WebEC(object):
     """
     Class for an elliptic curve over Q
@@ -166,7 +197,6 @@ class WebEC(object):
         data['j_inv_factor'] = latex(0)
         if data['j_invariant']: # don't factor 0
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
-        data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
 
         # extract data about MW rank, generators, heights and torsion:
@@ -260,30 +290,50 @@ class WebEC(object):
         # isogeny class, obviously) and expected for all N.
 
         # Column 'optimality' is 1 for certainly optimal curves, 0 for
-        # non-optimal curves, and is n>1 if the curve is one of n in
-        # the isogeny class which may be optimal given current
+        # certainly non-optimal curves, and is n>1 if the curve is one
+        # of n in the isogeny class which may be optimal given current
         # knowledge.
 
         # Column "manin_constant' is the correct Manin constant
-        # assuming that the curve with (Cremona) number 1 in the class
-        # is optimal.
-        
-        data['optimality_code'] = self.optimality
-        # The "or" clause in the next line is so that we can update
-        # things by changing one line in this file even without
-        # changing the data:
-        data['optimality_known'] = (self.optimality < 2) or (N<OPTIMALITY_BOUND)
-        data['optimality_bound'] = OPTIMALITY_BOUND
-        # (conditional on data['optimality_known'])
-        data['manin_constant'] = self.manin_constant
+        # assuming that the optimal curve in the class is known, or
+        # otherwise if it is the curve with (Cremona) number 1.
 
-        # To detect whether the optimal curve in this curve's class is
-        # known when its optimality code s >1 we need to look at the
-        # code for the curve with 'number'==1.  Here we also record
-        # the label of that curve for the template.
-        opt_curve = db.ec_curves.lucky({'iso':self.iso, 'number':3 if self.iso=='990h' else 1},projection=['label','lmfdb_label','optimality'])
-        data['manin_known'] = self.optimality==1 or (opt_curve['optimality']==1)
-        data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
+        # The code here allows us to update the display correctly by
+        # changing one line in this file (defining OPTIMALITY_BOUND)
+        # without changing the data.
+
+        data['optimality_bound'] = OPTIMALITY_BOUND
+        data['manin_constant'] = self.manin_constant # (conditional on data['optimality_known'])
+
+        if N<OPTIMALITY_BOUND:
+
+            data['optimality_code'] = int(self.number == (3 if self.iso=='990h' else 1))
+            data['optimality_known'] = True
+            data['manin_known'] = True
+            if self.label_type=='Cremona':
+                data['optimal_label'] = '990h3' if self.iso=='990h' else self.iso+'1'
+            else:
+                data['optimal_label'] = '990.i3' if self.lmfdb_iso=='990.i' else self.lmfdb_iso+'1'
+
+        else:
+
+            data['optimality_code'] = self.optimality
+            data['optimality_known'] = (self.optimality < 2)
+
+            if self.optimality==1:
+                data['manin_known'] = True
+                data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+            else:
+                if self.number==1:
+                    data['manin_known'] = False
+                    data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+                else:
+                    # find curve #1 in this class and its optimailty code:
+                    opt_curve = db.ec_curves.lucky({'iso': self.iso, 'number': 1},
+                                                   projection=['label','lmfdb_label','optimality'])
+                    data['manin_known'] = (opt_curve['optimality']==1)
+                    data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
+
         data['p_adic_data_exists'] = False
         if data['optimality_code']==1:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
@@ -371,14 +421,10 @@ class WebEC(object):
         mw = self.mw = {}
         mw['rank'] = self.rank
         mw['int_points'] = ''
+        # should import this from import_ec_data.py
         if self.xintcoords:
-            a1, a2, a3, a4, a6 = self.ainvs
-            def lift_x(x):
-                f = ((x + a2) * x + a4) * x + a6
-                b = (a1*x + a3)
-                d = (b*b + 4*f).sqrt()
-                return (x, (-b+d)/2)
-            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
+            mw['int_points'] = make_integral_points(self)
+            #mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
         mw['heights'] = []
@@ -493,7 +539,7 @@ class WebEC(object):
                     tg1['bc'] = bcc[0]
                     tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
             else:
-                field_data = web_latex_split_on_pm(coeff_to_poly(string2list(F)))
+                field_data = web_latex(coeff_to_poly(string2list(F)))
                 deg = F.count(",")
             tg1['d'] = deg
             tg1['f'] = field_data
@@ -519,10 +565,8 @@ class WebEC(object):
         
         tg['maxd'] = 7
 
-
-
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 

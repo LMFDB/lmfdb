@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 r""" Functions to check consistency of data between elliptic curves and
 Hilbert Modular Forms databases:  """
+from __future__ import print_function
 
 # 2018-12-14: converted to work with the postgres database (JEC)
 
@@ -8,11 +9,11 @@ import sys
 from sage.all import EllipticCurve, Magma, srange, oo
 from lmfdb import db
 
-print "setting nfcurves"
+print("setting nfcurves")
 nfcurves = db.ec_nfcurves
 qcurves = db.ec_curves
 
-print "setting hmfs, forms, fields"
+print("setting hmfs, forms, fields")
 forms = db.hmf_forms
 fields = db.hmf_fields
 hecke = db.hmf_hecke        # contains eigenvalues
@@ -269,7 +270,7 @@ def output_magma_field(field_label, K, Plist, outfilename=None, verbose=False):
     define the field `K` and the list `Plist` of primes.
     """
     if outfilename:
-        outfile = file(outfilename, mode="w")
+        outfile = open(outfilename, mode="w")
     name = K.gen()
     pol = K.defining_polynomial()
 
@@ -342,7 +343,7 @@ def output_magma_curve_search(HMF, form, outfilename=None, verbose=False, effort
         if verbose:
             sys.stdout.write(L)
     if outfilename:
-        outfile = file(outfilename, mode="a")
+        outfile = open(outfilename, mode="a")
 
     N = HMF.ideal(form['level_label'])
     conductor_ideal = form['level_ideal'].replace(" ","")
@@ -451,7 +452,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         return
 
-    if outfilename==None:
+    if outfilename is None:
         return
 
     # Step 2: for each newform for which there was no curve, create a
@@ -590,9 +591,9 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     # (unless outfilename is None in which case just dump the missing labels to a file)
 
     if outfilename:
-        outfile = file(outfilename, mode="w")
+        outfile = open(outfilename, mode="w")
     else:
-        t = file("curves_missing.{}".format(field_label), mode="w")
+        t = open("curves_missing.{}".format(field_label), mode="w")
         for c in missing_curves:
             t.write(c)
             t.write("\n")
@@ -680,7 +681,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
                 print("!!! No curves for %s found (using %s ap) !!!" % (nf_label,len(aplist)))
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-        if E!=None:
+        if E is not None:
             ec = {}
             ec['field_label'] = field_label
             ec['conductor_label'] = form['level_label']
@@ -746,7 +747,7 @@ def EllipticCurveSearch(K, Plist, N, aplist, effort=1000):
         mag.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
         mag.eval('ncurves := #curves;')
         ncurves = mag('ncurves;').sage()
-    except RuntimeError, arg:
+    except RuntimeError as arg:
         print("RuntimError in Magma: {}".format(arg))
         return []
     if ncurves==0:
@@ -767,11 +768,11 @@ def magma_output_iter(infilename):
 
     - ``infilename`` (string) -- name of file containing Magma output
     """
-    infile = file(infilename)
+    infile = open(infilename)
 
     while True:
         try:
-            L = infile.next()
+            L = next(infile)
         except StopIteration:
             raise StopIteration
 
@@ -809,7 +810,7 @@ def export_magma_output(infilename, outfilename=None, verbose=False):
     - ``verbose`` (boolean, default ``False``) -- verbosity flag.
     """
     if outfilename:
-        outfile = file(outfilename, mode="w")
+        outfile = open(outfilename, mode="w")
 
     def output(L):
         if outfilename:

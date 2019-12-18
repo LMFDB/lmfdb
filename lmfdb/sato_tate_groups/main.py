@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six.moves import range
 import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
@@ -153,7 +153,7 @@ def index():
     if len(request.args) != 0:
         return search(**request.args)
     weight_list= [0, 1]
-    degree_list=range(1, 5, 1)
+    degree_list = list(range(1, 5, 1))
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
@@ -260,7 +260,7 @@ def search(**args):
        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and \
        (not 'trace_zero_density' in query or query['trace_zero_density'] == '0'):
         if not 'components' in query:
-            components_list = xrange(1,3 if ratonly else start+count+1)
+            components_list = range(1, 3 if ratonly else start + count + 1)
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
         nres = len(components_list) if 'components' in query or ratonly else INFINITY
@@ -532,7 +532,7 @@ def render_st_group(info, portrait=None):
     ]
     title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
-                           properties2=prop2,
+                           properties=prop2,
                            credit=credit_string,
                            info=info,
                            bread=bread,

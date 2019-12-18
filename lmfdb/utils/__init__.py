@@ -22,7 +22,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'image_callback', 'encode_plot',
            'KeyedDefaultDict', 'make_tuple', 'range_formatter',
            'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_rational',
-           'parse_rats', 'parse_bracketed_posints', 'parse_bool',
+           'parse_rats', 'parse_bracketed_posints', 'parse_bracketed_rats', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of',
            'parse_subset', 'parse_submultiset', 'parse_list',
            'parse_list_start', 'parse_string_start', 'parse_restricted',
@@ -31,7 +31,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_container', 'parse_hmf_weight', 'parse_count',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
            'nf_string_to_label', 'clean_input', 'prep_ranges',
-           'search_wrap',
+           'search_wrap', 'count_wrap',
+           'SearchArray', 'TextBox', 'SelectBox', 'TextBoxWithSelect', 'BasicSpacer', 'SkipBox', 'CheckBox', 'CheckboxSpacer',
            'Downloader',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration',
@@ -63,7 +64,7 @@ from .utilities import (
 
 from .search_parsing import (
     parse_ints, parse_signed_ints, parse_floats, parse_rational, parse_rats,
-    parse_bracketed_posints, parse_bool, parse_bool_unknown, parse_primes,
+    parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
     parse_element_of, parse_subset, parse_submultiset, parse_list,
     parse_list_start, parse_string_start, parse_restricted, parse_noop,
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string,
@@ -71,7 +72,8 @@ from .search_parsing import (
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     clean_input, prep_ranges)
 
-from .search_wrapper import search_wrap
+from .search_wrapper import search_wrap, count_wrap
+from .search_boxes import SearchArray, TextBox, SelectBox, TextBoxWithSelect, BasicSpacer, SkipBox, CheckBox, CheckboxSpacer
 from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration

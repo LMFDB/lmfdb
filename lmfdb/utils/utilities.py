@@ -3,6 +3,9 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+from six.moves import range
+from six import integer_types as six_integers
+from six import string_types
 
 import cmath
 import math
@@ -21,8 +24,9 @@ from urllib import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
+# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
 from werkzeug.contrib.cache import SimpleCache
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
@@ -79,7 +83,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
         # casting from ZZT -> ZZpT
         if p is None:
-            gtoprint = dict(zip(zip([0]*len(g), range(len(g))), g))
+            gtoprint = {(0, i): gi for i, gi in enumerate(g)}
         else:
             gtoprint = {}
             for i, elt in enumerate(g):
@@ -114,8 +118,10 @@ def try_int(foo):
     except Exception:
         return foo
 
+
 def key_for_numerically_sort(elt, split="[\s\.\-]"):
-    return map(try_int, re.split(split, elt))
+    return tuple(try_int(k) for k in re.split(split, elt))
+
 
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=QQ):
@@ -290,8 +296,10 @@ def to_dict(args, exclude = []):
             d[key] = values
     return d
 
+
 def is_exact(x):
-    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
@@ -510,9 +518,9 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
-    if enclose == True:
+    if enclose:
         return "\( %s \)" % latex(x)
     return " %s " % latex(x)
 
@@ -552,7 +560,7 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)
@@ -616,7 +624,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     def insert_latex(s):
         return s.group(1) + '\) \('
 
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
         A = "\( %s \)" % latex(x)
@@ -714,12 +722,16 @@ def make_bigint(s, cutoff=20, max_width=70):
     """
     Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
     def knowl_replacer(M):
-        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
+        if a[0:2] == r'<a':
+            return r'\)' + a + r'\('
+        else:
+            return a
     return Zmatcher.sub(knowl_replacer, s)
 
 
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
         lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
@@ -769,7 +781,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
     if cutoff:
         long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
@@ -814,7 +826,8 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
@@ -830,8 +843,8 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
     - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
-    plus = r"\mathstrut +\mathstrut \) "
-    minus = r"\mathstrut -\mathstrut \) "
+    plus = r" + "
+    minus = r" - "
     m = len(coeffs)
     while m and coeffs[m-1] == 0:
         m -= 1
@@ -851,23 +864,23 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         # this effectively disables the bigint
         bigint_cutoff = bigint_overallmin + 7
 
-    for n in reversed(xrange(m)):
+    for n in reversed(range(m)):
         c = coeffs[n]
         if n == 1:
             if superscript:
-                varpow = r"\(" + var
+                varpow = "" + var
             else:
-                varpow = r"\(%s_{1}"%var
+                varpow = r"%s_{1}"%var
         elif n > 1:
             if superscript:
-                varpow = r"\(%s^{%s}"%(var, n)
+                varpow = r"%s^{%s}"%(var, n)
             else:
-                varpow = r"\(%s_{%s}"%(var, n)
+                varpow = r"%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c, bigint_cutoff)
+                s += plus + str(c)
             elif c < 0:
-                s += minus + bigint_knowl(-c, bigint_cutoff)
+                s += minus + str(-c)
             break
         if c > 0:
             s += plus
@@ -876,14 +889,13 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c), bigint_cutoff) + " "
+            s += str(abs(c)) + " "
         s += varpow
-    if coeffs[0] == 0:
-        s += r"\)"
+    s += r"\)"
     if s.startswith(plus):
-        return s[len(plus):]
+        return "\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
-        return r"\(-\)" + s[len(minus):]
+        return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
@@ -1221,7 +1233,7 @@ def range_formatter(x):
         elif b is None:
             return "{0}-".format(a)
         elif a is None:
-            raise ValueError
+            return "..{0}".format(b)
         else:
             return "{0}-{1}".format(a,b)
     return str(x)
@@ -1240,7 +1252,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
+    if not isinstance(pol_str, string_types):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')

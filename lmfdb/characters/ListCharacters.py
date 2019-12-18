@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
+from six.moves import range
 
 import re
 from sage.all import lcm, factor, divisors
@@ -44,7 +45,7 @@ def parse_interval(arg, name):
 
 def parse_limit (arg):
     if not arg:
-        return 25
+        return 50
     limit = -1
     arg = arg.replace  (' ','')
     if re.match('^[0-9]+$', arg):
@@ -56,10 +57,10 @@ def parse_limit (arg):
 
 def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
-    headers = range(1, limit)
+    headers = list(range(1, limit))
     headers.append("more")
     entries = {}
-    rows = range(a, b + 1)
+    rows = list(range(a, b + 1))
     for row in rows:
         G = DirichletGroup_conrey(row)
         for chi in G:
@@ -74,7 +75,7 @@ def get_character_modulus(a, b, limit=7):
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
-    for k, v in entries.iteritems():
+    for k, v in entries.items():
         l = []
         v = sorted(v)
         while v:

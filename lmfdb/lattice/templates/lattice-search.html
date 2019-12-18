@@ -2,7 +2,7 @@
 {% block content %}
 
 <h2> Further refine search </h2>
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 {% include 'hidden_search_inputs.html' %}
 <table border="0">
 
@@ -63,7 +63,6 @@
   </tr>
   {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

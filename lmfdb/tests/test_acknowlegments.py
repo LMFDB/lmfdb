@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import urllib2, ssl, errno
 from lmfdb.tests import LmfdbTest
 
@@ -42,14 +42,14 @@ class HomePageTest(LmfdbTest):
             self.check_external(homepage,
                 "https://hobbes.la.asu.edu/lmfdb-14/",
                 'Arizona State University' )
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
-                pass;
+                pass
             elif 'Connection refused' in str(e): # not every error comes with a errno
-                pass;
+                pass
             else:
-                print e
-                print e.errno
+                print(e)
+                print(e.errno)
                 raise
 
         self.check_external(homepage,

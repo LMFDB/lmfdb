@@ -1,8 +1,9 @@
 # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
+from __future__ import print_function
 from sage.all import matrix, vector, PolynomialRing, ZZ, NumberField, ComplexField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
-from  lmfdb.db_backend import db
+from  lmfdb.backend.database import db
 ZZx = PolynomialRing(ZZ, "x")
 
 def convert_eigenvals_to_qexp(basis, eigenvals, normalization):
@@ -33,15 +34,15 @@ def upsert_embedding(id_number, skip = True):
     elif newform['weight'] == 1:
         return
     elif newform.get('field_poly', None) is None:
-	    return
+        return
     else:
         # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
-        hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
+        hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','field_poly_root_of_unity','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
         assert hecke_nf is not None
         assert newform['field_poly'] == hecke_nf['field_poly']
         assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
-        if hecke_nf['hecke_ring_power_basis']:
+        if hecke_nf['hecke_ring_power_basis'] or (hecke_nf['field_poly_root_of_unity'] != 0):
             v = HF.gens()[0]
             betas = [ v**i for i in range(len(newform['field_poly'])) ]
         else:
@@ -88,8 +89,8 @@ if len(sys.argv) == 3:
     for j, i in enumerate(ids):
         upsert_embedding(i)
         if j % int(len(ids)*0.01) == 0:
-            print '%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids)))
+            print('%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids))))
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])

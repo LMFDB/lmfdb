@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 
 from dirichlet_conrey import DirichletGroup_conrey
 from sage.all import euler_phi
@@ -111,5 +111,5 @@ class char_dir_orbits(TableChecker):
         parity = 1 if char.is_even() else -1
         success = (parity == rec['parity'] and char.conductor() == rec['conductor'] and char.multiplicative_order() == rec['order'])
         if verbose and not success:
-            print "Order-parity failure", parity, rec['parity'], char.conductor(), rec['conductor'], char.multiplicative_order(), rec['order']
+            print("Order-parity failure", parity, rec['parity'], char.conductor(), rec['conductor'], char.multiplicative_order(), rec['order'])
         return success

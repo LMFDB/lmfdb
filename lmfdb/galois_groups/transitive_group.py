@@ -182,11 +182,11 @@ class WebGaloisGroup:
             cc = ccc
             cc2 = [x.cycletype(n) for x in cc]
         cc2 = [str(x) for x in cc2]
-        cc2 = map(lambda x: re.sub("\[", '', x), cc2)
-        cc2 = map(lambda x: re.sub("\]", '', x), cc2)
+        cc2 = [re.sub("\[", '', x) for x in cc2]
+        cc2 = [re.sub("\]", '', x) for x in cc2]
         ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
         self._data['conjclasses'] = ans
-        return(ans)
+        return ans
 
     def sibling_bound(self):
         return self._data['bound_siblings']
@@ -553,7 +553,7 @@ def chartable(n, t):
 
 
 def group_alias_table():
-    akeys = aliases.keys()
+    akeys = list(aliases)
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
@@ -788,10 +788,17 @@ aliases['D46'] = [(46,3)]
 aliases['D47'] = [(47,2)]
 
 # Load all sibling representations from the database
+labels = ["%sT%s" % elt[0] for elt in aliases.values()]
+siblings = dict(
+    (elt["label"], [tuple(z[0]) for z in elt["siblings"]])
+    for elt in db.gps_transitive.search(
+        {"label": {"$in": labels}}, ["label", "siblings"]
+    )
+)
 for ky in aliases.keys():
     nt = aliases[ky][0]
     label = "%sT%s"% nt
-    aliases[ky] = [tuple(z[0]) for z in db.gps_transitive.lookup(label)['siblings']]
+    aliases[ky] = siblings[label][:]
     if nt not in aliases[ky]:
         aliases[ky].append(nt)
     aliases[ky].sort()

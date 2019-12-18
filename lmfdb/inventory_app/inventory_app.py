@@ -77,7 +77,7 @@ def show_edit_child(id):
         nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
         listing = inventory_viewer.get_edit_list(id)
         lockout = inventory_live_data.get_lockout_state()
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=None, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
@@ -110,7 +110,7 @@ def show_records(id, id2):
         if not valid:
             raise BadNameError('')
         nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_records', id=id, id2=id2)]])
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
@@ -128,7 +128,7 @@ def show_indices(id, id2):
         if not valid:
             raise BadNameError('')
         nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_indices', id=id, id2=id2)]])
     except ih.ConnectOrAuthFail as e:
 

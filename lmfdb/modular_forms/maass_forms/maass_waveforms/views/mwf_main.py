@@ -20,7 +20,7 @@ AUTHORS:
 
 
 """
-
+from __future__ import print_function
 import flask
 from flask import render_template, url_for, request, send_file
 import re
@@ -68,7 +68,9 @@ FLOAT_RE = re.compile(r'^(\d+|\d+\.\d)$')
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-    info["credit"] = ""
+    info["credit"] = u"Data computed by Stefan Lemurell and Fredrik Str\u00f6mberg."
+    info["bread"] = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
     mwf_logger.debug("method=%s" % request.method)
@@ -87,21 +89,36 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                     flash_error("%s is not a level, please specify a positive integer <span style='color:black'>n</span> or postivie integer range <span style='color:black'>m..n</span>.", info['level_range'])
                     return render_template('mwf_navigate.html', **info)
         if info['character'] != -1:
-            try:
-                N = int(info.get('level_range','0'))
-            except:
-                flash_error("Character %s cannot be specified in combination with a range of levels.", info['character'])
-                return render_template('mwf_navigate.html', **info)
-            if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
-                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
-                return render_template('mwf_navigate.html', **info)
-            s = info['character'].split('.')
-            q,n = int(s[0]), int(s[1])
-            if n > q or gcd(q,n) != 1 or (N > 0 and q != N):
-                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
-                return render_template('mwf_navigate.html', **info)
-            info['level_range'] = str(q)
-            info['character'] = str(n)
+            if info['character'] == '1' or info['character'] == '1.1':
+                info['character'] = '1'
+            else:
+                try:
+                    N = int(info.get('level_range','0'))
+                except:
+                    flash_error("Only the trivial character can be specified in combination with a range of levels.", info['character'])
+                    return render_template('mwf_navigate.html', **info)
+                if re.match(POSINT_RE, info['character']):
+                    if N==0:
+                        flash_error("Character %s is ambiguous. Please either specify a level or use a character label of the form <span style='color:black'>q.n</span>, where q specifies the level.", info['character'])
+                        return render_template('mwf_navigate.html', **info)
+                    n = int(info['character'])
+                    if gcd(N,n) != 1:
+                        flash_error("Character %s is not coprime to the level %s.", info['character'], str(N))
+                        return render_template('mwf_navigate.html', **info)
+                else:
+                    if  not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
+                        flash_error("%s is not a valid label for a Dirichlet character.  It should be either be 1 (for the trivial character) or of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                        return render_template('mwf_navigate.html', **info)
+                    s = info['character'].split('.')
+                    q,n = int(s[0]), int(s[1])
+                    if n > q or gcd(q,n) != 1:
+                        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                        return render_template('mwf_navigate.html', **info)
+                    if  N > 0 and q != N:
+                        flash_error("The specified character %s is not compatible with the level %s.", info['character'], info['level'])
+                        return render_template('mwf_navigate.html', **info)
+                    info['level_range'] = str(q)
+                    info['character'] = str(n)
         if info['weight'] != -1:
             if not re.match(INT_RE, info['weight']):
                 flash_error("%s is not a valid weight.  It should be a nonnegative integer.", info['weight'])
@@ -174,7 +191,7 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Maass Waveforms', url_for('.render_maass_waveforms'))]
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
 
@@ -236,7 +253,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     info['MF'] = MF
     info['title'] = "Maass Form"
     info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms'))]
+                     ('Maass Forms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
         info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
@@ -307,7 +324,7 @@ def render_one_maass_waveform_wp(info, prec=9):
                   ]
     if dim > 1 and info['MF'].the_character() == "trivial":
         properties.append(("Possibly oldform", []))
-    info['properties2'] = properties
+    info['properties'] = properties
 
     # The precision in set_table indicates which coefficients to set to zero.
     # For instance, if the imaginary part is less than the precision in
@@ -494,11 +511,11 @@ def render_browse_all_eigenvalues(**kwds):
                         'Coeff.', 'Fricke', 'Atkin-Lehner']
 
     if int(info.get('weight', 0)) == 1:
-        print "weight1=", info.get('weight', 0)
+        print("weight1=", info.get('weight', 0))
         info['wtis1'] = "selected"
         info['wtis0'] = ""
     else:
-        print "weight0=", info.get('weight', 0)
+        print("weight0=", info.get('weight', 0))
         info['wtis0'] = "selected"
         info['wtis1'] = ""
     return render_template("mwf_browse_all_eigenvalues.html", **info)
@@ -524,7 +541,7 @@ def get_table():
 def source():
     t = 'Source of Maass forms data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Source", '')]
+                     ('Maass Forms', url_for('.render_maass_waveforms')), ("Source", '')]
     learnmore = learnmore_list_remove('Source')
     return render_template("single.html", kid='rcs.source.maass',
                            title=t, bread=bread,
@@ -534,7 +551,7 @@ def source():
 def reliability():
     t = 'Reliability of Maass forms data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Reliability", '')]
+                     ('Maass Forms', url_for('.render_maass_waveforms')), ("Reliability", '')]
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.maass',
                            title=t, bread=bread,

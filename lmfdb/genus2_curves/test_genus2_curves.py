@@ -176,6 +176,9 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_clebsch_inv&geometric_invariants=[1824%2C179520%2C140795904%2C207474688]')
         assert '1369.a.50653.1' in L.data
         assert '169.a.169.1' not in L.data
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants=[1824%2C179520%2C140795904%2C207474688]')
+        assert '1369.a.50653.1' in L.data
+        assert '169.a.169.1' not in L.data
 
     def test_igusa_search(self):
         L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_inv&geometric_invariants=[228%2C296%2C-98568%2C-5640280%2C50653]')
@@ -202,7 +205,11 @@ class Genus2Test(LmfdbTest):
         assert '324.a.648.1' in L.data
         assert '450.a.2700.1' in L.data
         assert not('169.a.169.1' in L.data)
-        
+        L = self.tc.get('/Genus2Curve/Q/?bad_primes=2%2C3')
+        assert '324.a.648.1' in L.data
+        assert '450.a.2700.1' in L.data
+        assert not('169.a.169.1' in L.data)
+                
 
     def test_related_objects(self):
         for url, friends in [

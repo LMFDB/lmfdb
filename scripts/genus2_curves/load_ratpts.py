@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import lmfdb
 import ast
 import pymongo
@@ -49,7 +49,7 @@ def load_ratpts_data(filename):
                 # 'mw_rank_v': bool(mwrank_v) }
         outrecs.append(rec)
     if db.ratpts.new.count() > 0:
-        print "overwriting existing ratpts.new"
+        print("overwriting existing ratpts.new")
         db.ratpts.new.drop()
     db.ratpts.new.insert_many(outrecs)
     assert db.ratpts.new.count() == len(outrecs)
@@ -66,11 +66,11 @@ def load_ratpts_data(filename):
         r = db.ratpts.find_one({'label':rec['label']})
         rec['num_rat_pts'] = r['num_rat_pts']
         return rec
-    print "Updating num_rat_pts in curves collection"
+    print("Updating num_rat_pts in curves collection")
     rewrite_collection(db, "curves","curves.new", ratpts_update)
-    print "renaming curves.new to curves"
+    print("renaming curves.new to curves")
     db.curves.old.drop()
     db.curves.rename("curves.old")
     db.curves.new.rename("curves")
     db.curves.create_index([('num_rat_pts',int(1))])
-    print "Done!"
+    print("Done!")

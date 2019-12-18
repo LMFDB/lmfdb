@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 import re
 
 from flask import render_template, url_for, request, redirect
@@ -243,7 +243,7 @@ def render_bmf_space_webpage(field_label, level_label):
              (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
              (level_label, '')]
     friends = []
-    properties2 = []
+    properties = []
 
     if not field_label_regex.match(field_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
@@ -297,10 +297,10 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
                 info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
                 info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] - 2*info['nnf2']
-                properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
+                properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
-    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties2=properties2, friends=friends, learnmore=learnmore_list())
+    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
@@ -310,7 +310,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     info = {}
     title = "Bianchi cusp forms"
     data = None
-    properties2 = []
+    properties = []
     friends = []
     bread = [('Modular Forms', url_for('modular_forms')), ('Bianchi Modular Forms', url_for(".index"))]
     try:
@@ -321,18 +321,18 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
                  (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=data.field_label)),
                  (data.level_label, url_for('.render_bmf_space_webpage', field_label=data.field_label, level_label=data.level_label)),
                  (data.short_label, '')]
-        properties2 = data.properties2
+        properties = data.properties
         friends = data.friends
     except ValueError:
         raise
         info['err'] = "No Bianchi modular form in the database has label {}".format(label)
-    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=properties2, friends=friends, info=info, learnmore=learnmore_list())
+    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties=properties, friends=friends, info=info, learnmore=learnmore_list())
 
 def bianchi_modular_form_by_label(lab):
     if lab == '':
         # do nothing: display the top page
         return redirect(url_for(".index"))
-    if isinstance(lab, basestring):
+    if isinstance(lab, string_types):
         res = db.bmf_forms.lookup(lab)
     else:
         res = lab

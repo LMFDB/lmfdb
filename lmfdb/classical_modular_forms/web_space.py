@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -156,6 +156,10 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     N, k, chi = map(int, spacelabel_conrey.split('.'))
     return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
+
+def trace_expansion_generic(space, prec_max=10):
+    prec = min(len(space.traces)+1, prec_max)
+    return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
 class DimGrid(object):
     def __init__(self, grid=None):
@@ -352,8 +356,7 @@ class WebNewformSpace(object):
         return ALdim_table(self.AL_dims, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
-        prec = min(len(self.traces)+1, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
+        return trace_expansion_generic(self, prec_max)
 
     def hecke_cutter_display(self):
         return ", ".join(r"\(%d\)" % p for p in self.hecke_cutter_primes)
@@ -510,14 +513,13 @@ class WebGamma1Space(object):
             link = self._link(space['level'], space['char_orbit_label'])
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
-            elif len(forms) == 0:
+            elif not forms:
                 ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
-                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
+                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], list(zip(forms[1:], dims[1:]))))
         return ans
 
     def trace_expansion(self, prec_max=10):
-        prec = min(len(self.traces)+1, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
+        return trace_expansion_generic(self, prec_max)

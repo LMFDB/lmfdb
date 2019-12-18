@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os, time
 try:
     # Make lmfdb available
@@ -49,7 +50,7 @@ if len(sys.argv) == 3:
     maxid = _min_id + (j+1)*chunk_size
     query = {'id':{'$gte': minid, '$lt': maxid}}
     total = db.mf_hecke_cc.count(query)
-    print "%d: %d rows to check" % (j, total)
+    print("%d: %d rows to check" % (j, total))
     if total > 0:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
             while counter < total:
@@ -63,16 +64,16 @@ if len(sys.argv) == 3:
                         F.flush()
                     if total > 100:
                         if counter % (total/100) == 0:
-                            print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
+                            print("%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter))
                 assert rec['id'] > minid
                 minid = rec['id']
                 query = {'id':{'$gt': minid, '$lt': maxid}}
-        print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
+        print("%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter))
     else:
-        print "%d: DONE -- avg oo s" % j
+        print("%d: DONE -- avg oo s" % j)
 
 
 else:
-    print r"""Usage:
+    print(r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0])

@@ -3,7 +3,7 @@
 
 Author: Samuele Anni
 """
-
+from __future__ import print_function
 import os
 
 from pymongo.mongo_client import MongoClient
@@ -35,18 +35,18 @@ def check_orbit_data(orbit_label, ll, fix=False):
     query['orbit_label'] = str(orbit_label)
 
     if hecke_orb.find(query).count()>1:
-        print "Check the orbit %s: multiple label assigned" %orbit_label
+        print("Check the orbit %s: multiple label assigned" %orbit_label)
     else:
         orb = hecke_orb.find_one(query)
         print("Hecke orbit with label %s" % (orbit_label))
         if orb is None:
-            print "No orbit"
+            print("No orbit")
             return None
-        print "Checking whether the data is stored..." 
+        print("Checking whether the data is stored..." )
         if 'Zbasis' not in orb.keys():
             print("NOT stored")
             if fix:
-                d=do_import(ll);
+                d = do_import(ll)
                 hecke_orb.update({"_id": orb["_id"]}, {"$set":{'Zbasis':d['Zbasis'],'discriminant':d['discriminant'],'disc_fac':d['disc_fac'],'Qbasis':d['Qbasis'],'Qalg_gen':d['Qalg_gen']}}, upsert=True)
                 print("Fixed orbit label %s" % (orbit_label))
         else:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
+from __future__ import print_function
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
@@ -180,7 +181,8 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
         # This should be fixed in the data
-        return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
+        return [{k: (v if k == 'id' else [normalize_define(t) for t in v])
+                 for k, v in zip(['id', 'defines'], res)} for res in cur]
 
     #FIXME shouldn't I be allowed to search on id? or something?
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
@@ -526,10 +528,10 @@ class KnowlBackend(PostgresBase):
         if execute:
             for kid in bad_names:
                 new_kid = kid.replace('-', '_')
-                print "Renaming %s -> %s" % (kid, new_kid)
+                print("Renaming %s -> %s" % (kid, new_kid))
                 self.rename(kid, new_kid)
         else:
-            print bad_names
+            print(bad_names)
 
     def broken_links_knowls(self):
         """

@@ -14,6 +14,8 @@ Evolved during 2012-2018
 
 Postgres table ec_curves has these columns (updated 2019-08-05):
 """
+from __future__ import print_function
+from six import text_type
 
 qcurves_col_type = {
     u'2adic_gens': 'jsonb',
@@ -151,8 +153,9 @@ import re, os
 import time
 from sage.all import ZZ, RR, EllipticCurve, prod, Set, magma, prime_range, GF, pari
 from lmfdb.utils import web_latex
+from lmfdb.elliptic_curves.web_ec import count_integral_points
 from lmfdb import db
-print "setting curves"
+print("setting curves")
 curves = db.ec_curves
 
 def parse_tgens(s):
@@ -191,7 +194,6 @@ def split(line):
 
 lmfdb_label_to_label = {}
 label_to_lmfdb_label = {}
-    
 
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
@@ -277,7 +279,7 @@ def allgens(line):
     torsion = int(prod([int(ti) for ti in tor_struct], 1))
     ainvs = parse_ainvs(data[3])
     E = EllipticCurve(ainvs)
-    jinv = unicode(str(E.j_invariant()))
+    jinv = text_type(E.j_invariant())
     if E.has_cm():
         cm = int(E.cm_discriminant())
     else:
@@ -285,7 +287,7 @@ def allgens(line):
     N = E.conductor()
     bad_p = N.prime_factors() # will be sorted
     num_bad_p = len(bad_p)
-    
+
     local_data = [{'p': int(ld.prime().gen()),
                            'ord_cond':int(ld.conductor_valuation()),
                            'ord_disc':int(ld.discriminant_valuation()),
@@ -310,14 +312,14 @@ def allgens(line):
         minq_ainvs = Etw.ainvs()
         r = curves.lucky({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs}, projection=['label','lmfdb_label'])
         min_quad_twist = {'label': r['label'], 'lmfdb_label':r['lmfdb_label'], 'disc':int(Dtw)}
-    
-    #print("computing hash")    
+
+    #print("computing hash")
     #trace_hash = ZZ(magma.TraceHash(E))
     #trace_hash = ZZ(magma.eval("TraceHash(EllipticCurve({}));".format(data[3])))
     trace_hash = TraceHashClass(iso, E)
     #trace_hash = ZZ(0)
-    #print("done")    
-        
+    #print("done")
+
     return label,  {
         'conductor': int(data[0]),
         'iso': iso,
@@ -570,7 +572,7 @@ def allisog(line, lmfdb_order=True):
     data = split(line)
     isomat = data[5]
     isomat = [[int(d) for d in row.split(",")] for row in isomat[2:-2].split("],[")]
-    
+
     # This dict stores the degrees of (cyclic) isogenies from each
     # curve.  We must compute this *before* the optional (but default)
     # reordering of the rows/cols.  The value for key n (=1,2,3,...)
@@ -642,29 +644,45 @@ def fix_isogeny_degrees(C):
     #print("changing isogeny_degrees for {} ({}) from {} to {}".format(C['label'],C['lmfdb_label'],old_isodegs,new_isodegs))
     C['isogeny_degrees'] = new_isodegs
     return C
-    
+
 
 def cmp_label(lab1, lab2):
+    """
+    EXAMPLES::
+
+    cmp_label('24a5', '33a1')
+    -1
+    cmp_label('11a1', '11a1')
+    0
+    """
     from sage.databases.cremona import parse_cremona_label, class_to_int
-#    print lab1,lab2
     a, b, c = parse_cremona_label(lab1)
     id1 = int(a), class_to_int(b), int(c)
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
+    if id1 == id2:
+        return 0
+    return -1 if id1 < id2 else 1
 
 
-def comp_dict_by_label(d1, d2):
-    return cmp_label(d1['label'], d2['label'])
+def sorting_label(d1):
+    """
+    Provide a sorting key.
+    """
+    from sage.databases.cremona import parse_cremona_label, class_to_int
+    a, b, c = parse_cremona_label(d1["label"])
+    return (int(a), class_to_int(b), int(c))
+
 
 def encode(x):
     if x is None:
-        return '\N'
+        return '\\N'
     if x is True:
         return 't'
     if x is False:
         return 'f'
     return str(x)
+
 
 def copy_records_to_file(records, fname, id0=0, verbose=True):
     searchfile = fname+'.search'
@@ -673,7 +691,7 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
         print("Writing records to {} and {}".format(searchfile, extrafile))
 
     # NB since records might be a generator object we only pass through it once.
-    
+
     fs = open(searchfile, 'w')
     fe = open(extrafile, 'w')
     curves._write_header_lines(fs, ["id"]+curves.search_cols)
@@ -690,7 +708,7 @@ def copy_records_to_file(records, fname, id0=0, verbose=True):
     fe.close()
     if verbose:
         print("Wrote {} lines to {} and {}".format(id-id0, searchfile, extrafile))
-    
+
 #
 
 
@@ -770,7 +788,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             continue
         t0=time.time()
         h = open(os.path.join(base_path, f))
-        print "opened %s" % os.path.join(base_path, f)
+        print("opened %s" % os.path.join(base_path, f))
 
         parse=parsing_dict[f]
         count = 0
@@ -791,7 +809,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
         print("finished reading {} lines from file in {}".format(count, time.time()-t0))
 
     vals = data_to_insert.values()
-    # vals.sort(cmp=comp_dict_by_label)
+    # vals.sort(key=sorting_label)
 
     if allisog_filename in file_list:
         isogmats = read1isogmats(base_path, min_N, max_N)
@@ -822,7 +840,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
     else:
         print("Some records have missing keys, no uploading")
         return
-    
+
     if insert:
         if mode=='test':
             print("(not) inserting all data")
@@ -841,7 +859,7 @@ def upload_to_db(base_path, min_N, max_N, insert=True, mode='test'):
             curves.upsert({'label': val['label']}, val)
             count += 1
             if count % 5000 == 0:
-                print "inserted %s" % (val['label'])
+                print("inserted %s" % (val['label']))
 
 def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     r""" Returns a dictionary whose keys are Cremona labels of individual
@@ -940,7 +958,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
     'x-coordinates_of_integral_points' --> 'xcoord_integral_points'
 
     """
-    str_type = type(unicode('abc'))
+    str_type = text_type
     int_type = type(int(1))
     bigint_type = type(ZZ(1))
     list_type = type([1,2,3])
@@ -1029,7 +1047,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
 
     tor_gro_keys = ['tor_gro', 'tor_degs', 'tor_fields']
     tor_gro_bound = 400000
-    
+
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
@@ -1122,7 +1140,7 @@ def update_stats(recount=True, verbose=True):
         ncu = ec_count({'sha':s**2})
         if verbose and ncu:
             print("{} curves have Sha order {}^2".format(ncu,s))
-    
+
 def update_torsion_growth_stats(verbose=True):
     # torsion growth:
     if verbose:
@@ -1135,7 +1153,7 @@ def update_torsion_growth_stats(verbose=True):
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
 
 def update_int_pts(filename, test=True, verbose=0, basepath=None):
-    if basepath==None:
+    if basepath is None:
         basepath = os.environ['HOME']
     int_pts_data = {}
     for L in open(os.path.join(basepath,filename)):
@@ -1248,14 +1266,14 @@ def fix_quad_twist(c):
             ct = curves.lucky({'ainvs':ainvs}, projection=['label', 'lmfdb_label'])
         else:
             ct = curves.lucky({'lmfdb_label':mqt['lmfdb_label']}, projection=['label', 'lmfdb_label'])
-        if ct==None:
+        if ct is None:
             print("failed to find curve (twist of {})".format(c['label']))
         else:
             mqt['label'] = ct['label']
             if mqt['lmfdb_label'] == '':
                 mqt['lmfdb_label'] = ct['lmfdb_label']
-    return c    
-        
+    return c
+
 
 # Rewrite function to add optimality and manin constant data.
 #
@@ -1296,8 +1314,11 @@ def add_opt_man(c):
         c.update(opt_man_data[lab])
     else:
         print("No new optimality/Manin data for curve {}".format(lab))
-    c['num_int_pts'] = len(c['xcoord_integral_points'])
     return c
+
+def update_num_int_pts(rec):
+    rec['num_int_pts'] = count_integral_points(rec)
+    return rec
 
 # Sage translation of the Magma function TraceHash(), just for elliptic curves /Q
 

@@ -2,7 +2,7 @@
 """
 This script is used to run verification jobs in parallel.  For more options (such as verifying only a single check or a single object) see the verify method of PosgresTable in lmfdb/backend/database.py.
 """
-
+from __future__ import print_function
 import argparse, os, subprocess, sys, tempfile, textwrap
 
 try:
@@ -83,8 +83,7 @@ if __name__ == '__main__':
                 cmd = ['parallel'] + parallel_args
                 cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
                 cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
-                print "Running: {0}".format(subprocess.list2cmdline(cmd))
+                print("Running: {0}".format(subprocess.list2cmdline(cmd)))
                 exitcode = subprocess.call(cmd)
-
 
         sys.exit(exitcode)

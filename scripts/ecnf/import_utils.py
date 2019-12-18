@@ -3,6 +3,7 @@ All the funtions needed in `import_ecnf_data.py` that don't need acces to the ec
 """
 # Label of an ideal I in a quadratic field: string formed from the
 # Norm and HNF of the ideal
+from __future__ import print_function
 import re
 from sage.all import cm_j_invariants_and_orders, ZZ, QQ
 from lmfdb.ecnf.WebEllipticCurve import ideal_HNF
@@ -129,7 +130,7 @@ def isoclass(line):
     # Parse the line and form the full label:
     data = split(line)
     if len(data) < 5:
-        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
+        print("isoclass line %s does not have 5 fields (excluding gens), skipping" % line)
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string

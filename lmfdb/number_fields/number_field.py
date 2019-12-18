@@ -2,15 +2,14 @@
 
 import ast, os, re, StringIO, time
 
-import flask
-from flask import render_template, request, url_for, redirect, send_file, make_response
+from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
-    web_latex_split_on_pm, flash_error,
+    flash_error,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -47,14 +46,17 @@ def init_nf_count():
         max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
+
 def group_cclasses_data(n, t):
-    return flask.Markup(group_cclasses_knowl_guts(n, t))
+    return Markup(group_cclasses_knowl_guts(n, t))
+
 
 def group_character_table_data(n, t):
-    return flask.Markup(group_character_table_knowl_guts(n, t))
+    return Markup(group_character_table_knowl_guts(n, t))
+
 
 def number_field_data(label):
-    return flask.Markup(nf_knowl_guts(label))
+    return Markup(nf_knowl_guts(label))
 
 #def na_text():
 #    return "Not computed"
@@ -101,11 +103,6 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
-
-@app.route("/NF")
-@app.route("/NF/")
-def NF_redirect():
-    return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
 @nf_page.route("/Source")
 def source():
@@ -316,15 +313,15 @@ def number_field_render_webpage():
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
-    if len(args) == 0:
+    if not args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000]
         discriminant_list = ["%s..%s" % (start, end - 1) for start, end in zip(
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-            'degree_list': range(1, max_deg + 1),
+            'degree_list': list(range(1, max_deg + 1)),
             'signature_list': sig_list,
-            'class_number_list': range(1, 6) + ['6..10'],
+            'class_number_list': list(range(1, 6)) + ['6..10'],
             'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,
@@ -480,7 +477,7 @@ def render_field_webpage(args):
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex_split_on_pm(nf.poly()),
+        'polynomial': web_latex(nf.poly()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
@@ -563,7 +560,7 @@ def render_field_webpage(args):
     label_orig = label
     if len(label)>25:
         label = label[:16]+'...'+label[-6:]
-    properties2 = [('Label', label),
+    properties = [('Label', label),
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
@@ -571,7 +568,7 @@ def render_field_webpage(args):
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_pretty_and_nTj(data['degree'], t))
+                   ('Galois group', group_pretty_and_nTj(data['degree'], t))
                    ]
     downloads = [('Stored data to gp', url_for('.nf_download', nf=label_orig, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
@@ -594,7 +591,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
+    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))
@@ -721,7 +718,7 @@ def number_field_jump(info):
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
-             split_ors=['galois_group'],
+             split_ors=['galt'],
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list)
@@ -785,7 +782,7 @@ def see_frobs(frob_data):
             s = '$'
             firstone = True
             for j in dec:
-                if firstone == False:
+                if not firstone:
                     s += '{,}\,'
                 if j[0]<15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 

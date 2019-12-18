@@ -132,7 +132,7 @@ class WebBMF(object):
             self.Lratio = QQ(self.Lratio)
             self.anrank = "\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else "\(\ge2\), even"
 
-        self.properties2 = [('Base field', pretty_field),
+        self.properties = [('Base field', pretty_field),
                             ('Weight', str(self.weight)),
                             ('Level norm', str(self.level_norm)),
                             ('Level', self.level_ideal2),
@@ -150,7 +150,7 @@ class WebBMF(object):
                     self.CM = 4*self.CM
         except AttributeError:
             self.CM = 'not determined'
-        self.properties2.append(('CM', str(self.CM)))
+        self.properties.append(('CM', str(self.CM)))
 
         self.bc_extra = ''
         self.bcd = 0
@@ -173,7 +173,7 @@ class WebBMF(object):
             self.bcd = -self.bc
             self.bc = 'no'
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
-        self.properties2.append(('Base-change', str(self.bc)))
+        self.properties.append(('Base-change', str(self.bc)))
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
@@ -191,8 +191,8 @@ class WebBMF(object):
             else:
                 self.ec_status = 'missing'
 
-        self.properties2.append(('Sign', self.sign))
-        self.properties2.append(('Analytic rank', self.anrank))
+        self.properties.append(('Sign', self.sign))
+        self.properties.append(('Analytic rank', self.anrank))
 
         self.friends = []
         self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]

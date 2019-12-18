@@ -1,5 +1,5 @@
 # Different helper functions.
-
+from six import string_types
 import math, re
 
 from flask import url_for
@@ -87,7 +87,7 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
     try:
-        if isinstance(coeff,str) or isinstance(coeff,unicode):
+        if isinstance(coeff, string_types):
             if coeff == "I":
                 rp = 0
                 ip = 1
@@ -383,8 +383,7 @@ def lfuncEPhtml(L, fmt):
     # Figuring out good and bad primes
     bad_primes = [p for p, _ in L.bad_lfactors]
     good_primes = [p for p in prime_range(100) if p not in bad_primes]
-    p_index = dict(zip(prime_range(100), range(len(prime_range(100)))))
-
+    p_index = {p: i for i, p in enumerate(prime_range(100))}
 
     #decide if we display galois
     display_galois = True
@@ -712,7 +711,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     else:
         lfunction_value_tex_analytic = ''
 
-    if isinstance(val, basestring):
+    if isinstance(val, string_types):
         Lval = val
     else:
         ccval = CDF(val)

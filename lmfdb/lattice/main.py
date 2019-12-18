@@ -63,11 +63,11 @@ def learnmore_list_remove(matchstring):
 @lattice_page.route("/")
 def lattice_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         maxs=lattice_summary_data()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        dim_list = list(range(1, 11, 1))
+        max_class_number = 20
+        class_number_list = list(range(1, max_class_number + 1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
@@ -298,7 +298,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):

@@ -437,8 +437,8 @@ function cleanSubmit(id)
         if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   for(i = 0; item = allSelects[i]; i++) {
@@ -446,8 +446,8 @@ function cleanSubmit(id)
       if (!item.value) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   if (!n) {
@@ -544,6 +544,38 @@ function debounce(func, wait, immediate){
 	return debounced;
 };
 
+/* Showing advanced search boxes */
+
+
+$(document).ready(function () {
+  $('#advancedtoggle').click(
+    function (evt) {
+      evt.preventDefault();
+      var advanced = $('.advanced');
+      if( advanced.is(":visible") )
+      {
+        advanced.hide();
+        $('#advancedtoggle').text('Advanced search options');
+      } else {
+        advanced.show();
+        $('#advancedtoggle').text('Hide advanced search options');
+      }
+      return false;
+    });
+});
+
+function show_advancedQ () {
+  var values = $('select.advanced, input.advanced');
+  for(var i = 0; i < values.length; i++) {
+    if( values[i].value != "" ) {
+      $('.advanced').show();
+      $('#advancedtoggle').text('Hide advanced search options');
+      break;
+    }
+  }
+};
+
+
 /* Contracting and expanding statistics displays */
 
 function show_stats_rows(hsh, to_show) {
@@ -557,8 +589,6 @@ function show_stats_rows(hsh, to_show) {
 
 /* Show/hide sidebar */
 $(document).ready(function () {
-  console.log("ready");
-  console.log(document.cookie);
   $('#menutoggle').click(
     function (evt) {
       evt.preventDefault();
@@ -570,13 +600,11 @@ $(document).ready(function () {
         sidebar.hide();
         document.cookie = 'showmenu=False;path=/';
         $('#menutoggle').text('Show Menu');
-        console.log(document.cookie);
       } else {
         main.css( { "margin-left" : "200px", "transition": "margin 0.2s"} );
         sidebar.show("fast");
         document.cookie = 'showmenu=True;path=/';
         $('#menutoggle').text('Hide Menu');
-        console.log(document.cookie);
       }
       return false;
     });
