@@ -35,6 +35,7 @@ hgcwa_group = re.compile(r'\[(\d+),(\d+)\]')
 def label_is_one_family(lab):
     return family_label_regex.match(lab)
 
+
 def label_is_one_passport(lab):
     return passport_label_regex.match(lab)
 
@@ -478,26 +479,26 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
 
         for g in range(min_genus,max_genus+1):
             if '(' in arg:
-        	b = int(GENUS_RE.match(arg).groups()[6])
-        	if '+' in arg: #a(g+b)
-        	    group_order = int(a)*(g+b)
-        	elif '-' in arg: #a(g-b)
-        	    group_order = int(a)*(g-b)
+                b = int(GENUS_RE.match(arg).groups()[6])
+                if '+' in arg: #a(g+b)
+                    group_order = int(a)*(g+b)
+                elif '-' in arg: #a(g-b)
+                    group_order = int(a)*(g-b)
             else:
-        	if '+' in arg: 
-        	    b = int(GENUS_RE.match(arg).groups()[4])
-        	    if a == '': #g+b
-        		group_order = g+b
-        	    else: #ag+b
-        		group_order = int(a)*g+b
-        	elif '-' in arg: 
-        	    b = int(GENUS_RE.match(arg).groups()[4])
-        	    if a == '': #g-b
-        		group_order = g-b
-        	    else: #ag-b
-        		group_order = int(a)*g-b
-        	else: #ag
-        	    group_order = int(a)*g
+                if '+' in arg: 
+                    b = int(GENUS_RE.match(arg).groups()[4])
+                    if a == '': #g+b
+                        group_order = g+b
+                    else: #ag+b
+                        group_order = int(a)*g+b
+                elif '-' in arg: 
+                    b = int(GENUS_RE.match(arg).groups()[4])
+                    if a == '': #g-b
+                        group_order = g-b
+                    else: #ag-b
+                        group_order = int(a)*g-b
+                else: #ag
+                    group_order = int(a)*g
 
             queries.append((group_order, g))
 
@@ -521,9 +522,9 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_group_order(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
-	collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
+        collapse_ors(parse_range2_extend(inp, qfield, parse_singleton), query)
     else:
-	raise ValueError("It needs to be an integer (such as 25), \
+        raise ValueError("It needs to be an integer (such as 25), \
                     a range of integers (such as 2-10 or 2..10), \
                     a linear function of variable g for genus (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
