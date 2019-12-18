@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ast import literal_eval
 import re
-import time
 
-from flask import render_template, url_for, request, redirect, send_file, abort
+from flask import render_template, url_for, request, redirect, abort
 from sage.misc.cachefunc import cached_function
 from sage.all import QQ, PolynomialRing, NumberField, sage_eval
 
