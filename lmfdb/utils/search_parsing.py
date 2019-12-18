@@ -479,7 +479,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
-            example = "[2,3] or [3,3]"
+            example = "[6,2] or [32,32]"
         elif exactlength == 1:
             lstr = "list of 1 integer"
             example = "[2]"
