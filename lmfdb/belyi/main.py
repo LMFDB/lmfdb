@@ -21,8 +21,8 @@ from lmfdb.utils import (
     Downloader,
     StatsDisplay,
 )
-from .belyi import belyi_page
-from .belyi.web_belyi import (
+from . import belyi_page
+from .web_belyi import (
     WebBelyiGalmap,
     WebBelyiPassport,
 )
@@ -502,91 +502,6 @@ class Belyi_download(Downloader):
 @belyi_page.route("/download_galmap_to_magma/<label>")
 def belyi_galmap_code_download(label):
     return Belyi_download().download_galmap_magma(label)
-
-
-## no longer used and should be fixed
-#def download_search(info):
-#    download_comment_prefix = {"magma": "//", "sage": "#", "gp": "\\\\", "text": "#"}
-#    download_assignment_defn = {"magma": ":=", "sage": " = ", "gp": " = ", "text": "="}
-#    delim_start = {"magma": "[*", "sage": "[", "gp": "[", "text": " ["}
-#    delim_end = {"magma": "*]", "sage": "]", "gp": "]", "text": " ]"}
-#    start_and_end = {
-#        "magma": ["[*", "*];"],
-#        "sage": ["[", "];"],
-#        "gp": ["{[", "]}"],
-#        "text": ["[", "];"],
-#    }
-#    file_suffix = {"magma": ".m", "sage": ".sage", "gp": ".gp", "text": ".txt"}
-#    lang = info.get("Submit", "text").strip()
-#    filename = "belyi_maps" + file_suffix[lang]
-#    mydate = time.strftime("%d %B %Y")
-#    start = delim_start[lang]
-#    end = delim_end[lang]
-#    # reissue query here
-#    try:
-#        res = db.belyi_galmaps.search(
-#            literal_eval(info.get("query", "{}")), projection=["label", "triples"]
-#        )
-#    except Exception as err:
-#        return "Unable to parse query: %s" % err
-#    # list of labels and triples
-#
-#    def coerce_triples(triples):
-#        deg = len(triples[0][0])
-#        if lang == "sage":
-#            return (
-#                "["
-#                + ",\n".join(
-#                    ["map(SymmetricGroup(%d), %s)" % (deg, s) for s in triples]
-#                )
-#                + "]"
-#            )
-#        elif lang == "magma":
-#            return (
-#                "["
-#                + ",\n".join(
-#                    [
-#                        "[" + ",\n".join(["Sym(%d) ! %s" % (deg, t) for t in s]) + "]"
-#                        for s in triples
-#                    ]
-#                )
-#                + "]"
-#            )
-#
-#            return "[" + ",\n".join(["Sym(%d) ! %s" % (deg, s) for s in triples]) + "]"
-#        else:
-#            return str(triples)
-#
-#    res_list = [
-#        start
-#        + str(r["label"]).__repr__().replace("'", '"')
-#        + ", "
-#        + coerce_triples(r["triples"])
-#        + end
-#        for r in res
-#    ]
-#    c = download_comment_prefix[lang]
-#    s = "\n"
-#    s += c + " Belyi maps downloaded from the LMFDB, downloaded on %s.\n" % mydate
-#    s += c + ' Query "%s" returned %d maps.\n\n' % (
-#        str(info.get("query")),
-#        len(res_list),
-#    )
-#    s += c + " Below is a list called data. Each entry has the form:\n"
-#    s += c + "   [label, permutation_triples]\n"
-#    s += c + " where the permutation triples are in one line notation\n"
-#    s += c + "\n"
-#    s += "\n"
-#    s += "data " + download_assignment_defn[lang] + start_and_end[lang][0] + "\\\n"
-#    s += str(",\n".join(res_list))
-#    s += start_and_end[lang][1]
-#    s += "\n\n"
-#    strIO = StringIO.StringIO()
-#    strIO.write(s)
-#    strIO.seek(0)
-#    return send_file(
-#        strIO, attachment_filename=filename, as_attachment=True, add_etags=False
-#    )
 
 
 @search_wrap(
