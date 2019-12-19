@@ -13,6 +13,8 @@ It's purpose is to parse a config file (create a default one if none
 is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
+from six.moves.configparser import ConfigParser
+
 import argparse
 import sys
 import os
@@ -200,8 +202,6 @@ class Configuration(object):
             if sec not in self.default_args:
                 self.default_args[sec] = {}
             self.default_args[sec][opt] = str(val)
-
-        from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
         # 2/1: does config file exist?
