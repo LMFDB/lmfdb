@@ -20,7 +20,7 @@ from copy import copy
 from functools import wraps
 from itertools import islice
 from types import GeneratorType
-from urllib import urlencode
+from six.moves.urllib_parse import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -35,6 +35,7 @@ from sage.all import floor, latex, prime_range, valuation
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
+
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
@@ -1178,7 +1179,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     from StringIO import StringIO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
-    from urllib import quote
+    from six.moves.urllib_parse import quote
 
     virtual_file = StringIO()
     fig = P.matplotlib(axes_pad=axes_pad)
