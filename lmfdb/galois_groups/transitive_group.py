@@ -1,11 +1,11 @@
 import re
-import string
 
 from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
+
 
 @cached_function
 def small_group_display_knowl(n, k, name=None):
