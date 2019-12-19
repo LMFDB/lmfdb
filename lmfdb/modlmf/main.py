@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+from six import StringIO
+import time
 
 from flask import render_template, request, url_for, make_response, redirect, send_file
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
@@ -119,7 +122,7 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

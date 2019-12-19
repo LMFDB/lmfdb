@@ -1,7 +1,7 @@
 
 from os import path
 import hashlib
-from urlparse import urlparse
+from six.moves.urllib_parse import urlparse
 from logging import getLogger
 from lmfdb_inventory import LOG_ID as LOG_ID
 from lmfdb_inventory import coll_status as coll_status
@@ -23,9 +23,9 @@ def get_description_key(filename):
 def get_description_key_parts(name):
     """Gets the db and collection parts of a key"""
 
-    parts=name.split('.')
+    parts = name.split('.')
     if len(parts) < 2:
-        if len(parts) > 0:
+        if parts:
             return [parts[0], parts[0]]
         else:
             return ['', '']

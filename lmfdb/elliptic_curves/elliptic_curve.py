@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-import ast, os, re, StringIO, tempfile, time
+import ast
+import os
+import re
+from six import StringIO
+import tempfile
+import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
 from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
@@ -49,7 +54,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 #########################
 #  Search/navigate
@@ -220,7 +226,7 @@ def download_search(info):
     res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,

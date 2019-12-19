@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-D
 
-import ast, os, re, StringIO, time
+import ast
+import os
+import re
+from six import StringIO
+import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
@@ -683,7 +687,7 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,
