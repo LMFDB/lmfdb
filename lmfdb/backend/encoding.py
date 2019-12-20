@@ -66,7 +66,8 @@ def numeric_converter(value, cur=None):
 
     OUTPUT:
 
-    - either a sage integer (if there is no decimal point) or a real number whose precision depends on the number of digits in value.
+    - either a sage integer (if there is no decimal point) or
+      a real number whose precision depends on the number of digits in value.
     """
     if value is None:
         return None
@@ -74,7 +75,11 @@ def numeric_converter(value, cur=None):
         # The following is a good guess for the bit-precision,
         # but we use LmfdbRealLiterals to ensure that our number
         # prints the same as we got it.
-        prec = ceil(len(value)*3.322)
+
+        # drop the dot and zeros on the left
+        number_of_significant_digits = len(value.replace('.', '').lstrip('0'))
+        # log(10)/log(2) = 3.32192809488736
+        prec = ceil(number_of_significant_digits * 3.32192809488736)
         return LmfdbRealLiteral(RealField(prec), value)
     else:
         return Integer(value)
