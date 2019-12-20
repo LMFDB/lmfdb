@@ -15,6 +15,7 @@ Evolved during 2012-2018
 Postgres table ec_curves has these columns (updated 2019-08-05):
 """
 from __future__ import print_function
+from six import text_type
 
 qcurves_col_type = {
     u'2adic_gens': 'jsonb',
@@ -278,7 +279,7 @@ def allgens(line):
     torsion = int(prod([int(ti) for ti in tor_struct], 1))
     ainvs = parse_ainvs(data[3])
     E = EllipticCurve(ainvs)
-    jinv = unicode(str(E.j_invariant()))
+    jinv = text_type(E.j_invariant())
     if E.has_cm():
         cm = int(E.cm_discriminant())
     else:
@@ -957,7 +958,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
     'x-coordinates_of_integral_points' --> 'xcoord_integral_points'
 
     """
-    str_type = type(unicode('abc'))
+    str_type = text_type
     int_type = type(int(1))
     bigint_type = type(ZZ(1))
     list_type = type([1,2,3])
@@ -1015,7 +1016,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
                       'tor_fields': list_type,
                       'tor_gro': dict_type,
                       'tor_degs': list_type,
-                      'trace_hash': type(long()),
+                      'trace_hash': type(ZZ(2**65).__int__()),
                       'num_int_pts': int_type,
                       'num_bad_primes': int_type,
                       'semistable': bool_type,

@@ -140,9 +140,13 @@ def learnmore_list():
             ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
-# Return the learnmore list with the matchstring entry removed
+
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    """
+    Return the learnmore list with the matchstring entry removed.
+    """
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 ###############################################################################
 # Pages
@@ -150,7 +154,7 @@ def learnmore_list_remove(matchstring):
 
 @st_page.route('/')
 def index():
-    if len(request.args) != 0:
+    if request.args:
         return search(**request.args)
     weight_list= [0, 1]
     degree_list = list(range(1, 5, 1))

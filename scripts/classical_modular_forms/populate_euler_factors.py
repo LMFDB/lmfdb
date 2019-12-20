@@ -77,7 +77,7 @@ def fix_euler(idnumber, an_list_bound = 11):
             # it is a bad euler factor
             for j, (pj, badl) in enumerate(bad_lfactors):
                 if pj == p:
-                    break;
+                    break
             if None in badl:
                 bad_lfactors[j][1] = new_lpoly
             else:

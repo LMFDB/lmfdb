@@ -81,7 +81,7 @@ def IsSolubleAt(F,p):
         if p > 2:
             # Then a6 must be a square mod p, hence a square in Qp, contradiction
             # So x and y must be in Zp
-            return HasFinitePointAt(F,p,1);
+            return HasFinitePointAt(F, p, 1)
         else:
             # x'6 = y'² = 1 mod 8, so if A >= 3, then a6 = 1 mod 8, contradiction. So A <= 2, renormalise.
             t = F.variables()[0]

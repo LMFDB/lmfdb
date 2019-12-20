@@ -30,7 +30,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def list2string(li):
     return ','.join([str(x) for x in li])
@@ -113,9 +114,9 @@ def ab2gammas(A,B):
         incdict(ab[0], x)
     for x in B:
         incdict(ab[1], x)
-    gamma = [[],[]]
-    while ab[0] != {} or ab[1] != {}:
-        m = max(ab[0].keys() + ab[1].keys())
+    gamma = [[], []]
+    while ab[0] or ab[1]:
+        m = max(list(ab[0]) + list(ab[1]))
         wh = 0 if m in ab[0] else 1
         gamma[wh].append(m)
         subdict(ab[wh],m)

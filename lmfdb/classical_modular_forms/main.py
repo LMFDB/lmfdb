@@ -43,7 +43,7 @@ def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 @cached_function
@@ -262,7 +262,7 @@ def parse_n(info, newform, primes_only):
     try:
         info['CC_n'] = integer_options(nrange, newform.an_cc_bound)
     except (ValueError, TypeError) as err:
-        info['CC_n'] = range(2,maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
@@ -280,7 +280,7 @@ def parse_n(info, newform, primes_only):
             info['CC_n'] = [n for n in prime_range(maxp+1) if newform.level % n != 0]
     elif len(info['CC_n']) == 0:
         errs.append("No n in specified range; resetting to default")
-        info['CC_n'] = range(2, maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
     return errs
 
 def parse_m(info, newform):
@@ -299,7 +299,7 @@ def parse_m(info, newform):
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
-        info['CC_m'] = range(1, maxm+1)
+        info['CC_m'] = list(range(1, maxm + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
@@ -870,7 +870,7 @@ def set_rows_cols(info, query):
         primes = info.get('level_primes','').strip()
         if primes:
             try:
-                rad = prod(map(ZZ, primes.split(',')))
+                rad = prod(ZZ(p) for p in primes.split(','))
                 if info['prime_quantifier'] == 'subsets':
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] == 'append':

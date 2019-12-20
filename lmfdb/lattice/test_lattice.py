@@ -9,9 +9,9 @@ class HomePageTest(LmfdbTest):
         assert text in self.tc.get(path).data
 
     def check_external(self, homepage, path, text):
-        import urllib2
+        from six.moves.urllib.request import urlopen
         assert path in homepage
-        assert text in urllib2.urlopen(path).read()
+        assert text in urlopen(path).read()
 
     # The Lattice page
     def test_lattice(self):

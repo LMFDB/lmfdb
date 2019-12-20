@@ -80,7 +80,7 @@ function calculateAlignWidthOld(i)
 
 $.fn.dataTableExt.afnFiltering.push(
     function( oSettings, aData, iDataIndex ) {
-        var wtElt=document.getElementById('weight')
+        var wtElt=document.getElementById('weight');
         var iWt;
         var thisWt;
         //alert("hrjj");

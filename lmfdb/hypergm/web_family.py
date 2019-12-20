@@ -78,10 +78,10 @@ class WebHyperGeometricFamily(object):
             a[x] += 1
         for x in self.B:
             b[x] += 1
-        gamma = [[],[]]
+        gamma = [[], []]
         ab = [a, b]
         while a or b:
-            m = max(a.keys() + b.keys())
+            m = max(list(a) + list(b))
             wh = 0 if m in a else 1
             gamma[wh].append(m)
             subdict(ab[wh], m)

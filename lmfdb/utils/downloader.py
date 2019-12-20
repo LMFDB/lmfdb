@@ -1,9 +1,12 @@
 from six import string_types
+
 import time
+
 from flask import abort, send_file, stream_with_context, Response
+
 from werkzeug.datastructures import Headers
 from ast import literal_eval
-import StringIO
+from six import StringIO
 
 
 class Downloader(object):
@@ -137,8 +140,8 @@ class Downloader(object):
         s =  '\n'
         s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
         s += result
-        strIO = StringIO.StringIO()
-        strIO.write(str(s))
+        strIO = StringIO()
+        strIO.write(s)
         strIO.seek(0)
         return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 

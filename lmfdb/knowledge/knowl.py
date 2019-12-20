@@ -63,8 +63,8 @@ def make_keywords(content, kid, title):
     kws += hashtag_keywords.findall(content)
     kws = [k.lower() for k in kws]
     kws = set(kws)
-    kws = filter(lambda _: _ not in common_words, kws)
-    return kws
+    return [w for w in kws if w not in common_words]
+
 
 def extract_cat(kid):
     if not hasattr(kid, 'split'):
@@ -181,7 +181,8 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
         # This should be fixed in the data
-        return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
+        return [{k: (v if k == 'id' else [normalize_define(t) for t in v])
+                 for k, v in zip(['id', 'defines'], res)} for res in cur]
 
     #FIXME shouldn't I be allowed to search on id? or something?
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
@@ -211,7 +212,7 @@ class KnowlBackend(PostgresBase):
                 restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
                 values.extend([keywords, keywords, keywords])
             else:
-                keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
+                keywords = [w for w in keywords.split(" ") if len(w) >= 3]
                 if keywords:
                     restrictions.append(SQL("_keywords @> %s"))
                     values.append(keywords)

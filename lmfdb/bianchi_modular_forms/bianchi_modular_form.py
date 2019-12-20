@@ -28,10 +28,12 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def bc_info(bc):
-    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
+    return 'yes' if bc > 0 else 'yes (twist)' if bc < 0 else 'no'
+
 
 def cm_info(cm):
     try:

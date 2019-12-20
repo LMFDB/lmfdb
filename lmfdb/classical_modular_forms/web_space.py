@@ -513,12 +513,12 @@ class WebGamma1Space(object):
             link = self._link(space['level'], space['char_orbit_label'])
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
-            elif len(forms) == 0:
+            elif not forms:
                 ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
-                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
+                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], list(zip(forms[1:], dims[1:]))))
         return ans
 
     def trace_expansion(self, prec_max=10):

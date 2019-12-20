@@ -2,14 +2,13 @@
 
 import ast
 import re
-import StringIO
+from six import StringIO
 import time
 
 from flask import render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
-from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl,
@@ -33,14 +32,11 @@ def get_bread(*breads):
         ("Abelian Varieties", url_for(".abelian_varieties")),
         ("Fq", url_for(".abelian_varieties")),
     ]
-    map(bc.append, breads)
+    for z in breads:
+        bc.append(z)
     return bc
 
 abvarfq_credit = "Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent"
-
-@app.route("/EllipticCurves/Fq")
-def ECFq_redirect():
-    return redirect(url_for("abvarfq.abelian_varieties"), **request.args)
 
 def learnmore_list():
     return [
@@ -52,7 +48,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t: t[0].find(matchstring) < 0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 #########################
 #  Search/navigate
@@ -179,7 +175,7 @@ def download_search(info):
         s = s.replace("[", "[*")
         s = s.replace("]", "*]")
         s += ";"
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

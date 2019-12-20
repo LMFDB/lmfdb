@@ -251,5 +251,5 @@ def make_graph(M, vertex_labels=None):
     if vertex_labels:
         G.relabel(vertex_labels)
     else:
-        G.relabel(range(1,n+1))
+        G.relabel(list(range(1, n + 1)))
     return G

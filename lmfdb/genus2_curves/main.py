@@ -79,7 +79,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @g2c_page.route("/")
 def index():
@@ -422,28 +423,28 @@ def statistics():
 
 
 
-@g2c_page.route("/Completeness")
+@g2c_page.route("/Q/Completeness")
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
     return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@g2c_page.route("/Source")
+@g2c_page.route("/Q/Source")
 def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
     return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@g2c_page.route("/Reliability")
+@g2c_page.route("/Q/Reliability")
 def reliability_page():
     t = 'Reliability of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
     return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
-@g2c_page.route("/Labels")
+@g2c_page.route("/Q/Labels")
 def labels_page():
     t = 'Labels for Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Labels',''))
