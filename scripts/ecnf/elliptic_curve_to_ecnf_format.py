@@ -156,11 +156,8 @@ def hoeij_to_ecnf(url="http://www.math.fsu.edu/~hoeij/files/X1N/LowDegreePlaces"
     file.close()
     lines = [l for l in data.splitlines() if l[:3] == "N =" and "[" in l]
 
-    out_file = open(path,'w')
-    try:
+    with open(path, 'w') as out_file:
         for line in lines:
             E = EllipticCurve_from_hoeij_data(line)
             out_line =  EllipticCurve_make_line(E[1])
-            out_file.write(out_line+"\n")
-    finally:
-        out_file.close()
+            out_file.write(out_line + "\n")
