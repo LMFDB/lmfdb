@@ -99,7 +99,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def poly_to_field_label(pol):
     try:
@@ -107,6 +108,7 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
+
 
 @nf_page.route("/Source")
 def source():

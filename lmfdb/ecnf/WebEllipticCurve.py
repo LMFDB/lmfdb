@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import yaml
 from flask import url_for
-from urllib import quote
+from six.moves.urllib_parse import quote
 from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
