@@ -197,7 +197,7 @@ def urlencode(kwargs):
 
 
 @app.before_request
-def top_redirect():
+def netloc_redirect():
     """
         Redirect lmfdb.org -> www.lmfdb.org
         Redirect {www, beta, }.lmfdb.com -> {www, beta, }.lmfdb.org
@@ -680,15 +680,7 @@ WhiteListedRoutes = [
     'L/SymmetricPower/2/EllipticCurve',
     'L/SymmetricPower/3/EllipticCurve',
     'L/Zeros',
-    'L/degree1',
-    'L/degree2/CuspForm',
-    'L/degree2/EllipticCurve',
-    'L/degree2/MaassForm',
-    'L/degree3/EllipticCurve/SymmetricSquare',
-    'L/degree3/MaassForm',
-    'L/degree4/EllipticCurve/SymmetricCube',
-    'L/degree4/Genus2Curve',
-    'L/degree4/MaassForm',
+    'L/degree',
     'L/download',
     'L/history',
     'L/lhash',
