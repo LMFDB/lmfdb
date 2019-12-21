@@ -725,6 +725,7 @@ WhiteListedRoutes = [
     'style.css',
     'universe',
     'users',
+    'whitelistedsitemap',
     'zeros/zeta'
 ]
 
@@ -770,6 +771,26 @@ def forcebetasitemap():
                 else "<li>{0}</li>".format(endpoint)
                 for url, endpoint in routes()
                 if not white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+
+
+@app.route("/whitelistedsitemap")
+def forcebetasitemap():
+    """
+    Listing routes that are not allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if white_listed(endpoint)
             ]
         )
         + "</ul>"
