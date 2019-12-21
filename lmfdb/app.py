@@ -778,7 +778,7 @@ def forcebetasitemap():
 
 
 @app.route("/whitelistedsitemap")
-def forcebetasitemap():
+def whitelistedsitemap():
     """
     Listing routes that are not allowed on www.lmfdb.org
     """
