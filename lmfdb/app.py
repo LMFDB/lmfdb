@@ -674,6 +674,7 @@ WhiteListedRoutes = [
     'Genus2Curve/Q',
     'Group',
     'HigherGenus/C/Aut',
+    'L/browseGraphChar',
     'L/Completeness',
     'L/Plot',
     'L/Riemann',
