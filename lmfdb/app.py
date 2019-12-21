@@ -197,8 +197,13 @@ def urlencode(kwargs):
 
 
 @app.before_request
-def force_www_and_ssl():
-    """Redirect lmfdb.org requests to www.lmfdb.org and forces https"""
+def top_redirect():
+    """
+        Redirect lmfdb.org -> www.lmfdb.org
+        Redirect {www, beta, }.lmfdb.com -> {www, beta, }.lmfdb.org
+        Force https on www.lmfdb.org
+        Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
+    """
     from six.moves.urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
@@ -216,6 +221,14 @@ def force_www_and_ssl():
     ):
         url = request.url.replace("http://", "https://", 1)
         return redirect(url, code=301)
+    elif (
+        urlparts.netloc == "www.lmfdb.org"
+        and
+        not white_listed(urlparts.path)
+    ):
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=301)
+
 
 
 def timestamp():
@@ -275,146 +288,7 @@ def alive():
     else:
         abort(503)
 
-def routes():
-    links = []
-    for rule in app.url_map.iter_rules():
-        # Filter out rules we can't navigate to in a browser
-        # and rules that require parameters
-        if "GET" in rule.methods:  # and has_no_empty_params(rule):
-            try:
-                url = url_for(rule.endpoint, **(rule.defaults or {}))
-            except Exception:
-                url = None
-            links.append((url, str(rule)))
-    return sorted(links, key= lambda elt: elt[1])
 
-@app.route("/sitemap")
-def sitemap():
-    return (
-        "<ul>"
-        + "\n".join(
-            [
-                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
-                if url is not None
-                else "<li>{0}</li>".format(endpoint)
-                for url, endpoint in routes()
-            ]
-        )
-        + "</ul>"
-    )
-
-# Routes to remove?
-# AutomorphicForms
-# EC
-# EllipticCurves/Fq
-# Field
-# NF
-
-WhiteListedRoutes = [
-    'ArtinRepresentation',
-    'Character/Dirichlet',
-    'EllipticCurve',
-    'Field',
-    'GaloisGroup',
-    'Genus2Curve/Q',
-    'Group',
-    'HigherGenus/C/Aut',
-    'L/Completeness',
-    'L/Plot',
-    'L/Riemann',
-    'L/SymmetricPower/2/EllipticCurve',
-    'L/SymmetricPower/3/EllipticCurve',
-    'L/Zeros',
-    'L/degree1',
-    'L/degree2/CuspForm',
-    'L/degree2/EllipticCurve',
-    'L/degree2/MaassForm',
-    'L/degree3/EllipticCurve/SymmetricSquare',
-    'L/degree3/MaassForm',
-    'L/degree4/EllipticCurve/SymmetricCube',
-    'L/degree4/Genus2Curve',
-    'L/degree4/MaassForm',
-    'L/download',
-    'L/history',
-    'LocalNumberField',
-    'ModularForm/GL2/ImaginaryQuadratic',
-    'ModularForm/GL2/Q/Maass',
-    'ModularForm/GL2/Q/holomorphic',
-    'ModularForm/GL2/TotallyReal',
-    'NumberField',
-    'SatoTateGroup',
-    'Variety/Abelian/Fq',
-    'about',
-    'acknowledgment',
-    'alive',
-    'api',
-    'api2',
-    'bigpicture',
-    'callback_ajax',
-    'citation',
-    'contact',
-    'editorial-board',
-    'favicon.ico',
-    'features',
-    'health',
-    'humans.txt',
-    'info',
-    'intro',
-    'inventory',
-    'knowledge',
-    'management',
-    'news',
-    'not_yet_implemented',
-    'robots.txt',
-    'search',
-    'sitemap',
-    'static',
-    'statshealth',
-    'style.css',
-    'universe',
-    'zeros/zeta'
-]
-
-WhiteListedBreads = set()
-for elt in WhiteListedRoutes:
-    elt_split = elt.split('/')
-    bread = ''
-    for s in elt.split('/'):
-        if bread:
-            bread += '/' + s
-        else:
-            bread = s
-        WhiteListedBreads.add(bread)
-
-def white_listed(url):
-    url = url.rstrip('/').lstrip('/')
-    if not url:
-        return True
-    if any(url.startswith(elt) for elt in WhiteListedRoutes):
-        return True
-    # check if it starts with an L
-    if url[:2] == 'L/':
-        return white_listed(url[1:])
-    else:
-        # check if is an allowed bread
-        return url in WhiteListedBreads
-
-
-@app.route("/forcebetasitemap")
-def forcebetasitemap():
-    return (
-        "<ul>"
-        + "\n".join(
-            [
-                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
-                if url is not None
-                else "<li>{0}</li>".format(endpoint)
-                for url, endpoint in routes()
-                if not white_listed(endpoint)
-            ]
-        )
-        + "</ul>"
-    )
 
 @app.route("/statshealth")
 def statshealth():
@@ -748,3 +622,163 @@ def news():
     t = "News"
     b = [(t, url_for('news'))]
     return render_template(_single_knowl, title="LMFDB in the News", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+
+
+
+
+###############################################
+# White listing routes for www.lmfdb.org      #
+###############################################
+
+
+def routes():
+    """
+    Returns all routes
+    """
+    links = []
+    for rule in app.url_map.iter_rules():
+        # Filter out rules we can't navigate to in a browser
+        # and rules that require parameters
+        if "GET" in rule.methods:  # and has_no_empty_params(rule):
+            try:
+                url = url_for(rule.endpoint, **(rule.defaults or {}))
+            except Exception:
+                url = None
+            links.append((url, str(rule)))
+    return sorted(links, key= lambda elt: elt[1])
+
+@app.route("/sitemap")
+def sitemap():
+    """
+    Listing all routes
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+            ]
+        )
+        + "</ul>"
+    )
+
+WhiteListedRoutes = [
+    'ArtinRepresentation',
+    'Character/Dirichlet',
+    'EllipticCurve',
+    'Field',
+    'GaloisGroup',
+    'Genus2Curve/Q',
+    'Group',
+    'HigherGenus/C/Aut',
+    'L/Completeness',
+    'L/Plot',
+    'L/Riemann',
+    'L/SymmetricPower/2/EllipticCurve',
+    'L/SymmetricPower/3/EllipticCurve',
+    'L/Zeros',
+    'L/degree1',
+    'L/degree2/CuspForm',
+    'L/degree2/EllipticCurve',
+    'L/degree2/MaassForm',
+    'L/degree3/EllipticCurve/SymmetricSquare',
+    'L/degree3/MaassForm',
+    'L/degree4/EllipticCurve/SymmetricCube',
+    'L/degree4/Genus2Curve',
+    'L/degree4/MaassForm',
+    'L/download',
+    'L/history',
+    'L/lhash',
+    'L/Lhash',
+    'L/tracehash',
+    'LocalNumberField',
+    'ModularForm/GL2/ImaginaryQuadratic',
+    'ModularForm/GL2/Q/Maass',
+    'ModularForm/GL2/Q/holomorphic',
+    'ModularForm/GL2/TotallyReal',
+    'NumberField',
+    'SatoTateGroup',
+    'Variety/Abelian/Fq',
+    'about',
+    'acknowledgment',
+    'alive',
+    'api',
+    'api2',
+    'bigpicture',
+    'callback_ajax',
+    'citation',
+    'contact',
+    'editorial-board',
+    'favicon.ico',
+    'forcebetasitemap',
+    'features',
+    'health',
+    'humans.txt',
+    'info',
+    'intro',
+    'inventory',
+    'knowledge',
+    'management',
+    'news',
+    'not_yet_implemented',
+    'robots.txt',
+    'search',
+    'sitemap',
+    'static',
+    'statshealth',
+    'style.css',
+    'universe',
+    'users',
+    'zeros/zeta'
+]
+
+WhiteListedBreads = set()
+for elt in WhiteListedRoutes:
+    elt_split = elt.split('/')
+    bread = ''
+    for s in elt.split('/'):
+        if bread:
+            bread += '/' + s
+        else:
+            bread = s
+        WhiteListedBreads.add(bread)
+
+def white_listed(url):
+    url = url.rstrip("/").lstrip("/")
+    if not url:
+        return True
+    if (
+        any(url.startswith(elt) for elt in WhiteListedRoutes)
+        # check if is an allowed bread
+        or url in WhiteListedBreads
+    ):
+        return True
+    # check if it starts with an L
+    elif url[:2] == "L/":
+        return white_listed(url[1:])
+    else:
+        return False
+
+
+@app.route("/forcebetasitemap")
+def forcebetasitemap():
+    """
+    Listing routes that are not allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if not white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+
