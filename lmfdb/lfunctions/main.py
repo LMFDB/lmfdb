@@ -867,19 +867,19 @@ def getLfunctionPlot(request, *args):
     p = line(F_interp)
 
     styleLfunctionPlot(p, 10)
-    fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn)
-    with open(fn) as f:
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
+        p.save(filename=fn.name)
+    with open(fn.name) as f:
         data = f.read()
-    os.remove(fn)
+    os.remove(fn.name)
     return data
+
 
 def styleLfunctionPlot(p, fontsize):
     p.fontsize(fontsize)
-    p.axes_color((0.5,0.5,0.5))
-    p.tick_label_color((0.5,0.5,0.5))
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
     p.axes_width(0.2)
-
 
 
 def render_zerosLfunction(request, *args):

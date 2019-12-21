@@ -581,11 +581,10 @@ def _dimension_Gamma0_4(wt):
     REMARK
         Not completely implemented
     """
-    R = PowerSeriesRing(ZZ, default_prec = wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
-    H_all = (1 + x ** 4)(1 + x ** 11) / (1 - x ** 2) ** 3 / (1 - x ** 6)
+    R = PowerSeriesRing(ZZ, 'x')
+    x = R.gen().O(wt + 1)
+    H_all = (1 + x**4) * (1 + x**11) / (1 - x**2)**3 / (1 - x**6)
     return (H_all[wt],)
-
 
 
 ####################################################################
@@ -616,12 +615,10 @@ def _dimension_Gamma0_3(wt):
     REMARK
         Only total dimension implemented.
     """
-    R = PowerSeriesRing(ZZ, default_prec = wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
-    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 6) ** 2
+    R = PowerSeriesRing(ZZ, 'x')
+    x = R.gen().O(wt + 1)
+    H_all = (1 + 2 * x**4 + x**6 + x**15 * (1 + 2 * x**2 + x**6)) / (1 - x**2) / (1 - x**4) / (1 - x**6)**2
     return (H_all[wt],)
-
-
 
 
 ####################################################################
