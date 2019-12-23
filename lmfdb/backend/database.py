@@ -875,7 +875,7 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"|")
+        sep = kwds.pop("sep", u"|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -902,7 +902,7 @@ class PostgresBase(object):
                     self._execute(alter_table, [seq_name])
 
                 cur = self._db.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
+                cur.copy_from(F, table, columns=columns, sep=sep, **kwds)
 
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
