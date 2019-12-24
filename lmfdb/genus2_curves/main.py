@@ -385,13 +385,15 @@ class G2C_stats(StatsDisplay):
                   'real_geom_end_alg': 'identity component',
                   'st_group': 'Sato-Tate group',
                   'torsion_order': 'torsion order'}
-    top_titles = {'num_rat_wpts': 'rational Weierstrass points',
+    top_titles = {'num_rat_pts': 'rational points',
+                  'num_rat_wpts': 'rational Weierstrass points',
                   'aut_grp_id': '$\mathrm{Aut}(X)$',
                   'geom_aut_grp_id': '$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$',
                   'has_square_sha': 'squareness of &#1064;',
                   'locally_solvable': 'local solvability',
                   'is_gl2_type': '$\mathrm{GL}_2$-type',
                   'real_geom_end_alg': 'Sato-Tate group identity components',
+                  'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
     formatters = {'aut_grp_id': aut_grp_format,
                   'geom_aut_grp_id': geom_aut_grp_format,
