@@ -363,10 +363,10 @@ def modular_forms():
     # lm = [('History of modular forms', '/ModularForm/history')]
     return render_template('single.html', title=t, kid='mf.about', bread=b) #, learnmore=lm)
 
-@app.route("/ModularForm/history")
+# @app.route("/ModularForm/history")
 def modular_forms_history():
     t = 'Modular Forms'
-    b = [(t, url_for('modular forms'))]
+    b = [(t, url_for('modular_forms'))]
     b.append(('History', url_for("modular_forms_history")))
     return render_template(_single_knowl, title="A Brief History of Modular Forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
@@ -377,7 +377,7 @@ def varieties():
     # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
-@app.route("/Variety/history")
+# @app.route("/Variety/history")
 def varieties_history():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
@@ -391,7 +391,7 @@ def fields():
     # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Field/history")
+# @app.route("/Field/history")
 def fields_history():
     t = 'Fields'
     b = [(t, url_for('fields'))]
@@ -405,7 +405,7 @@ def representations():
     # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Representation/history")
+# @app.route("/Representation/history")
 def representations_history():
     t = 'Representations'
     b = [(t, url_for('representations'))]
@@ -419,7 +419,7 @@ def motives():
     # lm = [('History of motives', '/Motives/history')]
     return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Motives/history")
+# @app.route("/Motives/history")
 def motives_history():
     t = 'Motives'
     b = [(t, url_for('motives'))]
@@ -433,7 +433,7 @@ def groups():
     # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Group/history")
+# @app.route("/Group/history")
 def groups_history():
     t = 'Groups'
     b = [(t, url_for('groups'))]
