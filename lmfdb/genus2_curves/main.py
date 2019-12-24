@@ -393,7 +393,7 @@ class G2C_stats(StatsDisplay):
                   'locally_solvable': 'local solvability',
                   'is_gl2_type': '$\mathrm{GL}_2$-type',
                   'real_geom_end_alg': 'Sato-Tate group identity components',
-                  'st_group': 'Sato-Tate group',
+                  'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
     formatters = {'aut_grp_id': aut_grp_format,
                   'geom_aut_grp_id': geom_aut_grp_format,
