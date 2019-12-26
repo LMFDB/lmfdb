@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import urllib2, ssl, errno
+import ssl
+import errno
 from lmfdb.tests import LmfdbTest
+from six.moves.urllib.request import Request, urlopen
+from six.moves.urllib.error import URLError
+
 
 class HomePageTest(LmfdbTest):
 
@@ -12,9 +16,9 @@ class HomePageTest(LmfdbTest):
     def check_external(self, homepage, path, text):
         headers = {'User-Agent': 'Mozilla/5.0'}
         context = ssl._create_unverified_context()
-        request = urllib2.Request(path, headers = headers)
+        request = Request(path, headers = headers)
         assert path in homepage
-        assert text in urllib2.urlopen(request, context = context).read()
+        assert text in urlopen(request, context = context).read()
 
     # All tests should pass
     #
@@ -42,7 +46,7 @@ class HomePageTest(LmfdbTest):
             self.check_external(homepage,
                 "https://hobbes.la.asu.edu/lmfdb-14/",
                 'Arizona State University' )
-        except urllib2.URLError as e:
+        except URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass
             elif 'Connection refused' in str(e): # not every error comes with a errno

@@ -46,7 +46,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def get_bread(breads=[]):
     bc = [("Galois Groups", url_for(".index"))]
@@ -86,7 +87,7 @@ def index():
     if len(request.args) != 0:
         return galois_group_search(request.args)
     info = {'count': 50}
-    info['degree_list'] = range(48)[2:]
+    info['degree_list'] = list(range(2, 48))
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing

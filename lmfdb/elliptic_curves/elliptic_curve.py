@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-import ast, os, re, StringIO, tempfile, time
+import ast
+import os
+import re
+from six import StringIO
+import tempfile
+import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
 from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
@@ -49,7 +54,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 #########################
 #  Search/navigate
@@ -70,8 +76,8 @@ def rational_elliptic_curves(err_args=None):
     conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    rank_list = range(counts['max_rank'] + 1)
-    torsion_list = range(1,11) + [12, 16]
+    rank_list = list(range(counts['max_rank'] + 1))
+    torsion_list = list(range(1, 11)) + [12, 16]
     info = {
         'rank_list': rank_list,
         'torsion_list': torsion_list,
@@ -220,7 +226,7 @@ def download_search(info):
     res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,

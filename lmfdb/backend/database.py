@@ -120,12 +120,12 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
 def jsonb_idx(cols, cols_type):
     return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsonb")
 
-_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered",
-                     "out_of_order", "has_extras", "stats_valid", "label_col", "total", "important")
-_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total", "important") # 1000, true, 0, false
+_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered", "out_of_order", "has_extras",
+                     "stats_valid", "label_col", "total", "important", "include_nones")
+_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total", "important", "include_nones") # 1000, true, 0, false, false
 _meta_tables_types = dict(zip(_meta_tables_cols,
     ("text", "jsonb", "smallint", "boolean",
-        "boolean", "boolean", "boolean", "text", "bigint", "boolean")))
+        "boolean", "boolean", "boolean", "text", "bigint", "boolean", "boolean")))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
 _meta_indexes_cols = ("index_name", "table_name", "type", "columns", "modifiers", "storage_params")
@@ -716,12 +716,38 @@ class PostgresBase(object):
 
     def _column_types(self, table_name, data_types=None):
         """
-        Returns the column list, column types (as a dict), and has_id for a given table_name or list of table names
+        Returns the
+            -column list,
+            - column types (as a dict), and
+            - has_id for a given table_name or list of table names
 
         INPUT:
 
         - ``table_name`` -- a string or list of strings
-        - ``data_types`` -- (optional) a dictionary providing a list of column names and types for each table name.  If not provided, will be looked up from the database.
+        - ``data_types`` -- (optional) a dictionary providing a list of column names and
+        types for each table name.  If not provided, will be looked up from the database.
+
+        EXAMPLE:
+        sage: db._column_types('non_existant')
+        ([], {}, False)
+        sage: db._column_types('test_table')
+        ([u'dim',
+          u'label',
+          u'discriminant',
+          u'bad_primes',
+          u'new_column1',
+          u'new_label',
+          u'bar'],
+         {u'bad_primes': 'jsonb',
+          u'bar': 'text',
+          u'dim': 'smallint',
+          u'discriminant': 'numeric',
+          u'id': 'bigint',
+          u'label': 'text',
+          u'new_column1': 'text',
+          u'new_label': 'text'},
+         True)
+
         """
         has_id = False
         col_list = []
@@ -797,7 +823,7 @@ class PostgresBase(object):
         col_list, col_type, _ = self._column_types(table_name)
         columns_set.discard("id")
         if not (columns_set <= set(col_list)):
-            raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
+            raise ValueError("{} is not a subset of {}".format(columns_set, col_list))
         header_cols = self._read_header_lines(F, sep=sep)
         names = [elt[0] for elt in header_cols]
         names_set = set(names)
@@ -849,7 +875,7 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"|")
+        sep = kwds.pop("sep", u"|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -876,7 +902,7 @@ class PostgresBase(object):
                     self._execute(alter_table, [seq_name])
 
                 cur = self._db.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
+                cur.copy_from(F, table, columns=columns, sep=sep, **kwds)
 
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
@@ -1058,8 +1084,8 @@ class PostgresBase(object):
         if blank.strip():
             raise ValueError("The third line must be blank")
         if len(names) != len(types):
-            raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
-        return zip(names, types)
+            raise ValueError("The first line specifies %s columns, while the second specifies %s" % (len(names), len(types)))
+        return list(zip(names, types))
 
 
     ##################################################################
@@ -1255,13 +1281,14 @@ class PostgresTable(PostgresBase):
     - ``_primary_sort`` -- either None, a column name or a pair ``(col, direction)``, the most significant column when sorting
     - ``_sort`` -- the psycopg2.sql.Composable object containing the default sort clause
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types=None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, include_nones=False, data_types=None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
         self._id_ordered = id_ordered
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
+        self._include_nones = include_nones
         PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
@@ -1762,7 +1789,7 @@ class PostgresTable(PostgresBase):
                     yield rec[0]
                 else:
                     yield {k: v for k, v in zip(search_cols + extra_cols, rec)
-                           if v is not None}
+                           if (self._include_nones or v is not None)}
         finally:
             if isinstance(cur, pg_cursor):
                 cur.close()
@@ -2481,7 +2508,7 @@ class PostgresTable(PostgresBase):
                                                        index["columns"],
                                                        [[]] * len(index["columns"]),
                                                        storage_params)
-                self._execute(creator, storage_params.values())
+                self._execute(creator, list(storage_params.values()))
                 print("Index {} created in {:.3f} secs".format(index["name"].format(self.search_table), time.time() - now))
 
 
@@ -2599,7 +2626,7 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, silence=True):
             self._check_index_name(name, "Index")
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
             self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), storage_params])
         print("Index %s created in %.3f secs"%(name, time.time() - now))
@@ -2644,7 +2671,7 @@ class PostgresTable(PostgresBase):
             creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
             # this avoids clashes with deprecated indexes/constraints
             self._rename_if_exists(name, suffix)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
         print("Created index %s in %.3f secs"%(name, time.time() - now))
 
     def _indexes_touching(self, columns):
@@ -3370,7 +3397,7 @@ class PostgresTable(PostgresBase):
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
                     updater = updater.format(Identifier(table),
-                                             SQL(", ").join(map(Identifier, dat.keys())),
+                                             SQL(", ").join(map(Identifier, list(dat))),
                                              SQL(", ").join(Placeholder() * len(dat)),
                                              SQL("id = %s"))
                     dvalues = self._parse_values(dat)
@@ -3397,7 +3424,7 @@ class PostgresTable(PostgresBase):
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
                                     Identifier(table),
-                                    SQL(", ").join(map(Identifier, dat.keys())),
+                                    SQL(", ").join(map(Identifier, list(dat))),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))
                 self._break_order()
@@ -3771,7 +3798,7 @@ class PostgresTable(PostgresBase):
                 self.reload_meta(metafile)
 
         # Reinitialize object
-        tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
+        tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
         table = PostgresTable(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
@@ -5024,10 +5051,9 @@ class PostgresStatsTable(PostgresBase):
         A utility function for splitting a dictionary into parallel lists of keys and values.
         """
         if D:
-            ans = zip(*sorted(D.items()))
+            return [Json(t) for t in zip(*sorted(D.items()))]
         else:
-            ans = [], []
-        return map(Json, ans)
+            return [Json([]), Json([])]
 
     def _join_dict(self, ccols, cvals):
         """
@@ -6018,7 +6044,7 @@ class PostgresDatabase(PostgresBase):
                  data_types[table_name] = []
             data_types[table_name].append((column_name, regtype))
 
-        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
+        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -6301,14 +6327,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, version integer)"))
+            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, include_nones boolean, version integer)"))
             version = 0
 
             # copy data from meta_tables
-            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables "))
+            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
             self.grant_select('meta_tables_hist')
 
@@ -6604,7 +6630,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     print("Renamed {0} to {1}".format(old_name_tmp, new_name_old))
 
             # initialized table
-            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
+            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
             table = PostgresTable(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)

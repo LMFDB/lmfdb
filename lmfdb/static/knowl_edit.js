@@ -201,7 +201,7 @@ function refresh_link_suggestions() {
             var label = match[0];
             var klink = knowl_link(definer_id, label);
             // Add five words of context on each side, stopping at newlines
-            var pre_mark = match.index
+            var pre_mark = match.index;
             for (var j = 0; j < 5; j++) {
               pre_mark = content.lastIndexOf(" ", pre_mark-1);
               if (pre_mark == -1) {

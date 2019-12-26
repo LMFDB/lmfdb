@@ -23,6 +23,8 @@ addons:
             - openssl
             - libssl-dev
             # needed for pyflakes
+            - python3-pip
+            # needed for coveralls
             - python-pip
             # to run nosetests in parallel
             - parallel
@@ -32,7 +34,7 @@ install:
     # assert parallel
     - parallel --version
     # install the latest pyflakes
-    - pip install pyflakes --user
+    - pip3 install pyflakes --user
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}

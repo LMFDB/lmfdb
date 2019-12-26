@@ -383,8 +383,7 @@ def lfuncEPhtml(L, fmt):
     # Figuring out good and bad primes
     bad_primes = [p for p, _ in L.bad_lfactors]
     good_primes = [p for p in prime_range(100) if p not in bad_primes]
-    p_index = dict(zip(prime_range(100), range(len(prime_range(100)))))
-
+    p_index = {p: i for i, p in enumerate(prime_range(100))}
 
     #decide if we display galois
     display_galois = True

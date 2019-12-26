@@ -452,12 +452,12 @@ class WebNewform(object):
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in analytic_shift_formats:
-                self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
+                self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
                 chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
-                for p in self.cc_data.values()[0]['angles'].keys():
+                for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
                         continue

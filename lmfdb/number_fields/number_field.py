@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-D
 
-import ast, os, re, StringIO, time
+import ast
+import os
+import re
+from six import StringIO
+import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, RealField
@@ -95,7 +99,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def poly_to_field_label(pol):
     try:
@@ -103,6 +108,7 @@ def poly_to_field_label(pol):
         return wnf.get_label()
     except:
         return None
+
 
 @nf_page.route("/Source")
 def source():
@@ -313,15 +319,15 @@ def number_field_render_webpage():
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
-    if len(args) == 0:
+    if not args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000]
         discriminant_list = ["%s..%s" % (start, end - 1) for start, end in zip(
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info = {
-            'degree_list': range(1, max_deg + 1),
+            'degree_list': list(range(1, max_deg + 1)),
             'signature_list': sig_list,
-            'class_number_list': range(1, 6) + ['6..10'],
+            'class_number_list': list(range(1, 6)) + ['6..10'],
             'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,
@@ -683,7 +689,7 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,

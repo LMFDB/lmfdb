@@ -20,6 +20,7 @@ NB see ec_nfcurves.col_type for an up-to-date list.
 
 """
 from __future__ import print_function
+from six import text_type
 
 ec_nfcurves_col_types = {
  u'abs_disc': 'bigint',
@@ -780,7 +781,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
     """
-    str_type = type(unicode('abc'))
+    str_type = text_type
     int_type = type(int(1))
     float_type = type(float(1))
     list_type = type([1,2,3])
@@ -830,7 +831,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
                       'reg': float_type, # or int(1)
                       'q_curve': bool_type,
                       'base_change': list_type, # of strings
-                      'trace_hash': type(long())
+                      'trace_hash': type(ZZ(2**65).__int__())
     }
 
     key_set = Set(keys_and_types.keys())

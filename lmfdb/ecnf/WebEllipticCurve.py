@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import yaml
 from flask import url_for
-from urllib import quote
+from six.moves.urllib_parse import quote
 from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
@@ -454,17 +454,17 @@ class ECNF(object):
 
         # Generators
         try:
-            gens = [parse_point(K,P) for P in self.gens]
-            self.gens = ", ".join([web_point(P) for P in gens])
+            gens = [parse_point(K, P) for P in self.gens]
+            self.gens = ", ".join(web_point(P) for P in gens)
             if self.rk == "?":
                 self.reg = "not available"
             else:
                 if gens:
                     try:
-                        self.reg = self.reg
+                        self.reg
                     except AttributeError:
                         self.reg = "not available"
-                    pass # self.reg already set
+                    # self.reg already set
                 else:
                     self.reg = 1  # otherwise we only get 1.00000...
 

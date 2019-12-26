@@ -24,7 +24,7 @@ def make_path_crystal(crystal):
     from sage.all_cmdline import CrystalOfLSPaths
     cartan, rank, weight = crystal.split("-")
     weight = weight.split(".")
-    return CrystalOfLSPaths([str(cartan), int(rank)], map(int, weight))
+    return CrystalOfLSPaths([str(cartan), int(rank)], [int(w) for w in weight])
 
 
 @crystals_page.route("/<crystal>", methods=["GET"])
