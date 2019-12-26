@@ -831,7 +831,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
                       'reg': float_type, # or int(1)
                       'q_curve': bool_type,
                       'base_change': list_type, # of strings
-                      'trace_hash': type(long())
+                      'trace_hash': type(ZZ(2**65).__int__())
     }
 
     key_set = Set(keys_and_types.keys())

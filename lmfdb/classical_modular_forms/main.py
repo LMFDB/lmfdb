@@ -43,7 +43,7 @@ def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 @cached_function
@@ -870,7 +870,7 @@ def set_rows_cols(info, query):
         primes = info.get('level_primes','').strip()
         if primes:
             try:
-                rad = prod(map(ZZ, primes.split(',')))
+                rad = prod(ZZ(p) for p in primes.split(','))
                 if info['prime_quantifier'] == 'subsets':
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] == 'append':

@@ -383,7 +383,7 @@ class CMF_download(Downloader):
         if newform.dim == 1:
             return begin + [
                     '        Kf := Rationals();',
-                    '    end if;'
+                    '    end if;',
                     '    return [Kf!elt[1] : elt in input];',
                     'end function;',
                     ]

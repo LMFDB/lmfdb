@@ -2,7 +2,7 @@
 
 import ast
 import re
-import StringIO
+from six import StringIO
 import time
 
 from flask import render_template, url_for, request, redirect, send_file
@@ -32,7 +32,8 @@ def get_bread(*breads):
         ("Abelian Varieties", url_for(".abelian_varieties")),
         ("Fq", url_for(".abelian_varieties")),
     ]
-    map(bc.append, breads)
+    for z in breads:
+        bc.append(z)
     return bc
 
 abvarfq_credit = "Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent"
@@ -47,7 +48,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t: t[0].find(matchstring) < 0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 #########################
 #  Search/navigate
@@ -174,7 +175,7 @@ def download_search(info):
         s = s.replace("[", "[*")
         s = s.replace("]", "*]")
         s += ";"
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

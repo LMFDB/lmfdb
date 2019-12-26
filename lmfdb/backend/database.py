@@ -716,12 +716,38 @@ class PostgresBase(object):
 
     def _column_types(self, table_name, data_types=None):
         """
-        Returns the column list, column types (as a dict), and has_id for a given table_name or list of table names
+        Returns the
+            -column list,
+            - column types (as a dict), and
+            - has_id for a given table_name or list of table names
 
         INPUT:
 
         - ``table_name`` -- a string or list of strings
-        - ``data_types`` -- (optional) a dictionary providing a list of column names and types for each table name.  If not provided, will be looked up from the database.
+        - ``data_types`` -- (optional) a dictionary providing a list of column names and
+        types for each table name.  If not provided, will be looked up from the database.
+
+        EXAMPLE:
+        sage: db._column_types('non_existant')
+        ([], {}, False)
+        sage: db._column_types('test_table')
+        ([u'dim',
+          u'label',
+          u'discriminant',
+          u'bad_primes',
+          u'new_column1',
+          u'new_label',
+          u'bar'],
+         {u'bad_primes': 'jsonb',
+          u'bar': 'text',
+          u'dim': 'smallint',
+          u'discriminant': 'numeric',
+          u'id': 'bigint',
+          u'label': 'text',
+          u'new_column1': 'text',
+          u'new_label': 'text'},
+         True)
+
         """
         has_id = False
         col_list = []
@@ -797,7 +823,7 @@ class PostgresBase(object):
         col_list, col_type, _ = self._column_types(table_name)
         columns_set.discard("id")
         if not (columns_set <= set(col_list)):
-            raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
+            raise ValueError("{} is not a subset of {}".format(columns_set, col_list))
         header_cols = self._read_header_lines(F, sep=sep)
         names = [elt[0] for elt in header_cols]
         names_set = set(names)
@@ -849,7 +875,7 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"|")
+        sep = kwds.pop("sep", u"|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -876,7 +902,7 @@ class PostgresBase(object):
                     self._execute(alter_table, [seq_name])
 
                 cur = self._db.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
+                cur.copy_from(F, table, columns=columns, sep=sep, **kwds)
 
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
@@ -2482,7 +2508,7 @@ class PostgresTable(PostgresBase):
                                                        index["columns"],
                                                        [[]] * len(index["columns"]),
                                                        storage_params)
-                self._execute(creator, storage_params.values())
+                self._execute(creator, list(storage_params.values()))
                 print("Index {} created in {:.3f} secs".format(index["name"].format(self.search_table), time.time() - now))
 
 
@@ -2600,7 +2626,7 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, silence=True):
             self._check_index_name(name, "Index")
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
             self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), storage_params])
         print("Index %s created in %.3f secs"%(name, time.time() - now))
@@ -2645,7 +2671,7 @@ class PostgresTable(PostgresBase):
             creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
             # this avoids clashes with deprecated indexes/constraints
             self._rename_if_exists(name, suffix)
-            self._execute(creator, storage_params.values())
+            self._execute(creator, list(storage_params.values()))
         print("Created index %s in %.3f secs"%(name, time.time() - now))
 
     def _indexes_touching(self, columns):
@@ -3371,7 +3397,7 @@ class PostgresTable(PostgresBase):
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
                     updater = updater.format(Identifier(table),
-                                             SQL(", ").join(map(Identifier, dat.keys())),
+                                             SQL(", ").join(map(Identifier, list(dat))),
                                              SQL(", ").join(Placeholder() * len(dat)),
                                              SQL("id = %s"))
                     dvalues = self._parse_values(dat)
@@ -3398,7 +3424,7 @@ class PostgresTable(PostgresBase):
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
                                     Identifier(table),
-                                    SQL(", ").join(map(Identifier, dat.keys())),
+                                    SQL(", ").join(map(Identifier, list(dat))),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))
                 self._break_order()

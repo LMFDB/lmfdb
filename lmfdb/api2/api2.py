@@ -4,7 +4,7 @@ from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons
 import utils
 
-@api2_page.route("api.css")
+@api2_page.route("/api.css")
 def api_css():
     response = make_response(render_template("api.css"))
     response.headers['Content-type'] = 'text/css'

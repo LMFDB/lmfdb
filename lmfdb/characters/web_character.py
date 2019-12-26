@@ -181,13 +181,13 @@ class WebDirichlet(WebCharObject):
 
     @property
     def gens(self):
-        return map(int, self.H.gens())
+        return [int(k) for k in self.H.gens()]
 
     @property
     def generators(self):
         #import pdb; pdb.set_trace()
         #assert self.H.gens() is not None
-        return self.textuple(map(str, self.H.gens()))
+        return self.textuple([str(k) for k in self.H.gens()])
 
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
@@ -212,7 +212,7 @@ class WebDirichlet(WebCharObject):
 
     @property
     def groupelts(self):
-        return map(self.group2tex, self.Gelts())
+        return [self.group2tex(x) for x in self.Gelts()]
 
     @cached_method
     def Gelts(self):
@@ -420,14 +420,15 @@ class WebHecke(WebCharObject):
     @property
     def generators(self):
         """ use representative ideals """
-        return self.textuple( map(self.ideal2tex, self.G.gen_ideals() ), tag=False )
+        return self.textuple([self.ideal2tex(id)
+                              for id in self.G.gen_ideals()], tag=False)
 
     """ labeling conventions are put here """
 
     @staticmethod
     def char2tex(c, val='\cdot',tag=True):
         """ c is a Hecke character """
-        number = ','.join(map(str,c.exponents()))
+        number = ','.join(map(str, c.exponents()))
         s = r'\chi_{%s}(%s)'%(number,val)
         if tag:
             return r'\(%s\)'%s
@@ -499,7 +500,7 @@ class WebHecke(WebCharObject):
             a = self.k.gen()
             x = evalpolelt(x,a,'a')
         elif x.count(','):
-            x = tuple(map(int,x.split(',')))
+            x = tuple(map(int, x.split(',')))
         return self.G(x)
 
     @staticmethod
@@ -508,7 +509,7 @@ class WebHecke(WebCharObject):
 
     @staticmethod
     def label2number(label):
-        return map(int,label.split('.'))
+        return [int(v) for v in label.split('.')]
 
     @staticmethod
     def label2nf(label):
@@ -516,7 +517,7 @@ class WebHecke(WebCharObject):
 
     @property
     def groupelts(self):
-        return map(self.group2tex, self.Gelts())
+        return [self.group2tex(x) for x in self.Gelts()]
 
     @cached_method
     def Gelts(self):
@@ -927,8 +928,8 @@ class WebDBDirichlet(WebDirichlet):
         else:
             gens = [int(g) for g, v in valuepairs]
             vals = [int(v) for g, v in valuepairs]
-            self.generators = self.textuple( map(str, gens) )
-            self.genvalues = self.textuple( map(self._tex_value, vals) )
+            self.generators = self.textuple([str(g) for g in gens])
+            self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
     def _set_values_and_groupelts(self, values_data):
         """
@@ -1246,7 +1247,7 @@ class WebSmallDirichletGroup(WebDirichletGroup):
 
     @property
     def generators(self):
-        return self.textuple(map(str, self.H.gens_values()))
+        return self.textuple([str(v) for v in self.H.gens_values()])
 
 
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
@@ -1433,7 +1434,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     @property
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self.H.gens()]
-        return self.textuple( map(self.texlogvalue, logvals) )
+        return self.textuple([self.texlogvalue(v) for v in logvals])
 
     @property
     def codegenvalues(self):
@@ -1597,7 +1598,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def genvalues(self):
         logvals = self.chi.logvalues_on_gens()
-        return self.textuple( map(self.texlogvalue, logvals))
+        return self.textuple([self.texlogvalue(v) for v in logvals])
 
     @property
     def galoisorbit(self):

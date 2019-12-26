@@ -1016,7 +1016,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
                       'tor_fields': list_type,
                       'tor_gro': dict_type,
                       'tor_degs': list_type,
-                      'trace_hash': type(long()),
+                      'trace_hash': type(ZZ(2**65).__int__()),
                       'num_int_pts': int_type,
                       'num_bad_primes': int_type,
                       'semistable': bool_type,

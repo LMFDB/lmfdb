@@ -2,7 +2,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-import StringIO
+from six import StringIO
 
 from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
@@ -18,7 +18,7 @@ import dimensions
 import sample
 
 ###############################################################################
-# Utitlity functions
+# Utility functions
 ###############################################################################
 
 def find_samples(family, weight):
@@ -30,8 +30,8 @@ def find_samples(family, weight):
     return ret
 
 def download_sample(name):
-    a,b = name.split('.')
-    f = StringIO.StringIO(sample.export(a, b))
+    a, b = name.split('.')
+    f = StringIO(sample.export(a, b))
     f.seek(0)
     return send_file(f, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
 

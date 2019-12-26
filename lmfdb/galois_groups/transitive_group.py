@@ -1,11 +1,11 @@
 import re
-import string
 
 from lmfdb import db
 
 from sage.all import ZZ, gap, cached_function
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
+
 
 @cached_function
 def small_group_display_knowl(n, k, name=None):
@@ -553,7 +553,7 @@ def chartable(n, t):
 
 
 def group_alias_table():
-    akeys = aliases.keys()
+    akeys = list(aliases)
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
@@ -562,12 +562,10 @@ def group_alias_table():
         ntlist = aliases[j]
         #ntlist = filter(lambda x: x[0] < 12, ntlist)
         ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
-        ntstring = string.join(ntstrings, ", ")
+        ntstring = ", ".join(ntstrings)
         ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += '</tbody></table>'
     return ans
-
-
 
 
 def complete_group_code(code):

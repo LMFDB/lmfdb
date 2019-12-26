@@ -523,7 +523,7 @@ class StatsDisplay(UniqueRepresentation):
                 if show_total or proportioner is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
                 headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
-            elif cols == buckets.keys():
+            elif cols == list(buckets):
                 if split_list or avg or sort_key[col]:
                     raise ValueError("Unsupported option")
                 headers = [formatter[col](bucket) for bucket in buckets[col]]

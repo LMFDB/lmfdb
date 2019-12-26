@@ -132,7 +132,7 @@ def make_keys(K,p):
         # which is its index in the sublist withe same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
-        vals = key_dict.values()
+        vals = list(key_dict.values())
         new_key_dict = {}
         for P in key_dict:
             k = key_dict[P]

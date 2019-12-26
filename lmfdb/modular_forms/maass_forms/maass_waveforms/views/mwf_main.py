@@ -27,7 +27,7 @@ import re
 from lmfdb.utils import flash_error
 from sage.all import gcd
 
-import StringIO
+from six import StringIO
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
@@ -51,7 +51,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 met = ['GET', 'POST']
 maxNumberOfResultsToShow = 500
@@ -222,7 +222,7 @@ def render_one_maass_waveform(maass_id, **kwds):
         else:
             res = f.download_text()
 
-        strIO = StringIO.StringIO()
+        strIO = StringIO()
         strIO.write(res)
         strIO.seek(0)
         try:

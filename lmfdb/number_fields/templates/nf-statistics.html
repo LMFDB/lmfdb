@@ -4,7 +4,9 @@
 <div>
 The database contains {{ info['total'] }} number fields.
 </div>
-{% set maxdeg = info['maxdeg'] %}
+{# Keeping first line if/when we include higher degrees #}
+{# set maxdeg = info['maxdeg'] #}
+{% set maxdeg = 23 %}
 
 <h2> Distribution by signature </h2>
 {% set ncols = (info['nsig'][maxdeg - 1] | length) %}

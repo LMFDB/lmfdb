@@ -870,23 +870,22 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             # MongoDB is not aware that all the queries above imply that qfield
             # must all contain all those elements, we aid MongoDB by explicitly
             # saying that, and hopefully it will use a multikey index.
-            parsed_values = sub_query.values();
+            parsed_values = list(sub_query.values())
             # asking for each value to be in the array
             if parse_singleton is str:
                 all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
             else:
                 all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
 
-            if len(all_operand) > 0:
-                sub_query[qfield] = {'$all' : all_operand};
-
+            if all_operand:
+                sub_query[qfield] = {'$all' : all_operand}
 
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space
-            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict];
-            if len(elemMatch_operand) > 0:
+            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict]
+            if elemMatch_operand:
                 if qfield in sub_query:
-                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0];
+                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0]
                 else:
                     sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
             # we could add more than one $elemMatch operand, but 

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from six import string_types
+import sys
+if sys.version_info > (3,):
+    buffer = memoryview
 
-import urllib2
+from six.moves.urllib_parse import unquote
 import re
 import yaml
 import json
@@ -325,7 +328,7 @@ def api_query(table, id = None):
         location = table
         title = "API - " + location
         bc = [("API", url_for(".index")), (table,)]
-        query_unquote = urllib2.unquote(data["query"])
+        query_unquote = unquote(data["query"])
         return render_template("collection.html",
                                title=title,
                                single_object=single_object,
@@ -333,4 +336,3 @@ def api_query(table, id = None):
                                url_args = url_args,
                                bread=bc,
                                **data)
-

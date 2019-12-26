@@ -481,8 +481,9 @@ def learnmore_list(path, remove=None):
         ('Source of the data', url_for('.source', prepath=prepath)),
         ('Reliability of the data', url_for('.reliability', prepath=prepath))]
     if remove:
-        return filter(lambda t:t[0].find(remove) <0, learnmore)
+        return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
+
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
@@ -866,19 +867,19 @@ def getLfunctionPlot(request, *args):
     p = line(F_interp)
 
     styleLfunctionPlot(p, 10)
-    fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn)
-    with open(fn) as f:
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
+        p.save(filename=fn.name)
+    with open(fn.name) as f:
         data = f.read()
-    os.remove(fn)
+    os.remove(fn.name)
     return data
+
 
 def styleLfunctionPlot(p, fontsize):
     p.fontsize(fontsize)
-    p.axes_color((0.5,0.5,0.5))
-    p.tick_label_color((0.5,0.5,0.5))
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
     p.axes_width(0.2)
-
 
 
 def render_zerosLfunction(request, *args):

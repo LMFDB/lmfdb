@@ -3,7 +3,11 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Nhi Ngo, Albert Ford
 # (initial code copied from John Jones Local Fields)
 
-import ast, os, re, StringIO, yaml
+import ast
+import os
+import re
+from six import StringIO
+import yaml
 
 from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, redirect, send_file, abort
@@ -433,7 +437,7 @@ def hgcwa_code_download_search(info):
         code += '\n'
 
     logger.info("%s seconds for %d chars" % (time.time() - start, len(code)))
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(code)
     strIO.seek(0)
     return send_file(strIO,
@@ -918,7 +922,7 @@ def hgcwa_code_download(**args):
     lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
     code += '\n'.join(lines)
     logger.info("%s seconds for %d chars" % (time.time() - start, len(code)))
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(code)
     strIO.seek(0)
     return send_file(strIO,
