@@ -470,42 +470,53 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                     ret.append({a[i][0]: a[i][1], 'genus': a[i][2]})
         return ['$or', ret]
     elif 'g' in arg: # linear function of variable g (ax+b)
-        a = GENUS_RE.match(arg).groups()[0]    
-        genus_list = db.hgcwa_passports.distinct('genus')
-        genus_list.sort()
-        min_genus = genus_list[0]
-        max_genus = genus_list[-1]
-        queries = []
+        if GENUS_RE.match(arg):
+            a = GENUS_RE.match(arg).groups()[0]    
+            genus_list = db.hgcwa_passports.distinct('genus')
+            genus_list.sort()
+            min_genus = genus_list[0]
+            max_genus = genus_list[-1]
+            queries = []
 
-        for g in range(min_genus,max_genus+1):
-            if '(' in arg:
-                b = int(GENUS_RE.match(arg).groups()[6])
-                if '+' in arg: #a(g+b)
-                    group_order = int(a)*(g+b)
-                elif '-' in arg: #a(g-b)
-                    group_order = int(a)*(g-b)
+            for g in range(min_genus,max_genus+1):
+                if '(' in arg:
+                    b = int(GENUS_RE.match(arg).groups()[6])
+                    if '+' in arg: #a(g+b)
+                        group_order = int(a)*(g+b)
+                    elif '-' in arg: #a(g-b)
+                        group_order = int(a)*(g-b)
+                else:
+                    if '+' in arg: 
+                        b = int(GENUS_RE.match(arg).groups()[4])
+                        if a == '': #g+b
+                            group_order = g+b
+                        else: #ag+b
+                            group_order = int(a)*g+b
+                    elif '-' in arg: 
+                        b = int(GENUS_RE.match(arg).groups()[4])
+                        if a == '': #g-b
+                            group_order = g-b
+                        else: #ag-b
+                            group_order = int(a)*g-b
+                    elif a== '':
+                        group_order = g
+                    else: #ag
+                        group_order = int(a)*g
+
+                queries.append((group_order, g))
+
+            if instance == 1: #If there is only one linear function 
+                return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
             else:
-                if '+' in arg: 
-                    b = int(GENUS_RE.match(arg).groups()[4])
-                    if a == '': #g+b
-                        group_order = g+b
-                    else: #ag+b
-                        group_order = int(a)*g+b
-                elif '-' in arg: 
-                    b = int(GENUS_RE.match(arg).groups()[4])
-                    if a == '': #g-b
-                        group_order = g-b
-                    else: #ag-b
-                        group_order = int(a)*g-b
-                else: #ag
-                    group_order = int(a)*g
+                return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
 
-            queries.append((group_order, g))
-
-        if instance == 1: #If there is only one linear function 
-            return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
         else:
-            return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
+            raise ValueError("It needs to be an integer (such as 25), \
+                    a range of integers (such as 2-10 or 2..10), \
+                    a linear function of variable g for genus \
+                    (such as 84(g-1), 84g-84, 84g, or g-1), \
+                    or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+            
     elif '-' in arg and 'g' not in arg:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
