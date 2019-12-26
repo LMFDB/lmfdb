@@ -12,18 +12,13 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 from __future__ import print_function, absolute_import
 import os
+# Needs to be done first so that other modules and gunicorn can use logging
 from .logger import info
 from .app import app, set_running  # So that we can set it running below
 
 # Importing the following top-level modules adds blueprints
 # to the app and imports further modules to make them functional
 # Note that this necessarily includes everything, even code in still in an alpha state
-#import logging # Needs to be done first so that other modules and gunicorn can use logging
-#assert logging
-#import backend
-#assert backend
-#import utils
-#assert utils
 from . import api
 assert api
 from . import api2
