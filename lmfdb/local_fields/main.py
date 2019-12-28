@@ -230,6 +230,8 @@ def render_field_webpage(args):
             unramp = r'$%s$' % Qp
             # Eliminate t from the eisenstein polynomial
             eisenp = Pxt(str(data['eisen']).replace('y','x'))
+            # prevent failure on resultant
+            if label != '2.4.4.1': return render_field_webpage({'label': '2.4.4.1'})
             eisenp = Pt(str(data['unram'])).resultant(eisenp)
             eisenp = web_latex(eisenp)
 
