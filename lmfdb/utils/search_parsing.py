@@ -73,7 +73,7 @@ class SearchParser(object):
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
-                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>"+str(err)+"</span>. %s", inp, name)
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
@@ -585,69 +585,15 @@ def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
         gcs = complete_group_codes(inp)
-        nfield, tfield = qfield
-        galgrp_helper(nfield, tfield, query, gcs)
+        galfield, nfield = qfield
+        # This currently does nothing with nfield, but it could in certain cases
+        cands = ['{}T{}'.format(s[0],s[1]) for s in gcs]
+        if len(cands) == 1:
+            query[galfield] = cands[0]
+        else:
+            query[galfield] = {'$in': cands}
     except NameError:
-        raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
-
-def galgrp_helper(nfield, tfield, query, cands):
-    if nfield in query:
-        cands = [t for n,t in cands if n == query[nfield]]
-        print ""
-        print ""
-        print ""
-        print query[nfield]
-        if len(cands) == 0:
-            raise ValueError("Degree inconsistent with Galois group.")
-        elif len(cands) == 1:
-            query[tfield] = cands[0]
-        else:
-            query[tfield] = {'$in': cands}
-    else:
-        gcsdict = defaultdict(list)
-        for n,t in cands:
-            gcsdict[n].append(t)
-        if len(gcsdict) == 1:
-            query[nfield] = n # left over from the loop
-            if len(cands) == 1:
-                query[tfield] = t # left over from the loop
-            else:
-                query[tfield] = {'$in': gcsdict[n]}
-        else:
-            options = []
-            for n, T in gcsdict.items():
-                if len(T) == 1:
-                    options.append({nfield: n, tfield: T[0]})
-                else:
-                    options.append({nfield: n, tfield: {'$in': T}})
-            collapse_ors(['$or', options], query)
-
-# Parses a list of a combination of group names, gap id's, nTj's
-@search_parser(clean_info=True, error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_abstract_to_trans_grp(inp, query, qfield):
-    nfield, tfield = qfield
-    from lmfdb.galois_groups.transitive_group import complete_group_code
-    # Deal with the fact that commas separate a list, and also
-    mystr = inp.upper()
-    mystr = re.sub(r'\[(\d+),(\d+)\]', r'[\1q\2]', str(inp))
-    parts = mystr.split(',')
-    candidates = [] # build a list of [n,t] pairs
-    for part in parts:
-        if 'q' in part: # GAP id, amost right form except q instead of comma
-            nts = list(db.gps_transitive.search({'gapidfull':part.replace('q',',')}, projection=['n','t']))
-            candidates += nts
-        else:
-            try:
-                # this handles nTj and group nicknames
-                candidates += complete_group_code(part)
-            except NameError:
-                raise ValueError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], or <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>, such as C5 or 5T1.")
-    print ""
-    print "***********************"
-    print ""
-    print candidates
-    candidates = list(set(candidates))
-    galgrp_helper(nfield, tfield, query, candidates)
+        raise ValueError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:

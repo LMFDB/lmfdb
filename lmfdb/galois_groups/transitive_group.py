@@ -571,11 +571,18 @@ def group_alias_table():
 def complete_group_code(code):
     if code in aliases:
         return aliases[code]
+    # Try nTj notation
     rematch = re.match(r"^(\d+)T(\d+)$", code)
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [[n, t]]
+    # Try GAP code
+    rematch = re.match(r'^\[\d+,\d+\]$', code)
+    if rematch:
+        nts = list(db.gps_transitive.search({'gapidfull':code}, projection=['n','t']))
+        nts = [[z['n'], z['t']] for z in nts]
+        return nts
     else:
         raise NameError(code)
     return []
@@ -588,6 +595,7 @@ def complete_group_codes(codes):
     ans = []
     # after upper casing, we can replace commas we want to keep with "z"
     codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
+    codes = re.sub(r'\[(\d+),(\d+)\]', r'[\1z\2]', codes)
     codelist = codes.split(',')
     # now turn the z's back into commas
     codelist = [re.sub('z', ',', x) for x in codelist]
@@ -784,6 +792,12 @@ aliases['D44'] = [(44,9)]
 aliases['D45'] = [(45,4)]
 aliases['D46'] = [(46,3)]
 aliases['D47'] = [(47,2)]
+
+aliases['M12'] = [(12,295)]
+aliases['PSL(3,3)'] = [(13,7)]
+aliases['PSL(2,13)'] = [(14,30)]
+aliases['PSP(4,3)'] = [(27,993)]
+aliases['PSU(3,3)'] = [(28,323)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]
