@@ -223,16 +223,11 @@ def render_field_webpage(args):
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
-        Pxt=PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
-            # Eliminate t from the eisenstein polynomial
-            eisenp = Pxt(str(data['eisen']).replace('y','x'))
-            # prevent failure on resultant
-            if label != '2.4.4.1': return render_field_webpage({'label': '2.4.4.1'})
-            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = web_latex(eisenp)
 
         else:

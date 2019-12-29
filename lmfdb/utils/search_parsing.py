@@ -5,7 +5,7 @@ from six.moves import range
 from six import string_types
 
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
 from sage.all import ZZ, QQ, prod, PolynomialRing
@@ -585,8 +585,15 @@ def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
         gcs = complete_group_codes(inp)
+        gcs = list(set(gcs))
         galfield, nfield = qfield
-        # This currently does nothing with nfield, but it could in certain cases
+        if nfield not in query:
+            nvals = list(set([s[0] for s in gcs]))
+            if len(nvals) == 1:
+                query[nfield] = nvals[0]
+            else:
+                query[nfield] = {'$in': nvals}
+        # if nfield was already in the query, we could try to intersect it with nvals
         cands = ['{}T{}'.format(s[0],s[1]) for s in gcs]
         if len(cands) == 1:
             query[galfield] = cands[0]

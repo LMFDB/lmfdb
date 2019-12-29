@@ -576,12 +576,12 @@ def complete_group_code(code):
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
-        return [[n, t]]
+        return [(n, t)]
     # Try GAP code
     rematch = re.match(r'^\[\d+,\d+\]$', code)
     if rematch:
         nts = list(db.gps_transitive.search({'gapidfull':code}, projection=['n','t']))
-        nts = [[z['n'], z['t']] for z in nts]
+        nts = [(z['n'], z['t']) for z in nts]
         return nts
     else:
         raise NameError(code)
