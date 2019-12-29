@@ -771,7 +771,7 @@ class PostgresBase(object):
                     has_id = True
         return col_list, col_type, has_id
 
-    def _copy_to_select(self, select, filename, header="", sep='|', silent=False):
+    def _copy_to_select(self, select, filename, header="", sep="|", silent=False):
         """
         Using the copy_expert from psycopg2, exports the data from a select statement.
 
@@ -779,7 +779,7 @@ class PostgresBase(object):
 
         - ``select`` -- an SQL Composable object giving a select statement
         - ``header`` -- An initial header to write to the file
-        - ``sep`` -- a separator, defaults to tab
+        - ``sep`` -- a separator, defaults to ``|``
         - ``silent`` -- suppress reporting success
         """
         if sep != '\t':
@@ -1111,7 +1111,7 @@ class PostgresBase(object):
         meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
         try:
             cur = self._db.cursor()
-            cur.copy_from(filename, meta_name, columns=meta_cols)
+            cur.copy_from(filename, meta_name, columns=meta_cols, sep="|")
         except Exception:
             self.conn.rollback()
             raise
@@ -1161,7 +1161,7 @@ class PostgresBase(object):
             with open(filename, "r") as F:
                 try:
                     cur = self._db.cursor()
-                    cur.copy_from(F, meta_name, columns=meta_cols)
+                    cur.copy_from(F, meta_name, columns=meta_cols, sep="|")
                 except Exception:
                     self.conn.rollback()
                     raise
@@ -3992,7 +3992,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        sep = kwds.get("sep", u"|")
+        sep = kwds.pop("sep", u"|")
 
         tabledata = [
                 # tablename, cols, addid, write_header, filename
@@ -4022,7 +4022,7 @@ class PostgresTable(PostgresBase):
                     try:
                         if write_header:
                             self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols_wquotes, **kwds)
+                        cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
@@ -4034,7 +4034,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 cols = SQL(", ").join(map(Identifier, cols))
                 select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
-                self._copy_to_select(select, filename, silent=True)
+                self._copy_to_select(select, filename, silent=True, sep=sep)
                 print("\tExported data from %s in %.3f secs to %s" % (table, time.time() - now, filename))
 
             print("Exported %s in %.3f secs" % (self.search_table, time.time() - now_overall))
@@ -4231,9 +4231,9 @@ class PostgresTable(PostgresBase):
                         transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
                         cur = self._db.cursor()
                         with transfer_file:
-                            cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
+                            cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns, sep='|')
                         with open(transfer_file.name) as F:
-                            cur.copy_from(F, self.extra_table, columns=['id'] + columns)
+                            cur.copy_from(F, self.extra_table, columns=['id'] + columns, sep='|')
                     finally:
                         transfer_file.unlink(transfer_file.name)
                 except Exception:
