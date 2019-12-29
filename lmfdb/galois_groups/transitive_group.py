@@ -558,6 +558,7 @@ def group_alias_table():
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
+        # Remove An, Cn, Dn, Sn since they are covered by a general comment
         if not re.match(r'^[ACDS]\d+$', j):
             name = group_display_short(aliases[j][0][0], aliases[j][0][1])
             ntlist = aliases[j]
@@ -593,6 +594,8 @@ def complete_group_code(code):
 def complete_group_codes(codes):
     codes = codes.upper()
     ans = []
+    # some commas separate groups, and others are internal to group names
+    # like PSL(2,7) and gap id [6,1]
     # after upper casing, we can replace commas we want to keep with "z"
     codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
     codes = re.sub(r'\[(\d+),(\d+)\]', r'[\1z\2]', codes)
