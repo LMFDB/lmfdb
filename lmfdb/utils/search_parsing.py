@@ -585,7 +585,6 @@ def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
         gcs = complete_group_codes(inp)
-        gcs = list(set(gcs))
         galfield, nfield = qfield
         if nfield not in query:
             nvals = list(set([s[0] for s in gcs]))

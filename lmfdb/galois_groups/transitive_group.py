@@ -558,12 +558,12 @@ def group_alias_table():
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
-        name = group_display_short(aliases[j][0][0], aliases[j][0][1])
-        ntlist = aliases[j]
-        #ntlist = filter(lambda x: x[0] < 12, ntlist)
-        ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
-        ntstring = ", ".join(ntstrings)
-        ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
+        if not re.match(r'^[ACDS]\d+$', j):
+            name = group_display_short(aliases[j][0][0], aliases[j][0][1])
+            ntlist = aliases[j]
+            ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
+            ntstring = ", ".join(ntstrings)
+            ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += '</tbody></table>'
     return ans
 
@@ -601,7 +601,7 @@ def complete_group_codes(codes):
     codelist = [re.sub('z', ',', x) for x in codelist]
     for code in codelist:
         ans.extend(complete_group_code(code))
-    return ans
+    return list(set(ans))
 
 
 aliases = {}
@@ -794,6 +794,9 @@ aliases['D46'] = [(46,3)]
 aliases['D47'] = [(47,2)]
 
 aliases['M12'] = [(12,295)]
+aliases['M22'] = [(22,38)]
+aliases['M23'] = [(23,5)]
+aliases['M24'] = [(24,24680)]
 aliases['PSL(3,3)'] = [(13,7)]
 aliases['PSL(2,13)'] = [(14,30)]
 aliases['PSP(4,3)'] = [(27,993)]
