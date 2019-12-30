@@ -518,9 +518,11 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         if listprocess is not None:
             L = listprocess(L)
         if extractor is not None:
+            # This is currently only used by number field signatures
+            # The code assumes we have only a single item to deal with
+            # It needs to be fixed more generally if there are more items
+            # This needs to be run after degree and Galois group
             for qf, v in zip(qfield, extractor(L)):
-                if qf in query and query[qf] != v:
-                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
                 query[qf] = v
         elif split:
             query[qfield] = L
