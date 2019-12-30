@@ -519,11 +519,25 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             L = listprocess(L)
         if extractor is not None:
             # This is currently only used by number field signatures
-            # The code assumes we have only a single item to deal with
-            # It needs to be fixed more generally if there are more items
-            # This needs to be run after degree and Galois group
+            # It assumes degree is fairly simple in the query
             for qf, v in zip(qfield, extractor(L)):
-                query[qf] = v
+                if qf in query:
+                    # If used more generally we should check every modifier
+                    # value -1 is used to force empty search results
+                    if isinstance(query[qf], dict):
+                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                           or ('$gt' in query[qf] and not v > query[qf]['$gt'])
+                           or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
+                           or ('$lt' in query[qf] and not v < query[qf]['$lt'])
+                           or ('$lte' in query[qf] and not v <= query[qf]['$lte'])):
+                            query[qf] = -1
+                        else:
+                            query[qf] = v
+                    else:
+                        if v != query[qf]:
+                            query[qf] = -1 
+                else:
+                    query[qf] = v
         elif split:
             query[qfield] = L
         else:
