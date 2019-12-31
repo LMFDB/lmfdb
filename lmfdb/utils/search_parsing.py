@@ -602,7 +602,7 @@ def parse_galgrp(inp, query, qfield):
     try:
         gcs = complete_group_codes(inp)
         galfield, nfield = qfield
-        if nfield not in query:
+        if nfield and nfield not in query:
             nvals = list(set([s[0] for s in gcs]))
             if len(nvals) == 1:
                 query[nfield] = nvals[0]

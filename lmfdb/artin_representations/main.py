@@ -113,7 +113,7 @@ def artin_representation_search(info, query):
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
-    parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel","Galn"))
+    parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
     parse_bool(info,query,'Is_Even')
