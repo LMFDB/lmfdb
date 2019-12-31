@@ -65,22 +65,22 @@ def Array(*f, **kwargs):
         pass
 
     def initOneFunction(self, x, n=kwargs.get("n")):
-        tmp = (map(f[0], x[:n]))
+        tmp = (f[0](z) for z in x[:n])
         list.__init__(self, tmp)
 
     def initMultipleFunctions(self, x):
-        tmp = map(lambda ff, xx: ff(xx), f, x)
+        tmp = (ff(xx) for ff, xx in zip(f, x))
         list.__init__(self, tmp)
 
     if len(f) == 1:
         # setattr(SmartArray, "__init__", wrapper(initOneFunction))
-        setattr(SmartArray, "__init__", (initOneFunction))
+        setattr(SmartArray, "__init__", initOneFunction)
     else:
         try:
             n = kwargs.get("n")
             assert len(f) == n or n is None
             # setattr(SmartArray, "__init__", wrapper(initMultipleFunctions))
-            setattr(SmartArray, "__init__", (initMultipleFunctions))
+            setattr(SmartArray, "__init__", initMultipleFunctions)
 
         except AssertionError:
             raise Exception("Bad definition of a fixed length array")
