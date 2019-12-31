@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Different helper functions.
 from six import string_types
 import math, re
@@ -274,7 +275,7 @@ def lfuncEPtex(L, fmt):
         Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    from Lfunction import Lfunction_from_db
+    from .Lfunction import Lfunction_from_db
     if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
         try:
             return lfuncEPhtml(L, fmt)

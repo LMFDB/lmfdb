@@ -21,6 +21,7 @@ AUTHORS:
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import flask
 from flask import render_template, url_for, request, send_file
 import re
@@ -32,7 +33,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
-from mwf_plot import paintSvgMaass
+from .mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour

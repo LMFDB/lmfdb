@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
@@ -8,17 +9,17 @@ import tempfile
 import os
 import re
 
-import LfunctionPlot
+from . import LfunctionPlot
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
+from .Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_HMFDB, Lfunction_BMF,
                        Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
                        SymmetricPowerLfunction, HypergeometricMotiveLfunction,
                        Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
-from LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
-from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
+from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
+from .Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 

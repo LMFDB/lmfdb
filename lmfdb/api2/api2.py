@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from unicodedata import normalize
 from lmfdb.api2 import api2_page
 from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons
-import utils
+from . import utils
 
 @api2_page.route("/api.css")
 def api_css():

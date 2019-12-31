@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # / modular_forms/__init__.py
 
 import flask
@@ -10,9 +11,9 @@ MF = "mf"
 mf = flask.Blueprint(MF, __name__, template_folder="views/templates")
 mf_logger = make_logger(mf)
 
-import maass_forms
+from . import maass_forms
 assert maass_forms
-import views
+from . import views
 assert views
 
 app.register_blueprint(mf, url_prefix="/ModularForm/")

@@ -2,6 +2,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
+from __future__ import absolute_import
 from six import StringIO
 
 from flask import render_template, url_for, request, send_file, redirect
@@ -14,8 +15,8 @@ from lmfdb.utils import (
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.family import get_smf_family, get_smf_families
-import dimensions
-import sample
+from . import dimensions
+from . import sample
 
 ###############################################################################
 # Utility functions
