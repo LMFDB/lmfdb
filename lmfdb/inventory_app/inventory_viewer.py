@@ -283,11 +283,11 @@ def validate_edits(diff):
         tmp = diff["diffs"]
         assert(tmp is not None)
     except KeyError as e:
-        raise DiffKeyError(e.message)
+        raise DiffKeyError(e.args[0])
     except (AssertionError, TypeError) as e:
-        raise DiffBadType(e.message)
+        raise DiffBadType(e.args[0])
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
 
     if not isinstance(diff["db"], string_types):
         raise DiffBadType("db")
@@ -303,7 +303,7 @@ def validate_edits(diff):
     except TypeError:
         raise DiffBadType("diffs (not iterable)")
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
     #We want diffs to be specifically an iterable of things each containing item, field, content triplets
 
     try:
@@ -315,9 +315,10 @@ def validate_edits(diff):
             a = diff_item['content']
             assert(a is not None)
     except (TypeError, KeyError) as e:
-        raise DiffBadType("diffs (triplet errors)"+e.message)
+        raise DiffBadType("diffs (triplet errors)" + e.args[0])
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
+
 
 def process_edits(diff):
 #This has to reverse anything we did to display info
