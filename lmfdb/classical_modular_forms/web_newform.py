@@ -975,7 +975,7 @@ function switch_basis(btype) {
                 return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr align="center"><th colspan=8>By %s</th></tr>'% display_knowl('cmf.twisting_character','twisting character orbit'), '<tr>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twisting_character','twisting character orbit'), '<tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
@@ -995,8 +995,8 @@ function switch_basis(btype) {
             twists1.append('  </tr>')
         twists1.extend(['</tbody>', '</table>'])
 
-        twists2 = ['<table class="ntdata">', '<thead>',
-                   '<tr align="center"><th colspan=8>By %s</th></tr>'% display_knowl('cmf.twisted_newform','twisted newform orbit'), '<tr>',
+        twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twisted_newform','twisted newform orbit'), '<tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
