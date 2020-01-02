@@ -926,7 +926,7 @@ function switch_basis(btype) {
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
-            return '    <td>%s</th>' % val
+            return '    <td>%s</td>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
@@ -964,7 +964,7 @@ function switch_basis(btype) {
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
-            return '    <td>%s</th>' % val
+            return '    <td>%s</td>' % val
         def twist_type(r):
             if r['target_label'] != self.label:
                 return ''
@@ -994,7 +994,7 @@ function switch_basis(btype) {
             twists1.append('  </tr>')
         twists1.extend(['</tbody>', '</table>'])
 
-        twists2 = ['<table class="ntdata" style="float: left">', '<thead>', '  <tr>',
+        twists2 = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
@@ -1013,7 +1013,7 @@ function switch_basis(btype) {
             twists2.append('  </tr>')
         twists2.extend(['</tbody>', '</table>'])
 
-        return '<div>\n' + '\n'.join(twists1) + '\n'.join(twists2) + '\n</div>\n'
+        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp</div>\n' + '\n'.join(twists2) + '\n</div>\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
