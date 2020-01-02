@@ -927,7 +927,6 @@ function switch_basis(btype) {
                   #th_wrap('character.dirichlet.order', 'Order'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult.'),
                   th_wrap('cmf.self_twist_field', 'Self Twist'),
-                  th_wrap('cmf.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
         trivial = [elt for elt in self.inner_twists if elt[6] == 1]
         CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
@@ -938,7 +937,6 @@ function switch_basis(btype) {
         for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
             label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
             parity = 'Even' if parity == 1 else 'Odd'
-            proved = 'yes' if proved == 1 else 'no'
             link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
             if discriminant == 0:
                 field = ''
@@ -948,7 +946,7 @@ function switch_basis(btype) {
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
                 field = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [link, parity, mult, field, proved])) # add order back eventually
+            twists.extend(map(td_wrap, [link, parity, mult, field])) # remove proved (now always true), add order back eventually
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
