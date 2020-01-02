@@ -929,6 +929,7 @@ function switch_basis(btype) {
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.degree', 'Degree'),
                   th_wrap('character.dirichlet.order', 'Ord'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Self twist'),
@@ -969,7 +970,7 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.order', 'Ord'),
                   th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
-                  th_wrap('cmf.inner_twist', 'Type'),
+                  th_wrap('cmf.twist', 'Type'),
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   '  </tr>', '</thead>', '<tbody>']
@@ -978,7 +979,7 @@ function switch_basis(btype) {
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twist_type = ''
-            if 'target_label' == self.label:
+            if r['target_label'] == self.label:
                 if r['twisting_char_label'] == '1.a':
                     twist_type = 'trivial'
                 else:
