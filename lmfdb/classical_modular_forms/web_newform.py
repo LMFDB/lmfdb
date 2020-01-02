@@ -188,7 +188,7 @@ class WebNewform(object):
 
         # lookup twists (of newform orbits, not embedded newforms)
         if self.embedding_label is None and self.minimal_twist is not None:
-            twist_cols = ['twisting_char_label','target_label','multiplicity','parity','order','degree', ' target_dim']
+            twist_cols = ['twisting_char_label','target_label','multiplicity','parity','order','degree', 'target_dim']
             self.twists = [r for r in db.mf_twists.search({'source_label':self.label},twist_cols)]
             # TODO decide how to sort, for now we just use mf_twists default sort order (which is by twisting character then target)
         else:
