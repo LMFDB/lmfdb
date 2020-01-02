@@ -89,10 +89,10 @@ class CmfTest(LmfdbTest):
                     elt in main_page
                     desc in main_page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                    assert ("Newform %s" % elt) in page.data
+                    assert ("Newform orbit %s" % elt) in page.data
                     # redirect to the same page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                    assert ("Newform %s" % elt) in page.data
+                    assert ("Newform orbit %s" % elt) in page.data
         for l in favorite_space_labels:
             for elt, desc in l:
                 elt in main_page
@@ -237,10 +237,10 @@ class CmfTest(LmfdbTest):
     def test_convert_conreylabels(self):
         for c in [27, 31]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/%d/a/' % c,follow_redirects=True)
-            assert "Newform 38.9.d.a" in page.data
+            assert "Newform orbit 38.9.d.a" in page.data
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
-                assert "Newform 38.9.d.a" in page.data
+                assert "Embedded newform 38.9.d.a" in page.data
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
@@ -310,18 +310,18 @@ class CmfTest(LmfdbTest):
 
     def test_dual(self):
         urls_set = [
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual Form 5.9.c.a.2.1'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual Form 5.9.c.a.3.1'),
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform orbit 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual form 5.9.c.a.2.1'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual form 5.9.c.a.3.1'),
                 ],
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual Form 5.9.c.a.2.3'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual Form 5.9.c.a.3.3'),
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform orbit 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual form 5.9.c.a.2.3'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual form 5.9.c.a.3.3'),
                 ],
                 [
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a'),
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1'),
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform orbit 13.2.e.a'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual form 13.2.e.a.4.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual form 13.2.e.a.10.1'),
                 ]
                 ]
         for urls in urls_set:
@@ -355,8 +355,8 @@ class CmfTest(LmfdbTest):
                 assert n in page.data
 
             assert 'Newspace 13.2.e' in page.data
-            assert 'Newform 13.2.e.a' in page.data
-            assert 'Dual Form 13.2.e.a.' in page.data
+            assert 'Newform orbit 13.2.e.a' in page.data
+            assert 'Dual form 13.2.e.a.' in page.data
             assert 'L-function 13.2.e.a.' in page.data
 
             assert '0.103805522628' in page.data

@@ -236,7 +236,7 @@ class WebNewform(object):
             self.properties += [('CM', 'No')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', str(self.inner_twist_count))]
-        self.title = "Newform %s"%(self.label)
+        self.title = "Newform orbit %s"%(self.label)
 
     # Breadcrumbs
     @property
@@ -296,12 +296,12 @@ class WebNewform(object):
             res.append(('Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
                         '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
-            res.append(('Newform ' + self.label, nf_url))
+            res.append(('Newform orbit ' + self.label, nf_url))
             if (self.dual_label is not None and
                     self.dual_label != self.embedding_label):
                 dlabel = self.label + '.' + self.dual_label
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
-                res.append(('Dual Form ' + dlabel, d_url))
+                res.append(('Dual form ' + dlabel, d_url))
 
             if self.dim == 1:
                 # use the Galois orbits friends for the unique embedding
@@ -1065,7 +1065,7 @@ function switch_basis(btype) {
         return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
     def embedded_title(self, m):
-        return "Embedded Newform %s.%s"%(self.label, self.conrey_from_embedding(m))
+        return "Embedded newform %s.%s"%(self.label, self.conrey_from_embedding(m))
 
     def _display_re(self, x, prec, method='round', extra_truncation_digits=3):
         res = display_float(x, prec,
