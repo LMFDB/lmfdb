@@ -983,7 +983,9 @@ function switch_basis(btype) {
                 if r['twisting_char_label'] == '1.a':
                     twist_type = 'trivial'
                 else:
+                    print self.inner_twists
                     s = [x for x in self.inner_twists if x[3] == r['conductor'] and x[4] == r['twisting_char_orbit']]
+                    print s
                     if len(s) != 1:
                         return '<p>There is a problem with the twist data for this newform (an allegedly inner twist is not inner), please report this as a bug.</p>'
                     s = s[0]
