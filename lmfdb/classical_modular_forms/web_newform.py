@@ -963,8 +963,10 @@ function switch_basis(btype) {
             return '<p>Twists of this newform have not been computed.</p>'
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
-        def td_wrap(val):
-            return '    <td>%s</td>' % val
+        def td_wrapl(val):
+            return '    <td align="left">%s</td>' % val
+        def td_wrapr(val):
+            return '    <td align="right">%s</td>' % val
         def twist_type(r):
             if r['target_label'] != self.label:
                 return ''
@@ -990,9 +992,10 @@ function switch_basis(btype) {
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
-            twists1.append('  <tr>')
-            twists1.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type(r), target_link, r['target_dim']]))
-            twists1.append('  </tr>')
+            twists1.append('<tr>')
+            twists1.extend([td_wrapl(char_link), td_wrapr(parity), td_wrapr(r['order']), td_wrapr(r['degree']),
+                            td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)), td_wrapl(target_link), td_wrapr(r['target_dim'])])
+            twists1.append('</tr>')
         twists1.extend(['</tbody>', '</table>'])
 
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
@@ -1010,9 +1013,10 @@ function switch_basis(btype) {
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
-            twists2.append('  <tr>')
-            twists2.extend(map(td_wrap, [target_link, r['target_dim'], char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type(r)]))
-            twists2.append('  </tr>')
+            twists2.append('<tr>')
+            twists2.extend([td_wrapl(target_link), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapr(parity), td_wrapr(r['order']),
+                            td_wrapr(r['degree']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
+            twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
 
         return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
