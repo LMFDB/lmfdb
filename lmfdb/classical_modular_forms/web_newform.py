@@ -965,7 +965,16 @@ function switch_basis(btype) {
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
             return '    <td>%s</th>' % val
-        twists = ['<table class="ntdata" style="float: left">', '<thead>', '  <tr>',
+        def twist_type(r):
+            if r['target_label'] != self.label:
+                return ''
+            if r['twisting_char_label'] == '1.a':
+                return 'trivial'
+            else:
+                s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
+                return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
+
+        twists1 = ['<table class="ntdata" style="float: left">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
@@ -975,29 +984,36 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   '  </tr>', '</thead>', '<tbody>']
+
         for r in self.twists:
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
-            twist_type = ''
-            if r['target_label'] == self.label:
-                if r['twisting_char_label'] == '1.a':
-                    twist_type = 'trivial'
-                else:
-                    s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
-                    if len(s) != 1:
-                        return '<p>There is a problem with the twist data for this newform (an allegedly inner twist is not inner), please report this as a bug.</p>'
-                    s = s[0]
-                    # TODO remove this and add it to the verify code
-                    if s[1] != r['multiplicity']:
-                        return '<p>There is a problem with the twist data for this newform (multiplicity mismatch with inner twist data), please report this as a bug.</p>'
-                    twist_type = 'inner' if s[6] == 0 else ('CM' if s[6] < 0 else 'RM')
-            twists.append('  <tr>')
-            twists.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type, target_link, r['target_dim']]))
-            twists.append('  </tr>')
-        twists.extend(['</tbody>', '</table>'])
-        twists.extend(twists) #test two table format
-        return '<div>\n' + '\n'.join(twists) + '\n</div>'
+            twists1.append('  <tr>')
+            twists1.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type(r), target_link, r['target_dim']]))
+            twists1.append('  </tr>')
+        twists1.extend(['</tbody>', '</table>'])
+
+        twists2 = ['<table class="ntdata" style="float: right">', '<thead>', '  <tr>',
+                  th_wrap('cmf.twist_newform', 'Twist'),
+                  th_wrap('cmf.twist_dimension', 'Dim'),
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.order', 'Ord'),
+                  th_wrap('character.dirichlet.degree', 'Deg'),
+                  th_wrap('cmf.twist_multiplicity', 'Mult'),
+                  th_wrap('cmf.twist', 'Type'),
+                  '  </tr>', '</thead>', '<tbody>']
+        for r in sorted(self.twists, key = lambda x : x['target_label']):
+            parity = 'Even' if r['parity'] == 1 else 'Odd'
+            char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            twists2.append('  <tr>')
+            twists2.extend(map(td_wrap, [target_link, r['target_dim'], char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type(r)]))
+            twists2.append('  </tr>')
+        twists2.extend(['</tbody>', '</table>'])
+
+        return '<div>\n' + '\n'.join(twists1) + '\n'.join(twists2) + '\n</div>\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
