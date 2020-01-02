@@ -984,14 +984,14 @@ function switch_basis(btype) {
                     twist_type = 'trivial'
                 else:
                     print self.inner_twists
-                    s = [x for x in self.inner_twists if x[3] == r['conductor'] and x[4] == r['twisting_char_orbit']]
+                    s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
                     print s
                     if len(s) != 1:
                         return '<p>There is a problem with the twist data for this newform (an allegedly inner twist is not inner), please report this as a bug.</p>'
                     s = s[0]
                     if s[1] != r['multiplicity']:
                         return '<p>There is a problem with the twist data for this newform (multiplicity mismatch with inner twist data), please report this as a bug.</p>'
-                    twist_type = 'inner' if s[7] == 0 else ('CM' if s[7] < 0 else 'RM')
+                    twist_type = 'inner' if s[6] == 0 else ('CM' if s[6] < 0 else 'RM')
             twists.append('  <tr>')
             twists.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type, target_link, r['target_dim']]))
             twists.append('  </tr>')
