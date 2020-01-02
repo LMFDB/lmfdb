@@ -7,7 +7,7 @@ import bisect, re
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR,
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, euler_phi,
                       lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
@@ -927,11 +927,11 @@ function switch_basis(btype) {
         def td_wrap(val):
             return '    <td>%s</th>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
-                  th_wrap('character.dirichlet.galois_orbit_label', 'Char.'),
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
-                  #th_wrap('character.dirichlet.order', 'Order'),
-                  th_wrap('cmf.inner_twist_multiplicity', 'Mult.'),
-                  th_wrap('cmf.self_twist_field', 'Self Twist'),
+                  th_wrap('character.dirichlet.order', 'Ord'),
+                  th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
+                  th_wrap('cmf.self_twist_field', 'Self twist'),
                   '  </tr>', '</thead>', '<tbody>']
         trivial = [elt for elt in self.inner_twists if elt[6] == 1]
         CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
@@ -944,14 +944,14 @@ function switch_basis(btype) {
             parity = 'Even' if parity == 1 else 'Odd'
             link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
             if discriminant == 0:
-                field = ''
+                selftwist = ''
             elif discriminant == 1:
-                field = 'trivial'
+                selftwist = 'trivial'
             else:
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
-                field = cmrm + quad_field_knowl(discriminant)
+                selftwist = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [link, parity, mult, field])) # add order back eventually
+            twists.extend(map(td_wrap, [link, parity, order, euler_phi(order), mult, selftwist]))
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
@@ -964,20 +964,32 @@ function switch_basis(btype) {
         def td_wrap(val):
             return '    <td>%s</th>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
-                  th_wrap('character.dirichlet.galois_orbit_label', 'Char.'),
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
-                  th_wrap('character.dirichlet.order', 'Order'),
-                  th_wrap('character.dirichlet.degree', 'Degree'),
-                  th_wrap('cmf.twist_multiplicity', 'Mult.'),
+                  th_wrap('character.dirichlet.order', 'Ord'),
+                  th_wrap('character.dirichlet.degree', 'Deg'),
+                  th_wrap('cmf.twist_multiplicity', 'Mult'),
+                  th_wrap('cmf.inner_twist', 'Type'),
                   th_wrap('cmf.twist_newform', 'Twist'),
-                  th_wrap('cmf.twist_dimension', 'Dim.'),
+                  th_wrap('cmf.twist_dimension', 'Dim'),
                   '  </tr>', '</thead>', '<tbody>']
         for r in self.twists:
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            if 'target_label' == self.label:
+                if r['twisting_char_label'] == '1.a':
+                    twist_type = 'trivial'
+                else:
+                    s = [x for x in self.inner_twists if x[3] == r['conductor'] and x[4] == r['twisting_char_orbit']]
+                    if len(s) != 1:
+                        return '<p>There is a problem with the twist data for this newform (an allegedly inner twist is not inner), please report this as a bug.</p>'
+                    s = s[0]
+                    if s[1] != r['multiplicity']:
+                        return '<p>There is a problem with the twist data for this newform (multiplicity mismatch with inner twist data), please report this as a bug.</p>'
+                    twist_type = 'inner' if s[7] == 0 else ('CM' if s[7] < 0 else 'RM')
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], target_link, r['target_dim']]))
+            twists.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], twist_type, target_link, r['target_dim']]))
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
