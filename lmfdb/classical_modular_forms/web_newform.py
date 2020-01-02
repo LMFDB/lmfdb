@@ -957,7 +957,7 @@ function switch_basis(btype) {
         return '\n'.join(twists)
 
     def display_twists(self):
-        if not self.twist:
+        if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
