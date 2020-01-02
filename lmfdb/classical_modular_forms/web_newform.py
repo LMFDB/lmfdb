@@ -977,6 +977,7 @@ function switch_basis(btype) {
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            twist_type = ''
             if 'target_label' == self.label:
                 if r['twisting_char_label'] == '1.a':
                     twist_type = 'trivial'
