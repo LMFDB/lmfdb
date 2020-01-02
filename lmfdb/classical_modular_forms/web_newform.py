@@ -632,7 +632,7 @@ class WebNewform(object):
             desc = desc % (knowl, polynomials[0], self.display_newspace())
         else:
             desc = r"<p>This %s is the entire %s %s.</p> "%(display_knowl('cmf.newform_subspace','newform subspace'),
-                                                          display_knowl('cmf_newspace','newspace'),self.display_newspace())
+                                                          display_knowl('cmf.newspace','newspace'),self.display_newspace())
         return desc
 
     def defining_polynomial(self):
