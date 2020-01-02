@@ -975,7 +975,7 @@ function switch_basis(btype) {
                 return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr align="center"><th colspan=8>By %s</th></tr><tr>'% display_knowl('cmf.twisting_character','twisting character orbit'), '<tr>',
+                   '<tr align="center"><th colspan=8>By %s</th></tr>'% display_knowl('cmf.twisting_character','twisting character orbit'), '<tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
