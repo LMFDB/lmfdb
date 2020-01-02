@@ -974,7 +974,7 @@ function switch_basis(btype) {
                 s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
                 return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
 
-        twists1 = ['<table class="ntdata" style="width:40% float: left">', '<thead>', '  <tr>',
+        twists1 = ['<table class="ntdata" style="width:30% float: left">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
@@ -994,7 +994,7 @@ function switch_basis(btype) {
             twists1.append('  </tr>')
         twists1.extend(['</tbody>', '</table>'])
 
-        twists2 = ['<table class="ntdata" style="width:40% float: left">', '<thead>', '  <tr>',
+        twists2 = ['<table class="ntdata" style="width:30% float: left">', '<thead>', '  <tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
