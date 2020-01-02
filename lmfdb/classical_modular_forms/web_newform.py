@@ -939,7 +939,7 @@ function switch_basis(btype) {
         other = sorted([elt for elt in self.inner_twists if elt[6] == 0],
                 key = lambda elt: (elt[2],elt[3]))
         self.inner_twists = trivial + CMRM + other
-        for mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
+        for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
             label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
             parity = 'Even' if parity == 1 else 'Odd'
             link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
@@ -972,12 +972,12 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim.'),
                   '  </tr>', '</thead>', '<tbody>']
-        for twisting_char_label, parity, order, degree, multiplicity, target_label, target_dim in self.twists:
-            parity = 'Even' if parity == 1 else 'Odd'
-            char_link = display_knowl('character.dirichlet.orbit_data', title=twisting_char_label, kwargs={'label':twisting_char_label})
-            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + target_label.replace('.','/'),target_label)
+        for r in self.twists:
+            parity = 'Even' if r['parity'] == 1 else 'Odd'
+            char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [char_link, parity, order, degree, multiplicity, target_link, target_dim]))
+            twists.extend(map(td_wrap, [char_link, parity, r['order'], r['degree'], r['multiplicity'], target_link, r['target_dim']]))
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
