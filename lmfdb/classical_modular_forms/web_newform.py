@@ -925,8 +925,10 @@ function switch_basis(btype) {
                 return '<p>This newform does not have CM; other inner twists have not been computed.</p>'
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
-        def td_wrap(val):
-            return '    <td>%s</td>' % val
+        def td_wrapl(val):
+            return '    <td align="left">%s</td>' % val
+        def td_wrapr(val):
+            return '    <td align="right">%s</td>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
@@ -953,7 +955,7 @@ function switch_basis(btype) {
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
                 selftwist = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [link, parity, order, euler_phi(order), mult, selftwist]))
+            twists.extend([td_wrapl(link), td_wrapl(parity), td_wrapr(order), td_wrapr(euler_phi(order)), td_wrapr(mult), td_wrapl(selftwist)])
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
@@ -993,7 +995,7 @@ function switch_basis(btype) {
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists1.append('<tr>')
-            twists1.extend([td_wrapl(char_link), td_wrapr(parity), td_wrapr(r['order']), td_wrapr(r['degree']),
+            twists1.extend([td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['degree']),
                             td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)), td_wrapl(target_link), td_wrapr(r['target_dim'])])
             twists1.append('</tr>')
         twists1.extend(['</tbody>', '</table>'])
@@ -1014,7 +1016,7 @@ function switch_basis(btype) {
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
-            twists2.extend([td_wrapl(target_link), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapr(parity), td_wrapr(r['order']),
+            twists2.extend([td_wrapl(target_link), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']),
                             td_wrapr(r['degree']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
             twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
