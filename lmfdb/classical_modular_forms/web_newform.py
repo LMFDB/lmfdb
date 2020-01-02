@@ -974,7 +974,7 @@ function switch_basis(btype) {
                 s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
                 return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
 
-        twists1 = ['<table class="ntdata" style="float: left">', '<thead>', '  <tr>',
+        twists1 = ['<table class="ntdata" style="float: left">', '<tr><th colspan=8 align="center">By twisting character orbit</th></tr><thead>', '<tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
@@ -983,7 +983,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist', 'Type'),
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
-                  '  </tr>', '</thead>', '<tbody>']
+                  '</tr>', '</thead>', '<tbody>']
 
         for r in self.twists:
             parity = 'Even' if r['parity'] == 1 else 'Odd'
@@ -994,7 +994,7 @@ function switch_basis(btype) {
             twists1.append('  </tr>')
         twists1.extend(['</tbody>', '</table>'])
 
-        twists2 = ['<table class="ntdata">', '<thead>', '  <tr>',
+        twists2 = ['<table class="ntdata">', '<tr><th colspan=8 align="center">By twisted newform orbit</th></tr><thead>', '<tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
@@ -1003,7 +1003,7 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.twist', 'Type'),
-                  '  </tr>', '</thead>', '<tbody>']
+                  '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x : x['target_label']):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
@@ -1013,7 +1013,7 @@ function switch_basis(btype) {
             twists2.append('  </tr>')
         twists2.extend(['</tbody>', '</table>'])
 
-        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp</div>\n' + '\n'.join(twists2) + '\n</div>\n'
+        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n</div>\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
