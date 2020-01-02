@@ -995,7 +995,7 @@ function switch_basis(btype) {
             twists1.append('  </tr>')
         twists1.extend(['</tbody>', '</table>'])
 
-        twists2 = ['<table class="ntdata">', '<thead>',
+        twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twisted_newform','twisted newform orbit'), '<tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
@@ -1015,7 +1015,7 @@ function switch_basis(btype) {
             twists2.append('  </tr>')
         twists2.extend(['</tbody>', '</table>'])
 
-        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n'
+        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
