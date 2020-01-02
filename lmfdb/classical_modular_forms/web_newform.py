@@ -316,7 +316,7 @@ class WebNewform(object):
                 except TypeError:
                     related_objects = self.related_objects
         else:
-            if self.minimal_twist is not None:
+            if self.minimal_twist is not None and self.minimal_twist != self.label:
                 minimal_twist_url = cmf_base + self.minimal_twist.replace('.','/') + '/'
                 res.append(('Minimal twist ' + self.minimal_twist, minimal_twist_url))
             related_objects = self.related_objects
