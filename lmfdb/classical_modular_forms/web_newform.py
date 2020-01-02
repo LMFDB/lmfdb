@@ -316,12 +316,10 @@ class WebNewform(object):
                 except TypeError:
                     related_objects = self.related_objects
         else:
+            if self.minimal_twist is not None:
+                minimal_twist_url = cmf_base + self.minimal_twist.replace('.','/') + '/'
+                res.append(('Minimal twist ' + self.minimal_twist, minimal_twist_url))
             related_objects = self.related_objects
-        if self.sato_tate_group: # FIXME: if statement to be removed once ST are removed
-            try:
-                related_objects.remove('SatoTateGroup/' + self.sato_tate_group)
-            except ValueError:
-                pass
         res += names_and_urls(related_objects)
 
         # finally L-functions
