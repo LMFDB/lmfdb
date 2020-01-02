@@ -22,7 +22,7 @@ def get_bread(**kwds):
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
+             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
@@ -250,7 +250,7 @@ class WebNewformSpace(object):
             ('Dimension',str(self.dim)),
         ]
         if self.num_forms is not None:
-            self.properties.append(('Newforms',str(self.num_forms)))
+            self.properties.append(('Newform subspaces',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
@@ -414,7 +414,7 @@ class WebGamma1Space(object):
         if self.num_spaces is not None:
             self.properties.append(('Nonzero newspaces',str(self.num_spaces)))
         if self.num_forms is not None:
-            self.properties.append(('Newforms',str(self.num_forms)))
+            self.properties.append(('Newform subspaces',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if self.trace_bound is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
