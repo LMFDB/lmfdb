@@ -929,10 +929,10 @@ function switch_basis(btype) {
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
-                  th_wrap('character.dirichlet.degree', 'Degree'),
+                  th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('character.dirichlet.order', 'Ord'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
-                  th_wrap('cmf.self_twist_field', 'Self twist'),
+                  th_wrap('cmf.self_twist_field', 'Type'),
                   '  </tr>', '</thead>', '<tbody>']
         trivial = [elt for elt in self.inner_twists if elt[6] == 1]
         CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
@@ -983,12 +983,11 @@ function switch_basis(btype) {
                 if r['twisting_char_label'] == '1.a':
                     twist_type = 'trivial'
                 else:
-                    print self.inner_twists
                     s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
-                    print s
                     if len(s) != 1:
                         return '<p>There is a problem with the twist data for this newform (an allegedly inner twist is not inner), please report this as a bug.</p>'
                     s = s[0]
+                    # TODO remove this and add it to the verify code
                     if s[1] != r['multiplicity']:
                         return '<p>There is a problem with the twist data for this newform (multiplicity mismatch with inner twist data), please report this as a bug.</p>'
                     twist_type = 'inner' if s[6] == 0 else ('CM' if s[6] < 0 else 'RM')
