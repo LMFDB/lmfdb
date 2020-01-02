@@ -1015,7 +1015,7 @@ function switch_basis(btype) {
             twists2.append('  </tr>')
         twists2.extend(['</tbody>', '</table>'])
 
-        return '<div><div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n</div></div>\n'
+        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n</div>\n<div style="float: right"></div>\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
