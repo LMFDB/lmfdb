@@ -622,7 +622,7 @@ class WebNewform(object):
         if len(polynomials) > 1:
             title += 's'
         knowl = display_knowl('cmf.hecke_cutter', title=title)
-        desc = "<p>This ({{ KNOWL('cmf.newform_subspac', title='newform subspace') }}) can be constructed as the "
+        desc = "<p>This %s can be constructed as the "%(display_knowl('cmf.newform_subspace','newform subspace'))
         if len(polynomials) > 1:
             desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
             desc = desc % (knowl, self.display_newspace())
@@ -631,7 +631,8 @@ class WebNewform(object):
             desc += "kernel of the %s %s acting on %s."
             desc = desc % (knowl, polynomials[0], self.display_newspace())
         else:
-            desc = r"<p>This ({{KNOWL('cmf.newform_subspace','newform subspace')}}) is the entire ({{KNOWL('cmf.newspace','newspace')}}) %s.</p> "%(self.display_newspace())
+            desc = r"<p>This %s is the entire  %s.</p> "%(display_knowl('cmf.newform_subspace','newform subspace'),
+                                                          display_knowl('cmf_newspace','newspace'),self.display_newspace())
         return desc
 
     def defining_polynomial(self):
