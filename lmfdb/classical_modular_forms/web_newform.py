@@ -186,6 +186,13 @@ class WebNewform(object):
         ## CC_DATA
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
+        # lookup twists (of newform orbits, not embedded newforms)
+        if self.embedding_label is None and self.minimal_twist is not None:
+            twist_cols = ['twisting_char_label','target_label','multiplicity','parity','order','degree', ' target_dim']
+            self.twists = [r for r in db.mf_twists.search({'source_label':self.label},twist_cols)]
+            # TODO decide how to sort, for now we just use mf_twists default sort order (which is by twisting character then target)
+        else:
+            self.twists = None
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -920,7 +927,7 @@ function switch_basis(btype) {
         def td_wrap(val):
             return '    <td>%s</th>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
-                  th_wrap('character.dirichlet.galois_orbit_label', 'Char. orbit'),
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char.'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   #th_wrap('character.dirichlet.order', 'Order'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult.'),
@@ -932,7 +939,7 @@ function switch_basis(btype) {
         other = sorted([elt for elt in self.inner_twists if elt[6] == 0],
                 key = lambda elt: (elt[2],elt[3]))
         self.inner_twists = trivial + CMRM + other
-        for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
+        for mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
             label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
             parity = 'Even' if parity == 1 else 'Odd'
             link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
@@ -944,7 +951,33 @@ function switch_basis(btype) {
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
                 field = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [link, parity, mult, field])) # remove proved (now always true), add order back eventually
+            twists.extend(map(td_wrap, [link, parity, mult, field])) # add order back eventually
+            twists.append('  </tr>')
+        twists.extend(['</tbody>', '</table>'])
+        return '\n'.join(twists)
+
+    def display_twists(self):
+        if not self.twist:
+            return '<p>Twists of this newform have not been computed.</p>'
+        def th_wrap(kwl, title):
+            return '    <th>%s</th>' % display_knowl(kwl, title=title)
+        def td_wrap(val):
+            return '    <td>%s</th>' % val
+        twists = ['<table class="ntdata">', '<thead>', '  <tr>',
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char.'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.order', 'Order'),
+                  th_wrap('character.dirichlet.degree', 'Degree'),
+                  th_wrap('cmf.twist_multiplicity', 'Mult.'),
+                  th_wrap('cmf.twist_newform', 'Twist'),
+                  th_wrap('cmf.twist_dimension', 'Dim.'),
+                  '  </tr>', '</thead>', '<tbody>']
+        for twisting_char_label, parity, order, degree, multiplicity, target_label, target_dim in self.twists:
+            parity = 'Even' if parity == 1 else 'Odd'
+            char_link = display_knowl('character.dirichlet.orbit_data', title=twisting_char_label, kwargs={'label':twisting_char_label})
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + target_label.replace('.','/'),target_label)
+            twists.append('  <tr>')
+            twists.extend(map(td_wrap, [char_link, parity, order, degree, multiplicity, target_link, target_dim]))
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)

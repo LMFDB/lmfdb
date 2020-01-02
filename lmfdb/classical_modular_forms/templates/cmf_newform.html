@@ -218,6 +218,12 @@ function get_all_embeddings(num_embeddings) {
 </table>
 {% endif %}
 
+{% if newform.twists is not none %}
+<h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
+{{ newform.display_twists() | safe }}
+{% endif %}
+
+
 {% if newform.hecke_cutters is not none %}
 <h2>{{KNOWL('cmf.hecke_kernels', 'Hecke kernels')}}</h2>
 {{ newform.display_hecke_cutters() | safe }}
