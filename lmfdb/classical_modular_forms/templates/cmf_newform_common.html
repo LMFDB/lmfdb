@@ -94,7 +94,7 @@
   {% if newform.projective_image %}
   <tr>
     <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
-    <td>\({{ newform.projective_image_latex }}\)</td>
+    <td>\({{ newform.projective_image_knowl() | safe }}\)</td>
   </tr>
   {% endif %}
   {% if newform.projective_field %}
@@ -103,17 +103,18 @@
     <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
   </tr>
   {% endif %}
-  {% if newform.artin_degree %}
-  <tr>
-    <td>{{ KNOWL('cmf.artin_image', title='Artin image size') }}</td>
-    <td>\({{ newform.artin_degree }}\)</td>
-  </tr>
-  {% endif %}
   {% if newform.artin_image %}
   <tr>
     <td>{{ KNOWL('cmf.artin_image', title='Artin image') }}</td>
     <td>{{ newform.artin_image_knowl() | safe }}</td>
   </tr>
+  {% else %}
+    {% if newform.artin_degree %}
+    <tr>
+      <td>{{ KNOWL('cmf.artin_image', title='Artin image cardinality') }}</td>
+      <td>\({{ newform.artin_degree }}\)</td>
+    </tr>
+    {% endif %}
   {% endif %}
   {% if newform.artin_field %}
   <tr>
