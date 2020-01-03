@@ -560,10 +560,12 @@ class WebG2C(object):
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
-            if len(data['mw_invs']) == 0:
+            if len(ratpts['mw_invs']) == 0:
                 data['mw_group'] = '\mathrm{trivial}'
             else:
-                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in data['mw_invs'] ])
+                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
+            data['mw_group_proved'] = ratpts['mw_gens_v']
+
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = curve['real_period']
