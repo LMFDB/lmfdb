@@ -188,8 +188,7 @@ class WebNewform(object):
 
         # lookup twists (of newform orbits, not embedded newforms)
         if self.embedding_label is None and self.minimal_twist is not None:
-            twist_cols = ['twisting_char_label','target_label','multiplicity','conductor','twisting_char_orbit','parity','order','degree', 'target_dim']
-            self.twists = [r for r in db.mf_twists.search({'source_label':self.label},twist_cols)]
+            self.twists = [r for r in db.mf_twists.search({'source_label':self.label})]
             # TODO decide how to sort, for now we just use mf_twists default sort order (which is by twisting character then target)
         else:
             self.twists = None
@@ -1001,7 +1000,7 @@ function switch_basis(btype) {
         twists1.extend(['</tbody>', '</table>'])
 
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
-                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twisted_newform','twisted newform orbit'), '<tr>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twisted_newform','twisted newform orbit'), '<tr>',
                   th_wrap('cmf.twist_newform', 'Twist'),
                   th_wrap('cmf.twist_dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
@@ -1011,7 +1010,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.twist', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
-        for r in sorted(self.twists, key = lambda x : x['target_label']):
+        for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
