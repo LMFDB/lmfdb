@@ -505,13 +505,14 @@ class WebNewform(object):
     @property
     def projective_image_latex(self):
         if self.projective_image:
-            return '\\(%s_{%s}\\)' % (self.projective_image[:1], self.projective_image[1:])
+            return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
 
     def projective_image_knowl(self):
         if self.projective_image:
             gp_name = "C2^2" if self.projective_image == "D2" else ( "S3" if self.projective_image == "D3" else self.projective_image )
             gp_label = db.gps_small.lucky({'name':gp_name},'label')
-            return self.projective_image_latex if gp_label is None else small_group_label_display_knowl(gp_label,self.projective_image_latex)
+            gp_display = '\\(' + self.projective_image_latex + '\\)'
+            return gp_display if gp_label is None else small_group_label_display_knowl(gp_label,gp_display)
 
     def field_display(self):
         """
