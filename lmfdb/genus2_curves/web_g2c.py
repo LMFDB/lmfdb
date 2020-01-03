@@ -541,7 +541,6 @@ class WebG2C(object):
             data['aut_grp_id'] = curve['aut_grp_id']
             data['geom_aut_grp_id'] = curve['geom_aut_grp_id']
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
-            data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
             if len(P):
@@ -554,12 +553,17 @@ class WebG2C(object):
             else:
                 sz = "everywhere"
             data['non_solvable_places'] = sz
+            data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['torsion_order'] = curve['torsion_order']
             data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
+            if len(data['mw_invs']) == 0:
+                data['mw_group'] = '\mathrm{trivial}'
+            else:
+                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in data['mw_invs'] ])
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = curve['real_period']
