@@ -187,7 +187,6 @@ function get_all_embeddings(num_embeddings) {
 {% endif %}
 
 <h2>{{KNOWL('cmf.inner_twist', title='Inner twists')}}</h2>
-
 {% if newform.inner_twist_count == 1 %}
 <p>This newform does not admit any ({{KNOWL('cmf.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('cmf.inner_twist',title='inner twists') }}.</p>
 {% else %}
@@ -215,17 +214,13 @@ function get_all_embeddings(num_embeddings) {
 {% endif %}
 
 {% if newform.twists is not none %}
-<p>
 <h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
 {{ newform.display_twists() | safe }}
-</p>
 {% endif %}
 
 {% if newform.hecke_cutters is not none %}
 <h2>{{KNOWL('cmf.hecke_kernels', 'Hecke kernels')}}</h2>
-<p>
 {{ newform.display_hecke_cutters() | safe }}
-</p>
 {% endif %}
 
 
