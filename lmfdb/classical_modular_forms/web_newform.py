@@ -505,7 +505,7 @@ class WebNewform(object):
     @property
     def projective_image_latex(self):
         if self.projective_image:
-            return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
+            return '\\(%s_{%s}\\)' % (self.projective_image[:1], self.projective_image[1:])
 
     def projective_image_knowl(self):
         if self.projective_image:
