@@ -1010,7 +1010,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.twist', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
-        for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
+        for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
@@ -1020,7 +1020,7 @@ function switch_basis(btype) {
             twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
 
-        return '<div>\n' + '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
+        return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
         if self.sato_tate_group:
