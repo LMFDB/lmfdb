@@ -579,8 +579,8 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['mw_rank'] = ZZ(curve['mw_rank'])
-        data['mw_rank_proved'] = curve['mw_rank']
+        data['mw_rank'] = ZZ(curve['mw_rank']) if curve['mw_rank'] is not None else 'unknown'
+        data['mw_rank_proved'] = curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
