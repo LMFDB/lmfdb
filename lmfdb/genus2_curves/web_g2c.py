@@ -39,11 +39,13 @@ def list_to_min_eqn(L):
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
 def list_to_divisor(P):
-    xzR = PolynomialRing(QQ,['x','z']); x = xzR('x'); z = xzR('z')
+    R = PolynomialRing(QQ,['x','y','z']); x = R('x'); y = R('y'); z = R('z')
     xP,yP = P[0],P[1]
-    xD = sum([ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
-    yD = sum([ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return "(" + str(xD).replace("**","^").replace("*","") + "=0,\\,\\,\\, y =" + str(yD).replace("**","^").replace("*","") + ")"
+    xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
+    xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
+    yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+    miny = = -ZZ(yden)*y
+    return "\\langle" + str(xD).replace("**","^").replace("*","") + ",\\,\\,\\," + str(yD).replace("**","^").replace("*","") + str(miny) + "\\rangle"
 
 def url_for_ec(label):
     if not '-' in label:
@@ -579,8 +581,8 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['mw_rank'] = '\\text{unknown}' if curve['mw_rank'] is None else ZZ(curve['mw_rank'])
-        data['mw_rank_proved'] = '\\text{unknown}' if curve['mw_rank'] is None else curve['mw_rank_proved']
+        data['mw_rank'] = '\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
+        data['mw_rank_proved'] = '\\text{unknown}' if curve.get('mw_rank') is None else curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
@@ -634,7 +636,7 @@ class WebG2C(object):
             else:
                 data['regulator'] = '\\text{unknown}'
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
-            data['analytic_sha'] = '\\text{unknown}' if curve['analytic_sha'] is None else ZZ(curve['analytic_sha'])
+            data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = "%12.10f"%(curve['leading_coeff']) if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
