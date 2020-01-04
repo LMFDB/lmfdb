@@ -44,7 +44,7 @@ def list_to_divisor(P):
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return str(xD).replace("**","^").replace("*","") + "= 0,\\,\\,\\," + (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")
+    return str(xD.factor()).replace("**","^").replace("*","") + "= 0,\\,\\,\\," + (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")
 def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
@@ -471,7 +471,6 @@ def mw_gens_table(invs,gens,hts):
               th_wrapl('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
               th_wrapc('g2c.mw_generator', 'Order'),
-              th_wrapc('g2c.mw_generator', 'Factor'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('  <tr>')
