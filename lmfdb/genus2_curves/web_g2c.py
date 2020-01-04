@@ -611,7 +611,7 @@ class WebG2C(object):
                 data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
             data['tama'] = data['tama'][:-2] # trim last ", "
             if curve['tamagawa_proudct']:
-                data['tamagawa_prodct'] = ZZ(curve['tamagawa_product'])
+                data['tamagawa_product'] = ZZ(curve['tamagawa_product'])
                 data['tamagawa_product_factor_latex'] = web_latex(factor(int(data['tamagawa_product'])))
             if ratpts:
                 if len(ratpts['rat_pts']):
