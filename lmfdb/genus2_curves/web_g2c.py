@@ -579,9 +579,7 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        print "testing"
-        data['mw_rank'] = ZZ(curve['mw_rank']) if curve['mw_rank'] is not None else 'unknown'
-        print "mrank", data['mw_rank']
+        data['mw_rank'] = '\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
         data['mw_rank_proved'] = curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
@@ -636,7 +634,7 @@ class WebG2C(object):
             else:
                 data['regulator'] = 'not computed yet'
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
-            data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve['analytic_sha'] else '\\text{unknown}'
+            data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = curve['leading_coeff'] if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
