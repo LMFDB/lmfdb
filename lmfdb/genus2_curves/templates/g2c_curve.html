@@ -271,13 +271,15 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 </table>
 </p>
 
+<h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}}: </h2>
+
 <p>
 {% if data.local_table %}
 {{data.local_table | safe}}
 {% endif %}
 </p>
 
-<h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
+<h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 
 <p>
 <table>
@@ -286,7 +288,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 </table>
 </p>
 
-<h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
+<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition of the Jacobian') }} </h2>
 
 <!-- Description of a splitting field of minimal degree: -->
 <p>{{data.split_field_statement|safe}}</p>
@@ -294,7 +296,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 <!-- Description of the splittings themselves. -->
 <p>{{data.split_statement|safe}}</p>
 
-<h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms') }} </h3>
+<h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 
 <!-- Description over QQ: -->
 <p>{{data.gl2_statement_base}}</p>
