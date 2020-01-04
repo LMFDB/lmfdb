@@ -476,9 +476,9 @@ def mw_gens_table(invs,gens,hts):
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty'), td_wrapc('\\Z')])
+            gentab.extend([td_wrapl(D[i]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i]), td_wrapc('\\Z/%d\\Z'%(invs[i]))])
+            gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
@@ -579,7 +579,7 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['mw_rank'] = '\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
+        data['mw_rank'] = ZZ(curve['mw_rank']) #'\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
         data['mw_rank_proved'] = '\\text{unknown}' if curve.get('mw_rank') is None else curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
