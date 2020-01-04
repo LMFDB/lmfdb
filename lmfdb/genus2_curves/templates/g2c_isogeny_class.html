@@ -41,6 +41,7 @@ text-align: center;
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)</td></tr>
     {% else %}
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank*') }}:</td><td>\({{data.mw_rank}}\)&nbsp;&nbsp;(lower bound)</td></tr>
+    {% endif %}
     <tr><td>&nbsp;</td></tr>
     <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
         <table id = "bad_lfactors_table">
