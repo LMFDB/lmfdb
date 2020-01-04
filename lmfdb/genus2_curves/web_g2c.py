@@ -503,7 +503,7 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.text([td_wrapr(p),td_wrapr(D.ord(p)),td_wrapr(N.ord(p)),cp,Lp])
+        loctab.extend([td_wrapr(p),td_wrapr(D.ord(p)),td_wrapr(N.ord(p)),cp,Lp])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
