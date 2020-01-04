@@ -1000,10 +1000,10 @@ function switch_basis(btype) {
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             minflag = '*' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
-            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label']+minflag)
             twists1.append('<tr>')
             twists1.extend([td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['degree']),
-                            td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)), td_wrapl(target_link+minflag), td_wrapr(r['target_dim'])])
+                            td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)), td_wrapl(target_link), td_wrapr(r['target_dim'])])
             twists1.append('</tr>')
         twists1.extend(['</tbody>', '</table>'])
 
@@ -1022,9 +1022,9 @@ function switch_basis(btype) {
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             minflag = '*' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
-            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label']+minflag)
             twists2.append('<tr>')
-            twists2.extend([td_wrapl(target_link+minflag), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']),
+            twists2.extend([td_wrapl(target_link), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']),
                             td_wrapr(r['degree']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
             twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
