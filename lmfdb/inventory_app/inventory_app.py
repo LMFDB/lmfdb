@@ -241,7 +241,7 @@ def edit_failure(request=request):
         errcode = int(request.args.get('code'))
         errstr = inventory_viewer.err_registry[errcode].message
     except:
-         if get_lockout_state():
+        if get_lockout_state():
             errcode = 16
             errstr = inventory_viewer.err_registry[errcode].message
         else:
