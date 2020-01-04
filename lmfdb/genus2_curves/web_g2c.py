@@ -44,7 +44,7 @@ def list_to_divisor(P):
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return str(xD.factor()).replace("**","^").replace("*","") + "= 0,\\,\\,\\," + (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")
+    return [str(xD.factor()).replace("**","^").replace("*","") + "= 0", (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")]
 def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
@@ -458,6 +458,8 @@ def th_wrapr(kwl, title):
     return '    <th align="right">%s</th>' % display_knowl(kwl, title=title)
 def th_wrapc(kwl, title):
     return '    <th align="center">%s</th>' % display_knowl(kwl, title=title)
+def th_wrapc2(kwl, title):
+    return '    <th colspan=2 align="center">%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return '    <td align="left">\\(%s\\)</th>' % val
 def td_wrapr(val):
@@ -468,16 +470,16 @@ def td_wrapc(val):
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapl('g2c.mw_generator', 'Generator'),
+              th_wrapc2('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
               th_wrapc('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty')])
+            gentab.extend([td_wrapl(D[i][0]), td_wrapl(D[i][1]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i])])
+            gentab.extend([td_wrapl(D[i][0]), td_wrapl(D[i][1]), td_wrapl(0), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
