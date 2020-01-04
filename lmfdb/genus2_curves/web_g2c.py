@@ -45,7 +45,7 @@ def list_to_divisor(P):
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
     miny = -ZZ(yden)*y
-    return "\\langle" + str(xD).replace("**","^").replace("*","") + ",\\,\\,\\," + str(yD).replace("**","^").replace("*","") + str(miny) + "\\rangle"
+    return "\\( \\langle" + str(xD).replace("**","^").replace("*","") + ",\\,\\,\\," + str(yD).replace("**","^").replace("*","") + str(miny) + "\\rangle \\)"
 
 def url_for_ec(label):
     if not '-' in label:
