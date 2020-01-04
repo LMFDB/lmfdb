@@ -135,7 +135,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </tr>
 <tr>
 <td>
-{{KNOWL('g2c.geometric_invariants', title='Geometric invariants')}} 
+{{KNOWL('g2c.geometric_invariants', title='\(\overline{\Q}\)-invariants')}} 
   <select name='geometric_invariants_type'>
   <option value=''>Igusa-Clebsch</option>
   <option value='igusa_inv'>Igusa</option>
@@ -163,10 +163,6 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </td>
 <td><input type='text' name='bad_primes' size=10 example='5,13'></td>
 <td><span class="formexample"> e.g. 5,13</span></td>
-
-</tr>
-
-<tr>
 <td>Results to display</td>
 <td><input type='text' name='count' value=50 size=10></td>
 <td><span class="formexample"> &nbsp;</td>

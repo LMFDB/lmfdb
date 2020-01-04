@@ -250,7 +250,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 
 <p>
 <table>
-    {% if data.analytic_rank <= 1 %}
+    {% if data.analytic_rank < 2 %}
     <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)</td></tr>
     {% else %}
     <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}:</td><td>\({{data.analytic_rank}}\)&nbsp;&nbsp;(upper bound)</td>></tr>
