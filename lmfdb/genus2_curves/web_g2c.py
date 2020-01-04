@@ -485,8 +485,8 @@ def mw_gens_table(invs,gens,hts):
 
 def local_table(D,N,tama,bad_lpolys):
     loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapr('g2c.bad_prime', 'Prime'),
-              th_wrapc('g2c.conductor', 'ord(\\(N\\))'),
+              th_wrapr('ag.bad_prime', 'Prime'),
+              th_wrapc('ag.conductor', 'ord(\\(N\\))'),
               th_wrapc('g2c.discriminant', 'ord(\\(\\Delta\\))'),
               th_wrapc('g2c.tamagawa', 'Tamagawa'),
               th_wrapc('g2c.bad_lfactors', 'L-factor'),
