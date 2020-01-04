@@ -498,7 +498,7 @@ def local_table(D,N,tama,bad_lpolys):
             cp = str(cplist[0][1]) if cplist[0][1] > 0 else '?'
         else:
             cp = '1' if N%p != 0 else '?'
-        Lplist = [r for r in bad_lpolys]
+        Lplist = [r for r in bad_lpolys if r[0] == p]
         if Lplist:
             Lp = Lplist[0][1]
         else:
