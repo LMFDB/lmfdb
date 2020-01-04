@@ -7,7 +7,6 @@ from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 
 from lmfdb import db
-db.g2c_curves._include_nones=True
 from lmfdb.utils import (
     to_dict, comma, flash_error, display_knowl,
     parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,

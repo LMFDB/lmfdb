@@ -6952,3 +6952,4 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
 
 db = PostgresDatabase()
+db.g2c_curves._include_nones=True
