@@ -470,7 +470,7 @@ def mw_gens_table(invs,gens,hts):
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
               th_wrapl('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
-              th_wrapc('g2c.mw_order', 'Order'),
+              th_wrapc('g2c.mw_generator', 'Order'),
               th_wrapc('g2c.mw_generator', 'Factor'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
