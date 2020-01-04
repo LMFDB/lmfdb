@@ -1,7 +1,8 @@
 from __future__ import print_function
-import lmfdb_inventory as inv
-import inventory_db_core as invc
-import inventory_live_data as ild
+from __future__ import absolute_import
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as invc
+from . import inventory_live_data as ild
 import datetime
 from lmfdb import db as lmfdb_db
 

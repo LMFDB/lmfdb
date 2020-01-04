@@ -1,12 +1,13 @@
+from __future__ import absolute_import
 from flask import render_template, request, url_for, make_response, jsonify, Blueprint, send_from_directory
 from flask_login import login_required
 from lmfdb.users import admin_required
-import inventory_viewer
-import inventory_live_data
-import inventory_control
-import inventory_consistency
-import lmfdb_inventory as linv
-import inventory_helpers as ih
+from . import inventory_viewer
+from . import inventory_live_data
+from . import inventory_control
+from . import inventory_consistency
+from . import lmfdb_inventory as linv
+from . import inventory_helpers as ih
 from datetime import datetime as dt
 import json
 

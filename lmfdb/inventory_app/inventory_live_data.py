@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 from scripts.reports.jsonify_pg_structure import get_lmfdb_collections as glc
 import json
-import inventory_helpers as ih
-import inventory_viewer as iv
-import lmfdb_inventory as inv
-import inventory_db_core as idc
-from scrape_helpers import register_scrape
-import scrape_frontend as sf
+from . import inventory_helpers as ih
+from . import inventory_viewer as iv
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
+from .scrape_helpers import register_scrape
+from . import scrape_frontend as sf
 import uuid
 from lmfdb import db as lmfdb_db
 
