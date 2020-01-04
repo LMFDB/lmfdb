@@ -489,7 +489,7 @@ def local_table(D,N,tama,bad_lpolys):
               th_wrapc('ag.conductor', 'ord(\\(N\\))'),
               th_wrapc('g2c.discriminant', 'ord(\\(\\Delta\\))'),
               th_wrapc('g2c.tamagawa', 'Tamagawa'),
-              th_wrapc('g2c.bad_lfactors', 'L-factor'),
+              th_wrapl('g2c.bad_lfactors', 'L-factor'),
               '  </tr>', '</thead>', '<tbody>']
     for p in D.prime_divisors():
         loctab.append('  <tr>')
@@ -503,7 +503,7 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapc(Lp)])
+        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
