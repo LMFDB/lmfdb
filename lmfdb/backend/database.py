@@ -39,6 +39,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor as pg_cursor
 from sage.all import cartesian_product_iterator, binomial
+from sage.cpython.string import bytes_to_str
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
@@ -407,7 +408,7 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
+                    self.logger.info(bytes_to_str(query) + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info(
                                 "Replicate with db.%s.%s(%s)",

@@ -167,18 +167,18 @@ cyclolookup = {n:label for label,n in cycloinfo.items()}
 cyclolookup[1] = '1.1.1.1'
 cyclolookup[3] = '2.0.3.1'
 cyclolookup[4] = '2.0.4.1'
-for n, label in cyclolookup.items():
-    if n % 2 == 1:
-        cyclolookup[2*n] = label
+for n, label in list(cyclolookup.items()):
+    if n % 2:
+        cyclolookup[2 * n] = label
 
 rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
 for n in [5,8,12]:
     rcyclolookup[n] = '2.2.%s.1'%n
-for n, label in rcyclolookup.items():
-    if n % 2 == 1:
-        rcyclolookup[2*n] = label
+for n, label in list(rcyclolookup.items()):
+    if n % 2:
+        rcyclolookup[2 * n] = label
 
 def na_text():
     return "Not computed"
