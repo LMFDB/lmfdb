@@ -476,7 +476,7 @@ def mw_gens_table(invs,gens,hts):
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapl("%12.9f"%(hts[i])), td_wrapc('\\infty'), td_wrapc('\\Z')])
+            gentab.extend([td_wrapl(D[i]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty'), td_wrapc('\\Z')])
         else:
             gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i]), td_wrapc('\\Z/%d\\Z'%(invs[i]))])
         gentab.append('  </tr>')
@@ -628,14 +628,14 @@ class WebG2C(object):
 
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
-            data['real_period'] = "%12.9f"%(curve['real_period'])
+            data['real_period'] = "%12.10f"%(curve['real_period'])
             if (curve['regulator'] > -0.5):
-                data['regulator'] = "%12.9f"%(curve['regulator'])
+                data['regulator'] = "%12.10f"%(curve['regulator'])
             else:
                 data['regulator'] = '\\text{unknown}'
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
             data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
-            data['leading_coeff'] = "%12.9f"%(curve['leading_coeff']) if curve['leading_coeff'] else '\\text{unknown}'
+            data['leading_coeff'] = "%12.10f"%(curve['leading_coeff']) if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
