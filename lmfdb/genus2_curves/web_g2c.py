@@ -42,7 +42,9 @@ def list_to_divisor(P):
     xzR = PolynomialRing(QQ,['x','z']); x = xzR('x'); z = xzR('z')
     xP,yP = P[0],P[1]
     xD = sum([ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
-    yD = sum([ZZ(yP[i][0])/ZZ(xP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+    print xP
+    yD = sum([ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+    print yP
     return "(" + str(xD).replace("**","^").replace("*","") + "=0, y =" + str(yD).replace("**","^").replace("*","") + ")"
 
 def url_for_ec(label):
