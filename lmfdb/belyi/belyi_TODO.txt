@@ -1,3 +1,25 @@
+Soon:
+- Improve the pages under "Learn more about" and add a reliability page
+- Add a download to Sage button for Galois orbits of Belyi maps
+- Upload the rest of our data
+- Browse maps by base field, and see statistics on base field data
+- Browse by orbit size on Belyi main page; browsing by passports in general?
+- add portraits in Lady Gaga box
+- browse columns: degs and gs...column names for db in sage?
+
+Some day:
+- specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good
+reduction outside of 2 and 3?
+- revamp labels?
+- improve display of equations; table of coeffs?
+- Add more friends, specifically curves of genus 1 and 2 listed in the LMFDB; also modular forms?
+
+Long term:
+- connections to HGMs?
+- pictures of dessins; Mike's ribbon graphs
+
+OLD LIST:
+
 TODO:
 - genus 0 corner cases
 - hyperelliptic RR
@@ -26,7 +48,7 @@ It would be nice if:
 - Give descent of lax Belyi map when available
 - renamed "abc triple" to something less triggering
 - make links direct to passport pages (and search on them)
-- add annotations  
+- add annotations
 - embeddings in binary
 - factorization of phi (or divisor)
 - display info about group
