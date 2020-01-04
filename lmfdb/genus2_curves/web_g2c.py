@@ -550,6 +550,8 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
+        data['mw_rank'] = ZZ(curve['mw_rank'])
+        data['mw_rank_proved'] = curve['mw_rank']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
@@ -610,9 +612,9 @@ class WebG2C(object):
                     tamgwnr = 'N/A'
                 data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
             data['tama'] = data['tama'][:-2] # trim last ", "
-            if curve['tamagawa_product']:
-                data['tamagawa_product'] = ZZ(curve['tamagawa_product'])
-                data['tamagawa_product_factor_latex'] = web_latex(factor(int(data['tamagawa_product'])))
+            data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
+            data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve['analytic_sha'] else '\\text{unknown}'
+            data['leading_coeff'] = curve['leading_coeff'] if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])

@@ -266,25 +266,12 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 
 <p>
 <table>
-<tr>
-<td>{{ KNOWL('g2c.regulator', title='Regulator') }}:</td>
-<td>\( {{data.regulator}} \)</td><
-</tr><tr>
-<td>{{ KNOWL('g2c.real_period', title='Real period') }}: </td>
-<td>\( {{data.real_period}} \)</td>
-</tr><tr>
-<td>{{ KNOWL('g2c.tamagawa_product', title='Tamagawa product') }}:</td>
-<td>\( {{ data.tamagawa_product }} \) &nbsp;=&nbsp; \( {{ data.tamagawa_product_factor_latex }} \)</td>
-</tr><tr>
-<td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td>
-<td>\( {{ data.torsion_order }} \)</td>
-</tr><tr>
-<td>{{ KNOWL('g2c.leading_coeff', title='Leading coefficient') }}:</td>
-<td>\( {{ data.leading_coeff }} \)</td>
-</tr><tr>
-<td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td>
-<td>\( {{data.analytic_sha}} \)&nbsp;&nbsp;(rounded)</td>
-</tr>
+    <tr><td>{{ KNOWL('g2c.regulator', title='Regulator') }}:</td><td>\( {{data.regulator}} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.real_period', title='Real period') }}: </td><td>\( {{data.real_period}} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.tamagawa_product', title='Tamagawa product') }}:</td><td>\( {{ data.tamagawa_product }} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.leading_coeff', title='Leading coefficient') }}:</td><td>\( {{ data.leading_coeff }} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td><td>\( {{data.analytic_sha}} \)&nbsp;&nbsp;(rounded)</td></tr>
 </table>
 </p>
 
@@ -306,14 +293,10 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
 <p>
-    <table>
-        <tr>
-            <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
-        </tr>
-        <tr>
-            <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
-        </tr>
-    </table>
+<table>
+    <tr><td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td></tr>
+    <tr><td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\)</td></tr>
+</table>
 </p>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
