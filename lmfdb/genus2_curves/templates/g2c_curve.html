@@ -272,9 +272,10 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 </p>
 
 <p>
-{{place_code('tamagawa')}}
+{% if data.local_table %}
+{{data.local_table | safe}}
+{% endif %}
 </p>
-<p> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: {{data.tama}}</p>
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 

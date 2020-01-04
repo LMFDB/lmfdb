@@ -452,16 +452,21 @@ def add_friend(friends, friend):
             return
     friends.append(friend)
 
+def th_wrapl(kwl, title):
+    return '    <th align="left">%s</th>' % display_knowl(kwl, title=title)
+def th_wrapr(kwl, title):
+    return '    <th align="right">%s</th>' % display_knowl(kwl, title=title)
+def th_wrapc(kwl, title):
+    return '    <th align="center">%s</th>' % display_knowl(kwl, title=title)
+def td_wrapl(val):
+    return '    <td align="left">\\(%s\\)</th>' % val
+def td_wrapr(val):
+    return '    <td align="right">\\(%s\\)</th>' % val
+def td_wrapc(val):
+    return '    <td align="center">\\(%s\\)</th>' % val
+
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
-    def th_wrapl(kwl, title):
-        return '    <th>%s</th>' % display_knowl(kwl, title=title)
-    def th_wrapc(kwl, title):
-        return '    <th>%s</th>' % display_knowl(kwl, title=title)
-    def td_wrapl(val):
-        return '    <td align="left">\\(%s\\)</th>' % val
-    def td_wrapc(val):
-        return '    <td align="center">\\(%s\\)</th>' % val
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
               th_wrapl('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
@@ -478,6 +483,30 @@ def mw_gens_table(invs,gens,hts):
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
+def local_table(D,N,tama,bad_lpolys):
+    loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
+              th_wrapl('g2c.bad_prime', 'Prime'),
+              th_wrapl('g2c.conductor', 'ord(\\(N\\))'),
+              th_wrapc('g2c.discriminant', 'ord(\\(\\Delta\\))'),
+              th_wrapc('g2c.tamagawa', 'Tamagawa'),
+              th_wrapc('g2c.bad_lfactors', 'L-factor'),
+              '  </tr>', '</thead>', '<tbody>']
+    for p in D.prime_divisors:
+        loctab.append('  <tr>')
+        cplist = [r for r in tama if r[0] == p]
+        if cplist:
+            cp = str(cplist[0][1]) if cplist[0][1] > 0 else '?'
+        else:
+            cp = '1' if N%p != 0 else '?'
+        Lplist = [r for r in bad_lpolys]
+        if Lplist:
+            Lp = Lplist[1]
+        else:
+            Lp = '?'
+        loctab.text([td_wrapr(p),td_wrapr(D.ord(p)),td_wrapr(N.ord(p)),cp,Lp])
+        loctab.append('  </tr>')
+    loctab.extend(['</tbody>', '</table>'])
+    return '\n'.join(loctab)
 
 ###############################################################################
 # Genus 2 curve class definition
@@ -604,14 +633,6 @@ class WebG2C(object):
                 data['regulator'] = curve['regulator']
             else:
                 data['regulator'] = 'not computed yet'
-            data['tama'] = ''
-            for item in tama:
-                if item['tamagawa_number'] > 0:
-                    tamgwnr = str(item['tamagawa_number'])
-                else:
-                    tamgwnr = 'N/A'
-                data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
-            data['tama'] = data['tama'][:-2] # trim last ", "
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve['analytic_sha'] else '\\text{unknown}'
             data['leading_coeff'] = curve['leading_coeff'] if curve['leading_coeff'] else '\\text{unknown}'
@@ -634,6 +655,8 @@ class WebG2C(object):
                 data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
             data['mw_gens_v'] = ratpts['mw_gens_v']
             data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
+            tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
+            data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
 
         else:
             # invariants specific to isogeny class
