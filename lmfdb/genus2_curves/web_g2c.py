@@ -500,7 +500,7 @@ def local_table(D,N,tama,bad_lpolys):
             cp = '1' if N%p != 0 else '?'
         Lplist = [r for r in bad_lpolys]
         if Lplist:
-            Lp = Lplist[1]
+            Lp = Lplist[0][1]
         else:
             Lp = '?'
         loctab.text([td_wrapr(p),td_wrapr(D.ord(p)),td_wrapr(N.ord(p)),cp,Lp])
