@@ -1,5 +1,15 @@
 from __future__ import absolute_import
 from lmfdb.app import app
+from flask import Blueprint
 
-from . import inventory_app
-app.register_blueprint(inventory_app.inventory_app, url_prefix = inventory_app.url_pref)
+# Initialize the Flask application
+url_pref = '/inventory/'
+inventory_app = Blueprint(
+    "inventory_app",
+    __name__,
+    template_folder="./templates",
+    static_folder="./static",
+    static_url_path="static/",
+)
+
+app.register_blueprint(inventory_app, url_prefix=url_pref)

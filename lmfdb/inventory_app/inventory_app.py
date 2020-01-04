@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from flask import render_template, request, url_for, make_response, jsonify, Blueprint, send_from_directory
+from flask import render_template, request, url_for, make_response, jsonify, send_from_directory
 from flask_login import login_required
 from lmfdb.users import admin_required
 from . import inventory_viewer
@@ -8,6 +8,7 @@ from . import inventory_control
 from . import inventory_consistency
 from . import lmfdb_inventory as linv
 from . import inventory_helpers as ih
+from . import inventory_app, url_pref
 from datetime import datetime as dt
 import json
 
@@ -19,9 +20,6 @@ class CustomEncoder(json.JSONEncoder):
         except:
             return json.JSONEncoder.default(self, obj)
 
-# Initialize the Flask application
-inventory_app = Blueprint('inventory_app', __name__, template_folder='./templates', static_folder='./static', static_url_path = 'static/')
-url_pref = '/inventory/'
 
 #sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Set to info, debug etc
@@ -62,7 +60,7 @@ def show_edit_root():
 
         new_url = str(request.referrer)
 
-        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
+        bread=[['&#8962;', url_for('index')], [url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
