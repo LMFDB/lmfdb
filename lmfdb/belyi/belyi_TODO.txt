@@ -6,13 +6,15 @@ Soon:
 - Browse maps by base field, and see statistics on base field data
 - Browse by orbit size on Belyi main page
 - browsing passports in general? adding passport knowl on main browse page
+- search passports
 - browse columns: degs and gs...column names for db in sage?
 - Add more friends, specifically curves of genus 1 and 2 listed in the LMFDB; also modular forms?
+- revamp labels
+- put orbit in title of galmap pages
 
-Some day:
+Short term:
 - specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good
 reduction outside of 2 and 3?
-- revamp labels?
 - improve display of equations; table of coeffs? Polredfunctionfieldabs?
 - Compute L-functions of curves, if possible
 
@@ -57,5 +59,5 @@ It would be nice if:
 - embeddings in binary
 - factorization of phi (or divisor)
 - display info about group
-- computed Galois group over K(t)
+- compute Galois group over K(t)
 - download curve/map in magma then in sage and/or pari
