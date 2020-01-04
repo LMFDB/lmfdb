@@ -42,9 +42,9 @@ def list_to_divisor(P):
     xzR = PolynomialRing(QQ,['x','z']); x = xzR('x'); z = xzR('z')
     xP,yP = P[0],P[1]
     xD = sum([ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
-    print xP
+    print xD
     yD = sum([ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    print yP
+    print yD
     return "(" + str(xD).replace("**","^").replace("*","") + "=0, y =" + str(yD).replace("**","^").replace("*","") + ")"
 
 def url_for_ec(label):
@@ -469,7 +469,7 @@ def mw_gens_table(invs,gens,hts):
               th_wrapr('g2c.mw_height', 'Height'),
               th_wrapr('g2c.mw_order', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
-    for i in range(invs):
+    for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
             gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr('\\infty')])
