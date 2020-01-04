@@ -491,7 +491,7 @@ def local_table(D,N,tama,bad_lpolys):
               th_wrapc('g2c.tamagawa', 'Tamagawa'),
               th_wrapc('g2c.bad_lfactors', 'L-factor'),
               '  </tr>', '</thead>', '<tbody>']
-    for p in D.prime_divisors:
+    for p in D.prime_divisors():
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
         if cplist:
