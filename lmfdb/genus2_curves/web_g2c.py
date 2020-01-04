@@ -14,7 +14,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
+from sage.all import latex, ZZ, QQ, CC, lcm, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -44,7 +44,7 @@ def list_to_divisor(P):
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    miny = = -ZZ(yden)*y
+    miny = -ZZ(yden)*y
     return "\\langle" + str(xD).replace("**","^").replace("*","") + ",\\,\\,\\," + str(yD).replace("**","^").replace("*","") + str(miny) + "\\rangle"
 
 def url_for_ec(label):
