@@ -249,41 +249,27 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 <h2> {{KNOWL('g2c.bsd_invariants', title='BSD invariants')}}: </h2>
 
 <p>
-{% if data.analytic_rank <= 1 %}
-{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}: \({{data.analytic_rank}}\)
-{% else %}
-{{ KNOWL('g2c.analytic_rank', title='Analytic rank&') }}: \({{data.analytic_rank}}\)&nbsp;&nbsp;(upper bound)
-{% endif %}
-</p>
-
-<p>
-{% if data.mw_rank_proved %}
-{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}: \({{data.mw_rank}}\)
-{% else %}
-{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank*') }}: \({{data.mw_rank}}\)&nbsp;&nbsp;(lower bound)
-{% endif %}
-</p>
-
-<p>
 <table>
+    {% if data.analytic_rank <= 1 %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}:</td><td>\({{data.analytic_rank}}\)&nbsp;&nbsp;(upper bound)</td>></tr>
+    {% endif %}
+    {% if data.mw_rank_proved %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank*') }}:</td><td>\({{data.mw_rank}}\)&nbsp;&nbsp;(lower bound)</td></tr>
+    {% endif %}
+    <td><tr>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
     <tr><td>{{ KNOWL('g2c.regulator', title='Regulator') }}:</td><td>\( {{data.regulator}} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.real_period', title='Real period') }}: </td><td>\( {{data.real_period}} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.tamagawa_product', title='Tamagawa product') }}:</td><td>\( {{ data.tamagawa_product }} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.leading_coeff', title='Leading coefficient') }}:</td><td>\( {{ data.leading_coeff }} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td><td>\( {{data.analytic_sha}} \)&nbsp;&nbsp;(rounded)</td></tr>
+    <td><tr>{{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
-
-<p>
-{{place_code('two_selmer')}}
-</p>
-<p> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: \({{data.two_selmer_rank}}\)</p>
-
-<p>
-{{place_code('has_square_sha')}}
-</p>
-<p> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: {{data.has_square_sha}}</p>
 
 <p>
 {{place_code('tamagawa')}}
