@@ -225,13 +225,13 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 <p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 
 
-<h2> {{KNOWL('g2c.mw_group', title='Mordell-Weil group of the Jacobian')}}: </h2>
+<h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
 <p>
 {% if data.mw_gens_v %}
-{{ KNOWL('g2c.mw_group', title='Group structure') }}: \({{data.mw_group}}\)
+{{ KNOWL('ag.mordell_weil', title='Group structure') }}: \({{data.mw_group}}\)
 {% else %}
-{{ KNOWL('g2c.mw_group', title='Group structure*') }}: \({{data.mw_group}}\) (conditional on BSD)
+{{ KNOWL('ag.mordell_weil', title='Group structure*') }}: \({{data.mw_group}}\) (conditional on BSD)
 {% endif %}
 </p>
 
