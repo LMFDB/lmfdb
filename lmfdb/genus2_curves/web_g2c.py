@@ -485,8 +485,8 @@ def mw_gens_table(invs,gens,hts):
 
 def local_table(D,N,tama,bad_lpolys):
     loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapl('g2c.bad_prime', 'Prime'),
-              th_wrapl('g2c.conductor', 'ord(\\(N\\))'),
+              th_wrapr('g2c.bad_prime', 'Prime'),
+              th_wrapc('g2c.conductor', 'ord(\\(N\\))'),
               th_wrapc('g2c.discriminant', 'ord(\\(\\Delta\\))'),
               th_wrapc('g2c.tamagawa', 'Tamagawa'),
               th_wrapc('g2c.bad_lfactors', 'L-factor'),
@@ -503,7 +503,7 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.extend([td_wrapr(p),td_wrapr(D.ord(p)),td_wrapr(N.ord(p)),cp,Lp])
+        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),tw_wrapc(Lp)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
