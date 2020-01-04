@@ -237,7 +237,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 
 <p>
 {% if data.mw_gens_table %}
-{{data.mw_gens_table}}
+{{data.mw_gens_table | safe}}
 {% endif %}
 </p>
 
