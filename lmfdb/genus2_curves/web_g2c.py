@@ -459,7 +459,7 @@ def th_wrapr(kwl, title):
 def th_wrapc(kwl, title):
     return '    <th align="center">%s</th>' % display_knowl(kwl, title=title)
 def th_wrapc2(kwl, title):
-    return '    <th colspan=2 align="center">%s</th>' % display_knowl(kwl, title=title)
+    return '    <th colspan="2" align="center">%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return '    <td align="left">\\(%s\\)</th>' % val
 def td_wrapr(val):
