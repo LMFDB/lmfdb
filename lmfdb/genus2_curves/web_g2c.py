@@ -579,7 +579,9 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
+        print "testing"
         data['mw_rank'] = ZZ(curve['mw_rank']) if curve['mw_rank'] is not None else 'unknown'
+        print "mrank", data['mw_rank']
         data['mw_rank_proved'] = curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
@@ -640,8 +642,6 @@ class WebG2C(object):
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
                 data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
-                # data['mw_rank'] = ratpts['mw_rank']
-                # data['mw_rank_v'] = ratpts['mw_rank_v']
             else:
                 data['rat_pts_v'] = 0
             if curve['two_torsion_field'][0]:
