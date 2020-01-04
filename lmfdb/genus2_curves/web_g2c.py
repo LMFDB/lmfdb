@@ -39,14 +39,12 @@ def list_to_min_eqn(L):
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
 def list_to_divisor(P):
-    R = PolynomialRing(QQ,['x','y','z']); x = R('x'); y = R('y'); z = R('z')
+    R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
     xP,yP = P[0],P[1]
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    miny = -ZZ(yden)*y
-    return "\\( \\langle" + str(xD).replace("**","^").replace("*","") + ",\\,\\,\\," + str(yD).replace("**","^").replace("*","") + str(miny) + "\\rangle \\)"
-
+    return str(xD).replace("**","^").replace("*","") + "= 0,\\,\\,\\," + (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")
 def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
