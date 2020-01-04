@@ -458,8 +458,6 @@ def th_wrapr(kwl, title):
     return '    <th align="right">%s</th>' % display_knowl(kwl, title=title)
 def th_wrapc(kwl, title):
     return '    <th align="center">%s</th>' % display_knowl(kwl, title=title)
-def th_wrapc2(kwl, title):
-    return '    <th colspan="2" align="center">%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return '    <td align="left">\\(%s\\)</td>' % val
 def td_wrapr(val):
@@ -470,7 +468,7 @@ def td_wrapc(val):
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapc2('g2c.mw_generator', 'Generator'),
+              th_wrapc('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
               th_wrapc('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
