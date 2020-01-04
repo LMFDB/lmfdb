@@ -3,7 +3,7 @@ from flask import render_template, request, url_for, make_response, jsonify, sen
 from flask_login import login_required
 from lmfdb.users import admin_required
 from . import inventory_viewer
-from . import inventory_live_data
+from .inventory_live_data import get_db_lists, get_lockout_state
 from . import inventory_control
 from . import inventory_consistency
 from . import lmfdb_inventory as linv
@@ -54,7 +54,7 @@ class BadNameError(KeyError):
 def show_edit_root():
     try:
         listing = inventory_viewer.get_edit_list()
-        lockout = inventory_live_data.get_lockout_state()
+        lockout = get_lockout_state()
     except ih.ConnectOrAuthFail as e:
 
         new_url = str(request.referrer)
@@ -74,7 +74,7 @@ def show_edit_child(id):
             raise BadNameError('')
         nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
         listing = inventory_viewer.get_edit_list(id)
-        lockout = inventory_live_data.get_lockout_state()
+        lockout = get_lockout_state()
     except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=None, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
     except ih.ConnectOrAuthFail as e:
@@ -147,7 +147,7 @@ def show_edit_inventory(id, id2):
         valid = inventory_viewer.is_valid_db_collection(id, id2)
         if not valid:
             raise BadNameError('')
-        locked = inventory_live_data.get_lockout_state()
+        locked = get_lockout_state()
     except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]])
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
@@ -164,7 +164,7 @@ def show_edit_records(id, id2):
         valid = inventory_viewer.is_valid_db_collection(id, id2)
         if not valid:
             raise BadNameError('')
-        locked = inventory_live_data.get_lockout_state()
+        locked = get_lockout_state()
     except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_records', id=id, id2=id2)]])
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
@@ -180,7 +180,7 @@ def show_edit_records(id, id2):
 @inventory_app.route('live/')
 def generate_live_listing():
     try:
-        results = inventory_live_data.get_db_lists()
+        results = get_db_lists()
     except ih.ConnectOrAuthFail:
         return "{}"
     return jsonify(results)
@@ -241,7 +241,7 @@ def edit_failure(request=request):
         errcode = int(request.args.get('code'))
         errstr = inventory_viewer.err_registry[errcode].message
     except:
-        if inventory_live_data.get_lockout_state():
+         f get_lockout_state():
             errcode = 16
             errstr = inventory_viewer.err_registry[errcode].message
         else:
@@ -279,7 +279,7 @@ def show_rescrape_page():
 
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], ['rescrape', url_for('inventory_app.show_rescrape_page')]]
     try:
-        listing = inventory_live_data.get_db_lists()
+        listing = get_db_lists()
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
