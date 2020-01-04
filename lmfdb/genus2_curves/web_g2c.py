@@ -468,7 +468,7 @@ def td_wrapc(val):
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapc('g2c.mw_generator', 'Generator'),
+              th_wrapr('g2c.mw_generator', 'Generator'),tr_wrapc('',''),
               th_wrapl('g2c.mw_height', 'Height'),
               th_wrapc('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
