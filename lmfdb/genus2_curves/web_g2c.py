@@ -43,7 +43,7 @@ def list_to_divisor(P):
     xP,yP = P[0],P[1]
     xD = sum([ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return "(" + str(xD).replace("**","^").replace("*","") + "=0, y =" + str(yD).replace("**","^").replace("*","") + ")"
+    return "(" + str(xD).replace("**","^").replace("*","") + "=0,\\,\\,\\, y =" + str(yD).replace("**","^").replace("*","") + ")"
 
 def url_for_ec(label):
     if not '-' in label:
@@ -456,23 +456,24 @@ def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     def th_wrapl(kwl, title):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
-    def th_wrapr(kwl, title):
+    def th_wrapc(kwl, title):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
     def td_wrapl(val):
         return '    <td align="left">\\(%s\\)</th>' % val
-    def td_wrapr(val):
-        return '    <td align="right">\\(%s\\)</th>' % val
+    def td_wrapc(val):
+        return '    <td align="center">\\(%s\\)</th>' % val
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
               th_wrapl('g2c.mw_generator', 'Generator'),
-              th_wrapr('g2c.mw_height', 'Height'),
-              th_wrapr('g2c.mw_order', 'Order'),
+              th_wrapl('g2c.mw_height', 'Height'),
+              th_wrapc('g2c.mw_order', 'Order'),
+              th_wrapc('g2c.mw_generator', 'Sub'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr('\\infty')])
+            gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr('\\infty'), td_wrap('\\Z')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapr(0), td_wrapr(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapr(0), td_wrapr(invs[i]), td_wrap('\\Z/%o\\Z'%(invs[i]))])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
@@ -609,6 +610,9 @@ class WebG2C(object):
                     tamgwnr = 'N/A'
                 data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
             data['tama'] = data['tama'][:-2] # trim last ", "
+            if curve['tamagawa_proudct']:
+                data['tamagawa_prodct'] = ZZ(curve['tamagawa_product'])
+                data['tamagawa_product_factor_latex'] = web_latex(factor(int(data['tamagawa_product'])))
             if ratpts:
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
