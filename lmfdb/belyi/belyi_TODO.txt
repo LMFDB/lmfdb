@@ -1,22 +1,27 @@
 Soon:
 - Improve the pages under "Learn more about" and add a reliability page
+- add portraits in Lady Gaga box
 - Add a download to Sage button for Galois orbits of Belyi maps
 - Upload the rest of our data
 - Browse maps by base field, and see statistics on base field data
-- Browse by orbit size on Belyi main page; browsing by passports in general?
-- add portraits in Lady Gaga box
+- Browse by orbit size on Belyi main page
+- browsing passports in general? adding passport knowl on main browse page
 - browse columns: degs and gs...column names for db in sage?
+- Add more friends, specifically curves of genus 1 and 2 listed in the LMFDB; also modular forms?
 
 Some day:
 - specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good
 reduction outside of 2 and 3?
 - revamp labels?
-- improve display of equations; table of coeffs?
-- Add more friends, specifically curves of genus 1 and 2 listed in the LMFDB; also modular forms?
+- improve display of equations; table of coeffs? Polredfunctionfieldabs?
+- Compute L-functions of curves, if possible
 
 Long term:
+- pictures of dessins; Mike's ribbon graphs?; Bailey's drawing software
+- allow passports without all maps computed
+- compute and identify fiber products and imprimitive maps
 - connections to HGMs?
-- pictures of dessins; Mike's ribbon graphs
+- incorporate David Roberts's and Noam's data into the database; will probably require rewriting infrastructure
 
 OLD LIST:
 
