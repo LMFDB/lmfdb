@@ -461,11 +461,11 @@ def th_wrapc(kwl, title):
 def th_wrapc2(kwl, title):
     return '    <th colspan="2" align="center">%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
-    return '    <td align="left">\\(%s\\)</th>' % val
+    return '    <td align="left">\\(%s\\)</td>' % val
 def td_wrapr(val):
-    return '    <td align="right">\\(%s\\)</th>' % val
+    return '    <td align="right">\\(%s\\)</td>' % val
 def td_wrapc(val):
-    return '    <td align="center">\\(%s\\)</th>' % val
+    return '    <td align="center">\\(%s\\)</td>' % val
 
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
