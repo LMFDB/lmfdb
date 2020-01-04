@@ -4,7 +4,7 @@ from ast import literal_eval
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot,
                          list_to_factored_poly_otherorder, names_and_urls,
-                         web_latex)
+                         display_knowl, web_latex)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
 from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
@@ -37,6 +37,13 @@ def list_to_min_eqn(L):
     poly_tup = [ xpoly_rng(tup) for tup in L ]
     lhs = ypoly_rng([0, poly_tup[1], 1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
+
+def list_to_divisor(P):
+    xzR = PolynomialRing(QQ,['x','z']); x = xzR('x'); z = xzR('z')
+    xP,yP = P[0],P[1]
+    xD = sum([ZZ(xP[i][0])/ZZ(xP[i][1])*x^i*z^(len(xP)-i-1) for i in range(len(xP))])
+    yD = sum([ZZ(yP[i][0])/ZZ(xP[i][1])*x^i*z^(len(yP)-i-1) for i in range(len(yP))])
+    return "(" + str(xD).replace("*","") + "=0, y =" + str(yD).replace("*","") + ")"
 
 def url_for_ec(label):
     if not '-' in label:
@@ -445,6 +452,32 @@ def add_friend(friends, friend):
             return
     friends.append(friend)
 
+def mw_gens_table(invs,gens,hts):
+    D = [list_to_divisor(P) for P in gens]
+    def th_wrapl(kwl, title):
+        return '    <th>%s</th>' % display_knowl(kwl, title=title)
+    def th_wrapr(kwl, title):
+        return '    <th>%s</th>' % display_knowl(kwl, title=title)
+    def td_wrapl(val):
+        return '    <td align="left">\\(%s\\)</th>' % val
+    def td_wrapr(val):
+        return '    <td align="right">\\(%s\\)</th>' % val
+    gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
+              th_wrapl('g2c.mw_generator', 'Generator'),
+              th_wrapr('g2c.mw_height', 'Height'),
+              th_wrapr('g2c.mw_order', 'Order'),
+              '  </tr>', '</thead>', '<tbody>']
+    for i in range(invs):
+        gentab.append('  <tr>')
+        if invs[i] == 0:
+            gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr('\\infty')])
+        else:
+            gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr(invs[i])])
+        gentab.append('  </tr>')
+    gentab.extend(['</tbody>', '</table>'])
+    return '\n'.join(gentab)
+
+
 ###############################################################################
 # Genus 2 curve class definition
 ###############################################################################
@@ -560,11 +593,6 @@ class WebG2C(object):
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
-            if len(ratpts['mw_invs']) == 0:
-                data['mw_group'] = '\mathrm{trivial}'
-            else:
-                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
-            data['mw_group_proved'] = ratpts['mw_gens_v']
 
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
@@ -594,6 +622,13 @@ class WebG2C(object):
             else:
                 t = curve['two_torsion_field']
                 data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+            if len(ratpts['mw_invs']) == 0:
+                data['mw_group'] = '\mathrm{trivial}'
+            else:
+                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
+            data['mw_gens_v'] = ratpts['mw_gens_v']
+            data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
+
         else:
             # invariants specific to isogeny class
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
@@ -606,6 +641,7 @@ class WebG2C(object):
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
+
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']

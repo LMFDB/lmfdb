@@ -17,7 +17,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
 
-credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki"
+credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, Raymond van Bommel, Dan Yasaki"
 
 ###############################################################################
 # List and dictionaries needed routing and searching
