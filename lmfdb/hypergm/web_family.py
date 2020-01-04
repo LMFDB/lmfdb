@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 import re
 from flask import url_for
@@ -13,7 +14,7 @@ from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
     make_bigint, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
-from plot import circle_image, piecewise_constant_image, piecewise_linear_image
+from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 

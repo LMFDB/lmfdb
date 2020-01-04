@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
@@ -844,7 +845,7 @@ class NumberFieldGaloisGroup(object):
         try:
             dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
-            import cyc_alt_res_engine
+            from . import cyc_alt_res_engine
             self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict([str(m) for m in self.polynomial()], self.Frobenius_resolvents())
             # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
