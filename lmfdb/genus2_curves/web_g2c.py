@@ -474,7 +474,7 @@ def mw_gens_table(invs,gens,hts):
         if invs[i] == 0:
             gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapr(hts[i]), td_wrapr(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapr(0), td_wrapr(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
