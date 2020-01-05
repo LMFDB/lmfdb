@@ -52,7 +52,7 @@ def list_to_divisor(P):
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return str(xD.factor()).replace("**","^").replace("*","") + " = 0,\\ \\ " + (str(yden) if yden > 1 else "") + "= str(yD).replace("**","^").replace("*","")
+    return str(xD.factor()).replace("**","^").replace("*","") + " = 0,\\ \\ " + (str(yden) if yden > 1 else "") + " = " + str(yD).replace("**","^").replace("*","")
 
 def url_for_ec(label):
     if not '-' in label:
