@@ -454,7 +454,7 @@ def add_friend(friends, friend):
     friends.append(friend)
 
 def th_wrap(kwl, title):
-    return '    <th padding-right="3px">%s</th>' % display_knowl(kwl, title=title)
+    return '    <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return '    <td align="left">\\(%s\\)</td>' % val
 def td_wrapr(val):

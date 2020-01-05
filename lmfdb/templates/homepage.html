@@ -236,9 +236,9 @@
     {% endif %}
     {% if KNOWL_ID %}
     {% if BACKUP_KNOWL_ID %}
-    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='', backupid=BACKUP_KNOWL_ID+'.top') }}</h2>
+    {{ KNOWL_INC(KNOWL_ID+'.top', title='', backupid=BACKUP_KNOWL_ID+'.top') }}
     {% else %}
-    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+    {{ KNOWL_INC(KNOWL_ID+'.top', title='') }}
     {% endif %}
     {% endif %}
     {% block content -%}
