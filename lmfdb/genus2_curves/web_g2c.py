@@ -460,12 +460,8 @@ def add_friend(friends, friend):
             return
     friends.append(friend)
 
-def th_wrapl(kwl, title):
-    return '    <th align="left">%s</th>' % display_knowl(kwl, title=title)
-def th_wrapr(kwl, title):
-    return '    <th align="right">%s</th>' % display_knowl(kwl, title=title)
-def th_wrapc(kwl, title):
-    return '    <th align="center">%s</th>' % display_knowl(kwl, title=title)
+def th_wrap(kwl, title):
+    return '    <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
     return '    <td align="left">\\(%s\\)</td>' % val
 def td_wrapr(val):
@@ -476,27 +472,27 @@ def td_wrapc(val):
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapr('g2c.mw_generator', 'Generator'),
-              th_wrapl('g2c.mw_height', 'Height'),
-              th_wrapc('g2c.mw_generator', 'Order'),
+              th_wrap('g2c.mw_generator', 'Generator'),
+              th_wrap('g2c.mw_height', 'Height'),
+              th_wrap('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
             gentab.extend([td_wrapl(D[i]), td_wrapl(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapl(D[i][1]), td_wrapl(0), td_wrapc(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
 def local_table(D,N,tama,bad_lpolys):
     loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapr('ag.bad_prime', 'Prime'),
-              th_wrapc('ag.conductor', 'ord(\\(N\\))'),
-              th_wrapc('g2c.discriminant', 'ord(\\(\\Delta\\))'),
-              th_wrapc('g2c.tamagawa', 'Tamagawa'),
-              th_wrapl('g2c.bad_lfactors', 'L-factor'),
+              th_wrap('ag.bad_prime', 'Prime'),
+              th_wrap('ag.conductor', 'ord(\\(N\\))'),
+              th_wrap('g2c.discriminant', 'ord(\\(\\Delta\\))'),
+              th_wrap('g2c.tamagawa', 'Tamagawa'),
+              th_wrap('g2c.bad_lfactors', 'L-factor'),
               '  </tr>', '</thead>', '<tbody>']
     for p in D.prime_divisors():
         loctab.append('  <tr>')
