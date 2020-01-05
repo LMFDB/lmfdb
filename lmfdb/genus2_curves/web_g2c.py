@@ -14,7 +14,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, lcm, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
+from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -41,10 +41,28 @@ def strlist_to_nfelt(L, varname):
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
-    ypoly_rng = PolynomialRing(xpoly_rng,'y')
     poly_tup = [ xpoly_rng(tup) for tup in L ]
+    ypoly_rng = PolynomialRing(xpoly_rng,'y')
     lhs = ypoly_rng([0, poly_tup[1], 1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
+
+def list_to_min_eqns(L):
+    xpoly_rng = PolynomialRing(QQ,'x')
+    poly_tup = [ xpoly_rng(tup) for tup in L ]
+    f = 4*poly_tup[0] + poly_tup[1]**2
+    n = gcd(f.coefficients())
+    f = (n.squarefree_part() * f) / n
+    ypoly_rng = PolynomialRing(xpoly_rng,'y')
+    lhs = ypoly_rng([0, poly_tup[1], 1])
+    mineqns = [str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")]
+    xzpoly_rng = PolynomialRing(QQ,['x','z'])
+    z = xzpoly_rng('z')
+    poly_tup = map (lambda x: x.homogenize(z),[ xzpoly_rng(poly_tup[0])*z**(7-len(L[0])), xzpoly_rng(poly_tup[1])*z**(4-len(L[1]))])
+    ypoly_rng = PolynomialRing(xzpoly_rng,'y')
+    lhs = ypoly_rng([0, poly_tup[1], 1])
+    mineqns.append(str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*",""))
+    mineqns.append("y^2 = " + str(f).replace("*",""))
+    return mineqns
 
 def url_for_ec(label):
     if not '-' in label:
@@ -598,7 +616,7 @@ class WebG2C(object):
             data['abs_disc'] = ZZ(curve['abs_disc'])
             data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
-            data['min_eqn_display'] = list_to_min_eqn(data['min_eqn'])
+            data['min_eqn_display'] = list_to_min_eqns(data['min_eqn'])
             data['disc_factor_latex'] = web_latex(factor(data['disc']))
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
@@ -799,7 +817,7 @@ class WebG2C(object):
         self.code = code = {}
         code['show'] = {'sage':'','magma':''} # use default show names
         code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'%(data['min_eqn'][0],data['min_eqn'][1]),
-                              'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'%(data['min_eqn'][0],data['min_eqn'][1])}
+                         'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s); SimplifiedModel(C);'%(data['min_eqn'][0],data['min_eqn'][1]) }
         if data['abs_disc'] % 4096 == 0:
             ind2 = [a[0] for a in data['bad_lfactors']].index(2)
             bad2 = data['bad_lfactors'][ind2][1]

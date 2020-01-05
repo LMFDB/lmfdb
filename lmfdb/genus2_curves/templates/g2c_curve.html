@@ -26,15 +26,39 @@ function show_invs(invstyle) {
   }
 </script>
 
+<script>
+var cur_invstyle = null;
+function show_eqns(invstyle) {
+    $('.min_eqn').hide();
+    $('.proj_eqn').hide();
+    $('.simp_eqn').hide();
+    $('.'+invstyle).show();
+  }
+</script>
 
 {#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
 
-<h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
-{{place_code('curve')}}
+<h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+<h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+<h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation', title='Simplified equation') }} </h2>
+<p>{{place_code('curve')}}</p>
 
-<p> ${{ data.min_eqn_display }}$ </p>
+<table>
+<tr>
+<p class='min_eqn'>  ${{ data.min_eqn_display[0] }}$ </p>
+<p class='proj_eqn'> ${{ data.min_eqn_display[1] }}$ </p>
+<p class='simp_eqn'> ${{ data.min_eqn_display[2] }}$ </p>
+</tr>
+<tr>
+<div class="toggle">
+    <span class='proj_eqn simp_eqn nodisplay'><a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>,</span>
+    <span class='min_eqn simp_eqn'><a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>,</span>
+    <span class='min_eqn proj_eqn'><a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a></span>
+</div>
+</tr>
+</table>
 
 <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
 
