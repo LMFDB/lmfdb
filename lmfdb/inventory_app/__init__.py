@@ -12,4 +12,7 @@ inventory_app = Blueprint(
     static_url_path="static/",
 )
 
+from . import inventory_main
+assert inventory_main # silence pyflakes
+
 app.register_blueprint(inventory_app, url_prefix=url_pref)
