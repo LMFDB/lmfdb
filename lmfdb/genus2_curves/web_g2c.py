@@ -471,6 +471,7 @@ def td_wrapc(val):
 
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
+    print D
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
               th_wrap('g2c.mw_generator', 'Generator'),
               th_wrap('g2c.mw_height', 'Height'),
@@ -481,7 +482,7 @@ def mw_gens_table(invs,gens,hts):
         if invs[i] == 0:
             gentab.extend([td_wrapl(D[i]), td_wrapl(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapl(0), td_wrapc(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapl('0'), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
