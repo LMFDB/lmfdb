@@ -188,21 +188,19 @@ function show_invs(invstyle) {
 </p>
 <p> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
-{% if data.rat_pts_v > 0 %}
 <p>{{place_code('rat_pts')}}</p>
 <p>
-{% if data.rat_pts_v == 1 %}
-{% if data.rat_pts %}
-{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.rat_pts}}\)
+{% if data.rat_pts_v %}
+{% if data.num_rat_pts > 0 %}
+{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.pretty_rat_pts}}\)
 {% else %}
 {{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
 {% endif %}
 {% else %}
-{% if data.rat_pts %}
-{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: \({{data.rat_pts}}\)
+{% if data.num_rat_pts > 0 %}
+{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: \({{data.pretty_rat_pts}}\)
 {% else %}
 There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
-{% endif %}
 {% endif %}
 {% endif %}
 </p>

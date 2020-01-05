@@ -641,11 +641,13 @@ class WebG2C(object):
             data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
-                if len(ratpts['rat_pts']):
+                data['rat_pts_v'] =  ratpts['rat_pts_v']
+                data['num_rat_pts'] = len(ratpts['rat_pts'])
+                if data['num_rat_pts']:
                     data['rat_pts_pretty'] = ',\\, '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
-                data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
             else:
                 data['rat_pts_v'] = 0
+                data['num_rat_pts'] = 0
             if curve['two_torsion_field'][0]:
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
