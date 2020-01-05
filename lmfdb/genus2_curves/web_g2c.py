@@ -480,9 +480,9 @@ def mw_gens_table(invs,gens,hts):
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapl(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
+            gentab.extend([td_wrapl(D[i]), td_wrapc(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i]), td_wrapl('0'), td_wrapc(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapc('0'), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
