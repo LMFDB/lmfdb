@@ -4,11 +4,12 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
+from __future__ import absolute_import
 from sage.structure.sage_object import SageObject
 from sage.misc.latex import Latex
 from lmfdb import db
 import importlib, inspect
-from sample import Samples
+from .sample import Samples
 
 def get_smf_families():
     return [SiegelFamily(doc['name'], doc) for doc in db.smf_families.search({})]

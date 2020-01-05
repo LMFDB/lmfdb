@@ -2,11 +2,12 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
+from __future__ import absolute_import
 from lmfdb import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
-from galois_reps import GaloisRepresentation
+from .galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
 from lmfdb.characters.web_character import WebDirichletCharacter

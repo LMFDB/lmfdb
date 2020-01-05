@@ -1926,7 +1926,7 @@ class PostgresTable(PostgresBase):
             if projection == 0 or isinstance(projection, string_types):
                 return rec[0]
             else:
-                return {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
+                return {k:v for k,v in zip(search_cols + extra_cols, rec) if (self._include_nones or v is not None)}
 
     def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, split_ors=False, silent=False):
         """

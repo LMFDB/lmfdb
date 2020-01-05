@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma,
-    clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,
+    clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp, parse_restricted,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -123,7 +123,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
     parse_ints(info,query,'nilpotency')
-    parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
+    parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
     parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])

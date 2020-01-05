@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -11,7 +12,7 @@ motive_logger = make_logger(motive_page)
 def body_class():
     return {'body_class': 'motive'}
 
-import main
+from . import main
 assert main # silence pyflakes
 
 app.register_blueprint(motive_page, url_prefix="/Motive")

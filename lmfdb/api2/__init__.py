@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 assert app # keeps pyflakes happy
 from lmfdb.logger import make_logger
@@ -9,7 +10,7 @@ __version__ = "1.0.0"
 
 api2_page = Blueprint("API2", __name__, template_folder='templates', static_folder="static")
 
-import api2
+from . import api2
 assert api2
 
 app.register_blueprint(api2_page, url_prefix="/api2")

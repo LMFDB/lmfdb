@@ -2,6 +2,7 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
+from __future__ import absolute_import
 import re
 
 from flask import render_template, request, url_for, redirect, abort
@@ -16,7 +17,7 @@ from lmfdb.utils import (
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
-from web_family import WebHyperGeometricFamily
+from .web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
@@ -270,7 +271,7 @@ def index():
 
 def hgm_family_circle_plot_data(AB):
     A, B = AB.split("_")
-    from plot import circle_image
+    from .plot import circle_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
@@ -286,7 +287,7 @@ def hgm_family_circle_plot_data(AB):
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
     A, B = AB.split("_")
-    from plot import circle_image
+    from .plot import circle_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = circle_image(A, B)
@@ -296,7 +297,7 @@ def hgm_family_circle_image(AB):
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
     A, B = AB.split("_")
-    from plot import piecewise_linear_image
+    from .plot import piecewise_linear_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_linear_image(A, B)
@@ -306,7 +307,7 @@ def hgm_family_linear_image(AB):
 def hgm_family_constant_image(AB):
     # piecewise constant
     A, B = AB.split("_")
-    from plot import piecewise_constant_image
+    from .plot import piecewise_constant_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_constant_image(A, B)

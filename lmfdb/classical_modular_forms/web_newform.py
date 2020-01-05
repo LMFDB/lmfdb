@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
+from __future__ import absolute_import
 from six import string_types
 from collections import defaultdict
 import bisect, re
@@ -22,7 +23,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
-from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -490,7 +491,7 @@ class WebNewform(object):
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
             nontriv = not (a == 'a')
-            from main import Nk2_bound
+            from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv = nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
