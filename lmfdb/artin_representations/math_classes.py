@@ -380,10 +380,12 @@ class ArtinRepresentation(object):
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return group_display_knowl(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_knowl(n,t)
 
     def __str__(self):
         try:
