@@ -68,7 +68,8 @@ def local_algebra_data(labels):
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        ans += group_display_knowl(f['gal'][0],f['gal'][1])
+        galnt = [int(z) for z in f['galois_label'].split('T')]
+        ans += group_display_knowl(galnt[0],galnt[1])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -82,7 +83,7 @@ def local_field_data(label):
         nicename = ' = '+ prettyname(f)
     ans = 'Local number field %s%s<br><br>'% (label, nicename)
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
-    gt = f['gal']
+    gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
@@ -167,9 +168,9 @@ def local_field_jump(info):
              learnmore=learnmore_list,
              credit=lambda:LF_credit)
 def local_field_search(info,query):
-    parse_galgrp(info,query,'gal',qfield=('n','galT'))
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
@@ -196,7 +197,7 @@ def render_field_webpage(args):
         e = data['e']
         f = data['f']
         cc = data['c']
-        gt = data['gal']
+        gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
@@ -222,14 +223,11 @@ def render_field_webpage(args):
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
-        Pxt=PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
-            # Eliminate t from the eisenstein polynomial
-            eisenp = Pxt(str(data['eisen']).replace('y','x'))
-            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = web_latex(eisenp)
 
         else:

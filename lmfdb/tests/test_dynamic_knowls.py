@@ -38,4 +38,4 @@ class DynamicKnowlTest(LmfdbTest):
 
     def test_galois_alias_knowl(self):
         L = self.tc.get('/knowledge/show/nf.galois_group.name', follow_redirects=True)
-        assert '3T2' in L.data
+        assert '11T6' in L.data

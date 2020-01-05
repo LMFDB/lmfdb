@@ -135,7 +135,12 @@ A <a href={{url_for('.random_field')}}>random local number field</a> from the da
           </tr><tr>
             <td>{{KNOWL('nf.galois_group',title='Galois group $G$')}}</td>
             <td><input type="text" name="gal" value="" size=10 placeholder="5T3"></td>
-            <td><span class="formexample">e.g. 5T3, C4, or a list of {{KNOWL('nf.galois_group.name',title='labels')}}</span></td>
+            <td><span class="formexample">list of 
+              {{KNOWL('group.small_group_label',title="GAP id's")}},
+          e.g. [8,3] or [16,7], group names from the
+          {{KNOWL('nf.galois_group.name','list of group labels')}}, e.g.
+          C5 or S12, and {{KNOWL('gg.label','transitive group labels')}}, 
+          e.g., 7T2 or 11T5</span></td>
           </tr><tr>
             <td>Results to display</td>
             <td><input type="text" name="count" value="{{info.count}}" size=10></td>
