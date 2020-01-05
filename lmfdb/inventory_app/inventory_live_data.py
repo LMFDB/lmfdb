@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from scripts.reports.jsonify_pg_structure import get_lmfdb_collections as glc
+from .jsonify_pg_structure import get_lmfdb_collections as glc
 import json
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import scripts.reports.jsonify_pg_structure as jdbs
+import .jsonify_pg_structure as jdbs
 from . import inventory_upload_data as iud
 from .scrape_progress_update import update_scrape_progress
 import threading
