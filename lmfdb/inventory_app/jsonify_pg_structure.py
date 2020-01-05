@@ -1,5 +1,6 @@
-from id_object import get_description
-from lmfdb.backend.database import db
+from __future__ import absolute_import
+from .id_object import get_description
+from lmfdb import db
 import datetime
 
 __version__ = '1.0.0'
