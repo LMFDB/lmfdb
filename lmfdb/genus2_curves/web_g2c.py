@@ -180,7 +180,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
     ymin=min([R[2] for R in plotzones])
     ymax=max([R[3] for R in plotzones])
     for P in rat_pts:
-        (x,y,z)=eval(P.replace(':',','))
+        (x,y,z)=P
         z=ZZ(z)
         if z: # Do not attempt to plot points at infinity
             x=ZZ(x)/z
@@ -642,7 +642,7 @@ class WebG2C(object):
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
-                    data['rat_pts'] = ',\\,  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
+                    data['rat_pts_pretty'] = ',\\, '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
                 data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
             else:
                 data['rat_pts_v'] = 0
@@ -718,7 +718,7 @@ class WebG2C(object):
         # Properties
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
-            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], data['rat_pts'].split(',') if 'rat_pts' in data else []))
+            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], ratpts['rat_pts'] if ratpts else []))
             plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
 
             properties += [
