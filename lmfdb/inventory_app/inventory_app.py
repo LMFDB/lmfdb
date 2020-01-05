@@ -3,7 +3,7 @@ from flask import render_template, request, url_for, make_response, jsonify, sen
 from flask_login import login_required
 from lmfdb.users import admin_required
 from . import inventory_viewer
-from .inventory_live_data import get_db_lists, get_lockout_state
+from .inventory_live_data import get_db_lists, get_lockout_state, get_progress, collate_orphans_by_uid, trigger_scrape
 from . import inventory_control
 from . import inventory_consistency
 from . import lmfdb_inventory as linv
@@ -301,7 +301,7 @@ def show_rescrape_poll(uid):
 @login_required
 def fetch_progress_data(uid):
     try:
-        progress = inventory_live_data.get_progress(uid)
+        progress = get_progress(uid)
     except ih.ConnectOrAuthFail:
         progress = {'n_colls':0, 'curr_coll':0, 'progress_in_current':0}
     return jsonify(progress)
@@ -311,7 +311,7 @@ def fetch_progress_data(uid):
 @login_required
 def fetch_summary_data(uid):
     try:
-        data = inventory_live_data.collate_orphans_by_uid(uid)
+        data = collate_orphans_by_uid(uid)
     except ih.ConnectOrAuthFail:
         data = {}
     return jsonify(data)
@@ -321,7 +321,7 @@ def fetch_summary_data(uid):
 @login_required
 @admin_required
 def submit_rescrape_request():
-    scrape_info = inventory_live_data.trigger_scrape(request.data)
+    scrape_info = trigger_scrape(request.data)
     return jsonify({'url':url_for('inventory_app.show_rescrape_poll', uid=scrape_info['uid']), 'uid':scrape_info['uid'], 'locks':scrape_info['locks']})
 
 # Control panel functions and endpoints ---------------------------------------
