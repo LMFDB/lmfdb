@@ -411,7 +411,7 @@ def lfuncEPhtml(L, fmt):
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if display_galois:
-        eptable += "<th class='weight galois'>$\Gal(F_p(T))$</th>"
+        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
