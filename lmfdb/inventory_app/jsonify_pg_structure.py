@@ -1,9 +1,18 @@
-import dbtools
 import id_object
 from lmfdb.backend.database import db
 import datetime
 
 __version__ = '1.0.0'
+
+def get_pg_sample_record(table, field_name):
+    """ Function to get a sample, non-empty record from a table
+        table - Postgres table name
+        field_name - name of field to find sample record from
+
+        returns sample record
+    """
+
+    return db[table].lucky({str(field_name):{'$exists':True}})
 
 def _is_good_table(name):
     """ Function to test if a database is one to scan """
@@ -72,7 +81,7 @@ def _jsonify_collection_info(table, parse_jsonb = False):
     json_db_data['fields'] = {}
 
     for doc in results:
-        rls = dbtools.get_pg_sample_record(table, str(doc))
+        rls = get_pg_sample_record(table, str(doc))
         try:
             merge_dicts(json_db_data['fields'], _jsonify_record(str(doc), rls[doc], parse_jsonb = parse_jsonb))
         except:
