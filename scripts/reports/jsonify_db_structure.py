@@ -1,10 +1,10 @@
 from bson.code import Code
-import id_object
 import datetime
 #import threading
 #import bson
 #import time
 from collections import defaultdict
+from lmfdb.inventory_app.id_object import get_description
 from lmfdb.backend.database import db
 
 __version__ = '1.0.0'
@@ -94,7 +94,7 @@ def _jsonify_table_info(table, dbname = None):
         try:
             rls = get_sample_record(table, str(doc))
             try:
-                typedesc = id_object.get_description(rls[str(doc)])
+                typedesc = get_description(rls[str(doc)])
             except:
                 typedesc = 'Type cannot be identified (' \
                            + str(type(rls[str(doc)])) + ')'

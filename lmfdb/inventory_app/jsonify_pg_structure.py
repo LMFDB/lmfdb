@@ -1,4 +1,4 @@
-import id_object
+from id_object import get_description
 from lmfdb.backend.database import db
 import datetime
 
@@ -45,7 +45,7 @@ def _jsonify_record(name, record, parse_jsonb = False, inferred = False):
         if len(record) > 0 and isinstance(record[0], dict): merge_dicts(vals, _jsonify_record(name, record[0], parse_jsonb = parse_jsonb, inferred = True))
 
     try:
-        typedesc = id_object.get_description(record)
+        typedesc = get_description(record)
     except:
         typedesc = 'Type cannot be identified (' \
             + str(type(record)) + ')'
