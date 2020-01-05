@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
-from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
+from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                 specialValueTriple)
 

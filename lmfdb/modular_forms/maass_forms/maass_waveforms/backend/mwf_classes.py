@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from mwf_utils import mwf_logger
-from maass_forms_db import maass_db
+from .mwf_utils import mwf_logger
+from .maass_forms_db import maass_db
 from sage.all import Gamma0, CC, imag_part, real_part
 from lmfdb import db
 from lmfdb.utils import display_complex

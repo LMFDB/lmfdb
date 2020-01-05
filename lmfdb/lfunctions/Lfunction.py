@@ -6,6 +6,7 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
+from __future__ import absolute_import
 import math, re
 
 from flask import url_for, request
@@ -29,13 +30,13 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from Lfunction_base import Lfunction
+from .Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from Lfunctionutilities import (
+from .Lfunctionutilities import (
         string2number, get_bread,
         compute_local_roots_SMF2_scalar_valued,)
-from LfunctionComp import isogeny_class_cm
-from LfunctionDatabase import (
+from .LfunctionComp import isogeny_class_cm
+from .LfunctionDatabase import (
         get_lfunction_by_Lhash,
         get_instances_by_Lhash,
         get_instances_by_Lhash_and_trace_hash,

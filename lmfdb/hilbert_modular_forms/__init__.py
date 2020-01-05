@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -11,7 +12,7 @@ hmf_logger = make_logger(hmf_page)
 def body_class():
     return {'body_class': 'hmf'}
 
-import hilbert_modular_form
+from . import hilbert_modular_form
 assert hilbert_modular_form
 
 app.register_blueprint(hmf_page, url_prefix="/ModularForm/GL2/TotallyReal")
