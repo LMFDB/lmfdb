@@ -39,22 +39,12 @@ function show_invs(invstyle) {
 <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
 
 <table>
-    <tr>
-        <td> \( N \) </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td>\( {{ data.cond }} \)</td>
-        <td>&nbsp;=&nbsp;</td>
-        <td>{{ data.cond_factor_latex }}</td>
-        <td>{{place_code('cond')}}</td>
-    </tr>
-    <tr>
-        <td> \( \Delta \) </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.disc }}\)</td>
-        <td>&nbsp;=&nbsp;</td>
-        <td>{{ data.disc_factor_latex }}</td>
-        <td>{{place_code('disc')}}</td>
-    </tr>
+<tr><td> \( N \) </td>      <td>&nbsp;=&nbsp;</td> <td>\({{ data.cond }}\)</td> <td>&nbsp;=&nbsp;</td> <td>{{ data.cond_factor_latex }}</td>
+    <td>{{place_code('cond')}}</td>
+</tr>
+<tr><td> \( \Delta \) </td> <td>&nbsp;=&nbsp;</td> <td>\({{ data.disc }}\)</td> <td>&nbsp;=&nbsp;</td> <td>{{ data.disc_factor_latex }}</td>
+    <td>{{place_code('disc')}}</td>
+</tr>
 </table>
 
 <h3 class='igusa_clebsch'>
@@ -199,9 +189,7 @@ function show_invs(invstyle) {
 <p> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
 {% if data.rat_pts_v > 0 %}
-<p>
-{{place_code('rat_pts')}}
-</p>
+<p>{{place_code('rat_pts')}}</p>
 <p>
 {% if data.rat_pts_v == 1 %}
 {% if data.rat_pts %}
@@ -219,15 +207,13 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 {% endif %}
 </p>
 
-<p>
-{{place_code('num_rat_wpts')}}
-</p>
+<p>{{place_code('num_rat_wpts')}}</p>
 <p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 
 
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
-<p>
+<p>{{place_code('mw_group')}}</p>
 {% if data.mw_rank_proved %}
 {{ KNOWL('ag.mordell_weil', title='Group structure') }}: \({{data.mw_group}}\)
 {% else %}
@@ -241,9 +227,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 {% endif %}
 </p>
 
-<p>
-{{place_code('two_torsion_field')}}
-</p>
+<p>{{place_code('two_torsion_field')}}</p>
 <p><div style="display: inline">{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</div></p>
 
 <h2> {{KNOWL('g2c.bsd_invariants', title='BSD invariants')}} </h2>
