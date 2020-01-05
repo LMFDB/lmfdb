@@ -376,9 +376,9 @@ def lfuncEPhtml(L, fmt):
         elif L.degree == 2:
             ans += "\[F_p(T) = 1 - a_p T + p T^2 .\]"
     else:
-        ans += "\(F_p\) is a polynomial of degree " + str(L.degree) + ". "
+        ans += "\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
     if pbadset is not None:
-        ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
+        ans += "If " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
         ans += str(L.degree - 1) + ". "
 
     # Figuring out good and bad primes
@@ -411,8 +411,8 @@ def lfuncEPhtml(L, fmt):
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if display_galois:
-        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
-    eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
+        eptable += "<th class='weight galois'>$\Gal(F_p(T))$</th>"
+    eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
     def row(trclass, goodorbad, p, poly):
