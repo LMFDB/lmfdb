@@ -205,13 +205,13 @@ function show_invs(invstyle) {
 <p>
 {% if data.rat_pts_v == 1 %}
 {% if data.rat_pts %}
-{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: {{data.rat_pts}}
+{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.rat_pts}}\)
 {% else %}
 {{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
 {% endif %}
 {% else %}
 {% if data.rat_pts %}
-{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: {{data.rat_pts}}
+{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: \({{data.rat_pts}}\)
 {% else %}
 There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 {% endif %}
@@ -228,7 +228,7 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
 <p>
-{% if data.mw_gens_v %}
+{% if data.mw_rank_proved %}
 {{ KNOWL('ag.mordell_weil', title='Group structure') }}: \({{data.mw_group}}\)
 {% else %}
 {{ KNOWL('ag.mordell_weil', title='Group structure*') }}: \({{data.mw_group}}\) (conditional on BSD)

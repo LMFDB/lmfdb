@@ -22,6 +22,14 @@ from flask import url_for
 # Pretty print functions
 ###############################################################################
 
+def decimal_pretty(s,min_chars_before_decimal=1,max_chars_after_decimal=6,max_chars=10):
+    m = s.index(".") if "." in s else len(s)
+    if m < min_chars_before_decimal:
+        s = (min_chars_before_decimal-m)*' ' + s
+    n = min(min(max_chars,len(s)),min_chars_before_decimal+max_chars_after_decimal+1)
+    # truncate for the moment (as we do elsewhere in the LMFDB, revisit if we switch to rounding
+    return s[:n]
+
 def bool_pretty(v):
     return 'yes' if v else 'no'
 
@@ -44,7 +52,7 @@ def list_to_divisor(P):
     xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
     xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
     yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return [str(xD.factor()).replace("**","^").replace("*","") + "= 0", (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")]
+    return str(xD.factor()).replace("**","^").replace("*","") + "= 0", (str(yden) if yden > 1 else "") + ",\\ \\ y = " + str(yD).replace("**","^").replace("*","")]
 def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
@@ -468,16 +476,16 @@ def td_wrapc(val):
 def mw_gens_table(invs,gens,hts):
     D = [list_to_divisor(P) for P in gens]
     gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrapr('g2c.mw_generator', 'Generator'),th_wrapl('g2c.mw_generator', ''),
+              th_wrapr('g2c.mw_generator', 'Generator'),
               th_wrapl('g2c.mw_height', 'Height'),
               th_wrapc('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('  <tr>')
         if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i][0]), td_wrapl(D[i][1]), td_wrapl("%12.10f"%(hts[i])), td_wrapc('\\infty')])
+            gentab.extend([td_wrapl(D[i]), td_wrapl(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
         else:
-            gentab.extend([td_wrapl(D[i][0]), td_wrapl(D[i][1]), td_wrapl(0), td_wrapc(invs[i])])
+            gentab.extend([td_wrapl(D[i]), td_wrapl(D[i][1]), td_wrapl(0), td_wrapc(invs[i])])
         gentab.append('  </tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
@@ -627,14 +635,14 @@ class WebG2C(object):
 
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
-            data['real_period'] = "%12.10f"%(curve['real_period'])
+            data['real_period'] = decimal_pretty(str(curve['real_period']))
             if (curve['regulator'] > -0.5):
-                data['regulator'] = "%12.10f"%(curve['regulator'])
+                data['regulator'] = decimal_pretty(str(curve['regulator']))
             else:
                 data['regulator'] = '\\text{unknown}'
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
             data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
-            data['leading_coeff'] = "%12.10f"%(curve['leading_coeff']) if curve['leading_coeff'] else '\\text{unknown}'
+            data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
             if ratpts:
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
