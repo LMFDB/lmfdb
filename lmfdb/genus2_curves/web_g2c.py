@@ -46,14 +46,6 @@ def list_to_min_eqn(L):
     lhs = ypoly_rng([0, poly_tup[1], 1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
-def list_to_divisor(P):
-    R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
-    xP,yP = P[0],P[1]
-    xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
-    xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
-    yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-    return str(xD.factor()).replace("**","^").replace("*","") + " = 0,\\ \\ " + (str(yden) if yden > 1 else "") + "y = " + str(yD).replace("**","^").replace("*","")
-
 def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
@@ -471,19 +463,25 @@ def td_wrapc(val):
     return '    <td align="center">\\(%s\\)</td>' % val
 
 def mw_gens_table(invs,gens,hts):
-    D = [list_to_divisor(P) for P in gens]
-    gentab = ['<table class="ntdata">', '<thead>', '  <tr>',
-              th_wrap('g2c.mw_generator', 'Generator'),
+    def list_to_divisor(P):
+        R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
+        xP,yP = P[0],P[1]
+        xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
+        xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
+        yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+        return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]
+    gentab = ['<table class="ntdata">', '<thead>', '<tr>',
+              th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
               th_wrap('g2c.mw_height', 'Height'),
               th_wrap('g2c.mw_generator', 'Order'),
               '  </tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
-        gentab.append('  <tr>')
-        if invs[i] == 0:
-            gentab.extend([td_wrapl(D[i]), td_wrapc(decimal_pretty(str(hts[i]))), td_wrapc('\\infty')])
-        else:
-            gentab.extend([td_wrapl(D[i]), td_wrapc('0'), td_wrapc(invs[i])])
-        gentab.append('  </tr>')
+        gentab.append('<tr>')
+        D = list_to_divisor(gens[i])
+        gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
+                       td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
+                       td_wrapc('\\infty') if invs[i]==0 else td_wrapc(invs[i])])
+        gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
