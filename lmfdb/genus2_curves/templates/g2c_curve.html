@@ -198,7 +198,7 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.regulator', title='Regulator') }}:</td>
         <td>{% if data.regulator == 'unknown' %} unknown {% else %} \( {{data.regulator}} \) {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.real_period', title='Real period') }}: </td><td>\( {{data.real_period}} \)</td></tr>
-    <tr><td>{{ KNOWL('g2c.tamagawa', title='Tamagawa product') }}:</td><td>\( {{ data.tamagawa_product }} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.tamagawa', title='Tamagawa product') }}:</td>
         <td>{% if data.tamagawa_product != 0 %} \( {{data.tamagawa_product}} \) {% else %} unknown {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
     <tr><td>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
