@@ -48,15 +48,15 @@ function show_eqns(invstyle) {
 <table>
 <tr class='min_eqn'>
     <td>${{ data.min_eqn_display[0] }}$</td>
-    <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>simplify</a>)</td>
+    <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize </a>,<a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
 <tr>
 <tr class='proj_eqn nodisplay'>
     <td>${{ data.min_eqn_display[1] }}$</td>
-    <td>(<a onclick="show_eqns('ming_eqn'); return false" href='#'>dehomogenize </a>,<a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
+    <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>dehomogenize </a>,<a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a>)</td>
 <tr>
 <tr class='simp_eqn nodisplay'>
     <td>${{ data.min_eqn_display[2] }}$</td>
-    <td>(<a onclick="show_eqns('ming_eqn'); return false" href='#'>minimize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
+    <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>minimize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
 <tr>
 </table>
 
