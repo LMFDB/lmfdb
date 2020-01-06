@@ -43,7 +43,8 @@ function show_eqns(invstyle) {
 <h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  title='Simplified equation') }} </h2>
-<p>{{place_code('curve')}}</p>
+<p class='min_eqn proj_eqn'>{{place_code('curve')}}</p>
+<p class='simp_eqn nodisplay'>{{place_code("simplified_curve')}}</p>
 
 <table>
 <tr class='min_eqn'>
@@ -171,22 +172,21 @@ function show_eqns(invstyle) {
 <p>
 {% if data.rat_pts_v %}
 {% if data.num_rat_pts > 0 %}
-{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.rat_pts_pretty}}\)
-{% else %}
-{{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
-{% endif %}
-{% else %}
-{% if data.num_rat_pts > 0 %}
 {{ KNOWL('g2c.all_rational_points', title='All rational points') }}: \({{data.rat_pts_pretty}}\)
 {% else %}
 There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
+{% endif %}
+{% else %}
+{% if data.num_rat_pts > 0 %}
+{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.rat_pts_pretty}}\)
+{% else %}
+{{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
 {% endif %}
 {% endif %}
 </p>
 
 <p>{{place_code('num_rat_wpts')}}</p>
 <p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
-
 
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 

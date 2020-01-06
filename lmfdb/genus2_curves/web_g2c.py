@@ -39,30 +39,34 @@ def intlist_to_poly(s):
 def strlist_to_nfelt(L, varname):
     return latex(PolynomialRing(QQ, varname)(L))
 
-def list_to_min_eqn(L):
-    xpoly_rng = PolynomialRing(QQ,'x')
-    poly_tup = [ xpoly_rng(tup) for tup in L ]
-    ypoly_rng = PolynomialRing(xpoly_rng,'y')
-    lhs = ypoly_rng([0, poly_tup[1], 1])
-    return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
+def min_eqn_pretty(fh):
+    xR = PolynomialRing(QQ,'x')
+    polys = [ xR(tup) for tup in fh ]
+    yR = PolynomialRing(xR,'y')
+    lhs = yR([0, polys[1], 1])
+    return str(lhs).replace("*","") + " = " + str(polys[0]).replace("*","")
 
-def list_to_min_eqns(L):
-    xpoly_rng = PolynomialRing(QQ,'x')
-    poly_tup = [ xpoly_rng(tup) for tup in L ]
-    f = 4*poly_tup[0] + poly_tup[1]**2
+def simplify_hyperelliptic(fh):
+    xR = PolynomialRing(QQ,'x')
+    f = 4*xR(fh[0]) + xR(fh[1])**2
     n = gcd(f.coefficients())
     f = (n.squarefree_part() * f) / n
-    ypoly_rng = PolynomialRing(xpoly_rng,'y')
-    lhs = ypoly_rng([0, poly_tup[1], 1])
-    mineqns = [str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")]
-    xzpoly_rng = PolynomialRing(QQ,['x','z'])
-    z = xzpoly_rng('z')
-    poly_tup = map (lambda x: x.homogenize(z),[ xzpoly_rng(poly_tup[0])*z**(7-len(L[0])), xzpoly_rng(poly_tup[1])*z**(4-len(L[1]))])
-    ypoly_rng = PolynomialRing(xzpoly_rng,'y')
-    lhs = ypoly_rng([0, poly_tup[1], 1])
-    mineqns.append(str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*",""))
-    mineqns.append("y^2 = " + str(f).replace("*",""))
-    return mineqns
+    return f.coefficients(sparse=False)
+
+def min_eqns_pretty(fh):
+    xR = PolynomialRing(QQ,'x')
+    polys = [ xR(tup) for tup in fh ]
+    yR = PolynomialRing(xR,'y')
+    lhs = yR([0, polys[1], 1])
+    slist = [str(lhs).replace("*","") + " = " + str(polys[0]).replace("*","")]
+    xzR = PolynomialRing(QQ,['x','z'])
+    z = xzR('z')
+    polys = map (lambda x: x.homogenize(z),[ xzR(polys[0])*z**(7-len(fh[0])), xzR(polys[1])*z**(4-len(fh[1]))])
+    yR = PolynomialRing(xzR,'y')
+    lhs = yR([0, polys[1], 1])
+    slist.append(str(lhs).replace("*","") + " = " + str(polys[0]).replace("*",""))
+    slist.append("y^2 = " + str(simplify_hyperelliptic(fh)).replace("*",""))
+    return slist
 
 def url_for_ec(label):
     if not '-' in label:
@@ -616,7 +620,7 @@ class WebG2C(object):
             data['abs_disc'] = ZZ(curve['abs_disc'])
             data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
-            data['min_eqn_display'] = list_to_min_eqns(data['min_eqn'])
+            data['min_eqn_display'] = min_eqns_pretty(data['min_eqn'])
             data['disc_factor_latex'] = web_latex(factor(data['disc']))
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
@@ -683,7 +687,7 @@ class WebG2C(object):
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            data['curves'] = [ {"label" : c['label'], "equation_formatted" : min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
@@ -816,8 +820,12 @@ class WebG2C(object):
             return
         self.code = code = {}
         code['show'] = {'sage':'','magma':''} # use default show names
-        code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'%(data['min_eqn'][0],data['min_eqn'][1]),
-                         'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s); SimplifiedModel(C);'%(data['min_eqn'][0],data['min_eqn'][1]) }
+        f,h = fh = data['min_eqn']
+        g = simplify_hyperelliptic(fh)
+        code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'%(f,h),
+                         'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'%(f,h) }
+        code['simplified_curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s))'%(g),
+                                    'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);\n X,pi:= SimplifiedModel(C);'%(f,h) }
         if data['abs_disc'] % 4096 == 0:
             ind2 = [a[0] for a in data['bad_lfactors']].index(2)
             bad2 = data['bad_lfactors'][ind2][1]
