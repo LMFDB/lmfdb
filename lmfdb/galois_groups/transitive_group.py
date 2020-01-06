@@ -137,7 +137,7 @@ class WebGaloisGroup:
 
     def otherrep_list(self, givebound=True):
         sibs = self._data['siblings']
-        pharse = "with degree $\leq %d$"% self.sibling_bound()
+        pharse = r"with degree $\leq %d$" % self.sibling_bound()
         if len(sibs)==0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False)
@@ -182,8 +182,8 @@ class WebGaloisGroup:
             cc = ccc
             cc2 = [x.cycletype(n) for x in cc]
         cc2 = [str(x) for x in cc2]
-        cc2 = [re.sub("\[", '', x) for x in cc2]
-        cc2 = [re.sub("\]", '', x) for x in cc2]
+        cc2 = [re.sub(r"\[", '', x) for x in cc2]
+        cc2 = [re.sub(r"\]", '', x) for x in cc2]
         ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
         self._data['conjclasses'] = ans
         return ans
@@ -555,7 +555,7 @@ def chartable(n, t):
 def group_alias_table():
     akeys = list(aliases)
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
-    ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
+    ans = r'<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
         # Remove An, Cn, Dn, Sn since they are covered by a general comment
@@ -564,8 +564,8 @@ def group_alias_table():
             ntlist = aliases[j]
             ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
             ntstring = ", ".join(ntstrings)
-            ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
-    ans += '</tbody></table>'
+            ans += r"<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
+    ans += r'</tbody></table>'
     return ans
 
 
