@@ -543,9 +543,12 @@ def ratpts_table(pts,pts_v):
             return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
     strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
     caption = 'Points' if pts_v else 'Known points'
-    if len(pts) < 7:
+    tabcols = 6
+    if len(pts) <= tabcols+1:
         return '<p>%s: \\(%s\\)</p>' % (display_knowl(kid,caption),',\\, '.join(strpts))
-    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption), '</tr>', '</thead>', '<tbody>']
+    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
+    ptstab.extend(['<th></th>' for i in range(tabcols-1)])
+    ptstab.extend(['</tr>', '</thead>', '<tbody>'])
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
