@@ -150,13 +150,13 @@ class Genus2Test(LmfdbTest):
 
     def test_mwgroup(self):
         L = self.tc.get('/Genus2Curve/Q/25913/a/25913/1')
-        assert "\\Z \times \\Z \times \\Z" in L.data
+        assert "\\Z \\times \\Z \\times \\Z" in L.data
         assert '-x^3 - z^3' in L.data
         assert '0.375585' in L.data
         assert '\\infty' in L.data
         assert '6.2.1658432.2' in L.data
         L = self.tc.get('/Genus2Curve/Q/969306/a/969306/1')
-        assert "\\Z \times \\Z \times \\Z \times \\Z/{2}\\Z" in L.data
+        assert "\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z" in L.data
         assert '16y' in L.data and '2xz^2 + 11z^3' in L.data
         assert '3.259671' in L.data
         assert '\\infty' in L.data
