@@ -125,10 +125,11 @@ function show_eqns(invstyle) {
     </tr>
 </table>
 <br>
-<div class="toggle">&nbsp;Switch to:
-    <span class='igusa G2 nodisplay'><a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,</span>
-    <span class='igusa_clebsch G2'><a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,</span>
-    <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2</a></span>
+<div class="toggle">&nbsp;
+    (<span class='igusa G2 nodisplay'>(<a onclick="show_invs'igusa_clebsch'); return false" href='#'>Igusa-Clebsch invariants</a>,</span>
+    <span class='igusa_clebsch'><a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a>,</span>
+    <span class='G2 nodisplay'><a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a></span>
+    <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2 invariants</a></span>)
 </div>
 
 <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
