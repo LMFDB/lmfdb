@@ -675,7 +675,7 @@ class WebG2C(object):
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = decimal_pretty(str(curve['real_period']))
             if data['mw_rank'] == 0:
-                 data['regulator'] = '1' if data['mr_rank_proved'] else '\\text{unknown}' # display an exact 1 when we know this
+                 data['regulator'] = '1' if data['mw_rank_proved'] else '\\text{unknown}' # display an exact 1 when we know this
             else:
                 data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else '\\text{unknown}'
                 
