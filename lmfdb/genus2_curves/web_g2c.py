@@ -634,7 +634,6 @@ class WebG2C(object):
         data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
-
         if is_curve:
             # invariants specific to curve
             data['class'] = curve['class']
@@ -667,9 +666,9 @@ class WebG2C(object):
             data['torsion_order'] = curve['torsion_order']
             data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
-                data['torsion_subgroup'] = '\mathrm{trivial}'
+                data['torsion_subgroup'] = '\\mathrm{trivial}'
             else:
-                data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
+                data['torsion_subgroup'] = ' \\times '.join([ '\\Z/{%s}\\Z' % n for n in data['torsion_factors'] ])
 
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
@@ -688,9 +687,9 @@ class WebG2C(object):
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
 
             if len(ratpts['mw_invs']) == 0:
-                data['mw_group'] = '\mathrm{trivial}'
+                data['mw_group'] = '\\mathrm{trivial}'
             else:
-                data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
+                data['mw_group'] = ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ])
             data['mw_gens_v'] = ratpts['mw_gens_v']
             data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
 
@@ -698,7 +697,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+                data['two_torsion_field_knowl'] = """splitting field of \\(%s\\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
@@ -720,7 +719,7 @@ class WebG2C(object):
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
         data['factorsRR_base'] = endo['factorsRR_base']
-        data['end_statement_base'] = """Endomorphism %s over \(\Q\):<br>""" %("ring" if is_curve else "algebra") + \
+        data['end_statement_base'] = """Endomorphism %s over \\(\\Q\\):<br>""" %("ring" if is_curve else "algebra") + \
             end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None)
 
         # Field over which all endomorphisms are defined
@@ -733,7 +732,7 @@ class WebG2C(object):
         data['factorsRR_geom'] = endo['factorsRR_geom']
         if data['end_field_label'] != '1.1.1.1':
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
-            data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" %("ring" if is_curve else "algebra") + \
+            data['end_statement_geom'] = """Endomorphism %s over \\(\\overline{\\Q}\\):""" %("ring" if is_curve else "algebra") + \
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
@@ -770,13 +769,13 @@ class WebG2C(object):
                 ('Discriminant', str(data['disc'])),
                 ]
             if data['mw_rank_proved']:
-                properties += [('Mordell-Weil group', data['mw_group'])]
+                properties += [('Mordell-Weil group', '\\(' + data['mw_group'] + '\\)')]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
-            ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
-            ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\Q\)', '\(%s\)' % data['geom_end_alg_name']),
-            ('\(\\overline{\\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
-            ('\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
+            ('\\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\\)', '\\(%s\\)' % data['real_geom_end_alg_name']),
+            ('\\(\\End(J_{\\overline{\\Q}}) \\otimes \\Q\\)', '\\(%s\\)' % data['geom_end_alg_name']),
+            ('\\(\\overline{\\Q}\\)-simple', bool_pretty(data['is_simple_geom'])),
+            ('\\(\\mathrm{GL}_2\\)-type', bool_pretty(data['is_gl2_type'])),
             ]
 
         # Friends
@@ -825,7 +824,7 @@ class WebG2C(object):
         # Breadcrumbs
         self.bread = bread = [
              ('Genus 2 Curves', url_for(".index")),
-             ('$\Q$', url_for(".index_Q")),
+             ('$\\Q$', url_for(".index_Q")),
              ('%s' % data['slabel'][0], url_for(".by_conductor", cond=data['slabel'][0])),
              ('%s' % data['slabel'][1], url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1]))
              ]
