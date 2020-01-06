@@ -143,7 +143,7 @@ function show_eqns(invstyle) {
     </tr>
     <tr>
         <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td>
-        <td>\({{ data['aut_grp'] \)</td>
+        <td>{{ data['aut_grp'] | safe }}</td>
         <!-- a hack so that that the table doesn't expand with code blurbls -->
         <!-- TODO: use javascript to adapt the width -->
         <td style="width: 420px;"></td>
@@ -155,7 +155,7 @@ function show_eqns(invstyle) {
     </tr>
     <tr>
         <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>
-        <td>\({{ data['geom_aut_grp'] \)</td>
+        <td>{{ data['geom_aut_grp'] | safe }}</td>
     </tr>
 </table>
 
