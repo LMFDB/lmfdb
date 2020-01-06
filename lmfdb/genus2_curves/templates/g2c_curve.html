@@ -171,13 +171,13 @@ function show_eqns(invstyle) {
 <p>{{place_code('locally_solvable')}}</p>
 <p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
-<h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
+<h2> {{KNOWL('g2c.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
 <p>{{place_code('mw_group')}}</p>
 {% if data.mw_rank_proved %}
-{{ KNOWL('ag.mordell_weil', title='Group structure') }}: {{data.mw_group}}
+{{ KNOWL('g2c.mordell_weil', title='Group structure') }}: {{data.mw_group}}
 {% else %}
-{{ KNOWL('ag.mordell_weil', title='Group structure*') }}: {{data.mw_group}} (conditional on BSD)
+{{ KNOWL('g2c.mordell_weil', title='Group structure*') }}: {{data.mw_group}} (conditional on BSD)
 {% endif %}
 
 {% if data.mw_gens_table %}
