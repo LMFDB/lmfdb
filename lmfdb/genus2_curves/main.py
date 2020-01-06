@@ -15,7 +15,7 @@ from lmfdb.utils import (
     StatsDisplay, formatters)
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
 
 credit_string = "Andrew Booker, Jeroen Sijsling, Michael Stoll, Andrew Sutherland, John Voight, Raymond van Bommel, Dan Yasaki"
 
@@ -261,7 +261,7 @@ class G2C_download(Downloader):
                         'download':G2C_download()},
              projection=['label','eqn','st_group','is_gl2_type','is_simple_geom','analytic_rank'],
              cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-                       "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
+                       "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
                        "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
              bread=lambda:[('Genus 2 Curves', url_for(".index")),
                            ('$\Q$', url_for(".index_Q")),
