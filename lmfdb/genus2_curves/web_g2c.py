@@ -651,8 +651,8 @@ class WebG2C(object):
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
-            data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)) for i in data['igusa_clebsch']]
-            data['igusa_factor_latex'] = [ web_latex(zfactor(j)) for j in data['igusa'] ]
+            data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)).replace("-1 \\cdot","-") for i in data['igusa_clebsch']]
+            data['igusa_factor_latex'] = [ web_latex(zfactor(j)).replace("-1 \\cdot","-") for j in data['igusa'] ]
             data['aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['aut_grp_id'])))
             data['geom_aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['geom_aut_grp_id'])))
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
