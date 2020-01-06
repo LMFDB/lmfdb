@@ -690,7 +690,7 @@ class WebG2C(object):
             data['mw_gens_v'] = ratpts['mw_gens_v']
             lower = len([n for n in ratpts['mw_invs'] if n == 0])
             upper = data['analytic_rank']
-            invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + data['mw_invs']
+            invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
             if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
