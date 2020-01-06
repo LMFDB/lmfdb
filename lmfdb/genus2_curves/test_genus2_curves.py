@@ -131,10 +131,18 @@ class Genus2Test(LmfdbTest):
         assert '336.a.172032.1' in L.data
 
     def test_sha_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=256')
+        assert '114240.d.114240.1' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=3')
+        assert 'No matches' in L.data
         L = self.tc.get('/Genus2Curve/Q/?has_square_sha=False')
         assert  '336.a.172032.1' in L.data and not '169.a.169.1' in L.data
         L = self.tc.get('/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False')
         assert 'No matches' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=2&has_square_sha=True')
+        assert 'No matches' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=2&has_square_sha=False')
+        assert '336.a.172032.1' in L.data
 
     def test_torsion(self):
         L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')
