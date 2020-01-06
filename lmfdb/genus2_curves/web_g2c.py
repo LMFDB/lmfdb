@@ -770,7 +770,7 @@ class WebG2C(object):
                 ('Discriminant', str(data['disc'])),
                 ]
             if data['mw_rank_proved']:
-                properties += [('Mordell-Weil group', '\\(%s\\)' % data['mw_group'])]
+                properties += [('Mordell-Weil group', data['mw_group'])]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             ('\\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\\)', '\\(%s\\)' % data['real_geom_end_alg_name']),
