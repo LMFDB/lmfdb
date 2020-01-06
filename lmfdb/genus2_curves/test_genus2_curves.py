@@ -185,7 +185,12 @@ class Genus2Test(LmfdbTest):
         assert '(13 : -4732 : 20)' in L.data
         L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
         assert 'everywhere' in L.data
-        assert 'no rational points' in L.data
+        assert 'This curve has no' in L.data
+        L = self.tc.get('/Genus2Curve/Q/3319/a/3319/1')
+        assert 'Known rational points' in L.data
+        L = self.tc.get('/Genus2Curve/Q/14880/c/238080/2')
+        assert 'rational points are known' in L.data
+        assert 'for this curve' in L.data
 
     def test_endo_search(self):
         # first result for every search
