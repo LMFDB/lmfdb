@@ -162,11 +162,7 @@ function show_eqns(invstyle) {
 </table>
 
 
-{% if data.rat_pts_v %}
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
-{% else %}
-<h2> {{ KNOWL('g2c.known_rational_points','Known rational points') }} </h2>
-{% endif %}
 
 <p>{{place_code('rat_pts')}}</p>
 {{ data.rat_pts_table | safe }}

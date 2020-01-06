@@ -69,8 +69,9 @@ class Genus2Test(LmfdbTest):
         assert '15360.f.983040.1' in L.data and '15360.f.983040.2' in L.data and not '15360.d.983040.1' in L.data
 
     def test_random(self):
-        L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
-        assert 'Sato-Tate group' in L.data
+        for i in range(5):
+            L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
+            assert 'Sato-Tate group' in L.data
 
     def test_conductor_search(self):
         L = self.tc.get('/Genus2Curve/Q/?cond=1225')
@@ -141,17 +142,17 @@ class Genus2Test(LmfdbTest):
 
     def test_mwgroup(self):
         L = self.tc.get('/Genus2Curve/Q/25913/a/25913/1')
-        assert '\\Z \times \\Z \times \\Z' in L.data
+        assert '\\Z \\times \\Z \\times \\Z' in L.data
         assert '-x^3 - z^3' in L.data
         assert '0.375585' in L.data
         assert '\\infty' in L.data
         assert '6.2.1658432.2' in L.data
         L = self.tc.get('/Genus2Curve/Q/25913/a/25913/1')
-        assert '\\Z \times \\Z \times \\Z \times \\Z/{2}\\Z' in L.data
+        assert '\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z' in L.data
         assert '16y' in L.data and '2xz^2 + 11z^3' in L.data
         assert '3.259671' in L.data
         assert '\\infty' in L.data
-        assert 'D_4\times C_2' in L.data
+        assert 'D_4\\times C_2' in L.data
         L = self.tc.get('/Genus2Curve/Q/461/a/461/1')
         assert 'trivial' in L.data
 
@@ -187,7 +188,7 @@ class Genus2Test(LmfdbTest):
         assert 'everywhere' in L.data
         assert 'This curve has no' in L.data
         L = self.tc.get('/Genus2Curve/Q/3319/a/3319/1')
-        assert 'Known rational points' in L.data
+        assert 'Known points' in L.data
         L = self.tc.get('/Genus2Curve/Q/14880/c/238080/2')
         assert 'rational points are known' in L.data
         assert 'for this curve' in L.data

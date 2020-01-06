@@ -510,7 +510,7 @@ def mw_gens_table(invs,gens,hts):
     return '\n'.join(gentab)
 
 def local_table(D,N,tama,bad_lpolys):
-    loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
+    loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', 'ord(\\(N\\))'),
               th_wrap('g2c.discriminant', 'ord(\\(\\Delta\\))'),
@@ -535,16 +535,17 @@ def local_table(D,N,tama,bad_lpolys):
     return '\n'.join(loctab)
 
 def ratpts_table(pts,pts_v):
-    ratpts_knowl_id = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
+    kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
-            return '<p>This curve has no %s.</p>' % display_knowl(ratpts_knowl_id,'rational points')
+            return '<p>This curve has no %s.</p>' % display_knowl(kid,'rational points')
         else:
-            return '<p>No %s for this curve.</p>' % display_knowl(ratpts_knowl_id,'rational points are known')
+            return '<p>No %s for this curve.</p>' % display_knowl(kid,'rational points are known')
     strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
+    caption = 'Points' if pts_v else 'Known points'
     if len(pts) < 7:
-        return '<p>\\(%s\\)</p>' % ',\\, '.join(strpts)
-    ptstab = ['<table class="ntdata">', '<thead></thead>', '<tbody>']
+        return '<p>%s: \\(%s\\)</p>' % (display_knowl(kid,caption),',\\, '.join(strpts))
+    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid,caption), '</tr>', </thead>', '<tbody>']
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
