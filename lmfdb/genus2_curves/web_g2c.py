@@ -65,7 +65,7 @@ def min_eqns_pretty(fh):
     yR = PolynomialRing(xzR,'y')
     lhs = yR([0, polys[1], 1])
     slist.append(str(lhs).replace("*","") + " = " + str(polys[0]).replace("*",""))
-    slist.append("y^2 = " + str(simplify_hyperelliptic(fh)).replace("*",""))
+    slist.append("y^2 = " + str(xR(simplify_hyperelliptic(fh))).replace("*",""))
     return slist
 
 def url_for_ec(label):
@@ -476,13 +476,13 @@ def add_friend(friends, friend):
     friends.append(friend)
 
 def th_wrap(kwl, title):
-    return '    <th>%s</th>' % display_knowl(kwl, title=title)
+    return ' <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
-    return '    <td align="left">\\(%s\\)</td>' % val
+    return ' <td align="left">\\(%s\\)</td>' % val
 def td_wrapr(val):
-    return '    <td align="right">\\(%s\\)</td>' % val
+    return ' <td align="right">\\(%s\\)</td>' % val
 def td_wrapc(val):
-    return '    <td align="center">\\(%s\\)</td>' % val
+    return ' <td align="center">\\(%s\\)</td>' % val
 
 def mw_gens_table(invs,gens,hts):
     def list_to_divisor(P):
@@ -492,11 +492,13 @@ def mw_gens_table(invs,gens,hts):
         xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
         return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]
-    gentab = ['<table class="ntdata">', '<thead>', '<tr>',
+    if not invs:
+        return ''
+    gentab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
               th_wrap('g2c.mw_height', 'Height'),
               th_wrap('g2c.mw_generator', 'Order'),
-              '  </tr>', '</thead>', '<tbody>']
+              '</tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('<tr>')
         D = list_to_divisor(gens[i])
@@ -508,13 +510,13 @@ def mw_gens_table(invs,gens,hts):
     return '\n'.join(gentab)
 
 def local_table(D,N,tama,bad_lpolys):
-    loctab = ['<table class="ntdata" cellpadding="2px">', '<thead>', '  <tr>',
+    loctab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '  <tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', 'ord(\\(N\\))'),
               th_wrap('g2c.discriminant', 'ord(\\(\\Delta\\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
               th_wrap('g2c.bad_lfactors', 'L-factor'),
-              '  </tr>', '</thead>', '<tbody>']
+              '</tr>', '</thead>', '<tbody>']
     for p in D.prime_divisors():
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
@@ -531,6 +533,29 @@ def local_table(D,N,tama,bad_lpolys):
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
+
+def ratpts_table(pts,pts_v):
+    ratpts_knowl_id = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
+    ratpts_knowl_title = 'Rational points' if pts_v else 'Known rational points'
+    if len(pts) == 0:
+        if pts_v:
+            return '<p>There are %s</p>' % display_knowl(ratpts_knowl_id,'no rational points')
+        else:
+            return '<p>%s</p>' % display_knowl(ratpts_knowl_id,'No rational points known')
+    strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
+    if len(pts) < 7:
+        pts_display = ',\\, '.join(strpts)
+        return '<p>%s: %s</p>' % (display_knowl(ratpts_knowl_id, ratpts_knowl_title), pts_display)
+    ptstab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '  <tr>',
+              th_wrap(ratpts_knowl_id, ratpts_knowl_title),
+              '</tr>', '</thead>', '<tbody>']
+    for i in range(0,len(pts),6):
+        ptstab.append('<tr>')
+        ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
+        ptstab.append('<\tr>')
+    ptstab.extend(['</tbody>', '</table>'])
+    return '\n'.join(ptstab)
+
 
 ###############################################################################
 # Genus 2 curve class definition
@@ -653,32 +678,36 @@ class WebG2C(object):
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = decimal_pretty(str(curve['real_period']))
-            if (curve['regulator'] > -0.5):
-                data['regulator'] = decimal_pretty(str(curve['regulator']))
+            if data['mw_rank'] == 0:
+                 data['regulator'] = '1' if data['mr_rank_proved'] else '\\text{unknown}' # display an exact 1 when we know this
             else:
-                data['regulator'] = '\\text{unknown}'
+                data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else '\\text{unknown}'
+                
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
             data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
+
             if ratpts:
+                data['rat_pts'] = ratpts['rat_pts']
                 data['rat_pts_v'] =  ratpts['rat_pts_v']
-                data['num_rat_pts'] = len(ratpts['rat_pts'])
-                if data['num_rat_pts']:
-                    data['rat_pts_pretty'] = ',\\, '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
+                data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
             else:
+                data['rat_pts'] = []
                 data['rat_pts_v'] = 0
-                data['num_rat_pts'] = 0
-            if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
-            else:
-                t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+
             if len(ratpts['mw_invs']) == 0:
                 data['mw_group'] = '\mathrm{trivial}'
             else:
                 data['mw_group'] = ' \\times '.join([ ('\Z' if n == 0 else '\Z/{%s}\Z' % n) for n in ratpts['mw_invs'] ])
             data['mw_gens_v'] = ratpts['mw_gens_v']
             data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
+
+            if curve['two_torsion_field'][0]:
+                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
+            else:
+                t = curve['two_torsion_field']
+                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
 
@@ -748,6 +777,8 @@ class WebG2C(object):
                 ('Conductor',str(data['cond'])),
                 ('Discriminant', str(data['disc'])),
                 ]
+            if data['mw_rank_proved']:
+                properties += [('Mordell-Weil group', data['mw_group'])]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),

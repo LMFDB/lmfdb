@@ -163,30 +163,16 @@ function show_eqns(invstyle) {
 
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
-<p>
-{{place_code('locally_solvable')}}
-</p>
-<p> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
+<p>{{place_code('locally_solvable')}}</p>
+<p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
+{% if data.rpts_table %}
 <p>{{place_code('rat_pts')}}</p>
-<p>
-{% if data.rat_pts_v %}
-{% if data.num_rat_pts > 0 %}
-{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: \({{data.rat_pts_pretty}}\)
-{% else %}
-There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
+{{data.ratpts_table | safe}}
 {% endif %}
-{% else %}
-{% if data.num_rat_pts > 0 %}
-{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: \({{data.rat_pts_pretty}}\)
-{% else %}
-{{ KNOWL('g2c.known_rational_points', title='No rational points known') }}.
-{% endif %}
-{% endif %}
-</p>
 
 <p>{{place_code('num_rat_wpts')}}</p>
-<p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
+<p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
@@ -196,13 +182,10 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 {% else %}
 {{ KNOWL('ag.mordell_weil', title='Group structure*') }}: \({{data.mw_group}}\) (conditional on BSD)
 {% endif %}
-</p>
 
-<p>
 {% if data.mw_gens_table %}
 {{data.mw_gens_table | safe}}
 {% endif %}
-</p>
 
 <p>{{place_code('two_torsion_field')}}</p>
 <p><div style="display: inline">{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</div></p>
@@ -228,11 +211,9 @@ There are {{ KNOWL('g2c.all_rational_points', title='no rational points') }}.
 
 <h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}} </h2>
 
-<p>
 {% if data.local_table %}
 {{data.local_table | safe}}
 {% endif %}
-</p>
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 
