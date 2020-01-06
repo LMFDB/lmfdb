@@ -3,6 +3,7 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
+from __future__ import absolute_import
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -27,7 +28,7 @@ login_manager = LoginManager()
 
 # We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
 FLASK_LOGIN_LIMIT = '0.3.0'
-from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
+from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
 

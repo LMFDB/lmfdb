@@ -228,7 +228,7 @@ class Configuration(object):
                 for opt, val in options.items():
                     _cfgp.set(sec, opt, str(val))
 
-            with open(args.config_file, "wb") as configfile:
+            with open(args.config_file, "w") as configfile:
                 _cfgp.write(configfile)
 
         # 2/2: reading the config file
