@@ -494,7 +494,7 @@ def mw_gens_table(invs,gens,hts):
         return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]
     if not invs:
         return ''
-    gentab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '<tr>',
+    gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
               th_wrap('g2c.mw_height', 'Height'),
               th_wrap('g2c.mw_generator', 'Order'),
@@ -510,7 +510,7 @@ def mw_gens_table(invs,gens,hts):
     return '\n'.join(gentab)
 
 def local_table(D,N,tama,bad_lpolys):
-    loctab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '  <tr>',
+    loctab = ['<table class="ntdata">', '<thead>', '  <tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', 'ord(\\(N\\))'),
               th_wrap('g2c.discriminant', 'ord(\\(\\Delta\\))'),
@@ -536,19 +536,15 @@ def local_table(D,N,tama,bad_lpolys):
 
 def ratpts_table(pts,pts_v):
     ratpts_knowl_id = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
-    ratpts_knowl_title = 'Rational points' if pts_v else 'Known rational points'
     if len(pts) == 0:
         if pts_v:
-            return '<p>There are %s</p>' % display_knowl(ratpts_knowl_id,'no rational points')
+            return '<p>This curve has no %s.</p>' % display_knowl(ratpts_knowl_id,'rational points')
         else:
-            return '<p>%s</p>' % display_knowl(ratpts_knowl_id,'No rational points known')
+            return '<p>No %s for this curve.</p>' % display_knowl(ratpts_knowl_id,'rational points are known')
     strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
     if len(pts) < 7:
-        pts_display = ',\\, '.join(strpts)
-        return '<p>%s: %s</p>' % (display_knowl(ratpts_knowl_id, ratpts_knowl_title), pts_display)
-    ptstab = ['<table class="ntdata" cellpadding="1px">', '<thead>', '  <tr>',
-              th_wrap(ratpts_knowl_id, ratpts_knowl_title),
-              '</tr>', '</thead>', '<tbody>']
+        return '<p>%s: %s</p>' % (ratpts_caption, ',\\, '.join(strpts))
+    ptstab = ['<table class="ntdata">', '<tbody>']
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
@@ -629,7 +625,7 @@ class WebG2C(object):
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
         data['mw_rank'] = '\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
-        data['mw_rank_proved'] = '\\text{unknown}' if curve.get('mw_rank') is None else curve['mw_rank_proved']
+        data['mw_rank_proved'] = curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
@@ -687,13 +683,9 @@ class WebG2C(object):
             data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
 
-            if ratpts:
-                data['rat_pts'] = ratpts['rat_pts']
-                data['rat_pts_v'] =  ratpts['rat_pts_v']
-                data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
-            else:
-                data['rat_pts'] = []
-                data['rat_pts_v'] = 0
+            data['rat_pts'] = ratpts['rat_pts']
+            data['rat_pts_v'] =  ratpts['rat_pts_v']
+            data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
 
             if len(ratpts['mw_invs']) == 0:
                 data['mw_group'] = '\mathrm{trivial}'

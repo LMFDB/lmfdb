@@ -161,18 +161,21 @@ function show_eqns(invstyle) {
     </tr>
 </table>
 
+
+{% if data.rat_pts_v %}
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
-
-<p>{{place_code('locally_solvable')}}</p>
-<p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
-
-{% if data.rpts_table %}
-<p>{{place_code('rat_pts')}}</p>
-{{data.ratpts_table | safe}}
+{% else %}
+<h2> {{ KNOWL('g2c.known_rational_points','Known rational points') }} </h2>
 {% endif %}
+
+<p>{{place_code('rat_pts')}}</p>
+{{ data.ratpts_table | safe }}
 
 <p>{{place_code('num_rat_wpts')}}</p>
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
+
+<p>{{place_code('locally_solvable')}}</p>
+<p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
@@ -184,7 +187,7 @@ function show_eqns(invstyle) {
 {% endif %}
 
 {% if data.mw_gens_table %}
-{{data.mw_gens_table | safe}}
+{{ data.mw_gens_table | safe }}
 {% endif %}
 
 <p>{{place_code('two_torsion_field')}}</p>
@@ -211,9 +214,7 @@ function show_eqns(invstyle) {
 
 <h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}} </h2>
 
-{% if data.local_table %}
-{{data.local_table | safe}}
-{% endif %}
+{{ data.local_table | safe }}
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 
