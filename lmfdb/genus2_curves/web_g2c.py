@@ -680,7 +680,7 @@ class WebG2C(object):
                 data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else '\\text{unknown}'
                 
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve['tamagawa_product'] else '\\text{unknown}'
-            data['analytic_sha'] = '\\text{unknown}' if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
+            data['analytic_sha'] = 0 if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else '\\text{unknown}'
 
             data['rat_pts'] = ratpts['rat_pts']
@@ -697,6 +697,7 @@ class WebG2C(object):
                 data['mw_group'] = '\\(' + ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in invs]) + '\\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
+            print lower,upper
 
             if curve['two_torsion_field'][0]:
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
