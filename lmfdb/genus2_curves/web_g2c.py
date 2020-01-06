@@ -497,7 +497,7 @@ def mw_gens_table(invs,gens,hts):
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
               th_wrap('g2c.mw_height', 'Height'),
-              th_wrap('g2c.mw_generator', 'Order'),
+              th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('<tr>')
