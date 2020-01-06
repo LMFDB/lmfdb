@@ -259,14 +259,14 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "Of \(\GL_2\)-type over " + base
-    return "Not of \(\GL_2\)-type over " + base
+        return "Of \\(\\GL_2\\)-type over " + base
+    return "Not of \\(\\GL_2\\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        gl2 = "of \(\GL_2\)-type"
+        gl2 = "of \\(\\GL_2\\)-type"
     else:
-        gl2 = "not of \(\GL_2\)-type"
+        gl2 = "not of \\(\\GL_2\\)-type"
     if len(factorsQQ) == 1 and factorsQQ[0][2] != 1:
         simple = "simple"
     else:
@@ -283,7 +283,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # endomorphism ring is an invariant of the curve but not the isogeny class, so we make it optional
     if ring:
         # First row: description of the endomorphism ring as an order in the endomorphism algebra
-        statement += """<tr><td>\(\End (J_{%s})\)</td><td>\(\simeq\)</td><td>""" % field
+        statement += """<tr><td>\\(\\End (J_{%s})\\)</td><td>\\(\\simeq\\)</td><td>""" % field
         # First the case of a maximal order:
         if ring[0] == 1:
             # Single factor:
@@ -292,20 +292,20 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
                 if factorsQQ[0][2] == -1:
                     # Prettify in quadratic case:
                     if len(factorsQQ[0][1]) in [2, 3]:
-                        statement += """\(%s\)""" % ring_pretty(factorsQQ[0][1], 1)
+                        statement += """\\(%s\\)""" % ring_pretty(factorsQQ[0][1], 1)
                     else:
-                        statement += """the maximal order of \(\End (J_{%s}) \otimes \Q\)""" % field
+                        statement += """the maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % field
                 else:
                     # Use M_2 over integers if this applies:
                     if factorsQQ[0][2] == 1 and factorsQQ[0][0] == '1.1.1.1':
-                        statement += """\(\mathrm{M}_2 (\Z)\)"""
+                        statement += """\\(\\mathrm{M}_2 (\\Z)\\)"""
                     # TODO: Add flag that indicates whether we are over a PID, in
                     # which case we can use the following lines:
                     #if factorsQQ[0][2] == 1:
                     #    statement += """\(\mathrm{M}_2 (%s)\)"""\
                     #        % ring_pretty(factorsQQ[0][1], 1)
                     else:
-                        statement += """a maximal order of \(\End (J_{%s}) \otimes \Q\)""" % field
+                        statement += """a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % field
             # If there are two factors, then they are both at most quadratic
             # and we can prettify them
             else:
@@ -316,23 +316,23 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
             if factorsQQ[0][2] == -1:
                 # Prettify in quadratic case:
                 if len(factorsQQ[0][1]) in [2, 3]:
-                    statement += """\(%s\)""" % ring_pretty(factorsQQ[0][1], ring[0])
+                    statement += """\\(%s\\)""" % ring_pretty(factorsQQ[0][1], ring[0])
                 else:
-                    statement += """an order of conductor of norm \(%s\) in \(\End (J_{%s}) \otimes \Q\)""" % (ring[0], field)
+                    statement += """an order of conductor of norm \\(%s\\) in \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
             # Otherwise mention whether the order is Eichler:
             elif ring[1] == 1:
-                statement += """an Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)""" % (ring[0], field)
+                statement += """an Eichler order of index \\(%s\\) in a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
             else:
-                statement += """a non-Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)""" % (ring[0], field)
+                statement += """a non-Eichler order of index \\(%s\\) in a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
         # Finally the case of two factors. We can prettify to some extent, since we
         # can describe the maximal order here
         else:
-            statement += """an order of index \(%s\) in \(%s\)""" % (ring[0], ' \\times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
+            statement += """an order of index \\(%s\\) in \\(%s\\)""" % (ring[0], ' \\times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
         # End of first row:
         statement += """</td></tr>"""
 
     # Second row: description of endomorphism algebra factors (this is the first row if ring=None)
-    statement += """<tr><td>\(\End (J_{%s}) \otimes \Q \)</td><td>\(\simeq\)</td><td>""" % field
+    statement += """<tr><td>\\(\\End (J_{%s}) \\otimes \\Q \\)</td><td>\\(\\simeq\\)</td><td>""" % field
     # In the case of only one factor we either get a number field or a
     # quaternion algebra:
     if factorsQQ_number == 1:
@@ -343,7 +343,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
             if factorsQQ_pretty:
                 statement += """<a href=%s>%s</a>""" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
             else:
-                statement += """the number field with defining polynomial \(%s\)""" % intlist_to_poly(factorsQQ[0][1])
+                statement += """the number field with defining polynomial \\(%s\\)""" % intlist_to_poly(factorsQQ[0][1])
             # Detect CM by presence of a quartic polynomial:
             if len(factorsQQ[0][1]) == 5:
                 statement += """ (CM)"""
@@ -352,14 +352,14 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
         # Up next is the case of a matrix ring (trivial disciminant), with
         # labels and full prettification always available:
         elif factorsQQ[0][2] == 1:
-            statement += """\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)""" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
+            statement += """\\(\\mathrm{M}_2(\\)<a href=%s>%s</a>\\()\\)""" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
         # And finally we deal with quaternion algebras over the rationals:
         else:
             statement += """the quaternion algebra over <a href=%s>%s</a> of discriminant %s"""\
                 % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0], factorsQQ[0][2])
     # If there are two factors, then we get two at most quadratic fields:
     else:
-        statement += """<a href=%s>%s</a> \(\\times\) <a href=%s>%s</a>"""\
+        statement += """<a href=%s>%s</a> \\(\\times\\) <a href=%s>%s</a>"""\
             % (url_for("number_fields.by_label", label=factorsQQ[0][0]), 
                 factorsQQ_pretty[0], url_for("number_fields.by_label",
                 label=factorsQQ[1][0]), factorsQQ_pretty[1])
@@ -367,7 +367,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
     statement += """</td></tr>"""
 
     # Third row: description of algebra tensored with RR (this is the second row if ring=None)
-    statement += """<tr><td>\(\End (J_{%s}) \otimes \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>""" % (field, factorsRR_raw_to_pretty(factorsRR))
+    statement += """<tr><td>\\(\\End (J_{%s}) \\otimes \\R\\)</td><td>\\(\\simeq\\)</td> <td>\\(%s\\)</td></tr>""" % (field, factorsRR_raw_to_pretty(factorsRR))
 
     # End of statement:
     statement += """</table>"""
@@ -375,27 +375,27 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
 
 def end_field_statement(field_label, poly):
     if field_label == '1.1.1.1':
-        return """All \(\overline{\Q}\)-endomorphisms of the Jacobian are defined over \(\Q\)."""
+        return """All \\(\\overline{\\Q}\\)-endomorphisms of the Jacobian are defined over \\(\\Q\\)."""
     elif field_label != '':
         pretty = field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
         return """Smallest field over which all endomorphisms are defined:<br>
-        Galois number field \(K = \Q (a) \simeq \) <a href=%s>%s</a> with defining polynomial \(%s\)""" % (url, pretty, poly)
+        Galois number field \\(K = \\Q (a) \\simeq \\) <a href=%s>%s</a> with defining polynomial \\(%s\\)""" % (url, pretty, poly)
     else:
         return """Smallest field over which all endomorphisms are defined:<br>
-        Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
+        Galois number field \\(K = \\Q (a)\\) with defining polynomial \\(%s\\)""" % poly
 
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
         if ED[0][0]:
             # Add link and prettify if available:
-            statement += """Over subfield \(F \simeq \) <a href=%s>%s</a> with generator \(%s\) with minimal polynomial \(%s\)"""\
+            statement += """Over subfield \\(F \\simeq \\) <a href=%s>%s</a> with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
                 % (url_for("number_fields.by_label", label=ED[0][0]),
                    field_pretty(ED[0][0]), strlist_to_nfelt(ED[0][2], 'a'),
                    intlist_to_poly(ED[0][1]))
         else:
-            statement += """Over subfield \(F\) with generator \(%s\) with minimal polynomial \(%s\)"""\
+            statement += """Over subfield \\(F\\) with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
         statement += """:<br>"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
@@ -407,16 +407,16 @@ def end_lattice_statement(lattice):
 
 def split_field_statement(is_simple_geom, field_label, poly):
     if is_simple_geom:
-        return """Simple over \(\overline{\Q}\)"""
+        return """Simple over \\(\\overline{\\Q}\\)"""
     elif field_label == '1.1.1.1':
-        return """Splits over \(\Q\)"""
+        return """Splits over \\(\\Q\\)"""
     elif field_label != '':
         pretty =  field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
-        return """Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"""\
+        return """Splits over the number field \\(\\Q (b) \\simeq \\) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\\(%s\\)"""\
             % (url, pretty, poly)
     else:
-        return """Splits over the number field \(\Q (b)\) with defining polynomial:<br>&nbsp;&nbsp;\(%s\)""" % poly
+        return """Splits over the number field \\(\\Q (b)\\) with defining polynomial:<br>&nbsp;&nbsp;\\(%s\\)""" % poly
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
@@ -690,7 +690,7 @@ class WebG2C(object):
             if len(ratpts['mw_invs']) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = '\\(' + '\\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ]) + '\\)'
+                data['mw_group'] = '\\(' + ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ]) + '\\)'
             data['mw_gens_v'] = ratpts['mw_gens_v']
             data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
 
