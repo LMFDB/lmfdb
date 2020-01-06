@@ -628,7 +628,7 @@ class WebG2C(object):
         # set attributes common to curves and isogeny classes here
         data['Lhash'] = str(curve['Lhash'])
         data['cond'] = ZZ(curve['cond'])
-        data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
+        data['cond_factor_latex'] = web_latex(factor(int(data['cond']))).replace("-1 \\cdot","-")
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
         data['mw_rank'] = ZZ(0) if curve.get('mw_rank') is None else ZZ(curve['mw_rank']) # 0 will be marked as a lower bound
         data['mw_rank_proved'] = curve['mw_rank_proved']
@@ -647,7 +647,7 @@ class WebG2C(object):
             data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
             data['min_eqn_display'] = min_eqns_pretty(data['min_eqn'])
-            data['disc_factor_latex'] = web_latex(factor(data['disc']))
+            data['disc_factor_latex'] = web_latex(factor(data['disc'])).replace("-1 \\cdot","-")
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
