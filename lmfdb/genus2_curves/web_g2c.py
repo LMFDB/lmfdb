@@ -670,11 +670,6 @@ class WebG2C(object):
             data['non_solvable_places'] = sz
             data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['torsion_order'] = curve['torsion_order']
-            data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
-            if len(data['torsion_factors']) == 0:
-                data['torsion_subgroup'] = '\\mathrm{trivial}'
-            else:
-                data['torsion_subgroup'] = ' \\times '.join([ '\\Z/{%s}\\Z' % n for n in data['torsion_factors'] ])
 
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
@@ -693,9 +688,9 @@ class WebG2C(object):
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
 
             if len(ratpts['mw_invs']) == 0:
-                data['mw_group'] = '\\mathrm{trivial}'
+                data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ])
+                data['mw_group'] = '\\(' + '\\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ]) + '\\)'
             data['mw_gens_v'] = ratpts['mw_gens_v']
             data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
 

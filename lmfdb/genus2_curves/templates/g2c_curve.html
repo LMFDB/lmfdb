@@ -175,9 +175,9 @@ function show_eqns(invstyle) {
 
 <p>{{place_code('mw_group')}}</p>
 {% if data.mw_rank_proved %}
-{{ KNOWL('ag.mordell_weil', title='Group structure') }}: \({{data.mw_group}}\)
+{{ KNOWL('ag.mordell_weil', title='Group structure') }}: {{data.mw_group}}
 {% else %}
-{{ KNOWL('ag.mordell_weil', title='Group structure*') }}: \({{data.mw_group}}\) (conditional on BSD)
+{{ KNOWL('ag.mordell_weil', title='Group structure*') }}: {{data.mw_group}} (conditional on BSD)
 {% endif %}
 
 {% if data.mw_gens_table %}
