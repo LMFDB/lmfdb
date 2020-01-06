@@ -46,18 +46,18 @@ function show_eqns(invstyle) {
 <p>{{place_code('curve')}}</p>
 
 <table>
+<tr class='min_eqn'>
+    <td>${{ data.min_eqn_display[0] }}$</td>
+    <td><a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>simplify</a></td>
 <tr>
-<p class='min_eqn'>  ${{ data.min_eqn_display[0] }}$ </p>
-<p class='proj_eqn'> ${{ data.min_eqn_display[1] }}$ </p>
-<p class='simp_eqn'> ${{ data.min_eqn_display[2] }}$ </p>
-</tr>
+<tr class='proj_eqn nodisplay'>
+    <td>${{ data.min_eqn_display[1] }}$</td>
+    <td><a onclick="show_eqns('proj_eqn'); return false" href='#'>dehomogenize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>simplify</a></td>
 <tr>
-<div class="toggle">
-    <span class='proj_eqn simp_eqn nodisplay'><a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>,</span>
-    <span class='min_eqn simp_eqn'><a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>,</span>
-    <span class='min_eqn proj_eqn'><a onclick="show_eqns('simp_eqn'); return false" href='#'>simplify</a></span>
-</div>
-</tr>
+<tr class='simp_eqn nodisplay'>
+    <td>${{ data.min_eqn_display[2] }}$</td>
+    <td><a onclick="show_eqns('proj_eqn'); return false" href='#'>minimize </a>,<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a></td>
+<tr>
 </table>
 
 <h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
