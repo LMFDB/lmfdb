@@ -545,7 +545,7 @@ def ratpts_table(pts,pts_v):
     caption = 'Points' if pts_v else 'Known points'
     if len(pts) < 7:
         return '<p>%s: \\(%s\\)</p>' % (display_knowl(kid,caption),',\\, '.join(strpts))
-    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption), '</tr>', </thead>', '<tbody>']
+    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption), '</tr>', '</thead>', '<tbody>']
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
