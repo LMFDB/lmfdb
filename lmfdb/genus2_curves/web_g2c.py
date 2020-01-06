@@ -553,7 +553,7 @@ def ratpts_table(pts,pts_v):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
         if i+6 > len(pts):
-            ptstab.extend(['<td></td>' for i in range(i+6-len(ptr))]) # pad last line
+            ptstab.extend(['<td></td>' for i in range(i+6-len(pts))]) # pad last line
         ptstab.append('</tr>')
     ptstab.extend(['</tbody>', '</table>'])
     return '\n'.join(ptstab)
