@@ -87,7 +87,7 @@ from . import rep_galois_modl
 assert rep_galois_modl
 from . import hecke_algebras
 assert hecke_algebras
-from .inventory_app.inventory_app import inventory_app
+from . import inventory_app
 assert inventory_app
 
 from .backend.database import db

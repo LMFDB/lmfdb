@@ -692,6 +692,7 @@ WhiteListedRoutes = [
     'ModularForm/GL2/Q/holomorphic',
     'ModularForm/GL2/TotallyReal',
     'NumberField',
+    'Representation/foo',  # allows /Representation but not /Representation/Galois/ModL/
     'SatoTateGroup',
     'Variety/Abelian/Fq',
     'about',

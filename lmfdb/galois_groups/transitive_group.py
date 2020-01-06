@@ -558,12 +558,13 @@ def group_alias_table():
     ans = r'<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
-        name = group_display_short(aliases[j][0][0], aliases[j][0][1])
-        ntlist = aliases[j]
-        #ntlist = filter(lambda x: x[0] < 12, ntlist)
-        ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
-        ntstring = ", ".join(ntstrings)
-        ans += r"<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
+        # Remove An, Cn, Dn, Sn since they are covered by a general comment
+        if not re.match(r'^[ACDS]\d+$', j):
+            name = group_display_short(aliases[j][0][0], aliases[j][0][1])
+            ntlist = aliases[j]
+            ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
+            ntstring = ", ".join(ntstrings)
+            ans += r"<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += r'</tbody></table>'
     return ans
 
@@ -571,11 +572,18 @@ def group_alias_table():
 def complete_group_code(code):
     if code in aliases:
         return aliases[code]
+    # Try nTj notation
     rematch = re.match(r"^(\d+)T(\d+)$", code)
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
-        return [[n, t]]
+        return [(n, t)]
+    # Try GAP code
+    rematch = re.match(r'^\[\d+,\d+\]$', code)
+    if rematch:
+        nts = list(db.gps_transitive.search({'gapidfull':code}, projection=['n','t']))
+        nts = [(z['n'], z['t']) for z in nts]
+        return nts
     else:
         raise NameError(code)
     return []
@@ -586,14 +594,17 @@ def complete_group_code(code):
 def complete_group_codes(codes):
     codes = codes.upper()
     ans = []
+    # some commas separate groups, and others are internal to group names
+    # like PSL(2,7) and gap id [6,1]
     # after upper casing, we can replace commas we want to keep with "z"
     codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
+    codes = re.sub(r'\[(\d+),(\d+)\]', r'[\1z\2]', codes)
     codelist = codes.split(',')
     # now turn the z's back into commas
     codelist = [re.sub('z', ',', x) for x in codelist]
     for code in codelist:
         ans.extend(complete_group_code(code))
-    return ans
+    return list(set(ans))
 
 
 aliases = {}
@@ -784,6 +795,15 @@ aliases['D44'] = [(44,9)]
 aliases['D45'] = [(45,4)]
 aliases['D46'] = [(46,3)]
 aliases['D47'] = [(47,2)]
+
+aliases['M12'] = [(12,295)]
+aliases['M22'] = [(22,38)]
+aliases['M23'] = [(23,5)]
+aliases['M24'] = [(24,24680)]
+aliases['PSL(3,3)'] = [(13,7)]
+aliases['PSL(2,13)'] = [(14,30)]
+aliases['PSP(4,3)'] = [(27,993)]
+aliases['PSU(3,3)'] = [(28,323)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]

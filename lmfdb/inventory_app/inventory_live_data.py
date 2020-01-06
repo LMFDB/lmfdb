@@ -1,11 +1,11 @@
-from scripts.reports.jsonify_pg_structure import get_lmfdb_collections as glc
+from __future__ import absolute_import
+from .jsonify_pg_structure import get_lmfdb_collections as glc
 import json
-import inventory_helpers as ih
-import inventory_viewer as iv
-import lmfdb_inventory as inv
-import inventory_db_core as idc
-from scrape_helpers import register_scrape
-import scrape_frontend as sf
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
+from .scrape_helpers import register_scrape
+from . import scrape_frontend as sf
 import uuid
 from lmfdb import db as lmfdb_db
 
@@ -130,13 +130,13 @@ def check_for_gone(lmfdb, db_name, coll_name):
 
 def mark_all_gone():
     """Set status of all removed collections to gone"""
-
-    dbs = iv.gen_retrieve_db_listing()
+    from .inventory_viewer import gen_retrieve_db_listing
+    dbs = gen_retrieve_db_listing()
     all_colls = get_db_lists()
 
     gone_code = ih.status_to_code('gone')
     for db in dbs:
-        colls = iv.gen_retrieve_db_listing(db[0])
+        colls = gen_retrieve_db_listing(db[0])
         db_id = idc.get_db_id(db[0])
         for coll in colls:
             gone = not (coll[0] in all_colls[db[0]])

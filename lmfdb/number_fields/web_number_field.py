@@ -406,12 +406,12 @@ class WebNumberField:
         if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
-        t = self._data['galt']
+        t = int(self._data['galois_label'].split('T')[1])
         return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
-        return self._data['galt']
+        return int(self._data['galois_label'].split('T')[1])
 
     # return the Galois group
     def gg(self):
@@ -835,7 +835,7 @@ class WebNumberField:
                         int(LF['e']),
                         int(LF['f']),
                         int(LF['c']),
-                        group_display_knowl(LF['n'], LF['galT']),
+                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
                         LF['t'],
                         LF['u'],
                         LF['slopes']
