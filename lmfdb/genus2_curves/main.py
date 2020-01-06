@@ -413,7 +413,7 @@ class G2C_stats(StatsDisplay):
         {'cols': 'analytic_rank', 'totaler': {'avg': True}},
         {'cols': 'two_selmer_rank', 'totaler': {'avg': True}},
         {'cols': 'has_square_sha'},
-        {'cols': 'analytic_sha'},
+        {'cols': 'analytic_sha', 'totaler': {'avg': True}},
         {'cols': 'locally_solvable'},
         {'cols': 'is_gl2_type'},
         {'cols': 'real_geom_end_alg'},

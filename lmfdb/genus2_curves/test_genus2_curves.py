@@ -153,7 +153,7 @@ class Genus2Test(LmfdbTest):
         assert '3.259671' in L.data
         assert '\\infty' in L.data
         assert 'D_4\\times C_2' in L.data
-        L = self.tc.get('/Genus2Curve/Q/461/a/461/1')
+        L = self.tc.get('/Genus2Curve/Q/461/a/461/2')
         assert 'trivial' in L.data
 
     def test_bsd_invariants(self):
