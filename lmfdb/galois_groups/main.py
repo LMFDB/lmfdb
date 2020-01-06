@@ -100,7 +100,6 @@ def make_order_key(order):
              title='Galois Group Search Results',
              err_title='Galois Group Search Input Error',
              learnmore=learnmore_list,
-             shortcuts={'jump_to': lambda info:redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)},
              bread=lambda: get_bread([("Search Results", ' ')]),
              credit=lambda: GG_credit)
 def galois_group_search(info, query):
@@ -119,6 +118,13 @@ def galois_group_search(info, query):
                 a = ZZ(interval)
                 if a != 1 and not a.is_prime():
                     return True
+    if info.get('jump_to','').strip():
+        parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='jump_to')
+        if db.gps_transitive.count(query) == 1:
+            ent = db.gps_transitive.lucky(query)
+            return redirect(url_for('.by_label', label=ent['label']).strip(), 301)
+        else: # convert this to a regular search
+            info['gal'] = info['jump_to']
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
