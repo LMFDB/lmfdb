@@ -679,8 +679,8 @@ class WebG2C(object):
             else:
                 data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
                 
-            data['tamagawa_product'] = 0 if curve.get('tamagawa_product') is none else ZZ(curve['tamagawa_product'])
-            data['analytic_sha'] = 0 if curve.get('analytic_sha') is None else ZZ(curve['analytic_sha'])
+            data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
+            data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
 
             data['rat_pts'] = ratpts['rat_pts']
