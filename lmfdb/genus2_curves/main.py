@@ -285,6 +285,7 @@ def genus2_curve_search(info, query):
     parse_bool(info,query,'locally_solvable','is locally solvable')
     parse_bool(info,query,'is_simple_geom','is geometrically simple')
     parse_ints(info,query,'cond','conductor')
+    parse_ints(info,query,'analytic_sha','analytic order of sha')
     parse_ints(info,query,'num_rat_pts','rational points')
     parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
     parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")

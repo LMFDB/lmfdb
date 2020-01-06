@@ -11,7 +11,7 @@ from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import group_display_knowl, small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
@@ -653,8 +653,8 @@ class WebG2C(object):
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
             data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)) for i in data['igusa_clebsch']]
             data['igusa_factor_latex'] = [ web_latex(zfactor(j)) for j in data['igusa'] ]
-            data['aut_grp_id'] = curve['aut_grp_id']
-            data['geom_aut_grp_id'] = curve['geom_aut_grp_id']
+            data['aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['aut_grp_id'])))
+            data['geom_aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['geom_aut_grp_id'])))
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
