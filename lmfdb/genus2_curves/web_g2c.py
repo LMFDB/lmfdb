@@ -630,7 +630,7 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['mw_rank'] = '\\text{unknown}' if curve.get('mw_rank') is None else ZZ(curve['mw_rank'])
+        data['mw_rank'] = ZZ(0) if curve.get('mw_rank') is None else ZZ(curve['mw_rank']) # 0 will be marked as a lower bound
         data['mw_rank_proved'] = curve['mw_rank_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
@@ -687,12 +687,16 @@ class WebG2C(object):
             data['rat_pts_v'] =  ratpts['rat_pts_v']
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
 
-            if len(ratpts['mw_invs']) == 0:
+            data['mw_gens_v'] = ratpts['mw_gens_v']
+            lower = len([n for n in ratpts['mw_invs'] if n == 0])
+            upper = data['mw_rank']
+            invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + data['mw_invs']
+            if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = '\\(' + ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in ratpts['mw_invs'] ]) + '\\)'
-            data['mw_gens_v'] = ratpts['mw_gens_v']
-            data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
+                data['mw_group'] = '\\(' + ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in invs]) + '\\)'
+            if lower >= upper:
+                data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
 
             if curve['two_torsion_field'][0]:
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))

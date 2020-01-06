@@ -171,14 +171,13 @@ function show_eqns(invstyle) {
 <p>{{place_code('locally_solvable')}}</p>
 <p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
-<h2> {{KNOWL('g2c.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
+<h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
 <p>{{place_code('mw_group')}}</p>
-{% if data.mw_rank_proved %}
-{{ KNOWL('g2c.mordell_weil', title='Group structure') }}: {{data.mw_group}}
-{% else %}
-{{ KNOWL('g2c.mordell_weil', title='Group structure*') }}: {{data.mw_group}} (conditional on BSD)
-{% endif %}
+<p>
+{{ KNOWL('ag.mordell_weil', title='Group structure') }}: {{data.mw_group}}
+{% if not data.mw_rank_proved %} ({{ KNOWL(`g2c.conditional_mordell_weil_group','conditional;)}}) {% endif %}
+</p>
 
 {% if data.mw_gens_table %}
 {{ data.mw_gens_table | safe }}
@@ -201,7 +200,9 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.tamagawa', title='Tamagawa product') }}:</td><td>\( {{ data.tamagawa_product }} \)</td></tr>
     <tr><td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
     <tr><td>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td><td>\( {{ data.leading_coeff }} \)</td></tr>
-    <tr><td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td><td>\( {{data.analytic_sha}} \)&nbsp;&nbsp;(rounded)</td></tr>
+    <tr><td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td><td>\( {{data.analytic_sha}} \)
+    {% if data.analytic_sha != 'unknown' %} &nbsp;&nbsp;(rounded) {% endif %}
+    </td></tr>
     <tr><td>{{ KNOWL('g2c.has_square_sha', title='Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
