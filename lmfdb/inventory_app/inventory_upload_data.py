@@ -1,7 +1,7 @@
 from __future__ import print_function
-import lmfdb_inventory as inv
-import inventory_db_core as invc
-import inventory_live_data as ild
+from __future__ import absolute_import
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as invc
 import datetime
 from lmfdb import db as lmfdb_db
 
@@ -24,6 +24,7 @@ def upload_scraped_inventory(structure_dat, uid):
         structure_dat -- JSON document containing all db/collections to upload
         uid -- UID string for uploading process
     """
+    from . import inventory_live_data as ild
 
     n_dbs = len(structure_dat.keys())
     progress_tracker = 0
