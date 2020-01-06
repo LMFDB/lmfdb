@@ -70,7 +70,7 @@ class Genus2Test(LmfdbTest):
 
     def test_random(self):
         L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
-        assert 'geometric invariants' in L.data
+        assert 'Sato-Tate group' in L.data
 
     def test_conductor_search(self):
         L = self.tc.get('/Genus2Curve/Q/?cond=1225')
@@ -138,8 +138,6 @@ class Genus2Test(LmfdbTest):
     def test_torsion(self):
         L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')
         assert '\Z/{29}\Z' in L.data
-        L = self.tc.get('/Genus2Curve/Q/118606/a/118606/1')
-        assert 'trivial' in L.data
 
     def test_mfhilbert(self):
         L = self.tc.get('/Genus2Curve/Q/12500/a/12500/1')

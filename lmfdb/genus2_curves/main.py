@@ -174,10 +174,10 @@ def by_label(label):
     return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
-    #try:
+    try:
     g2c = WebG2C.by_label(label)
-    #except (KeyError,ValueError) as err:
-    #    return abort(404,err.args)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args)
     return render_template("g2c_curve.html",
                            properties=g2c.properties,
                            credit=credit_string,
