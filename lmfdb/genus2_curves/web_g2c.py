@@ -538,14 +538,14 @@ def ratpts_table(pts,pts_v):
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
-            return '<p>This curve has no %s.</p>' % display_knowl(kid,'rational points')
+            return '<p>This curve has no %s.</p>' % display_knowl(kid, 'rational points')
         else:
-            return '<p>No %s for this curve.</p>' % display_knowl(kid,'rational points are known')
+            return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
     strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
     caption = 'Points' if pts_v else 'Known points'
     if len(pts) < 7:
         return '<p>%s: \\(%s\\)</p>' % (display_knowl(kid,caption),',\\, '.join(strpts))
-    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid,caption), '</tr>', </thead>', '<tbody>']
+    ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption), '</tr>', </thead>', '<tbody>']
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
         ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
