@@ -175,7 +175,7 @@ def by_label(label):
 
 def render_curve_webpage(label):
     try:
-    g2c = WebG2C.by_label(label)
+        g2c = WebG2C.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("g2c_curve.html",
