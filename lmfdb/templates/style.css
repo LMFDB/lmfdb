@@ -2301,3 +2301,7 @@ input.color_selecter {
 .advanced {
     display: none;
 }
+
+.viscollapse {
+    visibility: collapse;
+}

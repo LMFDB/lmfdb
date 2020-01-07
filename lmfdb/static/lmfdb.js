@@ -132,7 +132,11 @@ function knowl_click_handler($el) {
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
     if (table_mode) {
-      $output_id.parent().parent().slideToggle("fast");
+      $output_id.parent().parent().slideToggle("fast", "swing", function(){
+      $output_id.parent().parent().toggle();
+      $output_id.parent().parent().toggleClass("viscollapse");
+      }
+      );
     }
     $output_id.slideToggle("fast");
     $el.toggleClass("active");
