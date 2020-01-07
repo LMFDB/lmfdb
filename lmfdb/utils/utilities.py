@@ -493,8 +493,8 @@ def pol_to_html(p):
     '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
     """
     s = str(p)
-    s = re.sub(r"\^(\d*)", r"<sup>\\1</sup>", s)
-    s = re.sub(r"\_(\d*)", r"<sub>\\1</sub>", s)
+    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
+    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
     s = re.sub(r"\*", r"", s)
     s = re.sub(r"x", r"<i>x</i>", s)
     return s
