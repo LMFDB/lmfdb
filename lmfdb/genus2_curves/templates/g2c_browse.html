@@ -7,21 +7,22 @@
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
 <div style="padding-left: 2">
+<p>
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
 <a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-<br><br>
+</p><p>
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
 <a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-<br><br>
+</p><p>
 Some interesting curves:
 {% for curve in info.curve_list: %}
 <a href = "{{curve.url}}"> {{curve.label}} </a>&nbsp;
 {% endfor %}
-<br><br>
+</p><p>
 A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
 </div>
 
