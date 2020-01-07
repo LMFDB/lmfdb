@@ -995,9 +995,9 @@ class WebDBDirichlet(WebDirichlet):
 
     def _set_isminimal(self, orbit_data):
         if str(orbit_data['is_minimal']) == "True":
-            self.isprimitive = "Yes"
+            self.isminimal = "Yes"
         else:
-            self.isprimitive = "No"
+            self.isminimal = "No"
 
     def _set_parity(self, orbit_data):
         _parity = int(orbit_data['parity'])
