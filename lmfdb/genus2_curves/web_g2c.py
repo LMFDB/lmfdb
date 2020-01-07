@@ -402,7 +402,7 @@ def end_lattice_statement(lattice):
         statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
         statement += """<br>"""
         statement += gl2_simple_statement(ED[1], ED[2])
-        statement += """</p>"""
+        statement += """</p>\n"""
     return statement
 
 def split_field_statement(is_simple_geom, field_label, poly):
