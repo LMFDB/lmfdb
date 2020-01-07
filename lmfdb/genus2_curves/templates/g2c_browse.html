@@ -1,28 +1,33 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<style>
+.pad {
+  padding-left: 2;
+}
+</style>
+
 <p>
 {{ info.stats.short_summary | safe }}
 </p>
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
-<div style="padding-left: 2">
-<p>
+<p style="pad">
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
 <a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-</p><p>
+<p style="pad">
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
 <a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-</p><p>
+<p style="pad">
 Some interesting curves:
 {% for curve in info.curve_list: %}
 <a href = "{{curve.url}}"> {{curve.label}} </a>&nbsp;
 {% endfor %}
-</p><p>
+<p style="pad">
 A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
 </div>
 
@@ -48,7 +53,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
   <option value='g2_inv'>G2</option>
   </select>
 </td>
-<td colspan="3"><input type='text' name='geometric_invariants' size=50 example='[8,3172,30056,-692224]'></td>
+<td colspan="3"><input type='text' name='geometric_invariants' size=64 example='[8,3172,30056,-692224]'></td>
 </tr><tr>
 <td>{{ KNOWL('ag.conductor', title='Conductor') }}</td>
 <td><input type='text' name='cond' placeholder='169' size=10></td>
