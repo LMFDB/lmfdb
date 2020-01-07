@@ -33,7 +33,7 @@ def get_args_mwf(**kwds):
 
 def set_info_for_maass_form(data):
     ret = []
-    ret.append(["Eigenvalue", "\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)" + str(data['Eigenvalue'])])
+    ret.append(["Eigenvalue", r"\(\lambda=r^2 + \frac{1}{4} \ , \quad r= \ \)" + str(data['Eigenvalue'])])
     if data['Symmetry'] != "none":
         ret.append(["Symmetry", data['Symmetry']])
     if data['dbname'] == "HT":
@@ -218,17 +218,17 @@ def MakeTitle(level, weight, character):
     ret = "Maass cusp forms for "
     if level:
         if level == "1":
-            ret += "\(PSL(2,Z)\)"
+            ret += r"\(PSL(2,Z)\)"
         else:
-            ret += "\(\Gamma_0(" + str(level) + ")\)"
+            ret += r"\(\Gamma_0(" + str(level) + r")\)"
     else:
-        ret += "\(\Gamma_0(n)\)"
+        ret += r"\(\Gamma_0(n)\)"
     if weight:
         if float(weight) != 0:
             ret += ",k=" + weight
     if character:
         if character != "0":
-            ret += ",\(\chi_" + character + "\) (according to SAGE)"
+            ret += r",\(\chi_" + character + r"\) (according to SAGE)"
     return ret
 
 def ajax_once(callback, *arglist, **kwds):

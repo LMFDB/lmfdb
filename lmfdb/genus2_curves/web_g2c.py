@@ -136,8 +136,8 @@ def ring_pretty(L, f):
 
 def QpName(p):
     if p==0:
-        return "$\\R$"
-    return "$\\Q_{"+str(p)+"}$"
+        return r"$\R$"
+    return r"$\Q_{"+str(p)+"}$"
 
 ###############################################################################
 # Plot functions
@@ -156,7 +156,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
     h = poly_tup[1]
     g = f+h**2/4
     if len(g.real_roots())==0 and g(0)<0:
-        return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
+        return text(r"$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
     X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
     a,b = inflate_interval(min(X0),max(X0),1.5)
     groots = [a]+g.real_roots()+[b]
@@ -209,13 +209,13 @@ def eqn_list_to_curve_plot(L,rat_pts):
 
 def real_geom_end_alg_name(name):
     name_dict = {
-        "R":"\\R",
-        "C":"\\C",
-        "R x R":"\\R \\times \\R",
-        "C x R":"\\C \\times \\R",
-        "C x C":"\\C \\times \\C",
-        "M_2(R)":"\\mathrm{M}_2(\\R)",
-        "M_2(C)":"\\mathrm{M}_2(\\C)"
+        "R":r"\R",
+        "C":r"\C",
+        "R x R":r"\R \times \R",
+        "C x R":r"\C \times \R",
+        "C x C":r"\C \times \C",
+        "M_2(R)":r"\mathrm{M}_2(\R)",
+        "M_2(C)":r"\mathrm{M}_2(\C)"
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -224,15 +224,15 @@ def real_geom_end_alg_name(name):
 
 def geom_end_alg_name(name):
     name_dict = {
-        "Q":"\\Q",
-        "RM":"\\mathrm{RM}",
-        "Q x Q":"\\Q \\times \\Q",
-        "CM x Q":"\\mathrm{CM} \\times \\Q",
-        "CM":"\\mathrm{CM}",
-        "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
-        "QM":"\\mathrm{QM}",
-        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
-        "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
+        "Q":r"\Q",
+        "RM":r"\mathrm{RM}",
+        "Q x Q":r"\Q \times \Q",
+        "CM x Q":r"\mathrm{CM} \times \Q",
+        "CM":r"\mathrm{CM}",
+        "CM x CM":r"\mathrm{CM} \times \mathrm{CM}",
+        "QM":r"\mathrm{QM}",
+        "M_2(Q)":r"\mathrm{M}_2(\Q)",
+        "M_2(CM)":r"\mathrm{M}_2(\mathrm{CM})"
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -241,12 +241,12 @@ def geom_end_alg_name(name):
 
 def st0_group_name(name):
     st0_dict = {
-        'M_2(C)':'\\mathrm{U}(1)',
-        'M_2(R)':'\\mathrm{SU}(2)',
-        'C x C':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
-        'C x R':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
-        'R x R':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-        'R':'\\mathrm{USp}(4)'
+        'M_2(C)':r'\mathrm{U}(1)',
+        'M_2(R)':r'\mathrm{SU}(2)',
+        'C x C':r'\mathrm{U}(1)\times\mathrm{U}(1)',
+        'C x R':r'\mathrm{U}(1)\times\mathrm{SU}(2)',
+        'R x R':r'\mathrm{SU}(2)\times\mathrm{SU}(2)',
+        'R':r'\mathrm{USp}(4)'
         }
     if name in st0_dict.keys():
         return st0_dict[name]
@@ -259,14 +259,14 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "Of \\(\\GL_2\\)-type over " + base
-    return "Not of \\(\\GL_2\\)-type over " + base
+        return r"Of \(\GL_2\)-type over " + base
+    return r"Not of \(\GL_2\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        gl2 = "of \\(\\GL_2\\)-type"
+        gl2 = r"of \(\GL_2\)-type"
     else:
-        gl2 = "not of \\(\\GL_2\\)-type"
+        gl2 = r"not of \(\GL_2\)-type"
     if len(factorsQQ) == 1 and factorsQQ[0][2] != 1:
         simple = "simple"
     else:
@@ -276,14 +276,14 @@ def gl2_simple_statement(factorsQQ, factorsRR):
 def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # field is a latex string describing the basechange field (default is empty)
     # ring is optional, if unspecified only endomorphism algebra is described
-    statement = """<table class="g2">"""
+    statement = '<table class="g2">'
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if fac[0] ]
 
     # endomorphism ring is an invariant of the curve but not the isogeny class, so we make it optional
     if ring:
         # First row: description of the endomorphism ring as an order in the endomorphism algebra
-        statement += """<tr><td>\\(\\End (J_{%s})\\)</td><td>\\(\\simeq\\)</td><td>""" % field
+        statement += r"<tr><td>\(\End (J_{%s})\)</td><td>\(\simeq\)</td><td>" % field
         # First the case of a maximal order:
         if ring[0] == 1:
             # Single factor:
@@ -292,47 +292,47 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
                 if factorsQQ[0][2] == -1:
                     # Prettify in quadratic case:
                     if len(factorsQQ[0][1]) in [2, 3]:
-                        statement += """\\(%s\\)""" % ring_pretty(factorsQQ[0][1], 1)
+                        statement += r"\(%s\)" % ring_pretty(factorsQQ[0][1], 1)
                     else:
-                        statement += """the maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % field
+                        statement += r"the maximal order of \(\End (J_{%s}) \otimes \Q\)" % field
                 else:
                     # Use M_2 over integers if this applies:
                     if factorsQQ[0][2] == 1 and factorsQQ[0][0] == '1.1.1.1':
-                        statement += """\\(\\mathrm{M}_2 (\\Z)\\)"""
+                        statement += r"\(\mathrm{M}_2 (\Z)\)"
                     # TODO: Add flag that indicates whether we are over a PID, in
                     # which case we can use the following lines:
                     #if factorsQQ[0][2] == 1:
-                    #    statement += """\(\mathrm{M}_2 (%s)\)"""\
-                    #        % ring_pretty(factorsQQ[0][1], 1)
+                    #    statement += (r"\(\mathrm{M}_2 (%s)\)"
+                    #        % ring_pretty(factorsQQ[0][1], 1))
                     else:
-                        statement += """a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % field
+                        statement += r"a maximal order of \(\End (J_{%s}) \otimes \Q\)" % field
             # If there are two factors, then they are both at most quadratic
             # and we can prettify them
             else:
-                statement += r'\(' + ' \\times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]) + r'\)'
+                statement += r'\(' + r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]) + r'\)'
         # Then the case where there is still a single factor:
         elif factorsQQ_number == 1:
             # Number field case:
             if factorsQQ[0][2] == -1:
                 # Prettify in quadratic case:
                 if len(factorsQQ[0][1]) in [2, 3]:
-                    statement += """\\(%s\\)""" % ring_pretty(factorsQQ[0][1], ring[0])
+                    statement += r"\(%s\)" % ring_pretty(factorsQQ[0][1], ring[0])
                 else:
-                    statement += """an order of conductor of norm \\(%s\\) in \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
+                    statement += r"an order of conductor of norm \(%s\) in \(\End (J_{%s}) \otimes \Q\)" % (ring[0], field)
             # Otherwise mention whether the order is Eichler:
             elif ring[1] == 1:
-                statement += """an Eichler order of index \\(%s\\) in a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
+                statement += r"an Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)" % (ring[0], field)
             else:
-                statement += """a non-Eichler order of index \\(%s\\) in a maximal order of \\(\\End (J_{%s}) \\otimes \\Q\\)""" % (ring[0], field)
+                statement += r"a non-Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)" % (ring[0], field)
         # Finally the case of two factors. We can prettify to some extent, since we
         # can describe the maximal order here
         else:
-            statement += """an order of index \\(%s\\) in \\(%s\\)""" % (ring[0], ' \\times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
+            statement += r"an order of index \(%s\) in \(%s\)" % (ring[0], r' \times '.join([ ring_pretty(factorQQ[1], 1) for factorQQ in factorsQQ ]))
         # End of first row:
-        statement += """</td></tr>"""
+        statement += "</td></tr>"
 
     # Second row: description of endomorphism algebra factors (this is the first row if ring=None)
-    statement += """<tr><td>\\(\\End (J_{%s}) \\otimes \\Q \\)</td><td>\\(\\simeq\\)</td><td>""" % field
+    statement += r"<tr><td>\(\End (J_{%s}) \otimes \Q \)</td><td>\(\simeq\)</td><td>" % field
     # In the case of only one factor we either get a number field or a
     # quaternion algebra:
     if factorsQQ_number == 1:
@@ -341,100 +341,100 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
         if factorsQQ[0][2] == -1:
             # Prettify if labels available, otherwise return defining polynomial:
             if factorsQQ_pretty:
-                statement += """<a href=%s>%s</a>""" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
+                statement += "<a href=%s>%s</a>" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
             else:
-                statement += """the number field with defining polynomial \\(%s\\)""" % intlist_to_poly(factorsQQ[0][1])
+                statement += r"the number field with defining polynomial \(%s\)" % intlist_to_poly(factorsQQ[0][1])
             # Detect CM by presence of a quartic polynomial:
             if len(factorsQQ[0][1]) == 5:
-                statement += """ (CM)"""
+                statement += " (CM)"
                 # TODO: Get the following line to work
-                #statement += """ ({{ KNOWL('ag.complex_multiplication', title='CM') }})"""
+                #statement += " ({{ KNOWL('ag.complex_multiplication', title='CM') }})"
         # Up next is the case of a matrix ring (trivial disciminant), with
         # labels and full prettification always available:
         elif factorsQQ[0][2] == 1:
-            statement += """\\(\\mathrm{M}_2(\\)<a href=%s>%s</a>\\()\\)""" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
+            statement += r"\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)" % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0])
         # And finally we deal with quaternion algebras over the rationals:
         else:
-            statement += """the quaternion algebra over <a href=%s>%s</a> of discriminant %s"""\
-                % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0], factorsQQ[0][2])
+            statement += ("the quaternion algebra over <a href=%s>%s</a> of discriminant %s"
+                % (url_for("number_fields.by_label", label=factorsQQ[0][0]), factorsQQ_pretty[0], factorsQQ[0][2]))
     # If there are two factors, then we get two at most quadratic fields:
     else:
-        statement += """<a href=%s>%s</a> \\(\\times\\) <a href=%s>%s</a>"""\
-            % (url_for("number_fields.by_label", label=factorsQQ[0][0]), 
+        statement += (r"<a href=%s>%s</a> \(\times\) <a href=%s>%s</a>"
+            % (url_for("number_fields.by_label", label=factorsQQ[0][0]),
                 factorsQQ_pretty[0], url_for("number_fields.by_label",
-                label=factorsQQ[1][0]), factorsQQ_pretty[1])
+                label=factorsQQ[1][0]), factorsQQ_pretty[1]))
     # End of second row:
-    statement += """</td></tr>"""
+    statement += "</td></tr>"
 
     # Third row: description of algebra tensored with RR (this is the second row if ring=None)
-    statement += """<tr><td>\\(\\End (J_{%s}) \\otimes \\R\\)</td><td>\\(\\simeq\\)</td> <td>\\(%s\\)</td></tr>""" % (field, factorsRR_raw_to_pretty(factorsRR))
+    statement += r"<tr><td>\(\End (J_{%s}) \otimes \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>" % (field, factorsRR_raw_to_pretty(factorsRR))
 
     # End of statement:
-    statement += """</table>"""
+    statement += "</table>"
     return statement
 
 def end_field_statement(field_label, poly):
     if field_label == '1.1.1.1':
-        return """All \\(\\overline{\\Q}\\)-endomorphisms of the Jacobian are defined over \\(\\Q\\)."""
+        return r"All \(\overline{\Q}\)-endomorphisms of the Jacobian are defined over \(\Q\)."
     elif field_label != '':
         pretty = field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
-        return """Smallest field over which all endomorphisms are defined:<br>
-        Galois number field \\(K = \\Q (a) \\simeq \\) <a href=%s>%s</a> with defining polynomial \\(%s\\)""" % (url, pretty, poly)
+        return r"""Smallest field over which all endomorphisms are defined:<br>
+        Galois number field \(K = \Q (a) \simeq \) <a href=%s>%s</a> with defining polynomial \(%s\)""" % (url, pretty, poly)
     else:
-        return """Smallest field over which all endomorphisms are defined:<br>
-        Galois number field \\(K = \\Q (a)\\) with defining polynomial \\(%s\\)""" % poly
+        return r"""Smallest field over which all endomorphisms are defined:<br>
+        Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
 
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
         if ED[0][0]:
             # Add link and prettify if available:
-            statement += """Over subfield \\(F \\simeq \\) <a href=%s>%s</a> with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
+            statement += (r"Over subfield \(F \simeq \) <a href=%s>%s</a> with generator \(%s\) with minimal polynomial \(%s\)"
                 % (url_for("number_fields.by_label", label=ED[0][0]),
                    field_pretty(ED[0][0]), strlist_to_nfelt(ED[0][2], 'a'),
-                   intlist_to_poly(ED[0][1]))
+                   intlist_to_poly(ED[0][1])))
         else:
-            statement += """Over subfield \\(F\\) with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
-                % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
-        statement += """:<br>"""
+            statement += (r"Over subfield \(F\) with generator \(%s\) with minimal polynomial \(%s\)"
+                % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1])))
+        statement += ":<br>"
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
-        statement += """<br>"""
+        statement += "Sato Tate group: %s" % st_link_by_name(1,4,ED[4])
+        statement += "<br>"
         statement += gl2_simple_statement(ED[1], ED[2])
-        statement += """<p></p>"""
+        statement += "<p></p>"
     return statement
 
 def split_field_statement(is_simple_geom, field_label, poly):
     if is_simple_geom:
-        return """Simple over \\(\\overline{\\Q}\\)"""
+        return r"Simple over \(\overline{\Q}\)"
     elif field_label == '1.1.1.1':
-        return """Splits over \\(\\Q\\)"""
+        return r"Splits over \(\Q\)"
     elif field_label != '':
         pretty =  field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
-        return """Splits over the number field \\(\\Q (b) \\simeq \\) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\\(%s\\)"""\
-            % (url, pretty, poly)
+        return (r"Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"
+            % (url, pretty, poly))
     else:
-        return """Splits over the number field \\(\\Q (b)\\) with defining polynomial:<br>&nbsp;&nbsp;\\(%s\\)""" % poly
+        return r"Splits over the number field \(\Q (b)\) with defining polynomial:<br>&nbsp;&nbsp;\(%s\)" % poly
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
-        statement = """Decomposes up to isogeny as the square of the elliptic curve:"""
+        statement = "Decomposes up to isogeny as the square of the elliptic curve:"
     else:
-        statement = """Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"""
+        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"
     for n in range(len(coeffs)):
         # Use labels when possible:
         label = labels[n] if labels else ''
         if label:
-            statement += """<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>""" % (url_for_ec(label), label)
+            statement += "<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>" % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
-            \(g_4 = %s\)<br>\
-            \(g_6 = %s\)<br>\
-            Conductor norm: %s""" \
-            % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n])
+            statement += (r"""<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>
+            \(g_4 = %s\)<br>
+            \(g_6 = %s\)<br>
+            Conductor norm: %s"""
+            % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n]))
     return statement
 
 # create friend entry from url (typically coming from lfunc_instances)
@@ -478,11 +478,11 @@ def add_friend(friends, friend):
 def th_wrap(kwl, title):
     return ' <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
-    return ' <td align="left">\\(%s\\)</td>' % val
+    return r' <td align="left">\(%s\)</td>' % val
 def td_wrapr(val):
-    return ' <td align="right">\\(%s\\)</td>' % val
+    return r' <td align="right">\(%s\)</td>' % val
 def td_wrapc(val):
-    return ' <td align="center">\\(%s\\)</td>' % val
+    return r' <td align="center">\(%s\)</td>' % val
 
 def mw_gens_table(invs,gens,hts):
     def list_to_divisor(P):
@@ -504,7 +504,7 @@ def mw_gens_table(invs,gens,hts):
         D = list_to_divisor(gens[i])
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
-                       td_wrapc('\\infty') if invs[i]==0 else td_wrapc(invs[i])])
+                       td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
@@ -512,8 +512,8 @@ def mw_gens_table(invs,gens,hts):
 def local_table(D,N,tama,bad_lpolys):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
-              th_wrap('ag.conductor', 'ord(\\(N\\))'),
-              th_wrap('g2c.discriminant', 'ord(\\(\\Delta\\))'),
+              th_wrap('ag.conductor', r'ord(\(N\))'),
+              th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               '</tr>', '</thead>', '<tbody>']
@@ -545,7 +545,7 @@ def ratpts_table(pts,pts_v):
     caption = 'Points' if pts_v else 'Known points'
     tabcols = 6
     if len(pts) <= tabcols+1:
-        return '<p>%s: \\(%s\\)</p>' % (display_knowl(kid,caption),',\\, '.join(strpts))
+        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(strpts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
     ptstab.extend(['<th></th>' for i in range(tabcols-1)])
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
@@ -628,7 +628,7 @@ class WebG2C(object):
         # set attributes common to curves and isogeny classes here
         data['Lhash'] = str(curve['Lhash'])
         data['cond'] = ZZ(curve['cond'])
-        data['cond_factor_latex'] = web_latex(factor(int(data['cond']))).replace("-1 \\cdot","-")
+        data['cond_factor_latex'] = web_latex(factor(int(data['cond']))).replace(r"-1 \cdot","-")
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
         data['mw_rank'] = ZZ(0) if curve.get('mw_rank') is None else ZZ(curve['mw_rank']) # 0 will be marked as a lower bound
         data['mw_rank_proved'] = curve['mw_rank_proved']
@@ -647,12 +647,12 @@ class WebG2C(object):
             data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
             data['min_eqn_display'] = min_eqns_pretty(data['min_eqn'])
-            data['disc_factor_latex'] = web_latex(factor(data['disc'])).replace("-1 \\cdot","-")
+            data['disc_factor_latex'] = web_latex(factor(data['disc'])).replace(r"-1 \cdot","-")
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
-            data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)).replace("-1 \\cdot","-") for i in data['igusa_clebsch']]
-            data['igusa_factor_latex'] = [ web_latex(zfactor(j)).replace("-1 \\cdot","-") for j in data['igusa'] ]
+            data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)).replace(r"-1 \cdot","-") for i in data['igusa_clebsch']]
+            data['igusa_factor_latex'] = [ web_latex(zfactor(j)).replace(r"-1 \cdot","-") for j in data['igusa'] ]
             data['aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['aut_grp_id'])))
             data['geom_aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['geom_aut_grp_id'])))
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
@@ -693,7 +693,7 @@ class WebG2C(object):
             if len(invs) == 0:
                 data['mw_group'] = 'trivial'
             else:
-                data['mw_group'] = '\\(' + ' \\times '.join([ ('\\Z' if n == 0 else '\\Z/{%s}\\Z' % n) for n in invs]) + '\\)'
+                data['mw_group'] = r'\(' + r' \times '.join([ (r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs]) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'])
 
@@ -701,7 +701,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = """splitting field of \\(%s\\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+                data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
             data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
@@ -723,8 +723,8 @@ class WebG2C(object):
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
         data['factorsRR_base'] = endo['factorsRR_base']
-        data['end_statement_base'] = """Endomorphism %s over \\(\\Q\\):<br>""" %("ring" if is_curve else "algebra") + \
-            end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None)
+        data['end_statement_base'] = (r"Endomorphism %s over \(\Q\):<br>" %("ring" if is_curve else "algebra") +
+            end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None))
 
         # Field over which all endomorphisms are defined
         data['end_field_label'] = endo['fod_label']
@@ -736,8 +736,8 @@ class WebG2C(object):
         data['factorsRR_geom'] = endo['factorsRR_geom']
         if data['end_field_label'] != '1.1.1.1':
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
-            data['end_statement_geom'] = """Endomorphism %s over \\(\\overline{\\Q}\\):""" %("ring" if is_curve else "algebra") + \
-                end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
+            data['end_statement_geom'] = (r"Endomorphism %s over \(\overline{\Q}\):" %("ring" if is_curve else "algebra") +
+                end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
 
@@ -776,10 +776,10 @@ class WebG2C(object):
                 properties += [('Mordell-Weil group', data['mw_group'])]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
-            ('\\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\\)', '\\(%s\\)' % data['real_geom_end_alg_name']),
-            ('\\(\\End(J_{\\overline{\\Q}}) \\otimes \\Q\\)', '\\(%s\\)' % data['geom_end_alg_name']),
-            ('\\(\\overline{\\Q}\\)-simple', bool_pretty(data['is_simple_geom'])),
-            ('\\(\\mathrm{GL}_2\\)-type', bool_pretty(data['is_gl2_type'])),
+            (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
+            (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
+            (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
+            (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
 
         # Friends
@@ -828,7 +828,7 @@ class WebG2C(object):
         # Breadcrumbs
         self.bread = bread = [
              ('Genus 2 Curves', url_for(".index")),
-             ('$\\Q$', url_for(".index_Q")),
+             (r'$\Q$', url_for(".index_Q")),
              ('%s' % data['slabel'][0], url_for(".by_conductor", cond=data['slabel'][0])),
              ('%s' % data['slabel'][1], url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1]))
              ]

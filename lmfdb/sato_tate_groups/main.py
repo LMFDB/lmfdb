@@ -18,12 +18,12 @@ from lmfdb.sato_tate_groups import st_page
 # Globals
 ###############################################################################
 
-MU_LABEL_RE = '^0\.1\.[1-9][0-9]*$'
+MU_LABEL_RE = r'^0\.1\.[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
-NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
-SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
-ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
-ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
+NU1_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
+SU2_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
+ST_LABEL_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
+ST_LABEL_SHORT_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
 INFINITY = -1
 
@@ -99,12 +99,12 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    if re.match('SO\(1\)\_\d+', st0_name):
-        return '\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match('U\(1\)\_\d+', st0_name):
-        return '\\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match('SU\(2\)\_\d+', st0_name):
-        return '\\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'SO\(1\)\_\d+', st0_name):
+        return r'\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'U\(1\)\_\d+', st0_name):
+        return r'\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'SU\(2\)\_\d+', st0_name):
+        return r'\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
@@ -115,15 +115,15 @@ def sg_pretty(sg_label):
     
 # dictionary for quick and dirty prettification that does not access the database
 st_pretty_dict = {
-    'USp(4)':'\\mathrm{USp}(4)',
-    'U(2)':'\\mathrm{U}(2)',
-    'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)':'\\mathrm{U}(1)',
-    'N(U(1))':'N(\\mathrm{U}(1))'
+    'USp(4)':r'\mathrm{USp}(4)',
+    'U(2)':r'\mathrm{U}(2)',
+    'SU(2)':r'\mathrm{SU}(2)',
+    'U(1)':r'\mathrm{U}(1)',
+    'N(U(1))':r'N(\mathrm{U}(1))'
 }
 
 def st_pretty(st_name):
-    if re.match('mu\([1-9][0-9]*\)', st_name):
+    if re.match(r'mu\([1-9][0-9]*\)', st_name):
         return '\\' + st_name
     return st_pretty_dict.get(st_name,st_name)
 
@@ -319,10 +319,10 @@ def mu_info(n):
     rec['degree'] = 1
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'mu(%d)'%n
-    rec['pretty'] = '\mu(%d)'%n
+    rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
     rec['components'] = int(n)
-    rec['ambient'] = '\mathrm{O}(1)' if n <= 2 else '\mathrm{U}(1)'
+    rec['ambient'] = r'\mathrm{O}(1)' if n <= 2 else r'\mathrm{U}(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
@@ -339,13 +339,13 @@ def mu_info(n):
     if n == 1:
         rec['supgroups'] = st_link("0.1.2")
     elif n > 2:
-        rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+        rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    rec['probabilities'] = [['\\mathrm{P}[a_1=%d]=\\frac{1}{%d}'%(m,n)] for m in rational_traces]
+    rec['probabilities'] = [[r'\mathrm{P}[a_1=%d]=\frac{1}{%d}'%(m,n)] for m in rational_traces]
     return rec
 
 def mu_portrait(n):
@@ -372,7 +372,7 @@ def su2_mu_info(w,n):
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
-    rec['ambient'] = '\mathrm{U}(2)'
+    rec['ambient'] = r'\mathrm{U}(2)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SU(2)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
@@ -385,8 +385,8 @@ def su2_mu_info(w,n):
     rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
     rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
     rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
@@ -420,11 +420,11 @@ def nu1_mu_info(w,n):
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
     rec['components'] = int(2*n)
-    rec['ambient'] = '\mathrm{U}(2)'
+    rec['ambient'] = r'\mathrm{U}(2)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'U(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&0\\\\0&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha = 1,\\ \\alpha\\in\\mathbb{C}\\right\\}'
+    rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&0\\0&\bar\alpha\end{bmatrix}:\alpha\bar\alpha = 1,\ \alpha\in\mathbb{C}\right\}'
     rec['component_group'] = 'D_{%d}'%n
     rec['abelian'] = boolean_name(n <= 2)
     rec['cyclic'] = boolean_name(n <= 1)
@@ -433,8 +433,8 @@ def nu1_mu_info(w,n):
     rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
     rec['numgens'] = 2
     rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
     rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
@@ -519,14 +519,14 @@ def render_st_group(info, portrait=None):
     if portrait:
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
     prop2 += [
-        ('Name', '\(%s\)'%info['pretty']),
+        ('Name', r'\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
         ('Real dimension', '%d'%info['real_dimension']),
         ('Components', '%d'%info['components']),
-        ('Contained in','\(%s\)'%info['ambient']),
-        ('Identity Component', '\(%s\)'%info['identity_component']),
-        ('Component group', '\(%s\)'%info['component_group']),
+        ('Contained in',r'\(%s\)'%info['ambient']),
+        ('Identity Component', r'\(%s\)'%info['identity_component']),
+        ('Component group', r'\(%s\)'%info['component_group']),
     ]
     bread = [
         ('Sato-Tate Groups', url_for('.index')),
@@ -534,7 +534,7 @@ def render_st_group(info, portrait=None):
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    title = r'Sato-Tate Group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop2,
                            credit=credit_string,
