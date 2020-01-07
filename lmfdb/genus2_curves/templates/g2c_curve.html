@@ -125,7 +125,7 @@ function show_eqns(invstyle) {
         <td> \( g_3 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
     </tr>
 </table>
-<br>
+<p></p>
 <div class="toggle">&nbsp;
     <span class='igusa G2 nodisplay'>(<a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch invariants</a>,</span>
     <span class='igusa_clebsch'>(<a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a>,</span>
@@ -163,7 +163,7 @@ function show_eqns(invstyle) {
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
 <p>{{place_code('rat_pts')}}</p>
-{{ data.rat_pts_table | safe }}
+<p>{{ data.rat_pts_table | safe }}</p>
 
 <p>{{place_code('num_rat_wpts')}}</p>
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
@@ -180,7 +180,7 @@ function show_eqns(invstyle) {
 </p>
 
 {% if data.mw_gens_table %}
-{{ data.mw_gens_table | safe }}
+<p>{{ data.mw_gens_table | safe }}</p>
 {% endif %}
 
 <p>{{place_code('two_torsion_field')}}</p>
@@ -211,7 +211,7 @@ function show_eqns(invstyle) {
 
 <h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}} </h2>
 
-{{ data.local_table | safe }}
+<p>{{ data.local_table | safe }}</p>
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 
