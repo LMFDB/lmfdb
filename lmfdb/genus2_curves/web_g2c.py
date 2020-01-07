@@ -386,7 +386,7 @@ def end_field_statement(field_label, poly):
         Galois number field \\(K = \\Q (a)\\) with defining polynomial \\(%s\\)""" % poly
 
 def end_lattice_statement(lattice):
-    statement = ''
+    statement = '<p>'
     for ED in lattice:
         if ED[0][0]:
             # Add link and prettify if available:
@@ -402,7 +402,7 @@ def end_lattice_statement(lattice):
         statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
         statement += """<br>"""
         statement += gl2_simple_statement(ED[1], ED[2])
-        statement += """<p></p>"""
+        statement += """</p>"""
     return statement
 
 def split_field_statement(is_simple_geom, field_label, poly):
@@ -430,9 +430,9 @@ def split_statement(coeffs, labels, condnorms):
             statement += """<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>""" % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
-            \(g_4 = %s\)<br>\
-            \(g_6 = %s\)<br>\
+            statement += """<br>&nbsp;&nbsp;\\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\\) with<br>\
+            \\(g_4 = %s\\)<br>\
+            \\(g_6 = %s\\)<br>\
             Conductor norm: %s""" \
             % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n])
     return statement
