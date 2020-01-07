@@ -993,7 +993,7 @@ class WebDBDirichlet(WebDirichlet):
         else:
             self.isprimitive = "No"
 
-    def _set_isprimitive(self, orbit_data):
+    def _set_isminimal(self, orbit_data):
         if str(orbit_data['is_minimal']) == "True":
             self.isprimitive = "Yes"
         else:
