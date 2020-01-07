@@ -344,9 +344,6 @@ def st0_group_format(name):
 def st_group_format(name):
     return st_link_by_name(1,4,name)
 
-def analytic_sha_format(name):
-    return "Unknown" if name == "None" else name
-
 class G2C_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for genus 2 curves over Q
@@ -407,7 +404,6 @@ class G2C_stats(StatsDisplay):
     formatters = {'aut_grp_id': aut_grp_format,
                   'geom_aut_grp_id': geom_aut_grp_format,
                   'has_square_sha': formatters.boolean,
-                  'analytic_sha': analytic_sha_format,
                   'is_gl2_type': formatters.boolean,
                   'real_geom_end_alg': st0_group_format,
                   'st_group': st_group_format}
