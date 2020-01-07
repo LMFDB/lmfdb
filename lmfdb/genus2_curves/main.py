@@ -285,7 +285,10 @@ def genus2_curve_search(info, query):
     parse_bool(info,query,'locally_solvable','is locally solvable')
     parse_bool(info,query,'is_simple_geom','is geometrically simple')
     parse_ints(info,query,'cond','conductor')
-    parse_ints(info,query,'analytic_sha','analytic order of sha')
+    if info.get('analytic_sha') == "None":
+        query['analytic_sha'] = None;
+    else:
+        parse_ints(info,query,'analytic_sha','analytic order of sha')
     parse_ints(info,query,'num_rat_pts','rational points')
     parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
     parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
@@ -321,8 +324,7 @@ def genus2_curve_search(info, query):
         mode = 'complement'
     else:
         mode = 'append'
-    parse_primes(info, query, 'bad_primes', name='bad primes',
-                 qfield='bad_primes',mode=mode)
+    parse_primes(info, query, 'bad_primes', name='bad primes',qfield='bad_primes',mode=mode)
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
 
