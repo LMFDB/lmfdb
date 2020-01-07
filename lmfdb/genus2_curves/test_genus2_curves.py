@@ -69,8 +69,9 @@ class Genus2Test(LmfdbTest):
         assert '15360.f.983040.1' in L.data and '15360.f.983040.2' in L.data and not '15360.d.983040.1' in L.data
 
     def test_random(self):
-        L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
-        assert 'geometric invariants' in L.data
+        for i in range(5):
+            L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
+            assert 'Sato-Tate group' in L.data
 
     def test_conductor_search(self):
         L = self.tc.get('/Genus2Curve/Q/?cond=1225')
@@ -130,16 +131,56 @@ class Genus2Test(LmfdbTest):
         assert '336.a.172032.1' in L.data
 
     def test_sha_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=256')
+        assert '114240.d.114240.1' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=3')
+        assert 'No matches' in L.data
         L = self.tc.get('/Genus2Curve/Q/?has_square_sha=False')
         assert  '336.a.172032.1' in L.data and not '169.a.169.1' in L.data
         L = self.tc.get('/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False')
         assert 'No matches' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=2&has_square_sha=True')
+        assert 'No matches' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?analytic_sha=2&has_square_sha=False')
+        assert '336.a.172032.1' in L.data
 
     def test_torsion(self):
         L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')
-        assert '\Z/{29}\Z' in L.data
-        L = self.tc.get('/Genus2Curve/Q/118606/a/118606/1')
+        assert '\\Z/{29}\\Z' in L.data
+
+    def test_mwgroup(self):
+        L = self.tc.get('/Genus2Curve/Q/25913/a/25913/1')
+        assert "\\Z \\times \\Z \\times \\Z" in L.data
+        assert '-x^3 - z^3' in L.data
+        assert '0.375585' in L.data
+        assert '\\infty' in L.data
+        assert '6.2.1658432.2' in L.data
+        L = self.tc.get('/Genus2Curve/Q/969306/a/969306/1')
+        assert "\\Z \\times \\Z \\times \\Z \\times \\Z/{2}\\Z" in L.data
+        assert '16y' in L.data and '2xz^2 + 11z^3' in L.data
+        assert '3.259671' in L.data
+        assert '\\infty' in L.data
+        assert 'D_4\\times C_2' in L.data
+        L = self.tc.get('/Genus2Curve/Q/461/a/461/2')
         assert 'trivial' in L.data
+
+    def test_bsd_invariants(self):
+        L = self.tc.get('/Genus2Curve/Q/70450/c/704500/1')
+        assert 'upper bound' in L.data
+        assert '0.046457' in L.data
+        assert '16.52129' in L.data
+        assert '0.767540' in L.data
+        assert 'rounded' in L.data
+        L = self.tc.get('/Genus2Curve/Q/1253/a/1253/1')
+        assert '0.207463' in L.data
+        assert '0.414927' in L.data
+        assert 'twice a square' in L.data
+
+    def test_local_invariants(self):
+        L = self.tc.get('/Genus2Curve/Q/806069/a/806069/1')
+        assert '1 + 5 T + 11 T^{2}' in L.data
+        assert '1 + 2 T + 127 T^{2}' in L.data
+        assert '1 + 22 T + 577 T^{2}' in L.data
 
     def test_mfhilbert(self):
         L = self.tc.get('/Genus2Curve/Q/12500/a/12500/1')
@@ -153,7 +194,12 @@ class Genus2Test(LmfdbTest):
         assert '(13 : -4732 : 20)' in L.data
         L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
         assert 'everywhere' in L.data
-        assert 'no rational points' in L.data
+        assert 'This curve has no' in L.data
+        L = self.tc.get('/Genus2Curve/Q/3319/a/3319/1')
+        assert 'Known points' in L.data
+        L = self.tc.get('/Genus2Curve/Q/14880/c/238080/2')
+        assert 'rational points are known' in L.data
+        assert 'for this curve' in L.data
 
     def test_endo_search(self):
         # first result for every search
@@ -169,7 +215,6 @@ class Genus2Test(LmfdbTest):
                 ('M_2(CM)', '2916.b.11664.1')]:
             L = self.tc.get('/Genus2Curve/Q/?geom_end_alg={}'.format(endo))
             assert text in L.data
-
 
     # tests for searching by geometric invariants
     def test_igusa_clebsch_search(self):
@@ -190,8 +235,6 @@ class Genus2Test(LmfdbTest):
         assert '1369.a.50653.1' in L.data
         assert '169.a.169.1' not in L.data
 
-
-            
     def test_badprimes_search(self):
         L = self.tc.get('/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3')
         assert '324.a.648.1' in L.data
@@ -210,7 +253,6 @@ class Genus2Test(LmfdbTest):
         assert '450.a.2700.1' in L.data
         assert not('169.a.169.1' in L.data)
                 
-
     def test_related_objects(self):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',

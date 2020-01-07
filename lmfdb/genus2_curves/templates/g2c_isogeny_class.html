@@ -30,9 +30,17 @@ text-align: center;
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 
 <p>
-<!-- Someone please redo this table with css.-->
 <table>
-    <tr><td> {{KNOWL('g2c.analytic_rank', title='Analytic rank')}}:</td><td>\({{ data.analytic_rank }}\)</td> </tr>
+    {% if data.analytic_rank < 2 %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)&nbsp;&nbsp;(upper bound)</td></tr>
+    {% endif %}
+    {% if data.mw_rank_proved %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)&nbsp;&nbsp;(lower bound)</td></tr>
+    {% endif %}
     <tr><td>&nbsp;</td></tr>
     <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
         <table id = "bad_lfactors_table">
