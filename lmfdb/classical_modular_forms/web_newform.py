@@ -1015,7 +1015,7 @@ function switch_basis(btype) {
                   '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
-            minimality = '&check;' if r['target_label'] == self.minimal_twist else '=' if r['target_is_minimal'] else '&harrw;' if r['target_label'].split('.')[0] == self.minimal_twist.split('.')[0] else ''
+            minimality = '&check;' if r['target_label'] == self.minimal_twist else '=' if r['target_is_minimal'] else '&#x2b0c;' if r['target_label'].split('.')[0] == self.minimal_twist.split('.')[0] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
