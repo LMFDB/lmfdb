@@ -674,10 +674,9 @@ class WebG2C(object):
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['real_period'] = decimal_pretty(str(curve['real_period']))
-            if data['mw_rank'] == 0:
-                 data['regulator'] = '1' if data['mw_rank_proved'] else 'unknown' # display an exact 1 when we know this
-            else:
-                data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
+            data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
+            if data['mw_rank'] == 0 and data['mw_rank_proved']:
+                data['regulator'] = '1' # display an exact 1 when we know this
                 
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
