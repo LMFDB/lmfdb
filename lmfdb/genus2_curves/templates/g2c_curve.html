@@ -234,14 +234,14 @@ function show_eqns(invstyle) {
 
 <!-- Description over QQ: -->
 <p>{{data.gl2_statement_base}}</p>
-{{data.end_statement_base|safe}}
+<p>{{data.end_statement_base|safe}}</p>
 
 <!-- Description of field of definition: -->
 <p>{{data.end_field_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
 <p>{{data.gl2_statement_geom}}</p>
-{{data.end_statement_geom|safe}}
+<p>{{data.end_statement_geom|safe}}</p>
 <!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
 the previous statement ruins its table spacing.
 Same for all other occasions of it.-->
@@ -250,9 +250,7 @@ Same for all other occasions of it.-->
 <!-- Remainder of the lattice: -->
 {% if data.end_lattice_statement %}
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', title='endomorphism lattice') }} by field</h3>
-<p></p>
-{{data.end_lattice_statement|safe}}
-<p></p>
+<p><{{data.end_lattice_statement|safe}}</p>
 {% endif %}
 
 {% endblock %}
