@@ -7,8 +7,7 @@ import bisect, re
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, euler_phi,
-                      lazy_attribute)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -106,6 +105,15 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
             parts[2] = r'\(\cdots\)'
             name = '.'.join(parts)
         return nf_display_knowl(label, name)
+
+def th_wrap(kwl, title):
+    return '    <th>%s</th>' % display_knowl(kwl, title=title)
+def td_wrapl(val):
+    return '    <td align="left">%s</td>' % val
+def td_wrapc(val):
+    return '    <td align="center">%s</td>' % val
+def td_wrapr(val):
+    return '    <td align="right">%s</td>' % val
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
@@ -929,16 +937,9 @@ function switch_basis(btype) {
                 return '<p>Only self twists have been computed for this newform, which has CM by %s.</p>' % (quad_field_knowl(discriminant))
             else:
                 return '<p>This newform does not have CM; other inner twists have not been computed.</p>'
-        def th_wrap(kwl, title):
-            return '    <th>%s</th>' % display_knowl(kwl, title=title)
-        def td_wrapl(val):
-            return '    <td align="left">%s</td>' % val
-        def td_wrapr(val):
-            return '    <td align="right">%s</td>' % val
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
-                  th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('character.dirichlet.order', 'Ord'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
@@ -961,7 +962,7 @@ function switch_basis(btype) {
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
                 selftwist = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend([td_wrapl(link), td_wrapl(parity), td_wrapr(order), td_wrapr(euler_phi(order)), td_wrapr(mult), td_wrapl(selftwist)])
+            twists.extend([td_wrapl(link), td_wrapl(parity), td_wrapr(order), td_wrapr(mult), td_wrapl(selftwist)])
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
@@ -969,12 +970,6 @@ function switch_basis(btype) {
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'
-        def th_wrap(kwl, title):
-            return '    <th>%s</th>' % display_knowl(kwl, title=title)
-        def td_wrapl(val):
-            return '    <td align="left">%s</td>' % val
-        def td_wrapr(val):
-            return '    <td align="right">%s</td>' % val
         def twist_type(r):
             if r['target_label'] != self.label:
                 return ''
@@ -989,43 +984,43 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   th_wrap('cmf.twist', 'Twist'),
+                  th_wrap('cmf.twist_minimality', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
         for r in self.twists:
             parity = 'Even' if r['parity'] == 1 else 'Odd'
-            minflag = '*' if r['target_is_minimal'] else ''
+            minimality = '&#x2713;&#x2713;' if r['target_is_minimal'] else ('&#x2713;' if r['target_label'].split('.')[0] == self.minimal_twists.split('.')[0] else '')
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
-            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label']+minflag)
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists1.append('<tr>')
-            twists1.extend([td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['degree']),
-                            td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)), td_wrapl(target_link), td_wrapr(r['target_dim'])])
+            twists1.extend([td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r)),
+                            td_wrapl(target_link), td_wrapc(minimality), td_wrapr(r['target_dim'])])
             twists1.append('</tr>')
         twists1.extend(['</tbody>', '</table>'])
 
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform orbit'), '<tr>',
                   th_wrap('cmf.twist', 'Twist'),
+                  th_wrap('cmf.twist_minimality', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Ord'),
-                  th_wrap('character.dirichlet.degree', 'Deg'),
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
-            minflag = '*' if r['target_is_minimal'] else ''
+            minimality = '&#x2713;&#x2713;' if r['target_is_minimal'] else ('&#x2713;' if r['target_label'].split('.')[0] == self.minimal_twists.split('.')[0] else '')
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
-            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label']+minflag)
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
-            twists2.extend([td_wrapl(target_link), td_wrapr(r['target_dim']), td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']),
-                            td_wrapr(r['degree']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
+            twists2.extend([td_wrapl(target_link), td_wrapc(minimality), td_wrapr(r['target_dim']),
+                            td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
             twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
 
