@@ -4,12 +4,6 @@
 p {padding-left: 1ch;}
 </style>
 
-<!-- used in endomorphism novel-->
-<style type="text/css">
-table.g2 a {
-  padding: 0;
-}
-
 <style>
 .toggle {margin-top:5px; margin-left:20px;}
 div.properties-body table tr td.label { vertical-align: top; }
@@ -242,10 +236,6 @@ function show_eqns(invstyle) {
 <!-- Description over QQbar: -->
 <p>{{data.gl2_statement_geom}}</p>
 <p>{{data.end_statement_geom|safe}}</p>
-<!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
-the previous statement ruins its table spacing.
-Same for all other occasions of it.-->
-<p></p>
 
 <!-- Remainder of the lattice: -->
 {% if data.end_lattice_statement %}
