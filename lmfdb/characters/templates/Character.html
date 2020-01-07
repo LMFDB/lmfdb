@@ -36,6 +36,8 @@
   <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
   {% if isminimal %}
   <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
+  {% else %}
+  <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
   {% endif %}
   {% if parity %}
   <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
