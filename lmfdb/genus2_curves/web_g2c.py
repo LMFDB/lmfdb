@@ -534,7 +534,7 @@ def local_table(D,N,tama,bad_lpolys):
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
-def ptcmp(a,b):
+def ptscmp(a,b):
     ha = max([abs(x) for x in a])
     hb = max([abs(x) for x in b])
     if ha != hb:
@@ -547,7 +547,7 @@ def ptcmp(a,b):
 
 def ratpts_table(pts,pts_v):
     if len(pts) > 1:
-        pts = sorted(pts,pttmp)
+        pts = sorted(pts,ptscmp)
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
