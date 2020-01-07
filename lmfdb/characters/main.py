@@ -310,6 +310,7 @@ def _dir_knowl_data(label, orbit=False):
     inf += row_wrap('Conductor', webchar.conductor)
     inf += row_wrap('Order', webchar.order)
     inf += row_wrap('Degree', euler_phi(webchar.order))
+    inf += row_wrap('Minimal', webchar.isminimal)
     inf += row_wrap('Parity', "Even" if webchar.parity == 1 else "Odd")
     if numbers:
         inf += row_wrap('Characters', ",&nbsp;".join(numbers))

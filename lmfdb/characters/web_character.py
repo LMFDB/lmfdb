@@ -763,6 +763,8 @@ class WebChar(WebCharObject):
                 ("Order", [self.order]),
                 ("Real", [self.isreal]),
                 ("Primitive", [self.isprimitive])]
+        if self.isminimal:
+            f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
         try:
@@ -912,6 +914,7 @@ class WebDBDirichlet(WebDirichlet):
 
         self.conductor = int(orbit_data['conductor'])
         self._set_isprimitive(orbit_data)
+        self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
 
@@ -986,6 +989,12 @@ class WebDBDirichlet(WebDirichlet):
 
     def _set_isprimitive(self, orbit_data):
         if str(orbit_data['is_primitive']) == "True":
+            self.isprimitive = "Yes"
+        else:
+            self.isprimitive = "No"
+
+    def _set_isprimitive(self, orbit_data):
+        if str(orbit_data['is_minimal']) == "True":
             self.isprimitive = "Yes"
         else:
             self.isprimitive = "No"
