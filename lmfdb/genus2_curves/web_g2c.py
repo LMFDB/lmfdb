@@ -276,7 +276,7 @@ def gl2_simple_statement(factorsQQ, factorsRR):
 def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # field is a latex string describing the basechange field (default is empty)
     # ring is optional, if unspecified only endomorphism algebra is described
-    statement = """<table style=\"padding-lift: 2ch\">"""
+    statement = """<table style=\"padding-left: 2ch; margin-top: -4px\">"""
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if fac[0] ]
 
