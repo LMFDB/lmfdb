@@ -386,8 +386,9 @@ def end_field_statement(field_label, poly):
         Galois number field \\(K = \\Q (a)\\) with defining polynomial \\(%s\\)""" % poly
 
 def end_lattice_statement(lattice):
-    statement = '<p>'
+    statement = ''
     for ED in lattice:
+        statement += "<p>"
         if ED[0][0]:
             # Add link and prettify if available:
             statement += """Over subfield \\(F \\simeq \\) <a href=%s>%s</a> with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
@@ -397,10 +398,10 @@ def end_lattice_statement(lattice):
         else:
             statement += """Over subfield \\(F\\) with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
-        statement += """:<br>"""
+        statement += """:</p>\n"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
-        statement += """<br>"""
+        statement += """<p>Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
+        statement += """</p>\n<p>"""
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += """</p>\n"""
     return statement
