@@ -2,9 +2,7 @@
 {% block content %}
 
 <style>
-.pad {
-    margin-left: 5;
-}
+p {padding-left: 2em;}
 </style>
 
 <p>
@@ -12,24 +10,23 @@
 </p>
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
-</p><p style="padding-left: 10px">
+><p>
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
 <a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-</p><p style="margin-left: 10px">
+<p>
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
 <a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
-</p><p class="pad">
+<p>
 Some interesting curves:
 {% for curve in info.curve_list: %}
 <a href = "{{curve.url}}"> {{curve.label}} </a>&nbsp;
 {% endfor %}
-</p><p class="pad">
+<p>
 A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
-</p>
 
 <h2> Find a specific curve or isgoeny class by {{ KNOWL('g2c.label', title='label')}} </h2>
 
