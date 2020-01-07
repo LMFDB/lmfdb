@@ -264,9 +264,9 @@ def gl2_statement_base(factorsRR, base):
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        gl2 = "of \\(\\GL_2\\)-type"
+        gl2 = "Of \\(\\GL_2\\)-type"
     else:
-        gl2 = "not of \\(\\GL_2\\)-type"
+        gl2 = "Not of \\(\\GL_2\\)-type"
     if len(factorsQQ) == 1 and factorsQQ[0][2] != 1:
         simple = "simple"
     else:
@@ -276,7 +276,7 @@ def gl2_simple_statement(factorsQQ, factorsRR):
 def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # field is a latex string describing the basechange field (default is empty)
     # ring is optional, if unspecified only endomorphism algebra is described
-    statement = """<table class="g2">"""
+    statement = """<table style=\"padding: 10px;\">"""
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if fac[0] ]
 
