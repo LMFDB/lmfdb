@@ -388,7 +388,7 @@ def end_field_statement(field_label, poly):
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
-        statement += "<p>"
+        statement += ""
         if ED[0][0]:
             # Add link and prettify if available:
             statement += """Over subfield \\(F \\simeq \\) <a href=%s>%s</a> with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
@@ -398,12 +398,12 @@ def end_lattice_statement(lattice):
         else:
             statement += """Over subfield \\(F\\) with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
-        statement += """:</p>\n"""
+        statement += """:<br>\n"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += """<p>Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
-        statement += """</p>\n<p>"""
+        statement += """&nbsp;&nbsp;Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
+        statement += """<br>&nbsp;&nbsp;"""
         statement += gl2_simple_statement(ED[1], ED[2])
-        statement += """</p>\n"""
+        statement += """\n"""
     return statement
 
 def split_field_statement(is_simple_geom, field_label, poly):
