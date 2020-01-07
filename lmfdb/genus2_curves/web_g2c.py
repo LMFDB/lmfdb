@@ -276,7 +276,7 @@ def gl2_simple_statement(factorsQQ, factorsRR):
 def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # field is a latex string describing the basechange field (default is empty)
     # ring is optional, if unspecified only endomorphism algebra is described
-    statement = """<table style=\"padding: 10px;\">"""
+    statement = """<table style=\"padding-lift: 2ch\">"""
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if fac[0] ]
 
@@ -398,7 +398,7 @@ def end_lattice_statement(lattice):
         else:
             statement += """Over subfield \\(F\\) with generator \\(%s\\) with minimal polynomial \\(%s\\)"""\
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
-        statement += """:<br>\n"""
+        statement += """:\n"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
         statement += """&nbsp;&nbsp;Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
         statement += """<br>&nbsp;&nbsp;"""
