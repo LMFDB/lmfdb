@@ -264,9 +264,9 @@ def gl2_statement_base(factorsRR, base):
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        gl2 = r"of \(\GL_2\)-type"
+        gl2 = r"Of \(\GL_2\)-type"
     else:
-        gl2 = r"not of \(\GL_2\)-type"
+        gl2 = r"Not of \(\GL_2\)-type"
     if len(factorsQQ) == 1 and factorsQQ[0][2] != 1:
         simple = "simple"
     else:
@@ -276,7 +276,7 @@ def gl2_simple_statement(factorsQQ, factorsRR):
 def end_statement(factorsQQ, factorsRR, field='', ring=None):
     # field is a latex string describing the basechange field (default is empty)
     # ring is optional, if unspecified only endomorphism algebra is described
-    statement = '<table class="g2">'
+    statement = '<table style="margin-left: 10px; margin-top: -12px">'
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if fac[0] ]
 
@@ -388,6 +388,7 @@ def end_field_statement(field_label, poly):
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
+        statement += "<p>"
         if ED[0][0]:
             # Add link and prettify if available:
             statement += (r"Over subfield \(F \simeq \) <a href=%s>%s</a> with generator \(%s\) with minimal polynomial \(%s\)"
@@ -397,12 +398,12 @@ def end_lattice_statement(lattice):
         else:
             statement += (r"Over subfield \(F\) with generator \(%s\) with minimal polynomial \(%s\)"
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1])))
-        statement += ":<br>"
-        statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += "Sato Tate group: %s" % st_link_by_name(1,4,ED[4])
-        statement += "<br>"
+        statement += ":\n"
+        statement += end_statement(ED[1], ED[2], field='F', ring=ED[3])
+        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_link_by_name(1,4,ED[4])
+        statement += "<br>&nbsp;&nbsp;"
         statement += gl2_simple_statement(ED[1], ED[2])
-        statement += "<p></p>"
+        statement += "</p>\n"
     return statement
 
 def split_field_statement(is_simple_geom, field_label, poly):
@@ -430,11 +431,9 @@ def split_statement(coeffs, labels, condnorms):
             statement += "<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>" % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += (r"""<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>
-            \(g_4 = %s\)<br>
-            \(g_6 = %s\)<br>
-            Conductor norm: %s"""
-            % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n]))
+            statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
+            statement += r"<br>&nbsp;&nbsp;\(g_4 = %s\)<br>&nbsp;&nbsp;\(g_6 = %s\)" % tuple(map (lambda x: strlist_to_nfelt(x,'b'),coeffs[n]))
+            statement += "<br>&nbsp;&nbsp; Conductor norm: %s" % condnorms[n]
     return statement
 
 # create friend entry from url (typically coming from lfunc_instances)
@@ -490,6 +489,8 @@ def mw_gens_table(invs,gens,hts):
         xP,yP = P[0],P[1]
         xden,yden = lcm([r[1] for r in xP]), lcm([r[1] for r in yP])
         xD = sum([ZZ(xden)*ZZ(xP[i][0])/ZZ(xP[i][1])*x**i*z**(len(xP)-i-1) for i in range(len(xP))])
+        if str(xD.factor())[:4] == "(-1)":
+            xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
         return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]
     if not invs:
@@ -535,6 +536,8 @@ def local_table(D,N,tama,bad_lpolys):
     return '\n'.join(loctab)
 
 def ratpts_table(pts,pts_v):
+    if len(pts) > 1:
+        pts = sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:

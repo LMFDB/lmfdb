@@ -1216,7 +1216,9 @@ def make_tuple(val):
         return val
 
 def range_formatter(x):
-    if isinstance(x, dict):
+    if x is None:
+        return 'Unknown'
+    elif isinstance(x, dict):
         if '$gte' in x:
             a = x['$gte']
         elif '$gt' in x:

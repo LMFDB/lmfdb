@@ -1,14 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <style>
-<div.ratpts>span { white-space: nowrap; font-family: serif; }
+p {padding-left: 1ch;}
 </style>
-
-<!--New table class to avoid spacing in LaTeX-links -->
-<style type="text/css">
-table.g2 a {
-  padding: 0;
-}
 
 <style>
 .toggle {margin-top:5px; margin-left:20px;}
@@ -125,7 +119,7 @@ function show_eqns(invstyle) {
         <td> \( g_3 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
     </tr>
 </table>
-<br>
+<p></p>
 <div class="toggle">&nbsp;
     <span class='igusa G2 nodisplay'>(<a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch invariants</a>,</span>
     <span class='igusa_clebsch'>(<a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a>,</span>
@@ -163,7 +157,7 @@ function show_eqns(invstyle) {
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
 <p>{{place_code('rat_pts')}}</p>
-{{ data.rat_pts_table | safe }}
+<p>{{ data.rat_pts_table | safe }}</p>
 
 <p>{{place_code('num_rat_wpts')}}</p>
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
@@ -180,11 +174,11 @@ function show_eqns(invstyle) {
 </p>
 
 {% if data.mw_gens_table %}
-{{ data.mw_gens_table | safe }}
+<p>{{ data.mw_gens_table | safe }}</p>
 {% endif %}
 
 <p>{{place_code('two_torsion_field')}}</p>
-<p><div style="display: inline">{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</div></p>
+<p>{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
 
 <h2> {{KNOWL('g2c.bsd_invariants', title='BSD invariants')}} </h2>
 
@@ -211,7 +205,7 @@ function show_eqns(invstyle) {
 
 <h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}} </h2>
 
-{{ data.local_table | safe }}
+<p>{{ data.local_table | safe }}</p>
 
 <h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
 
@@ -234,25 +228,19 @@ function show_eqns(invstyle) {
 
 <!-- Description over QQ: -->
 <p>{{data.gl2_statement_base}}</p>
-{{data.end_statement_base|safe}}
+<p>{{data.end_statement_base|safe}}</p>
 
 <!-- Description of field of definition: -->
 <p>{{data.end_field_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
 <p>{{data.gl2_statement_geom}}</p>
-{{data.end_statement_geom|safe}}
-<!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
-the previous statement ruins its table spacing.
-Same for all other occasions of it.-->
-<p></p>
+<p>{{data.end_statement_geom|safe}}</p>
 
 <!-- Remainder of the lattice: -->
 {% if data.end_lattice_statement %}
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', title='endomorphism lattice') }} by field</h3>
-<p></p>
-{{data.end_lattice_statement|safe}}
-<p></p>
+<p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
 
 {% endblock %}
