@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 from __future__ import print_function
+from __future__ import absolute_import
 from six import string_types, text_type
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
@@ -15,7 +16,7 @@ from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
-from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
+from .main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
 from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login

@@ -1,11 +1,10 @@
 from bson.code import Code
-import dbtools
-import id_object
 import datetime
 #import threading
 #import bson
 #import time
 from collections import defaultdict
+from lmfdb.inventory_app.id_object import get_description
 from lmfdb.backend.database import db
 
 __version__ = '1.0.0'
@@ -59,6 +58,15 @@ def _get_db_records(table):
         if '_id' in doc['_id']: doc['_id'].remove('_id')
     return results
 
+def get_sample_record(collection, field_name):
+    """ Function to get a sample, non-empty record from a collection 
+        collection - MongoDB collection object
+        field_name - name of field to find sample record from
+
+        returns sample record
+    """
+    return collection.find_one({str(field_name):{'$exists':True,'$nin':[[], '']}})
+
 def _jsonify_table_info(table, dbname = None):
 
     """Private function to turn information about one table into base 
@@ -84,9 +92,9 @@ def _jsonify_table_info(table, dbname = None):
 
     for doc in lst:
         try:
-            rls = dbtools.get_sample_record(table, str(doc))
+            rls = get_sample_record(table, str(doc))
             try:
-                typedesc = id_object.get_description(rls[str(doc)])
+                typedesc = get_description(rls[str(doc)])
             except:
                 typedesc = 'Type cannot be identified (' \
                            + str(type(rls[str(doc)])) + ')'

@@ -39,6 +39,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor as pg_cursor
 from sage.all import cartesian_product_iterator, binomial
+from sage.cpython.string import bytes_to_str
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
@@ -407,7 +408,7 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
+                    self.logger.info(bytes_to_str(query) + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info(
                                 "Replicate with db.%s.%s(%s)",
@@ -5795,7 +5796,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
-            allcols = sorted(list(set(cols + constraint.keys())))
+            allcols = sorted(list(set(cols + list(constraint.keys()))))
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
@@ -5823,6 +5824,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
+            if buckets == {} and any(isinstance(val, dict) and any(relkey in val for relkey in ['$lt', '$lte', '$gt', '$gte']) for val in values):
+                # For non-bucketed statistics, we don't want to include counts for range queries
+                continue
             for val, header in zip(values, headers):
                 header.append(val)
             D = make_count_dict(values, count)
