@@ -431,11 +431,9 @@ def split_statement(coeffs, labels, condnorms):
             statement += """<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>""" % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>&nbsp;&nbsp;\\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\\) with<br>\
-            \\(g_4 = %s\\)<br>\
-            \\(g_6 = %s\\)<br>\
-            Conductor norm: %s""" \
-            % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n])
+            statement += """<br>&nbsp;&nbsp;\\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\\) with"""
+            statement += """<br>&nbsp;&nbsp;\\(g_4 = %s\\)<br>&nbsp;&nbsp;\\(g_6 = %s\\)""" % tuple(map (lambda x: strlist_to_nfelt(x,'b'),coeffs[n]))
+            statement += """<br>&nbsp;&nbsp; Conductor norm: %s""" % condnorms[n]
     return statement
 
 # create friend entry from url (typically coming from lfunc_instances)
