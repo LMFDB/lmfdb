@@ -397,7 +397,7 @@ class G2C_stats(StatsDisplay):
                   'st_group': lambda x: st_link_by_name(1,4,x)}
     query_formatters = {'aut_grp_id': lambda x: 'aut_grp_id=%s' % x,
                         'geom_aut_grp_id': lambda x: 'geom_aut_grp_id=%s' % x,
-                        'real_geom_end_alg': lambda x: 'real_geom_end_eld=%s' % x,
+                        'real_geom_end_alg': lambda x: 'real_geom_end_alg=%s' % x,
                         'st_group': lambda x: 'st_group=%s' % x,
                         }
 
