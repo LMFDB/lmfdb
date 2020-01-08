@@ -535,20 +535,9 @@ def local_table(D,N,tama,bad_lpolys):
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
-def ptscmp(a,b):
-    ha = max([abs(x) for x in a])
-    hb = max([abs(x) for x in b])
-    if ha != hb:
-        return int(-1) if ha < hb else int(1)
-    ha = sum([abs(x) for x in a])
-    hb = sum([abs(x) for x in b])
-    if ha != hb:
-        return int(-1) if ha < hb else int(1)
-    return int(-1) if a < b else int(1)
-
 def ratpts_table(pts,pts_v):
     if len(pts) > 1:
-        pts = sorted(pts,ptscmp)
+        pts = sorted(pts,key=lambda P:max([abs(x) for x in P]))
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
