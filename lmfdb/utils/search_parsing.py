@@ -625,7 +625,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     # Change unicode dash with minus sign
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
-    FF = FF.decode('utf8').encode('ascii', 'ignore')
+    FF = ''.join(c for c in FF if ord(c) < 128)
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")

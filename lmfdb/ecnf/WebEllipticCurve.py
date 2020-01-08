@@ -96,8 +96,8 @@ def ideal_from_string(K,s, IQF_format=False):
     else:
         # 'w' is used for the generator name for all fields for
         # numbers stored in the database
-        alpha = alpha.encode().replace('w',str(K.gen()))
-        I = K.ideal(a,K(alpha.encode()))
+        alpha = alpha.replace('w',str(K.gen()))
+        I = K.ideal(a,K(alpha))
     if I.norm()==N:
         return I
     else:
