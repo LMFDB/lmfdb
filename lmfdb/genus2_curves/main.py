@@ -93,7 +93,7 @@ def index_Q():
     info = {'stats' : G2C_stats()}
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] =  lambda label: url_for_curve_label(label)
-    curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1')
+    curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
     info["curve_list"] = [ {'label':label,'url':url_for_curve_label(label)} for label in curve_labels ]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
