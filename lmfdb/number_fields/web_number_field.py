@@ -624,7 +624,6 @@ class WebNumberField:
         if self.gen_name=='phi':
             return '\phi'
         else:
-            print((self.gen_name, type(self.gen_name)))
             return web_latex(self.gen_name)
 
     def variable_name(self):
