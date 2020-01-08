@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap,
+    search_wrap, range_formatter,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
@@ -1099,7 +1099,7 @@ def self_twist_type_formatter(x):
     return x # c = 'neither', 'CM only', 'RM only' or 'both'
 
 def rel_dim_formatter(x):
-    return 'dim=%s&dim_type=rel' % x
+    return 'dim=%s&dim_type=rel' % range_formatter(x)
 
 def self_twist_type_query_formatter(x):
     if x in [0, 'neither']:
