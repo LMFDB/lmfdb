@@ -49,21 +49,21 @@ geom_end_alg_dict = { x:x for x in geom_end_alg_list }
 
 aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
 aut_grp_dict = {
-        '[2,1]':'C_2',
-        '[4,1]':'C_4',
-        '[4,2]':'V_4',
-        '[6,2]':'C_6',
-        '[8,3]':'D_4',
-        '[12,4]':'D_6'
+        '[2,1]':'C2',
+        '[4,1]':'C4',
+        '[4,2]':'V4',
+        '[6,2]':'C6',
+        '[8,3]':'D4',
+        '[12,4]':'D6'
         }
 
 geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
 geom_aut_grp_dict = {
-        '[2,1]':'C_2',
-        '[4,2]':'V_4',
-        '[8,3]':'D_4',
-        '[10,2]':'C_{10}',
-        '[12,4]':'D_6',
+        '[2,1]':'C2',
+        '[4,2]':'V4',
+        '[8,3]':'D4',
+        '[10,2]':'C10',
+        '[12,4]':'D6',
         '[24,8]':'C3:D4',
         '[48,29]':'GL(2,3)'}
 
@@ -332,18 +332,6 @@ def genus2_curve_search(info, query):
 # Statistics
 ################################################################################
 
-def aut_grp_format(id):
-    return "\\("+aut_grp_dict[id]+"\\)"
-
-def geom_aut_grp_format(id):
-    return "\\("+geom_aut_grp_dict[id]+"\\)"
-
-def st0_group_format(name):
-    return "\\("+st0_group_name(name)+"\\)"
-
-def st_group_format(name):
-    return st_link_by_name(1,4,name)
-
 class G2C_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for genus 2 curves over Q
@@ -401,12 +389,17 @@ class G2C_stats(StatsDisplay):
                   'real_geom_end_alg': 'Sato-Tate group identity components',
                   'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
-    formatters = {'aut_grp_id': aut_grp_format,
-                  'geom_aut_grp_id': geom_aut_grp_format,
+    formatters = {'aut_grp_id': lambda x: aut_grp_dict[x],
+                  'geom_aut_grp_id': lambda x: geom_aut_grp_dict[x],
                   'has_square_sha': formatters.boolean,
                   'is_gl2_type': formatters.boolean,
-                  'real_geom_end_alg': st0_group_format,
-                  'st_group': st_group_format}
+                  'real_geom_end_alg': lambda x: "\\("+st0_group_name(x)+"\\)",
+                  'st_group': lambda x: st_link_by_name(1,4,x)}
+    query_formatters = {'aut_grp_id': lambda x: 'aut_grp_id=%s' % x,
+                        'geom_aut_grp_id': lambda x: 'geom_aut_grp_id=%s' % x,
+                        'real_geom_end_alg': lambda x: 'real_geom_end_alg=%s' % x,
+                        'st_group': lambda x: 'st_group=%s' % x,
+                        }
 
     stat_list = [
         {'cols': 'num_rat_pts', 'totaler': {'avg': True}},
