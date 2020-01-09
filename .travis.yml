@@ -2,6 +2,10 @@ language: sage
 sudo: false
 dist: trusty
 
+env:
+  SAGE_VERSION=8.8
+  SAGE_VERSION=9.0
+
 # blocklist
 branches:
   except:
@@ -41,7 +45,7 @@ install:
 
     # install SAGE with GAP already built in
     # see: https://github.com/edgarcosta/binary-pkg
-    - export SAGE_VERSION=8.8
+    # - export SAGE_VERSION=8.8 # this is now set in env above
     - export SAGE_DIR=${HOME}/SageMath
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
