@@ -46,6 +46,7 @@ install:
     # install SAGE with GAP already built in
     # see: https://github.com/edgarcosta/binary-pkg
     # - export SAGE_VERSION=8.8 # this is now set in env above
+    - echo $SAGE_VERSION
     - export SAGE_DIR=${HOME}/SageMath
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
