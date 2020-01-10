@@ -617,6 +617,9 @@ for j in range(1,48):
         aliases['C'+str(j)] = [(j,1)]
 aliases['C32'] = [(32,33)]
 
+# For direct products, factors must be reverse-sorted
+# All nicknames here must be all upper-case
+
 aliases['S1'] = [(1, 1)]
 aliases['A1'] = [(1, 1)]
 aliases['A2'] = [(1, 1)]
