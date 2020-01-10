@@ -3,7 +3,7 @@ from __future__ import print_function
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
+from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, range_formatter
 from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 
@@ -94,8 +94,8 @@ class AbvarFqStats(StatsDisplay):
                         "is_primitive": (lambda t: "primitive=%s" % (yn(t))),
                         "has_jacobian": (lambda t: "jacobian=%s" % (ynu(t))),
                         "has_principal_polarization": (lambda t: "polarizable=%s" % (ynu(t))),
-                        "jacobian_count": (lambda t: "jac_cnt=%s" % t),
-                        "hyp_count": (lambda t: "hyp_cnt=%s" % t),
+                        "jacobian_count": (lambda t: "jac_cnt=%s" % range_formatter(t)),
+                        "hyp_count": (lambda t: "hyp_cnt=%s" % range_formatter(t)),
     }
     stat_list = [
         {"cols": ["g", "q"],

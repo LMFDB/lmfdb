@@ -38,13 +38,16 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def make_cond_key(D):
-    D1=ZZ(D)
-    if D1<1: D1=ZZ(1)
+    D1 = ZZ(D)
+    if D1 < 1:
+        D1 = ZZ.one()
     D1 = int(D1.log(10))
-    return '%04d%s'%(D1,str(D))
+    return '%04d%s' % (D1, str(D))
+
 
 def parse_artin_orbit_label(label):
     label = clean_input(label)
@@ -110,7 +113,7 @@ def artin_representation_search(info, query):
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
-    parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
+    parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
     parse_bool(info,query,'Is_Even')

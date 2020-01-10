@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 import re
 from flask import url_for
@@ -13,7 +14,7 @@ from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
     make_bigint, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
-from plot import circle_image, piecewise_constant_image, piecewise_linear_image
+from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
@@ -182,10 +183,10 @@ class WebHyperGeometricFamily(object):
         return [
                 ('Label', self.label),
                 (None, self.plot_link),
-                ('A', '\({}\)'.format(self.A)),
-                ('B', '\({}\)'.format(self.B)),
-                ('Degree', '\({}\)'.format(self.degree)),
-                ('Weight',  '\({}\)'.format(self.weight)),
+                ('A', r'\({}\)'.format(self.A)),
+                ('B', r'\({}\)'.format(self.B)),
+                ('Degree', r'\({}\)'.format(self.degree)),
+                ('Weight',  r'\({}\)'.format(self.weight)),
                 ('Type', self.type)
                 ]
 
@@ -265,7 +266,7 @@ class WebHyperGeometricFamily(object):
     def bread(self):
         return [("Motives", url_for("motive.index")),
                 ("Hypergeometric", url_for("motive.index2")),
-                ("$\Q$", url_for(".index")),
+                (r"$\Q$", url_for(".index")),
                 ('family A = {}, B = {}'.format(str(self.A), str(self.B)), '')]
 
     @lazy_attribute
@@ -325,13 +326,13 @@ class WebHyperGeometricFamily(object):
             else:
                 factors, gal_groups = fG, ""
 
-            factors = make_bigint('\( %s \)' % factors)
+            factors = make_bigint(r'\( %s \)' % factors)
 
             if gal_groups:
                 if gal_groups[0] == [0,0]:
                     gal_groups = ""
                 else:
-                    gal_groups = "$\\times$".join(
+                    gal_groups = r"$\times$".join(
                             [group_display_knowl_C1_as_trivial(n, t)
                                 for n, t in gal_groups])
             return [gal_groups, factors, self.ordinary(f, p)]

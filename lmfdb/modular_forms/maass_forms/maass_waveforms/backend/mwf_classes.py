@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from mwf_utils import mwf_logger
-from maass_forms_db import maass_db
+from .mwf_utils import mwf_logger
+from .maass_forms_db import maass_db
 from sage.all import Gamma0, CC, imag_part, real_part
 from lmfdb import db
 from lmfdb.utils import display_complex
+
 
 class MaassFormTable(MFDataTable):
     r"""
@@ -54,7 +56,7 @@ class MaassFormTable(MFDataTable):
             self._table = []
             return
         limit = min(numc, self._nrows)
-        self._row_heads = range(limit)
+        self._row_heads = list(range(limit))
         self._col_heads = ['n', 'C(n)']
         row_min = self._nrows * skip
         mwf_logger.debug("numc: {0}".format(numc))
@@ -163,7 +165,7 @@ class WebMaassForm(object):
             if not isinstance(self.coeffs, dict):
                 mwf_logger.warning("Coefficients s not a dict. Got:{0}".format(type(self.coeffs)))
             else:
-                n1 = len(self.coeffs.keys())
+                n1 = len(list(self.coeffs))
                 mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
                 if n1 != self.dim:
                     mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())={1}".format(self.dim, n1))
@@ -272,7 +274,7 @@ class WebMaassForm(object):
         """
         table = {'nrows': self.num_coeff}
         if fnr < 0:
-            colrange = range(self.dim)
+            colrange = list(range(self.dim))
             table['ncols'] = self.dim + 1
         elif fnr < self.dim:
             colrange = [fnr]
@@ -311,7 +313,7 @@ class WebMaassForm(object):
             if not isinstance(self.coeffs, dict):
                 self.table = {}
                 return
-            for n in range(len(self.coeffs.keys() / 2)):
+            for n in range(len(list(self.coeffs)) // 2):
                 row = [n]
                 if self.dim == 1:
                     for k in range(table['ncols']):

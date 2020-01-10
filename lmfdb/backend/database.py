@@ -39,6 +39,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor as pg_cursor
 from sage.all import cartesian_product_iterator, binomial
+from sage.cpython.string import bytes_to_str
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
@@ -407,7 +408,7 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
+                    self.logger.info(bytes_to_str(query) + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info(
                                 "Replicate with db.%s.%s(%s)",
@@ -771,7 +772,7 @@ class PostgresBase(object):
                     has_id = True
         return col_list, col_type, has_id
 
-    def _copy_to_select(self, select, filename, header="", sep='|', silent=False):
+    def _copy_to_select(self, select, filename, header="", sep="|", silent=False):
         """
         Using the copy_expert from psycopg2, exports the data from a select statement.
 
@@ -779,7 +780,7 @@ class PostgresBase(object):
 
         - ``select`` -- an SQL Composable object giving a select statement
         - ``header`` -- An initial header to write to the file
-        - ``sep`` -- a separator, defaults to tab
+        - ``sep`` -- a separator, defaults to ``|``
         - ``silent`` -- suppress reporting success
         """
         if sep != '\t':
@@ -875,7 +876,8 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        sep = kwds.get("sep", u"|")
+        kwds = dict(kwds) # to not modify the dict kwds, with the pop
+        sep = kwds.pop("sep", u"|")
 
         with DelayCommit(self, silence=True):
             with open(filename) as F:
@@ -902,7 +904,7 @@ class PostgresBase(object):
                     self._execute(alter_table, [seq_name])
 
                 cur = self._db.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
+                cur.copy_from(F, table, columns=columns, sep=sep, **kwds)
 
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
@@ -1093,7 +1095,7 @@ class PostgresBase(object):
     ##################################################################
 
 
-    def _copy_to_meta(self, meta_name, filename, search_table):
+    def _copy_to_meta(self, meta_name, filename, search_table, sep="|"):
         meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
         table_name = _meta_table_name(meta_name)
         table_name_sql = Identifier(table_name)
@@ -1103,15 +1105,15 @@ class PostgresBase(object):
                 cols_sql, meta_name_sql, table_name_sql, Literal(search_table))
         now = time.time()
         with DelayCommit(self):
-            self._copy_to_select(select, filename, silent=True)
+            self._copy_to_select(select, filename, sep=sep, silent=True)
         print("Exported %s for %s in %.3f secs" % (meta_name,
                 search_table, time.time() - now))
 
-    def _copy_from_meta(self, meta_name, filename):
+    def _copy_from_meta(self, meta_name, filename, sep="|"):
         meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
         try:
             cur = self._db.cursor()
-            cur.copy_from(filename, meta_name, columns=meta_cols)
+            cur.copy_from(filename, meta_name, columns=meta_cols, sep=sep)
         except Exception:
             self.conn.rollback()
             raise
@@ -1130,7 +1132,7 @@ class PostgresBase(object):
             res = -1
         return res
 
-    def _reload_meta(self, meta_name, filename, search_table):
+    def _reload_meta(self, meta_name, filename, search_table, sep="|"):
         meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
         # the column which will match search_table
         table_name = _meta_table_name(meta_name)
@@ -1142,12 +1144,12 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter = "|")]
+            lines = [line for line in csv.reader(F, delimiter=sep)]
             if len(lines) == 0:
                 return
             for line in lines:
                 if line[table_name_idx] != search_table:
-                    raise RuntimeError("column %d in the file doesn't match the search table name" % table_name_idx)
+                    raise RuntimeError("in %s column %d (= %s) in the file doesn't match the search table name %s" % (filename, table_name_idx, line[table_name_idx], search_table))
 
 
         with DelayCommit(self, silence=True):
@@ -1161,7 +1163,7 @@ class PostgresBase(object):
             with open(filename, "r") as F:
                 try:
                     cur = self._db.cursor()
-                    cur.copy_from(F, meta_name, columns=meta_cols)
+                    cur.copy_from(F, meta_name, columns=meta_cols, sep=sep)
                 except Exception:
                     self.conn.rollback()
                     raise
@@ -1926,7 +1928,7 @@ class PostgresTable(PostgresBase):
             if projection == 0 or isinstance(projection, string_types):
                 return rec[0]
             else:
-                return {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
+                return {k:v for k,v in zip(search_cols + extra_cols, rec) if (self._include_nones or v is not None)}
 
     def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, split_ors=False, silent=False):
         """
@@ -2977,14 +2979,14 @@ class PostgresTable(PostgresBase):
     # Exporting, reloading and reverting meta_tables, meta_indexes and meta_constraints     #
     ##################################################################
 
-    def copy_to_meta(self, filename):
-        self._copy_to_meta("meta_tables", filename, self.search_table)
+    def copy_to_meta(self, filename, sep="|"):
+        self._copy_to_meta("meta_tables", filename, self.search_table, sep=sep)
 
-    def copy_to_indexes(self, filename):
-        self._copy_to_meta("meta_indexes", filename, self.search_table)
+    def copy_to_indexes(self, filename, sep="|"):
+        self._copy_to_meta("meta_indexes", filename, self.search_table, sep=sep)
 
-    def copy_to_constraints(self, filename):
-        self._copy_to_meta("meta_constraints", filename, self.search_table)
+    def copy_to_constraints(self, filename, sep="|"):
+        self._copy_to_meta("meta_constraints", filename, self.search_table, sep=sep)
 
     def _get_current_index_version(self):
         return self._get_current_meta_version("meta_indexes", self.search_table)
@@ -2992,14 +2994,14 @@ class PostgresTable(PostgresBase):
     def _get_current_constraint_version(self):
         return self._get_current_meta_version("meta_constraints", self.search_table)
 
-    def reload_indexes(self, filename):
-        return self._reload_meta("meta_indexes", filename, self.search_table)
+    def reload_indexes(self, filename, sep="|"):
+        return self._reload_meta("meta_indexes", filename, self.search_table, sep=sep)
 
-    def reload_meta(self, filename):
-        return self._reload_meta("meta_tables", filename, self.search_table)
+    def reload_meta(self, filename, sep="|"):
+        return self._reload_meta("meta_tables", filename, self.search_table, sep=sep)
 
-    def reload_constraints(self, filename):
-        return self._reload_meta("meta_constraints", filename, self.search_table)
+    def reload_constraints(self, filename, sep="|"):
+        return self._reload_meta("meta_constraints", filename, self.search_table, sep=sep)
 
     def revert_indexes(self, version = None):
         return self._revert_meta("meta_indexes", self.search_table, version)
@@ -3686,6 +3688,7 @@ class PostgresTable(PostgresBase):
             If the search and extra files contain ids, they should be contiguous,
             starting at 1.
         """
+        sep = kwds.get("sep", u"|")
         suffix = "_tmp"
         if restat is None:
             restat = (countsfile is None or statsfile is None)
@@ -3709,7 +3712,6 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 if adjust_schema and header:
                     # read the header and create the tmp_table accordingly
-                    sep = kwds.get("sep", u"|")
                     cols = self._create_table_from_header(filename, tmp_table, sep)
                 else:
                     self._clone(table, tmp_table)
@@ -3743,9 +3745,9 @@ class PostgresTable(PostgresBase):
 
             if indexesfile is not None:
                 # we do the swap at the end
-                self.reload_indexes(indexesfile)
+                self.reload_indexes(indexesfile, sep=sep)
             if constraintsfile is not None:
-                self.reload_constraints(constraintsfile)
+                self.reload_constraints(constraintsfile, sep=sep)
             if reindex:
                 # Also restores constraints
                 self.restore_indexes(suffix=suffix)
@@ -3775,7 +3777,7 @@ class PostgresTable(PostgresBase):
                 self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
             print("Reloaded %s in %.3f secs" % (self.search_table, time.time() - now_overall))
 
-    def reload_final_swap(self, tables=None, metafile=None, commit=True):
+    def reload_final_swap(self, tables=None, metafile=None, sep="|", commit=True):
         """
         Renames the _tmp versions of `tables` to the live versions.
         and updates the corresponding meta_tables row if `metafile` is provided
@@ -3784,6 +3786,7 @@ class PostgresTable(PostgresBase):
 
         - ``tables`` -- list of strings (optional), of the tables to renamed. If None is provided, renames all the tables ending in `_tmp`
         - ``metafile`` -- a string (optional), giving a file containing the meta information for the table.
+        - ``sep`` -- a character (default ``|``) to separate columns
         """
         with DelayCommit(self, commit, silence=True):
             if tables is None:
@@ -3795,7 +3798,7 @@ class PostgresTable(PostgresBase):
 
             self._swap_in_tmp(tables, commit=False)
             if metafile is not None:
-                self.reload_meta(metafile)
+                self.reload_meta(metafile, sep=sep)
 
         # Reinitialize object
         tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
@@ -3992,7 +3995,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        sep = kwds.get("sep", u"|")
+        sep = kwds.pop("sep", u"|")
 
         tabledata = [
                 # tablename, cols, addid, write_header, filename
@@ -4022,7 +4025,7 @@ class PostgresTable(PostgresBase):
                     try:
                         if write_header:
                             self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols_wquotes, **kwds)
+                        cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
@@ -4034,7 +4037,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 cols = SQL(", ").join(map(Identifier, cols))
                 select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
-                self._copy_to_select(select, filename, silent=True)
+                self._copy_to_select(select, filename, silent=True, sep=sep)
                 print("\tExported data from %s in %.3f secs to %s" % (table, time.time() - now, filename))
 
             print("Exported %s in %.3f secs" % (self.search_table, time.time() - now_overall))
@@ -4177,7 +4180,7 @@ class PostgresTable(PostgresBase):
             self.log_db_change("drop_column", name=name)
         print("Column %s dropped"%(name))
 
-    def create_extra_table(self, columns, ordered=False, commit=True):
+    def create_extra_table(self, columns, ordered=False, sep="|", commit=True):
         """
         Splits this search table into two, linked by an id column.
 
@@ -4187,6 +4190,8 @@ class PostgresTable(PostgresBase):
             that should be moved to the new extra table. Can be empty.
         - ``ordered`` -- whether the id column should be kept in sorted
             order based on the default sort order stored in meta_tables.
+        - ``sep`` -- a character (default ``|``) to separate columns in
+            the temp file used to move data
         """
         self._check_locks()
         if self.extra_table is not None:
@@ -4231,9 +4236,9 @@ class PostgresTable(PostgresBase):
                         transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
                         cur = self._db.cursor()
                         with transfer_file:
-                            cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
+                            cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns, sep=sep)
                         with open(transfer_file.name) as F:
-                            cur.copy_from(F, self.extra_table, columns=['id'] + columns)
+                            cur.copy_from(F, self.extra_table, columns=['id'] + columns, sep=sep)
                     finally:
                         transfer_file.unlink(transfer_file.name)
                 except Exception:
@@ -5792,7 +5797,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
-            allcols = sorted(list(set(cols + constraint.keys())))
+            allcols = sorted(list(set(cols + list(constraint.keys()))))
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
@@ -5820,6 +5825,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
+            if buckets == {} and any(isinstance(val, dict) and any(relkey in val for relkey in ['$lt', '$lte', '$gt', '$gte']) for val in values):
+                # For non-bucketed statistics, we don't want to include counts for range queries
+                continue
             for val, header in zip(values, headers):
                 header.append(val)
             D = make_count_dict(values, count)
@@ -6717,6 +6725,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if not os.path.isdir(data_folder):
             raise ValueError(
                     "The path {} is not a directory".format(data_folder))
+        sep = kwds.get("sep", u"|")
         with DelayCommit(self, commit, silence=True):
             file_list = []
             tablenames = []
@@ -6743,7 +6752,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter = "|")]
+                        rows = [line for line in csv.reader(F, delimiter=sep)]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
@@ -6831,7 +6840,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables=included, metafile=filedata[-1])
+                table.reload_final_swap(tables=included, metafile=filedata[-1], sep=sep)
 
         if failures:
             print("Reloaded %s"%(", ".join(tablenames)))

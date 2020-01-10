@@ -21,18 +21,19 @@ AUTHORS:
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import flask
 from flask import render_template, url_for, request, send_file
 import re
 from lmfdb.utils import flash_error
 from sage.all import gcd
 
-import StringIO
+from six import StringIO
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
-from mwf_plot import paintSvgMaass
+from .mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
@@ -51,7 +52,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 met = ['GET', 'POST']
 maxNumberOfResultsToShow = 500
@@ -222,7 +223,7 @@ def render_one_maass_waveform(maass_id, **kwds):
         else:
             res = f.download_text()
 
-        strIO = StringIO.StringIO()
+        strIO = StringIO()
         strIO.write(res)
         strIO.seek(0)
         try:
@@ -256,9 +257,9 @@ def render_one_maass_waveform_wp(info, prec=9):
                      ('Maass Forms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
-        info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
+        info['title'] += r" on \(\Gamma_{0}( %s )\)" % info['MF'].level
         if hasattr(MF, 'R') and MF.R:
-            info['title'] += " with \(R=%s\)" % info['MF'].R
+            info['title'] += r" with \(R=%s\)" % info['MF'].R
 
     # make sure all the expected attributes of a WebMaassForm are actually present
     missing = [attr for attr in ['level', 'dim', 'num_coeff', 'R', 'character'] if not hasattr(MF, attr)]
@@ -300,7 +301,7 @@ def render_one_maass_waveform_wp(info, prec=9):
                                    download='coefficients')) ]
     mwf_logger.debug("count={0}".format(maass_db.count()))
     ch = info['MF'].character
-    s = "\( \chi_{" + str(level) + "}(" + str(ch) + ",\cdot) \)"
+    s = r"\( \chi_{" + str(level) + "}(" + str(ch) + r",\cdot) \)"
     # Q: Is it possible to get the knowls into the properties?
     # A: Not in a nice way and this is not done elsewhere in the LMFDB; the knowls should appear on labels in the template
     # knowls = {'level': 'mf.maass.mwf.level',
@@ -569,4 +570,4 @@ def cande():
 
 
 def conrey_character_name(N, chi):
-    return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"
+    return r"\chi_{" + str(N) + "}(" + str(chi.number()) + r",\cdot)"

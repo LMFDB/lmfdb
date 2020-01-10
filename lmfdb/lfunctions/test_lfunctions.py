@@ -1,4 +1,5 @@
-from LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
+from __future__ import absolute_import
+from .LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):

@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 from six import string_types
 import json
-import inventory_helpers as ih
-import lmfdb_inventory as inv
-import inventory_db_core as idc
-from inventory_db_inplace import update_fields
-from inventory_live_data import get_lockout_state
-from scrape_helpers import check_scrapes_by_coll_id
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
+from .inventory_db_inplace import update_fields
+from .inventory_live_data import get_lockout_state
+from .scrape_helpers import check_scrapes_by_coll_id
 from copy import deepcopy
 from lmfdb.utils import comma
 from lmfdb.backend.database import db
@@ -283,11 +284,11 @@ def validate_edits(diff):
         tmp = diff["diffs"]
         assert(tmp is not None)
     except KeyError as e:
-        raise DiffKeyError(e.message)
+        raise DiffKeyError(e.args[0])
     except (AssertionError, TypeError) as e:
-        raise DiffBadType(e.message)
+        raise DiffBadType(e.args[0])
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
 
     if not isinstance(diff["db"], string_types):
         raise DiffBadType("db")
@@ -303,7 +304,7 @@ def validate_edits(diff):
     except TypeError:
         raise DiffBadType("diffs (not iterable)")
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
     #We want diffs to be specifically an iterable of things each containing item, field, content triplets
 
     try:
@@ -315,9 +316,10 @@ def validate_edits(diff):
             a = diff_item['content']
             assert(a is not None)
     except (TypeError, KeyError) as e:
-        raise DiffBadType("diffs (triplet errors)"+e.message)
+        raise DiffBadType("diffs (triplet errors)" + e.args[0])
     except Exception as e:
-        raise DiffUnknownError(e.message)
+        raise DiffUnknownError(e.args[0])
+
 
 def process_edits(diff):
 #This has to reverse anything we did to display info

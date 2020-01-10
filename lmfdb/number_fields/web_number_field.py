@@ -167,18 +167,18 @@ cyclolookup = {n:label for label,n in cycloinfo.items()}
 cyclolookup[1] = '1.1.1.1'
 cyclolookup[3] = '2.0.3.1'
 cyclolookup[4] = '2.0.4.1'
-for n, label in cyclolookup.items():
-    if n % 2 == 1:
-        cyclolookup[2*n] = label
+for n, label in list(cyclolookup.items()):
+    if n % 2:
+        cyclolookup[2 * n] = label
 
 rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
 for n in [5,8,12]:
     rcyclolookup[n] = '2.2.%s.1'%n
-for n, label in rcyclolookup.items():
-    if n % 2 == 1:
-        rcyclolookup[2*n] = label
+for n, label in list(rcyclolookup.items()):
+    if n % 2:
+        rcyclolookup[2 * n] = label
 
 def na_text():
     return "Not computed"
@@ -208,7 +208,7 @@ def is_fundamental_discriminant(d):
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
-        return '\(\Q\)'
+        return r'\(\Q\)'
     if d == '2':  # quadratic field
         D = ZZ(int(D))
         if r == '0':
@@ -216,9 +216,9 @@ def field_pretty(label):
         # Don't prettify invalid quadratic field labels
         if not is_fundamental_discriminant(D):
             return label
-        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
+        return r'\(\Q(\sqrt{' + str(D if D%4 else D/4) + r'}) \)'
     if label in cycloinfo:
-        return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+        return r'\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
@@ -233,10 +233,10 @@ def field_pretty(label):
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
-                return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
+                labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
+                return r'\(\Q(%s, %s)\)'%(labels[0],labels[1])
     if label in rcycloinfo:
-        return '\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
+        return r'\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
@@ -284,13 +284,13 @@ def nf_knowl_guts(label):
     out += "Global number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += "\(%s\)" % latex(wnf.poly())
+    out += r"\(%s\)" % latex(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        Dfact = "\(%s\)" % str(D)
+        Dfact = r"\(%s\)" % str(D)
     else:
-        Dfact = '%s = \(%s\)' % (str(D),Dfact)
+        Dfact = r'%s = \(%s\)' % (str(D),Dfact)
     out += '<br>Discriminant: '
     out += Dfact
     out += '<br>Signature: '
@@ -406,12 +406,12 @@ class WebNumberField:
         if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
-        t = self._data['galt']
+        t = int(self._data['galois_label'].split('T')[1])
         return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
-        return self._data['galt']
+        return int(self._data['galois_label'].split('T')[1])
 
     # return the Galois group
     def gg(self):
@@ -622,7 +622,7 @@ class WebNumberField:
     def generator_name(self):
         #Add special case code for the generator if desired:
         if self.gen_name=='phi':
-            return '\phi'
+            return r'\phi'
         else:
             return web_latex(self.gen_name)
 
@@ -835,7 +835,7 @@ class WebNumberField:
                         int(LF['e']),
                         int(LF['f']),
                         int(LF['c']),
-                        group_display_knowl(LF['n'], LF['galT']),
+                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
                         LF['t'],
                         LF['u'],
                         LF['slopes']

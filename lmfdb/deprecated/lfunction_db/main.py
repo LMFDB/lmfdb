@@ -1,9 +1,8 @@
 from lmfdb import db
-import flask
-from flask import render_template, request
+from flask import render_template, request, Blueprint
 from lmfdb.utils import Pagination
 
-mod = flask.Blueprint('LfunctionDB', __name__, template_folder="templates")
+mod = Blueprint('LfunctionDB', __name__, template_folder="templates")
 title = "L-function search"
 
 

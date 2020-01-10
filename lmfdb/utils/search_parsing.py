@@ -5,7 +5,7 @@ from six.moves import range
 from six import string_types
 
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
 from sage.all import ZZ, QQ, prod, PolynomialRing
@@ -73,7 +73,7 @@ class SearchParser(object):
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
-                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>"+str(err)+"</span>. %s", inp, name)
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
@@ -479,7 +479,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
-            example = "[2,3] or [3,3]"
+            example = "[6,2] or [32,32]"
         elif exactlength == 1:
             lstr = "list of 1 integer"
             example = "[2]"
@@ -518,10 +518,26 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         if listprocess is not None:
             L = listprocess(L)
         if extractor is not None:
+            # This is currently only used by number field signatures
+            # It assumes degree is fairly simple in the query
             for qf, v in zip(qfield, extractor(L)):
-                if qf in query and query[qf] != v:
-                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
-                query[qf] = v
+                if qf in query:
+                    # If used more generally we should check every modifier
+                    # value -1 is used to force empty search results
+                    if isinstance(query[qf], dict):
+                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                           or ('$gt' in query[qf] and not v > query[qf]['$gt'])
+                           or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
+                           or ('$lt' in query[qf] and not v < query[qf]['$lt'])
+                           or ('$lte' in query[qf] and not v <= query[qf]['$lte'])):
+                            query[qf] = -1
+                        else:
+                            query[qf] = v
+                    else:
+                        if v != query[qf]:
+                            query[qf] = -1 
+                else:
+                    query[qf] = v
         elif split:
             query[qfield] = L
         else:
@@ -581,40 +597,35 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield):
-    from lmfdb.galois_groups.transitive_group import complete_group_codes
+def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
     try:
-        gcs = complete_group_codes(inp)
-        nfield, tfield = qfield
-        if nfield in query:
-            gcs = [t for n,t in gcs if n == query[nfield]]
-            if len(gcs) == 0:
-                raise ValueError("Degree inconsistent with Galois group.")
-            elif len(gcs) == 1:
-                query[tfield] = gcs[0]
-            else:
-                query[tfield] = {'$in': gcs}
+        if list_ok:
+            from lmfdb.galois_groups.transitive_group import complete_group_codes
+            gcs = complete_group_codes(inp)
         else:
-            gcsdict = defaultdict(list)
-            for n,t in gcs:
-                gcsdict[n].append(t)
-            if len(gcsdict) == 1:
-                query[nfield] = n # left over from the loop
-                if len(gcs) == 1:
-                    query[tfield] = t # left over from the loop
-                else:
-                    query[tfield] = {'$in': gcsdict[n]}
-            else:
-                options = []
-                for n, T in gcsdict.items():
-                    if len(T) == 1:
-                        options.append({nfield: n, tfield: T[0]})
-                    else:
-                        options.append({nfield: n, tfield: {'$in': T}})
-                collapse_ors(['$or', options], query)
-    except NameError:
-        raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+            from lmfdb.galois_groups.transitive_group import complete_group_code
+            gcs = complete_group_code(inp.upper())
 
+        galfield, nfield = qfield
+        if nfield and nfield not in query:
+            nvals = list(set([s[0] for s in gcs]))
+            if len(nvals) == 1:
+                query[nfield] = nvals[0]
+            else:
+                query[nfield] = {'$in': nvals}
+        # if nfield was already in the query, we could try to intersect it with nvals
+        cands = ['{}T{}'.format(s[0],s[1]) for s in gcs]
+        if len(cands) == 1:
+            query[galfield] = cands[0]
+        else:
+            query[galfield] = {'$in': cands}
+    except NameError:
+        if re.match(r'^[ACDS]\d+$', inp):
+            raise ValueError("The requested group is not in the database")
+        if err_msg:
+            raise ValueError(err_msg)
+        else:
+            raise ValueError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:

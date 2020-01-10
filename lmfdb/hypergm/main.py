@@ -2,6 +2,7 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
+from __future__ import absolute_import
 import re
 
 from flask import render_template, request, url_for, redirect, abort
@@ -16,7 +17,7 @@ from lmfdb.utils import (
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
-from web_family import WebHyperGeometricFamily
+from .web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
@@ -30,7 +31,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def list2string(li):
     return ','.join([str(x) for x in li])
@@ -184,7 +186,7 @@ def make_t_label(t):
 def get_bread(breads=[]):
     bc = [("Motives", url_for("motive.index")),
           ("Hypergeometric", url_for("motive.index2")),
-          ("$\Q$", url_for(".index"))]
+          (r"$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -261,7 +263,7 @@ def index():
     info = {'count': 50}
     return render_template(
             "hgm-index.html",
-            title="Hypergeometric Motives over $\Q$",
+            title=r"Hypergeometric Motives over $\Q$",
             bread=get_bread(),
             credit=HGM_credit,
             info=info,
@@ -269,7 +271,7 @@ def index():
 
 def hgm_family_circle_plot_data(AB):
     A, B = AB.split("_")
-    from plot import circle_image
+    from .plot import circle_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
@@ -285,7 +287,7 @@ def hgm_family_circle_plot_data(AB):
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
     A, B = AB.split("_")
-    from plot import circle_image
+    from .plot import circle_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = circle_image(A, B)
@@ -295,7 +297,7 @@ def hgm_family_circle_image(AB):
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
     A, B = AB.split("_")
-    from plot import piecewise_linear_image
+    from .plot import piecewise_linear_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_linear_image(A, B)
@@ -305,7 +307,7 @@ def hgm_family_linear_image(AB):
 def hgm_family_constant_image(AB):
     # piecewise constant
     A, B = AB.split("_")
-    from plot import piecewise_constant_image
+    from .plot import piecewise_constant_image
     A = [int(n) for n in A[1:].split(".")]
     B = [int(n) for n in B[1:].split(".")]    
     G = piecewise_constant_image(A, B)
@@ -435,12 +437,12 @@ def render_hgm_webpage(label):
     famhodge = data['famhodge']
     prop2 = [
         ('Label', '%s' % data['label']),
-        ('A', '\(%s\)' % A),
-        ('B', '\(%s\)' % B),
-        ('Degree', '\(%s\)' % data['degree']),
-        ('Weight',  '\(%s\)' % data['weight']),
-        ('Hodge vector',  '\(%s\)' % hodge),
-        ('Conductor', '\(%s\)' % data['cond']),
+        ('A', r'\(%s\)' % A),
+        ('B', r'\(%s\)' % B),
+        ('Degree', r'\(%s\)' % data['degree']),
+        ('Weight',  r'\(%s\)' % data['weight']),
+        ('Hodge vector',  r'\(%s\)' % hodge),
+        ('Conductor', r'\(%s\)' % data['cond']),
     ]
     # Now add factorization of conductor
     Cond = ZZ(data['cond'])
@@ -549,7 +551,7 @@ def random_motive():
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Hypergeometric Motive Data over $\Q$'
+    t = r'Completeness of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
@@ -557,7 +559,7 @@ def completeness_page():
 
 @hypergm_page.route("/Source")
 def how_computed_page():
-    t = 'Source of Hypergeometric Motive Data over $\Q$'
+    t = r'Source of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Source',''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread,
@@ -565,7 +567,7 @@ def how_computed_page():
 
 @hypergm_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Hypergeometric Motives over $\Q$'
+    t = r'Labels for Hypergeometric Motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread,

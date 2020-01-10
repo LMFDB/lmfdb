@@ -97,7 +97,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def hilbert_modular_form_jump(info):
     lab = info['label'].strip()
@@ -386,7 +387,7 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = "\(" + teXify_pol(hecke_pol) + "\)"
+    info['hecke_polynomial'] = r"\(" + teXify_pol(hecke_pol) + r"\)"
 
     if not AL_eigs: # empty list
         if data['level_norm'] == 1: # OK, no bad primes
@@ -487,7 +488,7 @@ def statistics_by_degree(d):
     info = {}
     if not str(d) in counts['degrees']:
         if d==1:
-            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
+            info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
         d = 'bad'

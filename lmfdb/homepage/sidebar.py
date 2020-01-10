@@ -50,7 +50,7 @@ class SideBar(object):
     def __init__(self):
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.toc_dic =  yaml.load(open(os.path.join(_curdir, "sidebar.yaml")), Loader=yaml.FullLoader)
-        self.main_headings = self.toc_dic.keys()
+        self.main_headings = list(self.toc_dic.keys())
         self.main_headings.sort()
         heading = lambda k: linked_name(self.toc_dic[k]['heading'],'heading')
         self.data = [(k,heading(k),self.toc_dic[k]) for k in self.main_headings]

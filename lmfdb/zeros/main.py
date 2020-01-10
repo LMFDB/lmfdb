@@ -1,7 +1,6 @@
-import flask
-from flask import redirect, url_for
+from flask import redirect, url_for, Blueprint
 
-mod = flask.Blueprint('zeros', __name__, template_folder="templates")
+mod = Blueprint('zeros', __name__, template_folder="templates")
 title = "zeros"
 
 
