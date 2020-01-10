@@ -64,7 +64,7 @@ def learnmore_list_remove(matchstring):
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
     if err_args is None:
-        if len(request.args) != 0:
+        if request.args:
             return elliptic_curve_search(request.args)
         else:
             err_args = {}
@@ -133,7 +133,7 @@ def by_conductor(conductor):
     info = to_dict(request.args)
     info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
     info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
-    if len(request.args) > 0:
+    if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
@@ -518,13 +518,12 @@ def download_EC_all(label):
         data_list = [data]
     else:
         data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
-        if len(data_list) == 0:
+        if not data_list:
             return elliptic_curve_jump_error(label, {})
 
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 
 @ec_page.route("/Completeness")

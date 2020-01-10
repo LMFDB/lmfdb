@@ -54,7 +54,7 @@ def learnmore_list_remove(matchstring):
 @rep_galois_modl_page.route("/")
 def rep_galois_modl_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
         dim_list= list(range(1, 11, 1))
