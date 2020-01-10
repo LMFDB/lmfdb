@@ -157,7 +157,7 @@ class ECisog_class(object):
 
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
-                      ('$\Q$', url_for(".rational_elliptic_curves")),
+                      (r'$\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % N, url_for(".by_conductor", conductor=N)),
                       ('%s' % iso, ' ')]
         self.code = {}

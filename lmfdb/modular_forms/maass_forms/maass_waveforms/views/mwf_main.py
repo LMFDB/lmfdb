@@ -257,9 +257,9 @@ def render_one_maass_waveform_wp(info, prec=9):
                      ('Maass Forms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
-        info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
+        info['title'] += r" on \(\Gamma_{0}( %s )\)" % info['MF'].level
         if hasattr(MF, 'R') and MF.R:
-            info['title'] += " with \(R=%s\)" % info['MF'].R
+            info['title'] += r" with \(R=%s\)" % info['MF'].R
 
     # make sure all the expected attributes of a WebMaassForm are actually present
     missing = [attr for attr in ['level', 'dim', 'num_coeff', 'R', 'character'] if not hasattr(MF, attr)]
@@ -301,7 +301,7 @@ def render_one_maass_waveform_wp(info, prec=9):
                                    download='coefficients')) ]
     mwf_logger.debug("count={0}".format(maass_db.count()))
     ch = info['MF'].character
-    s = "\( \chi_{" + str(level) + "}(" + str(ch) + ",\cdot) \)"
+    s = r"\( \chi_{" + str(level) + "}(" + str(ch) + r",\cdot) \)"
     # Q: Is it possible to get the knowls into the properties?
     # A: Not in a nice way and this is not done elsewhere in the LMFDB; the knowls should appear on labels in the template
     # knowls = {'level': 'mf.maass.mwf.level',
@@ -570,4 +570,4 @@ def cande():
 
 
 def conrey_character_name(N, chi):
-    return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"
+    return r"\chi_{" + str(N) + "}(" + str(chi.number()) + r",\cdot)"

@@ -245,8 +245,8 @@ def render_group_webpage(args):
         if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
-            ('Order', '\(%s\)' % order),
-            ('n', '\(%s\)' % data['n']),
+            ('Order', r'\(%s\)' % order),
+            ('n', r'\(%s\)' % data['n']),
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),
