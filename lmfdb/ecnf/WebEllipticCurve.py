@@ -106,7 +106,7 @@ def ideal_from_string(K,s, IQF_format=False):
 def pretty_ideal(I):
     easy = I.number_field().degree()==2 or I.norm()==1
     gens = I.gens_reduced() if easy else I.gens()
-    return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
+    return r"\((" + ",".join([latex(g) for g in gens]) + r")\)"
 
 # HNF of an ideal I in a quadratic field
 
@@ -227,7 +227,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
-        return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
+        return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
 
@@ -385,16 +385,16 @@ class ECNF(object):
 
         # CM and End(E)
         self.cm_bool = "no"
-        self.End = "\(\Z\)"
+        self.End = r"\(\Z\)"
         if self.cm:
             self.rational_cm = K(self.cm).is_square()
             self.cm_sqf = ZZ(self.cm).squarefree_part()
-            self.cm_bool = "yes (\(%s\))" % self.cm
+            self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4
-                self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
+                self.End = r"\(\Z[\sqrt{%s}]\)" % (d4)
             else:
-                self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
+                self.End = r"\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
 
         # Galois images in CM case:
         if self.cm and self.galois_images != '?':
@@ -434,7 +434,7 @@ class ECNF(object):
         if self.tr == 0:
             self.tor_struct_pretty = "Trivial"
         if self.tr == 1:
-            self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
+            self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
 
@@ -590,7 +590,7 @@ class ECNF(object):
         ]
 
         for E0 in self.base_change:
-            self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+            self.friends += [(r'Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
 
         self._code = None # will be set if needed by get_code()
 

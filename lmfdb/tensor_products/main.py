@@ -99,7 +99,7 @@ def show():
 #            friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
 #            info['friends'] = friends
 
-            info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
+            info['eulerproduct'] = r'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
             info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
         except (KeyError,ValueError,RuntimeError,NotImplementedError) as err:

@@ -54,8 +54,8 @@ def index():
         info = {}
         gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
-        gl2_names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
-        sl2_names = gl2_names + ["\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
+        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
+        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
@@ -63,13 +63,13 @@ def index():
         bc_examples.append(('base-change of a newform with rational coefficients',
                          '2.0.4.1-100.2-a',
                          url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='100.2', label_suffix='a'),' (with an associated elliptic curve which is a base-change)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
                          '2.0.4.1-16384.1-d',
                          url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='16384.1', label_suffix='d'),' (with an associated elliptic curve which is not a base-change)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
                          '2.0.3.1-6561.1-b',
                          url_for('.render_bmf_webpage',field_label='2.0.3.1', level_label='6561.1', label_suffix='b'),' (with no associated elliptic curve)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
                          '2.0.7.1-10000.1-b',
                          url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
 
@@ -180,10 +180,10 @@ def bmf_field_dim_table(**args):
     query['field_label'] = field_label
     if gl_or_sl=='gl2_dims':
         info['group'] = 'GL(2)'
-        info['bgroup'] = '\GL(2,\mathcal{O}_K)'
+        info['bgroup'] = r'\GL(2,\mathcal{O}_K)'
     else:
         info['group'] = 'SL(2)'
-        info['bgroup'] = '\SL(2,\mathcal{O}_K)'
+        info['bgroup'] = r'\SL(2,\mathcal{O}_K)'
     if level_flag == 'all':
         query[gl_or_sl] = {'$exists': True}
     else:
