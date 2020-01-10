@@ -93,7 +93,6 @@ class MaassDB(object):
                         return e
             return f.get('Coefficients', None)
 
-        print(cid)
         ff = db.mwf_coeffs.lucky({'label':cid}, 'coefficients')
         if ff is None:
             return None
