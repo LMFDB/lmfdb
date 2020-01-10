@@ -1585,7 +1585,7 @@ class DedekindZeta(Lfunction):
                     myj = j % mycond
                     self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
                                            % (mycond, myj, mycond, myj))
-            elif len(wnf.factor_perm_repn())>0:
+            elif wnf.factor_perm_repn():
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'

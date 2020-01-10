@@ -50,7 +50,7 @@ def index():
     the function bianchi_modular_form_search().
     """
     args = request.args
-    if len(args) == 0:
+    if not args:
         info = {}
         gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]

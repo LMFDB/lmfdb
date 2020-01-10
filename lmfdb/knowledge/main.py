@@ -500,7 +500,7 @@ def demote(ID, timestamp):
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
-    if len(request.args) > 0:
+    if request.args:
         try:
             info = to_dict(request.args)
             beta = None
