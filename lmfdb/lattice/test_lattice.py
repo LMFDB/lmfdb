@@ -6,7 +6,7 @@ class HomePageTest(LmfdbTest):
 
     def check(self,homepage,path,text):
         assert path in homepage
-        assert text in self.tc.get(path).data
+        assert text in self.tc.get(path).get_data(as_text=True)
 
     def check_external(self, homepage, path, text):
         from six.moves.urllib.request import urlopen
@@ -80,7 +80,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
         L = self.tc.get("/Lattice/random", follow_redirects=True)
-        assert 'Normalized minimal vectors' in L.data # check redirection
+        assert 'Normalized minimal vectors' in L.get_data(as_text=True) # check redirection
 
     def test_downloadstring(self):
         L = self.tc.get("/Lattice/5.648.12.1.1").data
@@ -109,11 +109,11 @@ class HomePageTest(LmfdbTest):
             L = self.tc.get(
                     "/Lattice/?label={}".format(elt),
                     follow_redirects=True)
-            assert elt in L.data
+            assert elt in L.get_data(as_text=True)
             L = self.tc.get(
                     "/Lattice/{}".format(elt),
                     follow_redirects=True)
-            assert elt in L.data
+            assert elt in L.get_data(as_text=True)
 
 
 

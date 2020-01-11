@@ -6,7 +6,7 @@ class LfunctionTest(LmfdbTest):
 
     def check(self, homepage, path, text):
         assert path in homepage, "path not in homepage."
-        assert text in self.tc.get(path).data, "text %s not in pathpage %s."%(text, path)
+        assert text in self.tc.get(path).get_data(as_text=True), "text %s not in pathpage %s."%(text, path)
     
     # Testing all links in the home page
 

@@ -5,11 +5,11 @@ from lmfdb.tests import LmfdbTest
 class BelyiTest(LmfdbTest):
     def check_args(self, path, text):
         L = self.tc.get(path, follow_redirects=True)
-        assert text in L.data
+        assert text in L.get_data(as_text=True)
 
     def test_stats(self):
         L = self.tc.get("/Belyi/stats")
-        assert "Galois orbits of Belyi maps" in L.data and "proportion" in L.data
+        assert "Galois orbits of Belyi maps" in L.get_data(as_text=True) and "proportion" in L.data
 
     def test_random(self):
         self.check_args("/Belyi/random", "Monodromy group")
@@ -48,7 +48,7 @@ class BelyiTest(LmfdbTest):
 
     def test_deg_range(self):
         L = self.tc.get("/Belyi/?deg=2-7")
-        assert "5T4-[5,3,3]-5-311-311-g0-a" in L.data
+        assert "5T4-[5,3,3]-5-311-311-g0-a" in L.get_data(as_text=True)
 
     def test_group_search(self):
         self.check_args("/Belyi/?group=7T5", "7T5-[7,7,3]-7-7-331-g2-a")

@@ -18,14 +18,14 @@ class RootTest(LmfdbTest):
 
     def test_root(self):
         root = self.tc.get("/")
-        assert "database" in root.data
+        assert "database" in root.get_data(as_text=True)
 
     def test_robots(self):
         r = self.tc.get("/static/robots.txt")
-        assert "Disallow: /static" in r.data
+        assert "Disallow: /static" in r.get_data(as_text=True)
 
     def test_favicon(self):
-        assert len(self.tc.get("/favicon.ico").data) > 10
+        assert len(self.tc.get("/favicon.ico").get_data(as_text=True)) > 10
 
     def test_javscript(self):
         js = self.tc.get("/static/lmfdb.js").data
@@ -47,7 +47,7 @@ class RootTest(LmfdbTest):
             if "GET" in rule.methods:
                 tc = self.app.test_client()
                 res = tc.get(rule.rule)
-                assert "Database" in res.data, "rule %s failed " % rule
+                assert "Database" in res.get_data(as_text=True), "rule %s failed " % rule
 
     @unittest2.skip("Tests for latex errors, but fails at the moment because of other errors")
     def test_some_latex_error(self):
@@ -59,7 +59,7 @@ class RootTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert not ("Undefined control sequence" in res.data), "rule %s failed" % rule
+                    assert not ("Undefined control sequence" in res.get_data(as_text=True)), "rule %s failed" % rule
                 except KeyError:
                     pass
 

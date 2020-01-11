@@ -3,10 +3,10 @@ from lmfdb.tests import LmfdbTest
 
 class AVTest(LmfdbTest):
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def not_check_args(self, path, text):
-        assert not (text in self.tc.get(path, follow_redirects=True).data)
+        assert not (text in self.tc.get(path, follow_redirects=True).get_data(as_text=True))
 
     # All tests should pass
     def test_polynomial(self):
@@ -124,11 +124,11 @@ class AVTest(LmfdbTest):
         Test downloading on search results page.
         """
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))

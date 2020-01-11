@@ -7,7 +7,7 @@ class BMFTest(LmfdbTest):
 
     def check(self, homepage, path, text):
         assert path in homepage
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def check_args(self, path, text):
         if text in self.tc.get(path, follow_redirects=True).data:
@@ -24,7 +24,7 @@ class BMFTest(LmfdbTest):
         Check that the home page loads
         """
         L = self.tc.get(base_url)
-        assert 'Bianchi modular forms' in L.data
+        assert 'Bianchi modular forms' in L.get_data(as_text=True)
 
     # Link to random newform
     def test_random(self):
@@ -120,10 +120,10 @@ class BMFTest(LmfdbTest):
                     ]:
             L = self.tc.get(url)
             for t in texts:
-                assert t in L.data
-            assert 'L-function' in L.data
+                assert t in L.get_data(as_text=True)
+            assert 'L-function' in L.get_data(as_text=True)
 
             # this test isn't very specific
             # but the goal is to test that itself doesn't show in the friends list
-            assert notitself not in L.data
+            assert notitself not in L.get_data(as_text=True)
 

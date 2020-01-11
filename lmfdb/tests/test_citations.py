@@ -12,28 +12,28 @@ class CitationTest(LmfdbTest):
         Checking /citation page
         '''
         r = self.tc.get('/citation')
-        assert "A list of articles which cite the LMFDB" in r.data
+        assert "A list of articles which cite the LMFDB" in r.get_data(as_text=True)
 
     def test_how_to_cite(self):
         '''
         Checking "How to Cite" /citation/citing
         '''
         r = self.tc.get('/citation/citing')
-        assert "The BibTeX entry is" in r.data
-        assert "To cite a specific page in the LMFDB" in r.data
+        assert "The BibTeX entry is" in r.get_data(as_text=True)
+        assert "To cite a specific page in the LMFDB" in r.get_data(as_text=True)
 
     def test_citation_specific(self):
         '''
         Checking that a known citation appears in /citation/citations list
         '''
         r = self.tc.get('/citation/citations')
-        assert "Thomas&nbsp;A Hulse" in r.data
-        assert "Counting square discriminants" in r.data
+        assert "Thomas&nbsp;A Hulse" in r.get_data(as_text=True)
+        assert "Counting square discriminants" in r.get_data(as_text=True)
 
     def test_cite_bib(self):
         '''
         Checking that a known bib is in /citation/citations_bib bibliography
         '''
         r = self.tc.get('/citation/citations_bib')
-        assert "Hulse, Thomas A" in r.data
-        assert "Counting square discriminants" in r.data
+        assert "Hulse, Thomas A" in r.get_data(as_text=True)
+        assert "Counting square discriminants" in r.get_data(as_text=True)

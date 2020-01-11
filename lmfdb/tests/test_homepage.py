@@ -6,7 +6,7 @@ class HomePageTest(LmfdbTest):
 
     def check(self,homepage,path,text):
         assert path in homepage, "%s not in the homepage" % path
-        assert text in self.tc.get(path, follow_redirects=True).data, "%s not in the %s" % (text, path)
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True), "%s not in the %s" % (text, path)
 
     def check_external(self, homepage, path, text):
         from six.moves.urllib.request import urlopen

@@ -11,7 +11,7 @@ class HomePageTest(LmfdbTest):
 
     def check(self,homepage,path,text):
         assert path in homepage
-        assert text in self.tc.get(path).data
+        assert text in self.tc.get(path).get_data(as_text=True)
 
     def check_external(self, homepage, path, text):
         headers = {'User-Agent': 'Mozilla/5.0'}

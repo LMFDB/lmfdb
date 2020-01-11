@@ -3,10 +3,10 @@ from lmfdb.tests import LmfdbTest
 
 class AVHomeTest(LmfdbTest):
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def not_check_args(self, path, text):
-        assert not (text in self.tc.get(path, follow_redirects=True).data)
+        assert not (text in self.tc.get(path, follow_redirects=True).get_data(as_text=True))
 
     # All tests should pass
     # TODO test link to random isogeny class
