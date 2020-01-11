@@ -89,7 +89,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the plot of the Newton polygon is included and computed correctly
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
         # The following is part of the base64 encoded image of the Newton
         # polygon for this isogeny class.
         assert r"data:image/png;base64,iVBORw0KGgo" in page
@@ -98,7 +98,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the plot showing the roots of the Weil polynomial displays correctly
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
         # The following is part of the base64 encoded image of the circle plot
         # for this isogeny class.
         assert r"data:image/png;base64,iVBORw0KGgo" in page
@@ -107,7 +107,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the property box displays.
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data.replace("\n", "").replace(" ", "")
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True).replace("\n", "").replace(" ", "")
         assert '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
         assert '<tdclass="label">BaseField</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
         self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
@@ -116,7 +116,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the Frobenius angles are split into multiple math elements
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
         assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page
 
     def test_av_download(self):

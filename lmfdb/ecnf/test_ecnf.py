@@ -127,7 +127,7 @@ class EllCurveTest(LmfdbTest):
                      'Isogeny class 2.2.44.1-16.1-a',
                      'Isogeny class 2.2.44.1-16.1-c',
                      'L-function'])]:
-            L = self.tc.get(url).data
+            L = self.tc.get(url).get_data(as_text=True)
             for t in text:
                 assert t in L
 

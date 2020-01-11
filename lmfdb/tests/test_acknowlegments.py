@@ -24,18 +24,18 @@ class HomePageTest(LmfdbTest):
     #
     # The acknowledgments page
     def test_acknowledgements(self):
-        homepage = self.tc.get("/acknowledgment").data
+        homepage = self.tc.get("/acknowledgment").get_data(as_text=True)
         assert 'American Institute of Mathematics' in homepage
 
     #
     # Link to workshops page
     def test_workshops(self):
-        homepage = self.tc.get("/acknowledgment/activities").data
+        homepage = self.tc.get("/acknowledgment/activities").get_data(as_text=True)
         assert 'Computational Aspects of the Langlands Program' in homepage
     #
     # External Links on workshops page
     def test_workshoplinks(self):
-        homepage = self.tc.get("/acknowledgment/activities").data
+        homepage = self.tc.get("/acknowledgment/activities").get_data(as_text=True)
         self.check_external(homepage,
                 "http://people.oregonstate.edu/~swisherh/CRTNTconference/index.html",
                 'Galois')

@@ -282,7 +282,7 @@ class Genus2Test(LmfdbTest):
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
                 ]:
-            data = self.tc.get(url).data
+            data = self.tc.get(url).get_data(as_text=True)
             for friend in friends:
                 assert friend in data
 

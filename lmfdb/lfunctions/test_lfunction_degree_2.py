@@ -14,7 +14,7 @@ class LfunctionTest(LmfdbTest):
         r"""
         Check that the links in the /L/degree2/ table work.
         """
-        homepage = self.tc.get("/L/degree2/").data
+        homepage = self.tc.get("/L/degree2/").get_data(as_text=True)
         self.check(homepage,
                    "/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032",
                    'Maass')

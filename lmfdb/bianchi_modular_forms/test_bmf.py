@@ -31,7 +31,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check that the link to a random curve works.
         """
-        homepage = self.tc.get(base_url).data
+        homepage = self.tc.get(base_url).get_data(as_text=True)
         self.check(homepage, base_url+"random", 'Hecke eigenvalues')
 
     # Browsing links
@@ -39,7 +39,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check that the browsing links work.
         """
-        homepage = self.tc.get(base_url).data
+        homepage = self.tc.get(base_url).get_data(as_text=True)
         t = "?field_label=2.0.3.1"
         assert t in homepage
         self.check_args(base_url+t, "/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/124.1/a/")
