@@ -25,7 +25,7 @@ class RootTest(LmfdbTest):
         assert "Disallow: /static" in r.get_data(as_text=True)
 
     def test_favicon(self):
-        assert len(self.tc.get("/favicon.ico").get_data(as_text=True)) > 10
+        assert len(self.tc.get("/favicon.ico").get_data()) > 10
 
     def test_javscript(self):
         js = self.tc.get("/static/lmfdb.js").data
