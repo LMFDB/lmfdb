@@ -144,6 +144,6 @@ class EllCurveTest(LmfdbTest):
 
         L = self.tc.get('EllipticCurve/Q/990h/')
         #print row
-        #print L.data
+        #print L.get_data(as_text=True)
         self.assertTrue(row in L.get_data(as_text=True),
                         "990h appears to have the wrong optimal curve.")

@@ -14,7 +14,7 @@ class BMFTest(LmfdbTest):
             assert True
         else:
             print(text)
-            print(self.tc.get(path, follow_redirects=True).data)
+            print(self.tc.get(path, follow_redirects=True).get_data(as_text=True))
             assert False
 
     # All tests should pass
