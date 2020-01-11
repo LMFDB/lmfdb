@@ -6,7 +6,7 @@ class EllCurveTest(LmfdbTest):
 
     def check_args_with_timeout(self, path, text):
         timeout_error = 'The search query took longer than expected!'
-        data = self.tc.get(path, follow_redirects=True).data
+        data = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
         assert (text in data) or (timeout_error in data)
 
     # All tests should pass
@@ -28,13 +28,13 @@ class EllCurveTest(LmfdbTest):
 
     def test_Cremona_label_mal(self):
         L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
-        assert '12qx' in L.get_data(as_text=True) and 'does not define a recognised elliptic curve' in L.data
+        assert '12qx' in L.get_data(as_text=True) and 'does not define a recognised elliptic curve' in L.get_data(as_text=True)
 
     def test_missing_curve(self):
         L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
-        assert '13.a1' in L.get_data(as_text=True) and 'No curve' in L.data
+        assert '13.a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
-        assert '13a1' in L.get_data(as_text=True) and 'No curve' in L.data
+        assert '13a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -144,6 +144,6 @@ class EllCurveTest(LmfdbTest):
 
         L = self.tc.get('EllipticCurve/Q/990h/')
         #print row
-        #print L.data
+        #print L.get_data(as_text=True)
         self.assertTrue(row in L.get_data(as_text=True),
                         "990h appears to have the wrong optimal curve.")

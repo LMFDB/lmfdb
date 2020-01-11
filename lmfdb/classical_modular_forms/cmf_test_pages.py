@@ -23,15 +23,15 @@ class CMFTest(LmfdbTest):
             load = time.time() - now
             k = int(label.split(".")[1])
             if k > 1:
-                assert label in page.data
+                assert label in page.get_data(as_text=True)
                 if dim <= 80:
-                    assert 'L-function %s' % label in page.data
-                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
-                assert 'Analytic rank' in page.data
+                    assert 'L-function %s' % label in page.get_data(as_text=True)
+                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.get_data(as_text=True)
+                assert 'Analytic rank' in page.get_data(as_text=True)
             if dim == 1:
-                assert 'Satake parameters' in page.data
+                assert 'Satake parameters' in page.get_data(as_text=True)
             else:
-                assert 'Embeddings' in page.data
+                assert 'Embeddings' in page.get_data(as_text=True)
             return (load, url)
         except Exception as err:
             print("Error on page " + url)
@@ -85,15 +85,15 @@ class CMFTest(LmfdbTest):
             now = time.time()
             page = self.tc.get(url)
             load = time.time() - now
-            assert 'The following table gives the dimensions of various subspaces of' in page.data
+            assert 'The following table gives the dimensions of various subspaces of' in page.get_data(as_text=True)
             for space in newspaces:
-                assert space['label'] in page.data
+                assert space['label'] in page.get_data(as_text=True)
                 gamma1_dim += space['dim']
             assert gamma1_dim == dim
 
             gamma1_dim = 0
             for form in newforms:
-                assert form['label'] in page.data
+                assert form['label'] in page.get_data(as_text=True)
                 gamma1_dim += form['dim']
             assert gamma1_dim == dim
             res.append((load, url))
@@ -117,10 +117,10 @@ class CMFTest(LmfdbTest):
                 page = self.tc.get(url)
                 load = time.time() - now
                 space_dim = 0
-                assert label in page.data
+                assert label in page.get_data(as_text=True)
                 for nf in newforms:
                     if nf['space_label'] == label:
-                        assert nf['label'] in page.data
+                        assert nf['label'] in page.get_data(as_text=True)
                         space_dim += nf['dim']
                 assert space_dim == dim
                 res.append((load, url))
@@ -140,9 +140,9 @@ class CMFTest(LmfdbTest):
                 now = time.time()
                 page = self.tc.get(url)
                 load = time.time() - now
-                assert "There are no modular forms of weight" in page.data
-                assert "odd" in page.data
-                assert "even" in page.data
+                assert "There are no modular forms of weight" in page.get_data(as_text=True)
+                assert "odd" in page.get_data(as_text=True)
+                assert "even" in page.get_data(as_text=True)
                 res.append((load, url))
             except Exception as err:
                 print("Error on page " + url)

@@ -14,13 +14,13 @@ class CmfTest(LmfdbTest):
         r"""
         Check browsing for elliptic modular forms
         """
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
         assert '?search_type=Dimensions&dim=1' in data
         assert '?search_type=SpaceDimensions&char_order=1' in data
         assert "./stats" in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions",follow_redirects=True).data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions",follow_redirects=True).get_data(as_text=True)
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/23/12/">229</a>' in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions&char_order=1", follow_redirects=True).data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions&char_order=1", follow_redirects=True).get_data(as_text=True)
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">1</a>' in data
 
     def test_stats(self):
@@ -36,17 +36,17 @@ class CmfTest(LmfdbTest):
         assert "character order" in page.get_data(as_text=True)
 
     def test_sidebar(self):
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").get_data(as_text=True)
         assert 'Labels for Classical Modular Forms' in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Completeness").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Completeness").get_data(as_text=True)
         assert "Completeness of Classical Modular Form Data" in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").get_data(as_text=True)
         assert "Reliability of Classical Modular Form Data" in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Source").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Source").get_data(as_text=True)
         assert "Source of Classical Modular Form Data" in data
 
     def test_badp(self):
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").get_data(as_text=True)
         assert '343.1.d.a' in data
         assert '343.2.a.a' in data
         assert '7.7.d.a' in data
@@ -81,7 +81,7 @@ class CmfTest(LmfdbTest):
                         assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     def test_favorite(self):
-        main_page = self.tc.get("/ModularForm/GL2/Q/holomorphic/").data
+        main_page = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
         from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
         for l in favorite_newform_labels:
             for elt, desc in l:
@@ -131,7 +131,7 @@ class CmfTest(LmfdbTest):
         assert "No matches" in page.get_data(as_text=True)
         assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
-        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.data   
+        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)   
 
     def test_delta(self):
         r"""
@@ -550,7 +550,7 @@ class CmfTest(LmfdbTest):
                 ['24.3.h.c'
                     , '[a, -a^2 - 3, a^2]'],
                 ]:
-            sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).data
+            sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).get_data(as_text=True)
             assert "make_data" in sage_code
             assert "aps_data" in sage_code
             sage_code += "\n\nout = str(make_data().list()[2:5])\n"
@@ -634,7 +634,7 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
                 makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
                 assert makenewform  in page.get_data(as_text=True)
-                magma_code = page.data + '\n' + '%s();\n' % makenewform
+                magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
                 assert expected == magma_free(magma_code)
 
             for label, expected in [['24.3.h.a',
@@ -653,7 +653,7 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
                 makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
                 assert makenewform  in page.get_data(as_text=True)
-                magma_code = page.data + '\n' + '%s();\n' % makenewform
+                magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
                 assert expected == magma_free(magma_code)
 
         except socket.timeout as err:

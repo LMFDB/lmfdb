@@ -28,12 +28,12 @@ class RootTest(LmfdbTest):
         assert len(self.tc.get("/favicon.ico").get_data()) > 10
 
     def test_javscript(self):
-        js = self.tc.get("/static/lmfdb.js").data
+        js = self.tc.get("/static/lmfdb.js").get_data(as_text=True)
         # click handler def for knowls
         assert r"""$("body").on("click", "*[knowl]", debounce(knowl_handle,500, true));""" in js
 
     def test_css(self):
-        css = self.tc.get("/style.css").data
+        css = self.tc.get("/style.css").get_data(as_text=True)
         # def for knowls:
         assert '*[knowl]' in css
         assert 'border-bottom: 1px dotted' in css

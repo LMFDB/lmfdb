@@ -9,19 +9,19 @@ class SatoTateGroupTest(LmfdbTest):
     #
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
-        assert 'Browse' in L.get_data(as_text=True) and 'SO(1)' in L.data and 'U(1)_2' in L.data  and 'SU(2)' in L.data and 'Rational' in L.data
+        assert 'Browse' in L.get_data(as_text=True) and 'SO(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/?label=1.4.10.1.1a', follow_redirects=True)
-        assert 'USp(4)' in L.get_data(as_text=True) and '223412' in L.data
+        assert 'USp(4)' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)', follow_redirects=True)
-        assert '1.4.10.1.1a' in L.get_data(as_text=True) and '223412' in L.data
+        assert '1.4.10.1.1a' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))', follow_redirects=True)
-        assert '1.2.1.2.1a' in L.get_data(as_text=True) and '462' in L.data
+        assert '1.2.1.2.1a' in L.get_data(as_text=True) and '462' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=0.1.37', follow_redirects=True)
-        assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.data
+        assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
-        assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.data
+        assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(100000000000000000001)', follow_redirects=True)
         assert 'too large' in L.get_data(as_text=True)
 
@@ -59,7 +59,7 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_subgroups(self):
         L = self.tc.get('/SatoTateGroup/1.4.1.6.1a')
-        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.data and 'D_{6,1}' in L.data and 'D_6' in L.data and 'J(D_3)' in L.data and 'O' in L.data
+        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True) and 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
 
     def test_event_probabilities(self):
         L = self.tc.get('/SatoTateGroup/1.4.1.48.48a')
@@ -76,7 +76,7 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
-            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.data
+            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.get_data(as_text=True)
         data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(4)}, projection='label'))
@@ -86,9 +86,9 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
-            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.data
+            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
-        assert 'unique match'  in L.get_data(as_text=True) and 'mu(999999999)' in L.data
+        assert 'unique match'  in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
 
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
