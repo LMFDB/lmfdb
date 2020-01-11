@@ -10,7 +10,7 @@ class BMFTest(LmfdbTest):
         assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def check_args(self, path, text):
-        if text in self.tc.get(path, follow_redirects=True).data:
+        if text in self.tc.get(path, follow_redirects=True).get_data(as_text=True):
             assert True
         else:
             print(text)

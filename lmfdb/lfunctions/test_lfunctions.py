@@ -20,10 +20,10 @@ class LfunctionTest(LmfdbTest):
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/')
-        assert '0.4813597783' in L.get_data(as_text=True) and 'mu(9)' in L.data
+        assert '0.4813597783' in L.get_data(as_text=True) and 'mu(9)' in L.get_data(as_text=True)
         assert '2.13818063440820276534' in L.get_data(as_text=True)
         L = self.tc.get('/L/Character/Dirichlet/6400/3/')
-        assert '2.131285033' in L.get_data(as_text=True) in L.data and 'mu(320)' in L.data
+        assert '2.131285033' in L.get_data(as_text=True) in L.get_data(as_text=True) and 'mu(320)' in L.get_data(as_text=True)
         assert '3.1381043104275982' in L.get_data(as_text=True)
         L = self.tc.get('/L/Character/Dirichlet/17/16/')
         assert '1.01608483' in L.get_data(as_text=True)
@@ -32,7 +32,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Character/Dirichlet/6400/6399/')
         assert 'is imprimitive' in L.get_data(as_text=True)
         L = self.tc.get('L/Character/Dirichlet/1000000000/3/')
-        assert 'No L-function data' in L.get_data(as_text=True) and 'found in the database' in L.data
+        assert 'No L-function data' in L.get_data(as_text=True) and 'found in the database' in L.get_data(as_text=True)
         L = self.tc.get('L/Character/Dirichlet/1000000000000000000000/3/')
         assert 'too large' in L.get_data(as_text=True)
 
@@ -55,7 +55,7 @@ class LfunctionTest(LmfdbTest):
         assert '4.043044013797' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/Q/379998/d/')
-        assert '9.364311197' in L.get_data(as_text=True) and 'Isogeny class 379998.d' in L.data and '/SatoTateGroup/1.2.' in L.data
+        assert '9.364311197' in L.get_data(as_text=True) and 'Isogeny class 379998.d' in L.get_data(as_text=True) and '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/379998/d/')
         assert '0.8292065891985' in L.get_data(as_text=True)
 
@@ -178,7 +178,7 @@ class LfunctionTest(LmfdbTest):
         assert '18.17341115038590061946085869072' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/')
-        assert '0.523757' in L.get_data(as_text=True) and '0.530517' in L.data
+        assert '0.523757' in L.get_data(as_text=True) and '0.530517' in L.get_data(as_text=True)
         assert '(16 + 27.7<em>i</em>)' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/')
@@ -360,7 +360,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/NumberField/5.5.2337227518904161.1/')
         assert '3718837' in L.get_data(as_text=True)
         L = self.tc.get('L/NumberField/14.14.28152039412241052225421312.1/')
-        assert 'chi_{172}' in L.get_data(as_text=True) and 'chi_{43}' in L.data
+        assert 'chi_{172}' in L.get_data(as_text=True) and 'chi_{43}' in L.get_data(as_text=True)
 
     def test_Ldedekindabelian(self):
         L = self.tc.get('/L/NumberField/3.3.81.1/')
@@ -378,25 +378,25 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lmain(self):
         L = self.tc.get('/L/', follow_redirects=True)
-        assert 'Riemann' in L.get_data(as_text=True) and 'modular form' in L.data
+        assert 'Riemann' in L.get_data(as_text=True) and 'modular form' in L.get_data(as_text=True)
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
-        assert 'Dirichlet L-function' in L.get_data(as_text=True) and 'Conductor range' in L.data and 'Primitive Dirichlet character' in L.data
+        assert 'Dirichlet L-function' in L.get_data(as_text=True) and 'Conductor range' in L.get_data(as_text=True) and 'Primitive Dirichlet character' in L.get_data(as_text=True)
 
     def test_Ldegree2(self):
         L = self.tc.get('/L/degree2/')
-        assert '1.73353' in L.get_data(as_text=True) and '/EllipticCurve/Q/234446/a' in L.data
-        assert '17.02494' in L.get_data(as_text=True) and '/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032' in L.data
+        assert '1.73353' in L.get_data(as_text=True) and '/EllipticCurve/Q/234446/a' in L.get_data(as_text=True)
+        assert '17.02494' in L.get_data(as_text=True) and '/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032' in L.get_data(as_text=True)
 
     def test_Ldegree3(self):
         L = self.tc.get('/L/degree3/')
-        assert '6.42223' in L.get_data(as_text=True) and '/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864' in L.data
+        assert '6.42223' in L.get_data(as_text=True) and '/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864' in L.get_data(as_text=True)
 
     def test_Ldegree4(self):
         L = self.tc.get('/L/degree4/')
-        assert '5.06823' in L.get_data(as_text=True) and '/Genus2Curve/Q/169/a/' in L.data
-        assert '16.18901' in L.get_data(as_text=True) and '2.272' in L.data and '/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019' in L.data
+        assert '5.06823' in L.get_data(as_text=True) and '/Genus2Curve/Q/169/a/' in L.get_data(as_text=True)
+        assert '16.18901' in L.get_data(as_text=True) and '2.272' in L.get_data(as_text=True) and '/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019' in L.get_data(as_text=True)
 
     def test_LdegreeLarge(self):
         L = self.tc.get('L/degree1234567689/')
@@ -436,7 +436,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lgenus2(self):
         L = self.tc.get('/L/Genus2Curve/Q/169/a/')
-        assert '0.0904903908' in L.get_data(as_text=True) and 'E_6' in L.data
+        assert '0.0904903908' in L.get_data(as_text=True) and 'E_6' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/')
         assert '5.06823463541' in L.get_data(as_text=True)

@@ -131,7 +131,7 @@ class CmfTest(LmfdbTest):
         assert "No matches" in page.get_data(as_text=True)
         assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
-        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.data   
+        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)   
 
     def test_delta(self):
         r"""
