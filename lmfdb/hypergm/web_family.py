@@ -128,11 +128,10 @@ class WebHyperGeometricFamily(object):
     def bezout_latex(self):
         return latex(self.bezout)
 
-
     @lazy_attribute
     def bezout_module(self):
         l2 = [a for a in self.snf if a > 1]
-        if l2 == []:
+        if not l2:
             return 'C_1'
         fa = [ZZ(a).factor() for a in l2]
         eds = []
@@ -145,7 +144,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def type(self):
-        if (self.weight % 2) == 1 and (self.degree % 2) == 0:
+        if (self.weight % 2) and (self.degree % 2) == 0:
             return 'Symplectic'
         else:
             return 'Orthogonal'

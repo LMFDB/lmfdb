@@ -76,7 +76,7 @@ class CMFTest(LmfdbTest):
         if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
-            assert newforms == []
+            assert not(newforms)
             return []
 
         try:
@@ -185,7 +185,7 @@ class CMFTest(LmfdbTest):
                 else:
                     res.extend(o)
 
-        if errors == []:
+        if not errors:
             print("No errors while running the tests!")
         else:
             print("Unexpected errors occurring while running:")
@@ -197,8 +197,8 @@ class CMFTest(LmfdbTest):
         working_urls.sort(key= lambda elt: elt[0])
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
-        if broken_urls == []:
-            print("All the pages passed the tets")
+        if not broken_urls:
+            print("All the pages passed the tests")
             if total > 0:
                 print("Average loading time: %.2f" % (sum(just_times)/total,))
                 print("Min: %.2f Max %.2f" % (just_times[0], just_times[-1]))
