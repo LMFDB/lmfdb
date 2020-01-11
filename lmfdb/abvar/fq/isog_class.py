@@ -318,7 +318,7 @@ class AbvarFq_isoclass(object):
         # When degree > 1 we find the factorization by looking at the extension database
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
-            if factors == []:
+            if not factors:
                 return "The data at degree %s is missing." % degree, do_describe
             ans = "The base change of $A$ to ${0}$ is ".format(self.ext_field(degree))
         else:

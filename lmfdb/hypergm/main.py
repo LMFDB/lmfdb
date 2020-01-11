@@ -143,9 +143,10 @@ def cyc_to_QZ(A):
 def ab_label(A, B):
     return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
 
+
 def list2Cnstring(li):
     l2 = [a for a in li if a>1]
-    if l2 == []:
+    if not l2:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
     eds = []
@@ -156,8 +157,9 @@ def list2Cnstring(li):
     l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
 
+
 def showlist(li):
-    if len(li)==0:
+    if not li:
         return r'[\ ]'
     return li
 
