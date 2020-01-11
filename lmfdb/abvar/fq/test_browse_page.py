@@ -16,28 +16,28 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that the Variety/Abelian/Fq index page works
         """
-        homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
+        homepage = self.tc.get("/Variety/Abelian/Fq/").data
         assert "Some interesting isogeny classes" in homepage
 
     def test_completeness_page(self):
         r"""
         Check that Variety/Abelian/Fq/Completeness works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Completeness").get_data(as_text=True)
+        page = self.tc.get("/Variety/Abelian/Fq/Completeness").data
         assert "the collection of isogeny classes is complete" in page
 
     def test_further_completeness_page(self):
         r"""
         Check that Variety/Abelian/Fq/Source works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Source").get_data(as_text=True)
+        page = self.tc.get("/Variety/Abelian/Fq/Source").data
         assert "characteristic polynomial" in page
 
     def test_labels_page(self):
         r"""
         Check that Variety/Abelian/Fq/Labels works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Labels").get_data(as_text=True)
+        page = self.tc.get("/Variety/Abelian/Fq/Labels").data
         assert "label format" in page
 
     # Various searches
@@ -115,7 +115,7 @@ class AVHomeTest(LmfdbTest):
         Check that we can search by newton polygon
         """
         # [0,1] from browse page
-        self.check_args("/Variety/Abelian/Fq/?newton_polygon=%5B0%2C1%5D", "1.2.a")
+        self.check_args("/Variety/Abelian/Fq/?newton_polygon=%5B0%2C1%5D", "1.2.ab")
         # 1/3 from browse page, doesn't currently work
         self.check_args("/Variety/Abelian/Fq/?newton_polygon=1%2F3", "You cannot specify slopes on their own")
         # 1/5 from refine search, doesn't currently work
@@ -162,7 +162,7 @@ class AVHomeTest(LmfdbTest):
         Check that we can search by decomposition into isogeny factors
         """
         # [3.5.ah_y_ach,*]
-        self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_q")
+        self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_qb")
         self.check_args("/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1", "6.2.ag_p_aw_bh_acu_ey")
         self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "all 5 matches")
 
@@ -189,7 +189,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ad_c_a_")
+        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ad_c_a_b")
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c")
 
     def test_search_princpol(self):
@@ -199,15 +199,15 @@ class AVHomeTest(LmfdbTest):
         # princ polarizable only
         self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ab_f")
         self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ab_f")
-        self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_a")
-        self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_a")
+        self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_ab")
+        self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=yes", "2.5.ac_ab")
         # not princ polariable only
-        self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_a")
-        self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_a")
+        self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_ab")
+        self.check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ac_ab")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ab_f")
         self.not_check_args("/Variety/Abelian/Fq/?q=5&g=2&polarizable=no", "2.5.ab_f")
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_yes", "2.17.ae_a")
+        self.check_args("/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_yes", "2.17.ae_ab")
         self.check_args("/Variety/Abelian/Fq/?q=17&g=2&jacobian=no&polarizable=not_no", "2.17.aj_cc")
         self.check_args("/Variety/Abelian/Fq/?q=3&g=3&jacobian=no&polarizable=not_no", "3.3.ag_v_abs")
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no&polarizable=not_no", "3.2.c_e_g")
@@ -233,7 +233,7 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?q=7&g=1", "1.7.f")
         self.check_args("/Variety/Abelian/Fq/1/7/", "1.7.af")
         # dimension, base field and p-rank
-        self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.ad_")
+        self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.ad_b")
         self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.af_o")
         # dimension, base field and initial coefficients
         self.check_args("/Variety/Abelian/Fq/?q=25&g=2&initial_coefficients=%5B1%2C-13%5D", "2.25.b_an")
