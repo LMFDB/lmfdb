@@ -4,10 +4,10 @@ class HomePageTest(LmfdbTest):
 
     def check(self, homepage, path, text):
         assert path in homepage
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
 
     def check_args_with_timeout(self, path, text):

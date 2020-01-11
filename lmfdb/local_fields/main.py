@@ -120,11 +120,13 @@ def format_lfield(coefmult,p):
         return ''
     return lf_display_knowl(data['label'], name = prettyname(data))
 
+
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
-    if subdata == []:
+    if not subdata:
         return ''
     return display_multiset(subdata, format_lfield, p)
+
 
 # Encode string for rational into our special format
 def ratproc(inp):

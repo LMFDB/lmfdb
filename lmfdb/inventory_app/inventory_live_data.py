@@ -233,12 +233,13 @@ def split_orphans(entry):
         else:
             gone_w_data.append(item)
 
-    if just_gone == []:
+    if not just_gone:
          just_gone = None
-    if gone_w_data == []:
+    if not gone_w_data:
         gone_w_data = None
 
     return {'gone':just_gone, 'orphan':gone_w_data}
+
 
 def check_orphan_empty(entry):
     """Check whether is empty"""

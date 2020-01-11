@@ -570,8 +570,10 @@ def group_alias_table():
 
 
 def complete_group_code(code):
-    if code in aliases:
-        return aliases[code]
+    # Order direct products
+    code1 = 'X'.join(sorted(code.split('X'), reverse=True))
+    if code1 in aliases:
+        return aliases[code1]
     # Try nTj notation
     rematch = re.match(r"^(\d+)T(\d+)$", code)
     if rematch:
@@ -615,6 +617,9 @@ for j in range(1,48):
         aliases['C'+str(j)] = [(j,1)]
 aliases['C32'] = [(32,33)]
 
+# For direct products, factors must be reverse-sorted
+# All nicknames here must be all upper-case
+
 aliases['S1'] = [(1, 1)]
 aliases['A1'] = [(1, 1)]
 aliases['A2'] = [(1, 1)]
@@ -644,7 +649,6 @@ aliases['GL(3,2)'] = [(7, 5)]
 aliases['A7'] = [(7, 6)]
 aliases['S7'] = [(7, 7)]
 aliases['C4XC2'] = [(8, 2)]
-aliases['C2XC4'] = [(8, 2)]
 aliases['C2XC2XC2'] = [(8, 3)]
 aliases['Q8'] = [(8, 5)]
 aliases['D8'] = [(8, 6),(16,7)]
@@ -657,7 +661,6 @@ aliases['S8'] = [(8, 50)]
 aliases['C3XC3'] = [(9, 2)]
 aliases['D9'] = [(9, 3)]
 aliases['S3XC3'] = [(6, 5)]
-aliases['C3XS3'] = [(6, 5)]
 aliases['S3XS3'] = [(6, 9)]
 aliases['M9'] = [(9, 14)]
 aliases['PSL(2,8)'] = [(9, 27)]
@@ -676,7 +679,6 @@ aliases['M11'] = [(11, 6)]
 aliases['A11'] = [(11, 7)]
 aliases['S11'] = [(11, 8)]
 aliases['C6XC2'] = [(12, 2)]
-aliases['C2XC6'] = [(12, 2)]
 aliases['C3:C4'] = [(12, 5)]
 aliases['D12'] = [(12,12)]
 aliases['A12'] = [(12, 300)]
@@ -690,7 +692,6 @@ aliases['S14'] = [(14, 63)]
 aliases['A15'] = [(15, 103)]
 aliases['S15'] = [(15, 104)]
 aliases['Q8XC2'] = [(16, 7)]
-aliases['C2XQ8'] = [(16, 7)]
 aliases['C4:C4'] = [(16, 8)]
 aliases['Q16'] = [(16, 14)]
 aliases['A16'] = [(16, 1953)]
@@ -716,7 +717,6 @@ aliases['F23'] = [(23, 3)]
 aliases['M23'] = [(23, 5)]
 aliases['A23'] = [(23, 6)]
 aliases['S23'] = [(23, 7)]
-aliases['C3XQ8'] = [(24, 4)]
 aliases['Q8XC3'] = [(24, 4)]
 aliases['C3:Q8'] = [(24, 5)]
 aliases['C3:C8'] = [(24, 8)]

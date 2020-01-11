@@ -621,7 +621,7 @@ def render_family(args):
     if 'label' in args:
         label = clean_input(args['label'])
         dataz = list(db.hgcwa_passports.search({'label':label}))
-        if len(dataz) == 0:
+        if not dataz:
             flash_error("No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data = dataz[0]
@@ -706,7 +706,7 @@ def render_passport(args):
     if 'passport_label' in args:
         label = clean_input(args['passport_label'])
         dataz = list(db.hgcwa_passports.search({'passport_label': label}))
-        if len(dataz) == 0:
+        if not dataz:
             bread = get_bread([("Search Error", url_for('.index'))])
             flash_error("No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
