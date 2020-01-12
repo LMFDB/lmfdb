@@ -196,7 +196,7 @@ cellpadding="5";
 Rank not available.
 {% endif %}
 {% else %}
-<b>Rank:</b> \( {{ ec.rank }} \)
+<b>Rank:</b> \( {{ ec.rank }} \)<br>
 {% endif %}
  {{ place_code('rank') }}
 
@@ -221,8 +221,8 @@ Generators:
 {% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
 </p>
 {% endif %}
-{% endif %}
  {{ place_code('gens') }}
+{% endif %}
 
 <p>
 <b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
