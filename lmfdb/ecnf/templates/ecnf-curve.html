@@ -196,9 +196,9 @@ cellpadding="5";
 Rank not available.
 {% endif %}
 {% else %}
-<b>Rank:</b> \( {{ ec.rank }} \)<br>
+<b>Rank:</b> \( {{ ec.rank }} \)
 {% endif %}
- {{ place_code('rank') }}
+<p>{{ place_code('rank') }}</p>
 
 {% if ec.rank_bounds[0] %}
 {% if ec.gens == 'not available' %}
@@ -211,6 +211,7 @@ Generator:
 Generators:
 {% endif %}</b>
 {{ ec.gens }}
+{{ place_code('gens') }}
 </p>
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
@@ -219,9 +220,9 @@ Generators:
 {{ KNOWL('ec.canonical_height', title="Heights") }}:
 {% endif %}</b>
 {% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
+{{ place_code('heights') }}
 </p>
 {% endif %}
- {{ place_code('gens') }}
 {% endif %}
 
 <p>

@@ -60,24 +60,31 @@ rank:
   sage:  E.rank()
   magma: Rank(E);
 
-reg:
-  sage:  E.regulator_of_points(E.gens())
-  magma: Regulator(Generators(E));
-
 gens:
-  sage:  E.gens()
-  magma: Generators(E); // includes torsion
+  sage:  gens = E.gens(); gens
+  magma: |
+         gens := [P:P in Generators(E)|Order(P) eq 0]; gens;
+
+reg:
+  sage:  E.regulator_of_points(gens)
+  magma: Regulator(gens);
+
+heights:
+  sage:  |
+         [P.height():P in gens]
+  magma: |
+         [Height(P):P in gens];
 
 tors:
   sage:  T = E.torsion_subgroup(); T.invariants()
   pari:  T = elltors(E); T[2]
-  magma: T,pi := TorsionSubgroup(E); Invariants(T);
+  magma: T,piT := TorsionSubgroup(E); Invariants(T);
 
 torgens:
   sage:  T.gens()
   pari:  T[3]
   magma: |
-         [pi(P) : P in Generators(T)];
+         [piT(P) : P in Generators(T)];
 
 ntors:
   sage:  T.order()
