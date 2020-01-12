@@ -73,7 +73,7 @@ gens:
   magma: Generators(E); // includes torsion
 
 tors:
-  sage:  E.torsion_subgroup().gens()
+  sage:  E.torsion_subgroup()
   pari:  elltors(E)[2]
   magma: TorsionSubgroup(E);
 
