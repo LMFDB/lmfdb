@@ -228,6 +228,7 @@ Generators:
 <p>
 <b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
 {{ ec.reg }}
+{% if not ec.rank_bounds[0] %} {{ place_code('gens') }} {% endif %}
  {{ place_code('reg') }}
 </p>
 </div>
