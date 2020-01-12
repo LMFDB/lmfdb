@@ -1,6 +1,6 @@
 prompt:
   sage:  'sage'
-  pari:  'gp (2.8)'
+  pari:  'gp'
   magma: 'magma'
 
 logo:
