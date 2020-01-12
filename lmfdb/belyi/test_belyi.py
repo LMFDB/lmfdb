@@ -3,10 +3,6 @@ from lmfdb.tests import LmfdbTest
 
 
 class BelyiTest(LmfdbTest):
-    def check_args(self, path, text):
-        L = self.tc.get(path, follow_redirects=True)
-        assert text in L.data
-
     def test_stats(self):
         L = self.tc.get("/Belyi/stats")
         assert "Galois orbits of Belyi maps" in L.data and "proportion" in L.data

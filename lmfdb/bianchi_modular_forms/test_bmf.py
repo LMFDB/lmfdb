@@ -4,19 +4,6 @@ from lmfdb.tests import LmfdbTest
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 
 class BMFTest(LmfdbTest):
-
-    def check(self, homepage, path, text):
-        assert path in homepage
-        assert text in self.tc.get(path, follow_redirects=True).data
-
-    def check_args(self, path, text):
-        if text in self.tc.get(path, follow_redirects=True).data:
-            assert True
-        else:
-            print(text)
-            print(self.tc.get(path, follow_redirects=True).data)
-            assert False
-
     # All tests should pass
     #
     def test_home_page(self):

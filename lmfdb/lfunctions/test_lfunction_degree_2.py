@@ -3,11 +3,6 @@
 from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
-
-    def check(self, homepage, path, text):
-        assert path in homepage, "path not in homepage."
-        assert text in self.tc.get(path).data, "text %s not in pathpage %s."%(text, path)
-    
     # Testing all links in the home page
 
     def test_table(self):

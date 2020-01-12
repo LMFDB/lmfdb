@@ -3,12 +3,6 @@ from lmfdb.tests import LmfdbTest
 
 
 class EllCurveTest(LmfdbTest):
-
-    def check_args_with_timeout(self, path, text):
-        timeout_error = 'The search query took longer than expected!'
-        data = self.tc.get(path, follow_redirects=True).data
-        assert (text in data) or (timeout_error in data)
-
     # All tests should pass
     #
     def test_int_points(self):
