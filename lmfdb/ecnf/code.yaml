@@ -71,7 +71,7 @@ reg:
 
 heights:
   sage:  |
-         [P.height():P in gens]
+         [P.height() for P in gens]
   magma: |
          [Height(P):P in gens];
 
