@@ -42,7 +42,7 @@ class LmfdbTest(unittest2.TestCase):
 
     def not_check_args(self, path, text):
         assert not (
-            text in self.tc.get(path, follow_redirects=True).data
+            text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
         ), "%s in the %s" % (text, path)
 
     def check_external(self, homepage, path, text):
