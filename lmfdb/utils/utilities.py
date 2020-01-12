@@ -1176,7 +1176,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    from StringIO import StringIO
+    from six import StringIO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
     from six.moves.urllib_parse import quote
