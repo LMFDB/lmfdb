@@ -1,37 +1,33 @@
 prompt:
-  sage:   'sage'
-  pari:   'gp (2.8)'
-  magma:  'magma'
+  sage:  'sage'
+  pari:  'gp (2.8)'
+  magma: 'magma'
 
 logo:
-  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  sage:  <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari:  <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
   magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
 
 not-implemented:
-  sage: |
+  sage:  |
     # (not yet implemented)
-  pari: |
+  pari:  |
     \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
 
 field:
-  sage: x = polygen(QQ);  K.<a> = NumberField(%s)
-  pari: K = nfinit(%s);
+  sage:  x = polygen(QQ);  K.<a> = NumberField(%s)
+  pari:  K = nfinit(%s);
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
 
 curve:
-  sage: |
-    E = EllipticCurve(K, %s)
-  pari: |
-    E = ellinit(%s,K)
-  magma: |
-    E := ChangeRing(EllipticCurve(%s),K);
+  sage:  E = EllipticCurve(K, %s)
+  pari:  E = ellinit(%s,K)
+  magma: E := ChangeRing(EllipticCurve(%s),K);
 
 is_min:
-  sage: |
-    E.is_global_minimal_model()
+  sage:  E.is_global_minimal_model()
 
 cond:
   sage:  E.conductor()
@@ -73,24 +69,21 @@ gens:
   magma: Generators(E); // includes torsion
 
 tors:
-  sage:  E.torsion_subgroup()
-  pari:  elltors(E)[2]
-  magma: TorsionSubgroup(E);
+  sage:  T = E.torsion_subgroup(); T.invariants()
+  pari:  T = elltors(E); T[2]
+  magma: T,pi := TorsionSubgroup(E); Invariants(T);
 
 torgens:
-  sage:  E.torsion_subgroup().gens()
-  pari:  elltors(E)[3]
+  sage:  T.gens()
+  pari:  T[3]
   magma: |
-    [f(P): P in Generators(T)] where T,f:=TorsionSubgroup(E);
+         [pi(P) : P in Generators(T)];
 
 ntors:
-  sage:  E.torsion_order()
-  pari:  elltors(E)[1]
-  magma: Order(TorsionSubgroup(E));
-
+  sage:  T.order()
+  pari:  T[3]
+  magma: Order(T);
 
 localdata:
-  sage:
-    E.local_data()
-  magma:
-    LocalInformation(E);
+  sage:  E.local_data()
+  magma: LocalInformation(E);

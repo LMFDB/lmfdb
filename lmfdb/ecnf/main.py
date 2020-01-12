@@ -688,8 +688,8 @@ def ecnf_code_download(**args):
     return response
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank', 'ntors',
-                     'gens', 'reg', 'tors', 'torgens', 'localdata']
+                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
+                     'gens', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
 code_names = {'field': 'Define the base number field',
               'curve': 'Define the curve',
