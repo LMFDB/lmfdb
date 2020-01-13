@@ -688,8 +688,8 @@ def ecnf_code_download(**args):
     return response
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank', 'ntors',
-                     'gens', 'reg', 'tors', 'torgens', 'localdata']
+                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
+                     'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
 code_names = {'field': 'Define the base number field',
               'curve': 'Define the curve',
@@ -703,6 +703,7 @@ code_names = {'field': 'Define the base number field',
               'rank': 'Compute the Mordell-Weil rank',
               'ntors': 'Compute the order of the torsion subgroup',
               'gens': 'Compute the generators (of infinite order)',
+              'heights': 'Compute the heights of the generators (of infinite order)',
               'reg': 'Compute the regulator',
               'tors': 'Compute the torsion subgroup',
               'torgens': 'Compute the generators of the torsion subgroup',
