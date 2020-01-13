@@ -312,7 +312,7 @@ function populateEditorPage(blockList, startVisible=true){
     fieldDiv = document.createElement('div');
     fieldDiv.id = fields[i];
     fieldDiv.class = 'collapser';
-    headerDiv = document.createElement('div');
+    var headerDiv = document.createElement('div');
     headerDiv.id = 'Header'+id_delimiter+id;
     headerDiv.class = 'header';
     var butt = createCollapserButt(id, open=startVisible);
@@ -331,8 +331,8 @@ function populateEditorPage(blockList, startVisible=true){
     for(var blockId in blocks){
       block = blockList.getBlock(blocks[blockId]);
       if(block){
-        locked = !isEditable(block.key);
-        item = createItemDiv(block.fieldname, block.key, block.special, locked);
+        var locked = !isEditable(block.key);
+        var item = createItemDiv(block.fieldname, block.key, block.special, locked);
         fieldDiv.appendChild(item);
       }
     }
@@ -450,7 +450,7 @@ function toggleTypePopup(box_id, data){
   var box = document.getElementById(box_id);
   if(!box) return;
 
-  has_selectors = (document.getElementsByName(box_id + "_drop")).length > 0;
+  var has_selectors = (document.getElementsByName(box_id + "_drop")).length > 0;
   var div;
   if(has_selectors){
     div = document.getElementById(box_id+'_drop');
