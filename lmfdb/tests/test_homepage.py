@@ -6,7 +6,7 @@ class HomePageTest(LmfdbTest):
 
     def check(self,homepage,path,text):
         assert path in homepage, "%s not in the homepage" % path
-        assert text in self.tc.get(path, follow_redirects=True).data, "%s not in the %s" % (text, path)
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True), "%s not in the %s" % (text, path)
 
     def check_external(self, homepage, path, text):
         from six.moves.urllib.request import urlopen
@@ -20,7 +20,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 1 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/L/degree2/", '9.53369')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
         # self.check(homepage, "/ModularForm/GL2/Q/Maass/",  'The database contains 16599 Maass forms')
@@ -33,7 +33,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 2 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage,"/L/Riemann/",  'Pole at \(s=1\)')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
@@ -46,7 +46,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 3 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/L/", 'Dirichlet')
         self.check(homepage, "/L/", 'Symmetric square')
         self.check(homepage, "/L/", 'Genus 2 curve')
@@ -59,7 +59,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 4 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/L/degree4/MaassForm/", 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1')
         self.check(homepage, "/EllipticCurve/Q/102/c/", r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8')
 
@@ -68,7 +68,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 5 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/universe", 'universe')
         # removed in PR #1167
         #self.check(homepage, "/knowledge/", 'Recently modified Knowls')
@@ -78,7 +78,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the links in Box 6 work.
         """
-        homepage = self.tc.get("/").data
+        homepage = self.tc.get("/").get_data(as_text=True)
         self.check_external(homepage, "https://github.com/LMFDB/lmfdb", 'Modular Forms Database')
         # I could not get this one to work - AVS
         #self.check_external(homepage, "http://www.sagemath.org/", 'mathematics software system')

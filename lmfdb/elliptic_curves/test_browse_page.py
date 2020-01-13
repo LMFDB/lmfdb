@@ -4,15 +4,15 @@ class HomePageTest(LmfdbTest):
 
     def check(self, homepage, path, text):
         assert path in homepage
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
 
     def check_args_with_timeout(self, path, text):
         timeout_error = 'The search query took longer than expected!'
-        data = self.tc.get(path, follow_redirects=True).data
+        data = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
         assert (text in data) or (timeout_error in data)
 
     # All tests should pass
@@ -22,7 +22,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the elliptic curve/Q search & browse page works.
         """
-        homepage = self.tc.get("/EllipticCurve/Q/").data
+        homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
         assert 'Find a specific curve' in homepage
 
     #
@@ -31,7 +31,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the link to the stats page works.
         """
-        homepage = self.tc.get("/EllipticCurve/Q/").data
+        homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
         self.check(homepage, "/EllipticCurve/Q/stats",
                    'Distribution of rank')
 
@@ -41,7 +41,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the link to a random curve works.
         """
-        homepage = self.tc.get("/EllipticCurve/Q/").data
+        homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
         self.check(homepage, "/EllipticCurve/Q/random",
                    'Minimal Weierstrass equation')
 
@@ -51,7 +51,7 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the browsing links work.
         """
-        homepage = self.tc.get("/EllipticCurve/Q/").data
+        homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
         t = "?conductor=100-999"
         assert t in homepage
         self.check_args("/EllipticCurve/Q/%s" % t,

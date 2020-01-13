@@ -5,7 +5,7 @@ class NumberFieldTest(LmfdbTest):
 
     # All tests should pass
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def test_Q(self):
         self.check_args('/NumberField/Q', '\chi_{1}')

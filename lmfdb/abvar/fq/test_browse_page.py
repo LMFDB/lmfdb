@@ -3,10 +3,10 @@ from lmfdb.tests import LmfdbTest
 
 class AVHomeTest(LmfdbTest):
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def not_check_args(self, path, text):
-        assert not (text in self.tc.get(path, follow_redirects=True).data)
+        assert not (text in self.tc.get(path, follow_redirects=True).get_data(as_text=True))
 
     # All tests should pass
     # TODO test link to random isogeny class
@@ -16,28 +16,28 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that the Variety/Abelian/Fq index page works
         """
-        homepage = self.tc.get("/Variety/Abelian/Fq/").data
+        homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
         assert "Some interesting isogeny classes" in homepage
 
     def test_completeness_page(self):
         r"""
         Check that Variety/Abelian/Fq/Completeness works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Completeness").data
+        page = self.tc.get("/Variety/Abelian/Fq/Completeness").get_data(as_text=True)
         assert "the collection of isogeny classes is complete" in page
 
     def test_further_completeness_page(self):
         r"""
         Check that Variety/Abelian/Fq/Source works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Source").data
+        page = self.tc.get("/Variety/Abelian/Fq/Source").get_data(as_text=True)
         assert "characteristic polynomial" in page
 
     def test_labels_page(self):
         r"""
         Check that Variety/Abelian/Fq/Labels works
         """
-        page = self.tc.get("/Variety/Abelian/Fq/Labels").data
+        page = self.tc.get("/Variety/Abelian/Fq/Labels").get_data(as_text=True)
         assert "label format" in page
 
     # Various searches

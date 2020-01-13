@@ -7,14 +7,14 @@ class BMFTest(LmfdbTest):
 
     def check(self, homepage, path, text):
         assert path in homepage
-        assert text in self.tc.get(path, follow_redirects=True).data
+        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
 
     def check_args(self, path, text):
-        if text in self.tc.get(path, follow_redirects=True).data:
+        if text in self.tc.get(path, follow_redirects=True).get_data(as_text=True):
             assert True
         else:
             print(text)
-            print(self.tc.get(path, follow_redirects=True).data)
+            print(self.tc.get(path, follow_redirects=True).get_data(as_text=True))
             assert False
 
     # All tests should pass
@@ -24,14 +24,14 @@ class BMFTest(LmfdbTest):
         Check that the home page loads
         """
         L = self.tc.get(base_url)
-        assert 'Bianchi modular forms' in L.data
+        assert 'Bianchi modular forms' in L.get_data(as_text=True)
 
     # Link to random newform
     def test_random(self):
         r"""
         Check that the link to a random curve works.
         """
-        homepage = self.tc.get(base_url).data
+        homepage = self.tc.get(base_url).get_data(as_text=True)
         self.check(homepage, base_url+"random", 'Hecke eigenvalues')
 
     # Browsing links
@@ -39,7 +39,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check that the browsing links work.
         """
-        homepage = self.tc.get(base_url).data
+        homepage = self.tc.get(base_url).get_data(as_text=True)
         t = "?field_label=2.0.3.1"
         assert t in homepage
         self.check_args(base_url+t, "/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/124.1/a/")
@@ -120,10 +120,10 @@ class BMFTest(LmfdbTest):
                     ]:
             L = self.tc.get(url)
             for t in texts:
-                assert t in L.data
-            assert 'L-function' in L.data
+                assert t in L.get_data(as_text=True)
+            assert 'L-function' in L.get_data(as_text=True)
 
             # this test isn't very specific
             # but the goal is to test that itself doesn't show in the friends list
-            assert notitself not in L.data
+            assert notitself not in L.get_data(as_text=True)
 
