@@ -4,7 +4,7 @@ dist: trusty
 
 env:
   - SAGE_VERSION=8.8
-  - SAGE_VERSION=9.0
+  # - SAGE_VERSION=9.0
 
 # blocklist
 branches:
