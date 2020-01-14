@@ -128,11 +128,10 @@ class WebHyperGeometricFamily(object):
     def bezout_latex(self):
         return latex(self.bezout)
 
-
     @lazy_attribute
     def bezout_module(self):
         l2 = [a for a in self.snf if a > 1]
-        if l2 == []:
+        if not l2:
             return 'C_1'
         fa = [ZZ(a).factor() for a in l2]
         eds = []
@@ -145,7 +144,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def type(self):
-        if (self.weight % 2) == 1 and (self.degree % 2) == 0:
+        if (self.weight % 2) and (self.degree % 2) == 0:
             return 'Symplectic'
         else:
             return 'Orthogonal'
@@ -183,10 +182,10 @@ class WebHyperGeometricFamily(object):
         return [
                 ('Label', self.label),
                 (None, self.plot_link),
-                ('A', '\({}\)'.format(self.A)),
-                ('B', '\({}\)'.format(self.B)),
-                ('Degree', '\({}\)'.format(self.degree)),
-                ('Weight',  '\({}\)'.format(self.weight)),
+                ('A', r'\({}\)'.format(self.A)),
+                ('B', r'\({}\)'.format(self.B)),
+                ('Degree', r'\({}\)'.format(self.degree)),
+                ('Weight',  r'\({}\)'.format(self.weight)),
                 ('Type', self.type)
                 ]
 
@@ -266,7 +265,7 @@ class WebHyperGeometricFamily(object):
     def bread(self):
         return [("Motives", url_for("motive.index")),
                 ("Hypergeometric", url_for("motive.index2")),
-                ("$\Q$", url_for(".index")),
+                (r"$\Q$", url_for(".index")),
                 ('family A = {}, B = {}'.format(str(self.A), str(self.B)), '')]
 
     @lazy_attribute
@@ -326,13 +325,13 @@ class WebHyperGeometricFamily(object):
             else:
                 factors, gal_groups = fG, ""
 
-            factors = make_bigint('\( %s \)' % factors)
+            factors = make_bigint(r'\( %s \)' % factors)
 
             if gal_groups:
                 if gal_groups[0] == [0,0]:
                     gal_groups = ""
                 else:
-                    gal_groups = "$\\times$".join(
+                    gal_groups = r"$\times$".join(
                             [group_display_knowl_C1_as_trivial(n, t)
                                 for n, t in gal_groups])
             return [gal_groups, factors, self.ordinary(f, p)]

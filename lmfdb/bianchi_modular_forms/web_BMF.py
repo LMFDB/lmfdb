@@ -130,7 +130,7 @@ class WebBMF(object):
             self.anrank = "not determined"
         else:
             self.Lratio = QQ(self.Lratio)
-            self.anrank = "\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else "\(\ge2\), even"
+            self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
 
         self.properties = [('Base field', pretty_field),
                             ('Weight', str(self.weight)),
@@ -165,14 +165,14 @@ class WebBMF(object):
         elif self.bc >1:
             self.bcd = self.bc
             self.bc = 'yes'
-            self.bc_extra = ', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
+            self.bc_extra = r', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{' + str(self.bcd) + r'})\)'
         elif self.bc == -1:
             self.bc = 'no'
-            self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\)'
+            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\)'
         elif self.bc < -1:
             self.bcd = -self.bc
             self.bc = 'no'
-            self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
+            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
         self.properties.append(('Base-change', str(self.bc)))
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")

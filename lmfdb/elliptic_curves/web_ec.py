@@ -243,7 +243,7 @@ class WebEC(object):
 
         data['CMD'] = self.cm
         data['CM'] = "no"
-        data['EndE'] = "\(\Z\)"
+        data['EndE'] = r"\(\Z\)"
         if self.cm:
             data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_maximal_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
@@ -253,12 +253,12 @@ class WebEC(object):
                 data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
             data['cm_sqf'] = ZZ(self.cm).squarefree_part()
 
-            data['CM'] = "yes (\(D=%s\))" % data['CMD']
+            data['CM'] = r"yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
                 d4 = ZZ(data['CMD'])//4
-                data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
+                data['EndE'] = r"\(\Z[\sqrt{%s}]\)" % d4
             else:
-                data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
+                data['EndE'] = r"\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
             data['ST'] = st_link_by_name(1,2,'N(U(1))')
         else:
             data['ST'] = st_link_by_name(1,2,'SU(2)')
@@ -403,7 +403,7 @@ class WebEC(object):
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
                            ('Rank', '%s' % self.mw['rank']),
-                           ('Torsion Structure', '\(%s\)' % self.mw['tor_struct'])
+                           ('Torsion Structure', r'\(%s\)' % self.mw['tor_struct'])
                            ]
 
         if self.label_type == 'Cremona':
@@ -412,7 +412,7 @@ class WebEC(object):
             self.title = "Elliptic Curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
-                           ('$\Q$', url_for(".rational_elliptic_curves")),
+                           (r'$\Q$', url_for(".rational_elliptic_curves")),
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
@@ -435,10 +435,10 @@ class WebEC(object):
         mw['tor_order'] = self.torsion
         tor_struct = [int(c) for c in self.torsion_structure]
         if mw['tor_order'] == 1:
-            mw['tor_struct'] = '\mathrm{Trivial}'
+            mw['tor_struct'] = r'\mathrm{Trivial}'
             mw['tor_gens'] = ''
         else:
-            mw['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
+            mw['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in tor_struct])
             mw['tor_gens'] = ', '.join(web_latex(tuple(P)) for P in parse_points(self.torsion_generators))
 
     def make_bsd(self):
@@ -543,7 +543,7 @@ class WebEC(object):
                 deg = F.count(",")
             tg1['d'] = deg
             tg1['f'] = field_data
-            tg1['t'] = '\(' + ' \\times '.join(['\Z/{}\Z'.format(n) for n in T.split(",")]) + '\)'
+            tg1['t'] = r'\(' + r' \times '.join([r'\Z/{}\Z'.format(n) for n in T.split(",")]) + r'\)'
             tg1['m'] = 0
             tgextra.append(tg1)
 

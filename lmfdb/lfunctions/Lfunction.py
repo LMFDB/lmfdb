@@ -62,7 +62,7 @@ def validate_required_args(errmsg, args, *keys):
 def validate_integer_args(errmsg, args, *keys):
     for key in keys:
         if key in args:
-            if not isinstance(args[key],int) and not re.match('^\d+$',args[key].strip()):
+            if not isinstance(args[key],int) and not re.match(r'^\d+$',args[key].strip()):
                 raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
 def constructor_logger(object, args):
@@ -484,7 +484,7 @@ class Lfunction_Dirichlet(Lfunction):
         # Use ConreyCharacter to check primitivity (it can handle a huge modulus
         if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
             raise ValueError('Unable to construct Dirichlet L-function,',
-                             'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
+                             r'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
 
         # Load data from the database
         self.label = str(self.charactermodulus) + "." + str(self.characternumber)
@@ -493,7 +493,7 @@ class Lfunction_Dirichlet(Lfunction):
         try:
             self.lfunc_data = get_lfunction_by_Lhash(Lhash)
         except:
-            raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
+            raise KeyError(r'No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
 
         # Extract the data
         makeLfromdata(self)
@@ -530,7 +530,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\overline{\\chi},1-s)"
+            self.texnamecompleted1ms_arithmetic = r"\Lambda(\overline{\chi},1-s)"
         title_end = ("where $\\chi$ is the Dirichlet character with label "
                      + self.label)
         self.credit = 'Sage'
@@ -716,7 +716,7 @@ class Lfunction_from_db(Lfunction):
     def chilatex(self):
         try:
             if int(self.characternumber) != 1:
-                return "character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+                return r"character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
             else:
                 return "trivial character"
         except KeyError:
@@ -1577,7 +1577,7 @@ class DedekindZeta(Lfunction):
                     j += 1
                 dir_group.pop(j)
                 self.factorization = (r'\(\zeta_K(s) =\) ' +
-                                      '<a href="/L/Riemann/">\(\zeta(s)\)</a>')
+                                      r'<a href="/L/Riemann/">\(\zeta(s)\)</a>')
                 fullchargroup = wnf.full_dirichlet_group()
                 for j in dir_group:
                     chij = fullchargroup[j]
@@ -1585,11 +1585,11 @@ class DedekindZeta(Lfunction):
                     myj = j % mycond
                     self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
                                            % (mycond, myj, mycond, myj))
-            elif len(wnf.factor_perm_repn())>0:
+            elif wnf.factor_perm_repn():
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'
-                                           +'\(\zeta(s)\)</a>')
+                                           +r'\(\zeta(s)\)</a>')
                 for j in range(len(ar)):
                     if nfgg[j]>0:
                         the_rep = ar[j]
@@ -1889,9 +1889,9 @@ class SymmetricPowerLfunction(Lfunction):
         self.selfdual = True
 
         # Text for the web page
-        self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m
-        self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
-        self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
+        self.texname = r"L(s, E, \mathrm{sym}^{%d})" % self.m
+        self.texnamecompleteds = r"\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
+        self.texnamecompleted1ms = (r"\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
         self.credit = ' '
 
@@ -1916,7 +1916,7 @@ class SymmetricPowerLfunction(Lfunction):
                 return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
                         " Power")
 
-        self.info['title'] = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
+        self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
 

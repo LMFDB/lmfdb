@@ -82,7 +82,7 @@ def local_field_data(label):
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
     ans = 'Local number field %s%s<br><br>'% (label, nicename)
-    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
@@ -120,11 +120,13 @@ def format_lfield(coefmult,p):
         return ''
     return lf_display_knowl(data['label'], name = prettyname(data))
 
+
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
-    if subdata == []:
+    if not subdata:
         return ''
     return display_multiset(subdata, format_lfield, p)
+
 
 # Encode string for rational into our special format
 def ratproc(inp):
@@ -202,15 +204,15 @@ def render_field_webpage(args):
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+' over $\Q_{%d}$.'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}$.'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
-            ('Base', '\(%s\)' % Qp),
-            ('Degree', '\(%s\)' % data['n']),
-            ('e', '\(%s\)' % e),
-            ('f', '\(%s\)' % f),
-            ('c', '\(%s\)' % cc),
+            ('Base', r'\(%s\)' % Qp),
+            ('Degree', r'\(%s\)' % data['n']),
+            ('e', r'\(%s\)' % e),
+            ('f', r'\(%s\)' % f),
+            ('c', r'\(%s\)' % cc),
             ('Galois group', group_pretty_and_nTj(gn, gt)),
         ]
         # Look up the unram poly so we can link to it
@@ -310,15 +312,15 @@ def prettyname(ent):
 
 def printquad(code, p):
     if code == [1, 0]:
-        return('$\Q_{%s}$' % p)
+        return(r'$\Q_{%s}$' % p)
     if code == [1, 1]:
-        return('$\Q_{%s}(\sqrt{*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{*})$' % p)
     if code == [-1, 1]:
-        return('$\Q_{%s}(\sqrt{-*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{-*})$' % p)
     s = code[0]
     if code[1] == 1:
         s = str(s) + '*'
-    return('$\Q_{' + str(p) + '}(\sqrt{' + str(s) + '})$')
+    return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
 def search_input_error(info, bread):

@@ -166,7 +166,7 @@ class ArtinRepresentation(object):
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = " \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
+        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
     def hard_primes(self):
@@ -901,4 +901,4 @@ class NumberFieldGaloisGroup(object):
         return tmp
 
     def display_title(self):
-        return "The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"
+        return r"The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"
