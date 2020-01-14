@@ -3,16 +3,6 @@
 from lmfdb.tests import LmfdbTest
 
 class HomePageTest(LmfdbTest):
-
-    def check(self,homepage,path,text):
-        assert path in homepage, "%s not in the homepage" % path
-        assert text in self.tc.get(path, follow_redirects=True).get_data(as_text=True), "%s not in the %s" % (text, path)
-
-    def check_external(self, homepage, path, text):
-        from six.moves.urllib.request import urlopen
-        assert path in homepage
-        assert text in urlopen(path).read()
-
     # All tests should pass: these are all the links in the home page as specified in index_boxes.yaml
     #
     # Box 1

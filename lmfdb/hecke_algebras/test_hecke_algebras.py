@@ -3,16 +3,6 @@
 from lmfdb.tests import LmfdbTest
 
 class HomePageTest(LmfdbTest):
-
-    def check(self,homepage,path,text):
-        assert path in homepage
-        assert text in self.tc.get(path).get_data(as_text=True)
-
-    def check_external(self, homepage, path, text):
-        from six.moves.urllib.request import urlopen
-        assert path in homepage
-        assert text in urlopen(path).read()
-
     # Hecke algebra browse page
     def test_hecke_algebra(self):
         homepage = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/").get_data(as_text=True)
