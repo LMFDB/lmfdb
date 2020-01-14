@@ -209,20 +209,40 @@ def download_hmf_magma(**args):
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
 
-    outstr += '/* EXTRA CODE: recompute eigenform (warning, may take a few minutes or longer!):\n'
-    outstr += 'M := HilbertCuspForms(F, NN);\n'
-    outstr += 'S := NewSubspace(M);\n'
-    outstr += '// SetVerbose("ModFrmHil", 1);\n'
-    outstr += 'newspaces := NewformDecomposition(S);\n'
-    outstr += 'newforms := [Eigenform(U) : U in newspaces];\n'
-    outstr += 'ppind := 0;\n'
-    outstr += 'while #newforms gt 1 do\n'
-    outstr += '  pp := primes[ppind];\n'
-    outstr += '  newforms := [f : f in newforms | HeckeEigenvalue(f,pp) eq heckeEigenvalues[pp]];\n'
-    outstr += 'end while;\n'
-    outstr += 'f := newforms[1];\n'
-    outstr += '// [HeckeEigenvalue(f,pp) : pp in primes] eq heckeEigenvaluesArray;\n'
-    outstr += '*/\n'
+    outstr += '\n'.join([
+        'print "To reconstruct the Hilbert newform f, type',
+        ' f:=make_newform();";',
+        '',
+        'function make_newform();',
+        ' M := HilbertCuspForms(F, NN);',
+        ' S := NewSubspace(M);',
+        ' // SetVerbose("ModFrmHil", 1);',
+        ' NFD := NewformDecomposition(S);',
+        ' newforms := [* Eigenform(U) : U in NFD *];',
+        '',
+        ' if #newforms eq 0 then;',
+        '  print "No Hilbert newform found";',
+        '  return 0;',
+        ' else if #newforms eq 1 then;',
+        '  return newforms[1];',
+        ' end if;',
+        ' end if;',
+        '',
+        ' print "Testing ", #newforms, " possible newforms";',
+        ' for P in primes do;',
+        '  newforms := [* f: f in newforms | HeckeEigenvalue(f,P) eq heckeEigenvalues[P] *];',
+        '  if #newforms eq 0 then;',
+        '   print "No Hilbert newform found which matches the Hecke eigenvalues";',
+        '   return 0;',
+        '  else if #newforms eq 1 then;',
+        '   print "success";',
+        '   return newforms[1];',
+        '  end if;',
+        '  end if;',
+        ' end for;',
+        ' print "No Hilbert newform found which matches the Hecke eigenvalues";',
+        '',
+        'end function;'])
 
     return outstr
 
