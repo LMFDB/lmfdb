@@ -2294,7 +2294,7 @@ class PostgresTable(PostgresBase):
             count = int(len(results) * ratio)
             if repeatable is not None:
                 random.seed(repeatable)
-            return self._search_iterator(random.sample(results, count), search_cols, extra_cols, projection)
+            return random.sample(results, count)
         elif mode in ['SYSTEM', 'BERNOULLI']:
             if extra_cols:
                 raise ValueError("You cannot use the system or bernoulli modes with extra columns")
