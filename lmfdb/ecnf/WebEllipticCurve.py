@@ -33,11 +33,9 @@ def convert_IQF_label(fld, lab):
     if len(newlab.split("."))!=3:
         return newlab
     newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
-    if newlab:
-        if newlab!=lab:
-            print("Converted label {} to {} over {}".format(lab, newlab, fld))
-        return newlab
-    return lab
+    # if newlab and newlab!=lab:
+    #     print("Converted label {} to {} over {}".format(lab, newlab, fld))
+    return newlab if newlab else lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',

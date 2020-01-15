@@ -78,12 +78,6 @@ class HMFTest(LmfdbTest):
         assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],\\' in L.data
         assert 'hecke_eigenvalues_array = [4, -4,' in L.data
 
-    def test_download_magma(self):
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.725.1/holomorphic/4.4.725.1-31.1-a/download/magma')
-        assert 'NN := ideal<ZF | {31, 31, w^3 - 4*w + 1}>;' in L.data
-        assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],' in L.data
-        assert 'heckeEigenvaluesArray := [4, -4,' in L.data
-
     def test_Lfun_link(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a')
         assert         'L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a' in L.data
@@ -138,4 +132,39 @@ class HMFTest(LmfdbTest):
             # this test isn't very specific
             # but the goal is to test that itself doesn't show in the friends list
             assert notitself not in L.data
+
+    def test_download_magma(self):
+
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.725.1/holomorphic/4.4.725.1-31.1-a/download/magma')
+        assert 'NN := ideal<ZF | {31, 31, w^3 - 4*w + 1}>;' in L.data
+        assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],' in L.data
+        assert 'heckeEigenvaluesArray := [4, -4,' in L.data
+
+        page = self.tc.get('ModularForm/GL2/TotallyReal/3.3.837.1/holomorphic/3.3.837.1-48.3-z/download/magma')
+        assert 'No such form' in page.data
+
+        # These tests take too long to use magma_free, so we run magma when it is installed
+        from sage.all import magma
+        import sys
+        for field, label, expected in [
+                ['2.2.28.1', '2.2.28.1-531.1-m',
+                 'heckeEigenvaluesArray := [e, -1, -1, e^7 - 1/2*e^6 - 10*e^5 + 11/2*e^4 + 27*e^3 - 15*e^2 - 15*e + 4'],
+                ['3.3.837.1', '3.3.837.1-2.1-b',
+                 'heckeEigenvaluesArray := [1, e, e^2 - e - 7, -e^2 + 6, -e + 2, 2*e + 2, -e^2 + 2*e + 8, 2*e^2 - 4*e - 16'],
+                ['4.4.725.1', '4.4.725.1-31.1-a',
+                 'heckeEigenvaluesArray := [4, -4, -7, -4, 4, 2, -2, -1, -8, 2, 10']
+        ]:
+            sys.stdout.write("{}...".format(label))
+            sys.stdout.flush()
+            page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label))
+            assert expected in page.data
+            assert  'make_newform'  in page.data
+            try:
+                magma_code = page.data + '\n';
+                magma_code += 'f, iso := Explode(make_newform());\n'
+                magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
+                magma_code += 'f;\n'
+                assert 'success' in magma.eval(magma_code)
+            except RuntimeError:
+                pass
 
