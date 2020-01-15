@@ -51,12 +51,12 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return [t for t in learnmore_list if t[0].find(matchstring) < 0]
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 @belyi_page.route("/")
 def index():
-    if len(request.args) > 0:
+    if request.args:
         return belyi_search(to_dict(request.args))
     info = {"stats": Belyi_stats()}
     info["stats_url"] = url_for(".statistics")
@@ -139,7 +139,7 @@ def by_url_belyi_search_group_triple(group, abc):
             url_for(".by_url_belyi_search_group_triple", group=group, abc=abc),
         ),
     ]
-    if len(request.args) > 0:
+    if request.args:
         # if group or abc changed, fall back to a general search
         if "group" in request.args and (
             request.args["group"] != str(group) or request.args["abc_list"] != str(abc)
@@ -203,7 +203,7 @@ def by_url_belyi_search_group(group):
         ("Belyi Maps", url_for(".index")),
         ("%s" % group, url_for(".by_url_belyi_search_group", group=group)),
     ]
-    if len(request.args) > 0:
+    if request.args:
         # if the group changed, fall back to a general search
         if "group" in request.args and request.args["group"] != str(group):
             return redirect(url_for(".index", **request.args), 307)

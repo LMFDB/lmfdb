@@ -191,7 +191,7 @@ def list2string(li):
 
 def string2list(s):
     s = str(s)
-    if s == '':
+    if not s:
         return []
     return [int(a) for a in s.split(',')]
 
@@ -208,7 +208,7 @@ def is_fundamental_discriminant(d):
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
-        return '\(\Q\)'
+        return r'\(\Q\)'
     if d == '2':  # quadratic field
         D = ZZ(int(D))
         if r == '0':
@@ -216,16 +216,16 @@ def field_pretty(label):
         # Don't prettify invalid quadratic field labels
         if not is_fundamental_discriminant(D):
             return label
-        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
+        return r'\(\Q(\sqrt{' + str(D if D%4 else D/4) + r'}) \)'
     if label in cycloinfo:
-        return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+        return r'\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
         if len(subs)==3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
-            if [z for z in subs if z._data is None] == []:
+            if not any(z._data is None for z in subs):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
@@ -233,10 +233,10 @@ def field_pretty(label):
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
-                return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
+                labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
+                return r'\(\Q(%s, %s)\)'%(labels[0],labels[1])
     if label in rcycloinfo:
-        return '\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
+        return r'\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
@@ -284,13 +284,13 @@ def nf_knowl_guts(label):
     out += "Global number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += "\(%s\)" % latex(wnf.poly())
+    out += r"\(%s\)" % latex(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        Dfact = "\(%s\)" % str(D)
+        Dfact = r"\(%s\)" % str(D)
     else:
-        Dfact = '%s = \(%s\)' % (str(D),Dfact)
+        Dfact = r'%s = \(%s\)' % (str(D),Dfact)
     out += '<br>Discriminant: '
     out += Dfact
     out += '<br>Signature: '
@@ -524,7 +524,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(list(cnts))]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -568,7 +568,7 @@ class WebNumberField:
 
     def subfields_show(self):
         subs = self.subfields()
-        if subs == []:
+        if not subs:
             return []
         return display_multiset(subs, formatfield)
 
@@ -596,7 +596,7 @@ class WebNumberField:
 
     def unit_galois_action_show(self):
         ugm = self.unit_galois_action()
-        if ugm == []:
+        if not ugm:
             return ''
         n = self.degree()
         t = self.galois_t()
@@ -622,7 +622,7 @@ class WebNumberField:
     def generator_name(self):
         #Add special case code for the generator if desired:
         if self.gen_name=='phi':
-            return '\phi'
+            return r'\phi'
         else:
             return web_latex(self.gen_name)
 
@@ -688,7 +688,7 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return na_text()
         cg_list = self._data['class_group']
-        if cg_list == []:
+        if not cg_list:
             return 'Trivial'
         return '$%s$'%str(cg_list)
 
@@ -700,9 +700,9 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            if cg_list == []:
+            if not cg_list:
                 return 'Trivial group, which has order $1$'
-            cg_list = [r'C_{%s}'% z for z in cg_list]
+            cg_list = [r'C_{%s}' % z for z in cg_list]
             cg_string = r'\times '.join(cg_list)
             return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
         return na_text()

@@ -11,7 +11,7 @@ from sage.env import SAGE_VERSION
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.1"
+LMFDB_VERSION = "LMFDB Release 1.1.1"
 
 ############################
 #         Main app         #
