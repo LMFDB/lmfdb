@@ -20,4 +20,4 @@ class UsersTestCase(LmfdbTest):
 
     def test_user(self, id='cremona'):
         p = self.tc.get("/users/profile/%s" % id)
-        assert id in p.data
+        assert id in p.get_data(as_text=True)

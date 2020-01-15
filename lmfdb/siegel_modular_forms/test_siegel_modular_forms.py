@@ -6,7 +6,7 @@ from lmfdb import db
 
 class HomePageTest(LmfdbTest):
     def check(self, url, text):
-        data = self.tc.get("/ModularForm/GSp/Q/" + url, follow_redirects=True).data
+        data = self.tc.get("/ModularForm/GSp/Q/" + url, follow_redirects=True).get_data(as_text=True)
         if isinstance(text, list):
             for t in text:
                 assert t in data, (

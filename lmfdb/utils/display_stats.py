@@ -2,7 +2,7 @@ from six import string_types
 from collections import defaultdict
 
 from flask import url_for
-from sage.all import UniqueRepresentation, lazy_attribute
+from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from lmfdb.utils.utilities import format_percentage, display_knowl, KeyedDefaultDict, range_formatter
 
@@ -403,7 +403,12 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _sort_keys(self):
-        A = defaultdict(lambda: None)
+        # We want None (unknown) to show up at the beginning
+        def default_sort_key(val):
+            if val is None:
+                return -infinity
+            return val
+        A = defaultdict(lambda: default_sort_key)
         A.update(getattr(self, 'sort_keys', {}))
         return A
 

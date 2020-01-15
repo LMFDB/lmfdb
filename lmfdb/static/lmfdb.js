@@ -332,17 +332,17 @@ $(function() {
 });
 
 function decrease_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
-  newstart = parseInt(startelem.val())-count;
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
+  var newstart = parseInt(startelem.val())-count;
   if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
   $('form[id='+form_id+']').submit()
 };
 function increase_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
   startelem.val(parseInt(startelem.val())+count);
   $('form[id='+form_id+']').submit()
 };

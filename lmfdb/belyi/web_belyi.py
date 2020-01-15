@@ -174,7 +174,7 @@ class WebBelyiGalmap(object):
             data["base_field"] = F
         crv_str = galmap["curve"]
         if crv_str == "PP1":
-            data["curve"] = "\mathbb{P}^1"
+            data["curve"] = r"\mathbb{P}^1"
         else:
             data["curve"] = make_curve_latex(crv_str)
 
@@ -183,9 +183,9 @@ class WebBelyiGalmap(object):
         embed_strs = []
         for el in embeds:
             if el[1] < 0:
-                el_str = str(el[0]) + str(el[1]) + "\sqrt{-1}"
+                el_str = str(el[0]) + str(el[1]) + r"\sqrt{-1}"
             else:
-                el_str = str(el[0]) + "+" + str(el[1]) + "\sqrt{-1}"
+                el_str = str(el[0]) + "+" + str(el[1]) + r"\sqrt{-1}"
             embed_strs.append(el_str)
 
         data["map"] = make_map_latex(galmap["map"])
@@ -195,7 +195,7 @@ class WebBelyiGalmap(object):
                 triple_cyc = data["triples_cyc"][i]
                 data["embeddings_and_triples"].append(
                     [
-                        "\\text{not applicable (over $\mathbb{Q}$)}",
+                        r"\text{not applicable (over $\mathbb{Q}$)}",
                         triple_cyc[0],
                         triple_cyc[1],
                         triple_cyc[2],

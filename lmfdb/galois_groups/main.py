@@ -100,7 +100,6 @@ def make_order_key(order):
              title='Galois Group Search Results',
              err_title='Galois Group Search Input Error',
              learnmore=learnmore_list,
-             shortcuts={'jump_to': lambda info:redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)},
              bread=lambda: get_bread([("Search Results", ' ')]),
              credit=lambda: GG_credit)
 def galois_group_search(info, query):
@@ -119,6 +118,33 @@ def galois_group_search(info, query):
                 a = ZZ(interval)
                 if a != 1 and not a.is_prime():
                     return True
+    if info.get('jump_to','').strip():
+        jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
+          "8T1", "8T2", "8T3", "8T5", "9T1", "9T2", "10T1", "11T1", "12T1",
+          "12T2", "12T5", "13T1", "14T1", "15T1", "16T1", "16T2", "16T3", 
+          "16T4", "16T5", "16T7", "16T8", "16T14", "17T1", "18T1", "18T2", 
+          "19T1", "20T1", "20T2", "20T3", "21T1", "22T1", "23T1", "24T1", 
+          "24T2", "24T3", "24T4", "24T5", "24T6", "24T8", "25T1", "25T2", 
+          "26T1", "27T1", "27T2", "27T4", "28T1", "28T2", "28T3", "29T1", 
+          "30T1", "31T1", "32T32", "32T33", "32T34", "32T35", "32T36", 
+          "32T37", "32T38", "32T39", "32T40", "32T41", "32T42", "32T43", 
+          "32T44", "32T45", "32T46", "32T47", "32T48", "32T49", "32T50", 
+          "32T51", "33T1", "34T1", "35T1", "36T1", "36T2", "36T3", "36T4", 
+          "36T7", "36T9", "37T1", "38T1", "39T1", "40T1", "40T2", "40T3", 
+          "40T4", "40T5", "40T7", "40T8", "40T13", "41T1", "42T1", "43T1", 
+          "44T1", "44T2", "44T3", "45T1", "45T2", "46T1", "47T1"]
+        strip_label = info.get('jump_to','').strip().upper()
+        # If the user entered a simple label
+        if re.match(r'^\d+T\d+$',strip_label):
+            return redirect(url_for('.by_label', label=strip_label), 301)
+        parse_galgrp(info, query, qfield=['label','n'], 
+            name='a Galois group label', field='jump_to', list_ok=False,
+            err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
+        if query.get('label', '') in jump_list:
+            return redirect(url_for('.by_label', label=query['label']), 301)
+
+        else: # convert this to a regular search
+            info['gal'] = info['jump_to']
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
@@ -219,8 +245,8 @@ def render_group_webpage(args):
         if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
-            ('Order', '\(%s\)' % order),
-            ('n', '\(%s\)' % data['n']),
+            ('Order', r'\(%s\)' % order),
+            ('n', r'\(%s\)' % data['n']),
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),

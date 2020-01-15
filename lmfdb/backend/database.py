@@ -876,6 +876,7 @@ class PostgresBase(object):
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
+        kwds = dict(kwds) # to not modify the dict kwds, with the pop
         sep = kwds.pop("sep", u"|")
 
         with DelayCommit(self, silence=True):
@@ -1143,12 +1144,12 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter = "|")]
+            lines = [line for line in csv.reader(F, delimiter=sep)]
             if len(lines) == 0:
                 return
             for line in lines:
                 if line[table_name_idx] != search_table:
-                    raise RuntimeError("column %d in the file doesn't match the search table name" % table_name_idx)
+                    raise RuntimeError("in %s column %d (= %s) in the file doesn't match the search table name %s" % (filename, table_name_idx, line[table_name_idx], search_table))
 
 
         with DelayCommit(self, silence=True):
@@ -5796,7 +5797,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
-            allcols = sorted(list(set(cols + constraint.keys())))
+            allcols = sorted(list(set(cols + list(constraint.keys()))))
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
@@ -5824,6 +5825,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
+            if buckets == {} and any(isinstance(val, dict) and any(relkey in val for relkey in ['$lt', '$lte', '$gt', '$gte']) for val in values):
+                # For non-bucketed statistics, we don't want to include counts for range queries
+                continue
             for val, header in zip(values, headers):
                 header.append(val)
             D = make_count_dict(values, count)
@@ -6721,6 +6725,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if not os.path.isdir(data_folder):
             raise ValueError(
                     "The path {} is not a directory".format(data_folder))
+        sep = kwds.get("sep", u"|")
         with DelayCommit(self, commit, silence=True):
             file_list = []
             tablenames = []
@@ -6747,7 +6752,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter = "|")]
+                        rows = [line for line in csv.reader(F, delimiter=sep)]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
@@ -6835,7 +6840,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables=included, metafile=filedata[-1])
+                table.reload_final_swap(tables=included, metafile=filedata[-1], sep=sep)
 
         if failures:
             print("Reloaded %s"%(", ".join(tablenames)))

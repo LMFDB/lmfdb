@@ -1501,13 +1501,14 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
         while True:
             L = bnf.ideallist(bound)[oldbound:]
             for l in L:
-                if l == []: next
+                if not l:
+                    continue
                 for ideal in l:
-                    if gp.bnrisconductor(bnf,ideal):
+                    if gp.bnrisconductor(bnf, ideal):
                         yield self.k.ideal(ideal)
             """ double the range if one needs more ideal """
             oldbound = bound
-            bound *=2
+            bound *= 2
 
     """ for Hecke, I don't want to init WebHeckeGroup classes
         (recomputing number field and modulus is stupid)
