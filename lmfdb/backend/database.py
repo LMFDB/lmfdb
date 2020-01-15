@@ -4582,7 +4582,7 @@ class PostgresStatsTable(PostgresBase):
 
     You can see what additional counts are stored using the ``extra_counts`` method::
 
-        sage: list(db.mf_newforms.stats.extra_counts().keys())[0]
+        sage: list(db.mf_newforms.stats.extra_counts())[0]
         (u'dim',)
         sage: db.mf_newforms.stats.extra_counts()[('dim',)]
         [(({u'$gte': 10, u'$lte': 20},), 39288L)]
@@ -4862,7 +4862,7 @@ class PostgresStatsTable(PostgresBase):
             ccols, cvals, allcols = Json([]), Json([]), cols
         else:
             ccols, cvals = self._split_dict(constraint)
-            allcols = sorted(list(set(cols + list(constraint.keys()))))
+            allcols = sorted(list(set(cols + list(constraint))))
             # Ideally we would include the constraint in the query, but it's not easy to do that
             # So we check the results in Python
         jcols = Json(cols)
@@ -5344,7 +5344,7 @@ class PostgresStatsTable(PostgresBase):
             else:
                 ccols, cvals = self._split_dict(constraint)
             # We need to include the constraints in the count table if we're not grouping by that column
-            allcols = sorted(list(set(cols + list(constraint.keys()))))
+            allcols = sorted(list(set(cols + list(constraint))))
             if any(key.startswith('$') for key in constraint.keys()):
                 raise ValueError("Top level special keys not allowed")
             qstr, values = self.table._parse_dict(constraint)
@@ -5797,7 +5797,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
-            allcols = sorted(list(set(cols + list(constraint.keys()))))
+            allcols = sorted(list(set(cols + list(constraint))))
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
