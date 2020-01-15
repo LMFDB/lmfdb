@@ -524,7 +524,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(list(cnts))]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts)]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
