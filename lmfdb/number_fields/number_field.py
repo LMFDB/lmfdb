@@ -409,6 +409,7 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factorization_latex(factored_conductor)
             data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
+    data['auts'] = db.gps_transitive.lookup(r'{}T{}'.format(n,t))['auts']
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
