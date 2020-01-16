@@ -394,6 +394,7 @@ def render_field_webpage(args):
     t = nf.galois_t()
     n = nf.degree()
     data['is_galois'] = nf.is_galois()
+    data['autstring'] = r'\Gal' if data['is_galois'] else r'\Aut'
     data['is_abelian'] = nf.is_abelian()
     if nf.is_abelian():
         conductor = nf.conductor()
