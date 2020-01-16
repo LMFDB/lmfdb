@@ -275,7 +275,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_gen'] = latex(I.gens_reduced()[0])
                 info['level_fact'] = web_latex_ideal_fact(I.factor(), enclose=False)
                 dim_data = data['gl2_dims']
-                weights = dim_data.keys()
+                weights = list(dim_data)
                 weights.sort(key=lambda w: int(w))
                 for w in weights:
                     dim_data[w]['dim']=dim_data[w]['cuspidal_dim']

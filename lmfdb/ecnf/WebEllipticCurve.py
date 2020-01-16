@@ -3,6 +3,7 @@ import os
 import yaml
 from flask import url_for
 from six.moves.urllib_parse import quote
+from six import PY3
 from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
@@ -96,8 +97,12 @@ def ideal_from_string(K,s, IQF_format=False):
     else:
         # 'w' is used for the generator name for all fields for
         # numbers stored in the database
-        alpha = alpha.encode().replace('w',str(K.gen()))
-        I = K.ideal(a,K(alpha.encode()))
+        if PY3:
+            alpha = alpha.replace('w',str(K.gen()))
+            I = K.ideal(a,K(alpha))
+        else:
+            alpha = alpha.encode().replace('w',str(K.gen()))
+            I = K.ideal(a,K(alpha.encode()))
     if I.norm()==N:
         return I
     else:

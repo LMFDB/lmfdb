@@ -21,6 +21,7 @@ from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
+from six import PY3
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -1176,12 +1177,15 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    from six import StringIO
+    if PY3:
+        from io import BytesIO as IO
+    else:
+        from StringIO import StringIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
     from six.moves.urllib_parse import quote
 
-    virtual_file = StringIO()
+    virtual_file = IO()
     fig = P.matplotlib(axes_pad=axes_pad)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
@@ -1191,7 +1195,11 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+    if PY3:
+        buf = virtual_file.getbuffer()
+    else:
+        buf = virtual_file.buf
+    return "data:image/png;base64," + quote(b64encode(buf))
 
 class KeyedDefaultDict(defaultdict):
     """

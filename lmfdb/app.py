@@ -496,7 +496,7 @@ def root_static_file(name):
     def static_fn():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
-            return open(fn).read()
+            return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)

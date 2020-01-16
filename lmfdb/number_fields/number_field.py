@@ -221,7 +221,7 @@ def statistics():
 
     degree_r2_stats = nfstatdb.column_counts(['degree', 'r2'])
     # if a count is missing it is because it is zero
-    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)/2)]
+    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)//2)]
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galt'])

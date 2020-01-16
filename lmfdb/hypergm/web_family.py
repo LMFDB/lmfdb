@@ -277,10 +277,10 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def defaultp(self):
-        if not self.euler_factors.keys():
+        if not self.euler_factors:
             return []
         else:
-            return sorted(self.euler_factors.keys())[:4]
+            return sorted(self.euler_factors)[:4]
 
     @lazy_attribute
     def default_prange(self):
@@ -292,7 +292,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def maxp(self):
-        return -1 if not self.euler_factors.keys() else max(self.euler_factors.keys())
+        return -1 if not self.euler_factors else max(self.euler_factors) # max of keys
 
     @lazy_attribute
     def hodge_polygon(self):
@@ -341,7 +341,7 @@ class WebHyperGeometricFamily(object):
         return False if self.degree <= 2 or self.degree >= 12 else True
 
     def table_euler_factors_p(self, p):
-        if p not in self.euler_factors.keys():
+        if p not in self.euler_factors:
             return []
 
         ef = self.euler_factors[p]
@@ -351,7 +351,7 @@ class WebHyperGeometricFamily(object):
 
     def table_euler_factors_t(self, t, plist=None):
         if plist is None:
-            plist = sorted(self.euler_factors.keys())
+            plist = sorted(self.euler_factors)
         t = QQ(t)
         tmodp = [(p, t.mod_ui(p)) for p in plist if t.denominator() % p != 0]
         # filter

@@ -163,7 +163,7 @@ def do_import_one(g, q, db, status_file, datadir):
             status = yaml.load(F)
         pid = os.getpid()
         in_progress = status.get('D_uploading_%s'%(pid), [])
-        for qq, L in in_progress.iteritems():
+        for qq, L in in_progress.items():
             if q != qq:
                 continue
             try:
@@ -178,7 +178,7 @@ def do_import_one(g, q, db, status_file, datadir):
         done = status['A_uploaded']
         qfound = False
         for D in done:
-            for qq, L in D.iteritems():
+            for qq, L in D.items():
                 if q != qq:
                     continue
                 L.append(g)
@@ -286,7 +286,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
                     with open(status_file + '.tmp%s'%pid, 'w') as F:
                         yaml.dump(status, F)
                     shutil.move(status_file + '.tmp%s'%pid, status_file)
-            for q, L in in_progress.iteritems():
+            for q, L in in_progress.items():
                 for g in L:
                     do_import_one(g, q, db, status_file, datadir)
     finally:
