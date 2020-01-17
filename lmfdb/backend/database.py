@@ -1144,7 +1144,7 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            lines = [line for line in csv.reader(F, delimiter=sep)]
+            lines = [line for line in csv.reader(F, delimiter=str(sep))]
             if len(lines) == 0:
                 return
             for line in lines:
@@ -6752,7 +6752,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        rows = [line for line in csv.reader(F, delimiter=sep)]
+                        rows = [line for line in csv.reader(F, delimiter=str(sep))]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
