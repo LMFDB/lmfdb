@@ -635,6 +635,8 @@ class WebG2C(object):
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
         data['mw_rank'] = ZZ(0) if curve.get('mw_rank') is None else ZZ(curve['mw_rank']) # 0 will be marked as a lower bound
         data['mw_rank_proved'] = curve['mw_rank_proved']
+        data['analytic_rank_proved'] = curve['analytic_rank_proved']
+        data['hasse_weil_proved'] = curve['hasse_weil_proved']
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
