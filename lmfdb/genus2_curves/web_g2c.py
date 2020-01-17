@@ -484,7 +484,7 @@ def td_wrapc(val):
     return r' <td align="center">\(%s\)</td>' % val
 
 def point_string(P):
-    '(' + ' : '.join(map(str, P)) + ')'
+    return '(' + ' : '.join(map(str, P)) + ')'
 
 def mw_gens_table(invs,gens,hts,pts):
     def list_to_divisor(P):
