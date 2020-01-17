@@ -500,7 +500,7 @@ def mw_gens_table(invs,gens,hts,pts):
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
-              th_wrap('g2c.mw_generator_support', 'Divisor'),
+              th_wrap('g2c.mw_generator', 'Divisor'),
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
@@ -512,7 +512,7 @@ def mw_gens_table(invs,gens,hts,pts):
         supp = ('2 \\cdot' + point_string(D0[0]) if xD.is_square() else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
         supp += ' - ' + (' - '.join([point_string(P) for P in Dinf]) if Dinf else 'D_\\infty')
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
-                       td_wrapc(supp),
+                       td_wrapl(supp),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
                        td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
