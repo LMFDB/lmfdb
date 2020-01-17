@@ -500,18 +500,17 @@ def mw_gens_table(invs,gens,hts,pts):
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
-              th_wrap('g2c.mw_generator_support', 'Rational support'),
+              th_wrap('g2c.mw_generator_support', 'Divisor'),
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('<tr>')
         D,xD,yD = list_to_divisor(gens[i])
-        Daff = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
-        supp = '2*' + point_string(Daff[0]) if xD.is_square() else ' + '.join([point_string(P) for P in Daff])
-        if supp:
-            Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1])]
-            supp += (' - ' + ' - '.join([point_string(P) for P in Dinf])) if Dinf else ' - D_\\infty'
+        D0 = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
+        Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1])]
+        supp = ('2 \\cdot' + point_string(D0[0]) if xD.is_square() else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
+        supp += ' - ' + (' - '.join([point_string(P) for P in Dinf]) if Dinf else 'D_\\infty')
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
                        td_wrapc(supp),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
