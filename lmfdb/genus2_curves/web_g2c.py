@@ -547,7 +547,7 @@ def local_table(D,N,tama,bad_lpolys):
 
 def ratpts_table(pts,pts_v):
     def sorted_points(pts):
-        sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
+        return sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
     if len(pts) > 1:
         # always put points at infinity first, regardless of height
         pts = sorted_points([P for P in pts if P[2] == 0]) + sorted_points([P for P in pts if P[2] != 0])
