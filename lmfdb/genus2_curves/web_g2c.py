@@ -505,8 +505,13 @@ def mw_gens_table(invs,gens,hts,pts):
         gentab.append('<tr>')
         D,xD,yD = list_to_divisor(gens[i])
         supp = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
+        if xD.is_square():
+            assert len(sup) == 1
+            supp = '2*(' + join(map(str, supp[0])) + ')'
+        else:
+            supp = ' + '.join(['(' + ' : '.join(map(str, P)) + ')' for P in supp])
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
-                       td_wrapc(',\\ '.join(['(' + ' : '.join(map(str, P)) + ')' for P in supp])),
+                       td_wrapc(supp),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
                        td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
