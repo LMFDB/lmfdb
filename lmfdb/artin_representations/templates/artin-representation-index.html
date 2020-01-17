@@ -68,7 +68,12 @@ Artin representation: <input type='text' name='natural' size='50' example='3.2e3
     <tr>
         <td align="left">{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
         <td><input type='text' name='group' placeholder="A5" style="width: 160px;"></td>
-        <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
+        <td><span class="formexample">list of 
+              {{KNOWL('group.small_group_label',title="GAP id's")}},
+          e.g. [8,3] or [16,7], group names from the
+          {{KNOWL('nf.galois_group.name','list of group labels')}}, e.g.
+          C5 or S12, and {{KNOWL('gg.label','transitive group labels')}}, 
+          e.g., 7T2 or 11T5</span></td>
 
     <tr>
         <td align="left">{{ KNOWL('artin.parity',title="Parity") }}</td>

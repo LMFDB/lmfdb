@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import json
-import inventory_live_data as ild
-import inventory_consistency as ic
+from . import inventory_live_data as ild
+from . import inventory_consistency as ic
 
 def act(request):
     """Unpack requested action and trigger it

@@ -221,7 +221,7 @@ def statistics():
 
     degree_r2_stats = nfstatdb.column_counts(['degree', 'r2'])
     # if a count is missing it is because it is zero
-    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)/2)]
+    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)//2)]
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galt'])
@@ -272,11 +272,11 @@ def statistics():
              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
     h = [{'cnt': comma(h[j]),
           'prop': format_percentage(h[j], has_h),
-          'label': '$10^{' + str(j - 1) + '}<h\leq 10^{' + str(j) + '}$',
+          'label': '$10^{' + str(j - 1) + r'}<h\leq 10^{' + str(j) + '}$',
           'query': url_for(".number_field_render_webpage")+'?class_number=%s' % (str(1 + 10**(j - 1)) + '-' + str(10**j))} for j in range(len(h))]
     h[0]['label'] = '$h=1$'
-    h[1]['label'] = '$1<h\leq 10$'
-    h[2]['label'] = '$10<h\leq 10^2$'
+    h[1]['label'] = r'$1<h\leq 10$'
+    h[2]['label'] = r'$10<h\leq 10^2$'
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
     # Class number 1 by signature
@@ -400,14 +400,14 @@ def render_field_webpage(args):
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
         if len(dirichlet_chars)>0:
-            data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
+            data['dirichlet_group'] = [r'<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
             data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
-            data['conductor'] = "\(%s\)" % str(data['conductor'])
+            data['conductor'] = r"\(%s\)" % str(data['conductor'])
         else:
             factored_conductor = factor_base_factor(data['conductor'], ram_primes)
             factored_conductor = factor_base_factorization_latex(factored_conductor)
-            data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), factored_conductor)
+            data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
@@ -419,9 +419,9 @@ def render_field_webpage(args):
     D = nf.disc()
     data['disc_factor'] = nf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        data['discriminant'] = "\(%s\)" % str(D)
+        data['discriminant'] = r"\(%s\)" % str(D)
     else:
-        data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
+        data['discriminant'] = r"\(%s=%s\)" % (str(D), data['disc_factor'])
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else: # fallback in case we haven't computed them in a case
@@ -730,7 +730,7 @@ def number_field_jump(info):
              learnmore=learnmore_list)
 def number_field_search(info, query):
     parse_ints(info,query,'degree')
-    parse_galgrp(info,query, qfield=('degree', 'galt'))
+    parse_galgrp(info,query, qfield=('galois_label', 'degree'))
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
@@ -789,7 +789,7 @@ def see_frobs(frob_data):
             firstone = True
             for j in dec:
                 if not firstone:
-                    s += '{,}\,'
+                    s += r'{,}\,'
                 if j[0]<15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
                         label="%d.%d.0.1"%(p,j[0])), j[0])
@@ -820,7 +820,7 @@ def frobs(nf):
             firstone = 1
             for j in dec:
                 if firstone == 0:
-                    s += '{,}\,'
+                    s += r'{,}\,'
                 if j[0]<15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
                         label="%d.%d.0.1"%(p,j[0])), j[0])

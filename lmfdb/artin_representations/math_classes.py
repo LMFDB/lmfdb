@@ -166,7 +166,7 @@ class ArtinRepresentation(object):
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = " \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
+        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
     def hard_primes(self):
@@ -380,10 +380,12 @@ class ArtinRepresentation(object):
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return group_display_knowl(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_knowl(n,t)
 
     def __str__(self):
         try:
@@ -859,7 +861,7 @@ class NumberFieldGaloisGroup(object):
         except KeyError:
             raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
                 (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0])))
+                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):
@@ -899,4 +901,4 @@ class NumberFieldGaloisGroup(object):
         return tmp
 
     def display_title(self):
-        return "The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"
+        return r"The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"

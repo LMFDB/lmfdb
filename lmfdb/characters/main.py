@@ -222,7 +222,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus is None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-    if number is None and re.match('^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
+    if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 

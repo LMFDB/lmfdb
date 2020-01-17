@@ -119,7 +119,7 @@ class WebCharObject:
         else:
             s = r"e\left(\frac{%s}{%s}\right)" % (n, d)
         if tag:
-            return "\(%s\)" % s
+            return r"\(%s\)" % s
         else:
             return s
 
@@ -127,7 +127,8 @@ class WebCharObject:
     def textuple(l,tag=True):
         t = ','.join(l)
         if len(l) > 1: t='(%s)'%t
-        if tag: t = '\(%s\)'%t
+        if tag:
+            t = r'\(%s\)' % t
         return t
 
     @staticmethod
@@ -191,10 +192,10 @@ class WebDirichlet(WebCharObject):
 
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
-    def char2tex(modulus, number, val='\cdot', tag=True):
+    def char2tex(modulus, number, val=r'\cdot', tag=True):
         c = r'\chi_{%s}(%s,%s)'%(modulus,number,val)
         if tag:
-           return '\(%s\)'%c
+           return r'\(%s\)' % c
         else:
            return c
 
@@ -324,7 +325,7 @@ class WebDirichlet(WebCharObject):
         n = x.numerator()
         n = str(n) + "r" if not n == 1 else "r"
         d = x.denominator()
-        Gtex = '\Z/%s\Z' % mod
+        Gtex = r'\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
@@ -346,7 +347,7 @@ class WebDirichlet(WebCharObject):
         jacobi_sum = chi.jacobi_sum(psi)
         chitex = self.char2tex(mod, num, tag=False)
         psitex = self.char2tex(mod, val, tag=False)
-        Gtex = '\Z/%s\Z' % mod
+        Gtex = r'\Z/%s\Z' % mod
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
@@ -389,7 +390,7 @@ class WebDirichlet(WebCharObject):
             val = self.texlogvalue(self.chi.logvalue(val))
         else:
             val = 0
-        return '\(%s=%s\)'%(chartex,val)
+        return r'\(%s=%s\)' % (chartex, val)
 
     @property
     def codevalue(self):
@@ -426,7 +427,7 @@ class WebHecke(WebCharObject):
     """ labeling conventions are put here """
 
     @staticmethod
-    def char2tex(c, val='\cdot',tag=True):
+    def char2tex(c, val=r'\cdot',tag=True):
         """ c is a Hecke character """
         number = ','.join(map(str, c.exponents()))
         s = r'\chi_{%s}(%s)'%(number,val)
@@ -448,8 +449,8 @@ class WebHecke(WebCharObject):
 
     @staticmethod
     def ideal2tex(ideal):
-        a,b = ideal.gens_two()
-        return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
+        a, b = ideal.gens_two()
+        return r"\(\langle %s, %s\\rangle\)" % (a._latex_(), b._latex_())
 
     @staticmethod
     def ideal2cas(ideal):
@@ -483,9 +484,9 @@ class WebHecke(WebCharObject):
                     s.append('g_{%i}'%i)
                 else:
                     s.append('g_{%i}^{%i}'%(i,e))
-        s =  '\cdot '.join(s)
+        s =  r'\cdot '.join(s)
         if s == '': s = '1'
-        if tag: s = '\(%s\)'%s
+        if tag: s = r'\(%s\)' % s
         return s
 
     @staticmethod
@@ -550,7 +551,7 @@ class WebCharFamily(WebCharObject):
 
     def struct2tex(self, inv):
         if not inv: inv = (1,)
-        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+        return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
 
     def add_row(self, modulus):
         G = self.chargroup(modulus)
@@ -601,7 +602,7 @@ class WebCharGroup(WebCharObject):
     @property
     def structure(self):
         inv = self.H.invariants()
-        return '\(%s\)'%('\\times '.join(['C_{%s}'%d for d in inv]))
+        return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
 
     @property
     def codestruct(self):
@@ -949,7 +950,7 @@ class WebDBDirichlet(WebDirichlet):
             ]
 
     def _tex_value(self, numer, denom=None, texify=False):
-        """
+        r"""
         Formats the number e**(2 pi i * numer / denom), detecting if this
         simplifies to +- 1 or +- i.
 
@@ -980,7 +981,7 @@ class WebDBDirichlet(WebDirichlet):
         else:
             ret = r"e\left(\frac{%s}{%s}\right)" % (numer, denom)
         if texify:
-            return "\({}\)".format(ret)
+            return r"\({}\)".format(ret)
         else:
             return ret
 
@@ -1500,13 +1501,14 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
         while True:
             L = bnf.ideallist(bound)[oldbound:]
             for l in L:
-                if l == []: next
+                if not l:
+                    continue
                 for ideal in l:
-                    if gp.bnrisconductor(bnf,ideal):
+                    if gp.bnrisconductor(bnf, ideal):
                         yield self.k.ideal(ideal)
             """ double the range if one needs more ideal """
             oldbound = bound
-            bound *=2
+            bound *= 2
 
     """ for Hecke, I don't want to init WebHeckeGroup classes
         (recomputing number field and modulus is stupid)
@@ -1609,7 +1611,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
         chartex = self.char2tex(self.chi,val=val,tag=False)
         val = self.label2group(val)
         val = self.texlogvalue(self.chi.logvalue(val))
-        return '\(%s=%s\)'%(chartex,val)
+        return r'\(%s=%s\)' % (chartex, val)
 
     def char4url(self, chi):
         # FIXME: call url_character and only return (label, url)
