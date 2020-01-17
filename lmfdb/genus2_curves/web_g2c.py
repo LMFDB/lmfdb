@@ -624,6 +624,7 @@ class WebG2C(object):
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
+        print "curve",curve
 
         data['label'] = curve['label'] if is_curve else curve['class']
         data['slabel'] = data['label'].split('.')
@@ -637,8 +638,6 @@ class WebG2C(object):
         data['mw_rank_proved'] = curve['mw_rank_proved']
         data['analytic_rank_proved'] = curve['analytic_rank_proved']
         data['hasse_weil_proved'] = curve['hasse_weil_proved']
-        print "curve",curve
-        print "data",data
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
