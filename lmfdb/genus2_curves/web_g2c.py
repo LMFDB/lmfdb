@@ -508,7 +508,7 @@ def mw_gens_table(invs,gens,hts,pts):
         gentab.append('<tr>')
         D,xD,yD = list_to_divisor(gens[i])
         Daff = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
-        supp = '2*' cat point_string(D0[0]) if xD.is_square() else ' + '.join([point_string(P) for P in Daff])
+        supp = '2*' + point_string(Daff[0]) if xD.is_square() else ' + '.join([point_string(P) for P in Daff])
         if supp:
             Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1])]
             supp += (' - ' + ' - '.join([point_string(P) for P in Dinf])) if Dinf else ' - D_\\infty'
