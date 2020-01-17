@@ -483,6 +483,9 @@ def td_wrapr(val):
 def td_wrapc(val):
     return r' <td align="center">\(%s\)</td>' % val
 
+def point_string(P):
+    '(' + ' : '.join(map(str, P)) + ')'
+
 def mw_gens_table(invs,gens,hts,pts):
     def list_to_divisor(P):
         R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
@@ -497,19 +500,18 @@ def mw_gens_table(invs,gens,hts,pts):
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
-              th_wrap('g2c.mw_generator_support', 'Rational points'),
+              th_wrap('g2c.mw_generator_support', 'Rational support'),
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('<tr>')
         D,xD,yD = list_to_divisor(gens[i])
-        supp = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
-        if xD.is_square():
-            assert len(sup) == 1
-            supp = '2*(' + join(map(str, supp[0])) + ')'
-        else:
-            supp = ' + '.join(['(' + ' : '.join(map(str, P)) + ')' for P in supp])
+        Daff = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1]]
+        supp = '2*' cat point_string(D0[0]) if xD.is_square() else ' + '.join([point_string(P) for P in Daff])
+        if supp:
+            Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == P[1])]
+            supp += (' - ' + ' - '.join([point_string(P) for P in Dinf])) if Dinf else ' - D_\\infty'
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
                        td_wrapc(supp),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
@@ -544,25 +546,28 @@ def local_table(D,N,tama,bad_lpolys):
     return '\n'.join(loctab)
 
 def ratpts_table(pts,pts_v):
+    def sorted_points(pts):
+        sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
     if len(pts) > 1:
-        pts = sorted(pts,key=lambda P:(max([abs(x) for x in P]),sum([abs(x) for x in P])))
+        # always put points at infinity first, regardless of height
+        pts = sorted_points([P for P in pts if P[2] == 0]) + sorted_points([P for P in pts if P[2] != 0])
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
             return '<p>This curve has no %s.</p>' % display_knowl(kid, 'rational points')
         else:
             return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
-    strpts = ['(' + ' : '.join(map(str, P)) + ')' for P in pts]
-    caption = 'Points' if pts_v else 'Known points'
+    spts = [point_string(P) for P in pts]
+    caption = 'All points' if pts_v else 'Known points'
     tabcols = 6
     if len(pts) <= tabcols+1:
-        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(strpts))
+        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
     ptstab.extend(['<th></th>' for i in range(tabcols-1)])
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
     for i in range(0,len(pts),6):
         ptstab.append('<tr>')
-        ptstab.extend([td_wrapc(P) for P in strpts[i:i+6]])
+        ptstab.extend([td_wrapc(P) for P in spts[i:i+6]])
         if i+6 > len(pts):
             ptstab.extend(['<td></td>' for i in range(i+6-len(pts))]) # pad last line
         ptstab.append('</tr>')
