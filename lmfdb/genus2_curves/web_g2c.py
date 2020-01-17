@@ -483,7 +483,7 @@ def td_wrapr(val):
 def td_wrapc(val):
     return r' <td align="center">\(%s\)</td>' % val
 
-def mw_gens_table(invs,gens,hts):
+def mw_gens_table(invs,gens,hts,pts):
     def list_to_divisor(P):
         R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
         xP,yP = P[0],P[1]
@@ -492,18 +492,21 @@ def mw_gens_table(invs,gens,hts):
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-        return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]
+        return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")], xD, yD
     if not invs:
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
+              th_wrap('g2c.mw_generator_support', 'Rational points'),
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
     for i in range(len(invs)):
         gentab.append('<tr>')
-        D = list_to_divisor(gens[i])
+        D,xD,yD = list_to_divisor(gens[i])
+        supp = [P for P in pts if P[2] and xD(P[1],P[3]) == 0 and yD(P[2],P[3]) == 0]
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
+                       td_wrapc(', '.join(['(' + ' : '.join(map(str, P)) + ')' for P in supp])),
                        td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
                        td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
@@ -624,7 +627,6 @@ class WebG2C(object):
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
-        print "curve",curve
 
         data['label'] = curve['label'] if is_curve else curve['class']
         data['slabel'] = data['label'].split('.')
