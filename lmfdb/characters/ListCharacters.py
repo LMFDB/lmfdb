@@ -35,7 +35,7 @@ def parse_interval(arg, name):
     elif re.match('^[0-9]+..[0-9]+$', arg):
         s = arg.split('..')
         a,b = (int(s[0]), int(s[1]))
-    elif re.match('^\[[0-9]+..[0-9]+\]$', arg):
+    elif re.match(r'^\[[0-9]+..[0-9]+\]$', arg):
         s = arg[1:-1].split('..')
         a,b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:

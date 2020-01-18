@@ -140,7 +140,7 @@ class WebNewform(object):
 
         #self.char_conrey = self.conrey_indexes[0]
         #self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
+        self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
         self.hecke_ring_character_values = None
         self.single_generator = None
@@ -215,12 +215,12 @@ class WebNewform(object):
         self.properties += [('Dimension', str(self.dim))]
 
         if self.projective_image:
-            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+            self.properties += [('Projective image', r'\(%s\)' % self.projective_image_latex)]
         # Artin data would make the property box scroll
         #if self.artin_degree: # artin_degree > 0
         #    self.properties += [('Artin image size', str(self.artin_degree))]
         #if self.artin_image:
-        #    self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
+        #    self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
 
         if self.is_cm and self.is_rm:
             disc = ', '.join([ str(d) for d in self.self_twist_discs ])
@@ -294,7 +294,7 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.sato_tate_group:
-            res.append(('Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
+            res.append((r'Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
                         '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
             res.append(('Newform ' + self.label, nf_url))
@@ -594,7 +594,7 @@ class WebNewform(object):
     @property
     def hecke_ring_index_factored(self):
         if self.hecke_ring_index_factorization is not None:
-            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+            return r"\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
         return None
 
     def ring_index_display(self):
@@ -655,7 +655,7 @@ class WebNewform(object):
             if paren:
                 return r"\((\)%s\()/%s\)" % (num, den)
             else:
-                return "%s\(/%s\)" % (num, den)
+                return r"%s\(/%s\)" % (num, den)
         else:
             if paren:
                 return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
@@ -713,7 +713,7 @@ class WebNewform(object):
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
-        basis = [('\(1\)', r'\(\beta_0\)')]
+        basis = [(r'\(1\)', r'\(\beta_0\)')]
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
             num = web_latex_poly(num, r'\beta', superscript=False)
             if i == 0:
@@ -991,14 +991,14 @@ function switch_basis(btype) {
                 s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return '\(' + s + '+O(q^{%d})\)' % prec
+        return r'\(' + s + r'+O(q^{%d})\)' % prec
 
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
         prec = min(max(eigseq.keys()) + 1, prec_max)
         if prec == 0:
-            return '\(O(1)\)'
-        s = '\(q'
+            return r'\(O(1)\)'
+        s = r'\(q'
         for j in range(2, prec):
             term = eigseq[j]
             latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
@@ -1013,7 +1013,7 @@ function switch_basis(btype) {
                 s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '+O(q^{%d})\)' % prec
+        return s + r'+O(q^{%d})\)' % prec
 
 
     def q_expansion(self, prec_max=10):

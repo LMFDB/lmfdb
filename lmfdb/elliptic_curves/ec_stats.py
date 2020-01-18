@@ -99,19 +99,19 @@ class ECstats(object):
             ncu = ecdb.count({'torsion':t})
             if t in [4,8,12]: # two possible structures
                 ncyc = ecdb.count({'torsion_structure':[t]})
-                gp = "\(C_{%s}\)"%t
+                gp = r"\(C_{%s}\)"%t
                 prop = format_percentage(ncyc,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncyc, 'prop': prop})
                 nncyc = ncu-ncyc
-                gp = "\(C_{2}\\times C_{%s}\)"%(t//2)
+                gp = r"\(C_{2}\times C_{%s}\)"%(t//2)
                 prop = format_percentage(nncyc,ncurves)
                 tor_counts2.append({'t': t, 'gp': gp, 'ncurves': nncyc, 'prop': prop})
             elif t==16: # all C_2 x C_8
-                gp = "\(C_{2}\\times C_{8}\)"
+                gp = r"\(C_{2}\times C_{8}\)"
                 prop = format_percentage(ncu,ncurves)
                 tor_counts2.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
             else: # all cyclic
-                gp = "\(C_{%s}\)"%t
+                gp = r"\(C_{%s}\)"%t
                 prop = format_percentage(ncu,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
         stats['tor_counts'] = tor_counts+tor_counts2

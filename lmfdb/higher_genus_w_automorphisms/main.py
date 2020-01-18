@@ -621,7 +621,7 @@ def render_family(args):
     if 'label' in args:
         label = clean_input(args['label'])
         dataz = list(db.hgcwa_passports.search({'label':label}))
-        if len(dataz) == 0:
+        if not dataz:
             flash_error("No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data = dataz[0]
@@ -642,10 +642,10 @@ def render_family(args):
         smallgroup="[" + str(gn) + "," +str(gt) + "]"
 
         prop2 = [
-            ('Genus', '\(%d\)' % g),
-             ('Quotient Genus', '\(%d\)' % g0),
-            ('Group', '\(%s\)' % pretty_group),
-            ('Signature', '\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
+            ('Genus', r'\(%d\)' % g),
+             ('Quotient Genus', r'\(%d\)' % g0),
+            ('Group', r'\(%s\)' % pretty_group),
+            ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
         info.update({'genus': data['genus'],
                     'sign': sign_display(ast.literal_eval(data['signature'])),
@@ -676,7 +676,7 @@ def render_family(args):
         g2List = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
         if g == 2 and data['group'] in g2List:
             g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
-            friends = [("Genus 2 curves over $\Q$", g2url)]
+            friends = [(r"Genus 2 curves over $\Q$", g2url)]
         else:
             friends = []
 
@@ -706,7 +706,7 @@ def render_passport(args):
     if 'passport_label' in args:
         label = clean_input(args['passport_label'])
         dataz = list(db.hgcwa_passports.search({'passport_label': label}))
-        if len(dataz) == 0:
+        if not dataz:
             bread = get_bread([("Search Error", url_for('.index'))])
             flash_error("No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
@@ -738,11 +738,11 @@ def render_passport(args):
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
-            ('Genus', '\(%d\)' % g),
-            ('Quotient Genus', '\(%d\)' % g0),
-            ('Group', '\(%s\)' % pretty_group),
-            ('Signature', '\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
-            ('Generating Vectors', '\(%d\)' % numb)
+            ('Genus', r'\(%d\)' % g),
+            ('Quotient Genus', r'\(%d\)' % g0),
+            ('Group', r'\(%s\)' % pretty_group),
+            ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
+            ('Generating Vectors', r'\(%d\)' % numb)
         ]
         info.update({'genus': data['genus'],
                     'cc': cc_display(data['con']),

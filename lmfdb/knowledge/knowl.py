@@ -230,7 +230,7 @@ class KnowlBackend(PostgresBase):
             restrictions = SQL("")
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1} ORDER BY id, timestamp DESC").format(sqlfields, restrictions)
         secondary_restrictions = []
-        if len(filters) > 0:
+        if filters:
             secondary_restrictions.append(SQL("knowls.{0} = ANY(%s)").format(Identifier("status")))
             values.append([knowl_status_code[q] for q in filters if q in knowl_status_code])
         else:

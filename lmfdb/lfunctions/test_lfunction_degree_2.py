@@ -3,18 +3,13 @@
 from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
-
-    def check(self, homepage, path, text):
-        assert path in homepage, "path not in homepage."
-        assert text in self.tc.get(path).data, "text %s not in pathpage %s."%(text, path)
-    
     # Testing all links in the home page
 
     def test_table(self):
         r"""
         Check that the links in the /L/degree2/ table work.
         """
-        homepage = self.tc.get("/L/degree2/").data
+        homepage = self.tc.get("/L/degree2/").get_data(as_text=True)
         self.check(homepage,
                    "/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032",
                    'Maass')

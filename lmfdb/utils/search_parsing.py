@@ -597,10 +597,15 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield):
-    from lmfdb.galois_groups.transitive_group import complete_group_codes
+def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
     try:
-        gcs = complete_group_codes(inp)
+        if list_ok:
+            from lmfdb.galois_groups.transitive_group import complete_group_codes
+            gcs = complete_group_codes(inp)
+        else:
+            from lmfdb.galois_groups.transitive_group import complete_group_code
+            gcs = complete_group_code(inp.upper())
+
         galfield, nfield = qfield
         if nfield and nfield not in query:
             nvals = list(set([s[0] for s in gcs]))
@@ -615,7 +620,12 @@ def parse_galgrp(inp, query, qfield):
         else:
             query[galfield] = {'$in': cands}
     except NameError:
-        raise ValueError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
+        if re.match(r'^[ACDS]\d+$', inp):
+            raise ValueError("The requested group is not in the database")
+        if err_msg:
+            raise ValueError(err_msg)
+        else:
+            raise ValueError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:
@@ -625,7 +635,8 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     # Change unicode dash with minus sign
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
-    FF = FF.decode('utf8').encode('ascii', 'ignore')
+    # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
+    FF = FF.encode('utf8').decode('utf8').encode('ascii', 'ignore')
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")

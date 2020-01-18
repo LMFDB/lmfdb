@@ -110,7 +110,7 @@ def l_function_cuspform_browse_page(degree):
         return abort(404)
     info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(0.501),LfunctionPlot.getOneGraphHtmlHolo(1)]
-    return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_1(N)\)', **info)
+    return render_template("cuspformGL2.html", title=r'L-functions of Cusp Forms on \(\Gamma_1(N)\)', **info)
 
 
 # L-function of GL(2) maass forms browsing page ##############################################
@@ -567,8 +567,8 @@ def set_bread_and_friends(info, L, request):
     friendlink = splitlink[0] + splitlink[2]
 
     if L.Ltype() == 'riemann':
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
-                           ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage',
+        info['friends'] = [(r'\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
+                           (r'Dirichlet Character \(\chi_{1}(1,\cdot)\)',url_for('characters.render_Dirichletwebpage',
                                                                                   modulus=1, number=1)),
                            ('Artin Representation 1.1.1t1.1c1', url_for('artin_representations.render_artin_representation_webpage',label='1.1.1t1.1c1'))]
         info['bread'] = get_bread(1, [('Riemann Zeta', request.path)])
@@ -599,7 +599,7 @@ def set_bread_and_friends(info, L, request):
             info['friends'] = [('Maass Form ', friendlink)]
             info['bread'] = get_bread(2, [('Maass Form',
                                            url_for('.l_function_maass_browse_page')),
-                                          ('\(' + L.texname + '\)', request.path)])
+                                          (r'\(' + L.texname + r'\)', request.path)])
 
         else:
             if L.fromDB and not L.selfdual:
@@ -1176,7 +1176,7 @@ def processMaassNavigation(numrecs=35):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
-    s = '<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
+    s = r'<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
     i = 0
     maxinlevel = 4

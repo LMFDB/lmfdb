@@ -34,6 +34,7 @@ table.ntdata a {
              <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
              <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
             <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
+            <tr><td> $|{{ info.autstring|safe }}(K/\Q)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
   {% if info.is_abelian %}
             <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>

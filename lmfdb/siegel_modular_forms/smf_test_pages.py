@@ -19,7 +19,7 @@ class SMFPageTest(LmfdbTest):
             print("Checking home page for SMF sample " + full_label)
             try:
                 n = n+1
-                pagedata = self.tc.get(url, follow_redirects=True).data
+                pagedata = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
                 #print "Got %d bytes" % len(pagedata)
                 assert full_label in pagedata and "Hecke eigenform" in pagedata
             except:
