@@ -37,8 +37,6 @@ function show_eqns(invstyle) {
 <h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  title='Simplified equation') }} </h2>
-<p class='min_eqn proj_eqn'>{{place_code('curve')}}</p>
-<p class='simp_eqn nodisplay'>{{place_code('simplified_curve')}}</p>
 
 <table>
 <tr class='min_eqn'>
@@ -54,6 +52,7 @@ function show_eqns(invstyle) {
     <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>, <a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
 <tr>
 </table>
+<p>{{place_code('curve')}}</p>
 
 <h2> {{ KNOWL('g2c.invariants', title='Invariants') }} </h2>
 <table>
@@ -66,11 +65,8 @@ function show_eqns(invstyle) {
 </table>
 
 <h3 class='igusa_clebsch'>{{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}</h3>
-<p class='igusa_clebsch'>{{place_code('igusa_clebsch')}}</p>
 <h3 class='igusa nodisplay'>{{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}</h3>
-<p class='igusa nodisplay'>{{place_code('igusa')}}</p>
 <h3 class='G2 nodisplay'>{{KNOWL("g2c.g2_invariants", title="G2 invariants")}}</h3>
-<p class='G2 nodisplay'>{{place_code('g2')}}</p>
 
 <table>
     <tr class='igusa_clebsch'>
@@ -126,30 +122,23 @@ function show_eqns(invstyle) {
     <span class='G2 nodisplay'><a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a>)</span>
     <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2 invariants</a>)</span>
 </div>
+<p>{{place_code('geom_inv')}}</p>
 
 <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 
 <table>
-    <tr>
-        <td colspan="5">
-            {{place_code('aut')}}
-        </td>
-    </tr>
     <tr>
         <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td>
         <td>{{ data['aut_grp'] | safe }}</td>
         <!-- a hack so that that the table doesn't expand with code blurbls -->
         <!-- TODO: use javascript to adapt the width -->
         <td style="width: 420px;"></td>
-    </tr>
-    <tr>
-        <td colspan="5">
-            {{place_code('autQbar')}}
-        </td>
+        <td>{{place_code('aut')}}</td>
     </tr>
     <tr>
         <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>
         <td>{{ data['geom_aut_grp'] | safe }}</td>
+        <td>{{place_code('autQbar')}}</td>
     </tr>
 </table>
 

@@ -864,10 +864,8 @@ class WebG2C(object):
         code['show'] = {'sage':'','magma':''} # use default show names
         f,h = fh = data['min_eqn']
         g = simplify_hyperelliptic(fh)
-        code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'%(f,h),
-                         'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'%(f,h) }
-        code['simplified_curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s))'%(g),
-                                    'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);\n X,pi:= SimplifiedModel(C);'%(f,h) }
+        code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s)); X = Hyperellipticcurve(R(%s))'%(f,h,g),
+                         'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s); X,pi:= SimplifiedModel(C);'%(f,h) }
         if data['abs_disc'] % 4096 == 0:
             ind2 = [a[0] for a in data['bad_lfactors']].index(2)
             bad2 = data['bad_lfactors'][ind2][1]
@@ -876,10 +874,8 @@ class WebG2C(object):
             magma_cond_option = ''
         code['cond'] = {'magma': 'Conductor(LSeries(C%s)); Factorization($1);'% magma_cond_option}
         code['disc'] = {'magma':'Discriminant(C); Factorization(Integers()!$1);'}
-        code['igusa_clebsch'] = {'sage':'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
-                                      'magma':'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'}
-        code['igusa'] = {'magma':'IgusaInvariants(C); [Factorization(Integers()!a): a in $1];'}
-        code['g2'] = {'magma':'G2Invariants(C);'}
+        code['geom_inv'] = {'sage':'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
+                            'magma':'IgusaClebschInvariants(C); IgusaInvariants(C); G2Invariants(C);'}
         code['aut'] = {'magma':'AutomorphismGroup(C); IdentifyGroup($1);'}
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
