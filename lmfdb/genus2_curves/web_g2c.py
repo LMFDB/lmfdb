@@ -509,7 +509,7 @@ def mw_gens_table(invs,gens,hts,pts):
         D,xD,yD,yden = divisor_data(gens[i])
         D0 = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1]]
         Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1])]
-        supp = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(D0)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
+        supp = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
         supp += ' - '
         supp += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' + '.join([point_string(P) for P in Dinf])) if Dinf else r'D_\infty'
         gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
