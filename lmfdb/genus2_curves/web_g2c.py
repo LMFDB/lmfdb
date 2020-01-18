@@ -499,8 +499,8 @@ def mw_gens_table(invs,gens,hts,pts):
     if not invs:
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
-              th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
-              th_wrap('g2c.mw_generator', '$D_0$'),
+              th_wrap('g2c.mw_generator', 'Generator'),
+              th_wrap('g2c.mw_generator', '$D_0$'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
