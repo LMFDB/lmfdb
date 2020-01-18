@@ -500,7 +500,7 @@ def mw_gens_table(invs,gens,hts,pts):
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('g2c.mw_generator', 'Generator'), '<th></th>', '<th></th>', '<th></th>', '<th></th>', '<th></th>',
-              th_wrap('g2c.mw_generator', 'Divisor'),
+              th_wrap('g2c.mw_generator', '$D_0$'),
               th_wrap('ag.canonical_height', 'Height'),
               th_wrap('g2c.mw_generator_order', 'Order'),
               '</tr>', '</thead>', '<tbody>']
@@ -509,13 +509,11 @@ def mw_gens_table(invs,gens,hts,pts):
         D,xD,yD,yden = divisor_data(gens[i])
         D0 = [P for P in pts if P[2] and xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1]]
         Dinf = [P for P in pts if P[2] == 0 and not (xD(P[0],P[2]) == 0 and yD(P[0],P[2]) == yden*P[1])]
-        supp = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
-        supp += ' - '
-        supp += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' + '.join([point_string(P) for P in Dinf])) if Dinf else r'D_\infty'
-        gentab.extend([td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
-                       td_wrapl(supp),
-                       td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'),
-                       td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
+        div = (r'2 \cdot' + point_string(D0[0]) if len(D0)==1 and len(Dinf)!=1 else ' + '.join([point_string(P) for P in D0])) if D0 else 'D_0'
+        div += ' - '
+        div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf)==1 and len(D0)!=1 else ' - '.join([point_string(P) for P in Dinf])) if Dinf else r'D_\infty'
+        gentab.extend([td_wrapl(div), td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
+                       td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'), td_wrapc(r'\infty') if invs[i]==0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
