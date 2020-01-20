@@ -866,8 +866,7 @@ class WebG2C(object):
         g = simplify_hyperelliptic(fh)
         code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s));'%(f,h),
                          'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'%(f,h) }
-        code['simple_curve'] = {'sage':'X = HyperellipticCurve(R(%s))'%(g),
-                                'magma':'X,pi:= SimplifiedModel(C);'%(f,h) }
+        code['simple_curve'] = {'sage':'X = HyperellipticCurve(R(%s))'%(g), 'magma':'X,pi:= SimplifiedModel(C);' }
         if data['abs_disc'] % 4096 == 0:
             ind2 = [a[0] for a in data['bad_lfactors']].index(2)
             bad2 = data['bad_lfactors'][ind2][1]
