@@ -206,7 +206,7 @@ class AbvarFq_isoclass(object):
             ("Base Field", "$%s$" % (self.field(self.q))),
             ("Dimension", "$%s$" % (self.g)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-            ("Ordinary", "Yes" if self.is_ordinary == 1 else "No"),
+            ("Ordinary", "Yes" if self.is_ordinary() == 1 else "No"),
             ("$p$-rank", "$%s$" % (self.p_rank)),
         ]
         if self.has_principal_polarization != 0:
