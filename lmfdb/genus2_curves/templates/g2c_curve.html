@@ -37,8 +37,6 @@ function show_eqns(invstyle) {
 <h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 <h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  title='Simplified equation') }} </h2>
-<p class='min_eqn proj_eqn'>{{place_code('curve')}}</p>
-<p class='simp_eqn nodisplay'>{{place_code('simplified_curve')}}</p>
 
 <table>
 <tr class='min_eqn'>
@@ -54,6 +52,7 @@ function show_eqns(invstyle) {
     <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>, <a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
 <tr>
 </table>
+<p>{{place_code('curve')}}{{place_code('simple_curve')}}</p>
 
 <h2> {{ KNOWL('g2c.invariants', title='Invariants') }} </h2>
 <table>
@@ -66,11 +65,8 @@ function show_eqns(invstyle) {
 </table>
 
 <h3 class='igusa_clebsch'>{{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}</h3>
-<p class='igusa_clebsch'>{{place_code('igusa_clebsch')}}</p>
 <h3 class='igusa nodisplay'>{{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}</h3>
-<p class='igusa nodisplay'>{{place_code('igusa')}}</p>
 <h3 class='G2 nodisplay'>{{KNOWL("g2c.g2_invariants", title="G2 invariants")}}</h3>
-<p class='G2 nodisplay'>{{place_code('g2')}}</p>
 
 <table>
     <tr class='igusa_clebsch'>
@@ -126,66 +122,60 @@ function show_eqns(invstyle) {
     <span class='G2 nodisplay'><a onclick="show_invs('igusa'); return false" href='#'>Igusa invariants</a>)</span>
     <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2 invariants</a>)</span>
 </div>
+<p>{{place_code('geom_inv')}}</p>
 
 <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
 
 <table>
     <tr>
-        <td colspan="5">
-            {{place_code('aut')}}
-        </td>
-    </tr>
-    <tr>
         <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td>
         <td>{{ data['aut_grp'] | safe }}</td>
         <!-- a hack so that that the table doesn't expand with code blurbls -->
         <!-- TODO: use javascript to adapt the width -->
-        <td style="width: 420px;"></td>
-    </tr>
-    <tr>
-        <td colspan="5">
-            {{place_code('autQbar')}}
-        </td>
+        <td>{{place_code('aut')}}</td>
     </tr>
     <tr>
         <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td>
         <td>{{ data['geom_aut_grp'] | safe }}</td>
+        <td>{{place_code('autQbar')}}</td>
     </tr>
 </table>
 
 
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
-<p>{{place_code('rat_pts')}}</p>
 <p>{{ data.rat_pts_table | safe }}</p>
+<p>{{place_code('rat_pts')}}</p>
 
-<p>{{place_code('num_rat_wpts')}}</p>
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
+<p>{{place_code('num_rat_wpts')}}</p>
 
-<p>{{place_code('locally_solvable')}}</p>
 <p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
+<p>{{place_code('locally_solvable')}}</p>
 
 <h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
 
-<p>{{place_code('mw_group')}}</p>
 <p>
 {{ KNOWL('ag.mordell_weil', title='Group structure') }}: {{data.mw_group}}
 {% if not data.mw_rank_proved %} ({{ KNOWL('g2c.conditional_mw_group','conditional')}}) {% endif %}
 </p>
+<p>{{place_code('mw_group')}}</p>
 
 {% if data.mw_gens_table %}
 <p>{{ data.mw_gens_table | safe }}</p>
 {% endif %}
 
-<p>{{place_code('two_torsion_field')}}</p>
 <p>{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
+<p>{{place_code('two_torsion_field')}}</p>
 
 <h2> {{KNOWL('g2c.bsd_invariants', title='BSD invariants')}} </h2>
 
 <p>
 <table>
+    <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', title='Hasse-Weil conjecture') }}:</td>
+        <td>{% if data.hasse_weil_proved  %} verified {%else %} unverified {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td>
-        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 0 %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
+        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td>
         <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>    
     <tr><td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
