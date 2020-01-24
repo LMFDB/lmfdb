@@ -61,13 +61,10 @@ def abelian_varieties():
         info = to_dict(args)
         # hidden_search_type for prev/next buttons
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-
-        if search_type == "List":
-            return abelian_variety_search(info)
-        elif search_type == "Counts":
+        if search_type == "Counts":
             return abelian_variety_count(info)
-        elif search_type == "Random":
-            return abelian_variety_search(info, random=True)
+        elif search_type in ['List', 'Random']:
+            return abelian_variety_search(info)
         assert False
     else:
         return abelian_variety_browse(**args)
@@ -232,7 +229,7 @@ class AbvarSearchArray(SearchArray):
             knowl="lf.newton_polygon",
             example="[0,0,1/2]",
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
             short_label="slopes",
             advanced=True,
         )
@@ -248,7 +245,7 @@ class AbvarSearchArray(SearchArray):
             knowl="ag.fq.point_counts",
             example="[75,7125]",
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
             short_label="points on variety",
             advanced=True,
         )
@@ -258,7 +255,7 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.curve_point_counts",
             example="[9,87]",
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
             short_label="points on curve",
             advanced=True,
         )
@@ -271,7 +268,7 @@ class AbvarSearchArray(SearchArray):
             example="4.0.29584.2",
             example_span="4.0.29584.2 or Qzeta8",
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
             advanced=True,
         )
         galois_group = TextBox(
@@ -282,7 +279,7 @@ class AbvarSearchArray(SearchArray):
             example_span="C4, or 8T12, a list of "
             + display_knowl("nf.galois_group.name", "group labels"),
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
             advanced=True,
         )
         #size = TextBox(
@@ -467,16 +464,15 @@ class AbvarSearchArray(SearchArray):
             select_box=simple_quantifier,
             knowl="av.decomposition",
             colspan=(1, 3, 2),
-            width=40,
-            short_width=25,
+            width=3*190 - 30,
+            short_width=2*190 - 30,
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
         count = TextBox(
             "count",
-            label="Maximum number of isogeny classes to display",
-            colspan=(2, 1, 1),
-            width=10,
+            label="Results to display",
+            example=50,
         )
         refine_array = [
             [q, p, g, p_rank, initial_coefficients],
@@ -513,7 +509,10 @@ class AbvarSearchArray(SearchArray):
             [galois_group],
             [count],
         ]
-        SearchArray.__init__(self, browse_array, refine_array)
+        search_types = [('List', 'List of Results'),
+                        ('Counts', 'Counts Table'),
+                        ('Random', 'Random Result')]
+        SearchArray.__init__(self, browse_array, refine_array, search_types=search_types)
 
 def common_parse(info, query):
     info["search_array"] = AbvarSearchArray()
