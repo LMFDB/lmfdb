@@ -120,14 +120,22 @@
   <option value=''>include</option>
   <option value='exclude'>exclude</option>
   <option selected value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
 {% elif info.bad_quantifier=='exclude' %}
   <option value=''>include</option>
   <option selected value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
+{% elif info.bad_quantifier=='subset' %}
+  <option value=''>include</option>
+  <option value='exclude'>exclude</option>
+  <option value='exactly'>exactly</option>
+  <option selected value='subset'>subset of</option>
 {% else %}
   <option selected value=''>include</option>
   <option value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
 {% endif %}
   </select>
 <input type='text' name='bad_primes' placeholder="2,3" size=10  value={{info.bad_primes}}>

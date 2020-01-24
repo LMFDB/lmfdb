@@ -276,6 +276,8 @@ def elliptic_curve_search(info, query):
         mode = 'exact'
     elif info.get('bad_quantifier') == 'exclude':
         mode = 'complement'
+    elif info.get('bad_quantifier') == 'subset':
+        mode = 'subsets'
     else:
         mode = 'append'
     parse_primes(info, query, 'bad_primes', name='bad primes',
