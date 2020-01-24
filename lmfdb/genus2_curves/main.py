@@ -267,7 +267,9 @@ class G2C_download(Downloader):
                            (r'$\Q$', url_for(".index_Q")),
                            ('Search Results', '.')],
              learnmore=learnmore_list,
-             credit=lambda:credit_string)
+             credit=lambda:credit_string,
+             url_for_label=lambda label: url_for(".by_label", label=label)
+             )
 def genus2_curve_search(info, query):
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
