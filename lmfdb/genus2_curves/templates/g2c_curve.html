@@ -34,9 +34,9 @@ function show_eqns(invstyle) {
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
 
-<h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
-<h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
-<h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  title='Simplified equation') }} </h2>
+<h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
+<h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
+<h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  'Simplified equation') }} </h2>
 
 <table>
 <tr class='min_eqn'>
@@ -54,19 +54,19 @@ function show_eqns(invstyle) {
 </table>
 <p>{{place_code('curve')}}{{place_code('simple_curve')}}</p>
 
-<h2> {{ KNOWL('g2c.invariants', title='Invariants') }} </h2>
+<h2> {{ KNOWL('g2c.invariants', 'Invariants') }} </h2>
 <table>
-<tr><td> \( N \) </td><td>&nbsp;=&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
+<tr><td>{{KNOWL("ag.conductor", "Conductor")}}</td><td> \( N \) </td><td>&nbsp;=&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
     <td>{{place_code('cond')}}</td>
 </tr>
-<tr><td> \( \Delta \) </td> <td>&nbsp;=&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
+<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}</td><td> \( \Delta \) </td> <td>&nbsp;=&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
     <td>{{place_code('disc')}}</td>
 </tr>
 </table>
 
-<h3 class='igusa_clebsch'>{{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}</h3>
-<h3 class='igusa nodisplay'>{{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}</h3>
-<h3 class='G2 nodisplay'>{{KNOWL("g2c.g2_invariants", title="G2 invariants")}}</h3>
+<h3 class='igusa_clebsch'>{{KNOWL("g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants")}}</h3>
+<h3 class='igusa nodisplay'>{{KNOWL("g2c.igusa_invariants", "Igusa invariants")}}</h3>
+<h3 class='G2 nodisplay'>{{KNOWL("g2c.g2_invariants", "G2 invariants")}}</h3>
 
 <table>
     <tr class='igusa_clebsch'>
@@ -124,7 +124,7 @@ function show_eqns(invstyle) {
 </div>
 <p>{{place_code('geom_inv')}}</p>
 
-<h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
+<h2> {{ KNOWL('g2c.aut_grp', 'Automorphism group') }} </h2>
 
 <table>
     <tr>
@@ -147,16 +147,16 @@ function show_eqns(invstyle) {
 <p>{{ data.rat_pts_table | safe }}</p>
 <p>{{place_code('rat_pts')}}</p>
 
-<p>Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
+<p>Number of rational {{ KNOWL('g2c.num_rat_wpts', 'Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 <p>{{place_code('num_rat_wpts')}}</p>
 
-<p>This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
+<p>This curve is {{ KNOWL('g2c.locally_solvable', 'locally solvable') }} {{data.non_solvable_places}}.</p>
 <p>{{place_code('locally_solvable')}}</p>
 
-<h2> {{KNOWL('ag.mordell_weil', title='Mordell-Weil group of the Jacobian')}}: </h2>
+<h2> {{KNOWL('ag.mordell_weil', 'Mordell-Weil group of the Jacobian')}}: </h2>
 
 <p>
-{{ KNOWL('ag.mordell_weil', title='Group structure') }}: {{data.mw_group}}
+{{ KNOWL('ag.mordell_weil', 'Group structure') }}: {{data.mw_group}}
 {% if not data.mw_rank_proved %} ({{ KNOWL('g2c.conditional_mw_group','conditional')}}) {% endif %}
 </p>
 <p>{{place_code('mw_group')}}</p>
@@ -165,39 +165,39 @@ function show_eqns(invstyle) {
 <p>{{ data.mw_gens_table | safe }}</p>
 {% endif %}
 
-<p>{{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
+<p>{{ KNOWL('g2c.two_torsion_field', '2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
 <p>{{place_code('two_torsion_field')}}</p>
 
-<h2> {{KNOWL('g2c.bsd_invariants', title='BSD invariants')}} </h2>
+<h2> {{KNOWL('g2c.bsd_invariants', 'BSD invariants')}} </h2>
 
 <p>
 <table>
-    <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', title='Hasse-Weil conjecture') }}:</td>
+    <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', 'Hasse-Weil conjecture') }}:</td>
         <td>{% if data.hasse_weil_proved  %} verified {%else %} unverified {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td>
+    <tr><td>{{ KNOWL('g2c.analytic_rank', 'Analytic rank') }}:</td>
         <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
-    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td>
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', 'Mordell-Weil rank') }}:</td>
         <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>    
-    <tr><td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
-    <tr><td>{{ KNOWL('g2c.regulator', title='Regulator') }}:</td>
+    <tr><td>{{ KNOWL('g2c.two_selmer_rank', '2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
+    <tr><td>{{ KNOWL('g2c.regulator', 'Regulator') }}:</td>
         <td>{% if data.regulator == 'unknown' %} unknown {% else %} \( {{data.regulator}} \) {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('g2c.real_period', title='Real period') }}: </td><td>\( {{data.real_period}} \)</td></tr>
-    <tr><td>{{ KNOWL('g2c.tamagawa', title='Tamagawa product') }}:</td>
+    <tr><td>{{ KNOWL('g2c.real_period', 'Real period') }}: </td><td>\( {{data.real_period}} \)</td></tr>
+    <tr><td>{{ KNOWL('g2c.tamagawa', 'Tamagawa product') }}:</td>
         <td>{% if data.tamagawa_product != 0 %} \( {{data.tamagawa_product}} \) {% else %} unknown {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('g2c.torsion_order', title='Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
-    <tr><td>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
+    <tr><td>{{ KNOWL('g2c.torsion_order', 'Torsion order') }}:</td><td>\( {{ data.torsion_order }} \)</td></tr>
+    <tr><td>{{ KNOWL('lfunction.leading_coeff', 'Leading coefficient') }}:</td>
         <td>{% if data.leading_coefficient == 'unknown' %} unknown {% else %} \( {{ data.leading_coeff }} \) {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('g2c.analytic_sha', title='Analytic order of &#1064;') }}:</td>
+    <tr><td>{{ KNOWL('g2c.analytic_sha', 'Analytic order of &#1064;') }}:</td>
         <td>{% if data.analytic_sha != 0 %} \( {{data.analytic_sha}} \) &nbsp;&nbsp;(rounded) {% else %} unknown {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('g2c.has_square_sha', title='Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
+    <tr><td>{{ KNOWL('g2c.has_square_sha', 'Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
 
-<h2> {{KNOWL('g2c.local_invariants', title='Local invariants')}} </h2>
+<h2> {{KNOWL('g2c.local_invariants', 'Local invariants')}} </h2>
 
 <p>{{ data.local_table | safe }}</p>
 
-<h2> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h2>
+<h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
 <p>
 <table>
@@ -206,7 +206,7 @@ function show_eqns(invstyle) {
 </table>
 </p>
 
-<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition of the Jacobian') }} </h2>
+<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2>
 
 <!-- Description of a splitting field of minimal degree: -->
 <p>{{data.split_field_statement|safe}}</p>
@@ -214,7 +214,7 @@ function show_eqns(invstyle) {
 <!-- Description of the splittings themselves. -->
 <p>{{data.split_statement|safe}}</p>
 
-<h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+<h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2>
 
 <!-- Description over QQ: -->
 <p>{{data.gl2_statement_base}}</p>
@@ -229,7 +229,7 @@ function show_eqns(invstyle) {
 
 <!-- Remainder of the lattice: -->
 {% if data.end_lattice_statement %}
-<h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', title='endomorphism lattice') }} by field</h3>
+<h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', 'endomorphism lattice') }} by field</h3>
 <p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
 
