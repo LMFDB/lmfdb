@@ -514,7 +514,7 @@ class G2CSearchArray(SearchArray):
         )
 
         torsion_structure = TextBox(
-            name="torsion_structure",
+            name="torsion",
             knowl="g2c.torsion",
             label="Torsion structure",
             short_label="Torsion",
