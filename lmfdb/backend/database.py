@@ -1501,7 +1501,7 @@ class PostgresTable(PostgresBase):
             pairs = [self._parse_dict(clause, outer=col, outer_type=col_type) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
-                strings, values = zip(*pairs)
+                strings, values = tuple(zip(*pairs))
                 # flatten values
                 values = [item for sublist in values for item in sublist]
                 joiner = " OR " if key == '$or' else " AND "
