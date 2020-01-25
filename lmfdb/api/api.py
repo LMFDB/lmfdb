@@ -5,6 +5,7 @@ if sys.version_info > (3,):
     buffer = memoryview
 
 from six.moves.urllib_parse import unquote
+from __future__ import print_function
 import re
 import yaml
 import json
