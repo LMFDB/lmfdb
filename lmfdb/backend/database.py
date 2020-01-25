@@ -2549,7 +2549,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("""kind={} is not "Index" or "Constraint" """)
 
         selecter = SQL("SELECT 1 FROM {} WHERE {} = %s AND table_name = %s")
-        cur = self._execute(selecter.format(*map(Identifier, [meta, meta_name])),
+        cur = self._execute(selecter.format(*tuple(map(Identifier, [meta, meta_name]))),
                             [name, self.search_table])
         if cur.rowcount > 0:
             raise ValueError("{} name {} is invalid, ".format(kind, name) +
