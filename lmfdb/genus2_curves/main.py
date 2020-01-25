@@ -467,10 +467,8 @@ class G2CSearchArray(SearchArray):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
             width=100,
-            options=[('', 'Igusa-Clebsh'),
-                     ('igusa_inv', 'Igusa'),
-                     ('g2_inv', 'G2')
-                     ])
+            options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
+        )
 
         geometric_invariants = TextBoxWithSelect(
             name="geometric_invariants",
@@ -480,14 +478,16 @@ class G2CSearchArray(SearchArray):
             select_box=geometric_invariants_type,
             width=4 * 190 - 30,
             colspan=(1, 4, 1),
-            example_col=False)  # the last 1 is irrelevant
+            example_col=False,
+        )  # the last 1 is irrelevant
 
         conductor = TextBox(
             name="cond",
             knowl="ag.conductor",
             label="Conductor",
             example="169",
-            example_span="169, 100-1000")
+            example_span="169, 100-1000",
+        )
 
         discriminant = TextBox(
             name="abs_disc",
@@ -495,14 +495,16 @@ class G2CSearchArray(SearchArray):
             label="Absolute Discriminant",
             short_label="Discriminant",
             example="169",
-            example_span="169, 0-1000")
+            example_span="169, 0-1000",
+        )
 
         rational_points = TextBox(
             name="num_rat_pts",
             knowl="g2c.num_rat_pts",
             label="Rational points*",
             example="1",
-            example_span="0, 20-26")
+            example_span="0, 20-26",
+        )
 
         rational_weirstrass_points = TextBox(
             name="num_rat_wpts",
@@ -510,139 +512,151 @@ class G2CSearchArray(SearchArray):
             label="Rational Weierstrass points",
             short_label="Weierstrass",
             example="1",
-            example_span="1, 0-6")
+            example_span="1, 0-6",
+        )
 
         torsion_order = TextBox(
             name="torsion_order",
             knowl="g2c.torsion_order",
             label="Torsion order",
-            example="2")
+            example="2",
+        )
 
         torsion_structure = TextBox(
             name="torsion_structure",
             knowl="g2c.torsion_structure",
             label="Torsion structure",
             short_label="Torsion",
-            example="[2,2,2]")
+            example="[2,2,2]",
+        )
 
         two_selmer_rank = TextBox(
             name="two_selmer_rank",
             knowl="g2c.two_selmer_rank",
             label="2-Selmer rank",
-            example="1")
+            example="1",
+        )
 
         analytic_sha = TextBox(
             name="analytic_sha",
             knowl="g2c.analytic_sha",
             label="Analytic order of &#1064;*",
             short_label="Analytic &#1064;*",
-            example="2")
+            example="2",
+        )
 
         analytic_rank = TextBox(
             name="analytic_rank",
             knowl="g2c.analytic_rank",
             label="Analytic rank*",
-            example="1")
+            example="1",
+        )
 
         bad_quantifier = SelectBox(
-            name='bad_quantifier',
+            name="bad_quantifier",
             width=85,
-            options=[('', 'include'),
-                     ('exclude', 'exclude'),
-                     ('exactly', 'exactly'),
-                     ('subset', 'subset')])
+            options=[
+                ("", "include"),
+                ("exclude", "exclude"),
+                ("exactly", "exactly"),
+                ("subset", "subset"),
+            ],
+        )
 
         bad_primes = TextBoxWithSelect(
-            name='bad_primes',
-            knowl='g2c.good_reduction',
-            label='Bad primes',
+            name="bad_primes",
+            knowl="g2c.good_reduction",
+            label="Bad primes",
             short_label=r"Bad \(p\)",
-            example='5,13',
-            select_box=bad_quantifier)
-
+            example="5,13",
+            select_box=bad_quantifier,
+        )
 
         is_gl2_type = SelectBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
             label="$\GL_2$-type",
-            options=[('', ''),
-                     ('True', 'True'),
-                     ('False', 'False')])
+            options=[("", ""), ("True", "True"), ("False", "False")],
+        )
 
         st_group = SelectBox(
             name="st_group",
             knowl="g2c.st_group",
             label="Sato-Tate group",
             short_label=r"\(\mathrm{ST}\)",
-            options=([('', '')] +
-                     [(elt, st_group_dict[elt]) for elt in st_group_list]))
+            options=([("", "")] + [(elt, st_group_dict[elt]) for elt in st_group_list]),
+        )
 
         st_group_identity_component = SelectBox(
             name="real_geom_end_alg",
             knowl="g2c.st_group_identity_component",
             label="Sate-Tate identity component",
             short_label=r"\(\mathrm{ST}^0\)",
-            options=([('', '')] +
-                     [(elt, real_geom_end_alg_to_ST0_dict[elt])
-                      for elt in real_geom_end_alg_list]))
+            options=(
+                [("", "")]
+                + [
+                    (elt, real_geom_end_alg_to_ST0_dict[elt])
+                    for elt in real_geom_end_alg_list
+                ]
+            ),
+        )
 
         Q_automorphism = SelectBox(
             name="aut_grp_id",
             knowl="g2c.aut_grp",
             label=r"\(\Q\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X)\)",
-            options=([('', '')] +
-                     [(elt, aut_grp_dict[elt])
-                      for elt in aut_grp_list]))
+            options=([("", "")] + [(elt, aut_grp_dict[elt]) for elt in aut_grp_list]),
+        )
 
         geometric_automorphism = SelectBox(
             name="geom_aut_grp_id",
             knowl="g2c.aut_grp",
             label=r"\(\overline{\Q}\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X_{\overline{\Q}})\)",
-            options=([('', '')] +
-                     [(elt, geom_aut_grp_dict[elt])
-                      for elt in geom_aut_grp_list]))
+            options=(
+                [("", "")]
+                + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+            ),
+        )
 
         geometric_endomorphism = SelectBox(
             name="geom_end_alg",
             knowl="g2c.geom_end_alg",
             label=r"\(\overline{\Q}\)-endomorphism algebra",
             short_label=r"\(\overline{\Q}\)-end algebra",
-            options=([('', '')] +
-                     [(elt, geom_end_alg_dict[elt])
-                      for elt in geom_end_alg_list]))
+            options=(
+                [("", "")]
+                + [(elt, geom_end_alg_dict[elt]) for elt in geom_end_alg_list]
+            ),
+        )
 
         locally_solvable = SelectBox(
             name="locally_solvable",
             knowl="g2c.locally_solvable",
             label="Locally solvable",
-            options=[('', ''),
-                     ("True", "True"),
-                     ("False", "False")])
+            options=[("", ""), ("True", "True"), ("False", "False")],
+        )
 
         has_square_sha = SelectBox(
             name="has_square_sha",
             knowl="g2c.analytic_sha",
             label=r"Order of &#1064; is square*",
             short_label=r"Square &#1064;*",
-            options=[('', ''),
-                     ("True", "True"),
-                     ("False", "False")])
+            options=[("", ""), ("True", "True"), ("False", "False")],
+        )
 
         geometrically_simple = SelectBox(
             name="is_simple_geom",
             knowl="ag.geom_simple",
             label="Geometrically simple",
             short_label=r"\(\overline{\Q}\)-simple",
-            options=[('', ''),
-                     ("True", "True"),
-                     ("False", "False")])
+            options=[("", ""), ("True", "True"), ("False", "False")],
+        )
 
         count = TextBox(
-            "count",
-            label="Results to display",
-            example=50)
+            "count", label="Results to display", example=50, example_col=False
+        )
 
         browse_array = [
             [geometric_invariants],
@@ -655,24 +669,36 @@ class G2CSearchArray(SearchArray):
             [two_selmer_rank, locally_solvable],
             [analytic_sha, has_square_sha],
             [analytic_rank, geometrically_simple],
-            [bad_primes, count]]
+            [bad_primes, count],
+        ]
 
         refine_array = [
-            [conductor, discriminant, rational_points, rational_weirstrass_points, torsion_order],
-            [bad_primes, two_selmer_rank, analytic_rank, analytic_sha, torsion_structure],
-            [is_gl2_type, st_group, Q_automorphism, has_square_sha, geometrically_simple],
-            [geometric_endomorphism, st_group_identity_component, geometric_automorphism, locally_solvable]]
+            [
+                conductor,
+                discriminant,
+                rational_points,
+                rational_weirstrass_points,
+                torsion_order,
+            ],
+            [
+                bad_primes,
+                two_selmer_rank,
+                analytic_rank,
+                analytic_sha,
+                torsion_structure,
+            ],
+            [
+                is_gl2_type,
+                st_group,
+                Q_automorphism,
+                has_square_sha,
+                geometrically_simple,
+            ],
+            [
+                geometric_endomorphism,
+                st_group_identity_component,
+                geometric_automorphism,
+                locally_solvable,
+            ],
+        ]
         SearchArray.__init__(self, browse_array, refine_array)
-
-
-
-
-
-
-
-
-
-
-
-
-
