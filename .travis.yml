@@ -56,9 +56,9 @@ install:
     # what is the load on the server
     - uptime
     - wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    # travis_wait extends the default 10 minute timeout to 40 minutes
     # what is the load on the server
     - uptime
+    # travis_wait extends the default 10 minute timeout to 40 minutes
     - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
 
     # trigger the patch once script
