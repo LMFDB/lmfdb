@@ -32,8 +32,6 @@ addons:
             - python-pip
             # to run nosetests in parallel
             - parallel
-            # another linter
-            - pylint
 
 
 install:
@@ -41,6 +39,8 @@ install:
     - parallel --version
     # install the latest pyflakes
     - pip3 install pyflakes --user
+    # install a version of pylint having --py3k
+    - pip3 install pylint==2.4.4 --user
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
