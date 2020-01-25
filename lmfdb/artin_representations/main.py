@@ -89,8 +89,11 @@ def artin_representation_jump(info):
     try:
         label = parse_artin_label(label)
     except ValueError:
-        flash_error("%s is not in a valid form for an Artin representation label", label)
-        return redirect(url_for(".index"))
+        try:
+            label = parse_artin_orbit_label(label)
+        except ValueError:
+            flash_error("%s is not in a valid form for an Artin representation label", label)
+            return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
