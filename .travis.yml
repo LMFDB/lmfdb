@@ -40,7 +40,7 @@ install:
     # install the latest pyflakes
     - pip3 install pyflakes --user
     # install a version of pylint having --py3k
-    - pip3 install 'pylint<=2.4.4' --user
+    - pip2 install pylint --user
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
