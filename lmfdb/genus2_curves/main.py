@@ -99,16 +99,6 @@ def index_Q():
     info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
-    #info["st_group_list"] = st_group_list
-    #info["st_group_dict"] = st_group_dict
-    #info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    #info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
-    #info["aut_grp_list"] = aut_grp_list
-    #info["aut_grp_dict"] = aut_grp_dict
-    #info["geom_aut_grp_list"] = geom_aut_grp_list
-    #info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    #info["geom_end_alg_list"] = geom_end_alg_list
-    #info["geom_end_alg_dict"] = geom_end_alg_dict
     title = r'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), (r'$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -285,16 +275,6 @@ class G2C_download(Downloader):
 )
 def genus2_curve_search(info, query):
     info["search_array"] = G2CSearchArray()
-    info["st_group_list"] = st_group_list
-    info["st_group_dict"] = st_group_dict
-    info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
-    info["aut_grp_list"] = aut_grp_list
-    info["aut_grp_dict"] = aut_grp_dict
-    info["geom_aut_grp_list"] = geom_aut_grp_list
-    info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    info["geom_end_alg_list"] = geom_end_alg_list
-    info["geom_end_alg_dict"] = geom_end_alg_dict
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
