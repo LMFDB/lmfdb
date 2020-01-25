@@ -32,8 +32,8 @@ addons:
             - python-pip
             # to run nosetests in parallel
             - parallel
-	    # another linter
-	    - pylint
+            # another linter
+            - pylint
 
 
 install:
