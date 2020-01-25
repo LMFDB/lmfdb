@@ -255,23 +255,34 @@ class G2C_download(Downloader):
                              'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
                      'gp':['[apply(Polrev,c)|c<-data];']}
 
-@search_wrap(template="g2c_search_results.html",
-             table=db.g2c_curves,
-             title='Genus 2 Curve Search Results',
-             err_title='Genus 2 Curves Search Input Error',
-             shortcuts={'jump':genus2_jump,
-                        'download':G2C_download()},
-             projection=['label','eqn','st_group','is_gl2_type','is_simple_geom','analytic_rank'],
-             cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-                       "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
-                       "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
-             bread=lambda:[('Genus 2 Curves', url_for(".index")),
-                           (r'$\Q$', url_for(".index_Q")),
-                           ('Search Results', '.')],
-             learnmore=learnmore_list,
-             credit=lambda:credit_string,
-             url_for_label=lambda label: url_for(".by_label", label=label)
-             )
+@search_wrap(
+    template="g2c_search_results.html",
+    table=db.g2c_curves,
+    title="Genus 2 Curve Search Results",
+    err_title="Genus 2 Curves Search Input Error",
+    shortcuts={"jump": genus2_jump, "download": G2C_download()},
+    projection=[
+        "label",
+        "eqn",
+        "st_group",
+        "is_gl2_type",
+        "is_simple_geom",
+        "analytic_rank",
+    ],
+    cleaners={
+        "class": lambda v: class_from_curve_label(v["label"]),
+        "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
+        "st_group_link": lambda v: st_link_by_name(1, 4, v.pop("st_group")),
+    },
+    bread=lambda: [
+        ("Genus 2 Curves", url_for(".index")),
+        (r"$\Q$", url_for(".index_Q")),
+        ("Search Results", "."),
+    ],
+    learnmore=learnmore_list,
+    credit=lambda: credit_string,
+    url_for_label=lambda label: url_for(".by_label", label=label),
+)
 def genus2_curve_search(info, query):
     info["search_array"] = G2CSearchArray()
     info["st_group_list"] = st_group_list
