@@ -32,6 +32,8 @@ addons:
             - python-pip
             # to run nosetests in parallel
             - parallel
+	    # another linter
+	    - pylint
 
 
 install:
@@ -76,6 +78,9 @@ script:
     # run pyflakes
     - pyflakes . > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    # run pylint --py3k (with some temporary exceptions)
+    - pylint --py3k -d W1618,W1619,W1633,W1653,W1645 lmfdb/ > pylintlog
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
