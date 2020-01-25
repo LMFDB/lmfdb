@@ -1918,7 +1918,7 @@ class PostgresTable(PostgresBase):
             {'regulator':455.191694993}
         """
         search_cols, extra_cols = self._parse_projection(projection)
-        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
+        vars = SQL(", ").join(tuple(map(IdentifierWrapper, search_cols + extra_cols)))
         qstr, values = self._build_query(query, 1, offset, sort=sort)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
