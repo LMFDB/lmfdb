@@ -1,6 +1,7 @@
 from .utilities import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 
+
 class TdElt(object):
     def td(self, colspan=1):
         keys = []
@@ -10,10 +11,12 @@ class TdElt(object):
             keys.append(' class="advanced"')
         return "<td%s>" % ("".join(keys))
 
+
 class Spacer(TdElt):
     def __init__(self, colspan=1, advanced=False):
         self.colspan = colspan
         self.advanced = advanced
+
 
 class BasicSpacer(Spacer):
     def __init__(self, msg, colspan=1, advanced=False):
@@ -22,6 +25,7 @@ class BasicSpacer(Spacer):
 
     def html(self, info=None):
         return self.td(self.colspan) + self.msg + "</td>"
+
 
 class CheckboxSpacer(Spacer):
     def __init__(self, checkbox, colspan=1, advanced=False):
@@ -37,11 +41,23 @@ class CheckboxSpacer(Spacer):
             + "</td>"
         )
 
+
 class SearchBox(TdElt):
     """
     Class abstracting the input boxes used for LMFDB searches.
     """
-    def __init__(self, name=None, label=None, knowl=None, colspan=(1, 1, 1), short_label=None, advanced=False, example_col=False, qfield=None):
+
+    def __init__(
+        self,
+        name=None,
+        label=None,
+        knowl=None,
+        colspan=(1, 1, 1),
+        short_label=None,
+        advanced=False,
+        example_col=False,
+        qfield=None,
+    ):
         self.name = name
         self.label = label
         self.knowl = knowl
@@ -71,6 +87,7 @@ class SearchBox(TdElt):
         if self.example_col:
             return "<td></td>"
 
+
 class TextBox(SearchBox):
     """
     A text box for user input.
@@ -88,12 +105,37 @@ class TextBox(SearchBox):
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
 
-    def __init__(self, name=None, label=None, knowl=None, example=None, example_span=None, example_span_colspan=1, colspan=(1, 1, 1), width=160, short_width=160, short_label=None, advanced=False, example_col=None, qfield=None):
+    def __init__(
+        self,
+        name=None,
+        label=None,
+        knowl=None,
+        example=None,
+        example_span=None,
+        example_span_colspan=1,
+        colspan=(1, 1, 1),
+        width=160,
+        short_width=160,
+        short_label=None,
+        advanced=False,
+        example_col=None,
+        qfield=None,
+    ):
         self.example = example
         self.example_span = example if example_span is None else example_span
         if example_col is None:
             example_col = bool(self.example_span)
-        SearchBox.__init__(self, name, label, knowl=knowl, colspan=colspan, short_label=short_label, advanced=advanced, example_col=example_col, qfield=qfield)
+        SearchBox.__init__(
+            self,
+            name,
+            label,
+            knowl=knowl,
+            colspan=colspan,
+            short_label=short_label,
+            advanced=advanced,
+            example_col=example_col,
+            qfield=qfield,
+        )
         self.width = width
         self.short_width = short_width
         self.example_span_colspan = example_span_colspan
@@ -116,11 +158,39 @@ class TextBox(SearchBox):
 
     def example_html(self, info=None):
         if self.example_col:
-            return self.td(self.example_span_colspan) + '<span class="formexample">e.g. %s</span></td>' % self.example_span
+            return (
+                self.td(self.example_span_colspan)
+                + '<span class="formexample">e.g. %s</span></td>' % self.example_span
+            )
+
 
 class SelectBox(SearchBox):
-    def __init__(self, name=None, label=None, options=[], knowl=None, colspan=(1, 1, 1), width=170, short_width=170, short_label=None, advanced=False, example_col=False, qfield=None, extra=[]):
-        SearchBox.__init__(self, name, label, knowl=knowl, colspan=colspan, short_label=short_label, advanced=advanced, example_col=example_col, qfield=qfield)
+    def __init__(
+        self,
+        name=None,
+        label=None,
+        options=[],
+        knowl=None,
+        colspan=(1, 1, 1),
+        width=170,
+        short_width=170,
+        short_label=None,
+        advanced=False,
+        example_col=False,
+        qfield=None,
+        extra=[],
+    ):
+        SearchBox.__init__(
+            self,
+            name,
+            label,
+            knowl=knowl,
+            colspan=colspan,
+            short_label=short_label,
+            advanced=advanced,
+            example_col=example_col,
+            qfield=qfield,
+        )
         self.options = options
         self.width = width
         self.short_width = short_width
@@ -139,7 +209,12 @@ class SelectBox(SearchBox):
                 keys.append('style="width: %spx"' % self.short_width)
         opts = []
         for value, display in self.options:
-            if info is None and value == "" or info is not None and info.get(self.name, "") == value:
+            if (
+                info is None
+                and value == ""
+                or info is not None
+                and info.get(self.name, "") == value
+            ):
                 selected = " selected"
             else:
                 selected = ""
@@ -153,6 +228,7 @@ class SelectBox(SearchBox):
             "".join("\n" + " " * 10 + opt for opt in opts),
         )
 
+
 class CheckBox(SearchBox):
     def _input(self, info=None):
         keys = ['name="%s"' % self.name]
@@ -160,12 +236,14 @@ class CheckBox(SearchBox):
             keys.append('class="advanced"')
         return '<input type="checkbox" %s>' % (" ".join(keys),)
 
+
 class SkipBox(TextBox):
     def _input(self, info=None):
         return ""
 
     def _label(self, info=None):
         return ""
+
 
 class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
@@ -181,6 +259,8 @@ class TextBoxWithSelect(TextBox):
             + self.select_box._input(info)
             + "</div></td>"
         )
+
+
 class DoubleSelectBox(SearchBox):
     def __init__(self, label, select_box1, select_box2, **kwds):
         self.select_box1 = select_box1
@@ -192,13 +272,17 @@ class DoubleSelectBox(SearchBox):
             '<div class="float-left">'
             + self.select_box1._input(info)
             + self.select_box2._input(info)
-            + '</div>'
+            + "</div>"
         )
 
 
-
 class SearchArray(UniqueRepresentation):
-    def __init__(self, browse_array, refine_array, search_types=[('List', 'List of Results'), ('Random', 'Random Result')]):
+    def __init__(
+        self,
+        browse_array,
+        refine_array,
+        search_types=[("List", "List of Results"), ("Random", "Random Result")],
+    ):
         self.browse_array = browse_array
         self.refine_array = refine_array
         self.all_search = []
@@ -226,8 +310,10 @@ class SearchArray(UniqueRepresentation):
                         if ex:
                             cols.append(ex)
                     lines.append("".join("\n      " + col for col in cols))
-        elif info['search_type'] == 'DynStats':
-            return ''
+
+        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        if info["search_type"] == "DynStats":
+            return ""
         else:
             # refine search page
             lines = []
@@ -247,6 +333,7 @@ class SearchArray(UniqueRepresentation):
             + "".join("\n    <tr>" + line + "\n    </tr>" for line in lines)
             + "\n  </table>"
         )
+
     def buttons(self, info=None):
         button_str = "<td class='button'><button type='submit' name='search_type' value='{val}' style='width: 170px;' {onclick} >{desc}</button></td>"
         if info is None:
@@ -274,4 +361,3 @@ class SearchArray(UniqueRepresentation):
 
     def html(self, info=None):
         return "\n".join([self.main_table(info), self.buttons(info)])
-

@@ -5,7 +5,7 @@ import re
 from six import StringIO
 import time
 
-from flask import render_template, url_for, request, redirect, send_file
+from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
@@ -101,8 +101,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     try:
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError:
-        flash_error("%s is not in the database.", label)
-        return search_input_error()
+        return abort(404, "Isogeny class %s is not in the database." % label)
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
