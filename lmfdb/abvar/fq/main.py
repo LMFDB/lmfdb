@@ -229,6 +229,7 @@ class AbvarSearchArray(SearchArray):
             example="[0,0,1/2]",
             colspan=(1, 3, 1),
             width=3*190 - 30,
+            short_width=160,
             short_label="slopes",
             advanced=True,
         )
@@ -245,6 +246,7 @@ class AbvarSearchArray(SearchArray):
             example="[75,7125]",
             colspan=(1, 3, 1),
             width=3*190 - 30,
+            short_width=160,
             short_label="points on variety",
             advanced=True,
         )
@@ -255,6 +257,7 @@ class AbvarSearchArray(SearchArray):
             example="[9,87]",
             colspan=(1, 3, 1),
             width=3*190 - 30,
+            short_width=160,
             short_label="points on curve",
             advanced=True,
         )
@@ -268,6 +271,7 @@ class AbvarSearchArray(SearchArray):
             example_span="4.0.29584.2 or Qzeta8",
             colspan=(1, 3, 1),
             width=3*190 - 30,
+            short_width=160,
             advanced=True,
         )
         galois_group = TextBox(
@@ -279,6 +283,7 @@ class AbvarSearchArray(SearchArray):
             + display_knowl("nf.galois_group.name", "group labels"),
             colspan=(1, 3, 1),
             width=3*190 - 30,
+            short_width=160,
             advanced=True,
         )
         #size = TextBox(
@@ -455,7 +460,10 @@ class AbvarSearchArray(SearchArray):
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
         simple_quantifier = SelectBox(
             "simple_quantifier",
-            options=[("contained", "subset of"), ("exactly", "exactly"), ("", "superset of")],
+            width=85,
+            options=[("", "include"),
+                     ("contained", "subset"),
+                     ("exactly", "exactly")],
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",
@@ -472,7 +480,9 @@ class AbvarSearchArray(SearchArray):
             "count",
             label="Results to display",
             example=50,
+            example_col=False
         )
+
         refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],

@@ -100,7 +100,7 @@ class TextBox(SearchBox):
     - ``example`` -- the example in the input box
     - ``example_span`` -- the formexample span (defaults to example)
     - ``width`` -- the width of the input element on the browse page
-    - ``short_width`` -- the width of the input element on the refine-search page
+    - ``short_width`` -- the width of the input element on the refine-search page (defaults to width)
     - ``short_label`` -- the label on the refine-search page, if different
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
@@ -115,7 +115,7 @@ class TextBox(SearchBox):
         example_span_colspan=1,
         colspan=(1, 1, 1),
         width=160,
-        short_width=160,
+        short_width=None,
         short_label=None,
         advanced=False,
         example_col=None,
@@ -137,7 +137,7 @@ class TextBox(SearchBox):
             qfield=qfield,
         )
         self.width = width
-        self.short_width = short_width
+        self.short_width = self.width if short_width is None else short_width
         self.example_span_colspan = example_span_colspan
 
     def _input(self, info):
@@ -165,6 +165,21 @@ class TextBox(SearchBox):
 
 
 class SelectBox(SearchBox):
+    """
+    A select box for user input.
+
+    INPUT:
+
+    - ``name`` -- the name of the input (will show up in URL)
+    - ``label`` -- the label for the input, shown on browse page
+    - ``options`` -- list of tuples (value, option) for the select options
+    - ``knowl`` -- a knowl id to apply to the label (you can set as None include a display_knowl directly in the label/short_label if the whole text shouldn't be a knowl link)
+    - ``width`` -- the width of the input element on the browse page
+    - ``short_width`` -- the width of the input element on the refine-search page (defaults to width)
+    - ``short_label`` -- the label on the refine-search page, if different
+    - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
+    """
+
     def __init__(
         self,
         name=None,
@@ -173,7 +188,7 @@ class SelectBox(SearchBox):
         knowl=None,
         colspan=(1, 1, 1),
         width=170,
-        short_width=170,
+        short_width=None,
         short_label=None,
         advanced=False,
         example_col=False,
@@ -193,7 +208,7 @@ class SelectBox(SearchBox):
         )
         self.options = options
         self.width = width
-        self.short_width = short_width
+        self.short_width = self.width if short_width is None else short_width
         self.example_col = example_col
         self.extra = extra
 
@@ -254,10 +269,11 @@ class TextBoxWithSelect(TextBox):
         colspan = self.label_colspan if info is None else self.short_colspan
         return (
             self.td(colspan)
+            + '<div style="display: flex; justify-content: space-between;">'
             + self._label(info)
-            + '<div class="float-right">'
             + self.select_box._input(info)
-            + "</div></td>"
+            + "</div>"
+            + "</td>"
         )
 
 
@@ -269,7 +285,7 @@ class DoubleSelectBox(SearchBox):
 
     def _input(self, info):
         return (
-            '<div class="float-left">'
+            '<div style="display: flex; justify-content: space-between;">'
             + self.select_box1._input(info)
             + self.select_box2._input(info)
             + "</div>"
