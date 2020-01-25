@@ -1501,7 +1501,7 @@ class PostgresTable(PostgresBase):
             pairs = [self._parse_dict(clause, outer=col, outer_type=col_type) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
-                strings, values = tuple(zip(*pairs))
+                strings, values = zip(*pairs)
                 # flatten values
                 values = [item for sublist in values for item in sublist]
                 joiner = " OR " if key == '$or' else " AND "
@@ -1918,7 +1918,7 @@ class PostgresTable(PostgresBase):
             {'regulator':455.191694993}
         """
         search_cols, extra_cols = self._parse_projection(projection)
-        vars = SQL(", ").join(tuple(map(IdentifierWrapper, search_cols + extra_cols)))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         qstr, values = self._build_query(query, 1, offset, sort=sort)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
@@ -2298,7 +2298,7 @@ class PostgresTable(PostgresBase):
         elif mode in ['SYSTEM', 'BERNOULLI']:
             if extra_cols:
                 raise ValueError("You cannot use the system or bernoulli modes with extra columns")
-            vars = SQL(", ").join(map(Identifier, search_cols))
+            cols = SQL(", ").join(map(Identifier, search_cols))
             if repeatable is None:
                 repeatable = SQL("")
                 values = [100*ratio]
@@ -2311,7 +2311,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr = SQL(" WHERE {0}").format(qstr)
                 values.extend(qvalues)
-            selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}").format(vars, Identifier(self.search_table), repeatable, qstr)
+            selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}").format(cols, Identifier(self.search_table), repeatable, qstr)
             cur = self._execute(selecter, values, buffered=True)
             return self._search_iterator(cur, search_cols, extra_cols, projection)
 
@@ -2414,13 +2414,13 @@ class PostgresTable(PostgresBase):
             Execution time: 1947.655 ms
         """
         search_cols, extra_cols = self._parse_projection(projection)
-        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
+        cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
             qstr, values = self._build_query(query, limit, offset, sort)
         tbl = self._get_table_clause(extra_cols)
-        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
+        selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
         if explain_only:
             analyzer = SQL("EXPLAIN {0}").format(selecter)
         else:
@@ -4207,7 +4207,7 @@ class PostgresTable(PostgresBase):
                 updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
                 self._execute(updater, [True])
             self.extra_table = self.search_table + "_extras"
-            vars = [('id', 'bigint')]
+            col_type = [('id', 'bigint')]
             cur = self._indexes_touching(columns)
             if cur.rowcount > 0:
                 raise ValueError("Indexes (%s) depend on extra columns"%(", ".join(rec[0] for rec in cur)))
@@ -4224,10 +4224,10 @@ class PostgresTable(PostgresBase):
                     raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
                 typ = self.col_type[col]
                 self._check_col_datatype(typ)
-                vars.append((col, typ))
+                col_type.append((col, typ))
             self.extra_cols = []
-            vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
-            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
+            col_type_SQL = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in col_type)
+            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), col_type_SQL)
             self._execute(creator)
             if columns:
                 self.drop_constraints(columns)
@@ -5130,14 +5130,14 @@ class PostgresStatsTable(PostgresBase):
             having = SQL("")
         else:
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
-        vars = SQL("COUNT(*), AVG({0}), MIN({0}), MAX({0})").format(Identifier(col))
+        cols = SQL("COUNT(*), AVG({0}), MIN({0}), MAX({0})").format(Identifier(col))
         if grouping:
             groups = SQL(", ").join(map(Identifier, grouping))
             groupby = SQL(" GROUP BY {0}").format(groups)
-            vars = SQL("{0}, {1}").format(vars, groups)
+            cols = SQL("{0}, {1}").format(cols, groups)
         else:
             groupby = SQL("")
-        selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
+        selecter = SQL("SELECT {cols} FROM {table}{where}{groupby}{having}").format(cols=cols, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
         return self._execute(selecter, values)
 
     def add_numstats(self, col, grouping, constraint=None, threshold=None, suffix='', commit=True):
