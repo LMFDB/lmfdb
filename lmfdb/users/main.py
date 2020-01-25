@@ -108,7 +108,7 @@ def list():
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
     n = len(users)/COLS
-    user_rows = list(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
+    user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
