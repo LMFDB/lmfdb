@@ -311,23 +311,24 @@ class SearchArray(UniqueRepresentation):
                             cols.append(ex)
                     lines.append("".join("\n      " + col for col in cols))
 
-        info["search_type"] = info.get("search_type", info.get("hst", "List"))
-        if info["search_type"] == "DynStats":
-            return ""
         else:
-            # refine search page
-            lines = []
-            for row in self.refine_array:
-                if isinstance(row, Spacer):
-                    lines.append(row.html(info))
-                else:
-                    labels = []
-                    inputs = []
-                    for box in row:
-                        labels.append(box.label_html(info))
-                        inputs.append(box.input_html(info))
-                    lines.append("".join("\n      " + label for label in labels))
-                    lines.append("".join("\n      " + inp for inp in inputs))
+            info["search_type"] = info.get("search_type", info.get("hst", "List"))
+            if info["search_type"] == "DynStats":
+                return ""
+            else:
+                # refine search page
+                lines = []
+                for row in self.refine_array:
+                    if isinstance(row, Spacer):
+                        lines.append(row.html(info))
+                    else:
+                        labels = []
+                        inputs = []
+                        for box in row:
+                            labels.append(box.label_html(info))
+                            inputs.append(box.input_html(info))
+                        lines.append("".join("\n      " + label for label in labels))
+                        lines.append("".join("\n      " + inp for inp in inputs))
         return (
             '  <table border="0">'
             + "".join("\n    <tr>" + line + "\n    </tr>" for line in lines)
