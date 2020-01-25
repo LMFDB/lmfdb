@@ -113,8 +113,7 @@ class SearchWrapper(Wrapper):
         self.split_ors = split_ors
         self.random_projection = random_projection
 
-    def __call__(self, info, random=False):
-        # If random is True, returns a random label
+    def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
