@@ -88,6 +88,7 @@ script:
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
     - ls -a
