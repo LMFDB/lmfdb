@@ -1918,10 +1918,10 @@ class PostgresTable(PostgresBase):
             {'regulator':455.191694993}
         """
         search_cols, extra_cols = self._parse_projection(projection)
-        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
+        cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         qstr, values = self._build_query(query, 1, offset, sort=sort)
         tbl = self._get_table_clause(extra_cols)
-        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
+        selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
             rec = cur.fetchone()
@@ -2009,7 +2009,7 @@ class PostgresTable(PostgresBase):
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
-        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
+        cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
         nres = None if limit is None else self.stats.quick_count(query)
         def run_one_query(Q, lim, off):
@@ -2017,7 +2017,7 @@ class PostgresTable(PostgresBase):
                 qstr, values = self._build_query(Q, sort=sort)
             else:
                 qstr, values = self._build_query(Q, lim, off, sort)
-            selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
+            selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
             return self._execute(selecter, values, silent=silent,
                                  buffered=(lim is None),
                                  slow_note=(
@@ -5384,13 +5384,13 @@ class PostgresStatsTable(PostgresBase):
         if threshold is not None:
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
         if cols:
-            vars = SQL(", ").join(map(Identifier, cols))
+            cols_vars = SQL(", ").join(map(Identifier, cols))
             groupby = SQL(" GROUP BY {0}").format(vars)
-            vars = SQL("{0}, COUNT(*)").format(vars)
+            cols_vars = SQL("{0}, COUNT(*)").format(vars)
         else:
-            vars = SQL("COUNT(*)")
+            cols_vars = SQL("COUNT(*)")
             groupby = SQL("")
-        selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
+        selecter = SQL("SELECT {cols_vars} FROM {table}{where}{groupby}{having}").format(cols_vars=cols_vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
         return self._execute(selecter, values)
 
     def add_stats(self, cols, constraint=None, threshold=None, split_list=False, suffix='', commit=True):
