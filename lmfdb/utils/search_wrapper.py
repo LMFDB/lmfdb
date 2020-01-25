@@ -98,6 +98,7 @@ class SearchWrapper(Wrapper):
         cleaners={},
         postprocess=None,
         split_ors=None,
+        random_projection=0,  # i.e., the label_column
         **kwds
     ):
         Wrapper.__init__(
@@ -110,10 +111,14 @@ class SearchWrapper(Wrapper):
         self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.split_ors = split_ors
+        self.random_projection = random_projection
 
     def __call__(self, info, random=False):
         # If random is True, returns a random label
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
+        #  if search_type starts with 'Random' returns a random label
+        info["search_type"] = info.get("search_type", info.get("hst", "List"))
+        random = info["search_type"].startswith("Random")
         for key, func in self.shortcuts.items():
             if info.get(key, "").strip():
                 return func(info)
@@ -150,7 +155,7 @@ class SearchWrapper(Wrapper):
                         if pick < accum:
                             query = Q
                             break
-                label = table.random(query, projection=0)
+                label = table.random(query, projection=self.random_projection)
                 if label is None:
                     res = []
                     # ugh; we have to set these manually
