@@ -836,9 +836,5 @@ def index():
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),
                            filtermode = filtermode,
-                           knowl_types=knowl_type_code.keys(),
+                           knowl_types=list(knowl_type_code),
                            types=types)
-
-
-
-
