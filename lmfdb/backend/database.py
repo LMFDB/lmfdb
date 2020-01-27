@@ -42,7 +42,7 @@ from sage.all import cartesian_product_iterator, binomial
 from sage.cpython.string import bytes_to_str
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
-from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
+from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise, SearchParsingError
 from lmfdb.logger import make_logger
 
 # This list is used when creating new tables
@@ -112,7 +112,76 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
 
+##################################################################
+# query language                                                 #
+##################################################################
 
+# These operators are used in the filter_sql_injection function
+# If you make any additions or changes, ensure that it doesn't
+# open the LMFDB up to SQL injection attacks.
+postgres_infix_ops = {
+    '$lte': '<=',
+    '$lt': '<',
+    '$gte': '>=',
+    '$gt': '>',
+    '$ne': '!=',
+    '$like': 'LIKE',
+    '$regex': '~'
+}
+
+# This function is used to support the inclusion of limited raw postgres in queries
+def filter_sql_injection(clause, col, col_type, op, table):
+    """
+    INPUT:
+
+    - ``clause`` -- a plain string, obtained from the website UI so NOT SAFE
+    - ``col`` -- an SQL Identifier for a column in a table
+    - ``col_type`` -- a string giving the type of the column
+    - ``valid_cols`` -- the column names for this table
+    - ``op`` -- a string giving the operator to use
+      (`=` or one of the values in the ``postgres_infix_ops dictionary`` above)
+    - ``table`` -- a PostgresTable object for determining which columns are valid
+    """
+    # Our approach:
+    # * strip all whitespace: this makes some of the analysis below easier
+    #   and is okay since we support implicit multiplication at a higher level
+    # * Identify numbers (
+    # * whitelist names of columns and wrap them all in identifiers;
+    # * no other alphabetic characters allowed: this prevents the use
+    #   of any SQL functions or commands, and prevents encoding
+    #   strings in hex
+    # * The only other allowed characters are +-*^/().
+    # * We also prohibit --, /* and */ since these are comments in SQL
+    clause = re.sub(r'\s+', '', clause)
+    # It's possible that some search columns include numbers (2adic_gens in ec_curves for example)
+    # However, we don't support columns that are entirely numbers (such as some in smf_dims)
+    # since there's no way to distinguish them from integers
+    # We also want to include periods as part of the word/number character set, since they can appear in floats
+    FLOAT_RE = r'^((\d+([.]\d*)?)|([.]\d+))([eE][-+]?\d+)?$'
+    ARITH_RE = r'^[+*-/^()]+$'
+    processed = []
+    values = []
+    pieces = re.split(r'([A-Za-z_.0-9]+)', clause)
+    for i, piece in enumerate(pieces):
+        if not piece: # skip empty strings at beginning/end
+            continue
+        if i % 2: # a word/number
+            if piece in table.search_cols:
+                processed.append(Identifier(piece))
+            elif re.match(FLOAT_RE, piece):
+                processed.append(Placeholder())
+                if any(c in chunk for c in 'Ee.'):
+                    values.append(float(chunk))
+                else:
+                    values.append(int(chunk))
+            else:
+                raise SearchParsingError("%s: %s is not a column of %s" % (clause, piece, table.search_table))
+        else:
+            if re.match(ARITH_RE, piece) and not any(comment in piece for comment in ["--", "/*", "*/"]):
+                processed.append(SQL(piece))
+            else:
+                raise SearchParsingError("%s: invalid characters %s (only +*-/^() allowed)" % (clause, piece))
+    return SQL("{0} %s {1}" % op).format(col, SQL("").join(processed)), values
 
 ##################################################################
 # meta_* infrastructure                                          #
@@ -1470,6 +1539,7 @@ class PostgresTable(PostgresBase):
             - ``$startswith`` -- for text columns, matches strings that start with the given string.
             - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
             - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
+            - ``$raw`` -- a string to be inserted as SQL after filtering against SQL injection
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column, wrapped in SQL
         - ``col_type`` -- the SQL type of the column
@@ -1528,18 +1598,17 @@ class PostgresTable(PostgresBase):
             # have to take modulus twice since MOD(-1,5) = -1 in postgres
             cmd = SQL("MOD(%s + MOD({0}, %s), %s) = %s").format(col)
             value = [value[1], value[1], value[1], value[0] % value[1]]
-
+        elif key == '$raw':
+            cmd, value = filter_sql_injection(value, col, col_type, '=', self)
+        elif isinstance(value, dict) and len(value) == 1 and '$raw' in value:
+            # We support queries like {'abvar_count':{'$lte':{'$raw':'q^g'}}}
+            if key in postgres_infix_ops:
+                cmd, value = filter_sql_injection(value, col, col_type, postgres_infix_ops[key], self)
+            else:
+                raise ValueError("Error building query: {0} (in $raw)".format(key))
         else:
-            if key == '$lte':
-                cmd = SQL("{0} <= %s")
-            elif key == '$lt':
-                cmd = SQL("{0} < %s")
-            elif key == '$gte':
-                cmd = SQL("{0} >= %s")
-            elif key == '$gt':
-                cmd = SQL("{0} > %s")
-            elif key == '$ne':
-                cmd = SQL("{0} != %s")
+            if key in postgres_infix_ops:
+                cmd = SQL("{0} " + postgres_infix_ops[key] + " %s")
             # FIXME, we should do recursion with _parse_special
             elif key == '$maxgte':
                 cmd = SQL("array_max({0}) >= %s")
@@ -1567,10 +1636,6 @@ class PostgresTable(PostgresBase):
             elif key == '$startswith':
                 cmd = SQL("{0} LIKE %s")
                 value = value.replace('_',r'\_').replace('%',r'\%') + '%'
-            elif key == '$like':
-                cmd = SQL("{0} LIKE %s")
-            elif key == '$regex':
-                cmd = SQL("{0} ~ %s")
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if col_type == 'jsonb':
@@ -1722,7 +1787,7 @@ class PostgresTable(PostgresBase):
         else:
             return self._sort_str(sort), bool(sort), sort
 
-    def _build_query(self, query, limit=None, offset=0, sort=None):
+    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, raw_values=[]):
         """
         Build an SQL query from a dictionary, including limit, offset and sorting.
 
@@ -1732,6 +1797,7 @@ class PostgresTable(PostgresBase):
         - ``limit`` -- a limit on the number of records returned
         - ``offset`` -- an offset on how many records to skip
         - ``sort`` -- a sort order (to be passed into the ``_sort_str`` method, or None.
+        - ``raw`` -- a string to be used as the WHERE clause.  DO NOT USE WITH INPUT FROM THE WEBSITE
 
         OUTPUT:
 
@@ -1748,7 +1814,10 @@ class PostgresTable(PostgresBase):
             sage: statement.as_string(db.conn), vals
             (' WHERE "class_number" = %s ORDER BY "id" LIMIT %s', [1, 20])
         """
-        qstr, values = self._parse_dict(query)
+        if raw is None:
+            qstr, values = self._parse_dict(query)
+        else:
+            qstr, values = SQL(raw), raw_values
         if qstr is None:
             s = SQL("")
             values = []
@@ -1857,7 +1926,7 @@ class PostgresTable(PostgresBase):
         else:
             return Identifier(self.search_table)
 
-    def lucky(self, query={}, projection=2, offset=0, sort=[]):
+    def lucky(self, query={}, projection=2, offset=0, sort=[], raw=None, raw_values=[]):
         #FIXME Nulls aka Nones are being erased, we should perhaps just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
@@ -1887,6 +1956,8 @@ class PostgresTable(PostgresBase):
                 If not specified, will use the default sort order on the table.
             - [] (default), unsorted, thus if there is more than one match to
                 the query then the choice of the result is arbitrary.
+        - ``raw`` -- a string, to be used as the WHERE part of the query.  DO NOT USE THIS DIRECTLY FOR INPUT FROM WEBSITE.
+        - ``raw_values`` -- a list of values to be substituted for %s entries in the raw string.  Useful when strings might include quotes.
 
         OUTPUT:
 
@@ -1919,7 +1990,7 @@ class PostgresTable(PostgresBase):
         """
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
-        qstr, values = self._build_query(query, 1, offset, sort=sort)
+        qstr, values = self._build_query(query, 1, offset, sort=sort, raw=raw, raw_values=raw_values)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
         cur = self._execute(selecter, values)
@@ -1930,7 +2001,7 @@ class PostgresTable(PostgresBase):
             else:
                 return {k:v for k,v in zip(search_cols + extra_cols, rec) if (self._include_nones or v is not None)}
 
-    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, split_ors=False, silent=False):
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, split_ors=False, silent=False, raw=None, raw_values=[]):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for usage from search pages where multiple results may be returned.
@@ -1957,6 +2028,8 @@ class PostgresTable(PostgresBase):
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``split_ors`` -- a boolean.  If true, executes one query per clause in the `$or` list, combining the results.  Only used when a limit is provided.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
+        - ``raw`` -- a string, to be used as the WHERE part of the query.  DO NOT USE THIS DIRECTLY FOR INPUT FROM WEBSITE.
+        - ``raw_values`` -- a list of values to be substituted for %s entries in the raw string.  Useful when strings might include quotes.
 
         WARNING:
 
@@ -2002,6 +2075,8 @@ class PostgresTable(PostgresBase):
         search_cols, extra_cols = self._parse_projection(projection)
         if limit is None and split_ors:
             raise ValueError("split_ors only supported when a limit is provided")
+        if raw is not None:
+            split_ors = False
         if split_ors:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
@@ -2014,9 +2089,9 @@ class PostgresTable(PostgresBase):
         nres = None if limit is None else self.stats.quick_count(query)
         def run_one_query(Q, lim, off):
             if lim is None:
-                qstr, values = self._build_query(Q, sort=sort)
+                qstr, values = self._build_query(Q, sort=sort, raw=raw, raw_values=raw_values)
             else:
-                qstr, values = self._build_query(Q, lim, off, sort)
+                qstr, values = self._build_query(Q, lim, off, sort, raw=raw, raw_values=raw_values)
             selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
             return self._execute(selecter, values, silent=silent,
                                  buffered=(lim is None),
