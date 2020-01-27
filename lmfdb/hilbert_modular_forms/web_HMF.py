@@ -5,6 +5,7 @@
 #
 # In particular this code assumes that all the data for one HMF is in
 # a single collection, which is no longer the case.
+from __future__ import print_function
 from six import text_type
 from sage.all import QQ, polygen
 

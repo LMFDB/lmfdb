@@ -13,6 +13,7 @@ It's purpose is to parse a config file (create a default one if none
 is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
+from __future__ import print_function
 from six.moves.configparser import ConfigParser
 
 import argparse
