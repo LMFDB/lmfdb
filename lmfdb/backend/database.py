@@ -170,10 +170,10 @@ def filter_sql_injection(clause, col, col_type, op, table):
                 processed.append(Identifier(piece))
             elif re.match(FLOAT_RE, piece):
                 processed.append(Placeholder())
-                if any(c in chunk for c in 'Ee.'):
-                    values.append(float(chunk))
+                if any(c in piece for c in 'Ee.'):
+                    values.append(float(piece))
                 else:
-                    values.append(int(chunk))
+                    values.append(int(piece))
             else:
                 raise SearchParsingError("%s: %s is not a column of %s" % (clause, piece, table.search_table))
         else:
