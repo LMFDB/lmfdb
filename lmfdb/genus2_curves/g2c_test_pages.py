@@ -17,7 +17,7 @@ class Genus2Test(LmfdbTest):
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
-                assert c['label'] in page.data
+                assert c['label'] in page.get_data(as_text=True)
             except:
                 print("Internal server error on page " + url)
                 errors.append(url)
@@ -27,7 +27,7 @@ class Genus2Test(LmfdbTest):
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
-                assert c['label'] in page.data
+                assert c['label'] in page.get_data(as_text=True)
             except:
                 print("Internal server error on page "+url)
                 errors.append(url)

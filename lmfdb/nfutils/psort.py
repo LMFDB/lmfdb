@@ -46,8 +46,10 @@ def padded_list(c,k):
         a = c.list(start_val=0)
     return a[:k] + [ZZ(0)]* (k-len(a))
 
+
 def ZpX_key(k):
-    return lambda f: [f.degree()] + flatten(zip(*[padded_list(c,k) for c in f.list()]))
+    return lambda f: [f.degree()] + flatten(list(zip(*[padded_list(c, k)
+                                                       for c in f.list()])))
 
 ###################################################
 #
@@ -130,7 +132,7 @@ def make_keys(K,p):
         # which is its index in the sublist withe same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
-        vals = key_dict.values()
+        vals = list(key_dict.values())
         new_key_dict = {}
         for P in key_dict:
             k = key_dict[P]

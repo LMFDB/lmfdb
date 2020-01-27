@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from six import integer_types as six_integers
+from six import string_types
 import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
@@ -9,7 +11,7 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 
-integer_types = (int, long, Integer)
+integer_types = six_integers + (Integer,)
 def accumulate_failures(L):
     """
     Accumulates a list of bad labels
@@ -371,7 +373,7 @@ class TableChecker(object):
         if query is None:
             if table is None:
                 table = self.table.search_table
-            if isinstance(table, basestring):
+            if isinstance(table, string_types):
                 if ratio == 1:
                     table = Identifier(table)
                 else:
@@ -414,7 +416,7 @@ class TableChecker(object):
         # so should only be run locally in data validation
         join = self._make_join(join1, join2)
         col = self._make_sql(col, "t1")
-        if isinstance(quantity, basestring):
+        if isinstance(quantity, string_types):
             quantity = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
@@ -440,9 +442,9 @@ class TableChecker(object):
         return self._run_query(SQL("{0} != {1}").format(Identifier(col1), Identifier(col2)), constraint)
 
     def _check_arith(self, a_columns, b_columns, constraint, op):
-        if isinstance(a_columns, basestring):
+        if isinstance(a_columns, string_types):
             a_columns = [a_columns]
-        if isinstance(b_columns, basestring):
+        if isinstance(b_columns, string_types):
             b_columns = [b_columns]
         return self._run_query(SQL(" != ").join([
             SQL(" %s "%op).join(map(Identifier, a_columns)),
@@ -493,12 +495,12 @@ class TableChecker(object):
             return self._run_query(SQL("NOT ({0})").format(vstr), constraint, values=vvalues)
 
     def check_non_null(self, columns, constraint={}):
-        if isinstance(columns, basestring):
+        if isinstance(columns, string_types):
             columns = [columns]
         return self.check_values({col: {'$exists':True} for col in columns}, constraint)
 
     def check_null(self, columns, constraint={}):
-        if isinstance(columns, basestring):
+        if isinstance(columns, string_types):
             columns = [columns]
         return self.check_values({col: None for col in columns}, constraint)
 
@@ -544,9 +546,9 @@ class TableChecker(object):
         return self._run_query(SQL("NOT ({0} %s ALL({1}))" % op).format(Literal(bound), Identifier(array_column)), constraint=constraint)
 
     def check_array_concatenation(self, a_columns, b_columns, constraint={}):
-        if isinstance(a_columns, basestring):
+        if isinstance(a_columns, string_types):
             a_columns = [a_columns]
-        if isinstance(b_columns, basestring):
+        if isinstance(b_columns, string_types):
             b_columns = [b_columns]
         return self._run_query(SQL("{0} != {1}").format(
             SQL(" || ").join(map(Identifier, a_columns)),

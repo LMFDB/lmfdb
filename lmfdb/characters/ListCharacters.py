@@ -35,7 +35,7 @@ def parse_interval(arg, name):
     elif re.match('^[0-9]+..[0-9]+$', arg):
         s = arg.split('..')
         a,b = (int(s[0]), int(s[1]))
-    elif re.match('^\[[0-9]+..[0-9]+\]$', arg):
+    elif re.match(r'^\[[0-9]+..[0-9]+\]$', arg):
         s = arg[1:-1].split('..')
         a,b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:
@@ -75,7 +75,7 @@ def get_character_modulus(a, b, limit=7):
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
-    for k, v in entries.iteritems():
+    for k, v in entries.items():
         l = []
         v = sorted(v)
         while v:

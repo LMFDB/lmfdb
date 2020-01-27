@@ -91,11 +91,12 @@ def do_import(ll):
         print("new lattice")
         print("***********")
         print("check for isometries...")
-        A=data['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
+        A = data['gram']
+        n = len(A[0])
+        d = matrix(A).determinant()
+        result = [B for B in lat.find({'dim': int(n), 'det': int(d)})
+                  if isom(A, B['gram'])]
+        if result:
             print("... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram']))
             print("***********")
         else:

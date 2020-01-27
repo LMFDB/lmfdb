@@ -230,7 +230,7 @@ class WebNewformSpace(object):
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         self.char_conrey = self.conrey_indexes[0]
-        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
@@ -466,7 +466,7 @@ class WebGamma1Space(object):
         return common_latex(*(self._vec() + ["S",1,"old"]))
 
     def header_latex(self):
-        return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + '\)'
+        return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + r'\)'
 
     def _link(self, N, i=None, form=None, typ="new", label=True):
         if form is not None:
@@ -507,18 +507,18 @@ class WebGamma1Space(object):
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
                                              number=space['conrey_indexes'][0])
-            chi_rep += '">\({}\)</a>'.format(chi_str)
+            chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
             link = self._link(space['level'], space['char_orbit_label'])
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
-            elif len(forms) == 0:
+            elif not forms:
                 ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
-                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
+                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], list(zip(forms[1:], dims[1:]))))
         return ans
 
     def trace_expansion(self, prec_max=10):

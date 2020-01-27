@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+from six import StringIO
+import time
 
 from flask import render_template, request, url_for, make_response, redirect, send_file
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
@@ -21,12 +24,13 @@ def print_q_expansion(list):
     return web_latex(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
+    # This code was copy pasted and should be refactored
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\zeta', ss)
     ss += ""
     return ss
 
@@ -45,7 +49,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
@@ -56,10 +60,10 @@ def modlmf_render_webpage():
         counts = get_stats().counts()
         characteristic_list= [2,3,5,7,11]
         max_lvl=min(counts['max_level'],150)
-        level_list_endpoints = range(1, max_lvl+1, 10)
+        level_list_endpoints = list(range(1, max_lvl + 1, 10))
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
         max_wt=min(counts['max_weight'], 10)
-        weight_list= range(1, max_wt+1)
+        weight_list = list(range(1, max_wt + 1))
         label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
@@ -119,7 +123,7 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

@@ -2,6 +2,13 @@
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
+from six import string_types
+from six import integer_types as six_integers
+
+import binascii
+import json
+import datetime
+
 from psycopg2.extras import register_json, Json as pgJson
 from psycopg2.extensions import adapt, register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
 from sage.functions.other import ceil
@@ -19,8 +26,7 @@ from sage.rings.number_field.number_field_rel import NumberField_relative
 from sage.rings.polynomial.polynomial_element import Polynomial
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.modules.free_module_element import vector, FreeModuleElement
-import json
-import datetime
+
 
 def setup_connection(conn):
     # We want to use unicode everywhere
@@ -41,16 +47,19 @@ def setup_connection(conn):
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
 
+
 class LmfdbRealLiteral(RealLiteral):
     """
     A real number that prints using the string used to construct it.
     """
     def __init__(self, parent, x=0, base=10):
-        if not isinstance(x, basestring):
+        if not isinstance(x, string_types):
             x = str(x)
         RealLiteral.__init__(self, parent, x, base)
+
     def __repr__(self):
         return self.literal
+
 
 def numeric_converter(value, cur=None):
     """
@@ -71,10 +80,11 @@ def numeric_converter(value, cur=None):
         # The following is a good guess for the bit-precision,
         # but we use LmfdbRealLiterals to ensure that our number
         # prints the same as we got it.
-        prec = ceil(len(value)*3.322)
+        prec = ceil(len(value) * 3.322)
         return LmfdbRealLiteral(RealField(prec), value)
     else:
         return Integer(value)
+
 
 class Array(object):
     """
@@ -108,16 +118,20 @@ class Array(object):
     def __str__(self):
         return str(self.getquoted())
 
+
 class RealEncoder(object):
     def __init__(self, value):
         self._value = value
+
     def getquoted(self):
         if isinstance(self._value, RealLiteral):
             return self._value.literal
         else:
             return str(self._value)
+
     def __str__(self):
         return self.getquoted()
+
 
 class Json(pgJson):
     @classmethod
@@ -160,8 +174,9 @@ class Json(pgJson):
             if obj and all(isinstance(k, (int, Integer)) for k in obj):
                 return {'__IntDict__': 0, # encoding version
                         'data': [[int(k), cls.prep(v, escape_backslashes)] for k, v in obj.items()]}
-            elif all(isinstance(k, basestring) for k in obj):
-                return {k:cls.prep(v, escape_backslashes) for k,v in obj.iteritems()}
+            elif all(isinstance(k, string_types) for k in obj):
+                return {k: cls.prep(v, escape_backslashes)
+                        for k, v in obj.items()}
             else:
                 raise TypeError("keys must be strings or integers")
         elif isinstance(obj, FreeModuleElement):
@@ -223,24 +238,24 @@ class Json(pgJson):
                     'base': cls.prep(obj.base_ring(), escape_backslashes),
                     'prec': 'inf' if obj.prec() is infinity else int(obj.prec()),
                     'data': data}
-        elif escape_backslashes and isinstance(obj, basestring):
+        elif escape_backslashes and isinstance(obj, string_types):
             # For use in copy_dumps below
-            return obj.replace('\\','\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
+            return obj.replace('\\', '\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"', r'\"')
         elif obj is None:
             return None
         elif isinstance(obj, datetime.date):
             return {'__date__': 0,
-                    'data': "%s"%(obj)}
+                    'data': "%s" % (obj)}
         elif isinstance(obj, datetime.time):
             return {'__time__': 0,
-                    'data': "%s"%(obj)}
+                    'data': "%s" % (obj)}
         elif isinstance(obj, datetime.datetime):
             return {'__datetime__': 0,
-                    'data': "%s"%(obj)}
-        elif isinstance(obj, (basestring, int, long, bool, float)):
+                    'data': "%s" % (obj)}
+        elif isinstance(obj, (string_types, bool, float) + six_integers):
             return obj
         else:
-            raise ValueError("Unsupported type: %s"%(type(obj)))
+            raise ValueError("Unsupported type: %s" % (type(obj)))
 
     @classmethod
     def _extract(cls, parent, obj):
@@ -253,7 +268,7 @@ class Json(pgJson):
             obj = [cls._extract(base, c) for c in obj]
             return parent(obj)
         else:
-            raise NotImplementedError("Cannot extract element of %s"%(parent))
+            raise NotImplementedError("Cannot extract element of %s" % (parent))
 
     @classmethod
     def extract(cls, obj):
@@ -270,7 +285,7 @@ class Json(pgJson):
                 base = cls.extract(obj['base'])
                 return [cls._extract(base, c) for c in obj['data']]
             elif len(obj) == 2 and '__IntDict__' in obj:
-                return {Integer(k): cls.extract(v) for k,v in obj['data']}
+                return {Integer(k): cls.extract(v) for k, v in obj['data']}
             elif len(obj) == 3 and '__Vector__' in obj and 'base' in obj:
                 base = cls.extract(obj['base'])
                 return vector([cls._extract(base, v) for v in obj['data']])
@@ -310,6 +325,7 @@ class Json(pgJson):
                 return datetime.datetime.strptime(obj['data'], "%Y-%m-%d %H:%M:%S.%f")
         return obj
 
+
 def copy_dumps(inp, typ, recursing=False):
     """
     Output a string formatted as needed for loading by Postgres' COPY FROM.
@@ -322,13 +338,13 @@ def copy_dumps(inp, typ, recursing=False):
     if inp is None:
         return u'\\N'
     elif typ in ('text', 'char', 'varchar'):
-        if not isinstance(inp, basestring):
+        if not isinstance(inp, string_types):
             inp = str(inp)
-        inp = inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
+        inp = inp.replace('\\', '\\\\').replace('\r', r'\r').replace('\n', r'\n').replace('\t', r'\t').replace('"', r'\"')
         if recursing and ('{' in inp or '}' in inp):
             inp = '"' + inp + '"'
         return inp
-    elif typ in ('json','jsonb'):
+    elif typ in ('json', 'jsonb'):
         return json.dumps(Json.prep(inp, escape_backslashes=True))
     elif typ[-2:] == '[]':
         if not isinstance(inp, (list, tuple)):
@@ -354,13 +370,13 @@ def copy_dumps(inp, typ, recursing=False):
         return '{' + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + '}'
     elif isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (int, long, Integer, float, RealNumber)):
-        return str(inp).replace('L','')
-    elif typ=='boolean':
+    elif isinstance(inp, (Integer, float, RealNumber) + six_integers):
+        return str(inp).replace('L', '')
+    elif typ == 'boolean':
         return 't' if inp else 'f'
     elif isinstance(inp, (datetime.date, datetime.time, datetime.datetime)):
-        return "%s"%(inp)
+        return "%s" % (inp)
     elif typ == 'bytea':
-        return r'\\x' + ''.join(c.encode('hex') for c in inp)
+        return r'\\x' + ''.join(binascii.hexlify(c) for c in inp)
     else:
-        raise TypeError("Invalid input %s (%s) for postgres type %s"%(inp, type(inp), typ))
+        raise TypeError("Invalid input %s (%s) for postgres type %s" % (inp, type(inp), typ))

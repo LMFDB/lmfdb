@@ -20,9 +20,9 @@ class WebHMF:
         self.langlands = True
 
         if self.type == 'lcalcurl':
-            import urllib
+            from six.moves.urllib.request import urlopen
             self.url = dict['url']
-            self.contents = urllib.urlopen(self.url).read()
+            self.contents = urlopen(self.url).read()
             self.parseLcalcfile_ver1()
 
         elif self.type == 'lcalcfile':

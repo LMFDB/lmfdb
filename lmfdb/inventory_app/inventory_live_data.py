@@ -1,11 +1,11 @@
-from scripts.reports.jsonify_pg_structure import get_lmfdb_collections as glc
+from __future__ import absolute_import
+from .jsonify_pg_structure import get_lmfdb_collections as glc
 import json
-import inventory_helpers as ih
-import inventory_viewer as iv
-import lmfdb_inventory as inv
-import inventory_db_core as idc
-from scrape_helpers import register_scrape
-import scrape_frontend as sf
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
+from .scrape_helpers import register_scrape
+from . import scrape_frontend as sf
 import uuid
 from lmfdb import db as lmfdb_db
 
@@ -130,13 +130,13 @@ def check_for_gone(lmfdb, db_name, coll_name):
 
 def mark_all_gone():
     """Set status of all removed collections to gone"""
-
-    dbs = iv.gen_retrieve_db_listing()
+    from .inventory_viewer import gen_retrieve_db_listing
+    dbs = gen_retrieve_db_listing()
     all_colls = get_db_lists()
 
     gone_code = ih.status_to_code('gone')
     for db in dbs:
-        colls = iv.gen_retrieve_db_listing(db[0])
+        colls = gen_retrieve_db_listing(db[0])
         db_id = idc.get_db_id(db[0])
         for coll in colls:
             gone = not (coll[0] in all_colls[db[0]])
@@ -233,12 +233,13 @@ def split_orphans(entry):
         else:
             gone_w_data.append(item)
 
-    if just_gone == []:
+    if not just_gone:
          just_gone = None
-    if gone_w_data == []:
+    if not gone_w_data:
         gone_w_data = None
 
     return {'gone':just_gone, 'orphan':gone_w_data}
+
 
 def check_orphan_empty(entry):
     """Check whether is empty"""
@@ -252,21 +253,21 @@ def set_lockout_state(state):
     """Swap state of lockout. If record exists, toggle, else create"""
     try:
         assert(state is True or state is False)
-        rec_set = {'lockout':state}
+        rec_set = {'lockout': state}
         idc.add_to_ops_table(rec_set)
     except:
         pass
+
 
 def get_lockout_state():
     """Get global lockout status"""
     res = None
     try:
-        rec_find = {'lockout':{"$exists":True}}
-        #Get latest lockout record
+        rec_find = {'lockout': {"$exists": True}}
+        # Get latest lockout record
         res = idc.search_ops_table(rec_find).sort('_id', -1).limit(1)
     except:
         res = None
-        pass
     if res is None:
         return False
     else:

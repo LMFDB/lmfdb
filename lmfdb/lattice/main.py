@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import ast, re, StringIO, time
+import ast
+import re
+from six import StringIO
+import time
 
 from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
@@ -31,11 +34,11 @@ def print_q_expansion(list):
 
 def my_latex(s):
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\zeta', ss)
     ss += ""
     return ss
 
@@ -55,7 +58,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
@@ -63,11 +66,11 @@ def learnmore_list_remove(matchstring):
 @lattice_page.route("/")
 def lattice_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         maxs=lattice_summary_data()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        dim_list = list(range(1, 11, 1))
+        max_class_number = 20
+        class_number_list = list(range(1, max_class_number + 1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
@@ -141,7 +144,7 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
+    strIO = StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-
+from __future__ import absolute_import
+from six import string_types
 from collections import defaultdict
 import bisect, re
 
@@ -22,7 +23,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
-from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -139,7 +140,7 @@ class WebNewform(object):
 
         #self.char_conrey = self.conrey_indexes[0]
         #self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
+        self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
         self.hecke_ring_character_values = None
         self.single_generator = None
@@ -158,7 +159,13 @@ class WebNewform(object):
                     zero = []
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
+                m = self.field_poly_root_of_unity
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+                # This is not enough, for some reason
+                #if (m != 0) and (not self.single_generator):
+                # This is the only thing I could make work:
+                if (m != 0) and (self.hecke_ring_numerators is not None):
+                    self.convert_qexp_to_cyclotomic(m)
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
             hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
@@ -208,12 +215,12 @@ class WebNewform(object):
         self.properties += [('Dimension', str(self.dim))]
 
         if self.projective_image:
-            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+            self.properties += [('Projective image', r'\(%s\)' % self.projective_image_latex)]
         # Artin data would make the property box scroll
         #if self.artin_degree: # artin_degree > 0
         #    self.properties += [('Artin image size', str(self.artin_degree))]
         #if self.artin_image:
-        #    self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
+        #    self.properties += [('Artin image', r'\(%s\)' %  self.artin_image_display)]
 
         if self.is_cm and self.is_rm:
             disc = ', '.join([ str(d) for d in self.self_twist_discs ])
@@ -241,6 +248,23 @@ class WebNewform(object):
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
+    def convert_qexp_to_cyclotomic(self,  m):
+        from sage.all import CyclotomicField
+        F = CyclotomicField(m)
+        zeta = F.gens()[0]
+        ret = []
+        l = len(self.hecke_ring_numerators)
+        betas = [F(self.hecke_ring_numerators[i]) /
+                 self.hecke_ring_denominators[i] for i in range(l)]
+        write_in_powers = zeta.coordinates_in_terms_of_powers()
+        for coeffs in self.qexp:
+            elt = sum([coeffs[i] * betas[i] for i in range(l)])
+            ret.append(write_in_powers(elt))
+        self.single_generator = True
+        self.hecke_ring_power_basis = True
+        self.qexp = ret
+        return ret
+    
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -270,7 +294,7 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.sato_tate_group:
-            res.append(('Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
+            res.append((r'Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
                         '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
             res.append(('Newform ' + self.label, nf_url))
@@ -303,7 +327,7 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+            if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
                 res = [list(map(str, elt)) for elt in res]
@@ -429,12 +453,12 @@ class WebNewform(object):
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in analytic_shift_formats:
-                self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
+                self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
                 chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
-                for p in self.cc_data.values()[0]['angles'].keys():
+                for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
                         continue
@@ -467,7 +491,7 @@ class WebNewform(object):
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
             nontriv = not (a == 'a')
-            from main import Nk2_bound
+            from .main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv = nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
@@ -570,7 +594,7 @@ class WebNewform(object):
     @property
     def hecke_ring_index_factored(self):
         if self.hecke_ring_index_factorization is not None:
-            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+            return r"\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
         return None
 
     def ring_index_display(self):
@@ -631,7 +655,7 @@ class WebNewform(object):
             if paren:
                 return r"\((\)%s\()/%s\)" % (num, den)
             else:
-                return "%s\(/%s\)" % (num, den)
+                return r"%s\(/%s\)" % (num, den)
         else:
             if paren:
                 return r"\((\)%s\()/%s\)" % (num, make_bigint(web_latex(den, enclose=False)))
@@ -689,7 +713,7 @@ class WebNewform(object):
         return self._make_table(basis)
 
     def _order_basis_inverse(self):
-        basis = [('\(1\)', r'\(\beta_0\)')]
+        basis = [(r'\(1\)', r'\(\beta_0\)')]
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
             num = web_latex_poly(num, r'\beta', superscript=False)
             if i == 0:
@@ -967,14 +991,14 @@ function switch_basis(btype) {
                 s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return '\(' + s + '+O(q^{%d})\)' % prec
+        return r'\(' + s + r'+O(q^{%d})\)' % prec
 
     def q_expansion_cc(self, prec_max):
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
         prec = min(max(eigseq.keys()) + 1, prec_max)
         if prec == 0:
-            return '\(O(1)\)'
-        s = '\(q'
+            return r'\(O(1)\)'
+        s = r'\(q'
         for j in range(2, prec):
             term = eigseq[j]
             latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
@@ -989,7 +1013,7 @@ function switch_basis(btype) {
                 s += '' + latexterm + ' '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '+O(q^{%d})\)' % prec
+        return s + r'+O(q^{%d})\)' % prec
 
 
     def q_expansion(self, prec_max=10):
@@ -1036,7 +1060,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, basestring): # match object
+        if not isinstance(elabel, string_types): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

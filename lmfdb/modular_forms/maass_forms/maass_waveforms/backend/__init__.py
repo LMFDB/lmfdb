@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
-import mwf_utils
+from . import mwf_utils
 assert mwf_utils
-import mwf_classes
+from . import mwf_classes
 assert mwf_classes

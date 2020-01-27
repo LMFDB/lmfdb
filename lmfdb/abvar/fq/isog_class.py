@@ -93,7 +93,7 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(zip(self.simple_distinct, self.simple_multiplicities))
+        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
 
@@ -125,9 +125,9 @@ class AbvarFq_isoclass(object):
         else:
             p, r = Integer(q).is_prime_power(get_data=True)
         if r == 1:
-            return "\F_{%s}" % p
+            return r"\F_{%s}" % p
         else:
-            return "\F_{%s^{%s}}" % (p, r)
+            return r"\F_{%s^{%s}}" % (p, r)
 
     def nf(self):
         if self.is_simple:
@@ -206,7 +206,7 @@ class AbvarFq_isoclass(object):
             ("Base Field", "$%s$" % (self.field(self.q))),
             ("Dimension", "$%s$" % (self.g)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-            ("Ordinary", "Yes" if self.is_ordinary == 1 else "No"),
+            ("Ordinary", "Yes" if self.is_ordinary() == 1 else "No"),
             ("$p$-rank", "$%s$" % (self.p_rank)),
         ]
         if self.has_principal_polarization != 0:
@@ -289,16 +289,16 @@ class AbvarFq_isoclass(object):
 
     def alg_clo_field(self):
         if self.r == 1:
-            return "\\overline{\F}_{%s}" % (self.p)
+            return r"\overline{\F}_{%s}" % (self.p)
         else:
-            return "\\overline{\F}_{%s^{%s}}" % (self.p, self.r)
+            return r"\overline{\F}_{%s^{%s}}" % (self.p, self.r)
 
     def ext_field(self, s):
         n = s * self.r
         if n == 1:
-            return "\F_{%s}" % (self.p)
+            return r"\F_{%s}" % (self.p)
         else:
-            return "\F_{%s^{%s}}" % (self.p, n)
+            return r"\F_{%s^{%s}}" % (self.p, n)
 
     @cached_method
     def endo_extensions(self):
@@ -318,11 +318,12 @@ class AbvarFq_isoclass(object):
         # When degree > 1 we find the factorization by looking at the extension database
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
-            if factors == []:
+            if not factors:
                 return "The data at degree %s is missing." % degree, do_describe
             ans = "The base change of $A$ to ${0}$ is ".format(self.ext_field(degree))
         else:
-            factors = zip(self.simple_distinct, self.simple_multiplicities)
+            factors = list(zip(self.simple_distinct,
+                               self.simple_multiplicities))
             if self.is_simple:
                 ans = "The endomorphism algebra of this simple isogeny class is "
             else:
@@ -438,7 +439,7 @@ def describe_end_algebra(p, extension_label):
     ans = ["", ""]
     if center == "1.1.1.1" and divalg_dim == 4:
         ans[0] = "B"
-        ans[1] = "the quaternion algebra over {0} ramified at ${1}$ and $\infty$.".format(nf_display_knowl(center, field_pretty(center)), p)
+        ans[1] = r"the quaternion algebra over {0} ramified at ${1}$ and $\infty$.".format(nf_display_knowl(center, field_pretty(center)), p)
     elif int(center.split(".")[1]) > 0:
         ans[0] = "B"
         if divalg_dim == 4:
@@ -459,13 +460,13 @@ def describe_end_algebra(p, extension_label):
         ans[1] += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
             ans[1] += '<td class="center"> {0} </td>'.format(primeideal_display(p, prime))
-        ans[1] += "</tr><tr><td>$\operatorname{inv}_v$</td>"
+        ans[1] += r"</tr><tr><td>$\operatorname{inv}_v$</td>"
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
         center_poly = latex.latex(ZZ["x"](center_poly))
-        ans[1] += "where $\pi$ is a root of ${0}$.\n".format(center_poly)
+        ans[1] += r"where $\pi$ is a root of ${0}$.\n".format(center_poly)
     return ans
 
 def primeideal_display(p, prime_ideal):
@@ -502,9 +503,9 @@ def g2_table(field, entry, is_bold):
 
 def matrix_display(factor, end_alg):
     if end_alg[0] == "K" and end_alg[1] != factor[0] + ".":
-        ans = "$\mathrm{{M}}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
+        ans = r"$\mathrm{{M}}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
     else:
-        ans = "$\mathrm{{M}}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
+        ans = r"$\mathrm{{M}}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
     return ans
 
 def non_simple_loop(p, factors):

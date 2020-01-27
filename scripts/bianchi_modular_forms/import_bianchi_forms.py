@@ -195,7 +195,6 @@ def newforms(line):
         'label_suffix': label_suffix,
         'label_nsuffix': label_nsuffix,
         'short_label': short_label,
-        'label': label,
         'dimension': dimension,
         'hecke_poly': hecke_poly,
         'weight': weight,
@@ -287,7 +286,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
     # first check numbers
     norm_range = {}
     norm_range['$gte'] = min_norm
-    if max_norm!=None:
+    if max_norm is not None:
         norm_range['$lte'] = max_norm
     print("Checking field {}, norm range {}".format(fld, norm_range))
     form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}

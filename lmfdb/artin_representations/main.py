@@ -38,13 +38,16 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def make_cond_key(D):
-    D1=ZZ(D)
-    if D1<1: D1=ZZ(1)
+    D1 = ZZ(D)
+    if D1 < 1:
+        D1 = ZZ.one()
     D1 = int(D1.log(10))
-    return '%04d%s'%(D1,str(D))
+    return '%04d%s' % (D1, str(D))
+
 
 def parse_artin_orbit_label(label):
     label = clean_input(label)
@@ -63,10 +66,10 @@ def parse_artin_label(label):
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
     if rec:
+        num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
         for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
             s = r['url'].split('/')
-            # only friend embedded CMFs
-            if r['type'] == 'CMF' and len(s) == 10:
+            if r['type'] == 'CMF' and len(s) == num:
                 cmf_label = '.'.join(s[4:])
                 url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                 friends.append(("Modular form " + cmf_label, url))
@@ -86,8 +89,11 @@ def artin_representation_jump(info):
     try:
         label = parse_artin_label(label)
     except ValueError:
-        flash_error("%s is not in a valid form for an Artin representation label", label)
-        return redirect(url_for(".index"))
+        try:
+            label = parse_artin_orbit_label(label)
+        except ValueError:
+            flash_error("%s is not in a valid form for an Artin representation label", label)
+            return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
@@ -110,7 +116,7 @@ def artin_representation_search(info, query):
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
-    parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
+    parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
     parse_bool(info,query,'Is_Even')
@@ -227,6 +233,8 @@ def render_artin_representation_webpage(label):
         friends.append(("Galois orbit "+orblabel,
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
+        add_lfunction_friends(friends,label)
+        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'c'+str(j)
             friends.append(("Artin representation "+newlabel,

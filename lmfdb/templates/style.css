@@ -682,7 +682,7 @@ table.ntdata {
 table.ntdata thead th {
   background: {{ color.table_ntdata_background }};
 }
-table.ntdata > thead > tr:last-child {
+table.ntdata > thead {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 table.ntdata > thead > tr.bottomlined {
@@ -709,7 +709,7 @@ table.ntdata > thead > tr:first-child {
 
 table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
-} 
+}
 
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,

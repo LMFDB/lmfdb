@@ -1,8 +1,12 @@
+from six import string_types
+
 import time
+
 from flask import abort, send_file, stream_with_context, Response
+
 from werkzeug.datastructures import Headers
 from ast import literal_eval
-import StringIO
+from six import StringIO
 
 
 class Downloader(object):
@@ -93,7 +97,7 @@ class Downloader(object):
     def to_lang(self, lang, inp, level = 0, prepend = ''):
         if inp is None:
             return self.none[lang]
-        if isinstance(inp, str) or isinstance(inp, unicode):
+        if isinstance(inp, string_types):
             return '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)
@@ -133,11 +137,11 @@ class Downloader(object):
         filename = filebase + self.file_suffix[lang]
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
-        s =  '\n'
+        s = '\n'
         s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
         s += result
-        strIO = StringIO.StringIO()
-        strIO.write(str(s))
+        strIO = StringIO()
+        strIO.write(s.encode('utf-8'))
         strIO.seek(0)
         return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
@@ -183,7 +187,7 @@ class Downloader(object):
         func_start = self.get('function_start',{}).get(lang,[])
         func_body = self.get('function_body',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
-        if isinstance(self.columns, basestring):
+        if isinstance(self.columns, string_types):
             proj = [self.columns]
         elif isinstance(self.columns, list):
             proj = self.columns
@@ -230,7 +234,7 @@ class Downloader(object):
         if isinstance(data_desc, dict):
             data_desc = data_desc[lang]
         if data_desc is not None:
-            if isinstance(data_desc, basestring):
+            if isinstance(data_desc, string_types):
                 data_desc = [data_desc]
             for line in data_desc:
                 s += c + ' %s\n' % line

@@ -140,13 +140,16 @@ def read_line(line, degree, debug=0):
     # Qt = str_to_list(fields[1]) # string representing list of ints of length <=2
 
     tordata = [onefieldtor(dat, degree) for dat in fields[2:]]
-    if debug: print("before degree check, tordata = {}".format(tordata))
-    tordata = [t for t in tordata if t!=None]
-    if debug: print("after  degree check, tordata = {}".format(tordata))
+    if debug:
+        print("before degree check, tordata = {}".format(tordata))
+    tordata = [t for t in tordata if t is not None]
+    if debug:
+        print("after  degree check, tordata = {}".format(tordata))
     data = dict(tordata)
 
     if debug: print("label {}, data {}".format(clabel,data))
     return clabel, data
+
 
 def read_xline(line, degree, debug=0):
     r""" Parses one line from input file.  Returns a dict containing ...
@@ -343,7 +346,7 @@ def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
         print("opened {}".format(f))
         td = tordata[d]
         count = 0
-        for lab, dat in td.iteritems():
+        for lab, dat in td.items():
             h.write(" ".join([lab]+["[{}]:{}".format(T,F.replace(":",".")) for F,T in dat.items()]) + "\n")
             count +=1
             if count==maxlines:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
+from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
@@ -165,7 +166,7 @@ class ArtinRepresentation(object):
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = " \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
+        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
     def hard_primes(self):
@@ -379,10 +380,12 @@ class ArtinRepresentation(object):
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return group_display_knowl(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_knowl(n,t)
 
     def __str__(self):
         try:
@@ -633,7 +636,7 @@ class NumberFieldGaloisGroup(object):
         elif len(x) > 1:
             raise ValueError("Only one positional argument allowed")
         else:
-            if isinstance(x[0], basestring):
+            if isinstance(x[0], string_types):
                 if x[0]:
                     coeffs = x[0].split(',')
                 else:
@@ -671,7 +674,7 @@ class NumberFieldGaloisGroup(object):
 
     def polredabs(self):
         # polynomials are all polredabs'ed now
-        return PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        return PolynomialRing(QQ, 'x')([str(m) for m in self.polynomial()])
         #if "polredabs" in self._data.keys():
         #    return self._data["polredabs"]
         #else:
@@ -837,15 +840,15 @@ class NumberFieldGaloisGroup(object):
     def nfinit(self):
         from sage.all import pari
         X = PolynomialRing(QQ, "x")
-        pol = X(map(str,self.polynomial()))
+        pol = X([str(m) for m in self.polynomial()])
         return pari("nfinit([%s,%s])" % (str(pol), self.all_hard_primes()))
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
             dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
-            import cyc_alt_res_engine
-            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(map(str,self.polynomial()), self.Frobenius_resolvents())
+            from . import cyc_alt_res_engine
+            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict([str(m) for m in self.polynomial()], self.Frobenius_resolvents())
             # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
             # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
@@ -858,7 +861,7 @@ class NumberFieldGaloisGroup(object):
         except KeyError:
             raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
                 (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0])))
+                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):
@@ -886,16 +889,16 @@ class NumberFieldGaloisGroup(object):
         except AttributeError:
             from lmfdb.number_fields.number_field import residue_field_degrees_function
             fn_with_pari_output = residue_field_degrees_function(self.nfinit())
-            self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
+            self._residue_field_degrees = lambda p: [Integer(k) for k in fn_with_pari_output(p)]
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
 
     def __str__(self):
         try:
-            tmp = "The Galois group of the number field  Q[x]/(%s)" % map(str,self.polynomial())
+            tmp = "The Galois group of the number field  Q[x]/(%s)" % [str(m) for m in self.polynomial()]
         except:
             tmp = "The Galois group of a number field"
         return tmp
 
     def display_title(self):
-        return "The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"
+        return r"The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"

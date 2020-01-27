@@ -1,6 +1,7 @@
-import inventory_helpers as ih
-import lmfdb_inventory as inv
-import inventory_db_core as idc
+from __future__ import absolute_import, print_function
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
 from lmfdb import db as lmfdb_db
 
 class UpdateFailed(Exception):

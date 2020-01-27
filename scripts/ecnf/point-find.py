@@ -87,7 +87,7 @@ def map_points(maps, source, Plist, verbose=False):
         return [Plist]
     Qlists = [[]] * ncurves
     Qlists[source] = Plist
-    if len(Plist) == 0:
+    if not Plist:
         return Qlists
     nfill = 1
     # print("Qlists = %s" % Qlists)

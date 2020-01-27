@@ -50,7 +50,7 @@ function knowl_link(kid, label, title=null) {
 function enable(edit_mode) {
   view_refresh(edit_mode);
   for (var i = 0; i < all_modes.length; i++) {
-    mode = all_modes[i];
+    var mode = all_modes[i];
     if (mode === edit_mode) {
       $('#activate-' + mode).hide();
       $('#inactive-' + mode).show();
@@ -78,7 +78,7 @@ function refresh_link_suggestions() {
   var bad_intervals = [];
   var content = $kcontent.val();
   do {
-    m = wedef.exec(content);
+    var m = wedef.exec(content);
     if (m) {
       we_define[normalize_define(m[1])] = true;
     }
@@ -130,8 +130,8 @@ function refresh_link_suggestions() {
   bad_intervals.sort(sort_pairs);
   i = 0;
   while (i < bad_intervals.length-1) {
-    cur = bad_intervals[i];
-    next = bad_intervals[i+1];
+    var cur = bad_intervals[i];
+    var next = bad_intervals[i+1];
     if (cur[1] >= next[0]) {
       if (cur[1] < next[1]) {
         cur[1] = next[1];
@@ -164,7 +164,7 @@ function refresh_link_suggestions() {
         return bad_intervals[i0][0];
       }
     }
-    mid = Math.floor((i0+i1)/2);
+    var mid = Math.floor((i0+i1)/2);
     if (pos < bad_intervals[mid][0]) {
       return is_bad(pos, dir, i0, mid);
     } else {
@@ -174,12 +174,12 @@ function refresh_link_suggestions() {
   $linkul.empty();
   var some_link = false;
   var to_insert = [];
-  for (kdef in all_defines) {
+  for (var kdef in all_defines) {
     if (normalize_define(kdef) in we_define) {
       continue;
     }
-    found = false;
-    for (pdef in text_present) {
+    var found = false;
+    for (var pdef in text_present) {
       if (pdef.indexOf(kdef) != -1) {
         found = true;
         break;
@@ -201,7 +201,7 @@ function refresh_link_suggestions() {
             var label = match[0];
             var klink = knowl_link(definer_id, label);
             // Add five words of context on each side, stopping at newlines
-            var pre_mark = match.index
+            var pre_mark = match.index;
             for (var j = 0; j < 5; j++) {
               pre_mark = content.lastIndexOf(" ", pre_mark-1);
               if (pre_mark == -1) {
@@ -325,7 +325,7 @@ function refresh_diffs() {
 
 function find_current_edit_mode() {
   for (var i = 0; i < all_modes.length; i++) {
-    mode = all_modes[i];
+    var mode = all_modes[i];
     if ($('#activate-' + mode).is(":hidden")) {
       return mode;
     }
@@ -335,7 +335,7 @@ function find_current_edit_mode() {
 
 function dispatch_refresh() {
   // Some edit modes want a timer, others don't.  This is the function that's called by the keyup event on content.
-  edit_mode = find_current_edit_mode();
+  var edit_mode = find_current_edit_mode();
   if (edit_mode == 'preview') {
     delay_refresh();
   } else {

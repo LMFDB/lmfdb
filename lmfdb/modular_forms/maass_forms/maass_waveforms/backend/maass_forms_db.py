@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 from __future__ import print_function
+from six import string_types, PY3
 from lmfdb import db
-from sage.all import Integer, loads
+from sage.all import Integer, loads, floor, ceil
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 logger = mwf_logger
 
@@ -45,6 +46,19 @@ class MaassDB(object):
     def maassform_has_plot(self, maass_id):
         return db.mwf_plots.exists({'maass_id':maass_id})
 
+    def find_coeffs_from_dict(self, d, dictType):
+        if type(d) == dictType:
+            for i in d.keys():
+                x = self.find_coeffs_from_dict(d[i], dictType)
+                if x is not None:
+                    if (x == 0) or (x == 1):
+                        return x + 1
+                    if (x == 2):
+                        return d
+                    return x
+            return None
+        return 0
+
     def get_coefficients(self, data={}, verbose=0, **kwds):
         if verbose > 0:
             print("data=", data)
@@ -56,16 +70,36 @@ class MaassDB(object):
         f = db.mwf_forms.lucky({'maass_id': maass_id})
         if f is None:
             return None
-        nc = f.get('Numc', 0)
+        #nc = f.get('Numc', 0)
         if verbose > 0:
             print("f=", f)
-        if nc == 0:
-            return None
+        #if nc == 0:
+        #    return None
         cid = f.get('coeff_label', None)
         if cid is None:
+            R = f.get('Eigenvalue', None)
+            if R is None:
+                return f.get('Coefficients', None)
+            R = [floor(R*1E9)*1E-9, ceil(R*1E9)*1E-9]
+            for r in R:
+                searchcoeffs = db.mwf_coeffs.search({'label':{'$regex': str(r)}})
+                for res in searchcoeffs:
+                    c = res['coefficients'];
+                    d = loads(str(c));
+                    if type(d) == type([]):
+                        d = { i : d[i] for i in range(0, len(d)) }
+                    e = self.find_coeffs_from_dict(d, type(d))
+                    if (e is not None):
+                        return e
             return f.get('Coefficients', None)
+
         ff = db.mwf_coeffs.lucky({'label':cid}, 'coefficients')
-        return None if ff is None else loads(str(ff))
+        if ff is None:
+            return None
+        elif PY3:
+            return loads(bytes(ff))
+        else:
+            return loads(str(ff))
 
     def count(self, query={}):
         query = arg_to_search_parameters(query)
@@ -207,7 +241,8 @@ class MaassDB(object):
     def set_table(self, refresh=False):
         self.table = db.mwf_tables.lucky({})
         self.table['keylist'] = [tuple(k) for k in self.table['keylist']]
-        self.table['data'] = {tuple(map(int, k.split(','))):tuple(v) for k,v in self.table['data'].iteritems()}
+        self.table['data'] = {tuple(map(int, k.split(','))): tuple(v)
+                              for k, v in self.table['data'].items()}
         #data = self.show_data()
         #table = {}
         #table['weights'] = data.keys()
@@ -270,11 +305,13 @@ class MaassDB(object):
 
 maass_db = MaassDB()
 
+
 def lowercase_dict(data):
     for k in data.keys():
-        if isinstance(k, basestring):
+        if isinstance(k, string_types):
             data[k.lower()] = data.pop(k)
 
+            
 def arg_to_format_parameters(data={}, **kwds):
     res = {}
     if not isinstance(data, dict):
