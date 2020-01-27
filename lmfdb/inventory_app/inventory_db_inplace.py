@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv
 from . import inventory_db_core as idc
