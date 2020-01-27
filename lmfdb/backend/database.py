@@ -2091,13 +2091,8 @@ class PostgresTable(PostgresBase):
             if lim is None:
                 qstr, values = self._build_query(Q, sort=sort, raw=raw, raw_values=raw_values)
             else:
-<<<<<<< HEAD
                 qstr, values = self._build_query(Q, lim, off, sort, raw=raw, raw_values=raw_values)
-            selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
-=======
-                qstr, values = self._build_query(Q, lim, off, sort)
             selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
->>>>>>> f2d9e69f4c07b0e631f0cfb43a50f34efcf6d73f
             return self._execute(selecter, values, silent=silent,
                                  buffered=(lim is None),
                                  slow_note=(
