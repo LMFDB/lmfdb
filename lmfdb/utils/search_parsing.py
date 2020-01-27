@@ -1004,8 +1004,8 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
         query.update(make_sub_query(parts[0]))
     else:
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
-    print(query.get(qfield))
-    print(query.get(first_field))
+    # print(query.get(qfield))
+    # print(query.get(first_field))
 
 def parse_count(info, default=50):
     try:
