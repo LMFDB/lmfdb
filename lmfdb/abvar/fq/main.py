@@ -178,7 +178,7 @@ def download_search(info):
 
 class AbvarSearchArray(SearchArray):
     def __init__(self):
-        qshort = display_knowl("ag.base_field", "base field")
+        qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
             "q",
             label="Cardinality of the %s" % (qshort),
@@ -186,7 +186,7 @@ class AbvarSearchArray(SearchArray):
             example="81",
             example_span="81 or 3-49",
         )
-        pshort = display_knowl("ag.base_field", "base char.")
+        pshort = display_knowl("ag.base_field", "Base char.")
         p = TextBox(
             "p",
             label="Characteristic of the %s" % (qshort),
@@ -230,7 +230,7 @@ class AbvarSearchArray(SearchArray):
             colspan=(1, 3, 1),
             width=3*190 - 30,
             short_width=160,
-            short_label="slopes",
+            short_label="Slopes",
             advanced=True,
         )
         initial_coefficients = TextBox(
@@ -247,7 +247,7 @@ class AbvarSearchArray(SearchArray):
             colspan=(1, 3, 1),
             width=3*190 - 30,
             short_width=160,
-            short_label="points on variety",
+            short_label="Points on variety",
             advanced=True,
         )
         curve_point_count = TextBox(
@@ -258,7 +258,7 @@ class AbvarSearchArray(SearchArray):
             colspan=(1, 3, 1),
             width=3*190 - 30,
             short_width=160,
-            short_label="points on curve",
+            short_label="Points on curve",
             advanced=True,
         )
         def nbsp(knowl, label):
@@ -266,7 +266,7 @@ class AbvarSearchArray(SearchArray):
         number_field = TextBox(
             "number_field",
             label=nbsp("av.fq.number_field", "Number field"),
-            short_label=display_knowl("av.fq.number_field", "number field"),
+            short_label=display_knowl("av.fq.number_field", "Number field"),
             example="4.0.29584.2",
             example_span="4.0.29584.2 or Qzeta8",
             colspan=(1, 3, 1),
@@ -349,7 +349,7 @@ class AbvarSearchArray(SearchArray):
             label="Geometrically simple",
             options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.geometrically_simple",
-            short_label="geom. simple",
+            short_label="Geom. simple",
         )
         primitive = SelectBox(
             "primitive",
@@ -370,7 +370,7 @@ class AbvarSearchArray(SearchArray):
             label="Principally polarizable",
             options=uopts,
             knowl="av.princ_polarizable",
-            short_label="princ polarizable",
+            short_label="Princ polarizable",
         )
         jacobian = SelectBox(
             "jacobian",
@@ -378,7 +378,7 @@ class AbvarSearchArray(SearchArray):
             options=uopts,
             knowl="ag.jacobian"
         )
-        uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "geometric decomposition")
+        uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "Geometric decomposition")
         use_geom_decomp = CheckBox(
             "use_geom_decomp",
             label=uglabel,
@@ -389,7 +389,7 @@ class AbvarSearchArray(SearchArray):
         def long_label(d):
             return nbsp("av.decomposition", "Dimension %s factors" % d)
         def short_label(d):
-            return display_knowl("av.decomposition", "dim %s factors" % d)
+            return display_knowl("av.decomposition", "Dim %s factors" % d)
         dim1 = TextBox(
             "dim1_factors",
             label=long_label(1),
