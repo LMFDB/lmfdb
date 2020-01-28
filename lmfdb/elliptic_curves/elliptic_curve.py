@@ -551,9 +551,9 @@ def reliability_page():
     t = r'Reliability of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Source', '')]
+             ('Reliability', '')]
     return render_template("single.html", kid='dq.ec.reliability',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
