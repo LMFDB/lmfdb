@@ -21,6 +21,7 @@ from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
+from six import PY3
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -120,7 +121,7 @@ def try_int(foo):
         return foo
 
 
-def key_for_numerically_sort(elt, split="[\s\.\-]"):
+def key_for_numerically_sort(elt, split=r"[\s\.\-]"):
     return tuple(try_int(k) for k in re.split(split, elt))
 
 
@@ -493,10 +494,10 @@ def pol_to_html(p):
     '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
     """
     s = str(p)
-    s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
-    s = re.sub("\_(\d*)", "<sub>\\1</sub>", s)
-    s = re.sub("\*", "", s)
-    s = re.sub("x", "<i>x</i>", s)
+    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
+    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
+    s = re.sub(r"\*", r"", s)
+    s = re.sub(r"x", r"<i>x</i>", s)
     return s
 
 
@@ -506,7 +507,7 @@ def pol_to_html(p):
 ################################################################################
 
 def web_latex(x, enclose=True):
-    """
+    r"""
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
     `\(` and `\)` to tag it as an equation in html.
@@ -522,12 +523,12 @@ def web_latex(x, enclose=True):
     if isinstance(x, string_types):
         return x
     if enclose:
-        return "\( %s \)" % latex(x)
+        return r"\( %s \)" % latex(x)
     return " %s " % latex(x)
 
 
 def web_latex_ideal_fact(x, enclose=True):
-    """
+    r"""
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
     `\)` to tag it as an equation in html.
@@ -546,13 +547,13 @@ def web_latex_ideal_fact(x, enclose=True):
     '\\( \\left(-a\\right)^{-1} \\)'
     """
     y = web_latex(x, enclose=enclose)
-    y = y.replace("(\\left(","\\left(")
-    y = y.replace("\\right))","\\right)")
+    y = y.replace(r"(\left(", r"\left(")
+    y = y.replace(r"\right))", r"\right)")
     return y
 
 
 def web_latex_split_on(x, on=['+', '-']):
-    """
+    r"""
     Convert input into a latex string. A different latex surround `\(` `\)` is
     used, with splits occuring at `on` (+ - by default).
 
@@ -564,15 +565,15 @@ def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, string_types):
         return x
     else:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
         for s in on:
-            A = A.replace(s, '\) ' + s + ' \( ')
+            A = A.replace(s, r'\) ' + s + r' \( ')
     return A
 
 
 # web_latex_split_on was not splitting polynomials, so we make an expanded version
 def web_latex_split_on_pm(x):
-    """
+    r"""
     Convert input into a latex string, with specific handling of expressions
     including `+` and `-`.
 
@@ -584,34 +585,34 @@ def web_latex_split_on_pm(x):
     on = ['+', '-']
  #   A = "\( %s \)" % latex(x)
     try:
-        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+        A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
     except:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace("\\left","")
-    A = A.replace("\\right","")
+    A = A.replace(r"\left","")
+    A = A.replace(r"\right","")
     for s in on:
-  #      A = A.replace(s, '\) ' + s + ' \( ')
-   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
-        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+  #      A = A.replace(s, r'\) ' + s + r' \( ')
+   #     A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
+        A = A.replace(s, r'\)' + r' \(\mathstrut ' + s + r'\mathstrut ')
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
     # encounters terms like (-3+x)
     for s in on:
-        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
+        A = A.replace(r'(\) \(\mathstrut ' + s, '(' + s)
+    A = A.replace(r'( {}', r'(')
+    A = A.replace(r'(\) \(', r'(')
+    A = A.replace(r'\(+', r'\(\mathstrut+')
+    A = A.replace(r'\(-', r'\(\mathstrut-')
+    A = A.replace(r'(  ', r'(')
+    A = A.replace(r'( ', r'(')
 
     return A
     # return web_latex_split_on(x)
 
 def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
-    """
+    r"""
     Convert input into a latex string, with splits into separate latex strings
     occurring on given regex `r`.
     CAUTION: this gives a different result than web_latex_split_on_pm
@@ -623,31 +624,31 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     """
 
     def insert_latex(s):
-        return s.group(1) + '\) \('
+        return s.group(1) + r'\) \('
 
     if isinstance(x, string_types):
         return x
     else:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
         c = re.compile(r)
-        A = A.replace('+', '\) \( {}+ ')
-        A = A.replace('-', '\) \( {}- ')
+        A = A.replace(r'+', r'\) \( {}+ ')
+        A = A.replace(r'-', r'\) \( {}- ')
 #        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
 #        A = A.replace('\\right)','\left.\\right)')
-        A = A.replace('\left(','\\bigl(')
-        A = A.replace('\\right)','\\bigr)')
+        A = A.replace(r'\left(',r'\bigl(')
+        A = A.replace(r'\right)',r'\bigr)')
         A = c.sub(insert_latex, A)
 
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
     # encounters terms like (-3+x)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
-    A = A.replace('+\) \(O','+O')
+    A = A.replace(r'( {}', r'(')
+    A = A.replace(r'(\) \(', r'(')
+    A = A.replace(r'\(+', r'\(\mathstrut+')
+    A = A.replace(r'\(-', r'\(\mathstrut-')
+    A = A.replace(r'(  ', r'(')
+    A = A.replace(r'( ', r'(')
+    A = A.replace(r'+\) \(O', r'+O')
     return A
 
 def display_knowl(kid, title=None, kwargs={}):
@@ -894,7 +895,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         s += varpow
     s += r"\)"
     if s.startswith(plus):
-        return "\(" + make_bigint(s[len(plus):], bigint_cutoff)
+        return r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
         return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
 
@@ -1176,12 +1177,15 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    from StringIO import StringIO
+    if PY3:
+        from io import BytesIO as IO
+    else:
+        from StringIO import StringIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
     from six.moves.urllib_parse import quote
 
-    virtual_file = StringIO()
+    virtual_file = IO()
     fig = P.matplotlib(axes_pad=axes_pad)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
@@ -1191,7 +1195,11 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+    if PY3:
+        buf = virtual_file.getbuffer()
+    else:
+        buf = virtual_file.buf
+    return "data:image/png;base64," + quote(b64encode(buf))
 
 class KeyedDefaultDict(defaultdict):
     """
@@ -1281,7 +1289,7 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
     return o_str
 
 def add_space_if_positive(texified_pol):
-    """
+    r"""
     Add a space if texified_pol is positive to match alignment of positive and
     negative coefficients.
 
@@ -1293,5 +1301,5 @@ def add_space_if_positive(texified_pol):
     """
     if texified_pol[0] == '-':
         return texified_pol
-    return "\phantom{-}" + texified_pol
+    return r"\phantom{-}" + texified_pol
 

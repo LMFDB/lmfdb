@@ -27,7 +27,7 @@ Some interesting curves:
 A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
 </p>
 
-<h2> Find a specific curve or isgoeny class by {{ KNOWL('g2c.label', title='label')}} </h2>
+<h2> Find a specific curve or isogeny class by {{ KNOWL('g2c.label', title='label')}} </h2>
 
 <form>
 <input type='text' name='jump' placeholder='169.a.169.1'>
@@ -150,8 +150,9 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 {{KNOWL('g2c.good_reduction', title='Bad primes')}}&nbsp;&thinsp;
   <select name='bad_quantifier'  style="width: 122px">
   <option value=''>include</option>
-  <option value="exclude">exclude</option>
+  <option value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
   </select>
 </td>
 <td><input type='text' name='bad_primes' size=10 example='5,13'></td>

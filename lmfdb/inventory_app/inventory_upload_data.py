@@ -26,7 +26,7 @@ def upload_scraped_inventory(structure_dat, uid):
     """
     from . import inventory_live_data as ild
 
-    n_dbs = len(structure_dat.keys())
+    n_dbs = len(structure_dat)
     progress_tracker = 0
 
     for db_name in structure_dat:

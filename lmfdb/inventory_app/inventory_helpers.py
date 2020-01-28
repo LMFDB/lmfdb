@@ -170,25 +170,19 @@ def empty_all_if_null(obj):
 
 def empty_if_null(value):
     """Convert true null into empty string"""
-    try:
-        if value is None:
-            return ''
-        else:
-            return value
-    except:
+    if value is None:
+        return ''
+    else:
         return value
 
 def status_to_code(status):
-    try:
-        return coll_status.keys()[list(coll_status.values()).index(status)]
-    except:
-        return -1
+    for code, stat in coll_status.items():
+        if stat == status:
+            return code
+    return -1
 
 def code_to_status(status):
-    try:
-        return coll_status[status]
-    except:
-        return ''
+    return coll_status.get(status, '')
 
 #End display helpers ----------------------------------------------------------
 

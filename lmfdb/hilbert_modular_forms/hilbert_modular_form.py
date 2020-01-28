@@ -209,20 +209,67 @@ def download_hmf_magma(**args):
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
 
-    outstr += '/* EXTRA CODE: recompute eigenform (warning, may take a few minutes or longer!):\n'
-    outstr += 'M := HilbertCuspForms(F, NN);\n'
-    outstr += 'S := NewSubspace(M);\n'
-    outstr += '// SetVerbose("ModFrmHil", 1);\n'
-    outstr += 'newspaces := NewformDecomposition(S);\n'
-    outstr += 'newforms := [Eigenform(U) : U in newspaces];\n'
-    outstr += 'ppind := 0;\n'
-    outstr += 'while #newforms gt 1 do\n'
-    outstr += '  pp := primes[ppind];\n'
-    outstr += '  newforms := [f : f in newforms | HeckeEigenvalue(f,pp) eq heckeEigenvalues[pp]];\n'
-    outstr += 'end while;\n'
-    outstr += 'f := newforms[1];\n'
-    outstr += '// [HeckeEigenvalue(f,pp) : pp in primes] eq heckeEigenvaluesArray;\n'
-    outstr += '*/\n'
+    outstr += '\n'.join([
+        'print "To reconstruct the Hilbert newform f, type',
+        '  f, iso := Explode(make_newform());";',
+        '',
+        'function make_newform();',
+        ' M := HilbertCuspForms(F, NN);',
+        ' S := NewSubspace(M);',
+        ' // SetVerbose("ModFrmHil", 1);',
+        ' NFD := NewformDecomposition(S);',
+        ' newforms := [* Eigenform(U) : U in NFD *];',
+        '',
+        ' if #newforms eq 0 then;',
+        '  print "No Hilbert newforms at this level";',
+        '  return 0;',
+        ' end if;',
+        '',
+        ' print "Testing ", #newforms, " possible newforms";',
+        ' newforms := [* f: f in newforms | IsIsomorphic(BaseField(f), K) *];',
+        ' print #newforms, " newforms have the correct Hecke field";',
+        '',
+        ' if #newforms eq 0 then;',
+        '  print "No Hilbert newform found with the correct Hecke field";',
+        '  return 0;',
+        ' end if;',
+        '',
+        ' autos := Automorphisms(K);',
+        ' xnewforms := [* *];',
+        ' for f in newforms do;',
+        '  if K eq RationalField() then;',
+        '   Append(~xnewforms, [* f, autos[1] *]);',
+        '  else;',
+        '   flag, iso := IsIsomorphic(K,BaseField(f));',
+        '   for a in autos do;',
+        '    Append(~xnewforms, [* f, a*iso *]);',
+        '   end for;',
+        '  end if;',
+        ' end for;',
+        ' newforms := xnewforms;',
+        '',
+        ' for P in primes do;',
+        '  xnewforms := [* *];',
+        '  for f_iso in newforms do;',
+        '   f, iso := Explode(f_iso);',
+        '   if HeckeEigenvalue(f,P) eq iso(heckeEigenvalues[P]) then;',
+        '    Append(~xnewforms, f_iso);',
+        '   end if;',
+        '  end for;',
+        '  newforms := xnewforms;',
+        '  if #newforms eq 0 then;',
+        '   print "No Hilbert newform found which matches the Hecke eigenvalues";',
+        '   return 0;',
+        '  else if #newforms eq 1 then;',
+        '   print "success: unique match";',
+        '   return newforms[1];',
+        '  end if;',
+        '  end if;',
+        ' end for;',
+        ' print #newforms, "Hilbert newforms found which match the Hecke eigenvalues";',
+        ' return newforms[1];',
+        '',
+        'end function;'])
 
     return outstr
 
@@ -387,7 +434,7 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = "\(" + teXify_pol(hecke_pol) + "\)"
+    info['hecke_polynomial'] = r"\(" + teXify_pol(hecke_pol) + r"\)"
 
     if not AL_eigs: # empty list
         if data['level_norm'] == 1: # OK, no bad primes
@@ -488,7 +535,7 @@ def statistics_by_degree(d):
     info = {}
     if not str(d) in counts['degrees']:
         if d==1:
-            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
+            info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
         d = 'bad'
