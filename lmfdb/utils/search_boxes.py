@@ -312,7 +312,6 @@ class SearchArray(UniqueRepresentation):
         self.search_types = search_types
 
     def main_table(self, info=None):
-        print info
         if info is None:
             # browse page
             lines = []
