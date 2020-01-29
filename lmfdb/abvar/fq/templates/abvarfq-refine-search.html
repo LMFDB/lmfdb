@@ -29,26 +29,8 @@ function set_buckets(col_selecter, bucket_id) {
   <button id="advancedtoggle" href="#">Advanced search options</button>
 </h2>
 
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
-  {% include 'hidden_search_inputs.html' %}
-  {{ info.search_array.html(info) | safe }}
-  <table>
-    {% if info.search_type == 'DynStats' %}
-    {% include 'dynamic_stats_input.html' %}
-    {% else %}
-    {% set search_types = [('List', 'List of Results'), ('Counts', 'Counts Table'), ('Random', 'Random Result')] %}
-    <tr style="height: 20px;"></tr>
-    <tr>
-      <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 170px;" onclick='resetStart()'>Search again</button></td>
-      {% for type, desc in search_types %}
-      {% if info.search_type != type %}
-      <td><button type='submit' name='search_type' value='{{ type }}' style="width: 170px;">{{ desc }}</button></td>
-      {% endif %}
-      {% endfor %}
-    </tr>
-    {% endif %}
-  </table>
-</form>
+{% include 'refine_search_form.html' %}
+
 <script> show_advancedQ(); </script>
 {% if info.search_type == 'DynStats' %}
 <p>Note that the abelian varieties in the database may not be {{ KNOWL('rcs.rigor.av.fq', title='representative') }}.</p>

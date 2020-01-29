@@ -205,9 +205,9 @@ def index():
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
-        if search_type == 'List':
+        if search_type in ['List', 'Random']:
             return newform_search(info)
-        elif search_type == 'Spaces':
+        elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
         elif search_type == 'Dimensions':
             return dimension_form_search(info)
@@ -220,10 +220,6 @@ def index():
             return trace_search(info)
         elif search_type == 'SpaceTraces':
             return space_trace_search(info)
-        elif search_type == 'Random':
-            return newform_search(info, random=True)
-        elif search_type == 'RandomSpace':
-            return space_search(info, random=True)
         assert False
     info = {"stats": CMF_stats()}
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
@@ -239,12 +235,8 @@ def index():
 
 @cmf.route("/random/")
 def random_form():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-        return newform_search(info, random=True)
-    else:
-        label = db.mf_newforms.random()
-        return redirect(url_for_label(label), 307)
+    label = db.mf_newforms.random()
+    return redirect(url_for_label(label), 307)
 
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
