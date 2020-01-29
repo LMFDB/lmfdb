@@ -271,6 +271,7 @@ class TextBoxWithSelect(TextBox):
             self.td(colspan)
             + '<div style="display: flex; justify-content: space-between;">'
             + self._label(info)
+            + '<span style="margin-left: 5px;"></span>'
             + self.select_box._input(info)
             + "</div>"
             + "</td>"

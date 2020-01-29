@@ -457,7 +457,7 @@ class G2CSearchArray(SearchArray):
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
-            width=100,
+            width=108,
             options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
         )
 
@@ -467,7 +467,7 @@ class G2CSearchArray(SearchArray):
             label=r"\(\overline{\Q}\)-invariants",
             example="[8,3172,30056,-692224]",
             select_box=geometric_invariants_type,
-            width=4 * 190 - 30,
+            width=689,
             colspan=(1, 4, 1),
             example_col=False,
         )  # the last 1 is irrelevant
