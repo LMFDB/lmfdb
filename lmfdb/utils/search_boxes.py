@@ -312,6 +312,7 @@ class SearchArray(UniqueRepresentation):
         self.search_types = search_types
 
     def main_table(self, info=None):
+        print info
         if info is None:
             # browse page
             lines = []
@@ -329,23 +330,19 @@ class SearchArray(UniqueRepresentation):
                     lines.append("".join("\n      " + col for col in cols))
 
         else:
-            info["search_type"] = info.get("search_type", info.get("hst", "List"))
-            if info["search_type"] == "DynStats":
-                return ""
-            else:
-                # refine search page
-                lines = []
-                for row in self.refine_array:
-                    if isinstance(row, Spacer):
-                        lines.append(row.html(info))
-                    else:
-                        labels = []
-                        inputs = []
-                        for box in row:
-                            labels.append(box.label_html(info))
-                            inputs.append(box.input_html(info))
-                        lines.append("".join("\n      " + label for label in labels))
-                        lines.append("".join("\n      " + inp for inp in inputs))
+            # refine search page
+            lines = []
+            for row in self.refine_array:
+                if isinstance(row, Spacer):
+                    lines.append(row.html(info))
+                else:
+                    labels = []
+                    inputs = []
+                    for box in row:
+                        labels.append(box.label_html(info))
+                        inputs.append(box.input_html(info))
+                    lines.append("".join("\n      " + label for label in labels))
+                    lines.append("".join("\n      " + inp for inp in inputs))
         return (
             '  <table border="0">'
             + "".join("\n    <tr>" + line + "\n    </tr>" for line in lines)
@@ -361,12 +358,19 @@ class SearchArray(UniqueRepresentation):
                 for val, desc in self.search_types
             ]
         else:
-            search_types = [(info["search_type"], "Search again")] + [
-                (v, d) for v, d in self.search_types if v != info["search_type"]
-            ]
-            buttons = [
-                button_str.format(val=val, onclick="onclick='resetStart()'", desc=desc)
-                for val, desc in search_types
+            info["search_type"] = info.get("search_type", info.get("hst", "List"))
+            if info["search_type"] == "DynStats":
+                # The template dynamic_stats_input.html
+                # will take care of the Variables section
+                # and the button "Generate statistics"
+                return ""
+            else:
+                search_types = [(info["search_type"], "Search again")] + [
+                    (v, d) for v, d in self.search_types if v != info["search_type"]
+                ]
+                buttons = [
+                    button_str.format(val=val, onclick="onclick='resetStart()'", desc=desc)
+                    for val, desc in search_types
             ]
 
         return (
