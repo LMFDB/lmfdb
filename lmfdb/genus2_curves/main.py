@@ -483,7 +483,7 @@ class G2CSearchArray(SearchArray):
         discriminant = TextBox(
             name="abs_disc",
             knowl="g2c.abs_discriminant",
-            label="Absolute Discriminant",
+            label="Absolute discriminant",
             short_label="Discriminant",
             example="169",
             example_span="169, 0-1000",
