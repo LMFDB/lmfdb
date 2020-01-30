@@ -13,6 +13,11 @@ class AVHomeTest(LmfdbTest):
         homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
         assert "Some interesting isogeny classes" in homepage
 
+    def test_stats_page(self):
+        self.check_args("/Variety/Abelian/Fq/stats","Abelian Varity Isogeny Classes: Statistics")
+
+    # TODO test dynamic stats
+
     def test_completeness_page(self):
         r"""
         Check that Variety/Abelian/Fq/Completeness works

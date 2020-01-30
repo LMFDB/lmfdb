@@ -5825,7 +5825,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
-            if buckets == {} and any(isinstance(val, dict) and any(relkey in val for relkey in ['$lt', '$lte', '$gt', '$gte']) for val in values):
+            if any(isinstance(val, dict) and any(relkey in val for relkey in ['$lt', '$lte', '$gt', '$gte']) and cols[i] not in buckets for (i, val) in enumerate(values)):
                 # For non-bucketed statistics, we don't want to include counts for range queries
                 continue
             for val, header in zip(values, headers):
