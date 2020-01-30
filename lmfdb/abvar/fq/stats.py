@@ -139,10 +139,7 @@ class AbvarFqStats(StatsDisplay):
          "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian surfaces"},
         {"cols": ["has_jacobian", "q"],
          "constraint": {"g": 3},
-         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"],
-        # FIXME: this should work without the next line
-        "has_jacobian": ["-1", "0", "1"],
-                     },
+         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian threefolds"},
         {"cols": ["jacobian_count", "q"],
