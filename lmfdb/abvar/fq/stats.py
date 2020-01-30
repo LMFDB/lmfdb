@@ -17,15 +17,6 @@ def ynu(t):
         return "yes"
     elif t in [-1, "-1", "no"]:
         return "no"
-    elif isinstance(t,dict):
-        lower = t.get('$gte', -1)
-        lower = t.get('$gt', lower - 1) + 1
-        upper = t.get('$lte', 1)
-        upper = t.get('$lt', upper + 1) - 1
-        if lower == -1 and upper == 1:
-            return "unrestricted"
-        else:
-            return " or ".join(ynu(elt) for elt in range(lower, upper +1))
     else:
         print(t)
         raise RuntimeError
