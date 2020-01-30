@@ -11,12 +11,21 @@ logger = make_logger("abvarfq")
 def yn(t):
     return "yes" if (t and t != "no") else "no"
 def ynu(t):
-    if t in [0, "unknown"]:
+    if t in [0, "0", "unknown"]:
         return "unknown"
-    elif t in [1, "yes"]:
+    elif t in [1, "1", "yes"]:
         return "yes"
-    elif t in [-1, "no"]:
+    elif t in [-1, "-1", "no"]:
         return "no"
+    elif isinstance(t,dict):
+        lower = t.get('$gte', -1)
+        lower = t.get('$gt', lower - 1) + 1
+        upper = t.get('$lte', 1)
+        upper = t.get('$lt', upper + 1) - 1
+        if lower == -1 and upper == 1:
+            return "unrestricted"
+        else:
+            return " or ".join(ynu(elt) for elt in range(lower, upper +1))
     else:
         print(t)
         raise RuntimeError
@@ -128,11 +137,14 @@ class AbvarFqStats(StatsDisplay):
          "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian surfaces"},
-        #{"cols": ["has_jacobian", "q"],
-        # "constraint": {"g": 3},
-        # "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
-        # "proportioner": proportioners.per_col_total,
-        # "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian threefolds"},
+        {"cols": ["has_jacobian", "q"],
+         "constraint": {"g": 3},
+         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"],
+        # FIXME: this should work without the next line
+        "has_jacobian": ["-1", "0", "1"],
+                     },
+         "proportioner": proportioners.per_col_total,
+         "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian threefolds"},
         {"cols": ["jacobian_count", "q"],
          "constraint": {"g": 2},
          "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"],
