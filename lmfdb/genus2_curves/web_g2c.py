@@ -53,6 +53,7 @@ def simplify_hyperelliptic(fh):
     f = (n.squarefree_part() * f) / n
     return f.coefficients(sparse=False)
 
+
 def min_eqns_pretty(fh):
     xR = PolynomialRing(QQ,'x')
     polys = [ xR(tup) for tup in fh ]
@@ -61,12 +62,14 @@ def min_eqns_pretty(fh):
     slist = [str(lhs).replace("*","") + " = " + str(polys[0]).replace("*","")]
     xzR = PolynomialRing(QQ,['x','z'])
     z = xzR('z')
-    polys = map (lambda x: x.homogenize(z),[ xzR(polys[0])*z**(7-len(fh[0])), xzR(polys[1])*z**(4-len(fh[1]))])
+    polys = [x.homogenize(z) for x in [xzR(polys[0])*z**(7-len(fh[0])),
+                                       xzR(polys[1])*z**(4-len(fh[1]))]]
     yR = PolynomialRing(xzR,'y')
     lhs = yR([0, polys[1], 1])
     slist.append(str(lhs).replace("*","") + " = " + str(polys[0]).replace("*",""))
     slist.append("y^2 = " + str(xR(simplify_hyperelliptic(fh))).replace("*",""))
     return slist
+
 
 def url_for_ec(label):
     if not '-' in label:
