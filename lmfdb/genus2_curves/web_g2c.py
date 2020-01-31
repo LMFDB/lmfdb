@@ -252,7 +252,14 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-
+        
+def plot_from_label(label):
+    curve = db.g2c_curves.lookup(label)
+    ratpts = db.g2c_ratpts.lookup(curve['label'])
+    min_eqn = literal_eval(curve['eqn'])
+    plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
+    return plot
+    
 ###############################################################################
 # Statement functions for displaying formatted endomorphism data
 ###############################################################################
