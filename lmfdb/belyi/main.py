@@ -524,7 +524,7 @@ class Belyi_download(Downloader):
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
             curve_polys = self.curve_string_parser(rec)
-            s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
+            s += r"X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
