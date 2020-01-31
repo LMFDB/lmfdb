@@ -145,11 +145,10 @@ def filter_sql_injection(clause, col, col_type, op, table):
     # Our approach:
     # * strip all whitespace: this makes some of the analysis below easier
     #   and is okay since we support implicit multiplication at a higher level
-    # * Identify numbers (
+    # * Identify numbers (using a float regular expression) and call int or float on them as appropriate
     # * whitelist names of columns and wrap them all in identifiers;
     # * no other alphabetic characters allowed: this prevents the use
-    #   of any SQL functions or commands, and prevents encoding
-    #   strings in hex
+    #   of any SQL functions or commands
     # * The only other allowed characters are +-*^/().
     # * We also prohibit --, /* and */ since these are comments in SQL
     clause = re.sub(r'\s+', '', clause)

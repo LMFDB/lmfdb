@@ -727,7 +727,6 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 return cyclolookup[d]
             else:
                 raise SearchParsingError('%s is not in the database.' % F)
-                
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
@@ -961,10 +960,10 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
 @search_parser
 def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[], short_names={}):
     def parse_one(x):
-        if re.search(r'[A-Za-z]', x):
-            return parse_range2(x, first_field, lambda inp: prep_raw(inp, short_names), split_minus=False)
-        else:
-            return parse_range2(x, first_field, parse_singleton)
+        #if re.search(r'[A-Za-z]', x):
+        #    return parse_range2(x, first_field, lambda inp: prep_raw(inp, short_names), split_minus=False)
+        #else:
+        return parse_range2(x, first_field, parse_singleton)
     bparts = BRACKETING_RE.split(inp)
     parts = []
     for part in bparts:
@@ -1004,8 +1003,6 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
         query.update(make_sub_query(parts[0]))
     else:
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
-    print(query.get(qfield))
-    print(query.get(first_field))
 
 def parse_count(info, default=50):
     try:
