@@ -493,10 +493,7 @@ class Belyi_download(Downloader):
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := HyperellipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
             curve_polys = self.curve_string_parser(rec)
-            s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (
-                curve_polys[0],
-                curve_polys[1],
-            )
+            s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
             s += "phi := %s;" % rec["map"]
@@ -504,7 +501,7 @@ class Belyi_download(Downloader):
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
 
-#TODO: finish me!
+#TODO: need to test
     def download_galmap_sage(self, label, lang="sage"):
         s = ""
         rec = db.belyi_galmaps.lookup(label)
@@ -520,26 +517,33 @@ class Belyi_download(Downloader):
         s += self.make_base_field_string(rec,lang)
         s += "# Define the curve\n"
         if rec["g"] == 0:
-            s += "X = Curve(ProjectiveSpace(PolynomialRing(K, 2)))\n"
+            s += "X = ProjectiveSpace(1,K)\n"
             s += "# Define the map\n"
-            s += "KX<x> = FunctionField(X)\n" # how do you make the function field of a curve in Sage??? :(
+            s += "K.<x> = FunctionField(K)\n"
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
-            s += "S<x> = PolynomialRing(K)\n"
+            s += "S.<x> = PolynomialRing(K)\n"
             curve_polys = self.curve_string_parser(rec)
             s += "X = EllipticCurve(S!%s,S!%s)\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
-            s += "KX<x,y> = FunctionField(X)\n"
+            s += "K0.<x> = FunctionField(K)\n"
+            crv_str = rec['curve']
+            crv_strs = crv_str.split("=")
+            crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
+            R.<y> = PolynomialRing(K0)
+            s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 2:
-            s += "S<x> = PolynomialRing(K)\n"
+            s += "S.<x> = PolynomialRing(K)\n"
             curve_polys = self.curve_string_parser(rec)
-            s += "X = HyperellipticCurve(S!%s,S!%s)\n" % (
-                curve_polys[0],
-                curve_polys[1],
-            )
+            s += "X = HyperellipticCurve(S!%s,S!%s)\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
-            s += "KX<x,y> = FunctionField(X)\n"
+            s += "K0.<x> = FunctionField(K)\n"
+            crv_str = rec['curve']
+            crv_strs = crv_str.split("=")
+            crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
+            R.<y> = PolynomialRing(K0)
+            s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
         else:
             raise NotImplementedError("for genus > 2")
