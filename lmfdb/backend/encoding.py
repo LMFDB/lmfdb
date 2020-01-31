@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 """
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.

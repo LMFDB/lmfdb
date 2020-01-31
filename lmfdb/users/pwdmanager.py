@@ -11,7 +11,8 @@ from six import string_types, text_type
 # NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-from lmfdb.backend.database import PostgresBase, db
+from lmfdb.backend import db
+from lmfdb.backend.database import PostgresBase
 from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta

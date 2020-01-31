@@ -10,7 +10,7 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 # in the database, instead of trying to extract this from a URL
 def name_and_object_from_url(url, check_existence=False):
     # the import is here to avoid circular imports
-    from lmfdb.backend.database import db
+    from lmfdb.backend import db
     from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
     url_split = url.rstrip('/').lstrip('/').split("/")
     name = '??'
