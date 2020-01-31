@@ -29,24 +29,7 @@ from sage.rings.power_series_poly import PowerSeries_poly
 from sage.modules.free_module_element import vector, FreeModuleElement
 
 
-def setup_connection(conn):
-    # We want to use unicode everywhere
-    register_type(UNICODE, conn)
-    register_type(UNICODEARRAY, conn)
-    conn.set_client_encoding('UTF8')
-    cur = conn.cursor()
-    cur.execute("SELECT NULL::numeric")
-    oid = cur.description[0][1]
-    NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
-    cur.execute("SELECT NULL::numeric[]")
-    oid = cur.description[0][1]
-    NUMERICL = new_array_type((oid,), "NUMERIC[]", NUMERIC)
-    register_type(NUMERIC, conn)
-    register_type(NUMERICL, conn)
-    register_adapter(Integer, AsIs)
-    register_adapter(RealNumber, RealEncoder)
-    register_adapter(dict, Json)
-    register_json(conn, loads=Json.loads)
+
 
 
 class LmfdbRealLiteral(RealLiteral):

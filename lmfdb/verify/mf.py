@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from sage.all import cached_function, psi, RR, Integer, prod
 
-from lmfdb.backend.database import SQL, Identifier
+from psycopg2.sql import SQL, Identifier
 from .verification import TableChecker, overall
 
 @cached_function
