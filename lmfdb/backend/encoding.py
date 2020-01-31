@@ -10,9 +10,9 @@ import binascii
 import json
 import datetime
 
-from psycopg2.extras import register_json, Json as pgJson
-from psycopg2.extensions import adapt, register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
-from sage.functions.other import ceil
+from psycopg2.extras import Json as pgJson
+from psycopg2.extensions import adapt, ISQLQuote
+from sage.all import ceil
 from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
 from sage.rings.complex_number import ComplexNumber
 from sage.rings.complex_field import ComplexField

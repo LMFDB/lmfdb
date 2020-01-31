@@ -13,10 +13,14 @@ import traceback
 from collections import defaultdict, Counter
 from glob import glob
 
+from sage.all import Integer, RealNumber
+
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder
+from psycopg2.extensions import register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs
+from psycopg2.extras import register_json
 
-from .encoding import Json
+from .encoding import Json, RealEncoder, numeric_converter
 from .base import PostgresBase, _meta_tables_cols
 from .table import PostgresTable
 from .utils import DelayCommit
