@@ -60,14 +60,6 @@
 </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
-  <table>
-    <tr>
-      <td>Display: </td>
-      {% for type, desc in [('List', 'List of Results'), ('Counts', 'Counts Table'), ('Random', 'Random Result')] %}
-      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 170px;">{{desc}}</button></td>
-      {% endfor %}
-    </tr>
-  </table>
 </form>
 <script> show_advancedQ(); </script>
 {% endblock %}
