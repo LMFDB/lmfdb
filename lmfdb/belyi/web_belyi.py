@@ -228,8 +228,12 @@ class WebBelyiGalmap(object):
             self.downloads = [
                 (
                     "Code to Magma",
-                    url_for(".belyi_galmap_code_download", label=data["label"]),
-                )
+                    url_for(".belyi_galmap_magma_download", label=data["label"]),
+                ),
+                (
+                    "Code to SageMath",
+                    url_for(".belyi_galmap_sage_download", label=data["label"]),
+                ),
             ]
         else:
             self.downloads = []

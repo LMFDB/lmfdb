@@ -5,7 +5,7 @@ import re
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.misc.cachefunc import cached_function
-from sage.all import QQ, PolynomialRing, NumberField, sage_eval
+from sage.all import QQ, PolynomialRing, NumberField, sage_eval, CC
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -388,7 +388,7 @@ class Belyi_download(Downloader):
                 s += "K = QQ\n"  # is there a Sage version of RationalsAsNumberField()?
             else:
                 s += (
-                    "R.<T> = PolynomialRing(QQ)\nK.<nu> := NumberField(R(%s))\n\n"
+                    "R.<T> = PolynomialRing(QQ)\nK.<nu> = NumberField(R(%s))\n\n"
                     % rec["base_field"]
                 )
         else:
@@ -452,12 +452,12 @@ class Belyi_download(Downloader):
     def embedding_maker(self, rec, lang):
         emb_list = []
         embeddings = rec["embeddings"]
-        if "lang" == "magma":
+        if lang == "magma":
             for z in embeddings:
                 z_str = "ComplexField(15)!%s" % z
                 emb_list.append(z_str)
             return "[%s]" % ", ".join(emb_list)
-        if "lang" == "sage":
+        if lang == "sage":
             return "%s" % [CC(z) for z in embeddings]
 
     def download_galmap_magma(self, label, lang="magma"):
@@ -524,25 +524,25 @@ class Belyi_download(Downloader):
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
             curve_polys = self.curve_string_parser(rec)
-            s += "X = EllipticCurve(S!%s,S!%s)\n" % (curve_polys[0], curve_polys[1])
+            s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
             crv_strs = crv_str.split("=")
             crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
-            R.<y> = PolynomialRing(K0)
+            s += "R.<y> = PolynomialRing(K0)\n"
             s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 2:
             s += "S.<x> = PolynomialRing(K)\n"
             curve_polys = self.curve_string_parser(rec)
-            s += "X = HyperellipticCurve(S!%s,S!%s)\n" % (curve_polys[0], curve_polys[1])
+            s += "X = HyperellipticCurve(S(%s),S(%s))\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
             crv_strs = crv_str.split("=")
             crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
-            R.<y> = PolynomialRing(K0)
+            s += "R.<y> = PolynomialRing(K0)\n"
             s += "KX.<y> = K0.extension(%s)\n" % crv_str
             s += "phi = %s" % rec["map"]
         else:
@@ -551,9 +551,12 @@ class Belyi_download(Downloader):
 
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
-def belyi_galmap_code_download(label):
+def belyi_galmap_magma_download(label):
     return Belyi_download().download_galmap_magma(label)
 
+@belyi_page.route("/download_galmap_to_sage/<label>")
+def belyi_galmap_sage_download(label):
+    return Belyi_download().download_galmap_sage(label)
 
 @search_wrap(
     template="belyi_search_results.html",
