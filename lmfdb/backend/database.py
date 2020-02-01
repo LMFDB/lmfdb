@@ -22,7 +22,7 @@ from psycopg2.extras import register_json
 
 from .encoding import Json, RealEncoder, numeric_converter
 from .base import PostgresBase, _meta_tables_cols
-from .table import PostgresTable
+from .searchtable import PostgresSearchTable
 from .utils import DelayCommit
 
 
@@ -171,7 +171,7 @@ class PostgresDatabase(PostgresBase):
         for tabledata in cur:
             tablename = tabledata[0]
             tabledata += (data_types,)
-            table = PostgresTable(self, *tabledata)
+            table = PostgresSearchTable(self, *tabledata)
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
@@ -343,7 +343,7 @@ class PostgresDatabase(PostgresBase):
 
     def __getitem__(self, name):
         """
-        Accesses a PostgresTable object by name.
+        Accesses a PostgresSearchTable object by name.
         """
         if name in self.tablenames:
             return getattr(self, name)
@@ -469,7 +469,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         INPUT:
 
         - ``new_name`` -- a string giving the desired table name.
-        - ``table`` -- a string or PostgresTable object giving an existing table.
+        - ``table`` -- a string or PostgresSearchTable object giving an existing table.
         """
         if isinstance(table, string_types):
             table = self[table]
@@ -627,7 +627,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # FIXME use global constants ?
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, Json(sort), id_ordered, not id_ordered, extra_columns is not None, label_col])
-        self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
+        self.__dict__[name] = PostgresSearchTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
@@ -753,7 +753,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
             # initialized table
             tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
-            table = PostgresTable(self, *tabledata)
+            table = PostgresSearchTable(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)
             self.tablenames.remove(old_name)
