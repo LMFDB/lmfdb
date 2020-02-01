@@ -1,6 +1,4 @@
-#-*- coding: utf-8 -*-
-from __future__ import absolute_import
-# Backend module
+# -*- coding: utf-8 -*-
 """
 This module provides an interface to Postgres supporting
 the kinds of queries needed by the LMFDB.
@@ -29,10 +27,13 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
+from __future__ import absolute_import
 from .database import PostgresDatabase
 from .utils import DelayCommit
+
 assert DelayCommit
 from psycopg2.sql import SQL
+
 assert SQL
 
 db = PostgresDatabase()
