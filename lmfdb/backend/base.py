@@ -395,7 +395,10 @@ class PostgresBase(object):
     def _get_locks(self):
         return self._execute(
             SQL(
-                "SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) FROM pg_locks l JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"
+                "SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) "
+                "FROM pg_locks l "
+                "JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid "
+                "WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"
             )
         )
 
@@ -535,7 +538,8 @@ class PostgresBase(object):
         if tablename:
             cur = self._execute(
                 SQL(
-                    "SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"
+                    "SELECT 1 from information_schema.table_constraints "
+                    "WHERE table_name=%s and constraint_name=%s"
                 ),
                 [tablename, constraintname],
                 silent=True,
@@ -544,7 +548,8 @@ class PostgresBase(object):
         else:
             cur = self._execute(
                 SQL(
-                    "SELECT table_name from information_schema.table_constraints where constraint_name=%s"
+                    "SELECT table_name from information_schema.table_constraints "
+                    "WHERE constraint_name=%s"
                 ),
                 [constraintname],
                 silent=True,
@@ -681,11 +686,13 @@ class PostgresBase(object):
     @staticmethod
     def _sort_str(sort_list):
         """
-        Constructs a psycopg2.sql.Composable object describing a sort order for Postgres from a list of columns.
+        Constructs a psycopg2.sql.Composable object describing a sort order
+        for Postgres from a list of columns.
 
         INPUT:
 
-        - ``sort_list`` -- a list, either of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).
+        - ``sort_list`` -- a list, either of strings (which are interpreted as
+        column names in the ascending direction) or of pairs (column name, 1 or -1).
 
         OUTPUT:
 
@@ -746,7 +753,8 @@ class PostgresBase(object):
                 # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
                 cur = self._execute(
                     SQL(
-                        "SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"
+                        "SELECT column_name, udt_name::regtype FROM information_schema.columns "
+                        "WHERE table_name = %s ORDER BY ordinal_position"
                     ),
                     [tname],
                 )
@@ -928,7 +936,8 @@ class PostgresBase(object):
         """
         if self._table_exists(tmp_table):
             raise ValueError(
-                "Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
+                "Temporary table %s already exists. "
+                "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
                 % (tmp_table, table)
             )
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(
@@ -980,8 +989,8 @@ class PostgresBase(object):
             error_msg = "Table %s already exists." % name
             if name.endswith("_tmp"):
                 error_msg += (
-                    "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
-                    % (name[:-4])
+                    "Run db.%s.cleanup_from_reload() "
+                    "if you want to delete it and proceed." % (name[:-4])
                 )
             raise ValueError(error_msg)
         with open(filename, "r") as F:
@@ -1173,7 +1182,8 @@ class PostgresBase(object):
             for line in lines:
                 if line[table_name_idx] != search_table:
                     raise RuntimeError(
-                        "in %s column %d (= %s) in the file doesn't match the search table name %s"
+                        "in %s column %d (= %s) in the file "
+                        "doesn't match the search table name %s"
                         % (filename, table_name_idx, line[table_name_idx], search_table)
                     )
 

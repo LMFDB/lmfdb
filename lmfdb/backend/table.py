@@ -535,7 +535,8 @@ class PostgresTable(PostgresBase):
         now = time.time()
         with DelayCommit(self, silence=True):
             selecter = SQL(
-                "SELECT type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s AND index_name = %s"
+                "SELECT type, columns, modifiers, storage_params FROM meta_indexes "
+                "WHERE table_name = %s AND index_name = %s"
             )
             cur = self._execute(selecter, [self.search_table, name])
             if cur.rowcount > 1:
@@ -811,7 +812,9 @@ class PostgresTable(PostgresBase):
             )
             self._execute(creator)
             inserter = SQL(
-                "INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s)"
+                "INSERT INTO meta_constraints "
+                "(constraint_name, table_name, type, columns, check_func) "
+                "VALUES (%s, %s, %s, %s, %s)"
             )
             self._execute(
                 inserter, [name, self.search_table, type, Json(columns), check_func]
@@ -1619,14 +1622,18 @@ class PostgresTable(PostgresBase):
                 pkey = SQL("ALTER TABLE {0} ADD PRIMARY KEY ({1})")
                 self._execute(addcol.format(search_table, newid))
                 updater = SQL(
-                    "UPDATE {0} SET {1} = newsort.newid FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) newsort WHERE {0}.id = newsort.id"
+                    "UPDATE {0} SET {1} = newsort.newid "
+                    "FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) "
+                    "newsort WHERE {0}.id = newsort.id"
                 )
                 updater = updater.format(search_table, newid, self._sort)
                 self._execute(updater)
                 if extra_table is not None:
                     self._execute(addcol.format(extra_table, newid))
                     updater = SQL(
-                        "UPDATE {0} SET {1} = search_table.{1} FROM (SELECT id, {1} FROM {2}) search_table WHERE {0}.id = search_table.id"
+                        "UPDATE {0} SET {1} = search_table.{1} "
+                        "FROM (SELECT id, {1} FROM {2}) search_table "
+                        "WHERE {0}.id = search_table.id"
                     )
                     updater = updater.format(extra_table, newid, search_table)
                     self._execute(updater)
@@ -1709,9 +1716,11 @@ class PostgresTable(PostgresBase):
         )
         if backup_number > 1:  # There are multiple backup tables
             print(
-                "WARNING: there are now {1} backup tables for {0}\nYou should probably run `db.{0}.cleanup_from_reload()` to save disc space".format(
-                    self.search_table, backup_number
-                )
+                (
+                    "WARNING: there are now {1} backup tables for {0}\n"
+                    "You should probably run `db.{0}.cleanup_from_reload()` "
+                    "to save disc space"
+                ).format(self.search_table, backup_number)
             )
 
     def _check_file_input(self, searchfile, extrafile, kwds):
@@ -1883,10 +1892,12 @@ class PostgresTable(PostgresBase):
                 self.reload_final_swap(tables=tables, metafile=metafile, commit=False)
             elif metafile is not None and not silence_meta:
                 print(
-                    "Warning: since the final swap was not requested, we have not updated meta_tables"
+                    "Warning: since the final swap was not requested, "
+                    "we have not updated meta_tables"
                 )
                 print(
-                    "when performing the final swap with reload_final_swap, pass the metafile as an argument to update the meta_tables"
+                    "when performing the final swap with reload_final_swap, "
+                    "pass the metafile as an argument to update the meta_tables"
                 )
 
             if log_change:
@@ -1926,7 +1937,9 @@ class PostgresTable(PostgresBase):
         # Reinitialize object
         tabledata = self._execute(
             SQL(
-                "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"
+                "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, "
+                "has_extras, stats_valid, total, include_nones "
+                "FROM meta_tables WHERE name = %s"
             ),
             [self.search_table],
         ).fetchone()
@@ -1962,7 +1975,8 @@ class PostgresTable(PostgresBase):
         """
         if self._table_exists(self.search_table + "_tmp"):
             print(
-                "Reload did not successfully complete.  You must first call drop_tmp to delete the temporary tables created."
+                "Reload did not successfully complete. "
+                "You must first call drop_tmp to delete the temporary tables created."
             )
             return
         if backup_number is None:
@@ -2413,7 +2427,8 @@ class PostgresTable(PostgresBase):
                 )
             if columns:
                 selecter = SQL(
-                    "SELECT columns, constraint_name FROM meta_constraints WHERE table_name = %s AND ({0})"
+                    "SELECT columns, constraint_name "
+                    "FROM meta_constraints WHERE table_name = %s AND ({0})"
                 ).format(SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
                 cur = self._execute(
                     selecter,
@@ -2433,7 +2448,8 @@ class PostgresTable(PostgresBase):
                     )
                 if col in self._sort_keys:
                     raise ValueError(
-                        "Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"
+                        "Sorting for %s depends on %s; change default sort order "
+                        "with set_sort() before moving column to extra table"
                         % (self.search_table, col)
                     )
                 typ = self.col_type[col]

@@ -103,7 +103,7 @@ class PostgresDatabase(PostgresBase):
         self._user = options["user"]
         logging.info(
             "Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..."
-            % (options["user"], options["host"], options["port"], options["dbname"],)
+            % (options["user"], options["host"], options["port"], options["dbname"])
         )
         connection = connect(**options)
         logging.info("Done!\n connection = %s" % connection)
@@ -127,7 +127,7 @@ class PostgresDatabase(PostgresBase):
 
     def register_object(self, obj):
         """
-        The datbase holds references to tables, etc so that connections can be refreshed if they fail.
+        The database holds references to tables, etc so that connections can be refreshed if they fail.
         """
         obj.conn = self.conn
         self._objects.append(obj)
@@ -161,7 +161,9 @@ class PostgresDatabase(PostgresBase):
                 list(
                     self._execute(
                         SQL(
-                            "SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN ("
+                            "SELECT table_name, privilege_type "
+                            + "FROM information_schema.role_table_grants "
+                            + "WHERE grantee = %s AND table_name IN ("
                             + ",".join(["%s"] * len(knowls_tables))
                             + ") AND privilege_type IN ("
                             + ",".join(["%s"] * len(privileges))
@@ -181,7 +183,9 @@ class PostgresDatabase(PostgresBase):
                 list(
                     self._execute(
                         SQL(
-                            "SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN ("
+                            "SELECT privilege_type FROM information_schema.role_table_grants "
+                            + "WHERE grantee = %s AND table_schema = %s "
+                            + "AND table_name=%s AND privilege_type IN ("
                             + ",".join(["%s"] * len(privileges))
                             + ")"
                         ),
@@ -205,7 +209,8 @@ class PostgresDatabase(PostgresBase):
 
         cur = self._execute(
             SQL(
-                "SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns"
+                "SELECT table_name, column_name, udt_name::regtype "
+                "FROM information_schema.columns"
             )
         )
         data_types = {}
@@ -216,7 +221,8 @@ class PostgresDatabase(PostgresBase):
 
         cur = self._execute(
             SQL(
-                "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables"
+                "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, "
+                "has_extras, stats_valid, total, include_nones FROM meta_tables"
             )
         )
         self.tablenames = []
@@ -259,7 +265,8 @@ class PostgresDatabase(PostgresBase):
             print("Please provide your knowl username,")
             print("so that we can associate database changes with individuals.")
             print(
-                "Note that you can also do this by setting the editor field in the logging section of your config.ini file."
+                "Note that you can also do this by setting the editor field "
+                "in the logging section of your config.ini file."
             )
             uid = input("Username: ")
             selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
@@ -281,7 +288,8 @@ class PostgresDatabase(PostgresBase):
         """
         uid = self.login()
         inserter = SQL(
-            "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)"
+            "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
+            "VALUES (%s, %s, %s, %s, %s)"
         )
         self._execute(
             inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data]
@@ -311,9 +319,9 @@ class PostgresDatabase(PostgresBase):
                 # file not found or any other problem
                 # this is read-only everywhere
                 logging.warning(
-                    "PostgresSQL authentication: no webserver password on {0} -- fallback to read-only access".format(
-                        pw_filename
-                    )
+                    "PostgresSQL authentication: no webserver password "
+                    + "on {0}".format(pw_filename)
+                    + "-- fallback to read-only access"
                 )
                 options["user"], options["password"] = "lmfdb", "lmfdb"
 
@@ -487,7 +495,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, silence=True):
             self._execute(
                 SQL(
-                    "CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)"
+                    "CREATE TABLE meta_indexes_hist "
+                    "(index_name text, table_name text, type text, columns jsonb, "
+                    "modifiers jsonb, storage_params jsonb, version integer)"
                 )
             )
             version = 0
@@ -495,14 +505,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # copy data from meta_indexes
             rows = self._execute(
                 SQL(
-                    "SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes"
+                    "SELECT index_name, table_name, type, columns, modifiers, "
+                    "storage_params FROM meta_indexes"
                 )
             )
 
             for row in rows:
                 self._execute(
                     SQL(
-                        "INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                        "INSERT INTO meta_indexes_hist (index_name, table_name, "
+                        "type, columns, modifiers, storage_params, version) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s)"
                     ),
                     row + (version,),
                 )
@@ -515,7 +528,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, silence=True):
             self._execute(
                 SQL(
-                    "CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"
+                    "CREATE TABLE meta_constraints "
+                    "(constraint_name text, table_name text, "
+                    "type text, columns jsonb, check_func jsonb)"
                 )
             )
             self.grant_select("meta_constraints")
@@ -525,7 +540,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, silence=True):
             self._execute(
                 SQL(
-                    "CREATE TABLE meta_constraints_hist (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"
+                    "CREATE TABLE meta_constraints_hist "
+                    "(constraint_name text, table_name text, "
+                    "type text, columns jsonb, check_func jsonb, version integer)"
                 )
             )
             version = 0
@@ -533,14 +550,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # copy data from meta_constraints
             rows = self._execute(
                 SQL(
-                    "SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints"
+                    "SELECT constraint_name, table_name, type, columns, check_func "
+                    "FROM meta_constraints"
                 )
             )
 
             for row in rows:
                 self._execute(
                     SQL(
-                        "INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"
+                        "INSERT INTO meta_constraints_hist "
+                        "(constraint_name, table_name, type, columns, check_func, version) "
+                        "VALUES (%s, %s, %s, %s, %s, %s)"
                     ),
                     row + (version,),
                 )
@@ -553,7 +573,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, silence=True):
             self._execute(
                 SQL(
-                    "CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, include_nones boolean, version integer)"
+                    "CREATE TABLE meta_tables_hist "
+                    "(name text, sort jsonb, count_cutoff smallint DEFAULT 1000, "
+                    "id_ordered boolean, out_of_order boolean, has_extras boolean, "
+                    "stats_valid boolean DEFAULT true, label_col text, total bigint, "
+                    "include_nones boolean, version integer)"
                 )
             )
             version = 0
@@ -568,7 +592,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for row in rows:
                 self._execute(
                     SQL(
-                        "INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                        "INSERT INTO meta_tables_hist "
+                        "(name, sort, id_ordered, out_of_order, has_extras, label_col, "
+                        "total, include_nones, version) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
                     ),
                     row + (version,),
                 )
@@ -779,14 +806,18 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 self._execute(creator)
                 self.grant_select(name + "_extras")
             creator = SQL(
-                "CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)"
+                "CREATE TABLE {0} "
+                "(cols jsonb, values jsonb, count bigint, "
+                "extra boolean, split boolean DEFAULT FALSE)"
             )
             creator = creator.format(Identifier(name + "_counts"))
             self._execute(creator)
             self.grant_select(name + "_counts")
             self.grant_insert(name + "_counts")
             creator = SQL(
-                'CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)'
+                "CREATE TABLE {0} "
+                '(cols jsonb, stat text COLLATE "C", value numeric, '
+                "constraint_cols jsonb, constraint_values jsonb, threshold integer)"
             )
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
@@ -794,7 +825,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.grant_insert(name + "_stats")
             # FIXME use global constants ?
             inserter = SQL(
-                "INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)"
+                "INSERT INTO meta_tables "
+                "(name, sort, id_ordered, out_of_order, has_extras, label_col) "
+                "VALUES (%s, %s, %s, %s, %s, %s)"
             )
             self._execute(
                 inserter,
@@ -1024,7 +1057,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # initialized table
             tabledata = self._execute(
                 SQL(
-                    "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"
+                    "SELECT name, label_col, sort, count_cutoff, id_ordered, "
+                    "out_of_order, has_extras, stats_valid, total, include_nones "
+                    "FROM meta_tables WHERE name = %s"
                 ),
                 [new_name],
             ).fetchone()

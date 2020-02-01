@@ -572,7 +572,9 @@ class PostgresStatsTable(PostgresBase):
         """
         try:
             inserter = SQL(
-                "INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values) VALUES (%s, %s, %s, %s, %s)"
+                "INSERT INTO {0} "
+                "(cols, stat, value, constraint_cols, constraint_values) "
+                "VALUES (%s, %s, %s, %s, %s)"
             )
             self._execute(
                 inserter.format(Identifier(self.stats)),
@@ -1473,7 +1475,8 @@ ORDER BY v.ord LIMIT %s"""
         if col_value_dict:
             if have_stats:
                 print(
-                    "In addition to the statistics described above, additional counts are recorded",
+                    "In addition to the statistics described above, "
+                    "additional counts are recorded",
                     end=" ",
                 )
             else:
