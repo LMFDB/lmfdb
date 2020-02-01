@@ -128,7 +128,7 @@ def prep_raw(inp, names={}):
     # We use Sage's parser to make sure that the user input is well formed
     P = Parser(make_var=filtered_var)
     try:
-        parsed = P.parse_expression(inp)
+        P.parse_expression(inp)
     except SyntaxError:
         raise SearchParsingError("syntax error")
     pieces = re.split(r'([A-Za-z_]+)', inp)
