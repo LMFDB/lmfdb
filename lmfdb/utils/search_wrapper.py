@@ -4,7 +4,7 @@ from psycopg2.extensions import QueryCanceledError
 from sage.misc.decorators import decorator_keywords
 
 from lmfdb.app import ctx_proc_userdata
-from lmfdb.utils.search_parsing import parse_start, parse_count
+from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, to_dict
 
 
@@ -49,12 +49,10 @@ class Wrapper(object):
         try:
             errpage = self.f(info, query)
         except ValueError as err:
-            # Errors raised in parsing
-            info["err"] = str(err)
-            err_title = query.pop("__err_title__", self.err_title)
-            return render_template(
-                self.template, info=info, title=err_title, **template_kwds
-            )
+            # Errors raised in parsing; these should mostly be SearchParsingErrors
+            info['err'] = str(err)
+            err_title = query.pop('__err_title__', self.err_title)
+            return render_template(self.template, info=info, title=err_title, **template_kwds)
         else:
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
@@ -81,6 +79,12 @@ class Wrapper(object):
             template, info=info, title=self.err_title, **template_kwds
         )
 
+
+    def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
+        flash_error('Error parsing %s.', str(err))
+        info['err'] = str(err)
+        info['query'] = dict(query)
+        return render_template(template, info=info, title=self.err_title, **template_kwds)
 
 class SearchWrapper(Wrapper):
     def __init__(
@@ -176,9 +180,10 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
-                info, query, err, err_title, template, template_kwds
-            )
+            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+        except SearchParsingError as err:
+            # These can be raised when the query includes $raw keys.
+            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
         else:
             try:
                 if self.cleaners:
