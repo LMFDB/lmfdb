@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
@@ -17,7 +17,15 @@ from sage.all import Integer, RealNumber
 
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder
-from psycopg2.extensions import register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs
+from psycopg2.extensions import (
+    register_type,
+    register_adapter,
+    new_type,
+    new_array_type,
+    UNICODE,
+    UNICODEARRAY,
+    AsIs,
+)
 from psycopg2.extras import register_json
 
 from .encoding import Json, RealEncoder, numeric_converter
@@ -30,7 +38,7 @@ def setup_connection(conn):
     # We want to use unicode everywhere
     register_type(UNICODE, conn)
     register_type(UNICODEARRAY, conn)
-    conn.set_client_encoding('UTF8')
+    conn.set_client_encoding("UTF8")
     cur = conn.cursor()
     cur.execute("SELECT NULL::numeric")
     oid = cur.description[0][1]
@@ -44,6 +52,7 @@ def setup_connection(conn):
     register_adapter(RealNumber, RealEncoder)
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
+
 
 class PostgresDatabase(PostgresBase):
     """
@@ -79,19 +88,24 @@ class PostgresDatabase(PostgresBase):
         sage: db.av_fqisog
         Interface to Postgres table av_fqisog
     """
+
     def _new_connection(self, **kwargs):
         """
         Create a new connection to the postgres database.
         """
         from lmfdb.utils.config import Configuration
+
         options = Configuration().get_postgresql()
         # overrides the options passed as keyword arguments
         for key, value in kwargs.items():
             options[key] = value
         self.fetch_userpassword(options)
-        self._user = options['user']
-        logging.info("Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..." % (options['user'],options['host'], options['port'], options['dbname'],))
-        connection = connect( **options)
+        self._user = options["user"]
+        logging.info(
+            "Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..."
+            % (options["user"], options["host"], options["port"], options["dbname"],)
+        )
+        connection = connect(**options)
         logging.info("Done!\n connection = %s" % connection)
         # The following function controls how Python classes are converted to
         # strings for passing to Postgres, and how the results are decoded upon
@@ -105,8 +119,7 @@ class PostgresDatabase(PostgresBase):
         """
         Resets the connection
         """
-        logging.info("Connection broken (status %s); resetting...",
-                     self.conn.closed)
+        logging.info("Connection broken (status %s); resetting...", self.conn.closed)
         conn = self._new_connection()
         # Note that self is the first entry in self._objects
         for obj in self._objects:
@@ -125,12 +138,15 @@ class PostgresDatabase(PostgresBase):
         self._silenced = False
         self._objects = []
         self.conn = self._new_connection(**kwargs)
-        PostgresBase.__init__(self, 'db_all', self)
+        PostgresBase.__init__(self, "db_all", self)
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
         self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
-        self._super_user = self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == 'on'
+        self._super_user = (
+            self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0]
+            == "on"
+        )
 
         if self._read_only:
             self._read_and_write_knowls = False
@@ -139,15 +155,43 @@ class PostgresDatabase(PostgresBase):
             self._read_and_write_knowls = True
             self._read_and_write_userdb = True
         else:
-            privileges = ['INSERT', 'SELECT', 'UPDATE']
-            knowls_tables = ['kwl_knowls']
-            cur = sorted(list(self._execute(SQL("SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN (" + ",".join(['%s']*len(knowls_tables)) + ") AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user] +  knowls_tables + privileges)))
-#            print cur
-#            print sorted([(table, priv) for table in knowls_tables for priv in privileges])
-            self._read_and_write_knowls = cur == sorted([(table, priv) for table in knowls_tables for priv in privileges])
+            privileges = ["INSERT", "SELECT", "UPDATE"]
+            knowls_tables = ["kwl_knowls"]
+            cur = sorted(
+                list(
+                    self._execute(
+                        SQL(
+                            "SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN ("
+                            + ",".join(["%s"] * len(knowls_tables))
+                            + ") AND privilege_type IN ("
+                            + ",".join(["%s"] * len(privileges))
+                            + ")"
+                        ),
+                        [self._user] + knowls_tables + privileges,
+                    )
+                )
+            )
+            #            print cur
+            #            print sorted([(table, priv) for table in knowls_tables for priv in privileges])
+            self._read_and_write_knowls = cur == sorted(
+                [(table, priv) for table in knowls_tables for priv in privileges]
+            )
 
-            cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
-            self._read_and_write_userdb = cur == sorted([(priv,) for priv in privileges])
+            cur = sorted(
+                list(
+                    self._execute(
+                        SQL(
+                            "SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN ("
+                            + ",".join(["%s"] * len(privileges))
+                            + ")"
+                        ),
+                        [self._user, "userdb", "users"] + privileges,
+                    )
+                )
+            )
+            self._read_and_write_userdb = cur == sorted(
+                [(priv,) for priv in privileges]
+            )
 
         logging.info("User: %s", self._user)
         logging.info("Read only: %s", self._read_only)
@@ -156,17 +200,25 @@ class PostgresDatabase(PostgresBase):
         logging.info("Read/write to knowls: %s", self._read_and_write_knowls)
         # Stores the name of the person making changes to the database
         from lmfdb.utils.config import Configuration
-        self.__editor = Configuration().get_logging().get('editor')
 
+        self.__editor = Configuration().get_logging().get("editor")
 
-        cur = self._execute(SQL('SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns'))
+        cur = self._execute(
+            SQL(
+                "SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns"
+            )
+        )
         data_types = {}
         for table_name, column_name, regtype in cur:
             if table_name not in data_types:
-                 data_types[table_name] = []
+                data_types[table_name] = []
             data_types[table_name].append((column_name, regtype))
 
-        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables"))
+        cur = self._execute(
+            SQL(
+                "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables"
+            )
+        )
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -175,7 +227,7 @@ class PostgresDatabase(PostgresBase):
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
-        self.is_verifying = False # set to true when importing lmfdb.verify
+        self.is_verifying = False  # set to true when importing lmfdb.verify
 
     def __repr__(self):
         return "Interface to Postgres database"
@@ -206,7 +258,9 @@ class PostgresDatabase(PostgresBase):
         if self.__editor is None:
             print("Please provide your knowl username,")
             print("so that we can associate database changes with individuals.")
-            print("Note that you can also do this by setting the editor field in the logging section of your config.ini file.")
+            print(
+                "Note that you can also do this by setting the editor field in the logging section of your config.ini file."
+            )
             uid = input("Username: ")
             selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
@@ -226,8 +280,12 @@ class PostgresDatabase(PostgresBase):
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         uid = self.login()
-        inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
-        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
+        inserter = SQL(
+            "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)"
+        )
+        self._execute(
+            inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data]
+        )
 
     def fetch_userpassword(self, options):
         """
@@ -237,37 +295,45 @@ class PostgresDatabase(PostgresBase):
 
         - ``options`` -- a dictionary; 'user' and 'password' will be inserted.
         """
-        if 'user' not in options:
-            options['user'] = 'lmfdb'
+        if "user" not in options:
+            options["user"] = "lmfdb"
 
-        if options['user'] == 'webserver':
+        if options["user"] == "webserver":
             logging.info("Fetching webserver password...")
             # tries to read the file "password" on root of the project
-            pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "../password")
+            pw_filename = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "../password"
+            )
             try:
-                options['password'] = open(pw_filename, "r").readlines()[0].strip()
+                options["password"] = open(pw_filename, "r").readlines()[0].strip()
                 logging.info("Done!")
             except Exception:
                 # file not found or any other problem
                 # this is read-only everywhere
-                logging.warning("PostgresSQL authentication: no webserver password on {0} -- fallback to read-only access".format(pw_filename))
-                options['user'], options['password'] = 'lmfdb', 'lmfdb'
+                logging.warning(
+                    "PostgresSQL authentication: no webserver password on {0} -- fallback to read-only access".format(
+                        pw_filename
+                    )
+                )
+                options["user"], options["password"] = "lmfdb", "lmfdb"
 
-        elif 'password' not in options:
-            options['user'], options['password'] = 'lmfdb', 'lmfdb'
+        elif "password" not in options:
+            options["user"], options["password"] = "lmfdb", "lmfdb"
 
     def _grant(self, action, table_name, users):
         """
         Utility function for granting permissions on tables.
         """
         action = action.upper()
-        if action not in ['SELECT', 'INSERT', 'UPDATE', 'DELETE']:
-            raise ValueError("%s is not a valid action"%action)
-        grantor = SQL('GRANT %s ON TABLE {0} TO {1}'%action)
+        if action not in ["SELECT", "INSERT", "UPDATE", "DELETE"]:
+            raise ValueError("%s is not a valid action" % action)
+        grantor = SQL("GRANT %s ON TABLE {0} TO {1}" % action)
         for user in users:
-            self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True)
+            self._execute(
+                grantor.format(Identifier(table_name), Identifier(user)), silent=True
+            )
 
-    def grant_select(self, table_name, users=['lmfdb', 'webserver']):
+    def grant_select(self, table_name, users=["lmfdb", "webserver"]):
         """
         Grant users the ability to run SELECT statements on a given table
 
@@ -278,7 +344,7 @@ class PostgresDatabase(PostgresBase):
         """
         self._grant("SELECT", table_name, users)
 
-    def grant_insert(self, table_name, users=['webserver']):
+    def grant_insert(self, table_name, users=["webserver"]):
         """
         Grant users the ability to run INSERT statements on a given table
 
@@ -289,7 +355,7 @@ class PostgresDatabase(PostgresBase):
         """
         self._grant("INSERT", table_name, users)
 
-    def grant_update(self, table_name, users=['webserver']):
+    def grant_update(self, table_name, users=["webserver"]):
         """
         Grant users the ability to run UPDATE statements on a given table
 
@@ -300,7 +366,7 @@ class PostgresDatabase(PostgresBase):
         """
         self._grant("UPDATE", table_name, users)
 
-    def grant_delete(self, table_name, users=['webserver']):
+    def grant_delete(self, table_name, users=["webserver"]):
         """
         Grant users the ability to run DELETE statements on a given table
 
@@ -348,7 +414,7 @@ class PostgresDatabase(PostgresBase):
         if name in self.tablenames:
             return getattr(self, name)
         else:
-            raise ValueError("%s is not a search table"%name)
+            raise ValueError("%s is not a search table" % name)
 
     def table_sizes(self):
         """
@@ -384,81 +450,130 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 ) a"""
         sizes = defaultdict(lambda: defaultdict(int))
         cur = self._execute(SQL(query))
-        for table_name, row_estimate, total_bytes, index_bytes, toast_bytes, table_bytes in cur:
-            if table_name.endswith('_stats'):
+        for (
+            table_name,
+            row_estimate,
+            total_bytes,
+            index_bytes,
+            toast_bytes,
+            table_bytes,
+        ) in cur:
+            if table_name.endswith("_stats"):
                 name = table_name[:-6]
-                sizes[name]['nstats'] = int(row_estimate)
-                sizes[name]['stats_bytes'] = total_bytes
-            elif table_name.endswith('_counts'):
+                sizes[name]["nstats"] = int(row_estimate)
+                sizes[name]["stats_bytes"] = total_bytes
+            elif table_name.endswith("_counts"):
                 name = table_name[:-7]
-                sizes[name]['ncounts'] = int(row_estimate)
-                sizes[name]['counts_bytes'] = total_bytes
-            elif table_name.endswith('_extras'):
+                sizes[name]["ncounts"] = int(row_estimate)
+                sizes[name]["counts_bytes"] = total_bytes
+            elif table_name.endswith("_extras"):
                 name = table_name[:-7]
-                sizes[name]['extras_bytes'] = total_bytes
+                sizes[name]["extras_bytes"] = total_bytes
             else:
                 name = table_name
-                sizes[name]['nrows'] = int(row_estimate)
+                sizes[name]["nrows"] = int(row_estimate)
                 # use the cached account for an accurate count
                 if name in self.tablenames:
                     row_cached = self[name].stats.quick_count({})
                     if row_cached is not None:
-                        sizes[name]['nrows'] = row_cached
-                sizes[name]['index_bytes'] = index_bytes
-                sizes[name]['toast_bytes'] = toast_bytes
-                sizes[name]['table_bytes'] = table_bytes
-            sizes[name]['total_bytes'] += total_bytes
+                        sizes[name]["nrows"] = row_cached
+                sizes[name]["index_bytes"] = index_bytes
+                sizes[name]["toast_bytes"] = toast_bytes
+                sizes[name]["table_bytes"] = table_bytes
+            sizes[name]["total_bytes"] += total_bytes
         return sizes
 
     def _create_meta_indexes_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)"))
+            self._execute(
+                SQL(
+                    "CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)"
+                )
+            )
             version = 0
 
             # copy data from meta_indexes
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes"))
+            rows = self._execute(
+                SQL(
+                    "SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes"
+                )
+            )
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(
+                    SQL(
+                        "INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    ),
+                    row + (version,),
+                )
 
-            self.grant_select('meta_indexes_hist')
+            self.grant_select("meta_indexes_hist")
 
         print("Table meta_indexes_hist created")
 
-
     def _create_meta_constraints(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"))
-            self.grant_select('meta_constraints')
+            self._execute(
+                SQL(
+                    "CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"
+                )
+            )
+            self.grant_select("meta_constraints")
         print("Table meta_constraints created")
 
     def _create_meta_constraints_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_constraints_hist (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"))
+            self._execute(
+                SQL(
+                    "CREATE TABLE meta_constraints_hist (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"
+                )
+            )
             version = 0
 
             # copy data from meta_constraints
-            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints"))
+            rows = self._execute(
+                SQL(
+                    "SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints"
+                )
+            )
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(
+                    SQL(
+                        "INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"
+                    ),
+                    row + (version,),
+                )
 
-            self.grant_select('meta_constraints_hist')
+            self.grant_select("meta_constraints_hist")
 
         print("Table meta_constraints_hist created")
 
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, include_nones boolean, version integer)"))
+            self._execute(
+                SQL(
+                    "CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, include_nones boolean, version integer)"
+                )
+            )
             version = 0
 
             # copy data from meta_tables
-            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "))
+            rows = self._execute(
+                SQL(
+                    "SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones FROM meta_tables "
+                )
+            )
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(
+                    SQL(
+                        "INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, include_nones, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                    ),
+                    row + (version,),
+                )
 
-            self.grant_select('meta_tables_hist')
+            self.grant_select("meta_tables_hist")
 
         print("Table meta_tables_hist created")
 
@@ -473,8 +588,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if isinstance(table, string_types):
             table = self[table]
-        search_columns = {typ: [col for col in table.search_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
-        extra_columns = {typ: [col for col in table.extra_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
+        search_columns = {
+            typ: [col for col in table.search_cols if table.col_type[col] == typ]
+            for typ in set(table.col_type.values())
+        }
+        extra_columns = {
+            typ: [col for col in table.extra_cols if table.col_type[col] == typ]
+            for typ in set(table.col_type.values())
+        }
         # Remove empty lists
         for D in [search_columns, extra_columns]:
             for typ, cols in list(D.items()):
@@ -488,13 +609,44 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table.search_cols
-        self.create_table(new_name, search_columns, label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
+        self.create_table(
+            new_name,
+            search_columns,
+            label_col,
+            sort,
+            id_ordered,
+            extra_columns,
+            search_order,
+            extra_order,
+            commit=commit,
+        )
         if data:
-            self._execute(SQL('INSERT INTO {0} SELECT * FROM {1}').format(Identifier(new_name), Identifier(table.search_table)), commit=commit)
+            self._execute(
+                SQL("INSERT INTO {0} SELECT * FROM {1}").format(
+                    Identifier(new_name), Identifier(table.search_table)
+                ),
+                commit=commit,
+            )
             if extra_columns:
-                self._execute(SQL('INSERT INTO {0} SELECT * FROM {1}').format(Identifier(new_name + '_extras'), Identifier(table.extra_table)), commit=commit)
+                self._execute(
+                    SQL("INSERT INTO {0} SELECT * FROM {1}").format(
+                        Identifier(new_name + "_extras"), Identifier(table.extra_table)
+                    ),
+                    commit=commit,
+                )
 
-    def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
+    def create_table(
+        self,
+        name,
+        search_columns,
+        label_col,
+        sort=None,
+        id_ordered=None,
+        extra_columns=None,
+        search_order=None,
+        extra_order=None,
+        commit=True,
+    ):
         """
         Add a new search table to the database.  See also `create_table_like`.
 
@@ -534,21 +686,23 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - timestamp -- 8-byte date and time with no timezone.
         """
         if name in self.tablenames:
-            raise ValueError("%s already exists"%name)
-        if '_' not in name:
-            raise ValueError("Table name must contain an underscore; first part gives LMFDB section")
+            raise ValueError("%s already exists" % name)
+        if "_" not in name:
+            raise ValueError(
+                "Table name must contain an underscore; first part gives LMFDB section"
+            )
         now = time.time()
         if id_ordered is None:
-            id_ordered = (sort is not None)
+            id_ordered = sort is not None
         for typ, L in list(search_columns.items()):
             if isinstance(L, string_types):
                 search_columns[typ] = [L]
-        valid_list = sum(search_columns.values(),[])
+        valid_list = sum(search_columns.values(), [])
         valid_set = set(valid_list)
         # Check that columns aren't listed twice
         if len(valid_list) != len(valid_set):
             C = Counter(valid_list)
-            raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
+            raise ValueError("Column %s repeated" % (C.most_common(1)[0][0]))
         # Check that label_col is valid
         if label_col is not None and label_col not in valid_set:
             raise ValueError("label_col must be a search column")
@@ -559,17 +713,20 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     if len(col) != 2:
                         raise ValueError("Sort terms must be either strings or pairs")
                     if col[1] not in [1, -1]:
-                        raise ValueError("Sort terms must be of the form (col, 1) or (col, -1)")
+                        raise ValueError(
+                            "Sort terms must be of the form (col, 1) or (col, -1)"
+                        )
                     col = col[0]
                 if col not in valid_set:
-                    raise ValueError("Column %s does not exist"%(col))
+                    raise ValueError("Column %s does not exist" % (col))
         # Check that search order is valid
         if search_order is not None:
             for col in search_order:
                 if col not in valid_set:
-                    raise ValueError("Column %s does not exist"%(col))
+                    raise ValueError("Column %s does not exist" % (col))
             if len(search_order) != len(valid_set):
                 raise ValueError("Must include all columns")
+
         def process_columns(coldict, colorder):
             allcols = {}
             hasid = False
@@ -579,59 +736,102 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 if isinstance(cols, string_types):
                     cols = [cols]
                 for col in cols:
-                    if col == 'id':
+                    if col == "id":
                         hasid = True
                     # We have whitelisted the types, so it's okay to use string formatting
                     # to insert them into the SQL command.
                     # This is useful so that we can specify the collation in the type
                     allcols[col] = SQL("{0} " + typ).format(Identifier(col))
                     dictorder.append(col)
-            allcols = [allcols[col] for col in (dictorder if colorder is None else colorder)]
-            if (not hasid):
+            allcols = [
+                allcols[col] for col in (dictorder if colorder is None else colorder)
+            ]
+            if not hasid:
                 allcols.insert(0, SQL("id bigint"))
             return allcols
+
         processed_search_columns = process_columns(search_columns, search_order)
         with DelayCommit(self, commit, silence=True):
-            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(processed_search_columns))
+            creator = SQL("CREATE TABLE {0} ({1})").format(
+                Identifier(name), SQL(", ").join(processed_search_columns)
+            )
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
-                valid_extra_list = sum(extra_columns.values(),[])
+                valid_extra_list = sum(extra_columns.values(), [])
                 valid_extra_set = set(valid_extra_list)
                 # Check that columns aren't listed twice
                 if len(valid_extra_list) != len(valid_extra_set):
                     C = Counter(valid_extra_list)
-                    raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
+                    raise ValueError("Column %s repeated" % (C.most_common(1)[0][0]))
                 if extra_order is not None:
                     for col in extra_order:
                         if col not in valid_extra_set:
-                            raise ValueError("Column %s does not exist"%(col))
+                            raise ValueError("Column %s does not exist" % (col))
                     if len(extra_order) != len(valid_extra_set):
                         raise ValueError("Must include all columns")
                 processed_extra_columns = process_columns(extra_columns, extra_order)
-                creator = SQL('CREATE TABLE {0} ({1})')
-                creator = creator.format(Identifier(name+"_extras"),
-                                         SQL(", ").join(processed_extra_columns))
+                creator = SQL("CREATE TABLE {0} ({1})")
+                creator = creator.format(
+                    Identifier(name + "_extras"),
+                    SQL(", ").join(processed_extra_columns),
+                )
                 self._execute(creator)
-                self.grant_select(name+"_extras")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
-            creator = creator.format(Identifier(name+"_counts"))
+                self.grant_select(name + "_extras")
+            creator = SQL(
+                "CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)"
+            )
+            creator = creator.format(Identifier(name + "_counts"))
             self._execute(creator)
-            self.grant_select(name+"_counts")
-            self.grant_insert(name+"_counts")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
+            self.grant_select(name + "_counts")
+            self.grant_insert(name + "_counts")
+            creator = SQL(
+                'CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)'
+            )
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
-            self.grant_select(name+"_stats")
-            self.grant_insert(name+"_stats")
+            self.grant_select(name + "_stats")
+            self.grant_insert(name + "_stats")
             # FIXME use global constants ?
-            inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
-            self._execute(inserter, [name, Json(sort), id_ordered, not id_ordered, extra_columns is not None, label_col])
-        self.__dict__[name] = PostgresSearchTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
+            inserter = SQL(
+                "INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)"
+            )
+            self._execute(
+                inserter,
+                [
+                    name,
+                    Json(sort),
+                    id_ordered,
+                    not id_ordered,
+                    extra_columns is not None,
+                    label_col,
+                ],
+            )
+        self.__dict__[name] = PostgresSearchTable(
+            self,
+            name,
+            label_col,
+            sort=sort,
+            id_ordered=id_ordered,
+            out_of_order=(not id_ordered),
+            has_extras=(extra_columns is not None),
+            total=0,
+        )
         self.tablenames.append(name)
         self.tablenames.sort()
-        self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
-        print("Table %s created in %.3f secs"%(name, time.time()-now))
+        self.log_db_change(
+            "create_table",
+            tablename=name,
+            name=name,
+            search_columns=search_columns,
+            label_col=label_col,
+            sort=sort,
+            id_ordered=id_ordered,
+            extra_columns=extra_columns,
+            search_order=search_order,
+            extra_order=extra_order,
+        )
+        print("Table %s created in %.3f secs" % (name, time.time() - now))
 
     def drop_table(self, name, commit=True, force=False):
         """
@@ -650,24 +850,52 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         table = self[name]
         selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
         if self._execute(selecter, [name]).fetchone()[0]:
-            raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
+            raise ValueError(
+                "You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it."
+            )
         if not force:
-            ok = input("Are you sure you want to drop %s? (y/N) "%(name))
-            if not (ok and ok[0] in ['y','Y']):
+            ok = input("Are you sure you want to drop %s? (y/N) " % (name))
+            if not (ok and ok[0] in ["y", "Y"]):
                 return
         with DelayCommit(self, commit, silence=True):
             table.cleanup_from_reload()
-            indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
+            indexes = list(
+                self._execute(
+                    SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"),
+                    [name],
+                )
+            )
             if indexes:
-                self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
-                print("Deleted indexes {0}".format(", ".join(index[0] for index in indexes)))
-            constraints = list(self._execute(SQL("SELECT constraint_name FROM meta_constraints WHERE table_name = %s"), [name]))
+                self._execute(
+                    SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name]
+                )
+                print(
+                    "Deleted indexes {0}".format(
+                        ", ".join(index[0] for index in indexes)
+                    )
+                )
+            constraints = list(
+                self._execute(
+                    SQL(
+                        "SELECT constraint_name FROM meta_constraints WHERE table_name = %s"
+                    ),
+                    [name],
+                )
+            )
             if constraints:
-                self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = %s"), [name])
-                print("Deleted constraints {0}".format(", ".join(constraint[0] for constraint in constraints)))
+                self._execute(
+                    SQL("DELETE FROM meta_constraints WHERE table_name = %s"), [name]
+                )
+                print(
+                    "Deleted constraints {0}".format(
+                        ", ".join(constraint[0] for constraint in constraints)
+                    )
+                )
             self._execute(SQL("DELETE FROM meta_tables WHERE name = %s"), [name])
             if table.extra_table is not None:
-                self._execute(SQL("DROP TABLE {0}").format(Identifier(table.extra_table)))
+                self._execute(
+                    SQL("DROP TABLE {0}").format(Identifier(table.extra_table))
+                )
                 print("Dropped {0}".format(table.extra_table))
             for tbl in [name, name + "_counts", name + "_stats"]:
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)))
@@ -689,51 +917,85 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
             # first rename indexes and constraints
-            icols = [Identifier(s) for s in ['index_name', 'table_name']]
-            ccols = [Identifier(s) for s in ['constraint_name', 'table_name']]
+            icols = [Identifier(s) for s in ["index_name", "table_name"]]
+            ccols = [Identifier(s) for s in ["constraint_name", "table_name"]]
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
             rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             for meta, mname, cols in [
-                    ('meta_indexes', 'index_name', icols),
-                    ('meta_indexes_hist', 'index_name', icols),
-                    ('meta_constraints', 'constraint_name', ccols),
-                    ('meta_constraints_hist', 'constraint_name', ccols)]:
-                indexes = list(self._execute(SQL("SELECT {0} FROM {1} WHERE table_name = %s").format(Identifier(mname), Identifier(meta)), [old_name]))
+                ("meta_indexes", "index_name", icols),
+                ("meta_indexes_hist", "index_name", icols),
+                ("meta_constraints", "constraint_name", ccols),
+                ("meta_constraints_hist", "constraint_name", ccols),
+            ]:
+                indexes = list(
+                    self._execute(
+                        SQL("SELECT {0} FROM {1} WHERE table_name = %s").format(
+                            Identifier(mname), Identifier(meta)
+                        ),
+                        [old_name],
+                    )
+                )
                 if indexes:
-                    rename_index_in_meta = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3} = {4}")
-                    rename_index_in_meta = rename_index_in_meta.format( Identifier(meta),
-                                                                        SQL(", ").join(cols),
-                                                                        SQL(", ").join(Placeholder() * len(cols)),
-                                                                        cols[0],
-                                                                        Placeholder())
+                    rename_index_in_meta = SQL(
+                        "UPDATE {0} SET ({1}) = ({2}) WHERE {3} = {4}"
+                    )
+                    rename_index_in_meta = rename_index_in_meta.format(
+                        Identifier(meta),
+                        SQL(", ").join(cols),
+                        SQL(", ").join(Placeholder() * len(cols)),
+                        cols[0],
+                        Placeholder(),
+                    )
                     for old_index_name in indexes:
                         old_index_name = old_index_name[0]
                         new_index_name = old_index_name.replace(old_name, new_name)
-                        self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name])
-                        if meta == 'meta_indexes':
-                            self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
-                        elif meta == 'meta_constraints':
-                            self._execute(rename_constraint.format(Identifier(old_name), Identifier(old_index_name), Identifier(new_index_name)))
+                        self._execute(
+                            rename_index_in_meta,
+                            [new_index_name, new_name, old_index_name],
+                        )
+                        if meta == "meta_indexes":
+                            self._execute(
+                                rename_index.format(
+                                    Identifier(old_index_name),
+                                    Identifier(new_index_name),
+                                )
+                            )
+                        elif meta == "meta_constraints":
+                            self._execute(
+                                rename_constraint.format(
+                                    Identifier(old_name),
+                                    Identifier(old_index_name),
+                                    Identifier(new_index_name),
+                                )
+                            )
             else:
                 print("Renamed all indexes, constraints and the corresponding metadata")
 
             # rename meta_tables and meta_tables_hist
             rename_table_in_meta = SQL("UPDATE {0} SET name = %s WHERE name = %s")
-            for meta in ['meta_tables','meta_tables_hist']:
-                self._execute(rename_table_in_meta.format(Identifier(meta)), [new_name, old_name])
+            for meta in ["meta_tables", "meta_tables_hist"]:
+                self._execute(
+                    rename_table_in_meta.format(Identifier(meta)), [new_name, old_name]
+                )
             else:
                 print("Renamed all entries meta_tables(_hist)")
 
-            rename = SQL('ALTER TABLE {0} RENAME TO {1}');
+            rename = SQL("ALTER TABLE {0} RENAME TO {1}")
             # rename extra table
             if table.extra_table is not None:
                 old_extra = table.extra_table
-                assert old_extra == old_name + '_extras'
-                new_extra = new_name + '_extras'
-                self._execute(rename.format(Identifier(old_extra), Identifier(new_extra)))
+                assert old_extra == old_name + "_extras"
+                new_extra = new_name + "_extras"
+                self._execute(
+                    rename.format(Identifier(old_extra), Identifier(new_extra))
+                )
                 print("Renamed {0} to {1}".format(old_extra, new_extra))
-            for suffix in ['', "_counts", "_stats"]:
-                self._execute(rename.format(Identifier(old_name + suffix), Identifier(new_name + suffix)))
+            for suffix in ["", "_counts", "_stats"]:
+                self._execute(
+                    rename.format(
+                        Identifier(old_name + suffix), Identifier(new_name + suffix)
+                    )
+                )
                 print("Renamed {0} to {1}".format(old_name + suffix, new_name + suffix))
 
             # rename oldN tables
@@ -742,17 +1004,30 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     old_name_old = "{0}{1}_old{2}".format(old_name, ext, backup_number)
                     new_name_old = "{0}{1}_old{2}".format(new_name, ext, backup_number)
                     if self._table_exists(old_name_old):
-                        self._execute(rename.format(Identifier(old_name_old), Identifier(new_name_old)))
+                        self._execute(
+                            rename.format(
+                                Identifier(old_name_old), Identifier(new_name_old)
+                            )
+                        )
                         print("Renamed {0} to {1}".format(old_name_old, new_name_old))
             for ext in ["", "_extras", "_counts", "_stats"]:
                 old_name_tmp = "{0}{1}_tmp".format(old_name, ext)
                 new_name_tmp = "{0}{1}_tmp".format(new_name, ext)
                 if self._table_exists(old_name_tmp):
-                    self._execute(rename.format(Identifier(old_name_tmp), Identifier(new_name_tmp)))
+                    self._execute(
+                        rename.format(
+                            Identifier(old_name_tmp), Identifier(new_name_tmp)
+                        )
+                    )
                     print("Renamed {0} to {1}".format(old_name_tmp, new_name_old))
 
             # initialized table
-            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
+            tabledata = self._execute(
+                SQL(
+                    "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total, include_nones FROM meta_tables WHERE name = %s"
+                ),
+                [new_name],
+            ).fetchone()
             table = PostgresSearchTable(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)
@@ -776,16 +1051,27 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         for tablename in search_tables:
             if tablename in self.tablenames:
                 table = self[tablename]
-                searchfile = os.path.join(data_folder, tablename + '.txt')
-                statsfile = os.path.join(data_folder, tablename + '_stats.txt')
-                countsfile = os.path.join(data_folder, tablename + '_counts.txt')
-                extrafile = os.path.join(data_folder, tablename + '_extras.txt')
+                searchfile = os.path.join(data_folder, tablename + ".txt")
+                statsfile = os.path.join(data_folder, tablename + "_stats.txt")
+                countsfile = os.path.join(data_folder, tablename + "_counts.txt")
+                extrafile = os.path.join(data_folder, tablename + "_extras.txt")
                 if table.extra_table is None:
                     extrafile = None
-                indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
-                constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
-                metafile = os.path.join(data_folder, tablename + '_meta.txt')
-                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, constraintsfile=constraintsfile, metafile=metafile, **kwds)
+                indexesfile = os.path.join(data_folder, tablename + "_indexes.txt")
+                constraintsfile = os.path.join(
+                    data_folder, tablename + "_constraints.txt"
+                )
+                metafile = os.path.join(data_folder, tablename + "_meta.txt")
+                table.copy_to(
+                    searchfile=searchfile,
+                    extrafile=extrafile,
+                    countsfile=countsfile,
+                    statsfile=statsfile,
+                    indexesfile=indexesfile,
+                    constraintsfile=constraintsfile,
+                    metafile=metafile,
+                    **kwds
+                )
             else:
                 print("%s is not in tablenames " % (tablename,))
                 failures.append(tablename)
@@ -805,6 +1091,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if remote_opts is None:
             from lmfdb.utils.config import Configuration
+
             remote_opts = Configuration().get_postgresql_default()
 
         source = PostgresDatabase(**remote_opts)
@@ -812,10 +1099,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         # copy all the data
         source.copy_to(search_tables, data_folder, **kwds)
 
-
-    def reload_all(self, data_folder, halt_on_errors=True, resort=None, reindex=True, restat=None,
-                   adjust_schema=False, commit=True,
-                   **kwds):
+    def reload_all(
+        self,
+        data_folder,
+        halt_on_errors=True,
+        resort=None,
+        reindex=True,
+        restat=None,
+        adjust_schema=False,
+        commit=True,
+        **kwds
+    ):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
@@ -837,15 +1131,20 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         """
         if not os.path.isdir(data_folder):
-            raise ValueError(
-                    "The path {} is not a directory".format(data_folder))
+            raise ValueError("The path {} is not a directory".format(data_folder))
         sep = kwds.get("sep", u"|")
         with DelayCommit(self, commit, silence=True):
             file_list = []
             tablenames = []
             non_existent_tables = []
-            possible_endings = ['_extras.txt', '_counts.txt', '_stats.txt',
-                    '_indexes.txt','_constraints.txt','_meta.txt']
+            possible_endings = [
+                "_extras.txt",
+                "_counts.txt",
+                "_stats.txt",
+                "_indexes.txt",
+                "_constraints.txt",
+                "_meta.txt",
+            ]
             for path in glob(os.path.join(data_folder, "*.txt")):
                 filename = os.path.basename(path)
                 if any(filename.endswith(elt) for elt in possible_endings):
@@ -855,12 +1154,16 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     non_existent_tables.append(tablename)
             if non_existent_tables:
                 if not adjust_schema:
-                    raise ValueError("non existent tables: {0}; use adjust_schema=True to create them".format(", ".join(non_existent_tables)))
+                    raise ValueError(
+                        "non existent tables: {0}; use adjust_schema=True to create them".format(
+                            ", ".join(non_existent_tables)
+                        )
+                    )
                 print("Creating tables: {0}".format(", ".join(non_existent_tables)))
                 for tablename in non_existent_tables:
-                    search_table_file = os.path.join(data_folder, tablename + '.txt')
-                    extras_file = os.path.join(data_folder, tablename + '_extras.txt')
-                    metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                    search_table_file = os.path.join(data_folder, tablename + ".txt")
+                    extras_file = os.path.join(data_folder, tablename + "_extras.txt")
+                    metafile = os.path.join(data_folder, tablename + "_meta.txt")
                     if not os.path.exists(metafile):
                         raise ValueError("meta file missing for {0}".format(tablename))
                     # read metafile
@@ -877,74 +1180,102 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
                     search_columns = defaultdict(list)
                     for name, typ in search_columns_pairs:
-                        if name != 'id':
+                        if name != "id":
                             search_columns[typ].append(name)
 
                     extra_columns = None
                     if meta["has_extras"] == "t":
                         if not os.path.exists(extras_file):
-                            raise ValueError("extras file missing for {0}".format(tablename))
+                            raise ValueError(
+                                "extras file missing for {0}".format(tablename)
+                            )
                         with open(extras_file, "r") as F:
                             extras_columns_pairs = self._read_header_lines(F)
                         extra_columns = defaultdict(list)
                         for name, typ in extras_columns_pairs:
-                            if name != 'id':
+                            if name != "id":
                                 extra_columns[typ].append(name)
                     # the rest of the meta arguments will be replaced on the reload_all
-                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
+                    self.create_table(
+                        tablename, search_columns, None, extra_columns=extra_columns
+                    )
 
             for tablename in self.tablenames:
                 included = []
 
-                searchfile = os.path.join(data_folder, tablename + '.txt')
+                searchfile = os.path.join(data_folder, tablename + ".txt")
                 if not os.path.exists(searchfile):
                     continue
                 included.append(tablename)
 
-
                 table = self[tablename]
 
-                extrafile = os.path.join(data_folder, tablename + '_extras.txt')
+                extrafile = os.path.join(data_folder, tablename + "_extras.txt")
                 if os.path.exists(extrafile):
                     if table.extra_table is None:
-                        raise ValueError("Unexpected file %s"%extrafile)
-                    included.append(tablename + '_extras')
+                        raise ValueError("Unexpected file %s" % extrafile)
+                    included.append(tablename + "_extras")
                 elif table.extra_table is None:
                     extrafile = None
                 else:
-                    raise ValueError("Missing file %s"%extrafile)
+                    raise ValueError("Missing file %s" % extrafile)
 
-                countsfile = os.path.join(data_folder, tablename + '_counts.txt')
+                countsfile = os.path.join(data_folder, tablename + "_counts.txt")
                 if os.path.exists(countsfile):
-                    included.append(tablename + '_counts')
+                    included.append(tablename + "_counts")
                 else:
                     countsfile = None
 
-                statsfile = os.path.join(data_folder, tablename + '_stats.txt')
+                statsfile = os.path.join(data_folder, tablename + "_stats.txt")
                 if os.path.exists(statsfile):
-                    included.append(tablename + '_stats')
+                    included.append(tablename + "_stats")
                 else:
                     statsfile = None
 
-                indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
+                indexesfile = os.path.join(data_folder, tablename + "_indexes.txt")
                 if not os.path.exists(indexesfile):
                     indexesfile = None
 
-                constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
+                constraintsfile = os.path.join(
+                    data_folder, tablename + "_constraints.txt"
+                )
                 if not os.path.exists(constraintsfile):
                     constraintsfile = None
 
-                metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                metafile = os.path.join(data_folder, tablename + "_meta.txt")
                 if not os.path.exists(metafile):
                     metafile = None
 
-                file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
+                file_list.append(
+                    (
+                        table,
+                        (
+                            searchfile,
+                            extrafile,
+                            countsfile,
+                            statsfile,
+                            indexesfile,
+                            constraintsfile,
+                            metafile,
+                        ),
+                        included,
+                    )
+                )
                 tablenames.append(tablename)
             print("Reloading {0}".format(", ".join(tablenames)))
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, **kwds)
+                    table.reload(
+                        *filedata,
+                        resort=resort,
+                        reindex=reindex,
+                        restat=restat,
+                        final_swap=False,
+                        silence_meta=True,
+                        adjust_schema=adjust_schema,
+                        **kwds
+                    )
                 except DatabaseError:
                     if halt_on_errors or non_existent_tables:
                         raise
@@ -957,10 +1288,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 table.reload_final_swap(tables=included, metafile=filedata[-1], sep=sep)
 
         if failures:
-            print("Reloaded %s"%(", ".join(tablenames)))
-            print("Failures in reloading %s"%(", ".join(table.search_table for table in failures)))
+            print("Reloaded %s" % (", ".join(tablenames)))
+            print(
+                "Failures in reloading %s"
+                % (", ".join(table.search_table for table in failures))
+            )
         else:
-            print("Successfully reloaded %s"%(", ".join(tablenames)))
+            print("Successfully reloaded %s" % (", ".join(tablenames)))
 
     def reload_all_revert(self, data_folder, commit=True):
         """
@@ -974,12 +1308,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             were modified.
         """
         if not os.path.isdir(data_folder):
-            raise ValueError(
-                    "The path {} is not a directory".format(data_folder))
+            raise ValueError("The path {} is not a directory".format(data_folder))
 
         with DelayCommit(self, commit, silence=True):
             for tablename in self.tablenames:
-                searchfile = os.path.join(data_folder, tablename + '.txt')
+                searchfile = os.path.join(data_folder, tablename + ".txt")
                 if not os.path.exists(searchfile):
                     continue
                 self[tablename].reload_revert()
@@ -993,7 +1326,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 table = self[tablename]
                 table.cleanup_from_reload()
 
-    def verify(self, speedtype="all", logdir=None, parallel=8, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
+    def verify(
+        self,
+        speedtype="all",
+        logdir=None,
+        parallel=8,
+        follow=["errors", "log", "progress"],
+        poll_interval=0.1,
+        debug=False,
+    ):
         """
         Run verification tests on all tables (if defined in the lmfdb/verify folder).
         For more granular control, see the ``verify`` function on a particular table.
@@ -1010,12 +1351,16 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
         """
         if not self.is_verifying:
-            raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
+            raise ValueError(
+                "Verification not enabled by default; import db from lmfdb.verify to enable"
+            )
         if parallel <= 0:
             raise ValueError("Non-parallel runs not supported for whole database")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
+        lmfdb_root = os.path.abspath(
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..")
+        )
         if logdir is None:
-            logdir = os.path.join(lmfdb_root, 'logs', 'verification')
+            logdir = os.path.join(lmfdb_root, "logs", "verification")
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         types = None
@@ -1036,15 +1381,18 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # Shouldn't occur....
             raise ValueError("No verification tests defined!")
         parallel = min(parallel, len(tabletypes))
-        cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
-        cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, 'all', speedtype]
+        cmd = os.path.abspath(
+            os.path.join(os.path.abspath(__file__), "..", "verify", "verify_tables.py")
+        )
+        cmd = ["sage", "-python", cmd, "-j%s" % int(parallel), logdir, "all", speedtype]
         if debug:
             pipe = subprocess.Popen(cmd)
         else:
-            DEVNULL = open(os.devnull, 'wb')
+            DEVNULL = open(os.devnull, "wb")
             pipe = subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
         if follow:
             from lmfdb.verify.follower import Follower
+
             try:
                 Follower(logdir, tabletypes, follow, poll_interval).follow()
             finally:
@@ -1065,9 +1413,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             typelen = max(len(locktype) for (name, locktype, pid, t) in locks) + 3
             pidlen = max(len(str(pid)) for (name, locktype, pid, t) in locks) + 3
             for name, locktype, pid, t in locks:
-                print(name + ' '*(namelen - len(name)) + locktype + ' '*(typelen - len(locktype)) + 'pid %s' % pid + ' '*(pidlen - len(str(pid))) + 'age %s' % t)
+                print(
+                    name
+                    + " " * (namelen - len(name))
+                    + locktype
+                    + " " * (typelen - len(locktype))
+                    + "pid %s" % pid
+                    + " " * (pidlen - len(str(pid)))
+                    + "age %s" % t
+                )
         else:
             print("No locks currently held")
-
-
-
