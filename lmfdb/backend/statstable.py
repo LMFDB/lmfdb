@@ -1043,8 +1043,8 @@ class PostgresStatsTable(PostgresBase):
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
         if cols:
             cols_vars = SQL(", ").join(map(Identifier, cols))
-            groupby = SQL(" GROUP BY {0}").format(vars)
-            cols_vars = SQL("{0}, COUNT(*)").format(vars)
+            groupby = SQL(" GROUP BY {0}").format(cols_vars)
+            cols_vars = SQL("{0}, COUNT(*)").format(cols_vars)
         else:
             cols_vars = SQL("COUNT(*)")
             groupby = SQL("")
