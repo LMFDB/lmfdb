@@ -68,18 +68,12 @@ def filter_sql_injection(clause, col, col_type, op, table):
                 else:
                     values.append(int(piece))
             else:
-                raise SearchParsingError(
-                    "%s: %s is not a column of %s" % (clause, piece, table.search_table)
-                )
+                raise SearchParsingError("%s: %s is not a column of %s" % (clause, piece, table.search_table))
         else:
-            if re.match(ARITH_RE, piece) and not any(
-                comment in piece for comment in ["--", "/*", "*/"]
-            ):
+            if re.match(ARITH_RE, piece) and not any(comment in piece for comment in ["--", "/*", "*/"]):
                 processed.append(SQL(piece))
             else:
-                raise SearchParsingError(
-                    "%s: invalid characters %s (only +*-/^() allowed)" % (clause, piece)
-                )
+                raise SearchParsingError("%s: invalid characters %s (only +*-/^() allowed)" % (clause, piece))
     return SQL("{0} %s {1}" % op).format(col, SQL("").join(processed)), values
 
 

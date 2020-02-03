@@ -344,9 +344,7 @@ class Json(pgJson):
                 return QQ
             elif len(obj) == 3 and "__RationalPoly__" in obj and "vname" in obj:
                 return QQ[obj["vname"]]([QQ(tuple(v)) for v in obj["data"]])
-            elif (
-                len(obj) == 4 and "__Poly__" in obj and "vname" in obj and "base" in obj
-            ):
+            elif (len(obj) == 4 and "__Poly__" in obj and "vname" in obj and "base" in obj):
                 base = cls.extract(obj["base"])
                 return base[obj["vname"]]([cls._extract(base, c) for c in obj["data"]])
             elif (
@@ -358,9 +356,7 @@ class Json(pgJson):
             ):
                 base = cls.extract(obj["base"])
                 prec = infinity if obj["prec"] == "inf" else int(obj["prec"])
-                return base[[obj["vname"]]](
-                    [cls._extract(base, c) for c in obj["data"]], prec=prec
-                )
+                return base[[obj["vname"]]]([cls._extract(base, c) for c in obj["data"]], prec=prec)
             elif len(obj) == 2 and "__date__" in obj:
                 return datetime.datetime.strptime(obj["data"], "%Y-%m-%d").date()
             elif len(obj) == 2 and "__time__" in obj:
@@ -429,6 +425,4 @@ def copy_dumps(inp, typ, recursing=False):
     elif typ == "bytea":
         return r"\\x" + "".join(binascii.hexlify(c) for c in inp)
     else:
-        raise TypeError(
-            "Invalid input %s (%s) for postgres type %s" % (inp, type(inp), typ)
-        )
+        raise TypeError("Invalid input %s (%s) for postgres type %s" % (inp, type(inp), typ))

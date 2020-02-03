@@ -96,9 +96,7 @@ class PostgresSearchTable(PostgresTable):
                     extra_cols.append(col)
                 projection.pop(col, None)
             if projection:  # there were more columns requested
-                raise ValueError(
-                    "%s not column of %s" % (", ".join(projection), self.search_table)
-                )
+                raise ValueError("%s not column of %s" % (", ".join(projection), self.search_table))
         else:  # iterable or string_types
             if isinstance(projection, string_types):
                 projection = [projection]
@@ -123,12 +121,7 @@ class PostgresSearchTable(PostgresTable):
         It is called from `_parse_special` and `_parse_dict`; see the documentation
         of those functions for inputs.
         """
-        if col_type.endswith("[]") and key in [
-            "$eq",
-            "$ne",
-            "$contains",
-            "$containedin",
-        ]:
+        if col_type.endswith("[]") and key in ["$eq", "$ne", "$contains", "$containedin"]:
             if isinstance(col, Identifier):
                 return "::" + col_type
             else:
@@ -212,9 +205,7 @@ class PostgresSearchTable(PostgresTable):
                 cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
                 value = [Json(v) for v in value]
             else:
-                cmd = SQL(" AND ").join(
-                    SQL("NOT (%s = ANY({0}))").format(col) * len(value)
-                )
+                cmd = SQL(" AND ").join(SQL("NOT (%s = ANY({0}))").format(col) * len(value))
         elif key == "$mod":
             if not (isinstance(value, (list, tuple)) and len(value) == 2):
                 raise ValueError("Error building modulus operation: %s" % value)
@@ -226,9 +217,7 @@ class PostgresSearchTable(PostgresTable):
         elif isinstance(value, dict) and len(value) == 1 and "$raw" in value:
             # We support queries like {'abvar_count':{'$lte':{'$raw':'q^g'}}}
             if key in postgres_infix_ops:
-                cmd, value = filter_sql_injection(
-                    value, col, col_type, postgres_infix_ops[key], self
-                )
+                cmd, value = filter_sql_injection(value, col, col_type, postgres_infix_ops[key], self)
             else:
                 raise ValueError("Error building query: {0} (in $raw)".format(key))
         else:
@@ -296,10 +285,7 @@ class PostgresSearchTable(PostgresTable):
             [1, 2]
         """
 
-        return [
-            Json(val) if self.col_type[key] == "jsonb" else val
-            for key, val in D.items()
-        ]
+        return [Json(val) if self.col_type[key] == "jsonb" else val for key, val in D.items()]
 
     def _parse_dict(self, D, outer=None, outer_type=None):
         """
@@ -344,9 +330,7 @@ class PostgresSearchTable(PostgresTable):
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == "$":
-                    sub, vals = self._parse_special(
-                        key, value, outer, col_type=outer_type
-                    )
+                    sub, vals = self._parse_special(key, value, outer, col_type=outer_type)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -361,9 +345,7 @@ class PostgresSearchTable(PostgresTable):
                 else:
                     path = None
                 if key != "id" and key not in self.search_cols:
-                    raise ValueError(
-                        "%s is not a column of %s" % (key, self.search_table)
-                    )
+                    raise ValueError("%s is not a column of %s" % (key, self.search_table))
                 # Have to determine whether key is jsonb before wrapping it in Identifier
                 col_type = self.col_type[key]
                 if path:
@@ -381,9 +363,7 @@ class PostgresSearchTable(PostgresTable):
                 else:
                     if col_type == "jsonb":
                         value = Json(value)
-                    cmd = "{0} = %s" + self._create_typecast(
-                        "$eq", value, key, col_type
-                    )
+                    cmd = "{0} = %s" + self._create_typecast("$eq", value, key, col_type)
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
@@ -420,9 +400,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return self._sort_str(sort), bool(sort), sort
 
-    def _build_query(
-        self, query, limit=None, offset=0, sort=None, raw=None, raw_values=[]
-    ):
+    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, raw_values=[]):
         """
         Build an SQL query from a dictionary, including limit, offset and sorting.
 
@@ -503,10 +481,9 @@ class PostgresSearchTable(PostgresTable):
             if isinstance(cur, pg_cursor):
                 cur.close()
                 if (
-                    cur.withhold
-                    and self._db._nocommit_stack  # to assure that it is a buffered cursor
-                    == 0
-                ):  # and there is nothing to commmit
+                    cur.withhold # to assure that it is a buffered cursor
+                    and self._db._nocommit_stack == 0 # and there is nothing to commmit
+                ):
                     cur.connection.commit()
 
     ##################################################################
@@ -636,9 +613,7 @@ class PostgresSearchTable(PostgresTable):
         """
         search_cols, extra_cols = self._parse_projection(projection)
         cols = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
-        qstr, values = self._build_query(
-            query, 1, offset, sort=sort, raw=raw, raw_values=raw_values
-        )
+        qstr, values = self._build_query(query, 1, offset, sort=sort, raw=raw, raw_values=raw_values)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
         cur = self._execute(selecter, values)
@@ -744,9 +719,7 @@ class PostgresSearchTable(PostgresTable):
         if split_ors:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
-            raw_sort = [
-                ((col, 1) if isinstance(col, string_types) else col) for col in raw_sort
-            ]
+            raw_sort = [((col, 1) if isinstance(col, string_types) else col) for col in raw_sort]
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
@@ -756,13 +729,9 @@ class PostgresSearchTable(PostgresTable):
 
         def run_one_query(Q, lim, off):
             if lim is None:
-                qstr, values = self._build_query(
-                    Q, sort=sort, raw=raw, raw_values=raw_values
-                )
+                qstr, values = self._build_query(Q, sort=sort, raw=raw, raw_values=raw_values)
             else:
-                qstr, values = self._build_query(
-                    Q, lim, off, sort, raw=raw, raw_values=raw_values
-                )
+                qstr, values = self._build_query(Q, lim, off, sort, raw=raw, raw_values=raw_values)
             selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
             return self._execute(
                 selecter,
@@ -796,9 +765,7 @@ class PostgresSearchTable(PostgresTable):
                     if nres is None
                     else limit + offset
                 )
-                exact_count = (
-                    True  # updated below if we have a subquery hitting the prelimit
-                )
+                exact_count = True # updated below if we have a subquery hitting the prelimit
                 for Q in queries:
                     cur = run_one_query(Q, prelimit, 0)
                     if cur.rowcount == prelimit and nres is None:
@@ -808,11 +775,7 @@ class PostgresSearchTable(PostgresTable):
                     # but the sorting runtime is small compared to getting the records from
                     # postgres in the first place, so we use a simpler option.
                     # We override the projection on the iterator since we need to sort
-                    results.extend(
-                        self._search_iterator(
-                            cur, search_cols, extra_cols, projection=1
-                        )
-                    )
+                    results.extend(self._search_iterator(cur, search_cols, extra_cols, projection=1))
                 if all(
                     (asc == 1 or self.col_type[col] in number_types)
                     for col, asc in raw_sort
@@ -854,9 +817,7 @@ class PostgresSearchTable(PostgresTable):
             else:
                 exact_count = True
             results = cur.fetchmany(limit)
-            results = list(
-                self._search_iterator(results, search_cols, extra_cols, projection)
-            )
+            results = list(self._search_iterator(results, search_cols, extra_cols, projection))
         if info is not None:
             if offset >= nres > 0:
                 # We're passing in an info dictionary, so this is a front end query,
@@ -907,9 +868,7 @@ class PostgresSearchTable(PostgresTable):
         if label_col is None:
             label_col = self._label_col
             if label_col is None:
-                raise ValueError(
-                    "Lookup method not supported for tables with no label column"
-                )
+                raise ValueError("Lookup method not supported for tables with no label column")
         return self.lucky({label_col: label}, projection=projection, sort=[])
 
     def exists(self, query):
@@ -946,9 +905,7 @@ class PostgresSearchTable(PostgresTable):
         if label_col is None:
             label_col = self._label_col
             if label_col is None:
-                raise ValueError(
-                    "Lookup method not supported for tables with no label column"
-                )
+                raise ValueError("Lookup method not supported for tables with no label column")
         return self.exists({label_col: label})
 
     def random(self, query={}, projection=0):
@@ -1074,9 +1031,7 @@ class PostgresSearchTable(PostgresTable):
             return random.sample(results, count)
         elif mode in ["SYSTEM", "BERNOULLI"]:
             if extra_cols:
-                raise ValueError(
-                    "You cannot use the system or bernoulli modes with extra columns"
-                )
+                raise ValueError("You cannot use the system or bernoulli modes with extra columns")
             cols = SQL(", ").join(map(Identifier, search_cols))
             if repeatable is None:
                 repeatable = SQL("")
@@ -1126,9 +1081,7 @@ class PostgresSearchTable(PostgresTable):
         - ``col`` -- the name of the column
         - ``query`` -- a query dictionary constraining which rows are considered
         """
-        selecter = SQL("SELECT DISTINCT {0} FROM {1}").format(
-            Identifier(col), Identifier(self.search_table)
-        )
+        selecter = SQL("SELECT DISTINCT {0} FROM {1}").format(Identifier(col), Identifier(self.search_table))
         qstr, values = self._parse_dict(query)
         if qstr is not None:
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)

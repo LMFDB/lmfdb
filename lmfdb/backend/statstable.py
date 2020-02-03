@@ -219,15 +219,7 @@ class PostgresStatsTable(PostgresBase):
                 total = self._slow_count({}, extra=False)
         self.total = total
 
-    def _has_stats(
-        self,
-        jcols,
-        ccols,
-        cvals,
-        threshold,
-        split_list=False,
-        threshold_inequality=False,
-    ):
+    def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False):
         """
         Checks whether statistics have been recorded for a given set of columns.
         It just checks whether the "total" stat has been computed.
@@ -258,12 +250,8 @@ class PostgresStatsTable(PostgresBase):
                 threshold = "(threshold IS NULL OR threshold <= %s)"
             else:
                 threshold = "threshold = %s"
-        selecter = SQL(
-            "SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}"
-        )
-        selecter = selecter.format(
-            Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold)
-        )
+        selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
+        selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
@@ -310,9 +298,7 @@ class PostgresStatsTable(PostgresBase):
         """
         if split_list:
             raise NotImplementedError
-        selecter = SQL("SELECT COUNT(*) FROM {0}").format(
-            Identifier(self.search_table + suffix)
-        )
+        selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.search_table + suffix))
         qstr, values = self.table._parse_dict(query)
         if qstr is not None:
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
@@ -338,14 +324,10 @@ class PostgresStatsTable(PostgresBase):
         cols, vals = self._split_dict(query)
         data = [count, cols, vals, split_list]
         if self.quick_count(query) is None:
-            updater = SQL(
-                "INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)"
-            )
+            updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL(
-                "UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s"
-            )
+            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
@@ -473,8 +455,7 @@ class PostgresStatsTable(PostgresBase):
                 _make_tuple(rec[0]): rec[1]
                 for rec in cur
                 if not any(
-                    isinstance(val, dict)
-                    and all(
+                    isinstance(val, dict) and all(
                         isinstance(k, string_types) and k.startswith("$") for k in val
                     )
                     for val in rec[0]
@@ -486,9 +467,7 @@ class PostgresStatsTable(PostgresBase):
                 for (i, col) in enumerate(allcols)
                 if col in constraint
             ]
-            column_indexes = [
-                i for (i, col) in enumerate(allcols) if col not in constraint
-            ]
+            column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
 
             def satisfies_constraint(val):
                 return all(val[i] == c for i, c in constraint_list) and not any(
@@ -825,9 +804,7 @@ class PostgresStatsTable(PostgresBase):
                 col = col[0]
             else:
                 raise ValueError("Must provide exactly one column")
-        where, values, constraint, ccols, cvals, _ = self._process_constraint(
-            [col], constraint
-        )
+        where, values, constraint, ccols, cvals, _ = self._process_constraint([col], constraint)
         jcol = Json([col])
         jcgcols = Json(sorted(ccols.adapted + grouping))
         if self._has_numstats(jcol, jcgcols, cvals, threshold):
@@ -838,9 +815,7 @@ class PostgresStatsTable(PostgresBase):
             counts_to_add = []
             stats_to_add = []
             total = 0
-            cur = self._compute_numstats(
-                col, grouping, where, values, constraint, threshold, suffix
-            )
+            cur = self._compute_numstats(col, grouping, where, values, constraint, threshold, suffix)
             for statvec in cur:
                 cnt, colstats, gvals = statvec[0], statvec[1:4], statvec[4:]
                 total += cnt
@@ -861,30 +836,24 @@ class PostgresStatsTable(PostgresBase):
                     stats_to_add.append((jcol, st, val, jcgcols, jcgvals, threshold))
             # We record the grouping in a record to be inserted in the stats table
             # Note that we don't sort ccols and grouping together, so that we can distinguish them
-            stats_to_add.append(
-                (
-                    jcol,
-                    "ntotal",
-                    total,
-                    Json(ccols.adapted + grouping),
-                    cvals,
-                    threshold,
-                )
-            )
+            stats_to_add.append((
+                jcol,
+                "ntotal",
+                total,
+                Json(ccols.adapted + grouping),
+                cvals,
+                threshold,
+            ))
             # It's possible that stats/counts have been added by an add_stats call
             # The right solution is a unique index and an ON CONFLICT DO NOTHING clause,
             # but for now we just live with the possibility of a few duplicate rows.
-            inserter = SQL(
-                "INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s"
-            )
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(
                 inserter.format(Identifier(self.stats + suffix)),
                 stats_to_add,
                 values_list=True,
             )
-            inserter = SQL(
-                "INSERT INTO {0} (cols, values, count, split, extra) VALUES %s"
-            )
+            inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             self._execute(
                 inserter.format(Identifier(self.counts + suffix)),
                 counts_to_add,
@@ -912,9 +881,7 @@ class PostgresStatsTable(PostgresBase):
         else:
             values.append(threshold)
             threshold = "threshold = %s"
-        selecter = SQL(
-            "SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND constraint_cols = %s AND constraint_values = %s AND {1}"
-        )
+        selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND constraint_cols = %s AND constraint_values = %s AND {1}")
         selecter = selecter.format(Identifier(self.stats), SQL(threshold))
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
@@ -966,9 +933,7 @@ class PostgresStatsTable(PostgresBase):
         else:
             values.append(threshold)
             threshold = SQL("threshold = %s")
-        selecter = SQL(
-            "SELECT stat, value, constraint_values FROM {0} WHERE cols = %s AND constraint_cols = %s AND {1}"
-        )
+        selecter = SQL("SELECT stat, value, constraint_values FROM {0} WHERE cols = %s AND constraint_cols = %s AND {1}")
         selecter = selecter.format(Identifier(self.stats), threshold)
         nstats = defaultdict(dict)
         if onegroup:
@@ -1131,9 +1096,7 @@ class PostgresStatsTable(PostgresBase):
         """
         if split_list and threshold is not None:
             raise ValueError("split_list and threshold not simultaneously supported")
-        where, values, constraint, ccols, cvals, allcols = self._process_constraint(
-            cols, constraint
-        )
+        where, values, constraint, ccols, cvals, allcols = self._process_constraint(cols, constraint)
         if self._has_stats(Json(cols), ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
@@ -1160,9 +1123,7 @@ class PostgresStatsTable(PostgresBase):
             mn = None
             mx = None
         with DelayCommit(self, commit, silence=True):
-            cur = self._compute_stats(
-                cols, where, values, constraint, threshold, split_list, suffix
-            )
+            cur = self._compute_stats(cols, where, values, constraint, threshold, split_list, suffix)
             for countvec in cur:
                 seen_one = True
                 colvals, count = countvec[:-1], countvec[-1]
@@ -1178,9 +1139,7 @@ class PostgresStatsTable(PostgresBase):
                         else:
                             allcolvals.append(constraint[col])
                 if split_list:
-                    listed = [
-                        (x if isinstance(x, list) else list(x)) for x in allcolvals
-                    ]
+                    listed = [(x if isinstance(x, list) else list(x)) for x in allcolvals]
                     for vals in cartesian_product_iterator(listed):
                         total += count
                         to_add[(allcols, vals)] += count
@@ -1213,17 +1172,13 @@ class PostgresStatsTable(PostgresBase):
                 stats.append((jcols, "max", mx, ccols, cvals, threshold))
 
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
-            inserter = SQL(
-                "INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s"
-            )
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(
                 inserter.format(Identifier(self.stats + suffix)),
                 stats,
                 values_list=True,
             )
-            inserter = SQL(
-                "INSERT INTO {0} (cols, values, count, split, extra) VALUES %s"
-            )
+            inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             if split_list:
                 to_add = [
                     (Json(c), Json(v), ct, True, False)
@@ -1262,9 +1217,7 @@ class PostgresStatsTable(PostgresBase):
         - ``n`` -- an integer
         """
         if col not in self.table.search_cols:
-            raise ValueError(
-                "Column %s not a search column for %s" % (col, self.search_table)
-            )
+            raise ValueError("Column %s not a search column for %s" % (col, self.search_table))
         selecter = SQL(
             """SELECT v.{0}, (c.reltuples * freq)::int as estimate_ct
 FROM pg_stats s
@@ -1307,9 +1260,7 @@ ORDER BY v.ord LIMIT %s"""
             deleter = SQL("DELETE FROM {0} WHERE extra IS NOT TRUE")  # false and null
         self._execute(deleter.format(Identifier(self.counts)))
 
-    def add_stats_auto(
-        self, cols=None, constraints=[None], max_depth=None, threshold=1000
-    ):
+    def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
         """
         Searches for combinations of columns with many rows having the same set of values.
 
@@ -1346,9 +1297,7 @@ ORDER BY v.ord LIMIT %s"""
                         ):
                             i += 1
                             continue
-                        added_any = self.add_stats(
-                            colvec, constraint=constraint, threshold=threshold
-                        )
+                        added_any = self.add_stats(colvec, constraint=constraint, threshold=threshold)
                         if added_any:
                             i += 1
                         else:
@@ -1448,17 +1397,11 @@ ORDER BY v.ord LIMIT %s"""
                 self._print_statmsg(cols, (ccols, cvals), threshold, tense="past")
             for cols, ccols, cvals, threshold in split_cmds:
                 print("  ", end=" ")
-                self._print_statmsg(
-                    cols, (ccols, cvals), threshold, split_list=True, tense="past"
-                )
+                self._print_statmsg(cols, (ccols, cvals), threshold, split_list=True, tense="past")
             for col, grouping, ccols, cvals, threshold in nstat_cmds:
                 print("  ", end=" ")
-                self._print_statmsg(
-                    [col], (ccols, cvals), threshold, grouping=grouping, tense="past"
-                )
-            selecter = SQL("SELECT COUNT(*) FROM {0} WHERE extra = %s").format(
-                Identifier(self.counts)
-            )
+                self._print_statmsg([col], (ccols, cvals), threshold, grouping=grouping, tense="past")
+            selecter = SQL("SELECT COUNT(*) FROM {0} WHERE extra = %s").format(Identifier(self.counts))
             count_nrows = self._execute(selecter, [False]).fetchone()[0]
             selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.stats))
             stats_nrows = self._execute(selecter).fetchone()[0]
@@ -1599,9 +1542,7 @@ ORDER BY v.ord LIMIT %s"""
 
         def make_count_dict(values, cnt):
             if isinstance(values, (list, tuple)):
-                query = base_url + "&".join(
-                    query_formatter[col](val) for col, val in zip(cols, values)
-                )
+                query = base_url + "&".join(query_formatter[col](val) for col, val in zip(cols, values))
             else:
                 query = base_url + query_formatter[cols[0]](values)
             return {
@@ -1703,9 +1644,7 @@ ORDER BY v.ord LIMIT %s"""
             "SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL"
         ).format(Identifier(self.stats))
         ccols, cvals = self._split_dict(constraint)
-        totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(
-            totaler
-        )
+        totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
         totaler_values = [jcols, total_str, ccols, cvals]
         cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
@@ -1726,9 +1665,7 @@ ORDER BY v.ord LIMIT %s"""
         """
         name = self.search_table + "_oldstats"
         with DelayCommit(self, silence=True):
-            creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(
-                Identifier(name)
-            )
+            creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
             self._execute(creator)
             self._db.grant_select(name)
             cur = self._db.cursor()
@@ -1744,9 +1681,7 @@ ORDER BY v.ord LIMIT %s"""
         """
         Temporary suppport for statistics created in Mongo.
         """
-        selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(
-            Identifier(self.search_table + "_oldstats")
-        )
+        selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
         cur = self._execute(selecter, [name])
         if cur.rowcount != 1:
             raise ValueError("Not a unique oldstat identifier")

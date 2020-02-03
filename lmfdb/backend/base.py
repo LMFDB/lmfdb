@@ -134,25 +134,20 @@ _meta_tables_cols_notrequired = (
     "total",
     "important",
     "include_nones",
-)  # 1000, true, 0, false, false
-_meta_tables_types = dict(
-    zip(
-        _meta_tables_cols,
-        (
-            "text",
-            "jsonb",
-            "smallint",
-            "boolean",
-            "boolean",
-            "boolean",
-            "boolean",
-            "text",
-            "bigint",
-            "boolean",
-            "boolean",
-        ),
-    )
-)
+)  # defaults: 1000, true, 0, false, false
+_meta_tables_types = dict(zip(_meta_tables_cols, (
+    "text",
+    "jsonb",
+    "smallint",
+    "boolean",
+    "boolean",
+    "boolean",
+    "boolean",
+    "text",
+    "bigint",
+    "boolean",
+    "boolean",
+)))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
 _meta_indexes_cols = (
@@ -233,16 +228,16 @@ class PostgresBase(object):
         self.logger = make_logger(loggername, hl=False, extraHandlers=[handler])
 
     def _execute(
-        self,
-        query,
-        values=None,
-        silent=None,
-        values_list=False,
-        template=None,
-        commit=None,
-        slow_note=None,
-        reissued=False,
-        buffered=False,
+            self,
+            query,
+            values=None,
+            silent=None,
+            values_list=False,
+            template=None,
+            commit=None,
+            slow_note=None,
+            reissued=False,
+            buffered=False
     ):
         """
         Execute an SQL command, properly catching errors and returning the resulting cursor.
@@ -310,21 +305,11 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except (
-                    OperationalError,
-                    ProgrammingError,
-                    NotSupportedError,
-                    DataError,
-                    SyntaxError,
-                ) as e:
+                except (OperationalError, ProgrammingError, NotSupportedError, DataError, SyntaxError) as e:
                     try:
-                        context = " happens while executing {}".format(
-                            cur.mogrify(query, values)
-                        )
+                        context = " happens while executing {}".format(cur.mogrify(query, values))
                     except Exception:
-                        context = " happens while executing {} with values {}".format(
-                            query, values
-                        )
+                        context = " happens while executing {} with values {}".format(query, values)
                     reraise(type(e), type(e)(str(e) + context), sys.exc_info()[2])
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
@@ -339,10 +324,7 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(
-                        bytes_to_str(query)
-                        + " ran in \033[91m {0!s}s \033[0m".format(t)
-                    )
+                    self.logger.info(bytes_to_str(query) + " ran in \033[91m {0!s}s \033[0m".format(t))
                     if slow_note is not None:
                         self.logger.info(
                             "Replicate with db.%s.%s(%s)",
@@ -387,20 +369,16 @@ class PostgresBase(object):
 
         - ``tablename`` -- a string, the name of the table
         """
-        cur = self._execute(
-            SQL("SELECT 1 from pg_tables where tablename=%s"), [tablename], silent=True
-        )
+        cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"), [tablename], silent=True)
         return cur.fetchone() is not None
 
     def _get_locks(self):
-        return self._execute(
-            SQL(
-                "SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) "
-                "FROM pg_locks l "
-                "JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid "
-                "WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"
-            )
-        )
+        return self._execute(SQL(
+            "SELECT t.relname, l.mode, l.pid, age(clock_timestamp(), a.backend_start) "
+            "FROM pg_locks l "
+            "JOIN pg_stat_all_tables t ON l.relation = t.relid JOIN pg_stat_activity a ON l.pid = a.pid "
+            "WHERE l.granted AND t.schemaname <> 'pg_toast'::name AND t.schemaname <> 'pg_catalog'::name"
+        ))
 
     def _table_locked(self, tablename, types="all"):
         """
@@ -608,9 +586,7 @@ class PostgresBase(object):
             tablename = self._constraint_exists(name + suffix)
             if tablename:
                 kind = "Constraint"
-                begin_renamer = SQL("ALTER TABLE {0} RENAME CONSTRAINT").format(
-                    Identifier(tablename)
-                )
+                begin_renamer = SQL("ALTER TABLE {0} RENAME CONSTRAINT").format(Identifier(tablename))
                 end_renamer = SQL("{0} TO {1}")
                 begin_command = SQL("ALTER TABLE {0}").format(Identifier(tablename))
                 end_command = SQL("DROP CONSTRAINT {0}")
@@ -622,11 +598,9 @@ class PostgresBase(object):
                 end_command = SQL("DROP INDEX {0}")
             else:
                 raise ValueError(
-                    "Relation with "
-                    + "name {} ".format(name + suffix)
-                    + "already exists. "
-                    + "And it is not an index "
-                    + "or a constraint"
+                    "Relation with name "
+                    + name + suffix
+                    + " already exists. And it is not an index or a constraint"
                 )
 
             # Find a new name for the existing index
@@ -639,10 +613,7 @@ class PostgresBase(object):
                 deprecated_name = name[: 64 - len(depsuffix)] + depsuffix
 
             self._execute(
-                begin_renamer
-                + end_renamer.format(
-                    Identifier(name + suffix), Identifier(deprecated_name)
-                )
+                begin_renamer + end_renamer.format(Identifier(name + suffix), Identifier(deprecated_name))
             )
 
             command = begin_command + end_command.format(Identifier(deprecated_name))
@@ -651,8 +622,7 @@ class PostgresBase(object):
                 "{} with name {} ".format(kind, name + suffix)
                 + "already exists. "
                 + "It has been renamed to {} ".format(deprecated_name)
-                + "and it can be deleted "
-                + "with the following SQL command:\n"
+                + "and it can be deleted with the following SQL command:\n"
                 + self._db.cursor().mogrify(command)
             )
 
@@ -763,9 +733,7 @@ class PostgresBase(object):
             for rec in cur:
                 col = rec[0]
                 if col in col_type and col_type[col] != rec[1]:
-                    raise ValueError(
-                        "Type mismatch on %s: %s vs %s" % (col, col_type[col], rec[1])
-                    )
+                    raise ValueError("Type mismatch on %s: %s vs %s" % (col, col_type[col], rec[1]))
                 col_type[col] = rec[1]
                 if col != "id":
                     col_list.append(col)
@@ -940,9 +908,7 @@ class PostgresBase(object):
                 "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."
                 % (tmp_table, table)
             )
-        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(
-            Identifier(tmp_table), Identifier(table)
-        )
+        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator)
 
     def _check_col_datatype(self, typ):
@@ -963,9 +929,7 @@ class PostgresBase(object):
         # FIXME make the code use this
         for col, typ in columns:
             self._check_col_datatype(typ)
-        table_col = SQL(", ").join(
-            SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in columns
-        )
+        table_col = SQL(", ").join(SQL("{0} %s" % typ).format(Identifier(col)) for col, typ in columns)
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
         self._execute(creator)
 
@@ -1050,11 +1014,7 @@ class PostgresBase(object):
             for table in tables:
                 tablename_old = table + source
                 tablename_new = table + target
-                self._execute(
-                    rename_table.format(
-                        Identifier(tablename_old), Identifier(tablename_new)
-                    )
-                )
+                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
 
                 done = set({})  # done constraints/indexes
                 # We threat pkey separately
@@ -1190,9 +1150,7 @@ class PostgresBase(object):
         with DelayCommit(self, silence=True):
             # delete the current columns
             self._execute(
-                SQL("DELETE FROM {} WHERE {} = %s").format(
-                    meta_name_sql, table_name_sql
-                ),
+                SQL("DELETE FROM {} WHERE {} = %s").format(meta_name_sql, table_name_sql),
                 [search_table],
             )
 
@@ -1210,18 +1168,14 @@ class PostgresBase(object):
             # copy the new rows to history
             cols_sql = SQL(", ").join(map(Identifier, meta_cols))
             rows = self._execute(
-                SQL("SELECT {} FROM {} WHERE {} = %s").format(
-                    cols_sql, meta_name_sql, table_name_sql
-                ),
+                SQL("SELECT {} FROM {} WHERE {} = %s").format(cols_sql, meta_name_sql, table_name_sql),
                 [search_table],
             )
 
             cols = meta_cols + ("version",)
             cols_sql = SQL(", ").join(map(Identifier, cols))
             place_holder = SQL(", ").join(Placeholder() * len(cols))
-            query = SQL("INSERT INTO {} ({}) VALUES ({})").format(
-                meta_name_hist_sql, cols_sql, place_holder
-            )
+            query = SQL("INSERT INTO {} ({}) VALUES ({})").format(meta_name_hist_sql, cols_sql, place_holder)
 
             for row in rows:
                 row = [
@@ -1248,9 +1202,7 @@ class PostgresBase(object):
         with DelayCommit(self, silence=True):
             # delete current rows
             self._execute(
-                SQL("DELETE FROM {} WHERE {} = %s").format(
-                    meta_name_sql, table_name_sql
-                ),
+                SQL("DELETE FROM {} WHERE {} = %s").format(meta_name_sql, table_name_sql),
                 [search_table],
             )
 
@@ -1264,9 +1216,7 @@ class PostgresBase(object):
             )
 
             place_holder = SQL(", ").join(Placeholder() * len(meta_cols))
-            query = SQL("INSERT INTO {} ({}) VALUES ({})").format(
-                meta_name_sql, cols_sql, place_holder
-            )
+            query = SQL("INSERT INTO {} ({}) VALUES ({})").format(meta_name_sql, cols_sql, place_holder)
 
             cols = meta_cols + ("version",)
             cols_sql = SQL(", ").join(map(Identifier, cols))
@@ -1275,8 +1225,6 @@ class PostgresBase(object):
                 meta_name_hist_sql, cols_sql, place_holder
             )
             for row in rows:
-                row = [
-                    Json(elt) if i in jsonb_idx else elt for i, elt in enumerate(row)
-                ]
+                row = [Json(elt) if i in jsonb_idx else elt for i, elt in enumerate(row)]
                 self._execute(query, row)
                 self._execute(query_hist, row + [currentversion + 1])
