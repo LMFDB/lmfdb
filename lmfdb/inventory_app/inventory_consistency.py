@@ -5,7 +5,7 @@ from . import lmfdb_inventory as inv
 from .inventory_live_data import get_lockout_state
 from . import inventory_helpers as ih
 from . import inventory_db_core as idc
-from lmfdb.backend.database import db
+from lmfdb import db
 
 
 from .scrape_helpers import get_completed_scrapes, get_live_scrapes_older_than

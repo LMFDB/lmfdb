@@ -3,7 +3,7 @@ import datetime
 from lmfdb.api2 import __version__
 import json
 #from bson.objectid import ObjectId
-from lmfdb.backend.database import db
+from lmfdb import db
 import lmfdb.inventory_app.inventory_viewer as inventory
 
 api_version = __version__

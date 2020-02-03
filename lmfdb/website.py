@@ -90,7 +90,7 @@ assert hecke_algebras
 from . import inventory_app
 assert inventory_app
 
-from .backend.database import db
+from .backend import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
 

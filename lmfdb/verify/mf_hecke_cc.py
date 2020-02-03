@@ -2,7 +2,9 @@ from __future__ import print_function
 from dirichlet_conrey import DirichletGroup_conrey
 from sage.all import prime_range, CC, gcd, ZZ
 
-from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
+from lmfdb.backend import db
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycopg2.sql import SQL, Literal
 from .mf import MfChecker
 from .verification import overall, overall_long, slow
 
