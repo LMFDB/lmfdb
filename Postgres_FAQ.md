@@ -13,7 +13,7 @@ Changes
 
 1. What's an overview of the changes?
 
-   There is a new file, `lmfdb/backend/database.py`, containing the
+   There is a new folder, `lmfdb/backend/`, containing the
    main components of the new interface to the Postgres database.
    Postgres is a mature, open-source implementation of SQL.  One of
    the main differences is that Postgres is a strongly-typed
@@ -115,8 +115,8 @@ Database Interface
 
    The `info` argument is a dictionary that will be updated with
    various data that is commonly needed by templates populated by the
-   search functions.  For more details, see the documentation in
-   `backend/database.py`.
+   search functions.  For more details, see the documentation in the folder
+   `lmfdb/backend`.
 
 1. What if I only want a single entry, for example with a specified label?
 
@@ -158,11 +158,11 @@ Database Interface
 
    If use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
-   `lmfdb.backend.database`). You can see lots of examples of this
-   paradigm in `lmfdb/backend/database.py`.
+   `lmfdb.backend`). You can see lots of examples of this
+   paradigm in `lmfdb/backend/`.
 
    ```python
-   sage: from lmfdb.backend.database import db, SQL
+   sage: from lmfdb.backend import db, SQL
    sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2

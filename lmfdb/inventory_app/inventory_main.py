@@ -60,7 +60,7 @@ def show_edit_root():
         new_url = str(request.referrer)
 
         bread=[['&#8962;', url_for('index')], [url_pref.strip('/'), url_for('.show_edit_root')]]
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+str(e)
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
     return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=listing, lockout=lockout, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('.show_edit_root')]])
@@ -80,7 +80,7 @@ def show_edit_child(id):
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('.show_edit_root')]]
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+str(e)
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
     return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=listing, lockout=lockout, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('.show_edit_root')],[id, url_for('.show_edit_child', id=id)]])
@@ -113,7 +113,7 @@ def show_records(id, id2):
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('.show_edit_root')]]
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+str(e)
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order(), nice_name=nice_name)
 
@@ -133,7 +133,7 @@ def show_indices(id, id2):
         new_url = str(request.referrer)
 
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('.show_edit_root')]]
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+str(e)
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_indices.html', db_name=id, collection_name=id2, bread=bread, nice_name=nice_name, index_fields=linv.index_field_order())
 
@@ -239,11 +239,11 @@ def edit_failure(request=request):
     #We want to send user back to the page they got here from to retry
     try:
         errcode = int(request.args.get('code'))
-        errstr = inventory_viewer.err_registry[errcode].message
+        errstr = str(inventory_viewer.err_registry[errcode])
     except:
         if get_lockout_state():
             errcode = 16
-            errstr = inventory_viewer.err_registry[errcode].message
+            errstr = str(inventory_viewer.err_registry[errcode])
         else:
             errcode = -1
             errstr = "Undefined"
@@ -282,7 +282,7 @@ def show_rescrape_page():
         listing = get_db_lists()
     except ih.ConnectOrAuthFail as e:
         new_url = str(request.referrer)
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+str(e)
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
     return render_template('scrape_main.html', listing=listing, bread=bread)

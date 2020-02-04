@@ -5,7 +5,7 @@ try:
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 except NameError:
     pass
-from lmfdb.backend.database import db
+from lmfdb.backend import db
 from sage.all import CC, prime_range, gcd
 from dirichlet_conrey import DirichletGroup_conrey
 
