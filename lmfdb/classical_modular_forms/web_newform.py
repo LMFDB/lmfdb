@@ -196,8 +196,7 @@ class WebNewform(object):
 
         # lookup twists (of newform orbits, not embedded newforms)
         if self.embedding_label is None and self.minimal_twist is not None:
-            self.twists = [r for r in db.mf_twists.search({'source_label':self.label})]
-            # TODO decide how to sort, for now we just use mf_twists default sort order (which is by twisting character then target)
+            self.twists = [r for r in db.mf_twists_nf.search({'source_label':self.label})]
         else:
             self.twists = None
 
@@ -993,7 +992,7 @@ function switch_basis(btype) {
 
         for r in self.twists:
             parity = 'Even' if r['parity'] == 1 else 'Odd'
-            minimality = '&check;' if r['target_label'] == self.minimal_twist else '&#x2243;' if r['target_is_minimal'] else ''
+            minimality = '&check;&check;' if r['target_label'] == self.minimal_twist else '&check;' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists1.append('<tr>')
