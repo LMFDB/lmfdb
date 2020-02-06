@@ -318,7 +318,7 @@ class WebNewform(object):
                 dlabel = self.label + '.' + self.dual_label
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual form ' + dlabel, d_url))
-            if self.embedded_minimal_twist is not None and self.embedded_minimal_twist != self.label + '.' self.embedding_label:
+            if self.embedded_minimal_twist is not None and self.embedded_minimal_twist != self.label + '.' + self.embedding_label:
                 minimal_twist_url = cmf_base + self.embedded_minimal_twist.replace('.','/') + '/'
                 res.append(('Minimal twist ' + self.embedded_minimal_twist, minimal_twist_url))
             if self.dim == 1:
