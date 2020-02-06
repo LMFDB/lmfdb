@@ -283,8 +283,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
         assert 'Error: Table too large: must have at most 10000 entries'
 
-
-
         #the other dim table
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
         assert '7' in page.data
@@ -297,16 +295,11 @@ class CmfTest(LmfdbTest):
         for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
             assert elt in page.data
 
-
-
-
     def test_character_parity(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/c/")
         assert 'since the weight is even while the character is' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/a/")
         assert 'since the weight is odd while the character is' in page.data
-
-
 
     def test_dual(self):
         urls_set = [
