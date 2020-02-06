@@ -913,7 +913,7 @@ function switch_basis(btype) {
         else:
             ord_knowl = display_knowl('character.dirichlet.order', title='order')
             deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
-            min_knowl = ('not' if not self.char_is_minimal else '') + display_knowl('character.dirichlet.degree.minimal', title='minimal')
+            min_knowl = ('not' if not self.char_is_minimal else '') + display_knowl('character.dirichlet.minimal', title='minimal')
             ord_deg_min = r" (of %s \(%d\), %s \(%d\), %s)" % (ord_knowl, self.char_order, deg_knowl, self.char_degree, min_knowl)
         return self.char_orbit_link + ord_deg_min
 
