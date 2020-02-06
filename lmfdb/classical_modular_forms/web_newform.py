@@ -196,12 +196,13 @@ class WebNewform(object):
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
         # lookup twists (of newform orbits or embedded newforms as appropriate)
-        if self.embedding_label is None and self.minimal_twist is not None:
+        if self.embedding_label is None:
             self.twists = [r for r in db.mf_twists_nf.search({'source_label':self.label})]
         else:
             self.twists = [r for r in db.mf_twists_cc.search({'source_label':self.label})]
             if self.twists:
                 self.embedded_minimal_twist = self.twists[0]["twist_class_label"]
+            print "embedded minimal twists labe = ", self.embedded_minimal_twist
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
