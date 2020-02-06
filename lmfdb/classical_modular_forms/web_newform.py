@@ -202,7 +202,6 @@ class WebNewform(object):
             self.twists = [r for r in db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label})]
             if self.twists:
                 self.embedded_minimal_twist = self.twists[0]["twist_class_label"]
-            print "embedded minimal twists label = ", self.embedded_minimal_twist
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -222,7 +221,7 @@ class WebNewform(object):
             self.properties.append(('Character', '%s.%s' % (self.level, self.char_conrey)))
 
         if self.is_self_dual != 0:
-            self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+            self.properties += [('Self dual', 'yes' if self.is_self_dual == 1 else 'no')]
         self.properties += [('Analytic conductor', '%.3f'%(self.analytic_conductor))]
 
         if self.analytic_rank is not None:
@@ -248,9 +247,9 @@ class WebNewform(object):
             disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
             self.properties += [('RM disc.', disc)]
         elif self.weight == 1:
-            self.properties += [('CM/RM', 'No')]
+            self.properties += [('CM/RM', 'no')]
         else:
-            self.properties += [('CM', 'No')]
+            self.properties += [('CM', 'no')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', str(self.inner_twist_count))]
         self.title = "Newform orbit %s"%(self.label)
