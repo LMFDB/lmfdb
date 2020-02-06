@@ -199,9 +199,9 @@ class WebNewform(object):
         if self.embedding_label is None:
             self.twists = [r for r in db.mf_twists_nf.search({'source_label':self.label})]
         else:
-            self.twists = [r for r in db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label})]
-            if self.twists:
-                self.embedded_minimal_twist = self.twists[0]["twist_class_label"]
+            self.embedded_twists = [r for r in db.mf_twists_cc.search({'source_label':self.label + '.' + self.embedding_label})]
+            if self.embedded_twists:
+                self.embedded_minimal_twist = self.embedded_twists[0]["twist_class_label"]
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -985,9 +985,8 @@ function switch_basis(btype) {
                 return ''
             if r['twisting_char_label'] == '1.a':
                 return 'trivial'
-            else:
-                s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
-                return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
+            s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
+            return 'inner' if s[0][6] == 0 else ('CM' if s[0][6] < 0 else 'RM')
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character orbit'), '<tr>',
@@ -1001,7 +1000,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in self.twists:
+        for r in  sorted(self.twists, key = lambda x : [x['conductor'],x['twisting_char_orbit'],x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             minimality = '&#10004;' if r['target_label'] == self.minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
@@ -1031,6 +1030,67 @@ function switch_basis(btype) {
             twists2.append('<tr>')
             twists2.extend([td_wrapl(target_link), td_wrapc(minimality), td_wrapr(r['target_dim']),
                             td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapr(r['multiplicity']), td_wrapl(twist_type(r))])
+            twists2.append('</tr>')
+        twists2.extend(['</tbody>', '</table>'])
+
+        return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
+
+    def display_embedded_twists(self):
+        if not self.embedded_twists:
+            return '<p>Twists of this newform have not been computed.</p>'
+        if not self.embedding_label:
+            return '' # we should only be called when embedding_label is set
+        def twist_type(r):
+            if r['target_hecke_orbit_code'] != self.hecke_orbit_code:
+                return ''
+            if r['twisting_char_label'] == '1.1':
+                return 'trivial'
+            if r['target_label'] != self.label + '.' + self.embedding_label:
+                return 'inner'
+            else:
+                return 'CM' if r['parity'] < 0 else 'RM'
+
+        twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character'), '<tr>',
+                  th_wrap('character.dirichlet.conrey', 'Char'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.order', 'Ord'),
+                  th_wrap('cmf.self_twist_field', 'Type'),
+                  th_wrap('cmf.twist', 'Twist'),
+                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.dimension', 'Dim'),
+                  '</tr>', '</thead>', '<tbody>']
+
+        for r in sorted(self.embedded_twists, key = lambda x : [x['conductor'],x['twisting_conrey_index'],x['target_hecke_orbit'],x['target_conrey_index'],x['target_embedding_index']]):
+            parity = 'Even' if r['parity'] == 1 else 'Odd'
+            minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            char_link = display_knowl('character.dirichlet.data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            twists1.append('<tr>')
+            twists1.extend([td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapl(twist_type(r)),
+                            td_wrapl(target_link), td_wrapc(minimality), td_wrapr(r['target_dim'])])
+            twists1.append('</tr>')
+        twists1.extend(['</tbody>', '</table>'])
+
+        twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
+                   '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform'), '<tr>',
+                  th_wrap('cmf.twist', 'Twist'),
+                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.dimension', 'Dim'),
+                  th_wrap('character.dirichlet.conrey', 'Char'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.order', 'Ord'),
+                  th_wrap('cmf.self_twist_field', 'Type'),
+                  '</tr>', '</thead>', '<tbody>']
+
+        for r in sorted(self.embedded_twists, key = lambda x : [x['target_hecke_orbit'],x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
+            parity = 'Even' if r['parity'] == 1 else 'Odd'
+            minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
+            target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
+            twists2.append('<tr>')
+            twists2.extend([td_wrapl(target_link), td_wrapc(minimality), td_wrapr(r['target_dim']),
+                            td_wrapl(char_link), td_wrapl(parity), td_wrapr(r['order']), td_wrapl(twist_type(r))])
             twists2.append('</tr>')
         twists2.extend(['</tbody>', '</table>'])
 
