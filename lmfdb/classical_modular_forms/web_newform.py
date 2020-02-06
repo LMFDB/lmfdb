@@ -1061,7 +1061,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in sorted(self.embedded_twists, key = lambda x : [x['conductor'],x['twisting_conrey_index'],x['target_hecke_orbit'],x['target_conrey_index'],x['target_embedding_index']]):
+        for r in sorted(self.embedded_twists, key = lambda x : [x['conductor'],x['twisting_conrey_index'],x['target_hecke_orbit_code'],x['target_conrey_index'],x['target_embedding_index']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
@@ -1083,7 +1083,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in sorted(self.embedded_twists, key = lambda x : [x['target_hecke_orbit'],x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
+        for r in sorted(self.embedded_twists, key = lambda x : [x['target_hecke_orbit_code'],x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
             parity = 'Even' if r['parity'] == 1 else 'Odd'
             minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
