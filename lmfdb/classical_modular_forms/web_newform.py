@@ -239,7 +239,7 @@ class WebNewform(object):
 
         if self.is_cm and self.is_rm:
             disc = ', '.join([ str(d) for d in self.self_twist_discs ])
-            self.properties += [('CM/RM disc.', disc)]
+            self.properties += [('CM/RM discs', disc)]
         elif self.is_cm:
             disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
             self.properties += [('CM discriminant', disc)]
@@ -909,12 +909,13 @@ function switch_basis(btype) {
 
     def display_character(self):
         if self.char_order == 1:
-            ord_deg = " (trivial)"
+            ord_deg_min = " (trivial)"
         else:
             ord_knowl = display_knowl('character.dirichlet.order', title='order')
             deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
-            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
-        return self.char_orbit_link + ord_deg
+            min_knowl = ('not' if not self.char_is_minimal else '') + display_knowl('character.dirichlet.degree.minimal', title='minimal')
+            ord_deg_min = r" (of %s \(%d\), %s \(%d\), %s)" % (ord_knowl, self.char_order, deg_knowl, self.char_degree, min_knowl)
+        return self.char_orbit_link + ord_deg_min
 
     def display_character_values(self):
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
