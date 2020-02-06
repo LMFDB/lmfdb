@@ -621,6 +621,12 @@ class WebNewform(object):
         else:
             return r'multiple of %s' % fac
 
+    def twist_minimal_display(self):
+        if self.is_twist_minimal:
+            return r'yes'
+        else:
+            return r'no'
+
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
         if self.char_order == 1:

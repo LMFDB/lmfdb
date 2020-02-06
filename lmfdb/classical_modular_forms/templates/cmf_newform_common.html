@@ -67,10 +67,6 @@
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> {{ newform.ring_display() | safe }}</td>
   </tr>
-  <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
-    <td> {{ newform.ring_index_display() | safe }}</td>
-  </tr>
   {% elif newform.dim == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
@@ -80,11 +76,15 @@
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> \(\mathbb{Z}\)</td>
   </tr>
+  {% endif %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
-  {% endif %}
+  <tr>
+    <td> {{ KNOWL('cmf.twist_minimal',title='Twist minimal') }}: </td>
+    <td> {{ newform.twist_minimal_display() | safe }}</td>
+  </tr>
   {% if newform.char_order == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
