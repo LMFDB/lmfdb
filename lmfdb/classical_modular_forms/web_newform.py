@@ -242,10 +242,10 @@ class WebNewform(object):
             self.properties += [('CM/RM disc.', disc)]
         elif self.is_cm:
             disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
-            self.properties += [('CM disc.', disc)]
+            self.properties += [('CM discriminant', disc)]
         elif self.is_rm:
             disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
-            self.properties += [('RM disc.', disc)]
+            self.properties += [('RM discriminant', disc)]
         elif self.weight == 1:
             self.properties += [('CM/RM', 'no')]
         else:
