@@ -127,6 +127,7 @@ class WebNewform(object):
         self.__dict__.update(data)
         self._data = data
         self.embedding_label = embedding_label
+        self.embedded_minimal_twist = None # stub filled in below when embedding_label is set
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
@@ -194,11 +195,13 @@ class WebNewform(object):
         ## CC_DATA
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
-        # lookup twists (of newform orbits, not embedded newforms)
+        # lookup twists (of newform orbits or embedded newforms as appropriate)
         if self.embedding_label is None and self.minimal_twist is not None:
             self.twists = [r for r in db.mf_twists_nf.search({'source_label':self.label})]
         else:
-            self.twists = None
+            self.twists = [r for r in db.mf_twists_cc.search({'source_label':self.label})]
+            if self.twists:
+                self.embedded_minimal_twist = self.twists[0]["twist_class_label"]
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -315,7 +318,9 @@ class WebNewform(object):
                 dlabel = self.label + '.' + self.dual_label
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual form ' + dlabel, d_url))
-
+            if self.embedded_minimal_twist is not None and self.embedded_minimal_twist != self.label + '.' self.embedding_label:
+                minimal_twist_url = cmf_base + self.embedded_minimal_twist.replace('.','/') + '/'
+                res.append(('Minimal twist ' + self.embedded_minimal_twist, minimal_twist_url))
             if self.dim == 1:
                 # use the Galois orbits friends for the unique embedding
                 related_objects = self.related_objects
