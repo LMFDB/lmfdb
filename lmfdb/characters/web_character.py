@@ -138,7 +138,7 @@ class WebCharObject:
 
     @staticmethod
     def texbool(b):
-        return "bool_string(b)
+        return bool_string(b)
 
     def charvalues(self, chi):
         return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts() ]
