@@ -89,10 +89,10 @@ class CmfTest(LmfdbTest):
                     elt in main_page
                     desc in main_page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.data(as_text=True)
+                    assert ("Newform orbit %s" % elt) in page.data
                     # redirect to the same page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.data(as_text=True)
+                    assert ("Newform orbit %s" % elt) in page.data
         for l in favorite_space_labels:
             for elt, desc in l:
                 elt in main_page
@@ -237,10 +237,10 @@ class CmfTest(LmfdbTest):
     def test_convert_conreylabels(self):
         for c in [27, 31]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/%d/a/' % c,follow_redirects=True)
-            assert "Newform orbit 38.9.d.a" in page.data(as_text=True)
+            assert "Newform orbit 38.9.d.a" in page.data
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
-                assert "Embedded newform 38.9.d.a" in page.data(as_text=True)
+                assert "Embedded newform 38.9.d.a" in page.data
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
@@ -347,10 +347,10 @@ class CmfTest(LmfdbTest):
             for n in ['3.46410', '0.505291', '0.967559', '0.252646', '0.918699']:
                 assert n in page.data
 
-            assert 'Newspace 13.2.e' in page.data(as_text=True)
-            assert 'Newform orbit 13.2.e.a' in page.data(as_text=True)
-            assert 'Dual form 13.2.e.a.' in page.data(as_text=True)
-            assert 'L-function 13.2.e.a.' in page.data(as_text=True)
+            assert 'Newspace 13.2.e' in page.data
+            assert 'Newform orbit 13.2.e.a' in page.data
+            assert 'Dual form 13.2.e.a.' in page.data
+            assert 'L-function 13.2.e.a.' in page.data
 
             assert '0.103805522628' in page.data
 
