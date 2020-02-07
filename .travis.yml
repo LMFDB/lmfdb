@@ -39,6 +39,8 @@ install:
     - parallel --version
     # install the latest pyflakes
     - pip3 install pyflakes --user
+    # install a version of pylint having --py3k
+    - pip2 install pylint --user
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
@@ -51,10 +53,13 @@ install:
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
-    - wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    # travis_wait extends the default 10 minute timeout to 30 minutes
     # what is the load on the server
     - uptime
+      #- wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    - wget  --no-verbose https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    # what is the load on the server
+    - uptime
+    # travis_wait extends the default 10 minute timeout to 40 minutes
     - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
 
     # trigger the patch once script
@@ -76,6 +81,9 @@ script:
     # run pyflakes
     - pyflakes . > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    # run pylint --py3k (with some temporary exceptions)
+    - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
@@ -83,6 +91,7 @@ script:
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
     - ls -a

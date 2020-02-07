@@ -6,7 +6,8 @@ from collections import defaultdict
 import time
 import subprocess
 
-from lmfdb.backend.database import db, PostgresBase, DelayCommit
+from lmfdb.backend.base import PostgresBase
+from lmfdb.backend import db, DelayCommit
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.users.pwdmanager import userdb

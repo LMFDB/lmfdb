@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from six import string_types
 import sys
 if sys.version_info > (3,):

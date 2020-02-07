@@ -5,7 +5,7 @@ import datetime
 #import time
 from collections import defaultdict
 from lmfdb.inventory_app.id_object import get_description
-from lmfdb.backend.database import db
+from lmfdb.backend import db
 
 __version__ = '1.0.0'
 

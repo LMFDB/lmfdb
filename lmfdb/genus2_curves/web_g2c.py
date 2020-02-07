@@ -53,6 +53,7 @@ def simplify_hyperelliptic(fh):
     f = (n.squarefree_part() * f) / n
     return f.coefficients(sparse=False)
 
+
 def min_eqns_pretty(fh):
     xR = PolynomialRing(QQ,'x')
     polys = [ xR(tup) for tup in fh ]
@@ -61,12 +62,14 @@ def min_eqns_pretty(fh):
     slist = [str(lhs).replace("*","") + " = " + str(polys[0]).replace("*","")]
     xzR = PolynomialRing(QQ,['x','z'])
     z = xzR('z')
-    polys = map (lambda x: x.homogenize(z),[ xzR(polys[0])*z**(7-len(fh[0])), xzR(polys[1])*z**(4-len(fh[1]))])
+    polys = [x.homogenize(z) for x in [xzR(polys[0])*z**(7-len(fh[0])),
+                                       xzR(polys[1])*z**(4-len(fh[1]))]]
     yR = PolynomialRing(xzR,'y')
     lhs = yR([0, polys[1], 1])
     slist.append(str(lhs).replace("*","") + " = " + str(polys[0]).replace("*",""))
     slist.append("y^2 = " + str(xR(simplify_hyperelliptic(fh))).replace("*",""))
     return slist
+
 
 def url_for_ec(label):
     if not '-' in label:
@@ -252,7 +255,14 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-
+        
+def plot_from_label(label):
+    curve = db.g2c_curves.lookup(label)
+    ratpts = db.g2c_ratpts.lookup(curve['label'])
+    min_eqn = literal_eval(curve['eqn'])
+    plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
+    return plot
+    
 ###############################################################################
 # Statement functions for displaying formatted endomorphism data
 ###############################################################################
@@ -780,7 +790,11 @@ class WebG2C(object):
         # Properties
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
-            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], ratpts['rat_pts'] if ratpts else []))
+            plot_from_db = db.g2c_plots.lucky({"label": curve['label']})
+            if (plot_from_db is None):
+                self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], ratpts['rat_pts'] if ratpts else []))
+            else:
+                self.plot = plot_from_db['plot']
             plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
 
             properties += [

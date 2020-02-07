@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-This script is used to run verification jobs in parallel.  For more options (such as verifying only a single check or a single object) see the verify method of PosgresTable in lmfdb/backend/database.py.
+This script is used to run verification jobs in parallel.
+For more options (such as verifying only a single check or a single object)
+see the verify method of PosgresTable in lmfdb/backend/database.py.
 """
 from __future__ import print_function
-import argparse, os, subprocess, sys, tempfile, textwrap
+import argparse
+import os
+import subprocess
+import sys
+import tempfile
+import textwrap
 
 try:
     # Make lmfdb available

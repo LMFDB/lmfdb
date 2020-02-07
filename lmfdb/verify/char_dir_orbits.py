@@ -3,7 +3,7 @@ from __future__ import print_function
 from dirichlet_conrey import DirichletGroup_conrey
 from sage.all import euler_phi
 
-from lmfdb.backend.database import db, SQL
+from lmfdb.backend import db, SQL
 from .verification import TableChecker, overall, overall_long, fast, slow
 
 class char_dir_orbits(TableChecker):
