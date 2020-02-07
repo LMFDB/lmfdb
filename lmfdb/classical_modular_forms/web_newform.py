@@ -973,7 +973,7 @@ function switch_basis(btype) {
             polys.append('  <tr>')
             polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
             polys.append('  </tr>')
-        polys.extend(['''
+        polys.append('''
         {% if hecke_polys | length > 20 %}
             <tr class="less toggle">
                 <td colspan="{{colspan}}">
@@ -987,7 +987,7 @@ function switch_basis(btype) {
             </tr>
             {% endif %}
         '''
-        ])
+        )
         polys.extend(['</tbody>', '</table>'])
         return '\n'.join(polys)
       
