@@ -952,7 +952,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '  </tr>', '</thead>', '<tbody>']
         self_twists = sorted([r for r in self.twists if r['self_twist_disc']], key = lambda r: r['conductor'])
-        other_inner_twists = sorted([r for r in self.twists if r['target_label'] == self.label and not r['self_disc']], key = lambda r: r['conductor'])
+        other_inner_twists = sorted([r for r in self.twists if r['target_label'] == self.label and not r['self_twist_disc']], key = lambda r: r['conductor'])
         inner_twists = self_twists + other_inner_twists
         for r in inner_twists:
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
