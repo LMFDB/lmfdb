@@ -1,14 +1,15 @@
+from __future__ import absolute_import
 from six import string_types
 import json
-import inventory_helpers as ih
-import lmfdb_inventory as inv
-import inventory_db_core as idc
-from inventory_db_inplace import update_fields
-from inventory_live_data import get_lockout_state
-from scrape_helpers import check_scrapes_by_coll_id
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
+from .inventory_db_inplace import update_fields
+from .inventory_live_data import get_lockout_state
+from .scrape_helpers import check_scrapes_by_coll_id
 from copy import deepcopy
 from lmfdb.utils import comma
-from lmfdb.backend.database import db
+from lmfdb import db
 
 #Functions to populate viewer pages
 

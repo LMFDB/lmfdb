@@ -2,11 +2,12 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
+from __future__ import absolute_import
 from lmfdb import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
-from galois_reps import GaloisRepresentation
+from .galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
 from lmfdb.characters.web_character import WebDirichletCharacter
@@ -98,7 +99,7 @@ def show():
 #            friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
 #            info['friends'] = friends
 
-            info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
+            info['eulerproduct'] = r'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
             info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
         except (KeyError,ValueError,RuntimeError,NotImplementedError) as err:

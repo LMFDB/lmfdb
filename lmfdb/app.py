@@ -11,7 +11,7 @@ from sage.env import SAGE_VERSION
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.1"
+LMFDB_VERSION = "LMFDB Release 1.1.1"
 
 ############################
 #         Main app         #
@@ -496,7 +496,7 @@ def root_static_file(name):
     def static_fn():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
-            return open(fn).read()
+            return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
@@ -692,6 +692,7 @@ WhiteListedRoutes = [
     'ModularForm/GL2/Q/holomorphic',
     'ModularForm/GL2/TotallyReal',
     'NumberField',
+    'Representation/foo',  # allows /Representation but not /Representation/Galois/ModL/
     'SatoTateGroup',
     'Variety/Abelian/Fq',
     'about',

@@ -14,13 +14,14 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 ########################################################################
 from __future__ import print_function
+from __future__ import absolute_import
 from six.moves import range
 
 from sage.structure.sage_object import SageObject
 import sage.rings.all
 
 from sage.all import binomial
-from sympowlmfdb import sympowlmfdb
+from .sympowlmfdb import sympowlmfdb
 
 
 def tbin(a, b):
@@ -33,7 +34,7 @@ class SymmetricPowerLFunction(SageObject):
         if E.has_cm():
             raise ValueError("E should not be cm")
 
-        from sympowlmfdb import sympowlmfdb
+        from .sympowlmfdb import sympowlmfdb
         bad_primes, conductor, root_number = sympowlmfdb.local_data(E, m)
         self.bad_prime_euler = {}
         self.bad_primes = [i for (i, _) in bad_primes]

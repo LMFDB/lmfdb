@@ -1,6 +1,7 @@
-import scripts.reports.jsonify_pg_structure as jdbs
-import inventory_upload_data as iud
-from scrape_progress_update import update_scrape_progress
+from __future__ import absolute_import
+from . import jsonify_pg_structure as jdbs
+from . import inventory_upload_data as iud
+from .scrape_progress_update import update_scrape_progress
 import threading
 
 def get_scrape_progress(db, coll):

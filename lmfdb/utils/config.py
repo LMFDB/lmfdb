@@ -13,6 +13,7 @@ It's purpose is to parse a config file (create a default one if none
 is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
+from __future__ import print_function
 from six.moves.configparser import ConfigParser
 
 import argparse
@@ -228,7 +229,7 @@ class Configuration(object):
                 for opt, val in options.items():
                     _cfgp.set(sec, opt, str(val))
 
-            with open(args.config_file, "wb") as configfile:
+            with open(args.config_file, "w") as configfile:
                 _cfgp.write(configfile)
 
         # 2/2: reading the config file

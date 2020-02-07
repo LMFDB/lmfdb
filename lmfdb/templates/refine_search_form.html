@@ -1,0 +1,9 @@
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
+  {% include 'hidden_search_inputs.html' %}
+  {{ info.search_array.html(info) | safe }}
+  {% if info.search_type == 'DynStats' %}
+  <table>
+    {% include 'dynamic_stats_input.html' %}
+  </table>
+  {% endif %}
+</form>

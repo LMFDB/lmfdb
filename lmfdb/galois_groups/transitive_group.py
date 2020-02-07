@@ -137,7 +137,7 @@ class WebGaloisGroup:
 
     def otherrep_list(self, givebound=True):
         sibs = self._data['siblings']
-        pharse = "with degree $\leq %d$"% self.sibling_bound()
+        pharse = r"with degree $\leq %d$" % self.sibling_bound()
         if len(sibs)==0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False)
@@ -182,8 +182,8 @@ class WebGaloisGroup:
             cc = ccc
             cc2 = [x.cycletype(n) for x in cc]
         cc2 = [str(x) for x in cc2]
-        cc2 = [re.sub("\[", '', x) for x in cc2]
-        cc2 = [re.sub("\]", '', x) for x in cc2]
+        cc2 = [re.sub(r"\[", '', x) for x in cc2]
+        cc2 = [re.sub(r"\]", '', x) for x in cc2]
         ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
         self._data['conjclasses'] = ans
         return ans
@@ -555,27 +555,37 @@ def chartable(n, t):
 def group_alias_table():
     akeys = list(aliases)
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
-    ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
+    ans = r'<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
-        name = group_display_short(aliases[j][0][0], aliases[j][0][1])
-        ntlist = aliases[j]
-        #ntlist = filter(lambda x: x[0] < 12, ntlist)
-        ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
-        ntstring = ", ".join(ntstrings)
-        ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
-    ans += '</tbody></table>'
+        # Remove An, Cn, Dn, Sn since they are covered by a general comment
+        if not re.match(r'^[ACDS]\d+$', j):
+            name = group_display_short(aliases[j][0][0], aliases[j][0][1])
+            ntlist = aliases[j]
+            ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
+            ntstring = ", ".join(ntstrings)
+            ans += r"<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
+    ans += r'</tbody></table>'
     return ans
 
 
 def complete_group_code(code):
-    if code in aliases:
-        return aliases[code]
+    # Order direct products
+    code1 = 'X'.join(sorted(code.split('X'), reverse=True))
+    if code1 in aliases:
+        return aliases[code1]
+    # Try nTj notation
     rematch = re.match(r"^(\d+)T(\d+)$", code)
     if rematch:
         n = int(rematch.group(1))
         t = int(rematch.group(2))
-        return [[n, t]]
+        return [(n, t)]
+    # Try GAP code
+    rematch = re.match(r'^\[\d+,\d+\]$', code)
+    if rematch:
+        nts = list(db.gps_transitive.search({'gapidfull':code}, projection=['n','t']))
+        nts = [(z['n'], z['t']) for z in nts]
+        return nts
     else:
         raise NameError(code)
     return []
@@ -586,14 +596,17 @@ def complete_group_code(code):
 def complete_group_codes(codes):
     codes = codes.upper()
     ans = []
+    # some commas separate groups, and others are internal to group names
+    # like PSL(2,7) and gap id [6,1]
     # after upper casing, we can replace commas we want to keep with "z"
     codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
+    codes = re.sub(r'\[(\d+),(\d+)\]', r'[\1z\2]', codes)
     codelist = codes.split(',')
     # now turn the z's back into commas
     codelist = [re.sub('z', ',', x) for x in codelist]
     for code in codelist:
         ans.extend(complete_group_code(code))
-    return ans
+    return list(set(ans))
 
 
 aliases = {}
@@ -603,6 +616,9 @@ for j in range(1,48):
     if j != 32:
         aliases['C'+str(j)] = [(j,1)]
 aliases['C32'] = [(32,33)]
+
+# For direct products, factors must be reverse-sorted
+# All nicknames here must be all upper-case
 
 aliases['S1'] = [(1, 1)]
 aliases['A1'] = [(1, 1)]
@@ -633,7 +649,6 @@ aliases['GL(3,2)'] = [(7, 5)]
 aliases['A7'] = [(7, 6)]
 aliases['S7'] = [(7, 7)]
 aliases['C4XC2'] = [(8, 2)]
-aliases['C2XC4'] = [(8, 2)]
 aliases['C2XC2XC2'] = [(8, 3)]
 aliases['Q8'] = [(8, 5)]
 aliases['D8'] = [(8, 6),(16,7)]
@@ -646,7 +661,6 @@ aliases['S8'] = [(8, 50)]
 aliases['C3XC3'] = [(9, 2)]
 aliases['D9'] = [(9, 3)]
 aliases['S3XC3'] = [(6, 5)]
-aliases['C3XS3'] = [(6, 5)]
 aliases['S3XS3'] = [(6, 9)]
 aliases['M9'] = [(9, 14)]
 aliases['PSL(2,8)'] = [(9, 27)]
@@ -665,7 +679,7 @@ aliases['M11'] = [(11, 6)]
 aliases['A11'] = [(11, 7)]
 aliases['S11'] = [(11, 8)]
 aliases['C6XC2'] = [(12, 2)]
-aliases['C2XC6'] = [(12, 2)]
+aliases['C3:C4'] = [(12, 5)]
 aliases['D12'] = [(12,12)]
 aliases['A12'] = [(12, 300)]
 aliases['S12'] = [(12, 301)]
@@ -677,6 +691,8 @@ aliases['A14'] = [(14, 62)]
 aliases['S14'] = [(14, 63)]
 aliases['A15'] = [(15, 103)]
 aliases['S15'] = [(15, 104)]
+aliases['Q8XC2'] = [(16, 7)]
+aliases['C4:C4'] = [(16, 8)]
 aliases['Q16'] = [(16, 14)]
 aliases['A16'] = [(16, 1953)]
 aliases['S16'] = [(16, 1954)]
@@ -689,6 +705,7 @@ aliases['A18'] = [(18, 982)]
 aliases['S18'] = [(18, 983)]
 aliases['A19'] = [(19, 7)]
 aliases['S19'] = [(19, 8)]
+aliases['C5:C4'] = [(20, 2)]
 aliases['PGL(2,19)'] = [(20, 362)]
 aliases['A20'] = [(20, 1116)]
 aliases['S20'] = [(20, 1117)]
@@ -700,6 +717,9 @@ aliases['F23'] = [(23, 3)]
 aliases['M23'] = [(23, 5)]
 aliases['A23'] = [(23, 6)]
 aliases['S23'] = [(23, 7)]
+aliases['Q8XC3'] = [(24, 4)]
+aliases['C3:Q8'] = [(24, 5)]
+aliases['C3:C8'] = [(24, 8)]
 aliases['A24'] = [(24,24999)]
 aliases['S24'] = [(24,25000)]
 aliases['A25'] = [(25,210)]
@@ -708,6 +728,7 @@ aliases['A26'] = [(26,95)]
 aliases['S26'] = [(26,96)]
 aliases['A27'] = [(27,2391)]
 aliases['S27'] = [(27,2392)]
+aliases['C7:C4'] = [(28, 3)]
 aliases['A28'] = [(28,1853)]
 aliases['S28'] = [(28,1854)]
 aliases['A29'] = [(29,7)]
@@ -716,6 +737,7 @@ aliases['A30'] = [(30,5711)]
 aliases['S30'] = [(30,5712)]
 aliases['A31'] = [(31,11)]
 aliases['S31'] = [(31,12)]
+aliases['Q32'] = [(32, 51)]
 aliases['A32'] = [(32,2801323)]
 aliases['S32'] = [(32,2801324)]
 aliases['A33'] = [(33,161)]
@@ -732,6 +754,7 @@ aliases['A38'] = [(38,75)]
 aliases['S38'] = [(38,76)]
 aliases['A39'] = [(39,305)]
 aliases['S39'] = [(39,306)]
+aliases['C5:C8'] = [(40, 3)]
 aliases['A40'] = [(40,315841)]
 aliases['S40'] = [(40,315842)]
 aliases['A41'] = [(41,9)]
@@ -784,6 +807,15 @@ aliases['D44'] = [(44,9)]
 aliases['D45'] = [(45,4)]
 aliases['D46'] = [(46,3)]
 aliases['D47'] = [(47,2)]
+
+aliases['M12'] = [(12,295)]
+aliases['M22'] = [(22,38)]
+aliases['M23'] = [(23,5)]
+aliases['M24'] = [(24,24680)]
+aliases['PSL(3,3)'] = [(13,7)]
+aliases['PSL(2,13)'] = [(14,30)]
+aliases['PSP(4,3)'] = [(27,993)]
+aliases['PSU(3,3)'] = [(28,323)]
 
 # Load all sibling representations from the database
 labels = ["%sT%s" % elt[0] for elt in aliases.values()]

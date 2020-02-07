@@ -346,7 +346,7 @@ def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
         print("opened {}".format(f))
         td = tordata[d]
         count = 0
-        for lab, dat in td.iteritems():
+        for lab, dat in td.items():
             h.write(" ".join([lab]+["[{}]:{}".format(T,F.replace(":",".")) for F,T in dat.items()]) + "\n")
             count +=1
             if count==maxlines:

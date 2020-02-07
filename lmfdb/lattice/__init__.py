@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -11,7 +12,7 @@ lattice_logger = make_logger(lattice_page)
 def body_class():
     return {'body_class': 'lattice'}
 
-import main
+from . import main
 assert main
 
 app.register_blueprint(lattice_page, url_prefix="/Lattice")

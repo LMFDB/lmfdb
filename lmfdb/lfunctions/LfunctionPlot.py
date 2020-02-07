@@ -82,8 +82,8 @@ def getGroupHtml(group):
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s + i \\mu_3)"
         ans += "\\end{aligned}\\]\n"
-        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
-        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
+        ans += "with \\(\\mu_j\\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
+        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \\ge \\mu_2 \\ge 0\\), \n"
         ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
         ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
     elif group == 'r0r0r0r0':
@@ -96,7 +96,7 @@ def getGroupHtml(group):
         ans += "\\Gamma_\\R(s + i \\mu_3)"
         ans += "\\Gamma_\\R(s + i \\mu_4)"
         ans += "\\end{aligned}\\]\n"
-        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
+        ans += "with \\(\\mu_j\\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
         ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
         ans += "</div>\n"
     elif group == 'r0r0r0r0selfdual':
@@ -131,10 +131,10 @@ def getGroupHtml(group):
         ans += "to Maass cusp forms for GL(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\[\\begin{aligned}"
-        ans += "\\Gamma_\R(s + i \\mu_1)"
-        ans += "\\Gamma_\R(s + i \\mu_2)"
-        ans += "\\Gamma_\R(s - i \\mu_3)"
-        ans += "\\Gamma_\R(s - i \\mu_4)"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s - i \\mu_3)"
+        ans += "\\Gamma_\\R(s - i \\mu_4)"
         ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
@@ -178,7 +178,7 @@ def getOneGraphHtml(gls):
     else:
         ans = ("<h4>L-functions of conductor " + str(gls[1]) + "</h4>\n")
     ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\\epsilon=1\\)). "
     ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)

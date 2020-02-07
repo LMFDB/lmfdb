@@ -16,7 +16,7 @@ class ECNFTest(LmfdbTest):
             url = "EllipticCurve/%s/%d"%("/".join(e['class_label'].split("-")),e['number'])
             print("Checking " + url)
             page = self.tc.get(url, follow_redirects=True)
-            if not e['label'] in page.data or not 'Weierstrass equation' in page.data:
+            if not e['label'] in page.get_data(as_text=True) or not 'Weierstrass equation' in page.get_data(as_text=True):
                 print('Failed on', url)
                 errors.append(url)
         if errors:

@@ -1,7 +1,9 @@
 from __future__ import print_function
 from sage.all import prime_range, Integer, kronecker_symbol, PolynomialRing, ComplexField, ZZ, gap, infinity
 
-from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
+from lmfdb.backend import db
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycopg2.sql import SQL, Literal
 from lmfdb.utils import names_and_urls
 from .mf import MfChecker
 from .verification import overall, overall_long, slow, fast, accumulate_failures

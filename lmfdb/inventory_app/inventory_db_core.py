@@ -1,8 +1,9 @@
-import inventory_helpers as ih
-import lmfdb_inventory as inv
+from __future__ import absolute_import
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
 import datetime as dt
 from lmfdb.utils import comma
-from lmfdb.backend.database import db
+from lmfdb import db
 
 #Table creation routines -------------------------------------------------------------
 

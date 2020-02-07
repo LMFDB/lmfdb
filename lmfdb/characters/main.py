@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
@@ -19,7 +20,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
-import ListCharacters
+from . import ListCharacters
 
 #### make url_character available from templates
 @app.context_processor
@@ -221,7 +222,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus is None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-    if number is None and re.match('^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
+    if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 

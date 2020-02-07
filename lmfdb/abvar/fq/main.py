@@ -5,7 +5,7 @@ import re
 from six import StringIO
 import time
 
-from flask import render_template, url_for, request, redirect, send_file
+from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
@@ -61,13 +61,10 @@ def abelian_varieties():
         info = to_dict(args)
         # hidden_search_type for prev/next buttons
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-
-        if search_type == "List":
-            return abelian_variety_search(info)
-        elif search_type == "Counts":
+        if search_type == "Counts":
             return abelian_variety_count(info)
-        elif search_type == "Random":
-            return abelian_variety_search(info, random=True)
+        elif search_type in ['List', 'Random']:
+            return abelian_variety_search(info)
         assert False
     else:
         return abelian_variety_browse(**args)
@@ -104,8 +101,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     try:
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError:
-        flash_error("%s is not in the database.", label)
-        return search_input_error()
+        return abort(404, "Isogeny class %s is not in the database." % label)
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
@@ -182,7 +178,7 @@ def download_search(info):
 
 class AbvarSearchArray(SearchArray):
     def __init__(self):
-        qshort = display_knowl("ag.base_field", "base field")
+        qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
             "q",
             label="Cardinality of the %s" % (qshort),
@@ -190,7 +186,7 @@ class AbvarSearchArray(SearchArray):
             example="81",
             example_span="81 or 3-49",
         )
-        pshort = display_knowl("ag.base_field", "base char.")
+        pshort = display_knowl("ag.base_field", "Base char.")
         p = TextBox(
             "p",
             label="Characteristic of the %s" % (qshort),
@@ -232,8 +228,9 @@ class AbvarSearchArray(SearchArray):
             knowl="lf.newton_polygon",
             example="[0,0,1/2]",
             colspan=(1, 3, 1),
-            width=40,
-            short_label="slopes",
+            width=3*190 - 30,
+            short_width=160,
+            short_label="Slopes",
             advanced=True,
         )
         initial_coefficients = TextBox(
@@ -248,8 +245,9 @@ class AbvarSearchArray(SearchArray):
             knowl="ag.fq.point_counts",
             example="[75,7125]",
             colspan=(1, 3, 1),
-            width=40,
-            short_label="points on variety",
+            width=3*190 - 30,
+            short_width=160,
+            short_label="Points on variety",
             advanced=True,
         )
         curve_point_count = TextBox(
@@ -258,8 +256,9 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.curve_point_counts",
             example="[9,87]",
             colspan=(1, 3, 1),
-            width=40,
-            short_label="points on curve",
+            width=3*190 - 30,
+            short_width=160,
+            short_label="Points on curve",
             advanced=True,
         )
         def nbsp(knowl, label):
@@ -267,11 +266,12 @@ class AbvarSearchArray(SearchArray):
         number_field = TextBox(
             "number_field",
             label=nbsp("av.fq.number_field", "Number field"),
-            short_label=display_knowl("av.fq.number_field", "number field"),
+            short_label=display_knowl("av.fq.number_field", "Number field"),
             example="4.0.29584.2",
             example_span="4.0.29584.2 or Qzeta8",
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
+            short_width=160,
             advanced=True,
         )
         galois_group = TextBox(
@@ -282,7 +282,8 @@ class AbvarSearchArray(SearchArray):
             example_span="C4, or 8T12, a list of "
             + display_knowl("nf.galois_group.name", "group labels"),
             colspan=(1, 3, 1),
-            width=40,
+            width=3*190 - 30,
+            short_width=160,
             advanced=True,
         )
         #size = TextBox(
@@ -348,7 +349,7 @@ class AbvarSearchArray(SearchArray):
             label="Geometrically simple",
             options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.geometrically_simple",
-            short_label="geom. simple",
+            short_label="Geom. simple",
         )
         primitive = SelectBox(
             "primitive",
@@ -369,7 +370,7 @@ class AbvarSearchArray(SearchArray):
             label="Principally polarizable",
             options=uopts,
             knowl="av.princ_polarizable",
-            short_label="princ polarizable",
+            short_label="Princ polarizable",
         )
         jacobian = SelectBox(
             "jacobian",
@@ -377,7 +378,7 @@ class AbvarSearchArray(SearchArray):
             options=uopts,
             knowl="ag.jacobian"
         )
-        uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "geometric decomposition")
+        uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "Geometric decomposition")
         use_geom_decomp = CheckBox(
             "use_geom_decomp",
             label=uglabel,
@@ -388,7 +389,7 @@ class AbvarSearchArray(SearchArray):
         def long_label(d):
             return nbsp("av.decomposition", "Dimension %s factors" % d)
         def short_label(d):
-            return display_knowl("av.decomposition", "dim %s factors" % d)
+            return display_knowl("av.decomposition", "Dim %s factors" % d)
         dim1 = TextBox(
             "dim1_factors",
             label=long_label(1),
@@ -459,7 +460,10 @@ class AbvarSearchArray(SearchArray):
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
         simple_quantifier = SelectBox(
             "simple_quantifier",
-            options=[("contained", "subset of"), ("exactly", "exactly"), ("", "superset of")],
+            width=85,
+            options=[("", "include"),
+                     ("contained", "subset"),
+                     ("exactly", "exactly")],
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",
@@ -467,17 +471,18 @@ class AbvarSearchArray(SearchArray):
             select_box=simple_quantifier,
             knowl="av.decomposition",
             colspan=(1, 3, 2),
-            width=40,
-            short_width=25,
+            width=3*190 - 30,
+            short_width=2*190 - 30,
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
         count = TextBox(
             "count",
-            label="Maximum number of isogeny classes to display",
-            colspan=(2, 1, 1),
-            width=10,
+            label="Results to display",
+            example=50,
+            example_col=False
         )
+
         refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
@@ -513,7 +518,10 @@ class AbvarSearchArray(SearchArray):
             [galois_group],
             [count],
         ]
-        SearchArray.__init__(self, browse_array, refine_array)
+        search_types = [('List', 'List of Results'),
+                        ('Counts', 'Counts Table'),
+                        ('Random', 'Random Result')]
+        SearchArray.__init__(self, browse_array, refine_array, search_types=search_types)
 
 def common_parse(info, query):
     info["search_array"] = AbvarSearchArray()
