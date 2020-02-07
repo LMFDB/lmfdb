@@ -954,6 +954,28 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
+    def display_hecke_char_polys(self):
+        def th_wrap(kwl, title):
+            return '    <th>%s</th>' % display_knowl(kwl, title=title)
+        def td_wrap(val):
+            return '    <td>%s</th>' % val
+        data = db.mf_newforms.lookup(self.label)
+        hecke_orbit_code = data['hecke_orbit_code']
+        self.heckepolys = []
+        for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
+            # self.heckepolys.append([{'p' : poly_item['p']}, {'F_p(T)' : poly_item['lpoly']}])
+            self.heckepolys.append([poly_item['p'], poly_item['lpoly']])
+        polys = ['<table class="ntdata">', '<thead>', '  <tr>',
+                  th_wrap('p', 'p'),
+                  th_wrap('lpoly', 'F_p(T)'),
+                  '  </tr>', '</thead>', '<tbody>']
+        for p, lpoly in self.heckepolys:
+            polys.append('  <tr>')
+            polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
+            polys.append('  </tr>')
+        polys.extend(['</tbody>', '</table>'])
+        return '\n'.join(polys)
+      
     def sato_tate_display(self):
         if self.sato_tate_group:
             return st_link(self.sato_tate_group)
