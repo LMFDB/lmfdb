@@ -967,7 +967,7 @@ function switch_basis(btype) {
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = sum([coeffs[i] * (T**i) for i in xrange(len(coeffs))]).factor()
-            self.heckepolys.append([poly_item['p'], poly_item['lpoly']])
+            self.heckepolys.append([poly_item['p'], F_p])
         polys = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('p', '$p$'),
                   th_wrap('lpoly', '$F_p(T)$'),
