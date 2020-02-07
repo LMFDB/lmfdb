@@ -111,7 +111,7 @@ class AVTest(LmfdbTest):
         Check that the Frobenius angles are split into multiple math elements
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
-        assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page
+        assert r"$\pm0.150432950460$, $\pm0.544835058382$" in page
 
     def test_av_download(self):
         r"""
