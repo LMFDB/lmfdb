@@ -765,10 +765,12 @@ class WebChar(WebCharObject):
                 ("Primitive", [self.isprimitive])]
         if self.parity:
             f.append(("Parity", [self.parity]))
+        if self.isminimal:
+            f.append(("Minimal", [self.isminimal]))
         try:
             if self.orbit_label:
                 formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-                f.append(("Orbit Label", [formatted_orbit_label]))
+                f.append(("Orbit label", [formatted_orbit_label]))
         except KeyError:
             pass
         return f
