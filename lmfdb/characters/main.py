@@ -311,7 +311,7 @@ def _dir_knowl_data(label, orbit=False):
     inf += row_wrap('Order', webchar.order)
     inf += row_wrap('Degree', euler_phi(webchar.order))
     inf += row_wrap('Minimal', webchar.isminimal)
-    inf += row_wrap('Parity', "even" if webchar.parity == 1 else "odd")
+    inf += row_wrap('Parity', webchar.parity)
     if numbers:
         inf += row_wrap('Characters', ",&nbsp;".join(numbers))
     if modulus <= 10000:

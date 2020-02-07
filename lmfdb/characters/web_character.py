@@ -75,12 +75,6 @@ from lmfdb.characters.utils import url_character, complex2str, evalpolelt
 
 logger = make_logger("DC")
 
-def bool_string(b):
-    return "yes" if b else "no"
-
-def parity_string(n):
-    return "odd" if n == -1 else "even"
-
 #############################################################################
 ###
 ###    Class for Web objects
@@ -137,8 +131,12 @@ class WebCharObject:
         return t
 
     @staticmethod
+    def texparity(n):
+        return "Odd" if n == -1 else "Even"
+
+    @staticmethod
     def texbool(b):
-        return bool_string(b)
+        return "Yes" if b else "No"
 
     def charvalues(self, chi):
         return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts() ]
@@ -1000,7 +998,7 @@ class WebDBDirichlet(WebDirichlet):
         self.isminimal = self.texbool(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        self.parity = parity_string(int(orbit_data['parity']))
+        self.parity = self.texparity(int(orbit_data['parity']))
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
@@ -1180,7 +1178,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         """
         if self.order != 2:
             return None
-        if self.parity == parity_string(-1):
+        if self.parity == self.texparity(-1):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
@@ -1320,7 +1318,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def parity(self):
-        return ('odd', 'even')[self.chi.is_even()]
+        return ('Odd', 'Even')[self.chi.is_even()]
 
     @property
     def codeparity(self):
