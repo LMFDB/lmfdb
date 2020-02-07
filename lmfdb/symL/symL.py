@@ -157,7 +157,7 @@ def symmetricEulerFactor(E, m, p):
 
     print(type(F))
 
-    for i in range(0, (m - 1) / 2 + 1):
+    for i in range(0, (m - 1) // 2 + 1):
         s = m - 2 * i
         s2 = s // 2
         ap = E.ap(p)
