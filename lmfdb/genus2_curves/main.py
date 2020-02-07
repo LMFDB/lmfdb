@@ -566,7 +566,7 @@ class G2CSearchArray(SearchArray):
         is_gl2_type = SelectBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
-            label="$\GL_2$-type",
+            label=r"$\GL_2$-type",
             options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
