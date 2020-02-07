@@ -195,9 +195,9 @@ class CharacterSearch:
             flash_error("%s is not a valid value for parity.  It must be '%s' or '%s'", self.parity, parity_string(-1), parity_string(1))
             raise ValueError('parity')
         self.primitive = query.get('primitive')
-        if self.primitive in ["Yes,"yes"]:
+        if self.primitive in ["Yes","yes"]:
             self.primitive = bool_string(True)
-        if self.primitive in ["No,"no"]:
+        if self.primitive in ["No","no"]:
             self.primitive = bool_string(False)
         if self.primitive and not self.primitive in [bool_string(True),bool_string(False)]:
             flash_error("%s is not a valid value for primitive.  It must be %s or %s", self.primitive, bool_string(True), bool_string(False))
