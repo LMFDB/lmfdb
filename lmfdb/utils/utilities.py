@@ -32,6 +32,7 @@ from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
+from sage.misc.functional import round
 from sage.all import floor, latex, prime_range, valuation
 from sage.structure.element import Element
 
