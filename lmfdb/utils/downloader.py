@@ -6,7 +6,7 @@ from flask import abort, send_file, stream_with_context, Response
 
 from werkzeug.datastructures import Headers
 from ast import literal_eval
-from six import StringIO, PY2
+from six import BytesIO
 
 
 class Downloader(object):
@@ -140,11 +140,10 @@ class Downloader(object):
         s = '\n'
         s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
         s += result
-        strIO = StringIO()
-        if PY2:
-            strIO.write(s.encode('utf-8'))
-        strIO.seek(0)
-        return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+        bIO = BytesIO()
+        bIO.write(s.encode('utf-8'))
+        bIO.seek(0)
+        return send_file(bIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
     def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
         """
