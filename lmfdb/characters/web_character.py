@@ -1125,7 +1125,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index']
+              'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
         self.maxcols = 30
@@ -1406,7 +1406,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index']
+              'orbit_label', 'orbit_index','isminimal']
 
     def _compute(self):
         WebDirichlet._compute(self)
