@@ -958,7 +958,7 @@ function switch_basis(btype) {
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
-            return '    <td>%s</th>' % val
+            return '    <td>$%s$</th>' % val
         data = db.mf_newforms.lookup(self.label)
         hecke_orbit_code = data['hecke_orbit_code']
         self.heckepolys = []
