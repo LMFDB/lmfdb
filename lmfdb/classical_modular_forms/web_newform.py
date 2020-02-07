@@ -971,14 +971,14 @@ function switch_basis(btype) {
                   '  </tr>', '</thead>', '<tbody>']
         loop_count = 0
         for p, lpoly in self.heckepolys:
-            if loop_count < 20:
+            if loop_count < 5:
               polys.append('  <tr>')
             else:
               polys.append('  <tr class="more nodisplay">')  
             polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
             polys.append('  </tr>')
             loop_count += 1
-        if loop_count > 20:
+        if loop_count > 5:
           polys.append('''
             <tr class="less toggle">
                 <td colspan="{{colspan}}">
