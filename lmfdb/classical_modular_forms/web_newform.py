@@ -966,7 +966,7 @@ function switch_basis(btype) {
             # self.heckepolys.append([{'p' : poly_item['p']}, {'F_p(T)' : poly_item['lpoly']}])
             self.heckepolys.append([poly_item['p'], poly_item['lpoly']])
         polys = ['<table class="ntdata">', '<thead>', '  <tr>',
-                  th_wrap('p', 'p'),
+                  th_wrap('p', '$p$'),
                   th_wrap('lpoly', '$F_p(T)$'),
                   '  </tr>', '</thead>', '<tbody>']
         for p, lpoly in self.heckepolys:
