@@ -274,7 +274,7 @@ class WebNewform(object):
         if self.embedding_label is None:
             return [make_label(character, j)
                     for character in self.conrey_indexes
-                    for j in range(self.dim/self.char_degree)]
+                    for j in range(self.dim//self.char_degree)]
         else:
             character, j = map(int, self.embedding_label.split('.'))
             return [make_label(character, j-1)]
