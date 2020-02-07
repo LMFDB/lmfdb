@@ -178,7 +178,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
-        assert 'Odd' in W.data and '536870912' in W.data
+        assert parity_string(-1) in W.data and '536870912' in W.data
         assert '/SatoTateGroup/0.1.3748806900' in W.data
 
 class HeckeCharactersTest(LmfdbTest):

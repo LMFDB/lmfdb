@@ -8,7 +8,7 @@
 {# Kronecker symbol #}
 
 {% if symbol %}
-  {% if isprimitive == "Yes" and indlabel %}
+  {% if (isprimitive == "Yes" or isprimitive == "yes") and indlabel %}
     <h2>
       {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
     </h2>
