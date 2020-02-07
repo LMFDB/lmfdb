@@ -6,7 +6,7 @@ import re
 from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
-from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger
+from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger, parity_string, bool_string
 try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
@@ -143,7 +143,7 @@ def info_from_db_orbit(orbit):
     orbit_letter = cremona_letter_code(orbit_index - 1)
     orbit_label = "{}.{}".format(mod, orbit_letter)
     order = orbit['order']
-    is_odd = 'Odd' if _is_odd(orbit['parity']) else 'Even'
+    is_odd = parity_string(orbit['parity'])
     is_prim = _is_primitive(orbit['is_primitive'])
     results = []
     for num in orbit['galois_orbit']:
@@ -188,11 +188,11 @@ class CharacterSearch:
         self.parity = query.get('parity')
         self.primitive = query.get('primitive')
         self.limit = parse_limit(query.get('limit'))
-        if self.parity and not self.parity in ['Odd','Even']:
-            flash_error("%s is not a valid value for parity.  It must be 'Odd' or 'Even'", self.parity)
+        if self.parity and not self.parity in [parity_string(-1),parity_string(1)]:
+            flash_error("%s is not a valid value for parity.  It must be '%s' or '%s'", self.parity, parity_string(-1), parity_string(1))
             raise ValueError('parity')
-        if self.primitive and not self.primitive in ['Yes','No']:
-            flash_error("%s is not a valid value for primitive.  It must be 'Yes' or 'No'", self.primitive)
+        if self.primitive and not self.primitive in [bool_string(True),bool_string(False)]:
+            flash_error("%s is not a valid value for primitive.  It must be %s or %s", self.primitive, bool_string(True), bool_string(False))
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
@@ -206,23 +206,23 @@ class CharacterSearch:
         self.omin, self.omax = parse_interval(self.order, 'order') if self.order else (1, self.cmax)
         self.cmax = min(self.cmax,self.mmax)
         self.omax = min(self.omax,self.cmax)
-        if self.primitive == 'Yes':
+        if self.primitive == bool_string(True):
             self.cmin = max([self.cmin,self.mmin])
         self.cmin += 1 if self.cmin%4 == 2 else 0
         self.cmax -= 1 if self.cmax%4 == 2 else 0
-        if self.primitive == 'Yes':
+        if self.primitive == bool_string(True):
             self.mmin = max([self.cmin,self.mmin])
             self.mmax = min([self.cmax,self.mmax])
             self.cmin,self.cmax = self.mmin,self.mmax
-        if self.parity == "Odd":
+        if self.parity == parity_string(-1):
             self.omin += 1 if self.omin%2 else 0
             self.omax -= 1 if self.omax%2 else 0
         self.mmin = max(self.mmin,self.cmin,self.omin)
 
         if self.parity:
-            self.is_odd = True if self.parity == 'Odd' else False
+            self.is_odd = True if self.parity == parity_string(-1) else False
         if self.primitive:
-            self.is_primitive = True if self.primitive == 'Yes' else False
+            self.is_primitive = True if self.primitive == bool_string(True) else False
 
         self.start = int(query.get('start', '0'))
 

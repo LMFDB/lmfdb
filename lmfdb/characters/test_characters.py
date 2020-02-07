@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
-from lmfdb.characters.web_character import WebDirichlet, WebHecke
+from lmfdb.characters.web_character import WebDirichlet, WebHecke, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
@@ -34,8 +34,8 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_even_odd(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=35')
-        assert '>Even</t' in W.data
-        assert '>Odd</t' in W.data
+        assert '>%s</t'%(parity_string(1)) in W.data
+        assert '>%s</t'%(parity_string(-1)) in W.data
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
@@ -90,13 +90,13 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletgroup(self):
         W = self.tc.get('/Character/Dirichlet/23', follow_redirects=True)
-        assert 'Yes' in W.data
+        assert bool_string(True) in W.data
         assert 'DirichletGroup_conrey(23)' in W.data
         assert 'e\\left(\\frac{7}{11}\\right)' in W.data
         assert '/Character/Dirichlet/23/10' in W.data
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
-        assert 'Yes' in W.data
+        assert bool_string(True) in W.data
         assert 'Properties' in W.data, "properties box"
         assert 'DirichletGroup_conrey(91)' in W.data, "sage code example"
         assert '\chi_{91}(15,' in W.data and '\chi_{91}(66' in W.data, "generators"
