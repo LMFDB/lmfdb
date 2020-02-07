@@ -957,7 +957,7 @@ function switch_basis(btype) {
         for r in inner_twists:
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             d = r['self_twist_disc']
-            stdisc = '' if not d else ('trivial' if d==1 else ('CM by' if d < 0 else 'RM by') + quad_field_knowl(d))
+            stdisc = '' if not d else ('trivial' if d==1 else ('CM by ' if d < 0 else 'RM by ') + quad_field_knowl(d))
             twists.append('  <tr>')
             twists.extend([td_wrapl(char_link), td_wrapl(parity_text(r['parity'])), td_wrapr(r['order']), td_wrapr(r['multiplicity']), td_wrapl(stdisc)])
             twists.append('  </tr>')
