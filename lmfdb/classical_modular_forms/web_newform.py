@@ -963,7 +963,7 @@ function switch_basis(btype) {
         hecke_orbit_code = data['hecke_orbit_code']
         self.heckepolys = []
         R = PolynomialRing(ZZ, 'T')
-        T = R.0
+        T = R.gen(0)
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = sum([coeffs[i] * T^i for i in xrange(len(coeffs))]).factor()
