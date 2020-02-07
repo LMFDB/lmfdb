@@ -15,7 +15,7 @@ def mu_nu(hodge, signature):
     nu = sum(tmp, [])
 
     if motivic_weight % 2 == 0:
-        a = (hodge_index((motivic_weight) / 2) - abs(signature)) / 2
+        a = (hodge_index(motivic_weight // 2) - abs(signature)) // 2
         tmp = [0] * a
         nu += tmp
 
