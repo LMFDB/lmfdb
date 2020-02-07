@@ -870,7 +870,7 @@ def getLfunctionPlot(request, *args):
     styleLfunctionPlot(p, 10)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
         p.save(filename=fn.name)
-    with open(fn.name) as f:
+    with open(fn.name, 'rb') as f:
         data = f.read()
     os.remove(fn.name)
     return data
