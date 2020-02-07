@@ -39,7 +39,7 @@
   {% endif %}
   <tr>
     <td> {{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}: </td>
-    <td>\({{ newform.analytic_conductor }}\)</td>
+    <td>\({{ info.display_float(newform.analytic_conductor, 12, 'round') }}\)</td>
   </tr>
   {% if newform.has_analytic_rank %}
   <tr>

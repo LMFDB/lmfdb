@@ -121,9 +121,17 @@ def try_int(foo):
     except Exception:
         return foo
 
+def type_key(typ):
+    # For now we just use a simple mechanism: strings compare at the end.
+    if isinstance(typ, str):
+        return 1
+    else:
+        return 0
 
 def key_for_numerically_sort(elt, split=r"[\s\.\-]"):
-    return tuple(try_int(k) for k in re.split(split, elt))
+    # In Python 3 we can no longer compare ints and strings.
+    key = [try_int(k) for k in re.split(split, elt)]
+    return tuple((type_key(k), k) for k in key)
 
 
 def an_list(euler_factor_polynomial_fn,

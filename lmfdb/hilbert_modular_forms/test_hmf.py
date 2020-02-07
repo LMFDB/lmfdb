@@ -135,10 +135,10 @@ class HMFTest(LmfdbTest):
 
     def test_download_magma(self):
 
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.725.1/holomorphic/4.4.725.1-31.1-a/download/magma')
-        assert 'NN := ideal<ZF | {31, 31, w^3 - 4*w + 1}>;' in L.data
-        assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],' in L.data
-        assert 'heckeEigenvaluesArray := [4, -4,' in L.data
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.725.1/holomorphic/4.4.725.1-31.1-a/download/magma').get_data(as_text=True)
+        assert 'NN := ideal<ZF | {31, 31, w^3 - 4*w + 1}>;' in L
+        assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],' in L
+        assert 'heckeEigenvaluesArray := [4, -4,' in L
 
         page = self.tc.get('ModularForm/GL2/TotallyReal/3.3.837.1/holomorphic/3.3.837.1-48.3-z/download/magma')
         assert 'No such form' in page.data
