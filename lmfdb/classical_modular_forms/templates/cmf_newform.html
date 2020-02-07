@@ -193,6 +193,11 @@ function get_all_embeddings(num_embeddings) {
 {{ newform.display_inner_twists() | safe }}
 {% endif %}
 
+{% if newform.twists is not none %}
+<h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
+{{ newform.display_twists() | safe }}
+{% endif %}
+
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
 <h2>{{KNOWL('cmf.atkinlehner', title='Atkin-Lehner signs')}}</h2>
 <table class="ntdata">
@@ -211,11 +216,6 @@ function get_all_embeddings(num_embeddings) {
     {% endfor %}
   </tbody>
 </table>
-{% endif %}
-
-{% if newform.twists is not none %}
-<h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
-{{ newform.display_twists() | safe }}
 {% endif %}
 
 {% if newform.hecke_cutters is not none %}

@@ -986,8 +986,7 @@ function switch_basis(btype) {
                 return ''
             if r['twisting_char_label'] == '1.a':
                 return 'trivial'
-            s = [x for x in self.inner_twists if x[2] == r['conductor'] and x[3] == r['twisting_char_orbit']]
-            return 'inner' if (not s or s[0][6] == 0) else ('CM' if s[0][6] < 0 else 'RM')
+            return 'inner' if (r['self_twist_disc'] == 0) else ('CM' if r['self_twist_disc'] < 0 else 'RM')
 
         twists1 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisting character orbit'), '<tr>',
