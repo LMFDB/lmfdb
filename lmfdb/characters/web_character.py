@@ -75,6 +75,12 @@ from lmfdb.characters.utils import url_character, complex2str, evalpolelt
 
 logger = make_logger("DC")
 
+def bool_string(b):
+    return "yes" if b else "no"
+
+def parity_string(n):
+    return "odd" if n == -1 else "even"
+
 #############################################################################
 ###
 ###    Class for Web objects
@@ -132,7 +138,7 @@ class WebCharObject:
 
     @staticmethod
     def texbool(b):
-        return ("No","Yes")[b]
+        return "bool_string(b)
 
     def charvalues(self, chi):
         return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts() ]
@@ -763,10 +769,10 @@ class WebChar(WebCharObject):
                 ("Order", [self.order]),
                 ("Real", [self.isreal]),
                 ("Primitive", [self.isprimitive])]
-        if self.parity:
-            f.append(("Parity", [self.parity]))
         if self.isminimal:
             f.append(("Minimal", [self.isminimal]))
+        if self.parity:
+            f.append(("Parity", [self.parity]))
         try:
             if self.orbit_label:
                 formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
@@ -988,23 +994,13 @@ class WebDBDirichlet(WebDirichlet):
             return ret
 
     def _set_isprimitive(self, orbit_data):
-        if str(orbit_data['is_primitive']) == "True":
-            self.isprimitive = "Yes"
-        else:
-            self.isprimitive = "No"
+        self.isprimitive = texbool(orbit_data['is_primitive'])
 
     def _set_isminimal(self, orbit_data):
-        if str(orbit_data['is_minimal']) == "True":
-            self.isminimal = "Yes"
-        else:
-            self.isminimal = "No"
+        self.isminimal = texbool(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        _parity = int(orbit_data['parity'])
-        if _parity == -1:
-            self.parity = 'Odd'
-        else:
-            self.parity = 'Even'
+        self.parity = parity_string(int(orbit_data['parity'])
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
@@ -1151,7 +1147,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
-        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+        if self.type == "Dirichlet" and self.isprimitive == texbool(True):
             url = url_character(
                 type=self.type,
                 number_field=None,
@@ -1184,7 +1180,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         """
         if self.order != 2:
             return None
-        if self.parity == "Odd":
+        if self.parity == parit_string(-1):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
@@ -1324,7 +1320,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def parity(self):
-        return ('Odd', 'Even')[self.chi.is_even()]
+        return ('odd', 'even')[self.chi.is_even()]
 
     @property
     def codeparity(self):
