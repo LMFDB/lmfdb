@@ -969,12 +969,17 @@ function switch_basis(btype) {
                   th_wrap('p', '$p$'),
                   th_wrap('lpoly', '$F_p(T)$'),
                   '  </tr>', '</thead>', '<tbody>']
+        loop_count = 0
         for p, lpoly in self.heckepolys:
-            polys.append('  <tr>')
+            if loop_count < 20:
+              polys.append('  <tr>')
+            else:
+              polys.append('  <tr class="more nodisplay">')  
             polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
             polys.append('  </tr>')
-        polys.append('''
-        {% if hecke_polys | length > 20 %}
+            loop_count += 1
+        if loop_count > 20:
+          polys.append('''
             <tr class="less toggle">
                 <td colspan="{{colspan}}">
                   <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
@@ -986,8 +991,8 @@ function switch_basis(btype) {
                 </td>
             </tr>
             {% endif %}
-        '''
-        )
+          '''
+          )
         polys.extend(['</tbody>', '</table>'])
         return '\n'.join(polys)
       
