@@ -6,6 +6,7 @@ import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.misc.cachefunc import cached_function
 from sage.all import QQ, PolynomialRing, NumberField, sage_eval, CC
+from lmfdb.backend.encoding import Json
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -355,7 +356,6 @@ def belyi_jump(info):
     return redirect(url_for(".index"))
 
 
-# TODO: make downloads for sage, too
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
     title = "Belyi maps"
@@ -501,7 +501,6 @@ class Belyi_download(Downloader):
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
 
-#TODO: need to test
     def download_galmap_sage(self, label, lang="sage"):
         s = ""
         rec = db.belyi_galmaps.lookup(label)
@@ -549,6 +548,12 @@ class Belyi_download(Downloader):
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
 
+    def download_galmap_text(self, label, lang="text"):
+        data = db.belyi_galmaps.lookup(label)
+        return self._wrap(Json.dumps(data),
+        label,
+        title='Data for embedded Belyi map with label %s,'%label)
+
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
 def belyi_galmap_magma_download(label):
@@ -557,6 +562,10 @@ def belyi_galmap_magma_download(label):
 @belyi_page.route("/download_galmap_to_sage/<label>")
 def belyi_galmap_sage_download(label):
     return Belyi_download().download_galmap_sage(label)
+
+@belyi_page.route("/download_galmap_to_text/<label>")
+def belyi_galmap_text_download(label):
+    return Belyi_download().download_galmap_text(label)
 
 @search_wrap(
     template="belyi_search_results.html",

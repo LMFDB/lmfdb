@@ -234,6 +234,11 @@ class WebBelyiGalmap(object):
                     "Code to SageMath",
                     url_for(".belyi_galmap_sage_download", label=data["label"]),
                 ),
+                (
+                    "All data to text",
+                    url_for(".belyi_galmap_text_download", label=data["label"]),
+                ),
+
             ]
         else:
             self.downloads = []
