@@ -994,13 +994,13 @@ class WebDBDirichlet(WebDirichlet):
             return ret
 
     def _set_isprimitive(self, orbit_data):
-        self.isprimitive = texbool(orbit_data['is_primitive'])
+        self.isprimitive = self.texbool(orbit_data['is_primitive'])
 
     def _set_isminimal(self, orbit_data):
-        self.isminimal = texbool(orbit_data['is_minimal'])
+        self.isminimal = self.texbool(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        self.parity = parity_string(int(orbit_data['parity'])
+        self.parity = parity_string(int(orbit_data['parity']))
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
@@ -1147,7 +1147,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
-        if self.type == "Dirichlet" and self.isprimitive == texbool(True):
+        if self.type == "Dirichlet" and self.isprimitive == self.texbool(True):
             url = url_character(
                 type=self.type,
                 number_field=None,
@@ -1180,7 +1180,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         """
         if self.order != 2:
             return None
-        if self.parity == parit_string(-1):
+        if self.parity == parity_string(-1):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
