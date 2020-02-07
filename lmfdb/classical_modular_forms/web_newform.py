@@ -965,7 +965,7 @@ function switch_basis(btype) {
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             # self.heckepolys.append([{'p' : poly_item['p']}, {'F_p(T)' : poly_item['lpoly']}])
             self.heckepolys.append([poly_item['p'], poly_item['lpoly']])
-        polys = ['<form id="hecke_polys">', '<table class="ntdata">', '<thead>', '  <tr>',
+        polys = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('p', '$p$'),
                   th_wrap('lpoly', '$F_p(T)$'),
                   '  </tr>', '</thead>', '<tbody>']
@@ -990,7 +990,6 @@ function switch_basis(btype) {
                   <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
                 </td>
             </tr>
-            {% endif %}
           '''
           )
         polys.extend(['</tbody>', '</table>'])
