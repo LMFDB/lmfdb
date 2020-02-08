@@ -72,6 +72,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
 from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
 from lmfdb.characters.utils import url_character, complex2str, evalpolelt
+from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("DC")
 
@@ -81,7 +82,7 @@ logger = make_logger("DC")
 ###
 #############################################################################
 
-class WebCharObject:
+class WebCharObject(object):
     """ class for all characters and character groups """
     def __init__(self, **args):
         self.type = args.get('type',None)
@@ -180,11 +181,11 @@ class WebDirichlet(WebCharObject):
             H = DirichletGroup_conrey(mod)
         return H[num].is_primitive()
 
-    @property
+    @lazy_attribute
     def gens(self):
         return [int(k) for k in self.H.gens()]
 
-    @property
+    @lazy_attribute
     def generators(self):
         #import pdb; pdb.set_trace()
         #assert self.H.gens() is not None
@@ -211,7 +212,7 @@ class WebDirichlet(WebCharObject):
     number2label = int
     label2number = int
 
-    @property
+    @lazy_attribute
     def groupelts(self):
         return [self.group2tex(x) for x in self.Gelts()]
 
@@ -305,7 +306,7 @@ class WebDirichlet(WebCharObject):
 
 # The parts responsible for allowing computation of Gauss sums, etc. on page
 
-    @property
+    @lazy_attribute
     def charsums(self):
         if self.modulus < 1000:
             return { 'gauss': self.gauss_sum(2),
@@ -331,7 +332,7 @@ class WebDirichlet(WebCharObject):
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
         return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
-    @property
+    @lazy_attribute
     def codegauss(self):
         return { 'sage': 'chi.sage_character().gauss_sum(a)',
                  'pari': 'znchargauss(g,chi,a)' }
@@ -354,7 +355,7 @@ class WebDirichlet(WebCharObject):
         from sage.all import latex
         return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
-    @property
+    @lazy_attribute
     def codejacobi(self):
         return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
 
@@ -378,7 +379,7 @@ class WebDirichlet(WebCharObject):
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
-    @property
+    @lazy_attribute
     def codekloosterman(self):
         return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
 
@@ -392,7 +393,7 @@ class WebDirichlet(WebCharObject):
             val = 0
         return r'\(%s=%s\)' % (chartex, val)
 
-    @property
+    @lazy_attribute
     def codevalue(self):
         return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
@@ -418,7 +419,7 @@ class WebHecke(WebCharObject):
         self.parity = None
         logger.debug('###### WebHeckeComputed')
 
-    @property
+    @lazy_attribute
     def generators(self):
         """ use representative ideals """
         return self.textuple([self.ideal2tex(id)
@@ -516,7 +517,7 @@ class WebHecke(WebCharObject):
     def label2nf(label):
         return WebNumberField(label).K()
 
-    @property
+    @lazy_attribute
     def groupelts(self):
         return [self.group2tex(x) for x in self.Gelts()]
 
@@ -560,7 +561,7 @@ class WebCharFamily(WebCharObject):
         firstchars = [ self._char_desc(c) for c in G.first_chars() ]
         self._contents.append( (self.ideal2label(modulus), order, struct, firstchars) )
 
-    @property
+    @lazy_attribute
     def contents(self):
         if self._contents is None:
             self._contents = []
@@ -599,26 +600,26 @@ class WebCharGroup(WebCharObject):
         self.rowtruncate, self.coltruncate = False, False
         WebCharObject.__init__(self, **args)
 
-    @property
+    @lazy_attribute
     def structure(self):
         inv = self.H.invariants()
         return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
 
-    @property
+    @lazy_attribute
     def codestruct(self):
         return {'sage':'G.invariants()',
                 'pari':'g.cyc'}
 
-    @property
+    @lazy_attribute
     def order(self):
         return self.H.order()
 
-    @property
+    @lazy_attribute
     def codeorder(self):
         return {'sage': 'G.order()',
                 'pari': 'g.no' }
 
-    @property
+    @lazy_attribute
     def modulus(self):
         return self.ideal2tex(self._modulus)
 
@@ -644,19 +645,19 @@ class WebCharGroup(WebCharObject):
         for c in self.first_chars():
             self.add_row(c)
 
-    @property
+    @lazy_attribute
     def properties(self):
         return [("Modulus", [self.modulus]),
                 ("Structure", [self.structure]),
                 ("Order", [self.order]),
                 ]
 
-    @property
+    @lazy_attribute
     def friends(self):
         if self.nflabel:
             return [ ("Number Field", '/NumberField/' + self.nflabel), ]
 
-    @property
+    @lazy_attribute
     def contents(self):
         if self._contents is None:
             self._contents = []
@@ -690,48 +691,48 @@ class WebChar(WebCharObject):
         self.coltruncate = False
         WebCharObject.__init__(self, **args)
 
-    @property
+    @lazy_attribute
     def order(self):
         return self.chi.multiplicative_order()
 
-    @property
+    @lazy_attribute
     def codeorder(self):
         return { 'sage': 'chi.multiplicative_order()',
                  'pari': 'charorder(g,chi)' }
 
-    @property
+    @lazy_attribute
     def isprimitive(self):
         return self.texbool( self.chi.is_primitive() )
 
-    @property
+    @lazy_attribute
     def isreal(self):
         return self.texbool( self.order <= 2 )
 
-    @property
+    @lazy_attribute
     def values(self):
         return self.charvalues(self.chi)
 
-    @property
+    @lazy_attribute
     def conductor(self):
         return self.ideal2tex(self.chi.conductor())
 
-    @property
+    @lazy_attribute
     def modulus(self):
         return self.ideal2tex(self._modulus)
 
-    @property
+    @lazy_attribute
     def texname(self):
         return self.char2tex(self.chi)
 
-    @property
+    @lazy_attribute
     def condlabel(self):
         return self.ideal2label(self.conductor)
 
-    @property
+    @lazy_attribute
     def inducing(self):
         return self.char2tex(self.conductor, self.indlabel)
 
-    @property
+    @lazy_attribute
     def valuefield(self):
         """ compute order """
         order2 = self.order
@@ -745,7 +746,7 @@ class WebChar(WebCharObject):
             vf = r'\(\Q(\zeta_{%d})\)' % order2
         return vf
 
-    @property
+    @lazy_attribute
     def vflabel(self):
       order2 = self.order if self.order % 4 != 2 else self.order / 2
       if order2 == 1:
@@ -758,7 +759,7 @@ class WebChar(WebCharObject):
       else:
           return ''
 
-    @property
+    @lazy_attribute
     def properties(self):
         f = [("Conductor", [self.conductor]),
                 ("Order", [self.order]),
@@ -774,7 +775,7 @@ class WebChar(WebCharObject):
             pass
         return f
 
-    @property
+    @lazy_attribute
     def friends(self):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
@@ -816,7 +817,7 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
     #    inv = G.standard_dirichlet_group().generator_orders()
     #    return self.struct2tex(sorted(inv))
 
-    @property
+    @lazy_attribute
     def title(self):
         return "Dirichlet characters"
 
@@ -833,7 +834,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         WebDirichlet._compute(self)
         logger.debug('######## WebDirichletGroup Computed')
 
-    @property
+    @lazy_attribute
     def codeinit(self):
         return {
                 'sage': [
@@ -843,21 +844,21 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
                 'pari': 'g = idealstar(,%i,2)'%(self.modulus)
                 }
 
-    @property
+    @lazy_attribute
     def title(self):
       return r"Group of Dirichlet Characters of modulus %s" % (self.modulus)
 
-    @property
+    @lazy_attribute
     def codegen(self):
         return {'sage': 'H.gens()',
                 'pari': 'g.gen' }
 
-    @property
+    @lazy_attribute
     def codestruct(self):
         return {'sage': 'H.invariants()',
                 'pari': 'g.cyc'}
 
-    @property
+    @lazy_attribute
     def order(self):
         return self.H.order()
 
@@ -886,7 +887,7 @@ class WebDBDirichlet(WebDirichlet):
         self.codelangs = ('pari', 'sage')
         self._compute()
 
-    @property
+    @lazy_attribute
     def texname(self):
         return self.char2tex(self.modulus, self.number)
 
@@ -1124,19 +1125,19 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         self.coltruncate = False
         WebDBDirichlet.__init__(self, **kwargs)
 
-    @property
+    @lazy_attribute
     def texname(self):
         return self.char2tex(self.modulus, self.number)
 
-    @property
+    @lazy_attribute
     def title(self):
         return r"Dirichlet Character {}".format(self.texname)
 
-    @property
+    @lazy_attribute
     def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
 
-    @property
+    @lazy_attribute
     def friends(self):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
@@ -1180,15 +1181,15 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
-    @property
+    @lazy_attribute
     def previous(self):
         return None
 
-    @property
+    @lazy_attribute
     def next(self):
         return None
 
-    @property
+    @lazy_attribute
     def codeinit(self):
         return {
           'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
@@ -1197,22 +1198,22 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
           'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
           }
 
-    @property
+    @lazy_attribute
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
                  'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
 
-    @property
+    @lazy_attribute
     def codecond(self):
         return { 'sage': 'chi.conductor()',
                  'pari': 'znconreyconductor(g,chi)' }
 
-    @property
+    @lazy_attribute
     def codeparity(self):
         return { 'sage': 'chi.is_odd()',
                  'pari': 'zncharisodd(g,chi)' }
 
-    @property
+    @lazy_attribute
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
@@ -1221,7 +1222,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                      }
         return None
 
-    @property
+    @lazy_attribute
     def codegaloisorbit(self):
         return { 'sage': 'chi.sage_character().galois_orbit()',
                  'pari': [ 'order = charorder(g,chi)',
@@ -1238,15 +1239,15 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
-    @property
+    @lazy_attribute
     def contents(self):
         return None
 
-    @property
+    @lazy_attribute
     def gens(self):
         return self.H.gens_values()
 
-    @property
+    @lazy_attribute
     def generators(self):
         return self.textuple([str(v) for v in self.H.gens_values()])
 
@@ -1264,21 +1265,21 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         self.credit = ''
         self.codelangs = ('pari', 'sage')
 
-    @property
+    @lazy_attribute
     def conductor(self):
         return self.chi.conductor()
 
-    @property
+    @lazy_attribute
     def previous(self):   return None
-    @property
+    @lazy_attribute
     def next(self):       return None
-    @property
+    @lazy_attribute
     def genvalues(self):  return None
-    @property
+    @lazy_attribute
     def indlabel(self):  return None
 #    def value(self, *args): return None
 #
-#    @property
+#    @lazy_attribute
 #    def charsums(self, *args):
 #        return False
 #
@@ -1287,7 +1288,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 #    def kloosterman_sum(self, *args): return None
 
 
-    @property
+    @lazy_attribute
     def codeinit(self):
         return {
           'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
@@ -1296,34 +1297,34 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
           'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
           }
 
-    @property
+    @lazy_attribute
     def title(self):
         return r"Dirichlet Character %s" % (self.texname)
 
-    @property
+    @lazy_attribute
     def texname(self):
         return self.char2tex(self.modulus, self.number)
 
-    @property
+    @lazy_attribute
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
                  'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
 
-    @property
+    @lazy_attribute
     def codecond(self):
         return { 'sage': 'chi.conductor()',
                  'pari': 'znconreyconductor(g,chi)' }
 
-    @property
+    @lazy_attribute
     def parity(self):
         return ('Odd', 'Even')[self.chi.is_even()]
 
-    @property
+    @lazy_attribute
     def codeparity(self):
         return { 'sage': 'chi.is_odd()',
                  'pari': 'zncharisodd(g,chi)' }
 
-    @property
+    @lazy_attribute
     def galoisorbit(self):
         order = self.order
         mod, num = self.modulus, self.number
@@ -1335,7 +1336,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         ret = list(self._char_desc(num, prim=prim) for num in orbit)
         return ret
 
-    @property
+    @lazy_attribute
     def orbit_label(self):
         if self.modulus > 10000:
             return
@@ -1358,11 +1359,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
             return None
         return symbol_numerator(self.conductor, self.chi.is_odd())
 
-    @property
+    @lazy_attribute
     def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
 
-    @property
+    @lazy_attribute
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
@@ -1371,7 +1372,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
                      }
         return None
 
-    @property
+    @lazy_attribute
     def codegaloisorbit(self):
         return { 'sage': 'chi.sage_character().galois_orbit()',
                  'pari': [ 'order = charorder(g,chi)',
@@ -1407,19 +1408,19 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         assert gcd(m, n) == 1
         self.chi = self.H[n]
 
-    @property
+    @lazy_attribute
     def previous(self):
         if self.modulus == 1:
             return ('',{})
         mod, num = self.prevchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
-    @property
+    @lazy_attribute
     def next(self):
         mod, num = self.nextchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
-    @property
+    @lazy_attribute
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
         indlabel =  self.chi.primitive_character().number()
@@ -1427,17 +1428,17 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
             return 1
         return indlabel
 
-    @property
+    @lazy_attribute
     def codeinducing(self):
         return { 'sage': 'chi.primitive_character()',
                  'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
 
-    @property
+    @lazy_attribute
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self.H.gens()]
         return self.textuple([self.texlogvalue(v) for v in logvals])
 
-    @property
+    @lazy_attribute
     def codegenvalues(self):
         return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
@@ -1464,11 +1465,11 @@ class WebHeckeExamples(WebHecke):
         self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
 
-    @property
+    @lazy_attribute
     def title(self):
         return "Finite order Hecke characters"
 
-    @property
+    @lazy_attribute
     def contents(self):
         if self._contents is None:
             self._contents = []
@@ -1541,7 +1542,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
         self._contents.append( (self.ideal2label(modulus), order, struct, firstchars) )
 
 
-    @property
+    @lazy_attribute
     def title(self):
         return "Hecke characters"
 
@@ -1555,7 +1556,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
 
         self.zetaorder = 0 # FIXME H.zeta_order()
 
-    @property
+    @lazy_attribute
     def codeinit(self):
         kpol = self.k.polynomial()
         mod = self.ideal2cas(self._modulus)
@@ -1576,33 +1577,33 @@ class WebHeckeCharacter(WebChar, WebHecke):
                            ]
                 }
 
-    @property
+    @lazy_attribute
     def title(self):
       return r"Hecke Character: %s modulo %s" % (self.texname, self.modulus)
 
-    @property
+    @lazy_attribute
     def codecond(self):
         return {
                 'sage': 'chi.conductor()',
                 'pari': 'bnrconductorofchar(g,chi)'
                 }
 
-    @property
+    @lazy_attribute
     def inducing(self):
         #return lmfdb_hecke2tex(self.conductor(),self.indlabel())
         return None
 
-    @property
+    @lazy_attribute
     def indlabel(self):
         #return chi.primitive_character().number()
         return None
 
-    @property
+    @lazy_attribute
     def genvalues(self):
         logvals = self.chi.logvalues_on_gens()
         return self.textuple([self.texlogvalue(v) for v in logvals])
 
-    @property
+    @lazy_attribute
     def galoisorbit(self):
         prim = self.isprimitive
         return  [ self._char_desc(c, prim=prim) for c in self.chi.galois_orbit() ]
@@ -1624,19 +1625,19 @@ class WebHeckeCharacter(WebChar, WebHecke):
                 'number': self.number2label(chi.exponents())}
         return (label, args)
 
-    @property
+    @lazy_attribute
     def previous(self):
         psi = self.chi.prev_character()
         return self.char4url(psi)
 
-    @property
+    @lazy_attribute
     def next(self):
         psi = self.chi.next_character()
         return self.char4url(psi)
 
 class WebHeckeGroup(WebCharGroup, WebHecke):
 
-    @property
+    @lazy_attribute
     def codeinit(self):
         kpol = self.k.polynomial()
         mod = self.ideal2cas(self._modulus)
@@ -1656,16 +1657,16 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
                 }
 
 
-    @property
+    @lazy_attribute
     def title(self):
         return "Group of Hecke characters modulo %s"%(self.modulus)
 
-    @property
+    @lazy_attribute
     def nfpol(self):
         #return self.nf.web_poly()
         return web_latex(self.k.polynomial())
 
-    @property
+    @lazy_attribute
     def codegen(self):
         return {
                 'sage': 'G.gen_ideals()',

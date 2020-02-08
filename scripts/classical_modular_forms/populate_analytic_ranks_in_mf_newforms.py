@@ -10,7 +10,7 @@ def get_url(newform):
     base_label  = newform['label'].split(".")
     res = []
     for character in char_labels:
-        for j in range(newform['dim']/newform['char_degree']):
+        for j in range(newform['dim'] // newform['char_degree']):
             label = base_label + [str(character), str(j + 1)]
             origin_url = 'ModularForm/GL2/Q/holomorphic/'  + '/'.join(label)
             res.append(origin_url)

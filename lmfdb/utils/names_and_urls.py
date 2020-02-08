@@ -37,7 +37,7 @@ def name_and_object_from_url(url, check_existence=False):
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
         assert url_split[1] == "Dirichlet"
-        name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
+        name = r"Dirichlet Character \(\chi_{%s} (%s, \cdot) \)" %  tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
         obj_exists = True
         if check_existence:

@@ -84,7 +84,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base-change of a form over');
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'Isogeny class 2.0.11.1-256.1-a');
         # A dimension 2 example
-        self.check_args(base_url+'2.0.4.1/377.1/a2', 'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining');
+        self.check_args(base_url+'2.0.4.1/377.1/a2', r'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining');
 
 
     def test_friends(self):

@@ -555,7 +555,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = '\(\\mathrm{avg}\\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
