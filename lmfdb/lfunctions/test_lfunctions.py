@@ -374,7 +374,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/ArtinRepresentation/4.1609.5t5.1c1/')
         assert '0.0755586459' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/')
-        assert '3.504643404484' in L.get_data(as_text=True)
+        assert '3.50464340448' in L.get_data(as_text=True)
 
     def test_Lmain(self):
         L = self.tc.get('/L/', follow_redirects=True)
