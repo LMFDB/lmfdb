@@ -349,7 +349,7 @@ class CmfTest(LmfdbTest):
 
             assert 'Newspace 13.2.e' in page.get_data(as_text=True)
             assert 'Newform orbit 13.2.e.a' in page.get_data(as_text=True)
-            assert 'Dual Form 13.2.e.a.' in page.get_data(as_text=True)
+            assert 'Dual form 13.2.e.a.' in page.get_data(as_text=True)
             assert 'L-function 13.2.e.a.' in page.get_data(as_text=True)
 
             assert '0.103805522628' in page.get_data(as_text=True)
