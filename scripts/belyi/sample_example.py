@@ -47,11 +47,11 @@ galmaps.insert_one(sample_galmap);
 
 #loops over all passports
 for elt in passports.find():
-    for key, val in  elt.iteritems():
+    for key, val in  elt.items():
         print("%s : %s") % (key, val.__repr__())
 
 for elt in galmaps.find():
-    for key, val in  elt.iteritems():
+    for key, val in  elt.items():
         print("%s : %s") % (key, val.__repr__())
 
     print("############")

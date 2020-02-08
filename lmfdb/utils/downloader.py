@@ -137,11 +137,11 @@ class Downloader(object):
         filename = filebase + self.file_suffix[lang]
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
-        s =  '\n'
+        s = '\n'
         s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
         s += result
         strIO = StringIO()
-        strIO.write(s)
+        strIO.write(s.encode('utf-8'))
         strIO.seek(0)
         return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 

@@ -11,6 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
+from __future__ import absolute_import
 import string
 import re
 import json
@@ -22,7 +23,7 @@ from flask import abort, flash, jsonify, make_response,\
                   request, url_for
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from knowl import Knowl, knowldb, knowl_title, knowl_exists
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -45,9 +46,14 @@ _cache_time = 120
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
-    if ID.startswith('belyi') and\
-            (ID.endswith('top') or ID.endswith('bottom')):
-        for c in "[],T":
+    if ID.endswith('top') or ID.endswith('bottom'):
+        if ID.startswith('belyi'):
+            extras = "[],T"
+        elif ID.startswith('hgm'):
+            extras = "AB"
+        else:
+            extras = ""
+        for c in extras:
             ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
@@ -171,8 +177,8 @@ def ref_to_link(txt):
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
         this_link = ""
         if ref.startswith("href"):
-            the_link = re.sub(".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(".*}{([^}]+)}\s*", r"\1", ref)
+            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
+            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
             this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
@@ -217,7 +223,7 @@ def md_latex_accents(text):
     return knowl_content
 
 def md_preprocess(text):
-    """
+    r"""
     Markdown preprocessor: html paragraph breaks before display math,
     \cite{MR:...} and \cite{arXiv:...} converted to links.
     """
@@ -499,7 +505,7 @@ def demote(ID, timestamp):
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
-    if len(request.args) > 0:
+    if request.args:
         try:
             info = to_dict(request.args)
             beta = None
@@ -763,7 +769,7 @@ def index():
     cur_cat = request.args.get("category", "")
 
     filtermode = request.args.get("filtered")
-    from knowl import knowl_status_code, knowl_type_code
+    from .knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
         qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
         types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
@@ -830,9 +836,5 @@ def index():
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),
                            filtermode = filtermode,
-                           knowl_types=knowl_type_code.keys(),
+                           knowl_types=list(knowl_type_code),
                            types=types)
-
-
-
-

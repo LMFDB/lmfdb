@@ -4,11 +4,13 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
+from __future__ import absolute_import
+from six import PY3
 from sage.structure.sage_object import SageObject
 from sage.misc.latex import Latex
 from lmfdb import db
 import importlib, inspect
-from sample import Samples
+from .sample import Samples
 
 def get_smf_families():
     return [SiegelFamily(doc['name'], doc) for doc in db.smf_families.search({})]
@@ -38,10 +40,15 @@ class SiegelFamily (SageObject):
         module = importlib.import_module('lmfdb.siegel_modular_forms.dimensions')
         self.__dimension = module.__dict__.get('dimension_'+name)
         if self.__dimension:
+            if PY3:
+                args = inspect.getfullargspec(self.__dimension).args
+                self.__dimension_glossary = self.__dimension.__doc__
+            else:
+                args = inspect.getargspec(self.__dimension).args
+                self.__dimension_glossary = self.__dimension.func_doc
             self.__dimension_desc = { 'name': name,
-                                      'args': inspect.getargspec(self.__dimension).args,
+                                      'args': args
                                     }
-            self.__dimension_glossary = self.__dimension.func_doc
         else:
             self.__dimension_desc = None
             self.__dimension_glossary = None

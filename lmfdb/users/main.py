@@ -3,6 +3,7 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
+from __future__ import absolute_import
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -27,7 +28,7 @@ login_manager = LoginManager()
 
 # We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
 FLASK_LOGIN_LIMIT = '0.3.0'
-from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
+from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
 
@@ -107,7 +108,7 @@ def list():
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
     n = len(users)/COLS
-    user_rows = list(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
+    user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)

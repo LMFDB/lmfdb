@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 import re
 from flask import url_for
@@ -13,7 +14,7 @@ from lmfdb.utils import (
     encode_plot, list_to_factored_poly_otherorder,
     make_bigint, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl, group_display_knowl_C1_as_trivial
-from plot import circle_image, piecewise_constant_image, piecewise_linear_image
+from .plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
 HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 
@@ -127,11 +128,10 @@ class WebHyperGeometricFamily(object):
     def bezout_latex(self):
         return latex(self.bezout)
 
-
     @lazy_attribute
     def bezout_module(self):
         l2 = [a for a in self.snf if a > 1]
-        if l2 == []:
+        if not l2:
             return 'C_1'
         fa = [ZZ(a).factor() for a in l2]
         eds = []
@@ -144,7 +144,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def type(self):
-        if (self.weight % 2) == 1 and (self.degree % 2) == 0:
+        if (self.weight % 2) and (self.degree % 2) == 0:
             return 'Symplectic'
         else:
             return 'Orthogonal'
@@ -182,10 +182,10 @@ class WebHyperGeometricFamily(object):
         return [
                 ('Label', self.label),
                 (None, self.plot_link),
-                ('A', '\({}\)'.format(self.A)),
-                ('B', '\({}\)'.format(self.B)),
-                ('Degree', '\({}\)'.format(self.degree)),
-                ('Weight',  '\({}\)'.format(self.weight)),
+                ('A', r'\({}\)'.format(self.A)),
+                ('B', r'\({}\)'.format(self.B)),
+                ('Degree', r'\({}\)'.format(self.degree)),
+                ('Weight',  r'\({}\)'.format(self.weight)),
                 ('Type', self.type)
                 ]
 
@@ -265,7 +265,7 @@ class WebHyperGeometricFamily(object):
     def bread(self):
         return [("Motives", url_for("motive.index")),
                 ("Hypergeometric", url_for("motive.index2")),
-                ("$\Q$", url_for(".index")),
+                (r"$\Q$", url_for(".index")),
                 ('family A = {}, B = {}'.format(str(self.A), str(self.B)), '')]
 
     @lazy_attribute
@@ -277,10 +277,10 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def defaultp(self):
-        if not self.euler_factors.keys():
+        if not self.euler_factors:
             return []
         else:
-            return sorted(self.euler_factors.keys())[:4]
+            return sorted(self.euler_factors)[:4]
 
     @lazy_attribute
     def default_prange(self):
@@ -292,7 +292,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def maxp(self):
-        return -1 if not self.euler_factors.keys() else max(self.euler_factors.keys())
+        return -1 if not self.euler_factors else max(self.euler_factors) # max of keys
 
     @lazy_attribute
     def hodge_polygon(self):
@@ -325,13 +325,13 @@ class WebHyperGeometricFamily(object):
             else:
                 factors, gal_groups = fG, ""
 
-            factors = make_bigint('\( %s \)' % factors)
+            factors = make_bigint(r'\( %s \)' % factors)
 
             if gal_groups:
                 if gal_groups[0] == [0,0]:
                     gal_groups = ""
                 else:
-                    gal_groups = "$\\times$".join(
+                    gal_groups = r"$\times$".join(
                             [group_display_knowl_C1_as_trivial(n, t)
                                 for n, t in gal_groups])
             return [gal_groups, factors, self.ordinary(f, p)]
@@ -341,7 +341,7 @@ class WebHyperGeometricFamily(object):
         return False if self.degree <= 2 or self.degree >= 12 else True
 
     def table_euler_factors_p(self, p):
-        if p not in self.euler_factors.keys():
+        if p not in self.euler_factors:
             return []
 
         ef = self.euler_factors[p]
@@ -351,7 +351,7 @@ class WebHyperGeometricFamily(object):
 
     def table_euler_factors_t(self, t, plist=None):
         if plist is None:
-            plist = sorted(self.euler_factors.keys())
+            plist = sorted(self.euler_factors)
         t = QQ(t)
         tmodp = [(p, t.mod_ui(p)) for p in plist if t.denominator() % p != 0]
         # filter

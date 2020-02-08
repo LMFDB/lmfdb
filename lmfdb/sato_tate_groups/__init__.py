@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from flask import Blueprint
 from lmfdb.api2.searchers import register_search_function
@@ -9,7 +10,7 @@ st_page = Blueprint("st", __name__, template_folder='templates', static_folder="
 def body_class():
     return {'body_class': 'st'}
 
-import main
+from . import main
 
 assert main # silence pyflakes
 

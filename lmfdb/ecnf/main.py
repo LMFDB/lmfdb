@@ -39,7 +39,7 @@ def split_full_label(lab):
     try:
         # field 3.1.23.1 uses upper case letters
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
-        curve_number = re.search("\d+", data[2]).group()  # (a string)
+        curve_number = re.search(r"\d+", data[2]).group()  # (a string)
     except AttributeError:
         flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1",  lab)
         raise ValueError
@@ -58,7 +58,7 @@ def split_short_label(lab):
     try:
         # field 3.1.23.1 uses upper case letters
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
-        curve_number = re.search("\d+", data[1]).group()  # (a string)
+        curve_number = re.search(r"\d+", data[1]).group()  # (a string)
     except AttributeError:
         flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1", lab)
         raise ValueError
@@ -688,8 +688,8 @@ def ecnf_code_download(**args):
     return response
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank', 'ntors',
-                     'gens', 'reg', 'tors', 'torgens', 'localdata']
+                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
+                     'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
 code_names = {'field': 'Define the base number field',
               'curve': 'Define the curve',
@@ -703,6 +703,7 @@ code_names = {'field': 'Define the base number field',
               'rank': 'Compute the Mordell-Weil rank',
               'ntors': 'Compute the order of the torsion subgroup',
               'gens': 'Compute the generators (of infinite order)',
+              'heights': 'Compute the heights of the generators (of infinite order)',
               'reg': 'Compute the regulator',
               'tors': 'Compute the torsion subgroup',
               'torgens': 'Compute the generators of the torsion subgroup',

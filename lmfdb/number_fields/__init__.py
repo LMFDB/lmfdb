@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -11,7 +12,7 @@ nf_logger = make_logger(nf_page)
 def body_class():
     return {'body_class': 'nf'}
 
-import number_field
+from . import number_field
 assert number_field
 
 app.register_blueprint(nf_page, url_prefix="/NumberField")

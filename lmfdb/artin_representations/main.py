@@ -89,8 +89,11 @@ def artin_representation_jump(info):
     try:
         label = parse_artin_label(label)
     except ValueError:
-        flash_error("%s is not in a valid form for an Artin representation label", label)
-        return redirect(url_for(".index"))
+        try:
+            label = parse_artin_orbit_label(label)
+        except ValueError:
+            flash_error("%s is not in a valid form for an Artin representation label", label)
+            return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
@@ -113,7 +116,7 @@ def artin_representation_search(info, query):
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
-    parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
+    parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
     parse_bool(info,query,'Is_Even')

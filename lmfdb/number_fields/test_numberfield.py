@@ -2,11 +2,7 @@
 from lmfdb.tests import LmfdbTest
 
 class NumberFieldTest(LmfdbTest):
-
     # All tests should pass
-    def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
-
     def test_Q(self):
         self.check_args('/NumberField/Q', '\chi_{1}')
         self.check_args('/NumberField/1.1.1.1', '\chi_{1}')

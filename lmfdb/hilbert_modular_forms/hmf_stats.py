@@ -34,7 +34,7 @@ def hmf_summary():
     return ''.join([r'The database currently contains %s ' % counts['nforms_c'],
                     hmf_knowl,
                     r', over %s ' % counts['nfields'],
-                    nf_knowl, ' (not including $\mathbb{Q}$)',
+                    nf_knowl, r' (not including $\mathbb{Q}$)',
                     ' of degree up to %s' % counts['maxdeg']
                 ])
 

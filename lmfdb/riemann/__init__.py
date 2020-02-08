@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from lmfdb.app import app
 
-import main
-import stieltjes
+from . import main
+from . import stieltjes
 app.register_blueprint(main.mod, url_prefix="/riemann")
 app.register_blueprint(stieltjes.StieltjesConstants, url_prefix="/riemann/stieltjes")

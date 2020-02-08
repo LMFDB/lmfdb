@@ -2,6 +2,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
+from __future__ import absolute_import
 from six import StringIO
 
 from flask import render_template, url_for, request, send_file, redirect
@@ -14,8 +15,8 @@ from lmfdb.utils import (
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.family import get_smf_family, get_smf_families
-import dimensions
-import sample
+from . import dimensions
+from . import sample
 
 ###############################################################################
 # Utility functions
@@ -78,8 +79,8 @@ def by_label(label):
 def Sp4Z_j_space(k,j):
     bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index')),
-             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
-             ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
+             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
     if j%2:
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
@@ -96,7 +97,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
                            info=info)
 
@@ -123,7 +124,7 @@ def Sp4Z_2_space(k):
 def Sp4Z_j():
     bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index')),
-             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
+             (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
     info={'args': request.args}
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
@@ -138,7 +139,7 @@ def Sp4Z_j():
             flash_error(err)
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
-                           title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
+                           title=r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
                            bread = bread,
                            info = info
                            )

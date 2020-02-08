@@ -2,7 +2,7 @@ from six import string_types
 from collections import defaultdict
 
 from flask import url_for
-from sage.all import UniqueRepresentation, lazy_attribute
+from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from lmfdb.utils.utilities import format_percentage, display_knowl, KeyedDefaultDict, range_formatter
 
@@ -403,7 +403,12 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _sort_keys(self):
-        A = defaultdict(lambda: None)
+        # We want None (unknown) to show up at the beginning
+        def default_sort_key(val):
+            if val is None:
+                return -infinity
+            return val
+        A = defaultdict(lambda: default_sort_key)
         A.update(getattr(self, 'sort_keys', {}))
         return A
 
@@ -564,8 +569,16 @@ class StatsDisplay(UniqueRepresentation):
                 if col in buckets:
                     headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
                 else:
+                    try:
+                        dup_free = set(headers[i])
+                    except TypeError:
+                        # The headers may not all be hashable
+                        dup_free = []
+                        for h in headers[i]:
+                            if h not in dup_free:
+                                dup_free.append(h)
                     headers[i] = [formatter[col](val) for val in
-                                  sorted(set(headers[i]), key=sort_key[col], reverse=reverse[col])]
+                                  sorted(dup_free, key=sort_key[col], reverse=reverse[col])]
             row_headers, col_headers = headers
             grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
             # _total_grid is used for recursive proportions; such proportioners

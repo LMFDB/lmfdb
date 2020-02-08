@@ -11,7 +11,7 @@ def hecke_algebras_summary():
     hecke_knowl = '<a knowl="hecke_algebra.definition">Hecke algebras</a>'
     level_knowl = '<a knowl="cmf.level">level</a>'
     weight_knowl = '<a knowl="cmf.weight">weight</a>'
-    gamma0_knowl = '<a knowl="group.sl2z.subgroup.gamma0n">$\Gamma_0$</a>'
+    gamma0_knowl = r'<a knowl="group.sl2z.subgroup.gamma0n">$\Gamma_0$</a>'
     level_data = heckestats.get_oldstat('level')
     number = level_data['total']
     max_level = level_data['max']

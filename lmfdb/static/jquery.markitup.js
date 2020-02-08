@@ -53,7 +53,7 @@
 		// compute markItUp! path
 		if (!options.root) {
 			$('script').each(function(a, tag) {
-				miuScript = $(tag).get(0).src.match(/(.*)jquery\.markitup(\.pack)?\.js$/);
+				var miuScript = $(tag).get(0).src.match(/(.*)jquery\.markitup(\.pack)?\.js$/);
 				if (miuScript !== null) {
 					options.root = miuScript[1];
 				}
@@ -83,7 +83,7 @@
 
 			// init and build editor
 			function init() {
-				id = ''; nameSpace = '';
+				var id = ''; var nameSpace = '';
 				if (options.id) {
 					id = 'id="'+options.id+'"';
 				} else if ($$.attr("id")) {
@@ -107,7 +107,7 @@
 
 				// add the resize handle after textarea
 				if (options.resizeHandle === true && $.browser.safari !== true) {
-					resizeHandle = $('<div class="markItUpResizeHandle"></div>')
+					var resizeHandle = $('<div class="markItUpResizeHandle"></div>')
 						.insertAfter($$)
 						.bind("mousedown", function(e) {
 							var h = $$.height(), y = e.clientY, mouseMove, mouseUp;
@@ -150,7 +150,7 @@
 				$.each(markupSet, function() {
 					var button = this, t = '', title, li, j;
 					title = (button.key) ? (button.name||'')+' [Ctrl+'+button.key+']' : (button.name||'');
-					key   = (button.key) ? 'accesskey="'+button.key+'"' : '';
+					var key   = (button.key) ? 'accesskey="'+button.key+'"' : '';
 					if (button.separator) {
 						li = $('<li class="markItUpSeparator">'+(button.separator||'')+'</li>').appendTo(ul);
 					} else {
@@ -212,7 +212,7 @@
 							if (abort === true) {
 								return false;
 							}
-							value = prompt(b[0], (b[1]) ? b[1] : '');
+							var value = prompt(b[0], (b[1]) ? b[1] : '');
 							if (value === null) {
 								abort = true;
 							}
@@ -252,7 +252,7 @@
 					var lines = selection.split(/\r?\n/), blocks = [];
 					
 					for (var l=0; l < lines.length; l++) {
-						line = lines[l];
+						var line = lines[l];
 						var trailingSpaces;
 						if (trailingSpaces = line.match(/ *$/)) {
 							blocks.push(openWith + line.replace(/ *$/g, '') + closeWith + trailingSpaces);
@@ -298,7 +298,7 @@
 				$.extend(hash, { line:1 });
 
 				if ((ctrlKey === true && shiftKey === true)) {
-					lines = selection.split(/\r?\n/);
+					var lines = selection.split(/\r?\n/);
 					for (j = 0, n = lines.length, i = 0; i < n; i++) {
 						if ($.trim(lines[i]) !== '') {
 							$.extend(hash, { line:++j, selection:lines[i] } );
@@ -307,8 +307,8 @@
 							lines[i] = "";
 						}
 					}
-					string = { block:lines.join('\n')};
-					start = caretPosition;
+					var string = { block:lines.join('\n')};
+					var start = caretPosition;
 					len = string.block.length + (($.browser.opera) ? n-1 : 0);
 				} else if (ctrlKey === true) {
 					string = build(selection);
@@ -396,7 +396,7 @@
 					if ($.browser.opera && $.browser.version >= 9.5 && len == 0) {
 						return false;
 					}
-					range = textarea.createTextRange();
+					var range = textarea.createTextRange();
 					range.collapse(true);
 					range.moveStart('character', start); 
 					range.moveEnd('character', len); 
@@ -414,7 +414,7 @@
 
 				scrollPosition = textarea.scrollTop;
 				if (document.selection) {
-					selection = document.selection.createRange().text;
+					var selection = document.selection.createRange().text;
 					if ($.browser.msie) { // ie
 						var range = document.selection.createRange(), rangeCopy = range.duplicate();
 						rangeCopy.moveToElementText(textarea);
@@ -525,7 +525,7 @@
 
 				if (e.type === 'keydown') {
 					if (ctrlKey === true) {
-						li = $('a[accesskey="'+String.fromCharCode(e.keyCode)+'"]', header).parent('li');
+						var li = $('a[accesskey="'+String.fromCharCode(e.keyCode)+'"]', header).parent('li');
 						if (li.length !== 0) {
 							ctrlKey = false;
 							setTimeout(function() {
