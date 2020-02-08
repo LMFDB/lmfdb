@@ -30,6 +30,7 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float
 from lmfdb.app import is_debug_mode
 from lmfdb import db
+from six import string_types
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -907,7 +908,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, str):
+    if isinstance(website_zeros, string_types):
         return website_zeros
 
     positiveZeros = []
