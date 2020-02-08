@@ -48,17 +48,17 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_search(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4&limit=25')
-        assert r'\chi_{15}(2,' in W.get_data(as_text=True) and '\chi_{195}(53,' in W.get_data(as_text=True)
+        assert r'\chi_{15}(2,' in W.get_data(as_text=True) and r'\chi_{195}(53,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&limit=25')
-        assert r'\chi_{25}(6,' in W.get_data(as_text=True) and '\chi_{36}(7,' in W.get_data(as_text=True)
+        assert r'\chi_{25}(6,' in W.get_data(as_text=True) and r'\chi_{36}(7,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes&limit=25')
-        assert r'\chi_{25}(6,' in W.get_data(as_text=True) and '\chi_{36}(7,' in W.get_data(as_text=True)
+        assert r'\chi_{25}(6,' in W.get_data(as_text=True) and r'\chi_{36}(7,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&limit=25')
-        assert r'\chi_{50}(11,' in W.get_data(as_text=True) and '\chi_{72}(7,' in W.get_data(as_text=True)
+        assert r'\chi_{50}(11,' in W.get_data(as_text=True) and r'\chi_{72}(7,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Odd&limit=25')
-        assert r'\chi_{56}(23,' in W.get_data(as_text=True) and '\chi_{112}(79,' in W.get_data(as_text=True)
+        assert r'\chi_{56}(23,' in W.get_data(as_text=True) and r'\chi_{112}(79,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even&limit=25')
-        assert r'\chi_{50}(11,' in W.get_data(as_text=True) and '\chi_{75}(46,' in W.get_data(as_text=True)
+        assert r'\chi_{50}(11,' in W.get_data(as_text=True) and r'\chi_{75}(46,' in W.get_data(as_text=True)
 
     def test_condsearch(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=111&limit=100')
@@ -66,9 +66,9 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_nextprev(self):
         W = self.tc.get('/Character/Dirichlet/?start=200&count=25&order=3')
-        assert r'\chi_{169}(22,' in W.get_data(as_text=True) and '\chi_{182}(113,' in W.get_data(as_text=True)
+        assert r'\chi_{169}(22,' in W.get_data(as_text=True) and r'\chi_{182}(113,' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?start=100&count=25&order=3')
-        assert r'\chi_{97}(35,' in W.get_data(as_text=True) and '\chi_{117}(40,' in W.get_data(as_text=True)
+        assert r'\chi_{97}(35,' in W.get_data(as_text=True) and r'\chi_{117}(40,' in W.get_data(as_text=True)
 
 class DirichletTableTest(LmfdbTest):
 
@@ -99,7 +99,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Yes' in W.get_data(as_text=True)
         assert 'Properties' in W.get_data(as_text=True), "properties box"
         assert 'DirichletGroup_conrey(91)' in W.get_data(as_text=True), "sage code example"
-        assert r'\chi_{91}(15,' in W.get_data(as_text=True) and '\chi_{91}(66' in W.get_data(as_text=True), "generators"
+        assert r'\chi_{91}(15,' in W.get_data(as_text=True) and r'\chi_{91}(66' in W.get_data(as_text=True), "generators"
         assert r'e\left(\frac{7}{12}\right)' in W.get_data(as_text=True), "contents table"
         assert '/Character/Dirichlet/91/6' in W.get_data(as_text=True), "link in contents table"
 

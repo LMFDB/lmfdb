@@ -10,7 +10,7 @@ class HMFTest(LmfdbTest):
         assert 'Browse' in L.get_data(as_text=True)
         assert 'Search' in L.get_data(as_text=True)
         assert 'Find' in L.get_data(as_text=True)
-        assert '\sqrt{2}' in L.get_data(as_text=True) #552
+        assert r'\sqrt{2}' in L.get_data(as_text=True) #552
 
     def test_random(self): #993
         L = self.tc.get('/ModularForm/GL2/TotallyReal/random')
@@ -25,7 +25,7 @@ class HMFTest(LmfdbTest):
         assert 'EllipticCurve/2.2.89.1/2.1/a' in L.get_data(as_text=True)
 
     def test_typo(self): #771
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=2.2.5.1') 
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=2.2.5.1')
         assert 'Search again' in L.get_data(as_text=True)
 
     def test_large(self): #616
@@ -59,7 +59,7 @@ class HMFTest(LmfdbTest):
         assert 'no' in L.get_data(as_text=True)
         assert '-6' in L.get_data(as_text=True)
         assert '2w + 10' in L.get_data(as_text=True)
-        assert '\Q' in L.get_data(as_text=True)
+        assert r'\Q' in L.get_data(as_text=True)
         assert '[2, 2]' in L.get_data(as_text=True)
 
     def test_hmf_page_higherdim(self):
