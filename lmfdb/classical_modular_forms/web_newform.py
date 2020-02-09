@@ -18,7 +18,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls)
+    integer_options, names_and_urls, list_to_factored_poly_otherorder)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -966,7 +966,8 @@ function switch_basis(btype) {
         T = R.gen(0)
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             coeffs = poly_item['lpoly']
-            F_p = sum([coeffs[i] * (T**i) for i in xrange(len(coeffs))]).factor()
+            # F_p = sum([coeffs[i] * (T**i) for i in xrange(len(coeffs))]).factor()
+            F_p = list_to_factored_poly_otherorder(coeffs)
             self.heckepolys.append([poly_item['p'], F_p])
         polys = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('p', '$p$'),
