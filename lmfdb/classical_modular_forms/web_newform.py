@@ -954,7 +954,12 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
-    def display_hecke_char_polys(self):
+    def display_hecke_char_polys(self, num_disp = 5):
+      # Display a table of the characteristic polynomials of the Hecke operators for small primes
+      # Right now, the number of primes presented by default is 5, but that could be changed easily
+      # The rest could be seen by using "show more" / "show less" - 
+      # The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
+      # replaced by a call to a single class/function with some parameters
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
@@ -966,7 +971,6 @@ function switch_basis(btype) {
         T = R.gen(0)
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             coeffs = poly_item['lpoly']
-            # F_p = sum([coeffs[i] * (T**i) for i in xrange(len(coeffs))]).factor()
             F_p = list_to_factored_poly_otherorder(coeffs)
             self.heckepolys.append([poly_item['p'], F_p])
         polys = ['<table class="ntdata">', '<thead>', '  <tr>',
@@ -975,14 +979,14 @@ function switch_basis(btype) {
                   '  </tr>', '</thead>', '<tbody>']
         loop_count = 0
         for p, lpoly in self.heckepolys:
-            if loop_count < 5:
+            if loop_count < num_disp:
               polys.append('  <tr>')
             else:
               polys.append('  <tr class="more nodisplay">')  
             polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
             polys.append('  </tr>')
             loop_count += 1
-        if loop_count > 5:
+        if loop_count > num_disp:
           polys.append('''
             <tr class="less toggle">
                 <td colspan="{{colspan}}">
