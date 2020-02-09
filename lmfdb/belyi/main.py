@@ -5,7 +5,8 @@ import re
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.misc.cachefunc import cached_function
-from sage.all import QQ, PolynomialRing, NumberField, sage_eval
+from sage.all import QQ, PolynomialRing, NumberField, sage_eval, CC
+from lmfdb.backend.encoding import Json
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -355,7 +356,6 @@ def belyi_jump(info):
     return redirect(url_for(".index"))
 
 
-# TODO: make downloads for sage, too
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
     title = "Belyi maps"
@@ -388,7 +388,7 @@ class Belyi_download(Downloader):
                 s += "K = QQ\n"  # is there a Sage version of RationalsAsNumberField()?
             else:
                 s += (
-                    "R.<T> = PolynomialRing(QQ)\nK.<nu> := NumberField(R(%s))\n\n"
+                    "R.<T> = PolynomialRing(QQ)\nK.<nu> = NumberField(R(%s))\n\n"
                     % rec["base_field"]
                 )
         else:
@@ -427,24 +427,38 @@ class Belyi_download(Downloader):
         f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
         return f, h
 
-    def perm_maker_magma(self, rec):
+    def perm_maker(self, rec, lang):
         d = rec["deg"]
         perms = []
         triples = rec["triples"]
-        for triple in triples:
-            pref = "[Sym(%s) | " % d
-            s_trip = "%s" % triple
-            s_trip = pref + s_trip[1:]
-            perms.append(s_trip)
-        return "[" + ", ".join(perms) + "]"
+        if lang == "magma":
+            for triple in triples:
+                pref = "[Sym(%s) | " % d
+                s_trip = "%s" % triple
+                s_trip = pref + s_trip[1:]
+                perms.append(s_trip)
+            return "[%s]" % ", ".join(perms)
+        if lang == "sage":
+            triples_new = []
+            for triple in triples:
+                triple_new = []
+                for perm in triple:
+                    perm_str = "Permutation(%s)" % perm
+                    triple_new.append(perm_str)
+                triple_str = "[%s]" % ", ".join(triple_new)
+                triples_new.append(triple_str)
+            return "[%s]" % ", ".join(triples_new)
 
-    def embedding_maker_magma(self, rec):
+    def embedding_maker(self, rec, lang):
         emb_list = []
         embeddings = rec["embeddings"]
-        for z in embeddings:
-            z_str = "ComplexField(15)!%s" % z
-            emb_list.append(z_str)
-        return "[" + ", ".join(emb_list) + "]"
+        if lang == "magma":
+            for z in embeddings:
+                z_str = "ComplexField(15)!%s" % z
+                emb_list.append(z_str)
+            return "[%s]" % ", ".join(emb_list)
+        if lang == "sage":
+            return "%s" % [CC(z) for z in embeddings]
 
     def download_galmap_magma(self, label, lang="magma"):
         s = ""
@@ -453,18 +467,12 @@ class Belyi_download(Downloader):
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
         s += "i := %s;\n" % int(label.split("T")[1][0])
-        s += "G := TransitiveGroups(d)[i];\n"
-        s += "sigmas := %s;\n" % self.perm_maker_magma(rec)
-        s += "embeddings := %s;\n" % self.embedding_maker_magma(rec)
+        s += "G := TransitiveGroup(d,i);\n"
+        s += "sigmas := %s;\n" % self.perm_maker(rec,lang)
+        s += "embeddings := %s;\n" % self.embedding_maker(rec, lang)
         s += "\n// Geometric data\n\n"
         s += "// Define the base field\n"
-        if rec["base_field"] == [-1, 1]:
-            s += "K<nu> := RationalsAsNumberField();\n"
-        else:
-            s += (
-                "R<T> := PolynomialRing(Rationals());\nK<nu> := NumberField(R!%s);\n\n"
-                % rec["base_field"]
-            )
+        s += self.make_base_field_string(rec,lang)
         s += "// Define the curve\n"
         if rec["g"] == 0:
             s += "X := Curve(ProjectiveSpace(PolynomialRing(K, 2)));\n"
@@ -485,10 +493,7 @@ class Belyi_download(Downloader):
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := HyperellipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
             curve_polys = self.curve_string_parser(rec)
-            s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (
-                curve_polys[0],
-                curve_polys[1],
-            )
+            s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
             s += "phi := %s;" % rec["map"]
@@ -496,11 +501,71 @@ class Belyi_download(Downloader):
             raise NotImplementedError("for genus > 2")
         return self._wrap(s, label, lang=lang)
 
+    def download_galmap_sage(self, label, lang="sage"):
+        s = ""
+        rec = db.belyi_galmaps.lookup(label)
+        s += "# Sage code for Belyi map with label %s\n\n" % label
+        s += "\n# Group theoretic data\n\n"
+        s += "d = %s\n" % rec["deg"]
+        s += "i = %s\n" % int(label.split("T")[1][0])
+        s += "G = TransitiveGroup(d,i)\n"
+        s += "sigmas = %s\n" % self.perm_maker(rec,lang)
+        s += "embeddings = %s\n" % self.embedding_maker(rec,lang)
+        s += "\n# Geometric data\n\n"
+        s += "# Define the base field\n"
+        s += self.make_base_field_string(rec,lang)
+        s += "# Define the curve\n"
+        if rec["g"] == 0:
+            s += "X = ProjectiveSpace(1,K)\n"
+            s += "# Define the map\n"
+            s += "K.<x> = FunctionField(K)\n"
+            s += "phi = %s" % rec["map"]
+        elif rec["g"] == 1:
+            s += "S.<x> = PolynomialRing(K)\n"
+            curve_polys = self.curve_string_parser(rec)
+            s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
+            s += "# Define the map\n"
+            s += "K0.<x> = FunctionField(K)\n"
+            crv_str = rec['curve']
+            crv_strs = crv_str.split("=")
+            crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
+            s += "R.<y> = PolynomialRing(K0)\n"
+            s += "KX.<y> = K0.extension(%s)\n" % crv_str
+            s += "phi = %s" % rec["map"]
+        elif rec["g"] == 2:
+            s += "S.<x> = PolynomialRing(K)\n"
+            curve_polys = self.curve_string_parser(rec)
+            s += "X = HyperellipticCurve(S(%s),S(%s))\n" % (curve_polys[0], curve_polys[1])
+            s += "# Define the map\n"
+            s += "K0.<x> = FunctionField(K)\n"
+            crv_str = rec['curve']
+            crv_strs = crv_str.split("=")
+            crv_str = crv_strs[0] + '-(' + crv_strs[1] + ')'
+            s += "R.<y> = PolynomialRing(K0)\n"
+            s += "KX.<y> = K0.extension(%s)\n" % crv_str
+            s += "phi = %s" % rec["map"]
+        else:
+            raise NotImplementedError("for genus > 2")
+        return self._wrap(s, label, lang=lang)
+
+    def download_galmap_text(self, label, lang="text"):
+        data = db.belyi_galmaps.lookup(label)
+        return self._wrap(Json.dumps(data),
+        label,
+        title='Data for embedded Belyi map with label %s,'%label)
+
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
-def belyi_galmap_code_download(label):
+def belyi_galmap_magma_download(label):
     return Belyi_download().download_galmap_magma(label)
 
+@belyi_page.route("/download_galmap_to_sage/<label>")
+def belyi_galmap_sage_download(label):
+    return Belyi_download().download_galmap_sage(label)
+
+@belyi_page.route("/download_galmap_to_text/<label>")
+def belyi_galmap_text_download(label):
+    return Belyi_download().download_galmap_text(label)
 
 @search_wrap(
     template="belyi_search_results.html",
