@@ -698,7 +698,8 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
     # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
-    FF = FF.encode('utf8').decode('utf8').encode('ascii', 'ignore')
+    # Remove non-ascii characters
+    FF = re.sub(r'[^\x00-\x7f]', r'', FF)
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")

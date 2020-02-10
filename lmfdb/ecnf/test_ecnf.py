@@ -22,7 +22,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/3.1.23.1/89.1/A/1')
         assert '3.1.23.1' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/2.2.5.1/49.1/a/2')
-        assert '\phi' in L.get_data(as_text=True)
+        assert r'\phi' in L.get_data(as_text=True)
 
     def test_bad_red(self):
         r"""

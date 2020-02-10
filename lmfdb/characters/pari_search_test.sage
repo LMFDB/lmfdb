@@ -19,17 +19,17 @@ def match(q,n,mod=None,cond=None,ord=None,parity=None,primitive=None):
         if o < ord[0] or o > ord[1]:
             return False
     if parity:
-        if parity == 'Even' and pari('zncharisodd(g,chi)'):
+        if parity in ['even','Even'] and pari('zncharisodd(g,chi)'):
             return False
-        if parity == 'Odd' and not pari('zncharisodd(g,chi)'):
+        if parity in ['odd','Odd'] and not pari('zncharisodd(g,chi)'):
             return False
-        assert parity in ['Even','Odd']
+        assert parity in ['even','odd','Even','Odd']
     if primitive:
-        if primitive == 'Yes' and pari('#znconreyconductor(g,chi)!=1'):
+        if primitive in ['yes','Yes'] and pari('#znconreyconductor(g,chi)!=1'):
             return False
-        if primitive == 'No' and pari('#znconreyconductor(g,chi)==1'):
+        if primitive in ['no','No'] and pari('#znconreyconductor(g,chi)==1'):
             return False
-        assert primitive in ['Yes','No']
+        assert primitive in ['yes','no','Yes','No']
     return True
 
 def get_results(count,mod=None,cond=None,ord=None,parity=None,primitive=None):
