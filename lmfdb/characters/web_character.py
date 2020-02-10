@@ -76,6 +76,12 @@ from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("DC")
 
+def parity_string(n):
+    return "odd" if n == -1 else "even"
+
+def bool_string(b):
+    return "yes" if b else "no"
+
 #############################################################################
 ###
 ###    Class for Web objects
@@ -133,8 +139,8 @@ class WebCharObject(object):
         return t
 
     @staticmethod
-    def texbool(b):
-        return ("No","Yes")[b]
+    def texparity(n):
+        parity_string(n)
 
     def charvalues(self, chi):
         return [ self.texlogvalue(chi.logvalue(x), tag=True) for x in self.Gelts() ]
@@ -628,7 +634,7 @@ class WebCharGroup(WebCharObject):
         self._contents.append(
                  ( self._char_desc(chi, prim=prim),
                    ( chi.multiplicative_order(),
-                     self.texbool(prim) ),
+                     bool_string(prim) ),
                      self.charvalues(chi) ) )
 
     @cached_method
@@ -702,11 +708,11 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def isprimitive(self):
-        return self.texbool( self.chi.is_primitive() )
+        return bool_string( self.chi.is_primitive() )
 
     @lazy_attribute
     def isreal(self):
-        return self.texbool( self.order <= 2 )
+        return bool_string( self.order <= 2 )
 
     @lazy_attribute
     def values(self):
@@ -765,12 +771,14 @@ class WebChar(WebCharObject):
                 ("Order", [self.order]),
                 ("Real", [self.isreal]),
                 ("Primitive", [self.isprimitive])]
+        if self.isminimal:
+            f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
         try:
             if self.orbit_label:
                 formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-                f.append(("Orbit Label", [formatted_orbit_label]))
+                f.append(("Orbit label", [formatted_orbit_label]))
         except KeyError:
             pass
         return f
@@ -914,6 +922,7 @@ class WebDBDirichlet(WebDirichlet):
 
         self.conductor = int(orbit_data['conductor'])
         self._set_isprimitive(orbit_data)
+        self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
 
@@ -987,17 +996,13 @@ class WebDBDirichlet(WebDirichlet):
             return ret
 
     def _set_isprimitive(self, orbit_data):
-        if str(orbit_data['is_primitive']) == "True":
-            self.isprimitive = "Yes"
-        else:
-            self.isprimitive = "No"
+        self.isprimitive = bool_string(orbit_data['is_primitive'])
+
+    def _set_isminimal(self, orbit_data):
+        self.isminimal = bool_string(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        _parity = int(orbit_data['parity'])
-        if _parity == -1:
-            self.parity = 'Odd'
-        else:
-            self.parity = 'Even'
+        self.parity = parity_string(int(orbit_data['parity']))
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
@@ -1047,7 +1052,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         )
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),
-            (formatted_orbit_label, order, self.texbool(prim)),
+            (formatted_orbit_label, order, bool_string(prim)),
             self._determine_values(valuepairs, order)
         ))
 
@@ -1118,7 +1123,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index']
+              'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
         self.maxcols = 30
@@ -1144,7 +1149,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
-        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+        if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
                 type=self.type,
                 number_field=None,
@@ -1177,7 +1182,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         """
         if self.order != 2:
             return None
-        if self.parity == "Odd":
+        if self.parity == parity_string(-1):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
@@ -1317,7 +1322,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @lazy_attribute
     def parity(self):
-        return ('Odd', 'Even')[self.chi.is_even()]
+        return (parity_string(-1),parity_string(1))[self.chi.is_even()]
 
     @lazy_attribute
     def codeparity(self):
@@ -1399,7 +1404,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index']
+              'orbit_label', 'orbit_index','isminimal']
 
     def _compute(self):
         WebDirichlet._compute(self)

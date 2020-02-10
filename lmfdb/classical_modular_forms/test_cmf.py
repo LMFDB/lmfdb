@@ -89,10 +89,10 @@ class CmfTest(LmfdbTest):
                     elt in main_page
                     desc in main_page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                    assert ("Newform %s" % elt) in page.get_data(as_text=True)
+                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
                     # redirect to the same page
                     page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                    assert ("Newform %s" % elt) in page.get_data(as_text=True)
+                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
         for l in favorite_space_labels:
             for elt, desc in l:
                 elt in main_page
@@ -237,10 +237,10 @@ class CmfTest(LmfdbTest):
     def test_convert_conreylabels(self):
         for c in [27, 31]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/%d/a/' % c,follow_redirects=True)
-            assert "Newform 38.9.d.a" in page.get_data(as_text=True)
+            assert "Newform orbit 38.9.d.a" in page.get_data(as_text=True)
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
-                assert "Newform 38.9.d.a" in page.get_data(as_text=True)
+                assert "Newform orbit 38.9.d.a" in page.get_data(as_text=True)
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
@@ -283,8 +283,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
         assert 'Error: Table too large: must have at most 10000 entries'
 
-
-
         #the other dim table
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
         assert '7' in page.get_data(as_text=True)
@@ -297,31 +295,26 @@ class CmfTest(LmfdbTest):
         for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
             assert elt in page.get_data(as_text=True)
 
-
-
-
     def test_character_parity(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/c/")
         assert 'since the weight is even while the character is' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/a/")
         assert 'since the weight is odd while the character is' in page.get_data(as_text=True)
 
-
-
     def test_dual(self):
         urls_set = [
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual Form 5.9.c.a.2.1'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual Form 5.9.c.a.3.1'),
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform orbit 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual form 5.9.c.a.2.1'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual form 5.9.c.a.3.1'),
                 ],
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual Form 5.9.c.a.2.3'),
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual Form 5.9.c.a.3.3'),
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform orbit 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual form 5.9.c.a.2.3'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual form 5.9.c.a.3.3'),
                 ],
                 [
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a'),
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1'),
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform orbit 13.2.e.a'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual form 13.2.e.a.4.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual form 13.2.e.a.10.1'),
                 ]
                 ]
         for urls in urls_set:
@@ -355,8 +348,8 @@ class CmfTest(LmfdbTest):
                 assert n in page.get_data(as_text=True)
 
             assert 'Newspace 13.2.e' in page.get_data(as_text=True)
-            assert 'Newform 13.2.e.a' in page.get_data(as_text=True)
-            assert 'Dual Form 13.2.e.a.' in page.get_data(as_text=True)
+            assert 'Newform orbit 13.2.e.a' in page.get_data(as_text=True)
+            assert 'Dual form 13.2.e.a.' in page.get_data(as_text=True)
             assert 'L-function 13.2.e.a.' in page.get_data(as_text=True)
 
             assert '0.103805522628' in page.get_data(as_text=True)
