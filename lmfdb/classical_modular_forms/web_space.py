@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_to_factored_poly_otherorder
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
