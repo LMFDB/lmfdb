@@ -161,7 +161,7 @@ def trace_expansion_generic(space, prec_max=10):
     prec = min(len(space.traces)+1, prec_max)
     return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
-def display_hecke_polys(label, num_disp = 5):
+def display_hecke_polys(form_labels, num_disp = 5):
     """
     Display a table of the characteristic polynomials of the Hecke operators for small primes
     Right now, the number of primes presented by default is 5, but that could be changed easily
@@ -178,17 +178,10 @@ def display_hecke_polys(label, num_disp = 5):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
     def td_wrap(val):
         return '    <td>$%s$</th>' % val
-    is_form = (label.count('.') == 3)
-    if is_form:
-        num_forms = 1
-        form_labels = [label]
-    else:
-        data = db.mf_newspaces.lookup(label)
-        num_forms = data['num_forms']
-        form_labels = [label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
+    num_forms = len(form_labels)
     orbit_codes = []
-    for i in xrange(num_forms):    
-        data = db.mf_newforms.lookup(form_labels[i])
+    for label in form_labels:    
+        data = db.mf_newforms.lookup(label)
         orbit_codes.append(data['hecke_orbit_code'])
     hecke_polys_orbits = {}
     for orbit_code in orbit_codes:
@@ -384,7 +377,10 @@ class WebNewformSpace(object):
         return self.char_orbit_link + ord_deg
 
     def display_hecke_char_polys(self, num_disp = 5):
-        return display_hecke_polys(self.label, num_disp)
+        data = db.mf_newspaces.lookup(self.label)
+        num_forms = data['num_forms']
+        form_labels = [self.label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
+        return display_hecke_polys(form_labels, num_disp)
     
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
@@ -598,3 +594,14 @@ class WebGamma1Space(object):
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)
+    
+    def display_hecke_char_polys(self, num_disp = 5):
+        data = db.mf_gamma1.lookup(self.label)
+        num_spaces = data['num_spaces']
+        space_labels = [self.label + '.' + chr(ord('a') + i) for i in xrange(num_spaces)]
+        form_labels = []
+        for label in space_labels:
+            data = db.mf_newspaces.lookup(label)
+            num_forms = data['num_forms']
+            form_labels += [label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
+        return display_hecke_polys(form_labels, num_disp)
