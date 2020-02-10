@@ -355,6 +355,37 @@ def belyi_jump(info):
             flash_error("%s is not a valid Belyi map or passport label", jump)
     return redirect(url_for(".index"))
 
+def curve_string_parser(rec):
+    curve_str = rec["curve"]
+    curve_str = curve_str.replace("^", "**")
+    K = make_base_field(rec)
+    nu = K.gens()[0]
+    S0 = PolynomialRing(K, "x")
+    x = S0.gens()[0]
+    S = PolynomialRing(S0, "y")
+    y = S.gens()[0]
+    parts = curve_str.split("=")
+    lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
+    lhs_cs = lhs_poly.coefficients()
+    if len(lhs_cs) == 1:
+        h = 0
+    elif len(lhs_cs) == 2:  # if there is a cross-term
+        h = lhs_poly.coefficients()[0]
+    else:
+        raise NotImplementedError("for genus > 2")
+    # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
+    f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
+    return f, h
+
+
+def make_base_field(rec):
+    if rec["base_field"] == [-1, 1]:
+        K = QQ  # is there a Sage version of RationalsAsNumberField()?
+    else:
+        R = PolynomialRing(QQ, "T")
+        poly = R(rec["base_field"])
+        K = NumberField(poly, "nu")
+    return K
 
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
@@ -373,6 +404,7 @@ class Belyi_download(Downloader):
         ],
     }
 
+    # could use static method instead of adding self
     def make_base_field_string(self, rec, lang):
         s = ""
         if lang == "magma":
@@ -394,38 +426,6 @@ class Belyi_download(Downloader):
         else:
             raise NotImplementedError("for genus > 2")
         return s
-
-    def make_base_field(self, rec):
-        if rec["base_field"] == [-1, 1]:
-            K = QQ  # is there a Sage version of RationalsAsNumberField()?
-        else:
-            R = PolynomialRing(QQ, "T")
-            poly = R(rec["base_field"])
-            K = NumberField(poly, "nu")
-        return K
-
-    # could use static method instead of adding self
-    def curve_string_parser(self, rec):
-        curve_str = rec["curve"]
-        curve_str = curve_str.replace("^", "**")
-        K = self.make_base_field(rec)
-        nu = K.gens()[0]
-        S0 = PolynomialRing(K, "x")
-        x = S0.gens()[0]
-        S = PolynomialRing(S0, "y")
-        y = S.gens()[0]
-        parts = curve_str.split("=")
-        lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
-        lhs_cs = lhs_poly.coefficients()
-        if len(lhs_cs) == 1:
-            h = 0
-        elif len(lhs_cs) == 2:  # if there is a cross-term
-            h = lhs_poly.coefficients()[0]
-        else:
-            raise NotImplementedError("for genus > 2")
-        # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
-        f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
-        return f, h
 
     def perm_maker(self, rec, lang):
         d = rec["deg"]
@@ -483,7 +483,7 @@ class Belyi_download(Downloader):
             s += "S<x> := PolynomialRing(K);\n"
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := EllipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X := EllipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
@@ -492,7 +492,7 @@ class Belyi_download(Downloader):
             s += "S<x> := PolynomialRing(K);\n"
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := HyperellipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
@@ -522,7 +522,7 @@ class Belyi_download(Downloader):
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
@@ -534,7 +534,7 @@ class Belyi_download(Downloader):
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 2:
             s += "S.<x> = PolynomialRing(K)\n"
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X = HyperellipticCurve(S(%s),S(%s))\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
