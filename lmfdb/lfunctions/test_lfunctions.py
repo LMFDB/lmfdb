@@ -214,10 +214,10 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 490.2.a.a' in L.get_data(as_text=True)
         assert 'Isogeny class 490.a' in L.get_data(as_text=True)
         assert '0.729971' in L.get_data(as_text=True)
-        assert '(2,\ 490,\ (\ :1/2),\ 1)' in L.get_data(as_text=True)
+        assert r'(2,\ 490,\ (\ :1/2),\ 1)' in L.get_data(as_text=True)
         assert '0.940863335931152039286421559408' in L.get_data(as_text=True)
         assert '1 + 7 T + p T^{2}' in L.get_data(as_text=True)
-        assert '\chi_{490} (1, \cdot )' in L.get_data(as_text=True)
+        assert r'\chi_{490} (1, \cdot )' in L.get_data(as_text=True)
         L = self.tc.get('/L/EllipticCurve/Q/490/a/')
         assert '0.9408633359311520' in L.get_data(as_text=True)
 
@@ -225,8 +225,8 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 350.2.e.k.51.1' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert '/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/151/1/'
-        assert '\chi_{350} (51, \cdot )' in L.get_data(as_text=True)
-        assert '(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.get_data(as_text=True)
+        assert r'\chi_{350} (51, \cdot )' in L.get_data(as_text=True)
+        assert r'(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.get_data(as_text=True)
         assert '2.00692' in L.get_data(as_text=True)
         assert '0.127359' in L.get_data(as_text=True)
         assert '1 + 6T + 29T^{2}' in L.get_data(as_text=True)
@@ -237,8 +237,8 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 350.2.e.k.151.1' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert '/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/51/1/'
-        assert '\chi_{350} (151, \cdot )' in L.get_data(as_text=True)
-        assert '(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.get_data(as_text=True)
+        assert r'\chi_{350} (151, \cdot )' in L.get_data(as_text=True)
+        assert r'(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.get_data(as_text=True)
         assert '2.00692' in L.get_data(as_text=True)
         assert '0.127359' in L.get_data(as_text=True)
         assert '1 + 6T + 29T^{2}' in L.get_data(as_text=True)
@@ -249,7 +249,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 350.2.e.k.151.1' in L.get_data(as_text=True)
         assert 'Modular form 350.2.e.k.51.1' in L.get_data(as_text=True)
         assert 'Modular form 350.2.e.k' in L.get_data(as_text=True)
-        assert '(4,\ 122500,\ (\ :1/2, 1/2),\ 1)' in L.get_data(as_text=True)
+        assert r'(4,\ 122500,\ (\ :1/2, 1/2),\ 1)' in L.get_data(as_text=True)
         assert '4.04397' in L.get_data(as_text=True)
         assert '1.68486586956382681209348921118' in L.get_data(as_text=True)
         assert '3.10207045712088492456262227600' in L.get_data(as_text=True)
@@ -274,7 +274,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.676894' in L.get_data(as_text=True)
         assert '2.15777231959226116393597609132' in L.get_data(as_text=True)
         assert '1 - 2 T + 2 T^{2} - 2 p T^{3} + p^{2} T^{4}' in L.get_data(as_text=True)
-        assert '(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.get_data(as_text=True)
+        assert r'(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/')
         for c in [55,64,73,82,100,118,127,154,163,190]:
@@ -374,7 +374,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/ArtinRepresentation/4.1609.5t5.1c1/')
         assert '0.0755586459' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/')
-        assert '3.504643404484' in L.get_data(as_text=True)
+        assert '3.50464340448' in L.get_data(as_text=True)
 
     def test_Lmain(self):
         L = self.tc.get('/L/', follow_redirects=True)
@@ -532,7 +532,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.get_data(as_text=True), "Missing data in /L/lhash/dirichlet_L_6253.458/"
-        assert """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" % (6253,458) in L.get_data(as_text=True),\
+        assert r"Dirichlet Character \(\chi_{%s} (%s, \cdot) \)" % (6253,458) in L.get_data(as_text=True),\
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert '/L/Character/Dirichlet/6253/2635' in L.get_data(as_text=True)

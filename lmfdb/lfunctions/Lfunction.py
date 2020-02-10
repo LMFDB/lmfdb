@@ -19,7 +19,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-        web_latex, round_to_half_int, round_CBF_to_half_int,
+        web_latex, round_to_half_int, round_CBF_to_half_int, display_float,
         display_complex, str_to_CBF,
         Downloader,
         names_and_urls)
@@ -249,7 +249,7 @@ def makeLfromdata(L):
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
-    L.positive_zeros_raw = [str(z) for z in data['positive_zeros']]
+    L.positive_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in data['positive_zeros']]
     L.accuracy = data.get('accuracy', None)
 
     def convert_zeros(accuracy, list_zeros):
@@ -272,7 +272,7 @@ def makeLfromdata(L):
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
         L.dual_accuracy = dual_L_data.get('accuracy', None)
-        L.negative_zeros_raw = [str(z) for z in dual_L_data['positive_zeros']]
+        L.negative_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in dual_L_data['positive_zeros']]
         if L.dual_accuracy is not None:
             L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)
     L.negative_zeros = L.negative_zeros_raw[:zero_truncation]

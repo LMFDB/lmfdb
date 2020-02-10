@@ -331,6 +331,7 @@ def group_display_long(n, t):
 
 @cached_function
 def galois_group_data(n, t):
+    n, t = int(n), int(t)
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])

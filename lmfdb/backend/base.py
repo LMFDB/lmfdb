@@ -324,7 +324,9 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(bytes_to_str(query) + " ran in \033[91m {0!s}s \033[0m".format(t))
+                    if isinstance(query, bytes): # PY3 compatibility
+                        query = bytes_to_str(query)
+                    self.logger.info(query + " ran in \033[91m {0!s}s \033[0m".format(t))
                     if slow_note is not None:
                         self.logger.info(
                             "Replicate with db.%s.%s(%s)",

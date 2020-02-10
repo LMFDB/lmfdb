@@ -185,13 +185,6 @@ class mf_newforms(MfChecker):
                 self.check_array_bound('rm_discs', 1, upper=False) +
                 self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
 
-    @overall(max_failures=100)
-    def check_self_twist_proved(self):
-        """
-        check that self_twist_proved is set (log warning if not, currently there is 1 where it is not set)
-        """
-        return self.check_values({'self_twist_proved':True})
-
     @overall
     def check_fricke_eigenval(self):
         """
