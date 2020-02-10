@@ -178,19 +178,24 @@ def display_hecke_polys(label, num_disp = 5):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
     def td_wrap(val):
         return '    <td>$%s$</th>' % val
-    data = db.mf_newspaces.lookup(label)
-    num_forms = data['num_forms']
+    is_form = (label.count('.') eq 3)
+    if is_form:
+        num_forms = 1
+        form_labels = [label]
+    else:
+        data = db.mf_newspaces.lookup(label)
+        num_forms = data['num_forms']
+        form_labels = [label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
     orbit_codes = []
-    for i in xrange(num_forms):
-        form_label = label + '.' + chr(ord('a') + i)
-        data = db.mf_newforms.lookup(form_label)
+    for i in xrange(num_forms):    
+        data = db.mf_newforms.lookup(form_labels[i])
         orbit_codes.append(data['hecke_orbit_code'])
     hecke_polys_orbits = {}
     for orbit_code in orbit_codes:
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = list_to_factored_poly_otherorder(coeffs)
-            if (len(coeffs) == 2):
+            if (len(coeffs) == 2) and (num_forms > 1):
                 F_p = '(' + F_p + ')'
             hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
     heckepolys = hecke_polys_orbits.items()
