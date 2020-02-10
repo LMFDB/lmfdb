@@ -195,7 +195,7 @@ def display_hecke_polys(label, num_disp = 5):
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = list_to_factored_poly_otherorder(coeffs)
-            if (len(coeffs) == 2) and (num_forms > 1):
+            if (F_p[0] != '(') and (num_forms > 1):
                 F_p = '(' + F_p + ')'
             hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
     heckepolys = hecke_polys_orbits.items()
