@@ -18,7 +18,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls, list_to_factored_poly_otherorder)
+    integer_options, names_and_urls)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
