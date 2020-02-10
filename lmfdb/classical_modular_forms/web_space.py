@@ -198,7 +198,9 @@ def display_hecke_polys(label, num_disp = 5):
             if (F_p != "1"):
                 if (F_p[0] != '(') and (num_forms > 1):
                     F_p = '(' + F_p + ')'
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p              
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
+            else:
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
     heckepolys = hecke_polys_orbits.items()
     polys = ['<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
