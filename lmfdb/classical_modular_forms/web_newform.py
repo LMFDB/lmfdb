@@ -967,8 +967,6 @@ function switch_basis(btype) {
         data = db.mf_newforms.lookup(self.label)
         hecke_orbit_code = data['hecke_orbit_code']
         self.heckepolys = []
-        R = PolynomialRing(ZZ, 'T')
-        T = R.gen(0)
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = list_to_factored_poly_otherorder(coeffs)
