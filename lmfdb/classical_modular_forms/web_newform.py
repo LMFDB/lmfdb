@@ -955,7 +955,7 @@ function switch_basis(btype) {
         return '\n'.join(twists)
 
     def display_hecke_char_polys(self, num_disp = 5):
-        return display_hecke_polys(db.mf_newforms, self.label, num_disp)
+        return display_hecke_polys(self.label, num_disp)
       
     def sato_tate_display(self):
         if self.sato_tate_group:
