@@ -631,10 +631,12 @@ class WebNewform(object):
             return r'multiple of %s' % fac
 
     def twist_minimal_display(self):
+        if self.is_twist_minimal is None:
+            return 'unknown'
         if self.is_twist_minimal:
             return r'yes'
         else:
-            return r'no'
+            return r'no (minimal twist has level %s)'%(self.minimal_twist.split('.')[0]) if self.minimal_twist else r'no'
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
@@ -980,12 +982,12 @@ function switch_basis(btype) {
                   th_wrap('cmf.twist_multiplicity', 'Mult'),
                   th_wrap('cmf.self_twist_field', 'Type'),
                   th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.twist_minimal', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
         for r in  sorted(self.twists, key = lambda x : [x['conductor'],x['twisting_char_orbit'],x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
-            minimality = '&#10004;' if r['target_label'] == self.minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists1.append('<tr>')
@@ -997,7 +999,7 @@ function switch_basis(btype) {
         twists2 = ['<table class="ntdata" style="float: left">', '<thead>',
                    '<tr><th colspan=8>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;By %s</th></tr>'% display_knowl('cmf.twist','twisted newform orbit'), '<tr>',
                   th_wrap('cmf.twist', 'Twist'),
-                  th_wrap('cmf.twist_minimality', 'Min'),
+                  th_wrap('cmf.twist_minimal', 'Min'),
                   th_wrap('cmf.dimension', 'Dim'),
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
@@ -1006,7 +1008,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
-            minimality = '&#10004;' if r['target_label'] == self.minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes;' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
