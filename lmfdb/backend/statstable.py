@@ -1498,6 +1498,7 @@ ORDER BY v.ord LIMIT %s"""
         query_formatter,
         base_url,
         buckets=None,
+        recursing=False,
     ):
         """
         Utility function used in ``display_data``, used to generate data for stats tables.
@@ -1559,7 +1560,7 @@ ORDER BY v.ord LIMIT %s"""
             values = [values[i] for i in positions]
             if any(
                 isinstance(val, dict)
-                and any(relkey in val for relkey in ["$lt", "$lte", "$gt", "$gte"])
+                and any(relkey in val for relkey in ["$lt", "$lte", "$gt", "$gte", "$exists"])
                 and cols[i] not in buckets
                 for (i, val) in enumerate(values)
             ):
@@ -1603,8 +1604,7 @@ ORDER BY v.ord LIMIT %s"""
                     )
                     self.add_stats(ucols, bucketed_constraint)
                     ok = False
-        if not ok:
-            # Set buckets=False so we have no chance of infinite recursion
+        if not recursing and not ok:
             return self._get_values_counts(
                 cols,
                 constraint,
@@ -1612,7 +1612,8 @@ ORDER BY v.ord LIMIT %s"""
                 formatter,
                 query_formatter,
                 base_url,
-                buckets=False,
+                buckets,
+                recursing=True
             )
         if len(cols) == 1:
             return headers[0], data
