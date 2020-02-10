@@ -171,7 +171,7 @@ def display_hecke_polys(form_labels, num_disp = 5):
   
     INPUT:
  
-    - ``label`` - a string, the label of the object.
+    - ``form_labels`` - a list of strings, the labels of the newforms in the space
     - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
     """
     def th_wrap(kwl, title):
@@ -195,6 +195,8 @@ def display_hecke_polys(form_labels, num_disp = 5):
             else:
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
     heckepolys = hecke_polys_orbits.items()
+    if len(heckepolys) == 0:
+        return "There are no characteristic polynomials of Hecke operators in the database"
     polys = ['<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
              th_wrap('lpoly', '$F_p(T)$'),
