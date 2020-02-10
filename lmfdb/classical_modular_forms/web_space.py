@@ -178,7 +178,7 @@ def display_hecke_polys(label, num_disp = 5):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
     def td_wrap(val):
         return '    <td>$%s$</th>' % val
-    is_form = (label.count('.') eq 3)
+    is_form = (label.count('.') == 3)
     if is_form:
         num_forms = 1
         form_labels = [label]
