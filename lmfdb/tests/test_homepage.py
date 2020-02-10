@@ -24,7 +24,7 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 2 work.
         """
         homepage = self.tc.get("/").get_data(as_text=True)
-        self.check(homepage,"/L/Riemann/",  'Pole at \(s=1\)')
+        self.check(homepage,"/L/Riemann/",  r'Pole at \(s=1\)')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '0.792122')

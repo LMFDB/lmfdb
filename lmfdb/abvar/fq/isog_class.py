@@ -12,7 +12,7 @@ TODO
 from flask import url_for
 from collections import Counter
 
-from lmfdb.utils import encode_plot
+from lmfdb.utils import encode_plot, display_float
 from lmfdb.logger import make_logger
 
 from lmfdb import db
@@ -231,12 +231,13 @@ class AbvarFq_isoclass(object):
         ans = ""
         eps = 0.00000001
         for angle in self.angles:
+            angstr = display_float(angle, 12, 'round')
             if ans != "":
                 ans += ", "
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r"$\pm" + str(angle) + "$"
+                angle = r"$\pm" + angstr + "$"
             else:
-                angle = "$" + str(angle) + "$"
+                angle = "$" + angstr + "$"
             ans += angle
         return ans
 

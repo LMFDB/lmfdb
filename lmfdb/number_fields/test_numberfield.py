@@ -4,8 +4,8 @@ from lmfdb.tests import LmfdbTest
 class NumberFieldTest(LmfdbTest):
     # All tests should pass
     def test_Q(self):
-        self.check_args('/NumberField/Q', '\chi_{1}')
-        self.check_args('/NumberField/1.1.1.1', '\chi_{1}')
+        self.check_args('/NumberField/Q', r'\chi_{1}')
+        self.check_args('/NumberField/1.1.1.1', r'\chi_{1}')
 
     def test_hard_degree10(self):
         self.check_args('/NumberField/10.10.1107649855354064.1', '10T36')

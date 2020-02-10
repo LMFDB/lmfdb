@@ -73,6 +73,8 @@ class BelyiTest(LmfdbTest):
         r"""
         Test download function
         """
+        # genus 0 example
+            # magma
         page = self.tc.get(
             "/Belyi/download_galmap_to_magma/7T6-%5B7%2C2%2C6%5D-7-22111-322-g0-a",
             follow_redirects=True,
@@ -81,6 +83,18 @@ class BelyiTest(LmfdbTest):
             "phi := 1/2*(7*nu - 15)*x^7/(x^7 + 1/10*(28*nu + 7)*x^6 + 1/100*(-56*nu + 511)*x^5 + 1/40*(-672*nu - 1323)*x^4 + 1/20*(-42*nu - 63)*x^3 + 1/40*(1701*nu + 3024)*x^2 + 1/200*(-6237*nu - 11178));"
             in page.get_data(as_text=True)
         )
+            # sage
+        page = self.tc.get(
+            "/Belyi/download_galmap_to_sage/7T6-%5B7%2C2%2C6%5D-7-22111-322-g0-a",
+            follow_redirects=True,
+        )
+        assert(
+            "phi = 1/2*(7*nu - 15)*x^7/(x^7 + 1/10*(28*nu + 7)*x^6 + 1/100*(-56*nu + 511)*x^5 + 1/40*(-672*nu - 1323)*x^4 + 1/20*(-42*nu - 63)*x^3 + 1/40*(1701*nu + 3024)*x^2 + 1/200*(-6237*nu - 11178))"
+            in page.get_data(as_text=True)
+        )
+
+        # genus 1 example
+            # magma
         page = self.tc.get(
             "/Belyi/download_galmap_to_magma/6T15-%5B5%2C5%2C5%5D-51-51-51-g1-c",
             follow_redirects=True,
@@ -89,11 +103,31 @@ class BelyiTest(LmfdbTest):
             "phi := (1/3125*(162*nu - 81)*x^2 + 1/78125*(972*nu - 486)*x + 1/390625*(-1458*nu + 729))/(x^6 - 9/25*x^5 + 27/125*x^4 + 1/3125*(-162*nu - 54)*x^3 + 1/78125*(729*nu - 486)*x^2 + 1/9765625*(-2187*nu + 5832)*x + 1/244140625*(-2187*nu - 1458))*y + (1/3125*(-162*nu + 81)*x^3 + 1/156250*(1458*nu - 729)*x^2 + 1/9765625*(-2187*nu + 10935)*x + 1/488281250*(-4374*nu - 76545))/(x^6 - 9/25*x^5 + 27/125*x^4 + 1/3125*(-162*nu - 54)*x^3 + 1/78125*(729*nu - 486)*x^2 + 1/9765625*(-2187*nu + 5832)*x + 1/244140625*(-2187*nu - 1458));"
             in page.get_data(as_text=True)
         )
+            # sage 
+        page = self.tc.get(
+            "/Belyi/download_galmap_to_sage/6T15-%5B5%2C5%2C5%5D-51-51-51-g1-c",
+            follow_redirects=True,
+        )
+        assert (
+           "phi = (1/3125*(162*nu - 81)*x^2 + 1/78125*(972*nu - 486)*x + 1/390625*(-1458*nu + 729))/(x^6 - 9/25*x^5 + 27/125*x^4 + 1/3125*(-162*nu - 54)*x^3 + 1/78125*(729*nu - 486)*x^2 + 1/9765625*(-2187*nu + 5832)*x + 1/244140625*(-2187*nu - 1458))*y + (1/3125*(-162*nu + 81)*x^3 + 1/156250*(1458*nu - 729)*x^2 + 1/9765625*(-2187*nu + 10935)*x + 1/488281250*(-4374*nu - 76545))/(x^6 - 9/25*x^5 + 27/125*x^4 + 1/3125*(-162*nu - 54)*x^3 + 1/78125*(729*nu - 486)*x^2 + 1/9765625*(-2187*nu + 5832)*x + 1/244140625*(-2187*nu - 1458))" 
+            in page.get_data(as_text=True)
+        )
+        # genus 2 example
+            # magma
         page = self.tc.get(
             "/Belyi/download_galmap_to_magma/7T5-%5B7%2C7%2C3%5D-7-7-331-g2-a",
             follow_redirects=True,
         )
         assert (
             "phi := (1/2*x^2 + 2/5*x + 1/200*(nu + 5))/(x^5 + 6/5*x^4 + 1/50*(7*nu + 5)*x^3 + 1/250*(35*nu - 57)*x^2 + 1/10000*(91*nu - 345)*x + 1/12500*(-133*nu + 71))*y + 1/2;"
+            in page.get_data(as_text=True)
+        )
+            # sage
+        page = self.tc.get(
+            "/Belyi/download_galmap_to_sage/7T5-%5B7%2C7%2C3%5D-7-7-331-g2-a",
+            follow_redirects=True,
+        )
+        assert (
+            "phi = (1/2*x^2 + 2/5*x + 1/200*(nu + 5))/(x^5 + 6/5*x^4 + 1/50*(7*nu + 5)*x^3 + 1/250*(35*nu - 57)*x^2 + 1/10000*(91*nu - 345)*x + 1/12500*(-133*nu + 71))*y + 1/2"
             in page.get_data(as_text=True)
         )
