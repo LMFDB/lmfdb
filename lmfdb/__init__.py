@@ -4,5 +4,5 @@ __version__ = '0.1'
 
 #from .website import main
 #assert main
-from .backend.database import db
+from .backend import db
 assert db

@@ -11,6 +11,8 @@ from lmfdb.utils.utilities import flash_error
 from sage.all import ZZ, QQ, prod, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
+from sage.misc.parser import Parser
+from sage.calculus.var import var
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -38,7 +40,7 @@ class SearchParsingError(ValueError):
     pass
 
 class SearchParser(object):
-    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield,error_is_safe):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
         self.f = f
         self.clean_info = clean_info
         self.prep_ranges = prep_ranges
@@ -48,6 +50,7 @@ class SearchParser(object):
         self.default_name = default_name
         self.default_qfield = default_qfield
         self.error_is_safe = error_is_safe # Indicates that the message in raised exception contains no user input, so it is not escaped
+        self.clean_spaces = clean_spaces
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
             if field is None: field=self.default_field
@@ -61,7 +64,7 @@ class SearchParser(object):
             inp = str(inp)
             if SPACES_RE.search(inp):
                 raise SearchParsingError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
-            inp = clean_input(inp)
+            inp = clean_input(inp, self.clean_spaces)
             if qfield is None:
                 if field is None:
                     qfield = self.default_qfield
@@ -87,38 +90,52 @@ class SearchParser(object):
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
-                  default_field=None, default_name=None, default_qfield=None,error_is_safe=False):
-    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe)
+                  default_field=None, default_name=None, default_qfield=None, error_is_safe=False, clean_spaces=True):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
-def clean_input(inp):
+def clean_input(inp, clean_spaces=True):
     if inp is None: return None
-    return re.sub(r'[\s<>]', '', str(inp))
+    if clean_spaces:
+        return re.sub(r'[\s<>]', '', str(inp))
+    else:
+        return re.sub(r'[<>]', '', str(inp))
 def prep_ranges(inp):
     if inp is None: return None
     return inp.replace('..','-').replace(' ','')
 
-def prep_raw(inp, short_names={}):
+def prep_raw(inp, names={}):
     """
     Prepare an input string for being passed as a ``$raw`` value to the database search.
 
     INPUT:
 
     - ``inp`` -- a string from the website.  Aleady split up by commas and .. range indicators
-    - ``short_names`` -- a dictionary allowing short names to be input by the user rather than full column names from the database
+    - ``names`` -- a dictionary providing a translation from user input to column names.  Only keys in the dictionary are accepted.
 
     OUTPUT:
 
     A string with implicit multiplications inserted and full column names substituted for short names
+
+    This function will raise a SearchParsingError if there is a syntax error or if there is a variable that's not in the names list
     """
-    # Notice that we strip spaces before calling this, so you can't use spaces to indicate multiplication even thgough the implicit_mul function supports this
-    inp = implicit_mul(inp, level=10)
+    inp = implicit_mul(inp, level=10) # level = 10 includes (a+b)(c+d) -> (a+b)*(c+d) which isn't safe in Sage but should be okay for us
+    def filtered_var(s):
+        if s not in names:
+            raise SearchParsingError("%s is not a column of this table" % s)
+        return var(s)
+    # We use Sage's parser to make sure that the user input is well formed
+    P = Parser(make_var=filtered_var)
+    try:
+        P.parse_expression(inp)
+    except SyntaxError:
+        raise SearchParsingError("syntax error")
     pieces = re.split(r'([A-Za-z_]+)', inp)
     processed = []
     for piece in pieces:
-        if piece in short_names:
-            processed.append(short_names[piece])
+        if piece in names:
+            processed.append(names[piece])
         else:
             processed.append(piece)
     return {'$raw': "".join(processed)}
@@ -327,12 +344,12 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
     else:
         raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-@search_parser(clean_info=True, prep_ranges=False) # see SearchParser.__call__ for actual arguments when calling
-def parse_ints_raw(inp, query, qfield, short_names={}):
+@search_parser(clean_info=True, clean_spaces=False, prep_ranges=False) # see SearchParser.__call__ for actual arguments when calling
+def parse_ints_raw(inp, query, qfield, names={}):
     # This version of parse_ints allows the user to use arithmetic expressions involving database columns
     # We let postgres do most of the parsing and don't raise an error here on any input (since it's tricky to determine what's valid)
     if re.search(r'[A-Za-z]', inp):
-        collapse_ors(parse_range2(inp, qfield, lambda inp: prep_raw(inp, short_names), split_minus=False), query)
+        collapse_ors(parse_range2(inp, qfield, lambda inp: prep_raw(inp, names), split_minus=False), query)
     else:
         # If there are no letters we allow - to indicate a range.
         collapse_ors(parse_range2(inp, qfield, int), query)
@@ -681,7 +698,8 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
     # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
-    FF = FF.encode('utf8').decode('utf8').encode('ascii', 'ignore')
+    # Remove non-ascii characters
+    FF = re.sub(r'[^\x00-\x7f]', r'', FF)
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
@@ -958,10 +976,11 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
 @search_parser
-def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[], short_names={}):
+def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[], names={}):
     def parse_one(x):
+        ## Remember to add clean_spaces=True
         #if re.search(r'[A-Za-z]', x):
-        #    return parse_range2(x, first_field, lambda inp: prep_raw(inp, short_names), split_minus=False)
+        #    return parse_range2(x, first_field, lambda inp: prep_raw(inp, names), split_minus=False)
         #else:
         return parse_range2(x, first_field, parse_singleton)
     bparts = BRACKETING_RE.split(inp)

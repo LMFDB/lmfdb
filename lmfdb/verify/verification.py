@@ -9,7 +9,9 @@ from datetime import datetime
 from timeout_decorator import timeout, TimeoutError
 from sage.all import Integer, vector, ZZ
 
-from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
+from lmfdb.backend import db
+from psycopg2.sql import SQL, Composable, Literal
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
 
 integer_types = six_integers + (Integer,)
 def accumulate_failures(L):

@@ -10,7 +10,7 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 # in the database, instead of trying to extract this from a URL
 def name_and_object_from_url(url, check_existence=False):
     # the import is here to avoid circular imports
-    from lmfdb.backend.database import db
+    from lmfdb.backend import db
     from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
     url_split = url.rstrip('/').lstrip('/').split("/")
     name = '??'
@@ -37,7 +37,7 @@ def name_and_object_from_url(url, check_existence=False):
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
         assert url_split[1] == "Dirichlet"
-        name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
+        name = r"Dirichlet Character \(\chi_{%s} (%s, \cdot) \)" %  tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
         obj_exists = True
         if check_existence:
