@@ -1008,7 +1008,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.self_twist_field', 'Type'),
                   '</tr>', '</thead>', '<tbody>']
         for r in sorted(self.twists, key = lambda x : [x['target_level'],x['target_char_orbit'],x['target_hecke_orbit'],x['conductor'],x['twisting_char_orbit']]):
-            minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes;' if r['target_is_minimal'] else ''
+            minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
@@ -1048,7 +1048,7 @@ function switch_basis(btype) {
                   '</tr>', '</thead>', '<tbody>']
 
         for r in sorted(self.embedded_twists, key = lambda x : [x['conductor'],x['twisting_conrey_index'],revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index']]):
-            minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            minimality = '&check;' if r['target_label'] == self.embedded_minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists1.append('<tr>')
@@ -1069,7 +1069,7 @@ function switch_basis(btype) {
                   '</tr>', '</thead>', '<tbody>']
 
         for r in sorted(self.embedded_twists, key = lambda x : [revcode(x['target_hecke_orbit_code']),x['target_conrey_index'],x['target_embedding_index'],x['conductor'],x['twisting_conrey_index']]):
-            minimality = '&#10004;' if r['target_label'] == self.embedded_minimal_twist else '&#10003;' if r['target_is_minimal'] else ''
+            minimality = '&check;' if r['target_label'] == self.embedded_minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])
             twists2.append('<tr>')
