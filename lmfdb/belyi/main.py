@@ -368,7 +368,7 @@ def curve_string_parser(rec):
     lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
     lhs_cs = lhs_poly.coefficients()
     if len(lhs_cs) == 1:
-        h = 0
+        h = S0(0)
     elif len(lhs_cs) == 2:  # if there is a cross-term
         h = lhs_poly.coefficients()[0]
     else:
@@ -377,6 +377,17 @@ def curve_string_parser(rec):
     f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
     return f, h
 
+def hyperelliptic_polys_to_ainvs(f,h):
+    f_cs = f.coefficients(sparse = False)
+    h_cs = h.coefficients(sparse = False)
+    while len(h_cs) < 2: # pad coefficients of h with 0s to get length 2
+        h_cs += [0]
+    a3 = h_cs[0]
+    a1 = h_cs[1]
+    a6 = f_cs[0]
+    a4 = f_cs[1]
+    a2 = f_cs[2]
+    return [a1, a2, a3, a4, a6]
 
 def make_base_field(rec):
     if rec["base_field"] == [-1, 1]:
@@ -522,8 +533,9 @@ class Belyi_download(Downloader):
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
-            curve_polys = curve_string_parser(rec)
-            s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
+            f, h = curve_string_parser(rec)
+            ainvs = hyperelliptic_polys_to_ainvs(f,h)
+            s += "X = EllipticCurve(%s)\n" % ainvs
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
