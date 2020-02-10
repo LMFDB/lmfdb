@@ -107,6 +107,60 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
             parts[2] = r'\(\cdots\)'
             name = '.'.join(parts)
         return nf_display_knowl(label, name)
+      
+def display_hecke_polys(db_obj, label, num_disp = 5):
+    """
+    Display a table of the characteristic polynomials of the Hecke operators for small primes
+    Right now, the number of primes presented by default is 5, but that could be changed easily
+    The rest could be seen by using "show more" / "show less" - 
+    The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
+    replaced by a call to a single class/function with some parameters.
+  
+    INPUT:
+  
+    - ``db_obj`` - the LMFDB database in which we are looking for (db.mf_newforms / db.mf_newspaces).
+    - ``label`` - a string, the label of the object.
+    - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
+    """
+    def th_wrap(kwl, title):
+        return '    <th>%s</th>' % display_knowl(kwl, title=title)
+    def td_wrap(val):
+        return '    <td>$%s$</th>' % val
+    data = db_obj.lookup(label)
+    hecke_orbit_code = data['hecke_orbit_code']
+    heckepolys = []
+    for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
+        coeffs = poly_item['lpoly']
+        F_p = list_to_factored_poly_otherorder(coeffs)
+        heckepolys.append([poly_item['p'], F_p])
+    polys = ['<table class="ntdata">', '<thead>', '  <tr>',
+             th_wrap('p', '$p$'),
+             th_wrap('lpoly', '$F_p(T)$'),
+             '  </tr>', '</thead>', '<tbody>']
+    loop_count = 0
+    for p, lpoly in heckepolys:
+        if loop_count < num_disp:
+            polys.append('  <tr>')
+        else:
+            polys.append('  <tr class="more nodisplay">') 
+        polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
+        polys.append('  </tr>')
+        loop_count += 1
+    if loop_count > num_disp:
+        polys.append('''
+            <tr class="less toggle">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+                </td>
+            </tr>
+            <tr class="more toggle nodisplay">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+                </td>
+            </tr>
+            ''')
+        polys.extend(['</tbody>', '</table>'])
+    return '\n'.join(polys)
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
@@ -955,51 +1009,7 @@ function switch_basis(btype) {
         return '\n'.join(twists)
 
     def display_hecke_char_polys(self, num_disp = 5):
-      # Display a table of the characteristic polynomials of the Hecke operators for small primes
-      # Right now, the number of primes presented by default is 5, but that could be changed easily
-      # The rest could be seen by using "show more" / "show less" - 
-      # The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
-      # replaced by a call to a single class/function with some parameters
-        def th_wrap(kwl, title):
-            return '    <th>%s</th>' % display_knowl(kwl, title=title)
-        def td_wrap(val):
-            return '    <td>$%s$</th>' % val
-        data = db.mf_newforms.lookup(self.label)
-        hecke_orbit_code = data['hecke_orbit_code']
-        self.heckepolys = []
-        for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : hecke_orbit_code}):
-            coeffs = poly_item['lpoly']
-            F_p = list_to_factored_poly_otherorder(coeffs)
-            self.heckepolys.append([poly_item['p'], F_p])
-        polys = ['<table class="ntdata">', '<thead>', '  <tr>',
-                  th_wrap('p', '$p$'),
-                  th_wrap('lpoly', '$F_p(T)$'),
-                  '  </tr>', '</thead>', '<tbody>']
-        loop_count = 0
-        for p, lpoly in self.heckepolys:
-            if loop_count < num_disp:
-              polys.append('  <tr>')
-            else:
-              polys.append('  <tr class="more nodisplay">')  
-            polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
-            polys.append('  </tr>')
-            loop_count += 1
-        if loop_count > num_disp:
-          polys.append('''
-            <tr class="less toggle">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
-                </td>
-            </tr>
-            <tr class="more toggle nodisplay">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
-                </td>
-            </tr>
-          '''
-          )
-        polys.extend(['</tbody>', '</table>'])
-        return '\n'.join(polys)
+        return display_hecke_polys(db.mf_newforms, self.label, num_disp)
       
     def sato_tate_display(self):
         if self.sato_tate_group:
