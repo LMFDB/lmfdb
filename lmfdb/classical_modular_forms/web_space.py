@@ -365,6 +365,9 @@ class WebNewformSpace(object):
             ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
         return self.char_orbit_link + ord_deg
 
+    def display_hecke_char_polys(self, num_disp = 5):
+        return display_hecke_polys(db.mf_newspaces, self.label, num_disp)
+    
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
 
