@@ -379,9 +379,7 @@ class WebNewformSpace(object):
         return self.char_orbit_link + ord_deg
 
     def display_hecke_char_polys(self, num_disp = 5):
-        data = db.mf_newspaces.lookup(self.label)
-        num_forms = data['num_forms']
-        form_labels = [self.label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
+        form_labels = [nf['label'] for nf in self.newforms]
         return display_hecke_polys(form_labels, num_disp)
     
     def _vec(self):
@@ -598,12 +596,6 @@ class WebGamma1Space(object):
         return trace_expansion_generic(self, prec_max)
     
     def display_hecke_char_polys(self, num_disp = 5):
-        data = db.mf_gamma1.lookup(self.label)
-        num_spaces = data['num_spaces']
-        space_labels = [self.label + '.' + chr(ord('a') + i) for i in xrange(num_spaces)]
-        form_labels = []
-        for label in space_labels:
-            data = db.mf_newspaces.lookup(label)
-            num_forms = data['num_forms']
-            form_labels += [label + '.' + chr(ord('a') + i) for i in xrange(num_forms)]
+        newforms = list(db.mf_newforms.search({'level':self.level, 'weight':self.weight}, ['label']));
+        form_labels = [newform['label'] for newform in newforms]
         return display_hecke_polys(form_labels, num_disp)
