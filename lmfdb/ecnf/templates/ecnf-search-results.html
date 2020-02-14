@@ -29,7 +29,7 @@
 <td align=left><input type='text' name='conductor_norm' placeholder='31' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
-{% if info.query.number %}
+{% if info.query and info.query.number %}
            <option value="off" selected="yes">exclude</option>
            <option value="">include</option>
 {% else %}
