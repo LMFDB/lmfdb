@@ -541,7 +541,7 @@ class CmfTest(LmfdbTest):
                 ['24.3.h.a'
                     , '[-2, 3, 4]'],
                 ['24.3.h.c'
-                    , '[a, -a^2 - 3, a^2]'],
+                    , '[a, -1/4*a^3 - a^2 - 1/2*a - 3, a^2]'],
                 ]:
             sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).get_data(as_text=True)
             assert "make_data" in sage_code
