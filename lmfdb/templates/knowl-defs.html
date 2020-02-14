@@ -13,6 +13,7 @@
              to its default None.
 #}
 {% macro KNOWL(kid, title=none) -%}
+{% with kurlprefix = knowl_url_prefix() %}
 {% with ktitle = knowl_title(kid) -%}
 {% if ktitle is none -%}
  {# knowl does not exist. wrong knowlid or opportunity to create one! #}
@@ -39,17 +40,18 @@
  {% with hover = "%s [%s]"|format(ktitle, kid) -%}
   {% if title is none -%}
     {% if ktitle|length > 0 -%}
-     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ ktitle|safe }}</a>
+     <a title="{{ hover }}" prefix="{{ kurlprefix }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ ktitle|safe }}</a>
     {%- else -%}
-     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ kid }}</a>
+     <a title="{{ hover }}" prefix="{{ kurlprefix }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ kid }}</a>
     {%- endif %}
   {%- else -%}
     {% if title|length > 0 -%}
-     <a title="{{ hover }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
+     <a title="{{ hover }}" prefix="{{ kurlprefix }}" knowl="{{ kid }}" kwargs="{{ kwargs|urlencode }}">{{ title|safe }}</a>
     {%- endif %}
   {%- endif %}
  {%- endwith %}
 {%- endif %}
+{%- endwith %}
 {%- endwith %}
 {%- endmacro %}
 
