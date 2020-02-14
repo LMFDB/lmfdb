@@ -19,7 +19,7 @@ class HomePageTest(LmfdbTest):
     #
     # External Links on workshops page
     def test_workshoplinks(self):
-        homepage = self.tc.get("/acknowledgment/activities").data
+        homepage = self.tc.get("/acknowledgment/activities").get_data(as_text=True)
         self.check_external(
             homepage,
             "http://people.oregonstate.edu/~swisherh/CRTNTconference/index.html",

@@ -5,7 +5,7 @@ from six import StringIO
 import time
 
 from flask import render_template, request, url_for, redirect, make_response, send_file
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error,
@@ -38,7 +38,7 @@ def my_latex(s):
     ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
     ss = re.sub(r'\*', '', ss)
     ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
-    ss = re.sub('zeta', r'\zeta', ss)
+    ss = re.sub('zeta', r'\\zeta', ss)
     ss += ""
     return ss
 

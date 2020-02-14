@@ -131,7 +131,7 @@ class EllCurveTest(LmfdbTest):
           '<td align="center">[6]</td>',
           '<td align="center">',
           '1728</td>',
-          '<td>\(\Gamma_0(N)\)-optimal</td>'
+          r'<td>\(\Gamma_0(N)\)-optimal</td>'
         ])
         self.assertTrue(row in L.get_data(as_text=True),
                         "990.i appears to have the wrong optimal curve.")

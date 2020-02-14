@@ -376,7 +376,7 @@ def parseALstring(s):
     outlist = []
     #print s, sm
     assert len(sm) % 4 == 0
-    for i in range(len(sm)/4):
+    for i in range(len(sm) // 4):
         outlist += [[sm[4*i][1:]+","+sm[4*i+1]+","+sm[4*i+2], sm[4*i+3][:-1]]]
     return outlist
 

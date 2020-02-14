@@ -84,8 +84,11 @@ class MaassDB(object):
             for r in R:
                 searchcoeffs = db.mwf_coeffs.search({'label':{'$regex': str(r)}})
                 for res in searchcoeffs:
-                    c = res['coefficients'];
-                    d = loads(str(c));
+                    c = res['coefficients']
+                    if PY3:
+                        d = loads(bytes(c))
+                    else:
+                        d = loads(str(c))
                     if type(d) == type([]):
                         d = { i : d[i] for i in range(0, len(d)) }
                     e = self.find_coeffs_from_dict(d, type(d))

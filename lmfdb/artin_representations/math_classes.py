@@ -791,7 +791,7 @@ class NumberFieldGaloisGroup(object):
         PR = PowerSeriesRing(PolynomialRing(QQ, 'a'), 'p')
         myroots = [web_latex(PR(x), enclose=False) for x in myroots]
         # change p into its value
-        myroots = [re.sub(r'([a)\d]) *p', r'\1\cdot '+str(p), z) for z in myroots]
+        myroots = [re.sub(r'([a)\d]) *p', r'\1\\cdot '+str(p), z) for z in myroots]
         return [z.replace('p',str(p)) for z in myroots]
 
     def index_complex_conjugation(self):

@@ -58,7 +58,7 @@ class HomePageTest(LmfdbTest):
 
     def test_latticeZ2(self):
         L = self.tc.get("/Lattice/2.1.2.1.1").get_data(as_text=True)
-        assert '0.785398163397448309615660845820\dots' in L #Z2 lattice  
+        assert r'0.785398163397448309615660845820\dots' in L #Z2 lattice
 
     def test_lattice_thetadisplay(self):
         L = self.tc.get("/Lattice/theta_display/7.576.18.1.1/40").get_data(as_text=True)
