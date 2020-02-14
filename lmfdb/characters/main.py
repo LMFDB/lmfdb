@@ -311,12 +311,13 @@ def _dir_knowl_data(label, orbit=False):
     inf += row_wrap('Conductor', webchar.conductor)
     inf += row_wrap('Order', webchar.order)
     inf += row_wrap('Degree', euler_phi(webchar.order))
-    inf += row_wrap('Parity', "Even" if webchar.parity == 1 else "Odd")
+    inf += row_wrap('Minimal', webchar.isminimal)
+    inf += row_wrap('Parity', webchar.parity)
     if numbers:
         inf += row_wrap('Characters', ",&nbsp;".join(numbers))
     if modulus <= 10000:
         if not orbit:
-            inf += row_wrap('Orbit Label', '%d.%s' % (modulus, webchar.orbit_label))
+            inf += row_wrap('Orbit label', '%d.%s' % (modulus, webchar.orbit_label))
         inf += row_wrap('Orbit Index', webchar.orbit_index)
     inf += '</table></div>\n'
     if numbers is None:

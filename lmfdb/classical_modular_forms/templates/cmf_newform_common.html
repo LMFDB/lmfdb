@@ -34,7 +34,7 @@
   {% if newform.is_self_dual is not none %}
   <tr>
     <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
-    <td>{% if newform.is_self_dual %}Yes{% else %}No{% endif %}</td>
+    <td>{% if newform.is_self_dual %}yes{% else %}no{% endif %}</td>
   </tr>
   {% endif %}
   <tr>
@@ -67,10 +67,6 @@
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> {{ newform.ring_display() | safe }}</td>
   </tr>
-  <tr>
-    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
-    <td> {{ newform.ring_index_display() | safe }}</td>
-  </tr>
   {% elif newform.dim == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
@@ -80,11 +76,15 @@
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> \(\mathbb{Z}\)</td>
   </tr>
+  {% endif %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
-  {% endif %}
+  <tr>
+    <td> {{ KNOWL('cmf.twist_minimal',title='Twist minimal') }}: </td>
+    <td> {{ newform.twist_minimal_display() | safe }}</td>
+  </tr>
   {% if newform.char_order == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
@@ -94,7 +94,7 @@
   {% if newform.projective_image %}
   <tr>
     <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
-    <td>\({{ newform.projective_image_latex }}\)</td>
+    <td>{{ newform.projective_image_knowl() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.projective_field %}
@@ -103,17 +103,18 @@
     <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
   </tr>
   {% endif %}
-  {% if newform.artin_degree %}
-  <tr>
-    <td>{{ KNOWL('cmf.artin_image', title='Artin image size') }}</td>
-    <td>\({{ newform.artin_degree }}\)</td>
-  </tr>
-  {% endif %}
   {% if newform.artin_image %}
   <tr>
     <td>{{ KNOWL('cmf.artin_image', title='Artin image') }}</td>
     <td>{{ newform.artin_image_knowl() | safe }}</td>
   </tr>
+  {% else %}
+    {% if newform.artin_degree %}
+    <tr>
+      <td>{{ KNOWL('cmf.artin_image', title='Artin image cardinality') }}</td>
+      <td>\({{ newform.artin_degree }}\)</td>
+    </tr>
+    {% endif %}
   {% endif %}
   {% if newform.artin_field %}
   <tr>
@@ -243,7 +244,7 @@ function show_qexp(qstyle) {
 {% endif %}
 
 {% if newform.char_order != 1 and (newform.dim <= 20 or newform.weight == 1 or newform.embedding_label) %}
-<h2>Character Values</h2>
+<h2>Character values</h2>
 <p>We give the values of \(\chi\) on generators for \(\left(\mathbb{Z}/{{newform.level}}\mathbb{Z}\right)^\times\).</p>
 <table class="ntdata">
   <tbody>

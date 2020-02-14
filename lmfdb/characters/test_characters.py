@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
-from lmfdb.characters.web_character import WebDirichlet, WebHecke
+from lmfdb.characters.web_character import WebDirichlet, WebHecke, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
@@ -34,8 +34,8 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_even_odd(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=35')
-        assert '>Even</t' in W.get_data(as_text=True)
-        assert '>Odd</t' in W.get_data(as_text=True)
+        assert '>%s</t'%(parity_string(1)) in W.get_data(as_text=True)
+        assert '>%s</t'%(parity_string(-1)) in W.get_data(as_text=True)
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
@@ -90,13 +90,13 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletgroup(self):
         W = self.tc.get('/Character/Dirichlet/23', follow_redirects=True)
-        assert 'Yes' in W.get_data(as_text=True)
+        assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup_conrey(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
         assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
-        assert 'Yes' in W.get_data(as_text=True)
+        assert bool_string(True) in W.get_data(as_text=True)
         assert 'Properties' in W.get_data(as_text=True), "properties box"
         assert 'DirichletGroup_conrey(91)' in W.get_data(as_text=True), "sage code example"
         assert r'\chi_{91}(15,' in W.get_data(as_text=True) and r'\chi_{91}(66' in W.get_data(as_text=True), "generators"
@@ -178,7 +178,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
-        assert 'Odd' in W.get_data(as_text=True) and '536870912' in W.get_data(as_text=True)
+        assert parity_string(-1) in W.get_data(as_text=True) and '536870912' in W.get_data(as_text=True)
         assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True)
 
 class HeckeCharactersTest(LmfdbTest):
