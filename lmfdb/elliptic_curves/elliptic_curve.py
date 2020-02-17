@@ -2,7 +2,7 @@
 import ast
 import os
 import re
-from six import StringIO, BytesIO, PY3
+from six import BytesIO
 import tempfile
 import time
 
@@ -226,12 +226,8 @@ def download_search(info):
     res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
-    if PY3:
-        strIO = BytesIO()
-        strIO.write(s.encode('utf-8'))
-    else:
-        strIO = StringIO()
-        strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
