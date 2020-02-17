@@ -675,7 +675,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [polynomial, discriminant, t-number, class group]\n'
+    s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
     s += com + ' If a class group was not computed, the entry is [-1]\n'
     s += '\n' + com2
@@ -696,7 +696,7 @@ def download_search(info):
             cl = f['class_group']
         else:
             cl = [-1]
-        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
+        entry = ', '.join(['\"'+str(f['label'])+'\"', str(pol), str(D), str(gal_t), str(cl)])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':
