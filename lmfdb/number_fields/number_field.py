@@ -3,7 +3,7 @@
 import ast
 import os
 import re
-from six import StringIO
+from six import StringIO, BytesIO, PY3
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
@@ -696,7 +696,8 @@ def download_search(info):
             cl = f['class_group']
         else:
             cl = [-1]
-        entry = ', '.join(['\"'+str(f['label'])+'\"', str(pol), str(D), str(gal_t), str(cl)])
+        entry = ', '.join(['"'+str(f['label'])+'"', str(pol), str(D), str(gal_t), str(cl)])
+        print(entry)
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':
@@ -710,8 +711,12 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO()
-    strIO.write(s)
+    if PY3:
+        strIO = BytesIO()
+        strIO.write(s.encode('utf-8'))
+    else:
+        strIO = StringIO()
+        strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,

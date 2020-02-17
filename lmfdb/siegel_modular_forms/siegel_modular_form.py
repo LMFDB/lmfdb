@@ -3,7 +3,7 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from __future__ import absolute_import
-from six import StringIO
+from six import StringIO, BytesIO, PY3
 
 from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
@@ -32,9 +32,15 @@ def find_samples(family, weight):
 
 def download_sample(name):
     a, b = name.split('.')
-    f = StringIO(sample.export(a, b))
-    f.seek(0)
-    return send_file(f, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
+    s = sample.export(a, b)
+    if PY3:
+        strIO = BytesIO()
+        strIO.write(s.encode('utf-8'))
+    else:
+        strIO = StringIO()
+        strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
 
 
 ###############################################################################

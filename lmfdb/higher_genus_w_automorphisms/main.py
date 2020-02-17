@@ -6,7 +6,7 @@
 import ast
 import os
 import re
-from six import StringIO
+from six import StringIO, BytesIO, PY3
 import yaml
 
 from lmfdb.logger import make_logger
@@ -441,8 +441,12 @@ def hgcwa_code_download_search(info):
         code += '\n'
 
     logger.info("%s seconds for %d chars" % (time.time() - start, len(code)))
-    strIO = StringIO()
-    strIO.write(code)
+    if PY3:
+        strIO = BytesIO()
+        strIO.write(code.encode('utf-8'))
+    else:
+        strIO = StringIO()
+        strIO.write(code)
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
@@ -1022,8 +1026,12 @@ def hgcwa_code_download(**args):
     lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
     code += '\n'.join(lines)
     logger.info("%s seconds for %d chars" % (time.time() - start, len(code)))
-    strIO = StringIO()
-    strIO.write(code)
+    if PY3:
+        strIO = BytesIO()
+        strIO.write(code.encode('utf-8'))
+    else:
+        strIO = StringIO()
+        strIO.write(code)
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
