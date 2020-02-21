@@ -34,6 +34,7 @@
   <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
   <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
+{% if type == 'Dirichlet' %}
   {% if isminimal %}
   <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
   {% endif %}
@@ -45,6 +46,7 @@
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_index',title='Orbit index')}} </td> <td>=</td> <td> {{ orbit_index }} </td></tr>
   {% endif %}
+{% endif %}
 </table>
 
 {% if galoisorbit %}
@@ -81,7 +83,8 @@
 
 
 {# Values on generators #}
-{% if (type != 'Hecke') and modulus>2 and genvalues %}
+{% if type == 'Dirichlet' %}
+{% if modulus>2 and genvalues %}
 <h2>
   {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
 </h2>
@@ -91,6 +94,7 @@
 <p>
 {{ generators }} &rarr; {{ genvalues }}
 </p>
+{% endif %}
 {% endif %}
 
 {# Values #}
