@@ -212,7 +212,10 @@ class WebBelyiGalmap(object):
 
         # TODO: add portrait here, I think
         # Properties
+        #self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']})
+        #plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         properties = [
+            #(None, plot_link),
             ("Label", galmap["label"]),
             ("Group", str(galmap["group"])),
             ("Orders", str(galmap["abc"])),
