@@ -3,7 +3,7 @@
 from ast import literal_eval
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot,
-                         list_to_factored_poly_otherorder, names_and_urls,
+                         list_to_factored_poly_otherorder, make_bigint, names_and_urls,
                          display_knowl, web_latex)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
@@ -505,7 +505,7 @@ def mw_gens_table(invs,gens,hts,pts):
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-        return [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")], xD, yD, yden
+        return [make_bigint(elt, 10) for elt in [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]], xD, yD, yden
     if not invs:
         return ''
     gentab = ['<table class="ntdata">', '<thead>', '<tr>',
