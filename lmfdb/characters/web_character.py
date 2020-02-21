@@ -1166,6 +1166,13 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             )
         if len(self.vflabel) > 0:
             friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        if self.symbol_numerator():
+            if self.symbol_numerator() > 0:
+                assoclabel = '2.2.%d.1' % self.symbol_numerator()
+            else:
+                assoclabel = '2.0.%d.1' % -self.symbol_numerator()
+            friendlist.append(("Associated quadratic field", '/NumberField/' + assoclabel))
+
         label = "%s.%s"%(self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
         if not myrep is None:
