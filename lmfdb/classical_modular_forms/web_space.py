@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_to_factored_poly_otherorder
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_to_factored_poly_otherorder, make_bigint
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -181,13 +181,14 @@ def display_hecke_polys(form_labels, num_disp = 5):
     num_forms = len(form_labels)
     orbit_codes = []
     for label in form_labels:    
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms.lookup(label, ['hecke_orbit_code'])
         orbit_codes.append(data['hecke_orbit_code'])
     hecke_polys_orbits = {}
     for orbit_code in orbit_codes:
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
             coeffs = poly_item['lpoly']
             F_p = list_to_factored_poly_otherorder(coeffs)
+            F_p = make_bigint(r'\( %s \)' % F_p)
             if (F_p != "1") and (len(F_p) > 0):
                 if (F_p[0] != '(') and (num_forms > 1):
                     F_p = '(' + F_p + ')'
@@ -196,7 +197,9 @@ def display_hecke_polys(form_labels, num_disp = 5):
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
     if not hecke_polys_orbits:
         return "There are no characteristic polynomials of Hecke operators in the database"
-    polys = ['<table class="ntdata">', '<thead>', '  <tr>',
+    # tried adding this to make the scrolling inside the table, check again
+    polys = ['<div style="max-width: 100%; overflow-x; auto;">',
+             '<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
              th_wrap('lpoly', '$F_p(T)$'),
              '  </tr>', '</thead>', '<tbody>']
@@ -207,8 +210,8 @@ def display_hecke_polys(form_labels, num_disp = 5):
         if loop_count < num_disp:
             polys.append('  <tr>')
         else:
-            polys.append('  <tr class="more nodisplay">') 
-        polys.extend(map(td_wrap, [p, lpoly])) # add order back eventually
+            polys.append('  <tr class="more nodisplay">')
+        polys.extend([td_wrap(p), '<td>' + lpoly + '</th>'])
         polys.append('  </tr>')
         loop_count += 1
     if loop_count > num_disp:
@@ -224,7 +227,7 @@ def display_hecke_polys(form_labels, num_disp = 5):
                 </td>
             </tr>
             ''')
-        polys.extend(['</tbody>', '</table>'])
+        polys.extend(['</tbody>', '</table>', '</div>'])
     return '\n'.join(polys)
 
 class DimGrid(object):
