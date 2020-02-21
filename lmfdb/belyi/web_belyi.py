@@ -210,6 +210,7 @@ class WebBelyiGalmap(object):
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
+        # TODO: add portrait here, I think
         # Properties
         properties = [
             ("Label", galmap["label"]),
@@ -220,6 +221,7 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
+        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
 
