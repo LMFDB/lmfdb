@@ -457,7 +457,7 @@ class WebHecke(WebCharObject):
     @staticmethod
     def ideal2tex(ideal):
         a, b = ideal.gens_two()
-        return r"\(\langle %s, %s\\rangle\)" % (a._latex_(), b._latex_())
+        return r"\(\langle %s, %s \rangle\)" % (a._latex_(), b._latex_())
 
     @staticmethod
     def ideal2cas(ideal):
