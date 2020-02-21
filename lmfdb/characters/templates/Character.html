@@ -41,7 +41,7 @@
   <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
   {% endif %}
-  {% if modulus <= 10000 %}
+  {% if (type != 'Hecke') and (modulus <= 10000) %}
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_index',title='Orbit index')}} </td> <td>=</td> <td> {{ orbit_index }} </td></tr>
   {% endif %}
@@ -81,7 +81,7 @@
 
 
 {# Values on generators #}
-{% if modulus>2 and genvalues %}
+{% if (type != 'Hecke') and modulus>2 and genvalues %}
 <h2>
   {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
 </h2>
