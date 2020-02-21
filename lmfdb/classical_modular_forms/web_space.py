@@ -175,21 +175,17 @@ def display_hecke_polys(form_labels, num_disp = 5):
     - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
     """
     #from time import clock
-    #t0 = clock()
     def th_wrap(kwl, title):
         return '    <th>%s</th>' % display_knowl(kwl, title=title)
     def td_wrap(val):
         return '    <td>$%s$</th>' % val
     num_forms = len(form_labels)
     orbit_codes = []
-    for label in form_labels:    
+    for label in form_labels:
         data = db.mf_newforms.lookup(label, ['hecke_orbit_code'])
         orbit_codes.append(data['hecke_orbit_code'])
     hecke_polys_orbits = {}
-    #t1 = clock()
     #factor_time = 0
-    #bigint_time = 0
-    #print "before loop took " +str(t1-t0)
     for orbit_code in orbit_codes:
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
             coeffs = poly_item['lpoly']
@@ -198,22 +194,16 @@ def display_hecke_polys(form_labels, num_disp = 5):
             #t3 = clock()
             #factor_time += (t3-t2)
             F_p = make_bigint(r'\( %s \)' % F_p)
-            #t4 = clock()
-            #bigint_time += (t4 - t3)
             if (F_p != "1") and (len(F_p) > 0):
                 if (F_p[0] != '(') and (num_forms > 1):
                     F_p = '(' + F_p + ')'
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
             else:
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
-    #t2 = clock()
     #print "factoring took " + str(factor_time)
-    #print "bigint took " + str(bigint_time)
-    #print "total loop took " + str(t2-t1)
     if not hecke_polys_orbits:
         return "There are no characteristic polynomials of Hecke operators in the database"
-    # tried adding this to make the scrolling inside the table, check again
-    polys = ['<div style="max-width: 100%; overflow-x; auto;">',
+    polys = ['<div style="max-width: 100%; overflow-x: auto;">',
              '<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
              th_wrap('lpoly', '$F_p(T)$'),
@@ -243,8 +233,6 @@ def display_hecke_polys(form_labels, num_disp = 5):
             </tr>
             ''')
         polys.extend(['</tbody>', '</table>', '</div>'])
-        #t3 = clock()
-        #print "final loop took " + str(t3-t2)
     return '\n'.join(polys)
 
 class DimGrid(object):
