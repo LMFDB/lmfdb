@@ -194,15 +194,14 @@ def display_hecke_polys(form_labels, num_disp = 5):
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
             else:
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
-    heckepolys = hecke_polys_orbits.items()
-    if len(heckepolys) == 0:
+    if not hecke_polys_orbits:
         return "There are no characteristic polynomials of Hecke operators in the database"
     polys = ['<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
              th_wrap('lpoly', '$F_p(T)$'),
              '  </tr>', '</thead>', '<tbody>']
     loop_count = 0
-    for p, lpoly in heckepolys:
+    for p, lpoly in hecke_polys_orbits.items():
         if lpoly == "":
             lpoly = "1";
         if loop_count < num_disp:
