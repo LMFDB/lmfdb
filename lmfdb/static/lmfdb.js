@@ -120,8 +120,6 @@ var table_border_knowl_width = 20;
 function knowl_click_handler($el) {
   // the knowl attribute holds the id of the knowl
   var knowl_id = $el.attr("knowl");
-  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
-  var knowl_prefix = $el.attr("prefix");
   // the uid is necessary if we want to reference the same content several times
   var uid = $el.attr("knowl-uid");
   var output_id = '#knowl-output-' + uid;
@@ -241,7 +239,8 @@ function knowl_click_handler($el) {
       $output.addClass("loading");
       $output.show();
       // log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
-      $output.load(knowl_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
+	  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
+      $output.load(url_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {
