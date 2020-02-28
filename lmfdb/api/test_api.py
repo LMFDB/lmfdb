@@ -2,8 +2,6 @@
 from lmfdb.tests import LmfdbTest
 
 class ApiTest(LmfdbTest):
-
-    
     def test_api_home(self):
         r"""
         Check that the top-level api page works
@@ -51,7 +49,7 @@ class ApiTest(LmfdbTest):
                 ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
-            assert "!!python/unicode 'jinv': !!python/unicode '-65626385453056/656000554923'" in data
+            assert "jinv: -65626385453056/656000554923" in data
             assert not "Error:" in data
 
     def test_api_examples_json(self):
