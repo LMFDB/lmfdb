@@ -210,6 +210,15 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
     <td>
     <span class="formexample"> e.g. 2 or 4-15</span>
     </td>
+    <td>
+    {{ KNOWL('ec.q.regulator',title="Regulator") }}
+    </td>
+    <td>
+    <input type='text' name='regulator' example="8.4-9.1" size=10>
+    <td>
+    <span class="formexample"> e.g. 7.3 or 8.4-9.0</span>
+    </td>
+    </td>
 </tr>
 
 <tr><td>Results to display</td><td> <input type='text' name='count' value=50 size=10></td></tr>

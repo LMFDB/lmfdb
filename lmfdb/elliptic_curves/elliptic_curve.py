@@ -15,8 +15,8 @@ from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, flash_error,
-    parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
-    search_wrap)
+    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes, 
+    parse_element_of, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -253,6 +253,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
+    parse_floats(info,query,'regulator','regulator')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
