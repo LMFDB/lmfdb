@@ -663,7 +663,7 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=List', follow_redirects = True)
         assert '5.10.a.a' in page.get_data(as_text=True)
-        assert '[5, 10, 1, 2.5751791808193656, [0, 1], "1.1.1.1", [], [], [-8, -114, -625, 4242]]' in page.get_data(as_text=True)
+        assert ('[5, 10, 1, 2.5751791808193656, [0, 1], "1.1.1.1", [], [], [-8, -114, -625, 4242]]' in page.get_data(as_text=True)) or ('[5, 10, 1, 2.57517918082, [0, 1], "1.1.1.1", [], [], [-8, -114, -625, 4242]]' in page.get_data(as_text=True)) # Different tests for py2 and py3 due to different number of digits being returned.
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:
