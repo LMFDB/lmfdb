@@ -204,7 +204,7 @@ class CharacterSearch:
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
-            flash_error("Searching is limited to characters of modulus less than $10^5$")
+            flash_error("Searching is limited to characters of modulus less than $10^4$")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
             flash_error("For order searching the minimum modulus needs to be less than $10^3$")
