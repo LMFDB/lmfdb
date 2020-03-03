@@ -378,6 +378,8 @@ def curve_string_parser(rec):
     return f, h
 
 def hyperelliptic_polys_to_ainvs(f,h):
+    R = f.parent()
+    K = R.base_ring()
     f_cs = f.coefficients(sparse = False)
     h_cs = h.coefficients(sparse = False)
     while len(h_cs) < 2: # pad coefficients of h with 0s to get length 2
@@ -387,7 +389,7 @@ def hyperelliptic_polys_to_ainvs(f,h):
     a6 = f_cs[0]
     a4 = f_cs[1]
     a2 = f_cs[2]
-    return [a1, a2, a3, a4, a6]
+    return [K(a1), K(a2), K(a3), K(a4), K(a6)]
 
 def make_base_field(rec):
     if rec["base_field"] == [-1, 1]:

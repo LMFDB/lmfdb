@@ -29,14 +29,13 @@ def genus2_lookup_equation(f):
             return r['label']
     return None
 
-# No, input should be a BELYI rec, not an ellcrv rec
 def genus1_lookup_equation_QQ(rec):
     assert rec['g'] == 1
     f,h = curve_string_parser(rec)
     ainvs = hyperelliptic_polys_to_ainvs(f,h)
     E = EllipticCurve(ainvs)
     j = E.j_invariant()
-    for r in db.ec_curves.search({"jinv":str(j)}): # is there a better way to search than by j-invariant?
+    for r in db.ec_curves.search({"jinv":str(j)}): # is there a better way to search than by j-invariant? Conductor?
         ainvs2 = r['ainvs']
         E2 = EllipticCurve(ainvs2)
         if E.is_isomorphic(E2):
@@ -52,34 +51,35 @@ def genus1_lookup_equation_nf(rec):
     nf_matches = list(db.nf_fields.search({'coeffs':rec['base_field']}))
     if len(nf_matches) == 0:
         print "Base field not found in database"
-        #print "Curve not found in database"
         return None
     else:
+        #print "Base field found"
         nf_rec = nf_matches[0]
-        K = NumberField(R(rec['base_field']), "a")
-        a = K.gens()[0]
-        print "\n\nCurve defined over %s" % K
         # make curve
         f,h = curve_string_parser(rec)
         ainvs = hyperelliptic_polys_to_ainvs(f,h)
         E = EllipticCurve(ainvs)
+        K = E.base_field()
+        a = K.gens()[0]
         j = E.j_invariant()
         j_str = NFelt(j)
-        print "Curve has j-invariant %s, represented as %s" % (j, j_str)
-        j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str})) # is there a better way to search than by j-invariant?
-        print "Found %d curves with same j-invariant" % len(j_matches)
+        #cond_nrm = (E.conductor()).norm()
+        #print "Curve has j-invariant %s over %s" % (j, K) 
+        #print "\nCurve has j-invariant %s, represented as %s" % (j, j_str)
+        j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str})) # is there a better way to search than by j-invariant? Conductor norm?
+        #j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str, 'conductor_norm':cond_nrm})) # throws weird Postgres error
+        #print "Found %d curves with same j-invariant" % len(j_matches)
         for r in j_matches:
-            nf_lab = r['field_label']
-            nf_rec = db.nf_fields.lookup(nf_lab)
-            K2 = NumberField(R(nf_rec['coeffs']), 'b')
-            b = K2.gens()[0]
-            ainvs2 = parse_ainvs(K2, r['ainvs'])
+            ainvs2 = parse_ainvs(K, r['ainvs'])
             E2 = EllipticCurve(ainvs2)
+            assert E.base_field() == E2.base_field()
             if E.is_isomorphic(E2):
                 return r['label']
     print "Curve not found in database"
     return None
 
+# TODO: problems if curve defined over smaller field than Belyi map.
+# This code won't find base changes.
 def genus1_lookup_equation(rec):
     if rec['base_field'] == [-1, 1]:
         return genus1_lookup_equation_QQ(rec)
