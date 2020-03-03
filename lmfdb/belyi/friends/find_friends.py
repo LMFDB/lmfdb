@@ -32,7 +32,8 @@ def genus2_lookup_equation(f):
 # No, input should be a BELYI rec, not an ellcrv rec
 def genus1_lookup_equation_QQ(rec):
     assert rec['g'] == 1
-    ainvs = hyperelliptic_polys_to_ainvs(curve_string_parser(rec))
+    f,h = curve_string_parser(rec)
+    ainvs = hyperelliptic_polys_to_ainvs(f,h)
     E = EllipticCurve(ainvs)
     j = E.j_invariant()
     for r in db.ec_curves.search({"jinv":str(j)}): # is there a better way to search than by j-invariant?
@@ -43,24 +44,44 @@ def genus1_lookup_equation_QQ(rec):
     print "Curve not found in database"
     return None
 
-# TODO: have to add numfld parsing everywhere; see WebEllipticCurve.py
 def genus1_lookup_equation_nf(rec):
     assert rec['g'] == 1
     # make base field
-    R.<x> = PolynomialRing(QQ)
-    K.<a> = NumberField(R(rec['base_field']))
-    # make curve
-    ainvs = hyperelliptic_polys_to_ainvs(curve_string_parser(rec))
-    E = EllipticCurve(ainvs)
-    j = E.j_invariant()
-    j_str = NFelt(j)
-    for r in db.ec_nfcurves.search({"jinv":j_str}): # is there a better way to search than by j-invariant?
-        nf_lab = rec['field_label']
-        nf_rec = db.nf_fields.lookup(nf_lab)
-        K2.<a> = NumberField(R(nf_rec['coeffs']))
-        ainvs2 = parse_ainvs(K2, r['ainvs'])
-        E2 = EllipticCurve(ainvs2)
-        if E.is_isomorphic(E2):
-            return r['label']
+    R = PolynomialRing(QQ, "x")
+    x = R.gens()[0]
+    nf_matches = list(db.nf_fields.search({'coeffs':rec['base_field']}))
+    if len(nf_matches) == 0:
+        print "Base field not found in database"
+        #print "Curve not found in database"
+        return None
+    else:
+        nf_rec = nf_matches[0]
+        K = NumberField(R(rec['base_field']), "a")
+        a = K.gens()[0]
+        print "\n\nCurve defined over %s" % K
+        # make curve
+        f,h = curve_string_parser(rec)
+        ainvs = hyperelliptic_polys_to_ainvs(f,h)
+        E = EllipticCurve(ainvs)
+        j = E.j_invariant()
+        j_str = NFelt(j)
+        print "Curve has j-invariant %s, represented as %s" % (j, j_str)
+        j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str})) # is there a better way to search than by j-invariant?
+        print "Found %d curves with same j-invariant" % len(j_matches)
+        for r in j_matches:
+            nf_lab = r['field_label']
+            nf_rec = db.nf_fields.lookup(nf_lab)
+            K2 = NumberField(R(nf_rec['coeffs']), 'b')
+            b = K2.gens()[0]
+            ainvs2 = parse_ainvs(K2, r['ainvs'])
+            E2 = EllipticCurve(ainvs2)
+            if E.is_isomorphic(E2):
+                return r['label']
     print "Curve not found in database"
     return None
+
+def genus1_lookup_equation(rec):
+    if rec['base_field'] == [-1, 1]:
+        return genus1_lookup_equation_QQ(rec)
+    else:
+        return genus1_lookup_equation_nf(rec)
