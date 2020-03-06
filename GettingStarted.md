@@ -150,6 +150,10 @@ sage -python start-lmfdb.py --debug
 On the last step, when you start the server running,
 LMFDB will detect that it is running inside CoCalc and provide a URL through which the
 site can be accessed.
+* If you've changed static files, you will have to run LMFDB on a different port in order for the files to update. For instance, to run LMFDB on port 37778:
+```
+sage -python start-lmfdb.py --debug --port=37778
+```
 
 Troubleshooting
 ===============

@@ -136,10 +136,9 @@ div.unnecessary{
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src="/static/js/snap.svg-min.js"></script>
-
-<script src="/static/lmfdbmap/math_descriptions.js"></script>
-<script src="/static/lmfdbmap/lmfdbmap_code.js"></script>
+<script src="{{ url_for('static', filename='js/snap.svg-min.js') }}"></script>
+<script src="{{ url_for('static', filename='lmfdbmap/math_descriptions.js') }}"></script>
+<script src="{{ url_for('static', filename='lmfdbmap/lmfdbmap_code.js')}}"></script>
 
 <script>
 // This is the snap.svg script way of controlling the files.
@@ -149,7 +148,6 @@ var svg_examples = "svg_examples";
 var clickSwitch = 0;
 var clickID = "";
 var svg_element_currently_clicked;
-                
 // JSON object list for editing the SVG descriptions easily
 // opaque_id is the id of the element that gets its opacity turned down
 // No more than three list items!
