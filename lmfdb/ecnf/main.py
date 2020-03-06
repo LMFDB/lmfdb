@@ -4,7 +4,7 @@
 
 import ast
 import re
-from six import StringIO
+from six import BytesIO
 import time
 from six.moves.urllib_parse import quote, unquote
 
@@ -17,7 +17,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    search_wrap)
+    search_wrap, parse_rational)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -446,8 +446,8 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
@@ -499,9 +499,14 @@ def elliptic_curve_search(info, query):
             info['jinv'] = info['jinv'].replace('phi','a')
         if info.get('field','').strip() == '2.0.4.1':
             info['jinv'] = info['jinv'].replace('i','a')
-    parse_nf_elt(info,query,'jinv',name='j-invariant')
-    if query.get('jinv'):
-        query['jinv'] =','.join(query['jinv'])
+        if not 'a' in info['jinv'] and not info.get('field'): # rational j-invariant allowed for any field
+            parse_rational(info, query, 'jinv', name='j-invariant')
+            if query.get('jinv'):
+                query['jinv'] = {'$regex': '^' + query['jinv'] + '(,0)*$'} # nf elements like j,0,0,0
+        else: # j-invariant is a number field element
+            parse_nf_elt(info, query, 'jinv', name='j-invariant')
+            if query.get('jinv'):
+                query['jinv'] = ','.join(query['jinv'])
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
