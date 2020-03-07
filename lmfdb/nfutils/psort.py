@@ -46,8 +46,10 @@ def padded_list(c,k):
         a = c.list(start_val=0)
     return a[:k] + [ZZ(0)]* (k-len(a))
 
+
 def ZpX_key(k):
-    return lambda f: [f.degree()] + flatten(zip(*[padded_list(c,k) for c in f.list()]))
+    return lambda f: [f.degree()] + flatten(list(zip(*[padded_list(c, k)
+                                                       for c in f.list()])))
 
 ###################################################
 #
@@ -130,7 +132,7 @@ def make_keys(K,p):
         # which is its index in the sublist withe same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
-        vals = key_dict.values()
+        vals = list(key_dict.values())
         new_key_dict = {}
         for P in key_dict:
             k = key_dict[P]
@@ -187,12 +189,13 @@ def primes_of_degree_iter(K, deg, condition=None, sort_key=prime_label, maxnorm=
     condition(p) holds will be returned.  For example,
     condition=lambda:not p.divides(6).
     """
-    for p in primes(2,stop=maxnorm):
-        if condition==None or condition(p):
-            make_keys(K,p)
+    for p in primes(2, stop=maxnorm):
+        if condition is None or condition(p):
+            make_keys(K, p)
             for P in K.primes_dict[p]:
                 if P.residue_class_degree()==deg and P.norm()<=maxnorm:
                     yield P
+
 
 def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     """Iterator through primes of K, sorted using the provided sort key,
@@ -212,11 +215,11 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
     # pop the first prime off each iterator (allowing for the
     # possibility that there may be none):
-    Ps = [0 for d in dlist]
-    ns = [Infinity for d in dlist]
-    for i,PP in enumerate(PPs):
+    Ps = [0 for _ in dlist]
+    ns = [Infinity for _ in dlist]
+    for i, PP in enumerate(PPs):
         try:
-            P = PP.next()
+            P = next(PP)
             Ps[i] = P
             ns[i] = P.norm()
         except StopIteration:
@@ -235,7 +238,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 
         # pop the next prime off that sub-iterator, detecting if it has finished:
         try:
-            Ps[i] = PPs[i].next()
+            Ps[i] = next(PPs[i])
             ns[i] = Ps[i].norm()
         except StopIteration:
             # prevent i'th sub-iterator from being used again
@@ -259,7 +262,7 @@ def exp_vec_wt_iter(w, wts):
     if w==0:
         yield [0 for _ in wts]
     elif len(wts):
-        for v0 in range(1+w/wts[-1]):
+        for v0 in range(1+w//wts[-1]):
             w1 = w-wts[-1]*v0
             if w1==0:
                 yield [0]* (len(wts)-1) + [v0]

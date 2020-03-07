@@ -29,22 +29,22 @@ Browse by type:
 
 <p>
 Browse by abstract group:
-<a href="?gapid=[6,1]">$S_3$</a>,
-<a href="?gapid=[8,3]">$D_4$</a>,
-<a href="?gapid=[12,3]">$A_4$</a>,
-<a href="?gapid=[24,12]">$S_4$</a>,
-<a href="?gapid=[60,5]">$A_5$</a>,
-<a href="?gapid=[120,34]">$S_5$</a>,
-<a href="?gapid=[168,42]">$\GL(3,2)$</a>,
-<a href="?gapid=[360,118]">$A_6$</a>,
-<a href="?gapid=[504,156]">$\PSL(2,8)$</a>,
-<a href="?gapid=[660,13]">$\PSL(2,11)$</a>,
-<a href="?gapid=[1092,25]">$\PSL(2,13)$</a>,
-<a href="?solv=False&order=5616">$\PSL(3,3)$</a>,
-<a href="?solv=False&t=323%2C6815&order=6048">$\PSU(3,3)$</a>,
-<a href="?solv=False&t=993%2C12781%2C14345%2C666&order=25920">$\PSp(4,3)$</a>,
-<a href="?solv=False&n=11..22&order=7920">$M_{11}$</a>,
-<a href="?solv=False&n=12&order=95040">$M_{12}$</a>
+<a href="?gal=S3">$S_3$</a>,
+<a href="?gal=D4">$D_4$</a>,
+<a href="?gal=A4">$A_4$</a>,
+<a href="?gal=S4">$S_4$</a>,
+<a href="?gal=A5">$A_5$</a>,
+<a href="?gal=S5">$S_5$</a>,
+<a href="?gal=GL(3,2)">$\GL(3,2)$</a>,
+<a href="?gal=A6">$A_6$</a>,
+<a href="?gal=PSL(2,8)">$\PSL(2,8)$</a>,
+<a href="?gal=PSL(2,11)">$\PSL(2,11)$</a>,
+<a href="?gal=PSL(2,13)">$\PSL(2,13)$</a>,
+<a href="?gal=PSL(3,3)">$\PSL(3,3)$</a>,
+<a href="?gal=PSU(3,3)">$\PSU(3,3)$</a>,
+<a href="?gal=PSp(4,3)">$\PSp(4,3)$</a>,
+<a href="?gal=M11">$M_{11}$</a>,
+<a href="?gal=M12">$M_{12}$</a>
 <p>
 
 <p>
@@ -131,12 +131,18 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 
           <tr>
             <td>
-              {{KNOWL('group.small_group_label',title='GAP id')}} 
-            </td><td><input type="text" name="gapid" value="" placeholder="[8,3]" size=10></td>
+              {{KNOWL('group',title='Group')}}
+            </td><td><input type="text" name="gal" value="" placeholder="[8,3]" size=10></td>
 	    <td>
-	      <span class="formexample">e.g. [8,3] or [16,7]</span>
+          <span class="formexample">list of 
+              {{KNOWL('group.small_group_label',title="GAP id's")}},
+          e.g. [8,3] or [16,7], group names from the
+          {{KNOWL('nf.galois_group.name','list of group labels')}}, e.g.
+          C5 or S12, and {{KNOWL('gg.label','transitive group labels')}}, 
+          e.g., 7T2 or 11T5</span>
 	    </td>
           </tr>
+
 
           <tr>
             <td>
@@ -146,20 +152,14 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 	      <span class="formexample">e.g. -1, or 1..3</span>
 	    </td>
           </tr>
-
-
-          <tr>
+         <tr>
           <td> Results to display </td>
           <td>
             <input type="text" name="count" value="{{info.count}}" size=10>
           </td>
         </tr>
-
+        <tr><td><button type="submit" value="Search">Search</button></td></tr>
        </table>
-        <button type="submit" value="Search">Search</button>
       </form>
-
-    
-
 
 {% endblock %}

@@ -38,13 +38,6 @@
 
 <tr style="height:50px">
 <td class="button"><button type='submit' value='refine' style="width: 110px" onclick='resetStart()'>Search again</button></td>
-<td align=left colspan="7">
-<input type="hidden" name="query" value="{{info.query}}"/>
-Download all search results for&nbsp;
-<button type="submit" name="download" value="gp">Pari/GP</button>&nbsp;
-<button type="submit" name="download" value="sage">SageMath</button>&nbsp;
-<button type="submit" name="download" value="magma">Magma</button>&nbsp;
-</td>
 </tr>
 
 </table>
@@ -56,7 +49,7 @@ Download all search results for&nbsp;
 
 
 
-<table class="ntdata">
+<table class="ntdata"><thead>
 <tr>
     <th>{{ KNOWL('belyi.label', title='Label') }}</th>
     <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
@@ -64,7 +57,7 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
     <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
     <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
-</tr>
+</tr></thead><tbody>
 {% for galmap in info.results: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
@@ -75,6 +68,7 @@ Download all search results for&nbsp;
     <td align=center> {{galmap.geomtype}} </td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 
 

@@ -1,7 +1,9 @@
+from __future__ import print_function
 import os
 import yaml
 from flask import url_for
-from urllib import quote
+from six.moves.urllib_parse import quote
+from six import PY3
 from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
@@ -32,11 +34,9 @@ def convert_IQF_label(fld, lab):
     if len(newlab.split("."))!=3:
         return newlab
     newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
-    if newlab:
-        if newlab!=lab:
-            print("Converted label {} to {} over {}".format(lab, newlab, fld))
-        return newlab
-    return lab
+    # if newlab and newlab!=lab:
+    #     print("Converted label {} to {} over {}".format(lab, newlab, fld))
+    return newlab if newlab else lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -95,8 +95,12 @@ def ideal_from_string(K,s, IQF_format=False):
     else:
         # 'w' is used for the generator name for all fields for
         # numbers stored in the database
-        alpha = alpha.encode().replace('w',str(K.gen()))
-        I = K.ideal(a,K(alpha.encode()))
+        if PY3:
+            alpha = alpha.replace('w',str(K.gen()))
+            I = K.ideal(a,K(alpha))
+        else:
+            alpha = alpha.encode().replace('w',str(K.gen()))
+            I = K.ideal(a,K(alpha.encode()))
     if I.norm()==N:
         return I
     else:
@@ -105,7 +109,7 @@ def ideal_from_string(K,s, IQF_format=False):
 def pretty_ideal(I):
     easy = I.number_field().degree()==2 or I.norm()==1
     gens = I.gens_reduced() if easy else I.gens()
-    return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
+    return r"\((" + ",".join([latex(g) for g in gens]) + r")\)"
 
 # HNF of an ideal I in a quadratic field
 
@@ -226,7 +230,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
-        return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
+        return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
 
@@ -256,7 +260,7 @@ class ECNF(object):
         data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
-        print "No such curve in the database: %s" % label
+        print("No such curve in the database: %s" % label)
 
     def make_E(self):
         #print("Creating ECNF object for {}".format(self.label))
@@ -333,9 +337,9 @@ class ECNF(object):
                 self.fact_mindisc = self.mindisc
                 self.fact_mindisc_norm = self.mindisc
             else:
-                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,mindisc_ords)])
+                Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
-                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,mindisc_ords)])
+                Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
                 self.fact_mindisc_norm = web_latex(Dminnormfac)
 
         j = self.field.parse_NFelt(self.jinv)
@@ -384,16 +388,16 @@ class ECNF(object):
 
         # CM and End(E)
         self.cm_bool = "no"
-        self.End = "\(\Z\)"
+        self.End = r"\(\Z\)"
         if self.cm:
             self.rational_cm = K(self.cm).is_square()
             self.cm_sqf = ZZ(self.cm).squarefree_part()
-            self.cm_bool = "yes (\(%s\))" % self.cm
+            self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4
-                self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
+                self.End = r"\(\Z[\sqrt{%s}]\)" % (d4)
             else:
-                self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
+                self.End = r"\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
 
         # Galois images in CM case:
         if self.cm and self.galois_images != '?':
@@ -418,9 +422,9 @@ class ECNF(object):
         # Q-curve / Base change
         try:
             qc = self.q_curve
-            if qc == True:
+            if qc is True:
                 self.qc = "yes"
-            elif qc == False:
+            elif qc is False:
                 self.qc = "no"
             else: # just in case
                 self.qc = "not determined"
@@ -433,7 +437,7 @@ class ECNF(object):
         if self.tr == 0:
             self.tor_struct_pretty = "Trivial"
         if self.tr == 1:
-            self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
+            self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
 
@@ -453,17 +457,17 @@ class ECNF(object):
 
         # Generators
         try:
-            gens = [parse_point(K,P) for P in self.gens]
-            self.gens = ", ".join([web_point(P) for P in gens])
+            gens = [parse_point(K, P) for P in self.gens]
+            self.gens = ", ".join(web_point(P) for P in gens)
             if self.rk == "?":
                 self.reg = "not available"
             else:
                 if gens:
                     try:
-                        self.reg = self.reg
+                        self.reg
                     except AttributeError:
                         self.reg = "not available"
-                    pass # self.reg already set
+                    # self.reg already set
                 else:
                     self.reg = 1  # otherwise we only get 1.00000...
 
@@ -589,7 +593,7 @@ class ECNF(object):
         ]
 
         for E0 in self.base_change:
-            self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+            self.friends += [(r'Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
 
         self._code = None # will be set if needed by get_code()
 
@@ -617,7 +621,7 @@ class ECNF(object):
             self.friends += [('L-function not available', "")]
 
     def code(self):
-        if self._code == None:
+        if self._code is None:
             self.make_code_snippets()
         return self._code
 

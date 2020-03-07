@@ -51,7 +51,4 @@ class MFDataTable(object):
         return self._col_heads
 
     def prop(self, name=''):
-        if name in self._props.keys():
-            return self._props[name]
-        else:
-            return ''
+        return self._props.get(name, '')

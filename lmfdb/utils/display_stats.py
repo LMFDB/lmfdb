@@ -1,8 +1,8 @@
-
+from six import string_types
 from collections import defaultdict
 
 from flask import url_for
-from sage.all import UniqueRepresentation, lazy_attribute
+from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from lmfdb.utils.utilities import format_percentage, display_knowl, KeyedDefaultDict, range_formatter
 
@@ -46,6 +46,13 @@ class proportioners(object):
     ##################################################################
 
     @classmethod
+    def per_total(cls, grid, row_headers, col_headers, stats):
+        total = sum(D['count'] for row in grid for D in row)
+        for row in grid:
+            for D in row:
+                D['proportion'] = _format_percentage(D['count'], total)
+
+    @classmethod
     def per_row_total(cls, grid, row_headers, col_headers, stats):
         """
         Total is determined as the sum of the current row.
@@ -83,7 +90,7 @@ class proportioners(object):
         """
         Total is determined as the sum of the current column.
         """
-        cls.per_row_total(zip(*grid), col_headers, row_headers, stats)
+        cls.per_row_total(list(zip(*grid)), col_headers, row_headers, stats)
 
     @classmethod
     def per_col_query(cls, query):
@@ -102,7 +109,7 @@ class proportioners(object):
         A function for use as a proportioner.
         """
         def inner(grid, row_headers, col_headers, stats):
-            cls.per_row_query(query)(zip(*grid), col_headers, row_headers, stats)
+            cls.per_row_query(query)(list(zip(*grid)), col_headers, row_headers, stats)
         return inner
 
     @classmethod
@@ -282,7 +289,7 @@ class totaler(object):
         if col_counts:
             row_headers.append(col_total_label)
             if recursive_prop:
-                total_grid_cols = zip(*stats._total_grid)
+                total_grid_cols = list(zip(*stats._total_grid))
             row = []
             for i, col in enumerate(zip(*grid)):
                 # We've already totaled rows, so have to skip if we don't want the corner
@@ -330,6 +337,7 @@ class StatsDisplay(UniqueRepresentation):
       dictionaries with the following keys (optional except ``cols``):
 
       - ``cols`` -- a list of columns to analyze.
+      - ``constraint`` -- a query dictionary, giving constraints on the items included.
       - ``buckets`` -- a dictionary with columns as keys and list of strings such as '2-10' as values.
       - ``table`` -- a PostgresStatsTable containing the columns.
       - ``top_title`` -- a list of pairs (text, knowl) for the header of this statistics block.
@@ -387,7 +395,7 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _dynamic_cols(self):
-        return [('none', 'None')] + [(col, self._short_display[col].capitalize()) for col in self.dynamic_cols]
+        return [('none', 'None')] + [(col, self._short_display[col]) for col in self.dynamic_cols]
 
     @property
     def _default_buckets(self):
@@ -395,7 +403,12 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _sort_keys(self):
-        A = defaultdict(lambda: None)
+        # We want None (unknown) to show up at the beginning
+        def default_sort_key(val):
+            if val is None:
+                return -infinity
+            return val
+        A = defaultdict(lambda: default_sort_key)
         A.update(getattr(self, 'sort_keys', {}))
         return A
 
@@ -480,7 +493,7 @@ class StatsDisplay(UniqueRepresentation):
             being a list of dictionaries as above.
         - ``col_headers`` is a list of column headers.
         """
-        if isinstance(cols, basestring):
+        if isinstance(cols, string_types):
             cols = [cols]
         if buckets is None:
             buckets = {col: self._buckets[col] for col in cols if self._buckets[col]}
@@ -515,7 +528,7 @@ class StatsDisplay(UniqueRepresentation):
                 if show_total or proportioner is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
                 headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
-            elif cols == buckets.keys():
+            elif cols == list(buckets):
                 if split_list or avg or sort_key[col]:
                     raise ValueError("Unsupported option")
                 headers = [formatter[col](bucket) for bucket in buckets[col]]
@@ -542,7 +555,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = '\(\\mathrm{avg}\\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -556,8 +569,16 @@ class StatsDisplay(UniqueRepresentation):
                 if col in buckets:
                     headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
                 else:
+                    try:
+                        dup_free = set(headers[i])
+                    except TypeError:
+                        # The headers may not all be hashable
+                        dup_free = []
+                        for h in headers[i]:
+                            if h not in dup_free:
+                                dup_free.append(h)
                     headers[i] = [formatter[col](val) for val in
-                                  sorted(set(headers[i]), key=sort_key[col], reverse=reverse[col])]
+                                  sorted(dup_free, key=sort_key[col], reverse=reverse[col])]
             row_headers, col_headers = headers
             grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
             # _total_grid is used for recursive proportions; such proportioners
@@ -568,14 +589,15 @@ class StatsDisplay(UniqueRepresentation):
                 proportioner(grid, row_headers, col_headers, self)
             if totaler:
                 totaler(grid, row_headers, col_headers, self)
-            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
-        elif len(cols) == 0:
+            return {'grid': list(zip(row_headers, grid)),
+                    'col_headers': col_headers}
+        elif not cols:
             return {}
         else:
             raise NotImplementedError
 
     def prep(self, attr):
-        if isinstance(attr['cols'], basestring):
+        if isinstance(attr['cols'], string_types):
             attr['cols'] = [attr['cols']]
         cols = attr['cols']
         # default value for top_title from row_title/columns
@@ -583,7 +605,7 @@ class StatsDisplay(UniqueRepresentation):
             top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        if not isinstance(top_title, basestring):
+        if not isinstance(top_title, string_types):
             missing_knowl = any(knowl is None for text, knowl in top_title)
             joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
             attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
@@ -631,7 +653,7 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            if isinstance(cols, basestring):
+            if isinstance(cols, string_types):
                 cols = [cols]
             buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:

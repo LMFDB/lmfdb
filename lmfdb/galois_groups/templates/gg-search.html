@@ -64,7 +64,7 @@ table.ntdata a {
 {{KNOWL('group.order',title='Order')}} 
 
 <td align=left> 
-{{KNOWL('group.small_group_label',title='GAP id')}} 
+{{KNOWL('group',title='Group')}} 
 
 <td align=left> 
 {{KNOWL('group.nilpotent',title='Nilpotency')}} 
@@ -74,12 +74,12 @@ table.ntdata a {
 <td align=left> <input type="text" name="t" size="5" placeholder="2" value="{{info.t}}" ></td>
 <td align=left> <input type="text" name="order" size="5" placeholder="12" value="{{info.order}}" ></td>
 
-<td align=left><input type="text" name="gapid" size="5" placeholder="[6,3]" value="{{info.gapid}}" ></td>
+<td align=left><input type="text" name="gal" size="5" placeholder="[6,3]" value="{{info.gal}}" ></td>
 <td align=left><input type="text" name="nilpotency" size="5" placeholder="1..100" value="{{info.nilpotency}}" ></td>
 </tr>
 
 <tr>
-<td align=left colspan="2"> 
+<td align=left colspan="2">
 <button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td></tr>
 </table>
@@ -107,7 +107,7 @@ table.ntdata a {
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table border=1 cellpadding=5 class="ntdata">
+<table border=0 cellpadding=3 class="ntdata">
 <thead>
 <tr>
 <th>{{KNOWL('gg.label', title='Label')}}</th>
@@ -141,7 +141,6 @@ table.ntdata a {
 
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'dummy_download_search_results.html' %}
 <p>

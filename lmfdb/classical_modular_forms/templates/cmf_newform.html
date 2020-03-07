@@ -129,6 +129,9 @@ function get_all_embeddings(num_embeddings) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
+    <tr style="max-height: 0px;" class="border-bottom"> {# Add a bottom border #}
+      <td style="max-height: 0px;margin: 0px;padding: 0px;" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}"></td>
+    </tr>
     {% if info.CC_m[0] == 1 and (info.CC_m | length) < 100 and (info.CC_m | length) < newform.dim %}
     <tr>
       <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}">
@@ -183,16 +186,16 @@ function get_all_embeddings(num_embeddings) {
 
 {% endif %}
 
-<!-- Removed old code on special values that didn't seem to be used -->
-
-<!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
-
 <h2>{{KNOWL('cmf.inner_twist', title='Inner twists')}}</h2>
-
 {% if newform.inner_twist_count == 1 %}
 <p>This newform does not admit any ({{KNOWL('cmf.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('cmf.inner_twist',title='inner twists') }}.</p>
 {% else %}
 {{ newform.display_inner_twists() | safe }}
+{% endif %}
+
+{% if newform.twists is not none %}
+<h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
+{{ newform.display_twists() | safe }}
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}

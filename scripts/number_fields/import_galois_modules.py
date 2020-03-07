@@ -22,7 +22,7 @@ argument 1=complete, 0=incomplete (inf many), -1 =incomplete (just partial
 list)
 
 """
-
+from __future__ import print_function
 import sys
 import re
 import json
@@ -34,7 +34,7 @@ gmods = MongoClient(port=37010).transitivegroups.Gmodules
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def string2list(s):
   s = str(s)
@@ -69,7 +69,7 @@ def do_import(ll):
 # Do the main work
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     count = 0

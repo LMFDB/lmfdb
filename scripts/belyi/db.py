@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pymongo
 import os
 _C = None
@@ -28,9 +29,9 @@ def makeDBconnection_write():
         password = pw_dict['password']
         db = pw_dict['db']
         _Cwrite[db].authenticate(username, password)
-        print "Logged in as %s in %s!1!1!" % (username, db,)
+        print("Logged in as %s in %s!1!1!" % (username, db,))
     except:
-        print "Failed to login"
+        print("Failed to login")
 
 def getDBconnection_write():
     if _Cwrite is None:

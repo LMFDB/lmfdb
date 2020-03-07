@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-import os, time
+from __future__ import absolute_import
+import os
+import time
 
-from flask import Flask, g, render_template, request, make_response, redirect, url_for, current_app, abort
+from flask import (Flask, g, render_template, request, make_response,
+                   redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 
-from lmfdb.logger import logger_file_handler, critical
-from lmfdb.homepage import load_boxes, contribs
+from .logger import logger_file_handler, critical
+from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.1"
+LMFDB_VERSION = "LMFDB Release 1.1.1"
 
 ############################
 #         Main app         #
@@ -108,7 +111,7 @@ def ctx_proc_userdata():
 # so instead we do this to ensure that the sidebar content is available to every page:
 @app.context_processor
 def inject_sidebar():
-    from lmfdb.homepage import get_sidebar
+    from .homepage import get_sidebar
     return dict(sidebar=get_sidebar())
 
 ##############################
@@ -139,14 +142,11 @@ def git_infos():
                 [git_contains_cmd, contains],
                 [git_reflog_cmd, reflog],
                 [git_graphlog_cmd, graphlog]]
-        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
-        cmd_output = rev, date,  summary
+        summary = "\n".join("$ %s\n%s" % (c, o) for c, o in pairs)
+        return rev, date, summary
     except Exception:
-        cmd_output = '-', '-', '-'
-    return cmd_output
+        return '-', '-', '-'
 
-def git_summary():
-    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
 
 git_rev, git_date, _  = git_infos()
 
@@ -183,13 +183,13 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
 # You can use this formatter to turn newlines in a string into HTML line breaks
 @app.template_filter("nl2br")
 def nl2br(s):
-    return s.replace('\n', '<br>\n')
+    return s.replace('\n', '<br/>\n')
 
 # You can use this formatter to encode a dictionary into a url string
 @app.template_filter('urlencode')
 def urlencode(kwargs):
-    import urllib
-    return urllib.urlencode(kwargs)
+    from six.moves.urllib.parse import urlencode
+    return urlencode(kwargs)
 
 ##############################
 #    Redirects and errors    #
@@ -197,9 +197,14 @@ def urlencode(kwargs):
 
 
 @app.before_request
-def force_www_and_ssl():
-    """Redirect lmfdb.org requests to www.lmfdb.org and forces https"""
-    from urlparse import urlparse, urlunparse
+def netloc_redirect():
+    """
+        Redirect lmfdb.org -> www.lmfdb.org
+        Redirect {www, beta, }.lmfdb.com -> {www, beta, }.lmfdb.org
+        Force https on www.lmfdb.org
+        Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
+    """
+    from six.moves.urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
 
@@ -216,12 +221,18 @@ def force_www_and_ssl():
     ):
         url = request.url.replace("http://", "https://", 1)
         return redirect(url, code=301)
-
+    elif (
+        urlparts.netloc == "www.lmfdb.org"
+        and
+        not white_listed(urlparts.path)
+    ):
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=301)
 
 
 
 def timestamp():
-    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -271,18 +282,20 @@ def alive():
     """
     a basic health check
     """
-    from lmfdb import db
+    from . import db
     if db.is_alive():
         return "LMFDB!"
     else:
         abort(503)
+
+
 
 @app.route("/statshealth")
 def statshealth():
     """
     a health check on the stats pages
     """
-    from lmfdb import db
+    from . import db
     if db.is_alive():
         tc = app.test_client()
         for url in ['/NumberField/stats',
@@ -312,8 +325,8 @@ def info():
     from socket import gethostname
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
-    output += "# PostgreSQL info\n";
-    from lmfdb import db
+    output += "# PostgreSQL info\n"
+    from . import db
     if not db.is_alive():
         output += "db is offline\n"
     else:
@@ -323,11 +336,11 @@ def info():
         output += "Read only: %s\n" % db._read_only
         output += "Read and write to userdb: %s\n" % db._read_and_write_userdb
         output += "Read and write to knowls: %s\n" % db._read_and_write_knowls
-    output += "\n# GIT info\n";
+    output += "\n# GIT info\n"
     output += git_infos()[-1]
-    output += "\n\n";
-    
+    output += "\n\n"
     return output.replace("\n", "<br>")
+
 
 @app.route("/acknowledgment")
 def acknowledgment():
@@ -365,10 +378,10 @@ def modular_forms():
     # lm = [('History of modular forms', '/ModularForm/history')]
     return render_template('single.html', title=t, kid='mf.about', bread=b) #, learnmore=lm)
 
-@app.route("/ModularForm/history")
+# @app.route("/ModularForm/history")
 def modular_forms_history():
     t = 'Modular Forms'
-    b = [(t, url_for('modular forms'))]
+    b = [(t, url_for('modular_forms'))]
     b.append(('History', url_for("modular_forms_history")))
     return render_template(_single_knowl, title="A Brief History of Modular Forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
@@ -379,7 +392,7 @@ def varieties():
     # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
-@app.route("/Variety/history")
+# @app.route("/Variety/history")
 def varieties_history():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
@@ -393,7 +406,7 @@ def fields():
     # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Field/history")
+# @app.route("/Field/history")
 def fields_history():
     t = 'Fields'
     b = [(t, url_for('fields'))]
@@ -407,7 +420,7 @@ def representations():
     # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Representation/history")
+# @app.route("/Representation/history")
 def representations_history():
     t = 'Representations'
     b = [(t, url_for('representations'))]
@@ -421,7 +434,7 @@ def motives():
     # lm = [('History of motives', '/Motives/history')]
     return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Motives/history")
+# @app.route("/Motives/history")
 def motives_history():
     t = 'Motives'
     b = [(t, url_for('motives'))]
@@ -435,7 +448,7 @@ def groups():
     # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Group/history")
+# @app.route("/Group/history")
 def groups_history():
     t = 'Groups'
     b = [(t, url_for('groups'))]
@@ -483,11 +496,14 @@ def root_static_file(name):
     def static_fn():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
-            return open(fn).read()
+            return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
-map(root_static_file, ['favicon.ico'])
+
+
+for fn in ['favicon.ico']:
+    root_static_file(fn)
 
 
 @app.route("/robots.txt")
@@ -517,7 +533,7 @@ def add_colors():
     #       - from the config file
     # - remove cookie at logout (see line 307 of users/main)
     # - add cookie at login or when a color change happens (see line 175 of users/main)
-    from lmfdb.utils.color import all_color_schemes
+    from .utils.color import all_color_schemes
     color = request.args.get('color')
     if color and color.isdigit():
         color = int(color)
@@ -527,12 +543,12 @@ def add_colors():
         from flask_login import current_user
         userid = current_user.get_id()
         if userid is not None:
-            from lmfdb.users.pwdmanager import userdb
+            from .users.pwdmanager import userdb
             color = userdb.lookup(userid).get('color_scheme')
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from lmfdb.utils.config import Configuration
+            from .utils.config import Configuration
             color = Configuration().get_color()
     return dict(color=all_color_schemes[color].dict())
 
@@ -606,3 +622,177 @@ def news():
     t = "News"
     b = [(t, url_for('news'))]
     return render_template(_single_knowl, title="LMFDB in the News", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+
+
+
+
+###############################################
+# White listing routes for www.lmfdb.org      #
+###############################################
+
+
+def routes():
+    """
+    Returns all routes
+    """
+    links = []
+    for rule in app.url_map.iter_rules():
+        # Filter out rules we can't navigate to in a browser
+        # and rules that require parameters
+        if "GET" in rule.methods:  # and has_no_empty_params(rule):
+            try:
+                url = url_for(rule.endpoint, **(rule.defaults or {}))
+            except Exception:
+                url = None
+            links.append((url, str(rule)))
+    return sorted(links, key= lambda elt: elt[1])
+
+@app.route("/sitemap")
+def sitemap():
+    """
+    Listing all routes
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+            ]
+        )
+        + "</ul>"
+    )
+
+WhiteListedRoutes = [
+    'ArtinRepresentation',
+    'Character/Dirichlet',
+    'EllipticCurve',
+    'Field',
+    'GaloisGroup',
+    'Genus2Curve/Q',
+    'Group',
+    'HigherGenus/C/Aut',
+    'L/Completeness',
+    'L/Lhash',
+    'L/Plot',
+    'L/Riemann',
+    'L/SymmetricPower',
+    'L/Zeros',
+    'L/browseGraphChar',
+    'L/degree',
+    'L/download',
+    'L/history',
+    'L/lhash',
+    'L/tracehash',
+    'LocalNumberField',
+    'ModularForm/GL2/ImaginaryQuadratic',
+    'ModularForm/GL2/Q/Maass',
+    'ModularForm/GL2/Q/holomorphic',
+    'ModularForm/GL2/TotallyReal',
+    'NumberField',
+    'Representation/foo',  # allows /Representation but not /Representation/Galois/ModL/
+    'SatoTateGroup',
+    'Variety/Abelian/Fq',
+    'about',
+    'acknowledgment',
+    'alive',
+    'api',
+    'api2',
+    'bigpicture',
+    'callback_ajax',
+    'citation',
+    'contact',
+    'editorial-board',
+    'favicon.ico',
+    'features',
+    'forcebetasitemap',
+    'health',
+    'humans.txt',
+    'info',
+    'intro',
+    'inventory',
+    'knowledge',
+    'management',
+    'news',
+    'not_yet_implemented',
+    'robots.txt',
+    'search',
+    'sitemap',
+    'static',
+    'statshealth',
+    'style.css',
+    'universe',
+    'users',
+    'whitelistedsitemap',
+    'zeros/zeta'
+]
+
+WhiteListedBreads = set()
+for elt in WhiteListedRoutes:
+    elt_split = elt.split('/')
+    bread = ''
+    for s in elt.split('/'):
+        if bread:
+            bread += '/' + s
+        else:
+            bread = s
+        WhiteListedBreads.add(bread)
+
+def white_listed(url):
+    url = url.rstrip("/").lstrip("/")
+    if not url:
+        return True
+    if (
+        any(url.startswith(elt) for elt in WhiteListedRoutes)
+        # check if is an allowed bread
+        or url in WhiteListedBreads
+    ):
+        return True
+    # check if it starts with an L
+    elif url[:2] == "L/":
+        return white_listed(url[1:])
+    else:
+        return False
+
+
+@app.route("/forcebetasitemap")
+def forcebetasitemap():
+    """
+    Listing routes that are not allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if not white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+
+
+@app.route("/whitelistedsitemap")
+def whitelistedsitemap():
+    """
+    Listing routes that are allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+

@@ -9,7 +9,7 @@
 <table border="0">
 
 <tr>
-<td>{{ KNOWL('nf', title='Field') }}</td>
+<td>{{ KNOWL('nf', title='Base field') }}</td>
 <td>{{ KNOWL('nf.degree', title='Degree') }}</td>
 <td>{{ KNOWL('nf.discriminant', title='Discriminant') }}</td>
 <td>{{ KNOWL('mf.cm',title="CM") }}</td>
@@ -86,12 +86,15 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 {% if info.number > 0 %}
 
 <table class="ntdata">
-<tr>
-<th>Label</th>
-<th>{{ KNOWL('nf', title='Field') }}</th>
+<thead>
+  <tr>
+<th>{{ KNOWL('mf.hilbert.label', title='Label') }}</th>
+<th>{{ KNOWL('nf', title='Base field') }}</th>
 <th>{{ KNOWL('mf.hilbert.level_norm', title='Level') }}</th>
 <th>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }} </th>
-</tr>
+  </tr>
+</thead>
+<tbody>
 {% for form in info.results: %}
 <tr>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
@@ -101,10 +104,10 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% endif %}
 
-<hr>
 {% include 'forward_back.html' %}
 <br>
 {% endif %}
@@ -114,4 +117,5 @@ Either modify your search above or go <input type=button value="Back" onClick="h
    </p>
 -->
 
+{% include 'debug_info.html' %}
 {% endblock %}

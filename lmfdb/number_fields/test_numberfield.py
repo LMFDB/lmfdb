@@ -2,14 +2,10 @@
 from lmfdb.tests import LmfdbTest
 
 class NumberFieldTest(LmfdbTest):
-
     # All tests should pass
-    def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
-
     def test_Q(self):
-        self.check_args('/NumberField/Q', '\chi_{1}')
-        self.check_args('/NumberField/1.1.1.1', '\chi_{1}')
+        self.check_args('/NumberField/Q', r'\chi_{1}')
+        self.check_args('/NumberField/1.1.1.1', r'\chi_{1}')
 
     def test_hard_degree10(self):
         self.check_args('/NumberField/10.10.1107649855354064.1', '10T36')
@@ -86,3 +82,6 @@ class NumberFieldTest(LmfdbTest):
     def test_split_ors(self):
         self.check_args('/NumberField/?signature=%5B0%2C3%5D&galois_group=S3', '6.0.177147.2')
         self.check_args('/NumberField/?signature=%5B3%2C0%5D&galois_group=S3', '3.3.229.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=3%2C6','4.4.1311025.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=6%2C3','4.4.1311025.1')
+        self.check_args('/NumberField/?signature=[4%2C0]&galois_group=C2xC2&class_number=5-6%2C3','4.4.485809.1')

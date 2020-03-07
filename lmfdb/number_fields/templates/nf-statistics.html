@@ -4,10 +4,14 @@
 <div>
 The database contains {{ info['total'] }} number fields.
 </div>
-{% set maxdeg = info['maxdeg'] %}
+{# Keeping first line if/when we include higher degrees #}
+{# set maxdeg = info['maxdeg'] #}
+{% set maxdeg = 23 %}
 
 <h2> Distribution by signature </h2>
+{# Keep first line for when we expand this #}
 {% set ncols = (info['nsig'][maxdeg - 1] | length) %}
+{% set ncols = 23 %}
 <div>
 There is one row for each degree $n$, and the column is indexed by
 $r_2$, the number of non-real embeddings, so the signature is

@@ -7,7 +7,7 @@
 {% include 'hidden_search_inputs.html' %}
 <table>
 <tr>
-<td>{{ KNOWL('nf',title='Base Field') }}</td>
+<td>{{ KNOWL('nf',title='Base field') }}</td>
 <td>{{ KNOWL('mf.bianchi.level', title='Level norm') }}</td>
 <td>{{ KNOWL('mf.bianchi.newform', title='Dimension') }}</td>
 <td>{{ KNOWL('mf.bianchi.sign', title='Sign') }}</td>
@@ -71,15 +71,18 @@
 {% include 'matches.html' %}
 {% if info.number %}
 <table class="ntdata">
+  <thead>
 <tr>
-<th>Field</th>
+<th>{{ KNOWL('nf', title='Base field') }}</th>
 <th>{{ KNOWL('mf.bianchi.level', title='Level') }} </th>
-<th>Label</th>
+<th>{{ KNOWL('mf.bianchi.labels', title='Label') }} </th>
 <th>{{ KNOWL('mf.bianchi.newform', title='Dimension') }} </th>
 <th>{{ KNOWL('mf.bianchi.sign', title='Sign') }} </th>
 <th>{{ KNOWL('mf.bianchi.base_change', title='Base change') }} </th>
 <th>{{ KNOWL('mf.bianchi.cm', title='CM') }} </th>
 </tr>
+  </thead>
+    <tbody>
 {% for form in info.results: %}
 <tr>
 <td>{{form.field_label}}</td>
@@ -93,8 +96,8 @@
 <td align='center'>{{form.cm}}</td>
 </tr>
 {% endfor %}
+<tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'dummy_download_search_results.html' %}
 {% endif %}

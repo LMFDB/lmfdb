@@ -29,7 +29,7 @@ function alignColumnChar()
   
   // Add right-padding to each cell equivalent to the difference between its width and the maximum
   var maxwidth = 0;
-  for(i=0;i<widths.length;i++)
+  for(var i=0;i<widths.length;i++)
   {
     maxwidth = widths[i] > maxwidth ? widths[i] : maxwidth;
   }
@@ -80,7 +80,7 @@ function calculateAlignWidthOld(i)
 
 $.fn.dataTableExt.afnFiltering.push(
     function( oSettings, aData, iDataIndex ) {
-        var wtElt=document.getElementById('weight')
+        var wtElt=document.getElementById('weight');
         var iWt;
         var thisWt;
         //alert("hrjj");

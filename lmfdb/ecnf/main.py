@@ -2,9 +2,11 @@
 # This Blueprint is about Elliptic Curves over Number Fields
 # Authors: Harald Schilly and John Cremona
 
-import ast, re, StringIO, time
-from operator import mul
-from urllib import quote, unquote
+import ast
+import re
+from six import BytesIO
+import time
+from six.moves.urllib_parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response
 
@@ -15,7 +17,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    search_wrap)
+    search_wrap, parse_rational)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -37,7 +39,7 @@ def split_full_label(lab):
     try:
         # field 3.1.23.1 uses upper case letters
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
-        curve_number = re.search("\d+", data[2]).group()  # (a string)
+        curve_number = re.search(r"\d+", data[2]).group()  # (a string)
     except AttributeError:
         flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1",  lab)
         raise ValueError
@@ -56,7 +58,7 @@ def split_short_label(lab):
     try:
         # field 3.1.23.1 uses upper case letters
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
-        curve_number = re.search("\d+", data[1]).group()  # (a string)
+        curve_number = re.search(r"\d+", data[1]).group()  # (a string)
     except AttributeError:
         flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1", lab)
         raise ValueError
@@ -114,8 +116,10 @@ ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren
 
 def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
-    map(bc.append, breads)
+    for x in breads:
+        bc.append(x)
     return bc
+
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -125,7 +129,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @ecnf_page.route("/Completeness")
 def completeness_page():
@@ -169,7 +174,7 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    if len(request.args) > 0:
+    if request.args:
         return elliptic_curve_search(request.args)
     bread = get_bread()
 
@@ -185,7 +190,7 @@ def index():
     fields_by_sig = ECNF_stats().fields_by_sig
     data['fields'] = []
     # Rationals
-    data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
+    # data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)]) # Removed due to ambiguity
 
     # Real quadratics (sample)
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
@@ -340,7 +345,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
-                           properties2=cl.properties,
+                           properties=cl.properties,
                            friends=cl.friends,
                            learnmore=learnmore_list())
 
@@ -377,7 +382,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            ec=ec,
                            code = code,
                            #        properties = ec.properties,
-                           properties2=ec.properties,
+                           properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
@@ -441,8 +446,8 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
@@ -483,7 +488,10 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
-        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        t_o = 1
+        for n in query['torsion_structure']:
+            t_o *= int(n)
+        query['torsion_order'] = t_o
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
 
     if 'jinv' in info:
@@ -491,9 +499,14 @@ def elliptic_curve_search(info, query):
             info['jinv'] = info['jinv'].replace('phi','a')
         if info.get('field','').strip() == '2.0.4.1':
             info['jinv'] = info['jinv'].replace('i','a')
-    parse_nf_elt(info,query,'jinv',name='j-invariant')
-    if query.get('jinv'):
-        query['jinv'] =','.join(query['jinv'])
+        if not 'a' in info['jinv'] and not info.get('field'): # rational j-invariant allowed for any field
+            parse_rational(info, query, 'jinv', name='j-invariant')
+            if query.get('jinv'):
+                query['jinv'] = {'$regex': '^' + query['jinv'] + '(,0)*$'} # nf elements like j,0,0,0
+        else: # j-invariant is a number field element
+            parse_nf_elt(info, query, 'jinv', name='j-invariant')
+            if query.get('jinv'):
+                query['jinv'] = ','.join(query['jinv'])
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
@@ -680,8 +693,8 @@ def ecnf_code_download(**args):
     return response
 
 sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank', 'ntors',
-                     'gens', 'reg', 'tors', 'torgens', 'localdata']
+                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
+                     'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
 code_names = {'field': 'Define the base number field',
               'curve': 'Define the curve',
@@ -695,6 +708,7 @@ code_names = {'field': 'Define the base number field',
               'rank': 'Compute the Mordell-Weil rank',
               'ntors': 'Compute the order of the torsion subgroup',
               'gens': 'Compute the generators (of infinite order)',
+              'heights': 'Compute the heights of the generators (of infinite order)',
               'reg': 'Compute the regulator',
               'tors': 'Compute the torsion subgroup',
               'torgens': 'Compute the generators of the torsion subgroup',

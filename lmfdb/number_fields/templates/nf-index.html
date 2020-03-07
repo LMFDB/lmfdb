@@ -89,7 +89,12 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 <tr>
 <td align=left>{{KNOWL('nf.galois_group', title='Galois group')}} 
   <td colspan="2"><input type='text' name='galois_group' size=10 example='C5'>
-<span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
+<span class="formexample">list of 
+              {{KNOWL('group.small_group_label',title="GAP id's")}},
+          e.g. [8,3] or [16,7], group names from the
+          {{KNOWL('nf.galois_group.name','list of group labels')}}, e.g.
+          C5 or S12, and {{KNOWL('gg.label','transitive group labels')}}, 
+          e.g., 7T2 or 11T5</span></td>
 
 <td align=left>{{KNOWL('nf.regulator', title='Regulator')}} 
   <td colspan="2"><input type='text' name='regulator' size=10 example='1..3.5'>
@@ -129,8 +134,9 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 <tr>
 <td align="left">Results to display</td><td> <input type='text' name='count' value="{{info.count}}" size=10></td>
 <tr>
-<button type='submit'>Search</button></td>
-
+<tr>
+<td><button type='submit'>Search</button></td>
+</tr>
 
 </table>
 </form>

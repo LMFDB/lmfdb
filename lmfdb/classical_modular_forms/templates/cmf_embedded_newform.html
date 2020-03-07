@@ -207,4 +207,9 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 </div>
 {{ render_display_options("#coefficient_data") }}
 
+{% if newform.embedded_twists is not none %}
+<h2>{{KNOWL('cmf.twist', title='Twists')}}</h2>
+{{ newform.display_embedded_twists() | safe }}
+{% endif %}
+
 {% endblock %}

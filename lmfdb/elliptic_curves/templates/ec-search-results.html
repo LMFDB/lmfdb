@@ -88,6 +88,8 @@
 
 <tr>
 <td align=left colspan=2>{{KNOWL('ec.q.reduction_type', title='Bad primes')}}</td>
+<td>Number of {{ KNOWL('ec.q.integral_points',title="integral points") }}</td>
+<td>{{ KNOWL('ec.q.regulator',title="Regulator") }}</td>
 </tr>
 
 <tr>
@@ -97,17 +99,32 @@
   <option value=''>include</option>
   <option value='exclude'>exclude</option>
   <option selected value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
 {% elif info.bad_quantifier=='exclude' %}
   <option value=''>include</option>
   <option selected value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
+{% elif info.bad_quantifier=='subset' %}
+  <option value=''>include</option>
+  <option value='exclude'>exclude</option>
+  <option value='exactly'>exactly</option>
+  <option selected value='subset'>subset of</option>
 {% else %}
   <option selected value=''>include</option>
   <option value='exclude'>exclude</option>
   <option value='exactly'>exactly</option>
+  <option value='subset'>subset of</option>
 {% endif %}
   </select>
 <input type='text' name='bad_primes' placeholder="2,3" size=10  value={{info.bad_primes}}>
+</td>
+<td>
+<input type='text' name='num_int_pts' example="2" size=10 value={{info.num_int_pts}}>
+</td>
+<td>
+<input type='text' name='regulator' example='7.01-9.01' size=10 value=
+{{info.regulator}}>
 </td>
 </tr>
 
@@ -127,10 +144,12 @@ table td.params {
 }
 </style>
 
-<table>
+<table class='ntdata'>
+<thead>
   <tr>
     <th class="center" colspan=2>Curve</th>
     <th class="center" colspan=2>{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
+    <th colspan=3></th>
 </tr>
 <tr>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -139,11 +158,15 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
-  <th class="center">{{ KNOWL('ec.torsion_order', title='Torsion order') }}</th>
+  <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
+{% if info.num_int_pts %}
+  <th class="center">Number of {{KNOWL('ec.q.integral_points', title='integral points')}}</th>
+{% endif %}
 </tr>
+</thead>
 {% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url_LMFDB(curve)}}">{{curve.lmfdb_label}}</a></td>
@@ -152,14 +175,16 @@ table td.params {
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
 <td class="params">{{info.curve_ainvs(curve)}}</td>
 <td class="center">{{curve.rank}}</td>
-<td class="center">{{curve.torsion}}</td>
+<td class="center">{{curve.torsion_structure}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
+{% endif %}
+{% if info.num_int_pts %}
+<td class="center">{{curve.num_int_pts}}</td>
 {% endif %}
 </tr>
 {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

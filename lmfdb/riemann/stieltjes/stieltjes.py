@@ -111,8 +111,8 @@ def getone(n=None, digits=None, plain=False):
                                n=n,
                                digits=digits,
                                gamma=g,
-                               title="Stieltjes Constant $\gamma_{{{}}}$".format(n),
+                               title=r"Stieltjes Constant $\gamma_{{{}}}$".format(n),
                                bread=[
                                     ('Stieltjes Constants',
                                      url_for('.stieltjes_constants')),
-                                    ('$\gamma_{{{}}}$'.format(n), ' '), ])
+                                    (r'$\gamma_{{{}}}$'.format(n), ' '), ])

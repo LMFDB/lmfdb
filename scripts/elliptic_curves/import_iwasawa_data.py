@@ -18,11 +18,12 @@ Additional data fields for each elliptic curve over Q
 
 
 """
+from __future__ import print_function
 import os
 from sage.all import ZZ, primes
 
 from lmfdb.db_backen import db
-print "setting curves"
+print("setting curves")
 curves = db.ec_curves
 
 def read_line(line, debug=0):
@@ -87,7 +88,7 @@ def read_line(line, debug=0):
 def upload_to_db(base_path, f, test=True):
     f = os.path.join(base_path, f)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     data_to_insert = {}  # will hold all the data to be inserted
     count = 0
@@ -95,11 +96,11 @@ def upload_to_db(base_path, f, test=True):
     for line in h.readlines():
         count += 1
         if count%1000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         label, data = read_line(line,0)
         data_to_insert[label] = data
 
-    print "finished reading %s lines from file" % count
+    print("finished reading %s lines from file" % count)
     vals = data_to_insert.values()
 
     print("Number of records to insert = %s" % len(vals))
@@ -111,7 +112,7 @@ def upload_to_db(base_path, f, test=True):
         return
 
     for val in vals:
-        #print val
+        #print(val)
         count += 1
         if not test:
             curves.upsert({'label': val['label']}, val)
@@ -127,7 +128,7 @@ def add_iw_data1(C, iw_data):
 def read_iwasawa_data(base_path, filename):
     f = os.path.join(base_path, filename)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     iw_data = {}
     count = 0
@@ -135,7 +136,7 @@ def read_iwasawa_data(base_path, filename):
     for line in h.readlines():
         count += 1
         if count%1000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         label, data = read_line(line,0)
         iw_data[label] = data
 

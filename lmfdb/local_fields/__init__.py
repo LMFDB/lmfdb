@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -12,7 +13,7 @@ logger = make_logger(local_fields_page)
 def body_class():
     return {'body_class': 'local_fields'}
 
-import main
+from . import main
 assert main
 
 app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")

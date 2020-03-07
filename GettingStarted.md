@@ -50,8 +50,8 @@ Installation
     ```
       sage -pip install -r requirements.txt --upgrade
     ```
-    
-  - In case the last step fails by is Mac OSX with the error 
+
+  - In case the last step fails by is Mac OSX with the error
   ```
   Error: pg_config executable not found.
   ```
@@ -131,6 +131,29 @@ Running
   on devmirror.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
   on using a different database instance, you can do so by changing
   config.ini in the root of the lmfdb directory.
+
+CoCalc
+======
+
+* You can run the LMFDB inside a [CoCalc](https://www.cocalc.com) project by doing
+following the above installation instructions on a terminal in your project (you may want to
+install the requirements using the `--user` flag). 
+Explicitly,
+```
+cd ~
+git clone https://github.com/LMFDB/lmfdb.git lmfdb
+cd lmfdb
+sage -pip install --user -r requirements.txt
+sage -python start-lmfdb.py --debug
+```
+
+On the last step, when you start the server running,
+LMFDB will detect that it is running inside CoCalc and provide a URL through which the
+site can be accessed.
+* If you've changed static files, you will have to run LMFDB on a different port in order for the files to update. For instance, to run LMFDB on port 37778:
+```
+sage -python start-lmfdb.py --debug --port=37778
+```
 
 Troubleshooting
 ===============

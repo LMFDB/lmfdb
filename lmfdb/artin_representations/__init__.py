@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -15,7 +16,7 @@ artin_logger = make_logger("artin", hl=True)
 def body_class():
     return {'body_class': 'artin_representations'}
 
-import main
+from . import main
 assert main # silence pyflakes
 
 app.register_blueprint(artin_representations_page, url_prefix="/ArtinRepresentation")

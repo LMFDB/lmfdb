@@ -111,7 +111,7 @@
       {% else %}
         {% set colspan = 2 %}
       {% endif %}
-      <th class='weight'> $F_p$ </th>
+      <th class='weight'> $F_p(T)$ </th>
       {% if family.weight > 0 %}
         {% set colspan = colspan + 1 %}
         <th class='weight'> Ordinary? </th>
@@ -135,7 +135,7 @@
         {% if family.weight > 0 %}
           <td style="text-align: center;">
           {% if not ord %}
-            &#10008;
+            No
           {% endif %}
           </td>
         {% endif %}

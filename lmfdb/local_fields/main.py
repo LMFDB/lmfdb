@@ -36,7 +36,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
@@ -67,7 +68,8 @@ def local_algebra_data(labels):
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        ans += group_display_knowl(f['gal'][0],f['gal'][1])
+        galnt = [int(z) for z in f['galois_label'].split('T')]
+        ans += group_display_knowl(galnt[0],galnt[1])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -80,8 +82,8 @@ def local_field_data(label):
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
     ans = 'Local number field %s%s<br><br>'% (label, nicename)
-    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
-    gt = f['gal']
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
@@ -118,11 +120,13 @@ def format_lfield(coefmult,p):
         return ''
     return lf_display_knowl(data['label'], name = prettyname(data))
 
+
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
-    if subdata == []:
+    if not subdata:
         return ''
     return display_multiset(subdata, format_lfield, p)
+
 
 # Encode string for rational into our special format
 def ratproc(inp):
@@ -166,9 +170,9 @@ def local_field_jump(info):
              learnmore=learnmore_list,
              credit=lambda:LF_credit)
 def local_field_search(info,query):
-    parse_galgrp(info,query,'gal',qfield=('n','galT'))
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
@@ -195,20 +199,20 @@ def render_field_webpage(args):
         e = data['e']
         f = data['f']
         cc = data['c']
-        gt = data['gal']
+        gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+' over $\Q_{%d}$.'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}$.'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
-            ('Base', '\(%s\)' % Qp),
-            ('Degree', '\(%s\)' % data['n']),
-            ('e', '\(%s\)' % e),
-            ('f', '\(%s\)' % f),
-            ('c', '\(%s\)' % cc),
+            ('Base', r'\(%s\)' % Qp),
+            ('Degree', r'\(%s\)' % data['n']),
+            ('e', r'\(%s\)' % e),
+            ('f', r'\(%s\)' % f),
+            ('c', r'\(%s\)' % cc),
             ('Galois group', group_pretty_and_nTj(gn, gt)),
         ]
         # Look up the unram poly so we can link to it
@@ -221,14 +225,11 @@ def render_field_webpage(args):
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
-        Pxt=PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
-            # Eliminate t from the eisenstein polynomial
-            eisenp = Pxt(str(data['eisen']).replace('y','x'))
-            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = web_latex(eisenp)
 
         else:
@@ -286,7 +287,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -311,15 +312,15 @@ def prettyname(ent):
 
 def printquad(code, p):
     if code == [1, 0]:
-        return('$\Q_{%s}$' % p)
+        return(r'$\Q_{%s}$' % p)
     if code == [1, 1]:
-        return('$\Q_{%s}(\sqrt{*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{*})$' % p)
     if code == [-1, 1]:
-        return('$\Q_{%s}(\sqrt{-*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{-*})$' % p)
     s = code[0]
     if code[1] == 1:
         s = str(s) + '*'
-    return('$\Q_{' + str(p) + '}(\sqrt{' + str(s) + '})$')
+    return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
 def search_input_error(info, bread):

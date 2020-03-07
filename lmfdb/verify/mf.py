@@ -1,9 +1,9 @@
-
+from __future__ import print_function
 from collections import defaultdict
 
 from sage.all import cached_function, psi, RR, Integer, prod
 
-from lmfdb.backend.database import SQL, Identifier
+from psycopg2.sql import SQL, Identifier
 from .verification import TableChecker, overall
 
 @cached_function
@@ -17,7 +17,7 @@ def analytic_conductor(level, weight):
 def check_analytic_conductor(level, weight, analytic_conductor_stored, verbose=False, threshold = 1e-12):
     success = (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
     if not success and verbose:
-        print "Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored
+        print("Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored)
     return success
 
 @cached_function
@@ -65,7 +65,7 @@ class MfChecker(TableChecker):
         if not success and verbose:
             for attr, a, b in zip(attributes, stored, computed):
                 if a != b:
-                    print attr, a, b
+                    print(attr, a, b)
         return success
 
     hecke_orbit_code = []
@@ -86,9 +86,9 @@ class MfChecker(TableChecker):
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
             if x_column is None:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint").format(*tuple(map(Identifier, [hoc_column, N_column, k_column, i_column]))))
             else:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint + (({4}-1)::integer::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint + (({4}-1)::integer::bit(64)<<52)::bigint").format(*tuple(map(Identifier, [hoc_column, N_column, k_column, i_column, x_column]))))
 
 class SubspacesChecker(MfChecker):
     @overall

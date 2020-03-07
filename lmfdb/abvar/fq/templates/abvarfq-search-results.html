@@ -1,129 +1,6 @@
-{% extends 'homepage.html' %}
+{% extends 'abvarfq-refine-search.html' %}
 
-{% block content %}
-
-{% if info.stats %}
-<p>
-{{info.stats|safe}}
-</p>
-{% endif %}
-
-<h2> Refine search </h2>
-
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-
-    <table border="0">
-
-        <tr>
-            <td align=left>{{ KNOWL('ag.base_field',title = "Base field cardinality") }}</td>
-            <td align=left>{{ KNOWL('ag.dimension',title = "Dimension") }}</td>
-            <td align=left>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</td>
-            <td align=left>{{KNOWL('av.fq.angle_rank',title='Angle rank')}}</td>
-            <td align=left>{{ KNOWL('lf.newton_polygon',title="Slopes") }}</td>
-        </tr>
-
-        <tr>
-            <td><input type='text' name='q' placeholder = '81' size=10 value="{{info.q}}" /></td>
-            <td><input type='text' name='g' placeholder = '2' size=10 value="{{info.g}}" /></td>
-            <td><input type='text' name='p_rank' placeholder = '2' size=10 value="{{info.p_rank}}" /></td>
-            <td><input type='text' name='ang_rank' placeholder = '3' size=10 value="{{info.ang_rank}}" /></td>
-            <td><input type='text' name='newton_polygon' placeholder = '[0, 0, 1/2]' size=10 value="{{info.newton_polygon}}" /></td>
-        </tr>
-
-        <tr>
-            <td align=left>{{ KNOWL('av.fq.initial_coefficients',title='Initial coefficients')}}</td>
-            <td align=left>{{ KNOWL('ag.fq.point_counts',title="Points on variety") }}</td>
-            <td align=left>{{ KNOWL('av.fq.curve_point_counts',title="Points on curve") }}</td>
-            <td align=left>{{ KNOWL('av.fq.number_field',title="Number field") }}</td>
-	    <td align=left>{{ KNOWL('nf.galois_group',title="Galois group") }}</td>
-        </tr>
-
-        <tr>
-            <td><input type='text' name='initial_coefficients' placeholder = '[1, -1, 3, 9]' size=10 value="{{info.initial_coefficients}}" /></td>
-            <td><input type='text' name='abvar_point_count' placeholder = '[75, 7125]' size=10 value="{{info.abvar_point_count}}" /></td>
-            <td><input type='text' name='curve_point_count' placeholder = '[9, 87]' size=10 value="{{info.curve_point_count}}"/></td>
-            <td><input type='text' name='number_field' placeholder = '4.0.29584.2' size=10 value="{{info.number_field}}"/></td>
-            <td><input type='text' name='galois_group' placeholder='4T3' size=10 value="{{info.galois_group}}"/></td>
-        </tr>
-
-        <tr>
-            <td align=left>{{ KNOWL('av.simple',title="Simple") }}</td>
-            <td align=left>{{ KNOWL('ag.primitive',title="Primitive") }}</td>
-            <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
-            <td align=left>{{ KNOWL('av.princ_polarizable',title="Princ. polarizable") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="Simple factors") }}
-                <select name='simple_quantifier'>
-                    <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
-                    <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
-                    <option value='' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
-                </select>
-            </td>
-        </tr>
-
-        <tr>
-            <td><select name='simple'>
-                <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
-                <option value="" {% if info.simple not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
-                <option value="no" {% if info.simple == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='primitive'>
-                <option value="yes" {% if info.primitive == "yes" %}selected{% endif %}>yes</option>
-                <option value="" {% if info.primitive not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
-                <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='jacobian'>
-                <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
-		<option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
-		<option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
-                <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='polarizable'>
-                <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
-		<option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="" {% if info.polarizable not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
-		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
-                <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><input type='text' name='simple_factors' placeholder='1.2.b,1.2.b,2.2.a_b' size=10 value="{{info.simple_factors}}"/></td>
-        </tr>
-
-        <tr>
-            <td align=left>{{ KNOWL('av.decomposition',title="1-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="2-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="3-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="4-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="5-d factors") }}</td>
-        </tr>
-
-        <tr>
-            <td><input type='text' name='dim1_factors' placeholder='1-3' size=10 value="{{info.dim1_factors}}" /></td>
-            <td><input type='text' name='dim2_factors' placeholder='1-3' size=10 value="{{info.dim2_factors}}" /></td>
-            <td><input type='text' name='dim3_factors' placeholder='2' size=10 value="{{info.dim3_factors}}" /></td>
-            <td><input type='text' name='dim4_factors' placeholder='1' size=10 value="{{info.dim4_factors}}" /></td>
-            <td><input type='text' name='dim5_factors' placeholder='0' size=10 value="{{info.dim5_factors}}" /></td>
-        </tr>
-
-        <tr>
-            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 1-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 2-d factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="Distinct 3-d factors") }}</td>
-        </tr>
-
-        <tr>
-            <td><input type='text' name='dim1_distinct' placeholder='1-2' size=10 value="{{info.dim1_distinct}}" /></td>
-            <td><input type='text' name='dim2_distinct' placeholder='1-2' size=10 value="{{info.dim2_distinct}}" /></td>
-            <td><input type='text' name='dim3_distinct' placeholder='1' size=10 value="{{info.dim3_distinct}}" /></td>
-        </tr>
-
-        <tr>
-            <td class="button">
-                <button type='submit' value='refine' onclick='resetStart()'>Search again</button>
-            </td> </tr>
-    </table>
-
-</form>
+{% block show_results %}
 
 {% include 'matches.html' %}
 {% if info.number %}
@@ -137,15 +14,17 @@ table td.params {
     font-family: monospace;
 }
 </style>
-<table>
+<table class=ntdata>
+<thead>
   <tr>
     <th class="center">{{ KNOWL('av.fq.lmfdb_label',title="LMFDB label") }}</th>
     <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
     <th class="center">{{ KNOWL('ag.base_field',title = "base field") }}</th>
-    <th class="center">{{ KNOWL('av.fq.weil_polynomial',title="Weil polynomial") }}</th>
+    <th class="center">{{ KNOWL('av.fq.l-polynomial',title="L-polynomial") }}</th>
     <th class="center">{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</th>
     <th align="left">{{ KNOWL('av.decomposition',title="isogeny factors") }}</th>
   </tr>
+</thead>
   {% for abvar in info.results: %}
   <tr>
     <td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
@@ -155,14 +34,12 @@ table td.params {
     <td class="center">${{ abvar.field() }}$</td>
     <td class="center">${{ abvar.formatted_polynomial }}$</td>
     <td class="center">$ {{ abvar.p_rank }}$</td>
-    <td class="center">{{abvar.decomposition_display_search(abvar.decomp)|safe}}</td>
+    <td class="center">{{abvar.decomposition_display_search()|safe}}</td>
   </tr>
   {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}
-{% include 'debug_info.html' %}
 
 {% endblock %}

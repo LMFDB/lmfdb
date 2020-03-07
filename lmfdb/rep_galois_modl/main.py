@@ -1,6 +1,9 @@
+from six.moves import range
 
-
-import ast, re, StringIO, time
+import ast
+import re
+from six import BytesIO
+import time
 
 from flask import make_response, send_file, request, render_template, redirect, url_for
 from sage.all import ZZ, conway_polynomial
@@ -17,12 +20,13 @@ rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, Dav
 # utilitary functions for displays
 
 def my_latex(s):
+    # This code was copy pasted and should be refactored
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\zeta', ss)
     ss += ""
     return ss
 
@@ -34,6 +38,7 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
@@ -41,7 +46,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
@@ -49,15 +54,15 @@ def learnmore_list_remove(matchstring):
 @rep_galois_modl_page.route("/")
 def rep_galois_modl_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
-        dim_list= range(1, 11, 1)
+        dim_list= list(range(1, 11, 1))
         max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        class_number_list=list(range(1, max_class_number+1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
+#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det'] // 1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
@@ -116,12 +121,12 @@ def download_search(info):
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(gram) for gram in res])
+    s += ",\\\n".join(entry(gram) for gram in res)
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
@@ -189,7 +194,7 @@ def render_rep_galois_modl_webpage(**args):
     if info['field_deg'] > int(1):
         try:
             pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
-            info['field_str']=str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
+            info['field_str']=str(r'$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
         except:
             info['field_str']=""
 
@@ -219,7 +224,7 @@ def render_rep_galois_modl_webpage(**args):
         ('Dimension', '%s' %info['dim']),
         ('Field characteristic', '%s' %info['field_char']),
         ('Conductor', '%s' %info['conductor']),]
-    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='gal.modl.%s'%info['label'])
+    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='gal.modl.%s'%info['label'])
 #friends=friends
 
 

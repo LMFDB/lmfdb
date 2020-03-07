@@ -1,13 +1,18 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+from six.moves import range
+from six import string_types
 
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
 from sage.all import ZZ, QQ, prod, PolynomialRing
 from sage.misc.decorators import decorator_keywords
+from sage.repl.preparse import implicit_mul
+from sage.misc.parser import Parser
+from sage.calculus.var import var
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -28,9 +33,14 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
+class SearchParsingError(ValueError):
+    """
+    Used for errors raised when parsing search boxes
+    """
+    pass
 
 class SearchParser(object):
-    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield,error_is_safe):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
         self.f = f
         self.clean_info = clean_info
         self.prep_ranges = prep_ranges
@@ -40,6 +50,7 @@ class SearchParser(object):
         self.default_name = default_name
         self.default_qfield = default_qfield
         self.error_is_safe = error_is_safe # Indicates that the message in raised exception contains no user input, so it is not escaped
+        self.clean_spaces = clean_spaces
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
             if field is None: field=self.default_field
@@ -52,8 +63,8 @@ class SearchParser(object):
                     name = self.default_name
             inp = str(inp)
             if SPACES_RE.search(inp):
-                raise ValueError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
-            inp = clean_input(inp)
+                raise SearchParsingError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
+            inp = clean_input(inp, self.clean_spaces)
             if qfield is None:
                 if field is None:
                     qfield = self.default_qfield
@@ -71,7 +82,7 @@ class SearchParser(object):
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
-                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>"+str(err)+"</span>. %s", inp, name)
+                flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
@@ -79,17 +90,55 @@ class SearchParser(object):
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
-                  default_field=None, default_name=None, default_qfield=None,error_is_safe=False):
-    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe)
+                  default_field=None, default_name=None, default_qfield=None, error_is_safe=False, clean_spaces=True):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
-def clean_input(inp):
+def clean_input(inp, clean_spaces=True):
     if inp is None: return None
-    return re.sub(r'[\s<>]', '', str(inp))
+    if clean_spaces:
+        return re.sub(r'[\s<>]', '', str(inp))
+    else:
+        return re.sub(r'[<>]', '', str(inp))
 def prep_ranges(inp):
     if inp is None: return None
     return inp.replace('..','-').replace(' ','')
+
+def prep_raw(inp, names={}):
+    """
+    Prepare an input string for being passed as a ``$raw`` value to the database search.
+
+    INPUT:
+
+    - ``inp`` -- a string from the website.  Aleady split up by commas and .. range indicators
+    - ``names`` -- a dictionary providing a translation from user input to column names.  Only keys in the dictionary are accepted.
+
+    OUTPUT:
+
+    A string with implicit multiplications inserted and full column names substituted for short names
+
+    This function will raise a SearchParsingError if there is a syntax error or if there is a variable that's not in the names list
+    """
+    inp = implicit_mul(inp, level=10) # level = 10 includes (a+b)(c+d) -> (a+b)*(c+d) which isn't safe in Sage but should be okay for us
+    def filtered_var(s):
+        if s not in names:
+            raise SearchParsingError("%s is not a column of this table" % s)
+        return var(s)
+    # We use Sage's parser to make sure that the user input is well formed
+    P = Parser(make_var=filtered_var)
+    try:
+        P.parse_expression(inp)
+    except SyntaxError:
+        raise SearchParsingError("syntax error")
+    pieces = re.split(r'([A-Za-z_]+)', inp)
+    processed = []
+    for piece in pieces:
+        if piece in names:
+            processed.append(names[piece])
+        else:
+            processed.append(piece)
+    return {'$raw': "".join(processed)}
 
 # Various modules need to split a list of integers more simply
 def split_list(s):
@@ -99,11 +148,11 @@ def split_list(s):
     return []
 
 # This function can be used by modules to get a list of ints
-# or an iterator (xrange) that matches the results of parse_ints below
+# or an iterator (Python3 range) that matches the results of parse_ints below
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
-    if arg == None:
+    if arg is None:
         return []
     s = str(arg)
     s = s.replace(' ','')
@@ -116,11 +165,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return xrange(int(min),int(max)+1)
+        return range(int(min),int(max)+1)
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):
@@ -167,7 +216,7 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
 
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None):
+def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus=True):
     if parse_endpoint is None:
         parse_endpoint = parse_singleton
     if type(arg) == str:
@@ -178,9 +227,14 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None):
         tmp = [parse_range2(a, key, parse_singleton, parse_endpoint) for a in arg.split(',')]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ['$or', tmp]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
+    elif '..' in arg[1:] or (split_minus and '-' in arg[1:]):
+        if '..' in arg[1:]:
+            ix = arg.index('..', 1)
+            stop = ix + 2
+        else:
+            ix = arg.index('-', 1)
+            stop = ix + 1
+        start, end = arg[:ix], arg[stop:]
         q = {}
         if start:
             q['$gte'] = parse_endpoint(start)
@@ -226,11 +280,11 @@ def parse_range3(arg, split0 = False):
         if start:
             low = ZZ(str(start))
         else:
-            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+            raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if end:
             high = ZZ(str(end))
         else:
-            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+            raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if low == high: return [low]
         if split0 and low < 0 and high > 0:
             if low == -1: m = [low]
@@ -243,22 +297,24 @@ def parse_range3(arg, split0 = False):
     else:
         return [ZZ(str(arg))]
 
-def integer_options(arg, max_opts=None):
+def integer_options(arg, max_opts=None, contained_in=None):
     intervals = parse_range3(arg)
-    if max_opts is not None and len(intervals) > max_opts:
+    check = max_opts is not None and contained_in is None
+    if check and len(intervals) > max_opts:
         raise ValueError("Too many options.")
     ans = set()
     for interval in intervals:
         if isinstance(interval, list):
             a,b = interval
-            if max_opts is not None and len(ans) + b - a + 1 > max_opts:
+            if check and len(ans) + b - a + 1 > max_opts:
                 raise ValueError("Too many options")
-            for n in range(a,b+1):
-                ans.add(n)
-        elif max_opts is not None and len(ans) == max_opts:
-            raise ValueError("Too many options")
+            for n in range(a, b+1):
+                if contained_in is None or n in contained_in:
+                    ans.add(n)
         else:
             ans.add(int(interval))
+        if max_opts is not None and len(ans) >= max_opts:
+            raise ValueError("Too many options")
     return sorted(list(ans))
 
 def collapse_ors(parsed, query):
@@ -279,14 +335,31 @@ def parse_rational(inp, query, qfield):
     if QQ_RE.match(inp):
         query[qfield] = str(QQ(inp))
     else:
-        raise ValueError("It needs to be a rational number.")
+        raise SearchParsingError("It needs to be a rational number.")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
-        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+@search_parser(clean_info=True, clean_spaces=False, prep_ranges=False) # see SearchParser.__call__ for actual arguments when calling
+def parse_ints_raw(inp, query, qfield, names={}):
+    # This version of parse_ints allows the user to use arithmetic expressions involving database columns
+    # We let postgres do most of the parsing and don't raise an error here on any input (since it's tricky to determine what's valid)
+    if re.search(r'[A-Za-z]', inp):
+        collapse_ors(parse_range2(inp, qfield, lambda inp: prep_raw(inp, names), split_minus=False), query)
+    else:
+        # If there are no letters we allow - to indicate a range.
+        collapse_ors(parse_range2(inp, qfield, int), query)
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_posints(inp, query, qfield, parse_singleton=int):
+    if LIST_POSINT_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    else:
+        raise SearchParsingError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_floats(inp, query, qfield, allow_singletons=False):
@@ -294,7 +367,7 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
-            if isinstance(a, basestring) and '.' in a:
+            if isinstance(a, string_types) and '.' in a:
                 prec = len(a) - a.find('.') - 1
             else:
                 prec = 0
@@ -303,11 +376,11 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
     else:
         msg = "It must be a range of floats (such as 2.1-8.7) or a comma-separated list of these (such as 4-25.1, 81-121)."
         def parse_singleton(a):
-            raise ValueError(msg)
+            raise SearchParsingError(msg)
     if LIST_FLOAT_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton, parse_endpoint), query)
     else:
-        raise ValueError(msg)
+        raise SearchParsingError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):
@@ -364,7 +437,7 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
                     iquery.append({sign_field: s0, abs_field: abs_D})
             collapse_ors(['$or', iquery], query)
     else:
-        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_rats(inp, query, qfield, process=None):
@@ -372,7 +445,7 @@ def parse_rats(inp, query, qfield, process=None):
     if LIST_RAT_RE.match(inp):
         collapse_ors(parse_range2rat(inp, qfield, process), query)
     else:
-        raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise SearchParsingError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 def _parse_subset(inp, query, qfield, mode, radical, product):
     def add_condition(kwd):
@@ -389,7 +462,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         # since the query planner still uses an index scan on the primary key.
         #if len(inp) <= 5 and radical is not None:
         #    if radical in query:
-        #        raise ValueError("Cannot specify containment and equality simultaneously")
+        #        raise SearchParsingError("Cannot specify containment and equality simultaneously")
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         #else:
         add_condition('$containedin')
@@ -408,7 +481,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         else:
             dup_free = []
         if qfield in query:
-            raise ValueError("Cannot specify containment and equality simultaneously")
+            raise SearchParsingError("Cannot specify containment and equality simultaneously")
         query[qfield] = dup_free
     else:
         raise ValueError("Unrecognized mode: programming error in LMFDB code")
@@ -457,7 +530,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None):
         primes = [int(p) for p in inp.split(',')]
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if not format_ok:
-        raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
+        raise SearchParsingError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
     _parse_subset(primes, query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
@@ -468,20 +541,20 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
-            example = "[2,3] or [3,3]"
+            example = "[6,2] or [32,32]"
         elif exactlength == 1:
             lstr = "list of 1 integer"
             example = "[2]"
         elif exactlength is not None:
             lstr = "list of %s integers" % exactlength
-            example = str(range(2,exactlength+2)).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
+            example = str(list(range(2,exactlength+2))).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
         elif maxlength is not None:
             lstr = "list of at most %s integers" % maxlength
-            example = str(range(2,maxlength+2)).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
+            example = str(list(range(2,maxlength+2))).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
         else:
             lstr = "list of integers"
             example = "[1,2,3] or [5,6]"
-        raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
+        raise SearchParsingError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
         if inp == '[]': # fixes bug in the code below (split never returns an empty list)
             if split:
@@ -495,22 +568,38 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             #L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i] % L[i+1] != 0:
-                    raise ValueError("Each entry must divide the previous, such as [4,2].")
+                    raise SearchParsingError("Each entry must divide the previous, such as [4,2].")
         elif check_divisibility == 'increasing':
             # Check that each entry divides the previous
             # L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i+1] % L[i] != 0:
-                    raise ValueError("Each entry must divide the next, such as [2,4].")
+                    raise SearchParsingError("Each entry must divide the next, such as [2,4].")
         if process is not None:
             L = [process(a) for a in L]
         if listprocess is not None:
             L = listprocess(L)
         if extractor is not None:
+            # This is currently only used by number field signatures
+            # It assumes degree is fairly simple in the query
             for qf, v in zip(qfield, extractor(L)):
-                if qf in query and query[qf] != v:
-                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
-                query[qf] = v
+                if qf in query:
+                    # If used more generally we should check every modifier
+                    # value -1 is used to force empty search results
+                    if isinstance(query[qf], dict):
+                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                           or ('$gt' in query[qf] and not v > query[qf]['$gt'])
+                           or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
+                           or ('$lt' in query[qf] and not v < query[qf]['$lt'])
+                           or ('$lte' in query[qf] and not v <= query[qf]['$lte'])):
+                            query[qf] = -1
+                        else:
+                            query[qf] = v
+                    else:
+                        if v != query[qf]:
+                            query[qf] = -1 
+                else:
+                    query[qf] = v
         elif split:
             query[qfield] = L
         else:
@@ -531,14 +620,14 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
             example = "[2/5]"
         elif exactlength is not None:
             lstr = "list of %s rational numbers" % exactlength
-            example = str(range(2,exactlength+2)).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
+            example = str(list(range(2,exactlength+2))).replace(", ","/13,") + " or " + str([3]*exactlength).replace(", ","/4,")
         elif maxlength is not None:
             lstr = "list of at most %s rational numbers" % maxlength
-            example = str(range(2,maxlength+2)).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
+            example = str(list(range(2,maxlength+2))).replace(", ","/13,") + " or " + str([2]*max(1, maxlength-2)).replace(", ","/41,")
         else:
             lstr = "list of rational numbers"
             example = "[1/7,2,3] or [5,6/71]"
-        raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
+        raise SearchParsingError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
         if inp == '[]': # fixes bug in the code below (split never returns an empty list)
             if split:
@@ -554,7 +643,7 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
         if extractor is not None:
             for qf, v in zip(qfield, extractor(L)):
                 if qf in query and query[qf] != v:
-                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
+                    raise SearchParsingError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
                 query[qf] = v
         elif split:
             query[qfield] = L
@@ -570,39 +659,35 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield):
-    from lmfdb.galois_groups.transitive_group import complete_group_codes
+def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
     try:
-        gcs = complete_group_codes(inp)
-        nfield, tfield = qfield
-        if nfield in query:
-            gcs = [t for n,t in gcs if n == query[nfield]]
-            if len(gcs) == 0:
-                raise ValueError("Degree inconsistent with Galois group.")
-            elif len(gcs) == 1:
-                query[tfield] = gcs[0]
-            else:
-                query[tfield] = {'$in': gcs}
+        if list_ok:
+            from lmfdb.galois_groups.transitive_group import complete_group_codes
+            gcs = complete_group_codes(inp)
         else:
-            gcsdict = defaultdict(list)
-            for n,t in gcs:
-                gcsdict[n].append(t)
-            if len(gcsdict) == 1:
-                query[nfield] = n # left over from the loop
-                if len(gcs) == 1:
-                    query[tfield] = t # left over from the loop
-                else:
-                    query[tfield] = {'$in': gcsdict[n]}
+            from lmfdb.galois_groups.transitive_group import complete_group_code
+            gcs = complete_group_code(inp.upper())
+
+        galfield, nfield = qfield
+        if nfield and nfield not in query:
+            nvals = list(set([s[0] for s in gcs]))
+            if len(nvals) == 1:
+                query[nfield] = nvals[0]
             else:
-                options = []
-                for n, T in gcsdict.iteritems():
-                    if len(T) == 1:
-                        options.append({nfield: n, tfield: T[0]})
-                    else:
-                        options.append({nfield: n, tfield: {'$in': T}})
-                collapse_ors(['$or', options], query)
+                query[nfield] = {'$in': nvals}
+        # if nfield was already in the query, we could try to intersect it with nvals
+        cands = ['{}T{}'.format(s[0],s[1]) for s in gcs]
+        if len(cands) == 1:
+            query[galfield] = cands[0]
+        else:
+            query[galfield] = {'$in': cands}
     except NameError:
-        raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+        if re.match(r'^[ACDS]\d+$', inp):
+            raise SearchParsingError("The requested group is not in the database")
+        if err_msg:
+            raise SearchParsingError(err_msg)
+        else:
+            raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
 def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if FF in ['q', 'Q']:
@@ -612,10 +697,12 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     # Change unicode dash with minus sign
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
-    FF = FF.decode('utf8').encode('ascii', 'ignore')
+    # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
+    # Remove non-ascii characters
+    FF = re.sub(r'[^\x00-\x7f]', r'', FF)
     F = FF.lower() # keep original if needed
     if len(F) == 0:
-        raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+        raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
@@ -625,7 +712,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
-                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(FF[:5]))
+                raise SearchParsingError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(FF[:5]))
             if d == 1:
                 return '1.1.1.1'
             if d % 4 in [2, 3]:
@@ -640,7 +727,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 F = F.replace('_','')
             match_obj = re.match(r'^qzeta(\d+)(\+|plus)?$', F)
             if not match_obj:
-                raise ValueError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+                raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
 
             d = ZZ(str(match_obj.group(1)))
             if d % 4 == 2:
@@ -651,15 +738,14 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 if d in rcyclolookup:
                     return rcyclolookup[d]
                 else:
-                    raise ValueError('%s is not in the database.' % F)
+                    raise SearchParsingError('%s is not in the database.' % F)
             # Now not the totally real subfield
             from lmfdb.number_fields.web_number_field import cyclolookup
             if d in cyclolookup:
                 return cyclolookup[d]
             else:
-                raise ValueError('%s is not in the database.' % F)
-                
-        raise ValueError('It is not a valid field name or label, or a defining polynomial.')
+                raise SearchParsingError('%s is not in the database.' % F)
+        raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
@@ -669,10 +755,10 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise ValueError('%s does not define a number field in the database.'%F)
+        raise SearchParsingError('%s does not define a number field in the database.'%F)
     # Expand out factored labels, like 11.11.11e20.1
     if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
-        raise ValueError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
+        raise SearchParsingError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
     def raise_power(ab):
         if ab.count("e") == 0:
@@ -681,7 +767,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             a,b = ab.split("e")
             return ZZ(a)**ZZ(b)
         else:
-            raise ValueError("Malformed absolute discriminant.  It must be a sequence of strings AeB for A and B integers, joined by _s.  For example, 2e7_3e5_11.")
+            raise SearchParsingError("Malformed absolute discriminant.  It must be a sequence of strings AeB for A and B integers, joined by _s.  For example, 2e7_3e5_11.")
     parts[2] = str(prod(raise_power(c) for c in parts[2].split("_")))
     return ".".join(parts)
 
@@ -705,7 +791,7 @@ def pol_string_to_list(pol, deg=None, var=None):
 @search_parser(pass_name=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_elt(inp, query, name, qfield, field_label='field_label'):
     if field_label not in query:
-        raise ValueError("You must specify a field when searching by %s"%name)
+        raise SearchParsingError("You must specify a field when searching by %s"%name)
     deg = int(query[field_label].split('.')[0])
     query[qfield] = pol_string_to_list(inp, deg=deg)
 
@@ -716,7 +802,7 @@ def parse_container(inp, query, qfield):
     if format_ok:
         query[qfield] = str(inp)
     else:
-        raise ValueError("You must specify a permutation representation, such as 6T13" )
+        raise SearchParsingError("You must specify a permutation representation, such as 6T13" )
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_hmf_weight(inp, query, qfield):
@@ -727,7 +813,7 @@ def parse_hmf_weight(inp, query, qfield):
         try:
             query[normal_field] = str(split_list(inp))
         except ValueError:
-            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers enclosed in brackets, such as 2, or [2,2], or [2,4,6].")
+            raise SearchParsingError("It must be either an integer (parallel weight) or a comma separated list of integers enclosed in brackets, such as 2, or [2,2], or [2,4,6].")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool(inp, query, qfield, process=None, blank=[]):
@@ -742,7 +828,7 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
         # On the Galois groups page, these indicate "All"
         pass
     else:
-        raise ValueError("It must be True or False.")
+        raise SearchParsingError("It must be True or False.")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool_unknown(inp, query, qfield):
@@ -773,7 +859,7 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
             allowed_str = " or ".join(allowed)
         else:
             allowed_str = ", ".join(allowed[:-1]) + " or " + allowed[-1]
-        raise ValueError("It must be %s"%allowed_str)
+        raise SearchParsingError("It must be %s"%allowed_str)
     query[qfield] = process(inp)
 
 @search_parser
@@ -787,11 +873,11 @@ def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=i
     for piece in inp.split(','):
         piece = piece.strip().split('=')
         if len(piece) != 2:
-            raise ValueError("It must be a comma separated list of expressions of the form %sN=T"%(prefix))
+            raise SearchParsingError("It must be a comma separated list of expressions of the form %sN=T"%(prefix))
         n,t = piece
         n = n.strip()
         if not n.startswith(prefix):
-            raise ValueError("%s does not start with %s"%(n, prefix))
+            raise SearchParsingError("%s does not start with %s"%(n, prefix))
         n = int(n[len(prefix):]) + shift
         t = parse_singleton(t.strip())
         query[qfield + '.%s'%n] = t
@@ -858,23 +944,22 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             # MongoDB is not aware that all the queries above imply that qfield
             # must all contain all those elements, we aid MongoDB by explicitly
             # saying that, and hopefully it will use a multikey index.
-            parsed_values = sub_query.values();
+            parsed_values = list(sub_query.values())
             # asking for each value to be in the array
             if parse_singleton is str:
                 all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
             else:
                 all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
 
-            if len(all_operand) > 0:
-                sub_query[qfield] = {'$all' : all_operand};
-
+            if all_operand:
+                sub_query[qfield] = {'$all' : all_operand}
 
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space
-            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict];
-            if len(elemMatch_operand) > 0:
+            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict]
+            if elemMatch_operand:
                 if qfield in sub_query:
-                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0];
+                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0]
                 else:
                     sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
             # we could add more than one $elemMatch operand, but 
@@ -891,7 +976,13 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
 @search_parser
-def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[]):
+def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[], names={}):
+    def parse_one(x):
+        ## Remember to add clean_spaces=True
+        #if re.search(r'[A-Za-z]', x):
+        #    return parse_range2(x, first_field, lambda inp: prep_raw(inp, names), split_minus=False)
+        #else:
+        return parse_range2(x, first_field, parse_singleton)
     bparts = BRACKETING_RE.split(inp)
     parts = []
     for part in bparts:
@@ -909,22 +1000,22 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
         sub_query = {}
         part = part.strip()
         if not part:
-            raise ValueError("Every count specified must be nonempty.")
+            raise SearchParsingError("Every count specified must be nonempty.")
         if part[0] == '[':
             ispec = initial_segment + [x.strip() for x in part[1:-1].split(',')]
             if not all(ispec):
-                raise ValueError("Every count specified must be nonempty.")
+                raise SearchParsingError("Every count specified must be nonempty.")
             if len(ispec) == 1 and first_field is not None:
-                sub_query[first_field] = parse_range2(ispec[0], first_field, parse_singleton)[1]
+                sub_query[first_field] = parse_one(ispec[0])[1]
             else:
                 if any('-' in x[1:] for x in ispec):
-                    raise ValueError("Ranges not supported.")
+                    raise SearchParsingError("Ranges not supported.")
                 sub_query[qfield] = {'$startswith':' '.join(ispec) + ' '}
         elif first_field is not None:
-            sub_query[first_field] = parse_range2(part, first_field, parse_singleton)[1]
+            sub_query[first_field] = parse_one(part)[1]
         else:
             if '-' in part[1:]:
-                raise ValueError("Ranges not supported.")
+                raise SearchParsingError("Ranges not supported.")
             sub_query[qfield] = {'$startswith':'%s %s '%(' '.join(initial_segment), part)}
         return sub_query
     if len(parts) == 1:

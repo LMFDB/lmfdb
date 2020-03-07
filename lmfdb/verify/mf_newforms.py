@@ -1,7 +1,9 @@
-
+from __future__ import print_function
 from sage.all import prime_range, Integer, kronecker_symbol, PolynomialRing, ComplexField, ZZ, gap, infinity
 
-from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
+from lmfdb.backend import db
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycopg2.sql import SQL, Literal
 from lmfdb.utils import names_and_urls
 from .mf import MfChecker
 from .verification import overall, overall_long, slow, fast, accumulate_failures
@@ -183,13 +185,6 @@ class mf_newforms(MfChecker):
                 self.check_array_bound('rm_discs', 1, upper=False) +
                 self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
 
-    @overall(max_failures=100)
-    def check_self_twist_proved(self):
-        """
-        check that self_twist_proved is set (log warning if not, currently there is 1 where it is not set)
-        """
-        return self.check_values({'self_twist_proved':True})
-
     @overall
     def check_fricke_eigenval(self):
         """
@@ -313,7 +308,7 @@ class mf_newforms(MfChecker):
         if present, check that field_disc_factorization matches field_disc
         """
         # TIME about 3s
-        return self._run_query(SQL('field_disc != prod_factorization(field_disc_factorization)'), {'field_disc':{'$exists':True}});
+        return self._run_query(SQL('field_disc != prod_factorization(field_disc_factorization)'), {'field_disc':{'$exists':True}})
 
     @overall
     def check_hecke_ring_index_factorization(self):
@@ -321,7 +316,7 @@ class mf_newforms(MfChecker):
         if present, verify that hecke_ring_index_factorization matches hecke_ring_index
         """
         # TIME about 2s
-        return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}});
+        return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}})
 
 
     @overall(max_failures=1000)
@@ -422,7 +417,7 @@ class mf_newforms(MfChecker):
             for p in primes:
                 if kronecker_symbol(D, p) == -1 and traces[p] != 0:
                     if verbose:
-                        print "CM failure", D, p, traces[p]
+                        print("CM failure", D, p, traces[p])
                     return False
         return True
 
@@ -437,12 +432,12 @@ class mf_newforms(MfChecker):
         f = self.ZZx(rec['field_poly'])
         if not f.is_irreducible():
             if verbose:
-                print "Irreducibility failure", f.factor()
+                print("Irreducibility failure", f.factor())
             return False
         # if field_poly_is_cyclotomic, verify this
         if rec['field_poly_is_cyclotomic'] and not f.is_cyclotomic():
             if verbose:
-                print "Cyclotomic failure", f
+                print("Cyclotomic failure", f)
             return False
         return True
 
@@ -455,7 +450,7 @@ class mf_newforms(MfChecker):
         f = self.ZZx(rec['field_poly'])
         success = (rec.get('is_self_dual') == f.is_real_rooted())
         if not success and verbose:
-            print "Real roots failure", f, f.roots(CCC, multiplicities=False)
+            print("Real roots failure", f, f.roots(CCC, multiplicities=False))
         return success
 
     @slow(projection=['level', 'weight', 'char_orbit_index', 'dim', 'related_objects'])
@@ -466,20 +461,20 @@ class mf_newforms(MfChecker):
         names = names_and_urls(rec['related_objects'])
         if len(names) != len(rec['related_objects']):
             if verbose:
-                print "Length failure", len(names), len(rec['related_objects'])
+                print("Length failure", len(names), len(rec['related_objects']))
             return False
         # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
         for name, url in names:
             if name.startswith('Artin representation '):
                 if rec['weight'] != 1:
                     if verbose:
-                        print "Artin weight failure", name, rec['weight']
+                        print("Artin weight failure", name, rec['weight'])
                     return False
                 artin_label = name.split()[-1]
                 conductor_string = artin_label.split('.')[1]
                 conductor = 1
                 for elt in conductor_string.split('_'):
-                    pe = map(int, elt.split('e'))
+                    pe = [int(s) for s in elt.split('e')]
                     if len(pe) == 1:
                         conductor *= pe[0]
                     elif len(pe) == 2:
@@ -488,25 +483,25 @@ class mf_newforms(MfChecker):
                         raise ValueError(str(pe))
                 if conductor != rec['level']:
                     if verbose:
-                        print "Conductor failure", name, conductor, rec['level']
+                        print("Conductor failure", name, conductor, rec['level'])
                     return False
 
         # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
             if url.startswith('/EllipticCurve/Q/'):
                 if rec['weight'] != 2:
                     if verbose:
-                        print "EC weight failure", url, rec['weight']
+                        print("EC weight failure", url, rec['weight'])
                     return False
                 if rec['dim'] == 1:
                     # Curve over Q
                     if rec['level'] != int(name.split()[-1].split('.')[0]):
                         if verbose:
-                            print "EC level failure", url, rec['level'], int(name.split()[-1].split('.')[0])
+                            print("EC level failure", url, rec['level'], int(name.split()[-1].split('.')[0]))
                         return False
         if (rec['weight'] == 2 and rec['char_orbit_index'] == 1 and rec['dim'] == 1 and
             not any(url.startswith('/EllipticCurve/Q/') for name, url in names)):
             if verbose:
-                print "Modularity failure"
+                print("Modularity failure")
             return False
         return True
 
@@ -521,12 +516,12 @@ class mf_newforms(MfChecker):
         pimage = rec.get('projective_image')
         if pimage is None:
             if verbose:
-                print "No projective image"
+                print("No projective image")
             return False
-        aid = map(ZZ, aimage.split('.'))
+        aid = [ZZ(n) for n in aimage.split('.')]
         if aid[0] != rec['artin_degree']:
             if verbose:
-                print "Artin degree mismatch", aid, rec['artin_degree']
+                print("Artin degree mismatch", aid, rec['artin_degree'])
             return False
         if pimage == 'A4':
             pid = [12,3]
@@ -540,7 +535,7 @@ class mf_newforms(MfChecker):
         qid = G.FactorGroup(G.Center()).IdGroup().sage()
         success = (pid == qid)
         if not success and verbose:
-            print "Quotient failure", pid, qid
+            print("Quotient failure", pid, qid)
         return success
 
     #### char_dir_orbits ####
@@ -630,13 +625,13 @@ class mf_newforms(MfChecker):
         dbroots = [CCC(root["embedding_root_real"], root["embedding_root_imag"]) for root in dbroots]
         if len(dbroots) != poly.degree():
             if verbose:
-                print "Wrong number of roots"
+                print("Wrong number of roots")
             return False
         for r in dbroots:
             # f is irreducible, so all roots are simple and checking relative error is the way to go
             if poly(r)/dpoly(r) > 1e-11:
                 # It's still possible that the roots are correct; it could just be a problem of numerical instability
-                print r, poly(r)/dpoly(r)
+                print(r, poly(r)/dpoly(r))
                 break
         else:
             return True
@@ -652,7 +647,7 @@ class mf_newforms(MfChecker):
             # The dim 1 case where poly=x is handled correctly in the earlier loop, so r != 0.
             if best_dist/abs(r) > 1e-13:
                 if verbose:
-                    print "Roots mismatch", sorted(roots), sorted(dbroots)
+                    print("Roots mismatch", sorted(roots), sorted(dbroots))
                 return False
             roots.pop(0)
             dbroots.pop(best_i)

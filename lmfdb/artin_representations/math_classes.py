@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
+from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
@@ -14,11 +15,11 @@ import re
 # for values (value a means e(a/n))
 def id_dirichlet(fun, N, n):
     N = Integer(N)
-    if N==1:
-        return (1,1)
+    if N == 1:
+        return (1, 1)
     p2 = valuation(N, 2)
     N2 = 2**p2
-    Nodd = N/N2
+    Nodd = N//N2
     Nfact = list(factor(Nodd))
     #print "n = "+str(n)
     #for j in range(20):
@@ -123,14 +124,14 @@ class ArtinRepresentation(object):
         return int(self._data["Conductor"])
 
     def NFGal(self):
-        return  map(int, self._data["NFGal"]);
+        return [int(n) for n in self._data["NFGal"]]
 
     # If the dimension is 1, we want the result as a webcharacter
     # Otherwise, we want the label of it as an Artin rep.
     # Mostly, this is pulled from the database, but we can fall back
     # and compute it ourselves
     def determinant(self):
-        if len(self._data['Dets'])>0:
+        if self._data['Dets']:
             parts = self.label().split("c")
             thischar = str( self._data['Dets'][int(parts[1])-1] )
             if self.dimension()==1:
@@ -165,7 +166,7 @@ class ArtinRepresentation(object):
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = " \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
+        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
         return tmp
 
     def hard_primes(self):
@@ -204,7 +205,7 @@ class ArtinRepresentation(object):
         return self._nf
 
     def galois_conjugacy_size(self):
-    	return len(self.GaloisConjugates())
+        return len(self.GaloisConjugates())
 
     def smallest_gal_t(self):
         try:
@@ -215,7 +216,7 @@ class ArtinRepresentation(object):
             tmp = bits[2]
             bits = tmp.split('t')
             self._small_nt = [int(z) for z in bits]
-    	return self._small_nt
+        return self._small_nt
 
     def smallest_gal_t_format(self):
         galnt = self.smallest_gal_t()
@@ -379,10 +380,12 @@ class ArtinRepresentation(object):
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_short(n,t)
 
     def pretty_galois_knowl(self):
-        return group_display_knowl(self._data['Galn'],self._data['Galt'])
+        n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        return group_display_knowl(n,t)
 
     def __str__(self):
         try:
@@ -434,7 +437,7 @@ class ArtinRepresentation(object):
         # We are looking for the character value on the conjugacy class of complex conjugation.
         # This is always an integer, so we don't expect this to be a more general
         # algebraic integer, and we can simply convert to sage
-            raise TypeError, "Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp
+            raise TypeError("Expecting a character values that converts easily to integers, but that's not the case: %s" % tmp)
         return trace_complex
 
     def number_of_eigenvalues_plus_one_complex_conjugation(self):
@@ -532,7 +535,7 @@ class ArtinRepresentation(object):
         try:
             i = self.hard_primes().index(p)
         except:
-            raise IndexError, "Not a 'hard' prime%" % p
+            raise IndexError("Not a 'hard' prime")
         return self.hard_factors()[i]
 
     def nf(self):
@@ -633,7 +636,7 @@ class NumberFieldGaloisGroup(object):
         elif len(x) > 1:
             raise ValueError("Only one positional argument allowed")
         else:
-            if isinstance(x[0], basestring):
+            if isinstance(x[0], string_types):
                 if x[0]:
                     coeffs = x[0].split(',')
                 else:
@@ -671,7 +674,7 @@ class NumberFieldGaloisGroup(object):
 
     def polredabs(self):
         # polynomials are all polredabs'ed now
-        return PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        return PolynomialRing(QQ, 'x')([str(m) for m in self.polynomial()])
         #if "polredabs" in self._data.keys():
         #    return self._data["polredabs"]
         #else:
@@ -721,7 +724,6 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
-        import re
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
             mygalstring = wnf.galois_string()
@@ -789,7 +791,7 @@ class NumberFieldGaloisGroup(object):
         PR = PowerSeriesRing(PolynomialRing(QQ, 'a'), 'p')
         myroots = [web_latex(PR(x), enclose=False) for x in myroots]
         # change p into its value
-        myroots = [re.sub(r'([a)\d]) *p', r'\1\cdot '+str(p), z) for z in myroots]
+        myroots = [re.sub(r'([a)\d]) *p', r'\1\\cdot '+str(p), z) for z in myroots]
         return [z.replace('p',str(p)) for z in myroots]
 
     def index_complex_conjugation(self):
@@ -838,15 +840,15 @@ class NumberFieldGaloisGroup(object):
     def nfinit(self):
         from sage.all import pari
         X = PolynomialRing(QQ, "x")
-        pol = X(map(str,self.polynomial()))
+        pol = X([str(m) for m in self.polynomial()])
         return pari("nfinit([%s,%s])" % (str(pol), self.all_hard_primes()))
 
     def from_cycle_type_to_conjugacy_class_index(self, cycle_type, p):
         try:
             dict_to_use = self._from_cycle_type_to_conjugacy_class_index_dict
         except AttributeError:
-            import cyc_alt_res_engine
-            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict(map(str,self.polynomial()), self.Frobenius_resolvents())
+            from . import cyc_alt_res_engine
+            self._from_cycle_type_to_conjugacy_class_index_dict = cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict([str(m) for m in self.polynomial()], self.Frobenius_resolvents())
             # self._from_cycle_type_to_conjugacy_class_index_dict is now a dictionary with keys the the cycle types (as tuples),
             # and values functions of the prime that output the conjugacy class index (using different methods depending on local information)
             # cyc_alt_res_engine.from_cycle_type_to_conjugacy_class_index_dict constructs this dictionary,
@@ -857,9 +859,9 @@ class NumberFieldGaloisGroup(object):
         try:
             fn_to_use = dict_to_use[cycle_type]
         except KeyError:
-            raise KeyError, "Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
+            raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
                 (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0]))
+                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):
@@ -869,7 +871,7 @@ class NumberFieldGaloisGroup(object):
         try:
             assert p not in self.all_bad_primes()
         except:
-            raise AssertionError, "Expecting a prime not dividing the discriminant", p
+            raise AssertionError("Expecting a prime not dividing the discriminant")
         return tuple(self.residue_field_degrees(p))
         # tuple allows me to use this for indexing of a dictionary
 
@@ -887,16 +889,16 @@ class NumberFieldGaloisGroup(object):
         except AttributeError:
             from lmfdb.number_fields.number_field import residue_field_degrees_function
             fn_with_pari_output = residue_field_degrees_function(self.nfinit())
-            self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
+            self._residue_field_degrees = lambda p: [Integer(k) for k in fn_with_pari_output(p)]
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
 
     def __str__(self):
         try:
-            tmp = "The Galois group of the number field  Q[x]/(%s)" % map(str,self.polynomial())
+            tmp = "The Galois group of the number field  Q[x]/(%s)" % [str(m) for m in self.polynomial()]
         except:
             tmp = "The Galois group of a number field"
         return tmp
 
     def display_title(self):
-        return "The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"
+        return r"The Galois group of the number field $\mathbb{Q}[x]/(%s)" % self.polynomial().latex() + "$"

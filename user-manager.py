@@ -1,10 +1,13 @@
+from __future__ import print_function, absolute_import
 import sys
 
+
 def usage():
-    print ''' Usage: to change a password, type 'sage user-manager.py
+    print(''' Usage: to change a password, type 'sage user-manager.py
     changepassword username newpassword'.  You must have a file
     passwords.yaml in the current directory which holds the
-    authentication passwords.  '''
+    authentication passwords.  ''')
+
 
 def changepassword(username, newpassword):
     #import yaml
@@ -12,8 +15,9 @@ def changepassword(username, newpassword):
     #C['userdb'].authenticate(pw_dict['data']['username'],
     #                         pw_dict['data']['password'])
 
-    from lmfdb.users.pwdmanager import userdb
+    from .users.pwdmanager import userdb
     userdb.change_password(username, newpassword)
+
 
 if len(sys.argv) != 4:
     usage()

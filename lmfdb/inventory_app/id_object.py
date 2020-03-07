@@ -1,3 +1,5 @@
+from six import string_types
+
 null_type = 0
 integer_type = 1
 numeric_type = 2
@@ -59,7 +61,7 @@ def is_collection(object):
     if type(object) is list:
         for el in object:
             t = get_object_id(el)
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:
@@ -74,7 +76,7 @@ def is_collection(object):
     if type(object) is tuple:
         for el in object:
             t = get_object_id(el)
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:
@@ -89,7 +91,7 @@ def is_collection(object):
     if type(object) is dict:
         for el in object:
             t = get_object_id(object[el])
-            if subtype == None:
+            if subtype is None:
                 subtype = t
                 continue
             try:
@@ -142,17 +144,15 @@ def is_base_type(object):
     # At this point it isn't actually a basic object
     raise TypeError
 
+
 def is_string(object):
     """ Helper function to test for an object being either a primitive
         or unicode string.
 
         object - Object to test
         returns True or False """
+    return isinstance(object, string_types)
 
-    to = type(object)
-    if to is str or to is unicode:
-        return True
-    return False
 
 def is_string_of(object):
     """ Test for an object being an encoded string

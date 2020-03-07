@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap,
+    search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
@@ -43,7 +43,7 @@ def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 @cached_function
@@ -205,9 +205,9 @@ def index():
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
-        if search_type == 'List':
+        if search_type in ['List', 'Random']:
             return newform_search(info)
-        elif search_type == 'Spaces':
+        elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
         elif search_type == 'Dimensions':
             return dimension_form_search(info)
@@ -220,10 +220,6 @@ def index():
             return trace_search(info)
         elif search_type == 'SpaceTraces':
             return space_trace_search(info)
-        elif search_type == 'Random':
-            return newform_search(info, random=True)
-        elif search_type == 'RandomSpace':
-            return space_search(info, random=True)
         assert False
     info = {"stats": CMF_stats()}
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
@@ -239,12 +235,8 @@ def index():
 
 @cmf.route("/random/")
 def random_form():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-        return newform_search(info, random=True)
-    else:
-        label = db.mf_newforms.random()
-        return redirect(url_for_label(label), 307)
+    label = db.mf_newforms.random()
+    return redirect(url_for_label(label), 307)
 
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
@@ -262,7 +254,7 @@ def parse_n(info, newform, primes_only):
     try:
         info['CC_n'] = integer_options(nrange, newform.an_cc_bound)
     except (ValueError, TypeError) as err:
-        info['CC_n'] = range(2,maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
@@ -280,7 +272,7 @@ def parse_n(info, newform, primes_only):
             info['CC_n'] = [n for n in prime_range(maxp+1) if newform.level % n != 0]
     elif len(info['CC_n']) == 0:
         errs.append("No n in specified range; resetting to default")
-        info['CC_n'] = range(2, maxp+1)
+        info['CC_n'] = list(range(2, maxp + 1))
     return errs
 
 def parse_m(info, newform):
@@ -299,7 +291,7 @@ def parse_m(info, newform):
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
-        info['CC_m'] = range(1, maxm+1)
+        info['CC_m'] = list(range(1, maxm + 1))
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
@@ -328,6 +320,7 @@ def render_newform_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
+    info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
@@ -338,7 +331,7 @@ def render_newform_webpage(label):
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -355,6 +348,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
+    info['display_float'] = display_float
     # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
@@ -370,7 +364,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
-                           properties2=newform.properties,
+                           properties=newform.properties,
                            downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
@@ -389,7 +383,7 @@ def render_space_webpage(label):
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -407,7 +401,7 @@ def render_full_gamma1_space_webpage(label):
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
-                           properties2=space.properties,
+                           properties=space.properties,
                            downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
@@ -506,8 +500,8 @@ def jump_box(info):
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
     #handle direct trace_hash search
-    if re.match(r'^\#\d+$',jump) and long(jump[1:]) < 2**61:
-        label = db.mf_newforms.lucky({'trace_hash': long(jump[1:].strip())}, projection="label")
+    if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
+        label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:
@@ -870,7 +864,7 @@ def set_rows_cols(info, query):
         primes = info.get('level_primes','').strip()
         if primes:
             try:
-                rad = prod(map(ZZ, primes.split(',')))
+                rad = prod(ZZ(p) for p in primes.split(','))
                 if info['prime_quantifier'] == 'subsets':
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] == 'append':
@@ -1099,7 +1093,7 @@ def self_twist_type_formatter(x):
     return x # c = 'neither', 'CM only', 'RM only' or 'both'
 
 def rel_dim_formatter(x):
-    return 'dim=%s&dim_type=rel' % x
+    return 'dim=%s&dim_type=rel' % range_formatter(x)
 
 def self_twist_type_query_formatter(x):
     if x in [0, 'neither']:

@@ -238,8 +238,9 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
-      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+      // log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+	  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
+      $output.load(url_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {
@@ -332,17 +333,17 @@ $(function() {
 });
 
 function decrease_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
-  newstart = parseInt(startelem.val())-count;
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
+  var newstart = parseInt(startelem.val())-count;
   if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
   $('form[id='+form_id+']').submit()
 };
 function increase_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
   startelem.val(parseInt(startelem.val())+count);
   $('form[id='+form_id+']').submit()
 };
@@ -437,8 +438,8 @@ function cleanSubmit(id)
         if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   for(i = 0; item = allSelects[i]; i++) {
@@ -446,8 +447,8 @@ function cleanSubmit(id)
       if (!item.value) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   if (!n) {
@@ -544,6 +545,38 @@ function debounce(func, wait, immediate){
 	return debounced;
 };
 
+/* Showing advanced search boxes */
+
+
+$(document).ready(function () {
+  $('#advancedtoggle').click(
+    function (evt) {
+      evt.preventDefault();
+      var advanced = $('.advanced');
+      if( advanced.is(":visible") )
+      {
+        advanced.hide();
+        $('#advancedtoggle').text('Advanced search options');
+      } else {
+        advanced.show();
+        $('#advancedtoggle').text('Hide advanced search options');
+      }
+      return false;
+    });
+});
+
+function show_advancedQ () {
+  var values = $('select.advanced, input.advanced');
+  for(var i = 0; i < values.length; i++) {
+    if( values[i].value != "" ) {
+      $('.advanced').show();
+      $('#advancedtoggle').text('Hide advanced search options');
+      break;
+    }
+  }
+};
+
+
 /* Contracting and expanding statistics displays */
 
 function show_stats_rows(hsh, to_show) {
@@ -557,8 +590,6 @@ function show_stats_rows(hsh, to_show) {
 
 /* Show/hide sidebar */
 $(document).ready(function () {
-  console.log("ready");
-  console.log(document.cookie);
   $('#menutoggle').click(
     function (evt) {
       evt.preventDefault();
@@ -570,13 +601,11 @@ $(document).ready(function () {
         sidebar.hide();
         document.cookie = 'showmenu=False;path=/';
         $('#menutoggle').text('Show Menu');
-        console.log(document.cookie);
       } else {
         main.css( { "margin-left" : "200px", "transition": "margin 0.2s"} );
         sidebar.show("fast");
         document.cookie = 'showmenu=True;path=/';
         $('#menutoggle').text('Hide Menu');
-        console.log(document.cookie);
       }
       return false;
     });

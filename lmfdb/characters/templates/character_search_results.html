@@ -22,15 +22,15 @@
 <td align=left>
 <select name='parity'>
       <option value="">all</option>
-      <option value="Even" {{ "selected" if args.parity == 'Even'}}>even</option>
-      <option value="Odd" {{ "selected" if args.parity == 'Odd'}}>odd</option>
+      <option value="even" {{ "selected" if args.parity == 'even'}}>even</option>
+      <option value="odd" {{ "selected" if args.parity == 'odd'}}>odd</option>
 </select>
 </td>
 <td align=left>
 <select name='primitive'>
       <option value="">all</option>
-      <option value="Yes" {{ "selected" if args.primitive == 'Yes'}}>yes</option>
-      <option value="No" {{ "selected" if args.primitive == 'No'}}>no</option>
+      <option value="yes" {{ "selected" if args.primitive == 'yes'}}>yes</option>
+      <option value="no" {{ "selected" if args.primitive == 'no'}}>no</option>
 </select>
 </td>
 </tr>
@@ -68,7 +68,8 @@ table td.params {
 {% endif %}
 </h2>
 
-<table>
+<table class=ntdata>
+<thead>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.galois_orbit_label', title='Orbit label')}}</th>
@@ -78,6 +79,7 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
+</thead>
 
 {% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>
