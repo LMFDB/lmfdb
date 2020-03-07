@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_to_factored_poly_otherorder, make_bigint
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder, make_bigint
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -188,9 +188,9 @@ def display_hecke_polys(form_labels, num_disp = 5):
     #factor_time = 0
     for orbit_code in orbit_codes:
         for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
-            coeffs = poly_item['lpoly']
+            coeffs = poly_item['lpoly_factorization']
             #t2 = clock()
-            F_p = list_to_factored_poly_otherorder(coeffs)
+            F_p = list_factored_to_factored_poly_otherorder(coeffs)
             #t3 = clock()
             #factor_time += (t3-t2)
             F_p = make_bigint(r'\( %s \)' % F_p)
