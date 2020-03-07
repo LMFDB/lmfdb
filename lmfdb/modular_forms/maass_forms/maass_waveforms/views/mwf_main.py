@@ -28,7 +28,7 @@ import re
 from lmfdb.utils import flash_error
 from sage.all import gcd
 
-from six import StringIO
+from six import BytesIO
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
@@ -223,8 +223,8 @@ def render_one_maass_waveform(maass_id, **kwds):
         else:
             res = f.download_text()
 
-        strIO = StringIO()
-        strIO.write(res)
+        strIO = BytesIO()
+        strIO.write(res.encode('utf-8'))
         strIO.seek(0)
         try:
             return send_file(strIO,
