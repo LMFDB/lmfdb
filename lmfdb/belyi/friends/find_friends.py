@@ -64,7 +64,7 @@ def genus1_lookup_equation_nf(rec):
         j = E.j_invariant()
         j_str = NFelt(j)
         #cond_nrm = (E.conductor()).norm()
-        #print "Curve has j-invariant %s over %s" % (j, K) 
+        #print "Curve has j-invariant %s over %s" % (j, K)
         #print "\nCurve has j-invariant %s, represented as %s" % (j, j_str)
         j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str})) # is there a better way to search than by j-invariant? Conductor norm?
         #j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str, 'conductor_norm':cond_nrm})) # throws weird Postgres error
