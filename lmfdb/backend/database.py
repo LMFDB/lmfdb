@@ -196,7 +196,7 @@ class PostgresDatabase(PostgresBase):
 
         cur = self._execute(SQL(
             "SELECT table_name, column_name, udt_name::regtype "
-            "FROM information_schema.columns"
+            "FROM information_schema.columns ORDER BY table_name, ordinal_position"
         ))
         data_types = {}
         for table_name, column_name, regtype in cur:
