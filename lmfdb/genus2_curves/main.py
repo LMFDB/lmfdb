@@ -649,7 +649,7 @@ class G2CSearchArray(SearchArray):
             "count", label="Results to display", example=50, example_col=False
         )
 
-        browse_array = [
+        self.browse_array = [
             [geometric_invariants],
             [conductor, is_gl2_type],
             [discriminant, st_group],
@@ -663,7 +663,7 @@ class G2CSearchArray(SearchArray):
             [bad_primes, count],
         ]
 
-        refine_array = [
+        self.refine_array = [
             [
                 conductor,
                 discriminant,
@@ -692,4 +692,3 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
             ],
         ]
-        SearchArray.__init__(self, browse_array, refine_array)

@@ -483,7 +483,7 @@ class AbvarSearchArray(SearchArray):
             example_col=False
         )
 
-        refine_array = [
+        self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
             [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
@@ -494,7 +494,7 @@ class AbvarSearchArray(SearchArray):
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
         ]
-        browse_array = [
+        self.browse_array = [
             [q, primitive],
             [p, simple],
             [g, geom_simple],
@@ -518,10 +518,9 @@ class AbvarSearchArray(SearchArray):
             [galois_group],
             [count],
         ]
-        search_types = [('List', 'List of Results'),
-                        ('Counts', 'Counts Table'),
-                        ('Random', 'Random Result')]
-        SearchArray.__init__(self, browse_array, refine_array, search_types=search_types)
+        self.search_types = lambda info: [('List', 'List of Results'),
+                                          ('Counts', 'Counts Table'),
+                                          ('Random', 'Random Result')]
 
 def common_parse(info, query):
     info["search_array"] = AbvarSearchArray()

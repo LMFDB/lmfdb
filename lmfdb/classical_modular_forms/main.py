@@ -11,8 +11,10 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap, range_formatter, display_float,
+    search_wrap, range_formatter,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
+    DoubleSelectBox, BasicSpacer,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -226,6 +228,7 @@ def index():
     info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["search_array"] = CMFSearchArray()
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -320,7 +323,6 @@ def render_newform_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
@@ -348,7 +350,6 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['display_float'] = display_float
     # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
@@ -685,6 +686,7 @@ def parse_sort(info, query, spaces=False):
 
 def newform_parse(info, query):
     common_parse(info, query)
+    info["search_array"] = CMFSearchArray()
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
@@ -1240,5 +1242,346 @@ def dynamic_statistics():
     else:
         info = {}
     CMF_stats().dynamic_setup(info)
+    info["search_array"] = CMFSearchArray()
     title = 'Cuspidal Newforms: Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
+
+
+
+
+class CMFSearchArray(SearchArray):
+    def __init__(self, search_type=None):
+        level_quantifier = SelectBox(
+            name='level_type',
+            options=[('', 'unrestricted'),
+                     ('prime', 'prime'),
+                     ('prime_power', 'prime power'),
+                     ('square', 'square'),
+                     ('squarefree', 'squarefree')
+                     ],
+            width=105)
+        level = TextBoxWithSelect(
+            name='level',
+            label='Level',
+            knowl='cmf.level',
+            example='4',
+            example_span='e.g. 4, 1-20',
+            select_box=level_quantifier)
+
+        weight_quantifier = SelectBox(
+            name='weight_parity',
+            options=[('', 'any parity'),
+                     ('even', 'even only'),
+                     ('odd', 'odd only')],
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
+            width=105)
+
+        weight = TextBoxWithSelect(
+            name='weight',
+            label='Weight',
+            knowl='cmf.weight',
+            example='2',
+            example_span='e.g. 2, 4-8',
+            select_box=weight_quantifier)
+
+        character_quantifier = SelectBox(
+            name='char_parity',
+            options=[('', 'any parity'),
+                     ('even', 'even only'),
+                     ('odd', 'odd only')],
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
+            width=105)
+
+        character = TextBoxWithSelect(
+            name='char_label',
+            knowl='cmf.character',
+            label='Character',
+            example='20.d',
+            example_span='e.g. 20.d',
+            select_box=character_quantifier)
+
+        prime_quantifier = SelectBox(
+            name='prime_quantifier',
+            #width=105,
+            options=[('', 'equal to'),
+                     ('subsets', 'subset of'),
+                     ('append', 'superset of')],
+            width=105)
+        level_primes = TextBoxWithSelect(
+            name='level_primes',
+            knowl='cmf.bad_prime',
+            label=r'Bad \(p\)',
+            example='2,3',
+            example_span='e.g. 2,3',
+            select_box=prime_quantifier)
+
+        char_order = TextBox(
+            name='char_order',
+            label='Character order',
+            knowl='character.dirichlet.order',
+            example='1',
+            example_span='e.g. 1, 2-4')
+        char_primitive = TextBox(
+            name='prim_label',
+            knowl='character.dirichlet.primitive',
+            label='Primitive character',
+            example='1.a',
+            example_span='e.g. 1.a')
+
+        dim_quantifier = SelectBox(
+            name='dim_type',
+            options=[('', 'absolute'), ('rel', 'relative')],
+            width=105)
+
+        dim = TextBoxWithSelect(
+            name='dim',
+            label='Dim.',
+            knowl='cmf.dimension',
+            example='1',
+            example_span='e.g. 2, 1-6',
+            select_box=dim_quantifier)
+        hdim = HiddenBox(
+            name='dim',
+            label='')
+
+        coefficient_field = TextBox(
+            name='nf_label',
+            knowl='cmf.coefficient_field',
+            label='Coefficient field',
+            example='1.1.1.1',
+            example_span='e.g 4.0.144.1, Qsqrt5')
+
+        analytic_conductor = TextBox(
+            name='analytic_conductor',
+            knowl='cmf.analytic_conductor',
+            label='Analytic conductor',
+            example='1-10',
+            example_span='e.g. 1-10')
+
+        Nk2 = TextBox(
+            name='Nk2',
+            knowl='cmf.nk2',
+            label=r'\(Nk^2\)',
+            example='40-100',
+            example_span='e.g. 40-100')
+
+        cm = SelectBox(
+            name='cm',
+            options=[('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')],
+            width=80)
+        rm = SelectBox(
+            name='rm',
+            options=[('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')],
+            width=80)
+        self_twist = DoubleSelectBox(
+            label='Self-twists',
+            knowl='cmf.self_twist',
+            select_box1=cm,
+            select_box2=rm,
+            example_col=True)
+
+        self_twist_discs = TextBox(
+            name='self_twist_discs',
+            label='CM/RM discriminant',
+            knowl='cmf.self_twist',
+            example='-3',
+            example_span='e.g. -3')
+
+        inner_twist_count = TextBox(
+            name='inner_twist_count',
+            knowl='cmf.inner_twist_count',
+            label='Inner twist count',
+            example='1-',
+            example_span='e.g. 0, 1-, 2-3')
+
+        is_self_dual = SelectBox(
+            name='is_self_dual',
+            knowl='cmf.selfdual',
+            label='Is self-dual',
+            options=[('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ])
+
+        coefficient_ring_index = TextBox(
+            name='hecke_ring_index',
+            label='Coefficient ring index',
+            knowl='cmf.coefficient_ring',
+            example='1',
+            example_span='e.g. 1, 2-4')
+
+        hecke_ring_generator_nbound = TextBox(
+            name='hecke_ring_generator_nbound',
+            label='Coefficient ring gens.',
+            knowl='cmf.hecke_ring_generators',
+            example='20',
+            example_span='e.g. 7, 1-10')
+
+        analytic_rank= TextBox(
+            name='analytic_rank',
+            label='Analytic rank',
+            knowl='cmf.analytic_rank',
+            example='1',
+            example_span='e.g. 1, 2-4')
+
+        projective_image = TextBox(
+            name='projective_image',
+            label='Projective image',
+            knowl='cmf.projective_image',
+            example='D15',
+            example_span='wt. 1 only')
+
+        projective_image_type = SelectBox(
+            name='projective_image_type',
+            knowl='cmf.projective_image',
+            label='Projective image type',
+            options=[('', 'unrestricted'),
+                     ('Dn', 'Dn'),
+                     ('A4', 'A4'),
+                     ('S4', 'S4'),
+                     ('A5','A5')],
+            example_span='wt. 1 only')
+
+        num_newforms = TextBox(
+            name='num_forms',
+            label='Num. ' + display_knowl("cmf.newform", "newforms"),
+            width=160,
+            example='3')
+        hnum_newforms = HiddenBox(
+            name='num_forms',
+            label='')
+
+        results = TextBox(
+            "count",
+            label="Results to display",
+            example=50,
+        )
+
+        wt1only = BasicSpacer("Only for weight 1:")
+
+        trace_coldisplay = TextBox(
+            name='n',
+            label='Columns to display',
+            example='1-40',
+            example_span='e.g. 3,7,19, 40-90')
+
+        trace_primality = SelectBox(
+            name='n_primality',
+            label='Show',
+            options=[('', 'primes only'),
+                     ('prime_powers', 'prime powers'),
+                     ('all', 'all')])
+
+        trace_an_constraints = TextBox(
+            name='an_constraints',
+            label='Trace constraints',
+            example='a3=2,a5=0',
+            example_span='e.g. a17=1, a8=0')
+
+        trace_an_moduli = TextBox(
+            name='an_modulo',
+            label='Modulo',
+            example_span='e.g. 5, 16')
+
+        trace_view = SelectBox(
+            name='view_modp',
+            label='View',
+            options=[('', 'integers'),
+                     ('reductions', 'reductions')])
+
+        self.browse_array = [
+            [level, weight],
+            [level_primes, character],
+            [char_order, char_primitive],
+            [dim, coefficient_field],
+            [analytic_conductor, Nk2],
+            [self_twist, self_twist_discs],
+            [inner_twist_count, is_self_dual],
+            [coefficient_ring_index, hecke_ring_generator_nbound],
+            [analytic_rank, projective_image],
+            [results, projective_image_type]]
+
+        self.refine_array = [
+            [level, weight, analytic_conductor, Nk2, dim],
+            [level_primes, character, char_primitive, char_order, coefficient_field],
+            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
+            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
+
+        self.space_array = [
+            [level, weight, analytic_conductor, Nk2, dim],
+            [level_primes, character, char_primitive, char_order]
+        ]
+
+        self.sd_array = [
+            [level, weight, analytic_conductor, Nk2],
+            [level_primes, character, char_primitive, char_order]
+        ]
+
+        self.traces_array = [
+            [trace_coldisplay, trace_primality],
+            [trace_an_constraints, trace_an_moduli, trace_view]]
+
+        self.sorting = (
+            'cmf.sort_order',
+            [
+                ('', 'analytic conductor'),
+                ('Nk2', 'Nk^2'),
+                ('dim', 'dimension'),
+                ('reldim', 'relative dimension'),
+                ('N', 'level'),
+                ('k', 'weight')
+            ]
+        )
+
+    def hidden(self, info):
+        ans = [("start", "start"), ("count", "count"), ("hst", "search_type")]
+        if self._st(info) == 'SpaceDimensions':
+            ans.append(("all_spaces", "all_spaces"))
+        return ans
+
+    def main_array(self, info):
+        if info is None:
+            return self.browse_array
+        search_type = info.get('search_type', info.get('hst', 'List'))
+        if search_type in ['List', 'Dimensions', 'Traces']:
+            return self.refine_array
+        elif search_type in ['Spaces', 'SpaceTraces']:
+            return self.space_array
+        elif search_type == 'SpaceDimensions':
+            return self.sd_array
+        else:
+            raise ValueError
+
+    def late_array(self, info):
+        if info is None or info.get('search_type') not in ['Traces', 'SpaceTraces']:
+            return []
+        else:
+            return self.traces_array
+
+    def search_types(self, info):
+        basic = [('List', 'List of forms'),
+                 ('Dimensions', 'Dimension table'),
+                 ('Traces', 'Traces table'),
+                 ('Random', 'Random form')]
+        spaces = [('Spaces', 'List of spaces'),
+                  ('SpaceDimensions', 'Dimension table'),
+                  ('SpaceTraces', 'Traces table'),
+                  ('RandomSpace', 'Random')]
+        if info is None:
+            return basic
+        st = self._st(info)
+        if st in ["List", "Dimensions", "Traces"]:
+            return [(st, "Search again")] + [(v, d) for v, d in basic if v != st]
+        else:
+            return [(st, "Search again")] + [(v, d) for v, d in spaces if v != st]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
