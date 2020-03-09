@@ -72,7 +72,7 @@ class CheckboxSpacer(Spacer):
         Spacer.__init__(self, colspan=colspan, advanced=advanced)
         self.checkbox = checkbox
 
-    def input_html(self, info=None):
+    def html(self, info=None):
         return (
             self.td(self.colspan)
             + self.checkbox._label(info)
