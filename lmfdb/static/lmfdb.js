@@ -238,8 +238,9 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
-      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+      // log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+	  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
+      $output.load(url_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {

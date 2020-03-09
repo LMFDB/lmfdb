@@ -611,16 +611,19 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             commit=commit,
         )
         if data:
+            cols = SQL(", ").join(map(Identifier, table.search_cols))
             self._execute(
-                SQL("INSERT INTO {0} SELECT * FROM {1}").format(
-                    Identifier(new_name), Identifier(table.search_table)
+                SQL("INSERT INTO {0} ( {1} ) SELECT {1} FROM {2}").format(
+                    Identifier(new_name), cols, Identifier(table.search_table)
                 ),
                 commit=commit,
             )
             if extra_columns:
+                extra_cols = SQL(", ").join(map(Identifier, table.extra_cols))
                 self._execute(
-                    SQL("INSERT INTO {0} SELECT * FROM {1}").format(
-                        Identifier(new_name + "_extras"), Identifier(table.extra_table)
+                    SQL("INSERT INTO {0} ( {1} ) SELECT {1} FROM {2}").format(
+                        Identifier(new_name + "_extras"), extra_cols,
+                        Identifier(table.extra_table)
                     ),
                     commit=commit,
                 )
