@@ -14,7 +14,7 @@ from lmfdb.utils import (
     search_wrap, range_formatter,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
-    DoubleSelectBox, BasicSpacer,
+    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -202,8 +202,9 @@ favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
 
 @cmf.route("/")
 def index():
+    info = {"search_array": CMFSearchArray()}
     if len(request.args) > 0:
-        info = to_dict(request.args)
+        info.update(to_dict(request.args))
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
@@ -223,12 +224,11 @@ def index():
         elif search_type == 'SpaceTraces':
             return space_trace_search(info)
         assert False
-    info = {"stats": CMF_stats()}
+    info["stats"] = CMF_stats()
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
     info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
-    info["search_array"] = CMFSearchArray()
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -686,7 +686,6 @@ def parse_sort(info, query, spaces=False):
 
 def newform_parse(info, query):
     common_parse(info, query)
-    info["search_array"] = CMFSearchArray()
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
@@ -1296,6 +1295,7 @@ class CMFSearchArray(SearchArray):
             name='char_label',
             knowl='cmf.character',
             label='Character',
+            short_label='Char.',
             example='20.d',
             example_span='e.g. 20.d',
             select_box=character_quantifier)
@@ -1460,7 +1460,7 @@ class CMFSearchArray(SearchArray):
             name='n',
             label='Columns to display',
             example='1-40',
-            example_span='e.g. 3,7,19, 40-90')
+            example_span='3,7,19, 40-90')
 
         trace_primality = SelectBox(
             name='n_primality',
@@ -1473,12 +1473,12 @@ class CMFSearchArray(SearchArray):
             name='an_constraints',
             label='Trace constraints',
             example='a3=2,a5=0',
-            example_span='e.g. a17=1, a8=0')
+            example_span='a17=1, a8=0')
 
         trace_an_moduli = TextBox(
             name='an_modulo',
             label='Modulo',
-            example_span='e.g. 5, 16')
+            example_span='5, 16')
 
         trace_view = SelectBox(
             name='view_modp',
@@ -1506,29 +1506,35 @@ class CMFSearchArray(SearchArray):
 
         self.space_array = [
             [level, weight, analytic_conductor, Nk2, dim],
-            [level_primes, character, char_primitive, char_order]
+            [level_primes, character, char_primitive, char_order, num_newforms]
         ]
 
         self.sd_array = [
-            [level, weight, analytic_conductor, Nk2],
-            [level_primes, character, char_primitive, char_order]
+            [level, weight, analytic_conductor, Nk2, hdim],
+            [level_primes, character, char_primitive, char_order, hnum_newforms]
         ]
 
         self.traces_array = [
+            RowSpacer(22),
             [trace_coldisplay, trace_primality],
             [trace_an_constraints, trace_an_moduli, trace_view]]
 
-        self.sorting = (
-            'cmf.sort_order',
-            [
-                ('', 'analytic conductor'),
-                ('Nk2', 'Nk^2'),
-                ('dim', 'dimension'),
-                ('reldim', 'relative dimension'),
-                ('N', 'level'),
-                ('k', 'weight')
-            ]
-        )
+    sort_knowl = 'cmf.sort_order'
+    def sort_order(self, info):
+        st = self._st(info)
+        X = [
+            ('', 'analytic conductor'),
+            ('Nk2', 'Nk^2'),
+            ('dim', 'dimension'),
+            ('reldim', 'relative dimension'),
+            ('N', 'level'),
+            ('k', 'weight')
+        ]
+        if st in ['List', 'Traces']:
+            return X
+        elif st in ['Spaces', 'SpaceTraces']:
+            del X[3]
+            return X
 
     def hidden(self, info):
         ans = [("start", "start"), ("count", "count"), ("hst", "search_type")]
@@ -1549,12 +1555,6 @@ class CMFSearchArray(SearchArray):
         else:
             raise ValueError
 
-    def late_array(self, info):
-        if info is None or info.get('search_type') not in ['Traces', 'SpaceTraces']:
-            return []
-        else:
-            return self.traces_array
-
     def search_types(self, info):
         basic = [('List', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
@@ -1569,12 +1569,30 @@ class CMFSearchArray(SearchArray):
         st = self._st(info)
         if st in ["List", "Dimensions", "Traces"]:
             return [(st, "Search again")] + [(v, d) for v, d in basic if v != st]
-        else:
+        elif st == "SpaceDimensions":
             return [(st, "Search again")] + [(v, d) for v, d in spaces if v != st]
+        else:
+            select_box = SelectBox(
+                name="all_spaces",
+                options=[("", "split spaces"),
+                         ("yes", "all spaces")],
+                width=None)
+            search_again = SearchButtonWithSelect(
+                value=st,
+                description="Search again",
+                select_box=select_box,
+                label="Scope",
+                knowl="cmf.include_all_spaces")
+            return [search_again] + [(v, d) for v, d in spaces if v != st]
 
-
-
-
+    def html(self, info=None):
+        # We need to override html to add the trace inputs
+        layout = [self.hidden_inputs(info), self.main_table(info), self.buttons(info)]
+        st = self._st(info)
+        if st in ["Traces", "SpaceTraces"]:
+            trace_table = self._print_table(self.traces_array, info, layout_type="box")
+            layout.append(trace_table)
+        return "\n".join(layout)
 
 
 

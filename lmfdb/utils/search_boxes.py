@@ -316,6 +316,14 @@ class SelectBox(SearchBox):
             "".join("\n" + " " * 10 + opt for opt in opts),
         )
 
+class HiddenBox(SearchBox):
+    def _input(self, info=None):
+        keys = ['name="%s"' % self.name]
+        if self.advanced:
+            keys.append('class="advanced"')
+        if info is not None and info.get(self.name):
+            keys.append('value="%s"' % info.get(self.name))
+        return '<input type="hidden" %s>' % (" ".join(keys),)
 
 class CheckBox(SearchBox):
     def _input(self, info=None):
@@ -368,8 +376,9 @@ class DoubleSelectBox(SearchBox):
         )
 
 class SearchButton(SearchBox):
-    def __init__(self, value, description, width=170):
-        SearchBox.__init__(self, label="", width=width)
+    def __init__(self, value, description, width=170, **kwds):
+        kwds['label'] = kwds.get('label', '')
+        SearchBox.__init__(self, width=width, **kwds)
         self.value = value
         self.description = description
 
@@ -391,20 +400,44 @@ class SearchButton(SearchBox):
             onclick=onclick,
         )
 
+class SearchButtonWithSelect(SearchButton):
+    def __init__(self, value, description, select_box, **kwds):
+        self.select_box = select_box
+        SearchButton.__init__(self, value, description, **kwds)
+
+    def label_html(self, info=None):
+        colspan = self.label_colspan if info is None else self.short_colspan
+        return (
+            self.td(colspan)
+            + '<div style="display: flex; justify-content: space-between;">'
+            + self._label(info)
+            + '<span style="margin-left: 5px;"></span>'
+            + self.select_box._input(info)
+            + "</div>"
+            + "</td>"
+        )
+
 class SearchArray(UniqueRepresentation):
     """
+    This class is used to represent the grid of inputs in a browse or search array.
+    The goal is to be able to use create one object for each input which can then
+    be reused in multiple locations.
+
     You should set the following attributes/functions to make this work.
 
     - ``browse_array`` and ``refine_array`` -- each a list of lists of ``SearchBox`` objects.
         You can also override ``main_array()`` for more flexibility.
         Will be passed ``info=None`` for the browse page, or the info dictionary for refining search
-    - ``late_array()`` -- overriding this method to add search boxes after the submit buttons
-    - ``sorting`` -- a pair ``(kwl, L)``, where ``kwl`` is the id of a sort-order knowl
-        and ``L`` is a list of pairs giving the url value and display value for the sort options.
-    - ``search_types`` -- returns a list of pairs giving the url value and display value for the search buttons
+    - ``sort_order`` -- a function of ``info`` returning a list of pairs, the url value
+        and display value for the sort options.  You may also want to set the ``sort_knowl`` attribute
+    - ``search_types`` -- returns a list of pairs giving the url value and display value
+        for the search buttons
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
-    sorting = None
+    sort_knowl = None
+    def sort_order(self, info):
+        # Override this method to add a dropdown for sort order
+        return None
 
     def search_types(self, info):
         # Override this method to change the displayed search buttons
@@ -420,23 +453,20 @@ class SearchArray(UniqueRepresentation):
         else:
             return self.refine_array
 
-    def late_array(self, info):
-        return []
-
-    def _print_table(self, grid, info, label_above):
+    def _print_table(self, grid, info, layout_type):
         if not grid:
             return ""
         lines = []
         for row in grid:
             if isinstance(row, Spacer):
                 lines.append("\n      " + row.html())
-            elif label_above:
+            elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
                     labels = [box.label_html(info) for box in row]
                     lines.append("".join("\n      " + label for label in labels))
                 inputs = [box.input_html(info) for box in row]
                 lines.append("".join("\n      " + inp for inp in inputs))
-            else:
+            elif layout_type == 'horizontal':
                 cols = []
                 for box in row:
                     cols.append(box.label_html(info))
@@ -445,6 +475,18 @@ class SearchArray(UniqueRepresentation):
                     if ex:
                         cols.append(ex)
                 lines.append("".join("\n      " + col for col in cols))
+            elif layout_type == 'box':
+                top_cols = []
+                bot_cols = []
+                for box in row:
+                    top_cols.append(box.label_html(info))
+                    bot_cols.append(box.input_html(info))
+                    ex = box.example_html(info)
+                    if ex:
+                        top_cols.append('<td width="170"></td>')
+                        bot_cols.append(ex)
+                lines.append("".join("\n      " + col for col in top_cols))
+                lines.append("".join("\n      " + col for col in bot_cols))
         return (
             '  <table border="0">'
             + "".join("\n    <tr>" + line + "\n    </tr>" for line in lines)
@@ -498,18 +540,22 @@ class SearchArray(UniqueRepresentation):
             return []
 
     def hidden_inputs(self, info=None):
-        return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, val) for (name, val) in self.hidden(info))
+        if info is None:
+            return ""
+        else:
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for (name, val) in self.hidden(info))
 
     def main_table(self, info=None):
+        layout_type = "horizontal" if info is None else "vertical"
         label_above = (info is not None) # True if refine search page; False if browse page
-        s = self._print_table(self.main_array(info), info, label_above=label_above)
+        s = self._print_table(self.main_array(info), info, layout_type=layout_type)
         dstats = self.dynstats_array(info)
         if dstats:
-            s += "\n" + self._print_table(dstats, info, label_above=label_above)
+            s += "\n" + self._print_table(dstats, info, layout_type=layout_type)
         return s
 
     def has_advanced_inputs(self, info=None):
-        for row in self.main_array(info) + self.late_array(info):
+        for row in self.main_array(info):
             if isinstance(row, TdElt) and row.advanced:
                 return True
             for col in row:
@@ -518,31 +564,28 @@ class SearchArray(UniqueRepresentation):
         return False
 
     def buttons(self, info=None):
-        if info is None:
-            buttons = [[BasicSpacer("Display:")] + [SearchButton(*but) for but in self.search_types(info)]]
+        st = self._st(info)
+        buttons = []
+        if st == "DynStats":
+            buttons.append(SearchButton("DynStats", "Generate statistics"))
         else:
-            info["search_type"] = self._st(info)
-            if info["search_type"] == "DynStats":
-                buttons = [[SearchButton("DynStats", "Generate statistics")]]
-            else:
-                buttons = [[
-                    SearchButton(*but) for but in self.search_types(info)
-                ]]
-                if self.sorting:
-                    sort_knowl, sort_opts = self.sorting
+            if st is None:
+                buttons.append(BasicSpacer("Display:"))
+            for but in self.search_types(info):
+                if isinstance(but, TdElt):
+                    buttons.append(but)
+                else:
+                    buttons.append(SearchButton(*but))
+            if st is not None:
+                sort = self.sort_order(info)
+                if sort:
                     sort_box = SelectBox(
                         name='sort_order',
-                        knowl=sort_knowl,
-                        options=sort_opts,
+                        knowl=self.sort_knowl,
+                        options=sort,
                         width=170)
-                    buttons[0].append(sort_box)
-        return '  <br>\n' + self._print_table(buttons, info, label_above=True)
-
-    def post_table(self, info=None):
-        if self.late_array is None:
-            return ""
-        else:
-            return self._print_table(self.late_array(info), info, label_above=(info is not None))
+                    buttons.append(sort_box)
+        return self._print_table([RowSpacer(22), buttons], info, layout_type="vertical")
 
     def html(self, info=None):
-        return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info), self.post_table(info)])
+        return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
