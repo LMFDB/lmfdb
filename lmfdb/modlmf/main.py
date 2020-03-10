@@ -2,7 +2,7 @@
 
 import ast
 import re
-from six import StringIO
+from six import BytesIO
 import time
 
 from flask import render_template, request, url_for, make_response, redirect, send_file
@@ -123,8 +123,8 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 

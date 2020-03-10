@@ -140,8 +140,8 @@ class HMFTest(LmfdbTest):
         assert '[89, 89, 3*w^3 - 2*w^2 - 7*w],' in L
         assert 'heckeEigenvaluesArray := [4, -4,' in L
 
-        page = self.tc.get('ModularForm/GL2/TotallyReal/3.3.837.1/holomorphic/3.3.837.1-48.3-z/download/magma')
-        assert 'No such form' in page.data
+        page = self.tc.get('ModularForm/GL2/TotallyReal/3.3.837.1/holomorphic/3.3.837.1-48.3-z/download/magma').get_data(as_text=True)
+        assert 'No such form' in page
 
         # These tests take too long to use magma_free, so we run magma when it is installed
         from sage.all import magma
@@ -156,11 +156,11 @@ class HMFTest(LmfdbTest):
         ]:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
-            page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label))
-            assert expected in page.data
-            assert  'make_newform'  in page.data
+            page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label)).get_data(as_text=True)
+            assert expected in page
+            assert  'make_newform'  in page
             try:
-                magma_code = page.data + '\n';
+                magma_code = page + '\n';
                 magma_code += 'f, iso := Explode(make_newform());\n'
                 magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
                 magma_code += 'f;\n'
