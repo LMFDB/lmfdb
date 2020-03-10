@@ -475,12 +475,6 @@ def citing():
     b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
     return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
-@app.route("/citation/citations")
-def citations():
-    t = "LMFDB Citations"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
-    return render_template('citations.html', title=t, body_class='', bread=b)
-
 @app.route("/citation/citations_bib")
 def citations_bib():
     t = "LMFDB Citations (BiBTeX Entries)"
