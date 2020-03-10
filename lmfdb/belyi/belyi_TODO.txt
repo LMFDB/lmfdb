@@ -49,3 +49,4 @@ It would be nice if:
 - factorization of phi (or divisor)
 - display info about group
 - compute Galois group over K(t)
+- larger interactive conformal picture of fundamental domain with HTML regions over labels that display side-pairing elements

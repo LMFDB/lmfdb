@@ -2,6 +2,7 @@ from lmfdb import db
 from lmfdb.ecnf.WebEllipticCurve import parse_NFelt, parse_ainvs
 from lmfdb.belyi.main import hyperelliptic_polys_to_ainvs, curve_string_parser
 from scripts.ecnf.import_utils import NFelt
+from ast import literal_eval
 
 # function stolen from Drew's branch g2c-eqn-lookup
 def genus2_lookup_equation(f):
@@ -81,7 +82,20 @@ def genus1_lookup_equation_nf(rec):
 # TODO: problems if curve defined over smaller field than Belyi map.
 # This code won't find base changes.
 def genus1_lookup_equation(rec):
-    if rec['base_field'] == [-1, 1]:
+    if rec['base_field'] == [-1, 1]: # if defined over QQ
         return genus1_lookup_equation_QQ(rec)
     else:
         return genus1_lookup_equation_nf(rec)
+
+def assign_curve_label(rec):
+    if rec['g'] == 0:
+        return None
+    elif rec['g'] == 1:
+        rec['curve_label'] = genus1_lookup_equation(rec)
+        return "Searched for curve for %s" % rec['label']
+    elif rec['g'] == 2:
+        f,h = curve_string_parser(rec)
+        rec['curve_label'] = genus1_lookup_equation(str([f,h]))
+        return "Searched for curve for %s" % rec['label']
+    else:
+        return None
