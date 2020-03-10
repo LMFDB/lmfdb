@@ -15,14 +15,23 @@ from lmfdb.utils import (
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
-LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
-ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
+LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
+ORBIT_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+$')
+OLD_LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
+OLD_ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
 
 
 # Utility for permutations
 def cycle_string(lis):
     from sage.combinat.permutation import Permutation
     return Permutation(lis).cycle_string()
+
+# Conversion from numbers to letters
+def num2letters(n):
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -53,15 +62,21 @@ def parse_artin_orbit_label(label):
     label = clean_input(label)
     if ORBIT_RE.match(label):
         return label
-    else:
-        raise ValueError
+    if OLD_ORBIT_RE.match(label):
+        newlabel = db.artin_old2new_labels.lookup(label)
+        if newlabel:
+            return newlabel
+    raise ValueError
 
 def parse_artin_label(label):
     label = clean_input(label)
     if LABEL_RE.match(label):
         return label
-    else:
-        raise ValueError
+    if OLD_LABEL_RE.match(label):
+        newlabel = db.artin_old2new_labels.lookup(label)
+        if newlabel:
+            return newlabel
+    raise ValueError
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
@@ -147,7 +162,7 @@ def render_artin_representation_webpage(label):
     if clean_label != label:
         return redirect(url_for('.render_artin_representation_webpage', label=clean_label), 301)
     # We could have a single representation or a Galois orbit
-    case = 'rep' if ('c' in clean_label) else 'orbit'
+    case = 'rep' if (len(clean_label.split('.'))==5) else 'orbit'
     # Do this twice to customize error messages
     if case == 'rep':
         try:
@@ -162,7 +177,7 @@ def render_artin_representation_webpage(label):
                 return redirect(url_for(".index"))
     else: # it is an orbit
         try:
-            the_rep = ArtinRepresentation(label+'c1')
+            the_rep = ArtinRepresentation(label+'.a')
         except:
             try:
                 newlabel = parse_artin_orbit_label(label)

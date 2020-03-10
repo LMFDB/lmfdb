@@ -83,16 +83,16 @@ class ArtinRepresentation(object):
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
-                parts = x[0].split("c")
+                parts = x[0].split(".")
                 base = parts[0]
                 conjindex = int(parts[1])
             elif len(x) == 2: # base and gorb index
                 base = x[0]
                 conjindex = x[1]
-                label = "%sc%s"%(str(x[0]),str(x[1]))
+                label = "%s.%s"%(str(x[0]),str(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
-            self._data = db.artin_reps.lucky({'Baselabel':str(base)})
+            self._data = db.artin_reps_new.lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label'] = label
@@ -100,12 +100,12 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_reps_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
         # What about label?
-        return cls(data=db.artin_reps.lucky(*args, **kwds))
+        return cls(data=db.artin_reps_new.lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
