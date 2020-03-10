@@ -8,6 +8,7 @@ import sys
 import os
 import re
 import json
+import numpy
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
@@ -20,8 +21,8 @@ sys.path.append(mypath)
 from lmfdb import db
 from lmfdb.backend.encoding import copy_dumps
 
-rep=db.artin_reps
-nfgal=db.artin_field_data
+rep=db.artin_reps_new
+nfgal=db.artin_field_data_new
 
 count = 0
 
@@ -65,6 +66,9 @@ def artrepload(l):
   global outrecs
   l['Conductor'] = int(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
+  sortord = numpy.argsort([z['GalOrbIndex'] for z in l['GaloisConjugates']])
+  l['GaloisConjugates'] = [l['GaloisConjugates'][z] for z in sortord]
+  assert [z['GalOrbIndex'] for z in l['GaloisConjugates']] == [u for u in range(1,len(l['GaloisConjugates'])+1)]
   # Extract containing representation from the label
   cont = l['Baselabel'].split('.')[2]
   l['Container'] = cont
@@ -72,29 +76,18 @@ def artrepload(l):
     l[s] = [int(z) for z in l[s]]
   l['Galn'] = l['Galois_nt'][0]
   l['Galt'] = l['Galois_nt'][1]
+  l['GaloisLabel'] = "%sT%s"%(str(l['Galois_nt'][0]),str(l['Galois_nt'][1]))
   del l['Galois_nt']
   l['GalConjSigns'] = [z['Sign'] for z in l['GaloisConjugates']]
+  l['Dets'] = [z['Det'] for z in l['GaloisConjugates']]
+  for j in range(len(l['GaloisConjugates'])):
+    del l['GaloisConjugates'][j]['Det']
   chival = int(l['Chi_of_complex'])
   dim = int(l['Dim'])
   minusones = (dim - chival)/2
   iseven = (minusones % 2) == 0
-  ar1 = rep.lucky({'Baselabel': l['Baselabel'],'NFGal': l['NFGal']})
-  if ar1 is not None:
-    if 'Dets' not in ar1:
-        print(ar1)
-        l['Dets'] = []
-    else:
-        l['Dets'] = [str(z) for z in ar1['Dets']]
-        #print "type "+str(type(l['Dets']))
-    l['Is_Even'] = ar1['Is_Even']
-    if iseven != l['Is_Even']:
-      print("Is even mismatch: %s from %d and %d" % (str(l['Baselabel']), dim, chival))
-  else:
-    l['Is_Even'] = iseven
-    l['Dets'] = []
+  l['Is_Even'] = iseven
   #print str(l)
-  if not isinstance(l['Dets'], list):
-    print("Type error "+str(l['Baselabel'])+" , "+str(l['Dets'])+" "+str(type(l['Dets'])))
   count +=1
   outrecs.append(l)
   if count % 10000==0:
