@@ -22,7 +22,7 @@ app.register_blueprint(ecnf_page, url_prefix="/EllipticCurve")
 register_search_function(
     "elliptic_curves_nf",
     "Elliptic Curves over Number Fields",
-    "Search over elliptic curves devined over number fields",
+    "Search over elliptic curves defined over number fields",
     auto_search='ec_nfcurves'
 )
 register_singleton('EllipticCurve', 'ec_nfcurves',
