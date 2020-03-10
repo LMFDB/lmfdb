@@ -54,7 +54,6 @@ class RowSpacer(Spacer):
         return self._wrap("tr", **kwds)
 
     def html(self, info=None):
-        keys = []
         return self.tr(self.rowheight) + "</tr>"
 
 
@@ -547,7 +546,6 @@ class SearchArray(UniqueRepresentation):
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"
-        label_above = (info is not None) # True if refine search page; False if browse page
         s = self._print_table(self.main_array(info), info, layout_type=layout_type)
         dstats = self.dynstats_array(info)
         if dstats:

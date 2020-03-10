@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
@@ -421,6 +421,7 @@ def by_url_level(level):
             flash_error("%s is not a valid newform or space label", level)
             return redirect(url_for(".index"))
     info = to_dict(request.args)
+    info["search_array"] = CMFSearchArray()
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
     else:
