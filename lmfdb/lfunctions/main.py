@@ -393,7 +393,9 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
-    label = parse_artin_label(label)
+    newlabel = parse_artin_label(label, safe=True)
+    if newlabel != label:
+        return redirect(url_for(".l_function_artin_page", label=newlabel), 301)
     instance = db.lfunc_instances.lucky({'url': artin_url(label)})
     return render_single_Lfunction(ArtinLfunctionDB if instance else ArtinLfunction, {'label': label}, request)
 
@@ -985,7 +987,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         return DedekindZeta(label=str(args[1]))
 
     elif args[0] == "ArtinRepresentation":
-        label = parse_artin_label(args[1])
+        label = parse_artin_label(args[1], safe=True)
         instance = db.lfunc_instances.lucky({'url': artin_url(label)})
         return ArtinLfunctionDB(label=label) if instance else ArtinLfunction(label=label)
 

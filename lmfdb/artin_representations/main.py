@@ -52,24 +52,32 @@ def make_cond_key(D):
     return '%04d%s' % (D1, str(D))
 
 
-def parse_artin_orbit_label(label):
-    label = clean_input(label)
-    if ORBIT_RE.match(label):
-        return label
-    if OLD_ORBIT_RE.match(label):
-        newlabel = db.artin_old2new_labels.lookup(label)['new']
-        if newlabel:
-            return newlabel
+def parse_artin_orbit_label(label, safe=False):
+    try:
+        label = clean_input(label)
+        if ORBIT_RE.match(label):
+            return label
+        if OLD_ORBIT_RE.match(label):
+            newlabel = db.artin_old2new_labels.lookup(label)['new']
+            if newlabel:
+                return newlabel
+    except:
+        if safe:
+            return ''
     raise ValueError
 
-def parse_artin_label(label):
-    label = clean_input(label)
-    if LABEL_RE.match(label):
-        return label
-    if OLD_LABEL_RE.match(label):
-        newlabel = db.artin_old2new_labels.lookup(label)['new']
+def parse_artin_label(label, safe=False):
+    try:
+        label = clean_input(label)
+        if LABEL_RE.match(label):
+            return label
+        if OLD_LABEL_RE.match(label):
+            newlabel = db.artin_old2new_labels.lookup(label)['new']
         if newlabel:
             return newlabel
+    except:
+        if safe:
+            return ''
     raise ValueError
 
 # Is it a rep'n or an orbit, supporting old and new styles
@@ -161,8 +169,6 @@ def render_artin_representation_webpage(label):
     if re.compile(r'^\d+$').match(label):
         return artin_representation_search(**{'dimension': label})
 
-    bread = get_bread([(label, ' ')])
-
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
     clean_label = clean_input(label)
@@ -198,6 +204,8 @@ def render_artin_representation_webpage(label):
         allchars = [ ArtinRepresentation(label+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
     label = newlabel
+    bread = get_bread([(label, ' ')])
+
     #artin_logger.info("Found %s" % (the_rep._data))
 
     if case=='rep':
