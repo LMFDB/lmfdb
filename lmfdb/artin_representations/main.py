@@ -12,8 +12,9 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
-from lmfdb.artin_representations import artin_representations_page
-from lmfdb.artin_representations.math_classes import ArtinRepresentation
+from lmfdb.artin_representations import artin_representations_page, artin_logger
+from lmfdb.artin_representations.math_classes import (
+    ArtinRepresentation, num2letters)
 
 LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
 ORBIT_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+$')
@@ -25,13 +26,6 @@ OLD_ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
 def cycle_string(lis):
     from sage.combinat.permutation import Permutation
     return Permutation(lis).cycle_string()
-
-# Conversion from numbers to letters
-def num2letters(n):
-    if n <= 26:
-        return chr(96+n)
-    else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -63,7 +57,7 @@ def parse_artin_orbit_label(label):
     if ORBIT_RE.match(label):
         return label
     if OLD_ORBIT_RE.match(label):
-        newlabel = db.artin_old2new_labels.lookup(label)
+        newlabel = db.artin_old2new_labels.lookup(label)['new']
         if newlabel:
             return newlabel
     raise ValueError
@@ -73,10 +67,23 @@ def parse_artin_label(label):
     if LABEL_RE.match(label):
         return label
     if OLD_LABEL_RE.match(label):
-        newlabel = db.artin_old2new_labels.lookup(label)
+        newlabel = db.artin_old2new_labels.lookup(label)['new']
         if newlabel:
             return newlabel
     raise ValueError
+
+# Is it a rep'n or an orbit, supporting old and new styles
+def parse_any(label):
+    try:
+        newlabel = parse_artin_label(label)
+        return ['rep', newlabel]
+    except:
+        try:
+            newlabel = parse_artin_orbit_label(label)
+            return ['orbit', newlabel]
+        except:
+            return ['malformed', label]
+
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
@@ -112,7 +119,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+             table=db.artin_reps_new,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,
@@ -162,34 +169,35 @@ def render_artin_representation_webpage(label):
     if clean_label != label:
         return redirect(url_for('.render_artin_representation_webpage', label=clean_label), 301)
     # We could have a single representation or a Galois orbit
-    case = 'rep' if (len(clean_label.split('.'))==5) else 'orbit'
+    case = parse_any(label)
+    if case[0] == 'malformed':
+        try:
+            raise ValueError
+        except:
+            flash_error("%s is not in a valid form for the label for an Artin representation or a Galois orbit of Artin representations", label)
+            return redirect(url_for(".index"))
     # Do this twice to customize error messages
+    newlabel = case[1]
+    case = case[0]
     if case == 'rep':
         try:
-            the_rep = ArtinRepresentation(label)
+            the_rep = ArtinRepresentation(newlabel)
         except:
-            try:
-                newlabel = parse_artin_label(label)
-                flash_error("Artin representation %s is not in database", newlabel)
-                return redirect(url_for(".index"))
-            except ValueError:
-                flash_error("%s is not in a valid form for an Artin representation label", label)
-                return redirect(url_for(".index"))
+            newlabel = parse_artin_label(label)
+            flash_error("Artin representation %s is not in database", label)
+            return redirect(url_for(".index"))
     else: # it is an orbit
         try:
             the_rep = ArtinRepresentation(label+'.a')
         except:
-            try:
-                newlabel = parse_artin_orbit_label(label)
-                flash_error("Galois orbit of Artin representations %s is not in database", newlabel)
-                return redirect(url_for(".index"))
-            except ValueError:
-                flash_error("%s is not in a valid form for the label of a Galois orbit of Artin representations", label)
-                return redirect(url_for(".index"))
+            newlabel = parse_artin_orbit_label(newlabel)
+            flash_error("Galois orbit of Artin representations %s is not in database", label)
+            return redirect(url_for(".index"))
         # in this case we want all characters
         num_conj = the_rep.galois_conjugacy_size()
-        allchars = [ ArtinRepresentation(label+'c'+str(j)).character_formatted() for j in range(1,num_conj+1)]
+        allchars = [ ArtinRepresentation(label+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
+    label = newlabel
     #artin_logger.info("Found %s" % (the_rep._data))
 
     if case=='rep':
@@ -244,14 +252,14 @@ def render_artin_representation_webpage(label):
         elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
             friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                               label=the_rep.label())))
-        orblabel = re.sub(r'c\d+$', '', label)
+        orblabel = re.sub(r'\.[a-z]+$', '', label)
         friends.append(("Galois orbit "+orblabel,
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
         add_lfunction_friends(friends,label)
         friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
-            newlabel = label+'c'+str(j)
+            newlabel = label+'.'+num2letters(j)
             friends.append(("Artin representation "+newlabel,
                 url_for(".render_artin_representation_webpage", label=newlabel)))
 
