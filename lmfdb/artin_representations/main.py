@@ -12,7 +12,7 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
-from lmfdb.artin_representations import artin_representations_page, artin_logger
+from lmfdb.artin_representations import artin_representations_page
 from lmfdb.artin_representations.math_classes import (
     ArtinRepresentation, num2letters)
 
