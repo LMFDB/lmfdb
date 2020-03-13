@@ -11,7 +11,7 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg,
-    search_wrap)
+    search_wrap, Downloader)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
@@ -166,12 +166,25 @@ def url_for_label(label):
 def local_field_jump(info):
     return redirect(url_for_label(info['jump_to']), 301)
 
+class LF_download(Downloader):
+    table = db.lf_fields
+    title = 'Local Number Fields'
+    columns = ['p', 'coeffs']
+    data_format = ['p', '[coeffs]']
+    data_description = 'defining the local field over Qp by adjoining a root of f(x).'
+    function_body = {'magma':['Prec := 100; // Default precision of 100',
+                              'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
+                     'sage':['Prec = 100 # Default precision of 100',
+                             "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
+                     'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
+
+
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
              title='Local Number Field Search Results',
              err_title='Local Field Search Input Error',
              per_page=50,
-             shortcuts={'jump_to': local_field_jump},
+             shortcuts={'jump_to': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search Results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
