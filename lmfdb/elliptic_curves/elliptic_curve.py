@@ -16,7 +16,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeBox,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeOnlyBox,
     parse_element_of, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
@@ -683,7 +683,7 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = IncludeBox(
+        cm = IncludeOnlyBox(
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication")
