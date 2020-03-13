@@ -236,11 +236,17 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_curve")
+    return url_for(".by_ec_label", label=label)
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
+             url_for_label=url_for_label,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
@@ -305,6 +311,7 @@ def elliptic_curve_search(info, query):
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['iso'])
+    info['search_array'] = ECSearchArray()
 
 ##########################
 #  Specific curve pages
@@ -319,11 +326,6 @@ def by_double_iso_label(conductor,iso_label):
 def by_triple_label(conductor,iso_label,number):
     full_label = curve_lmfdb_label(conductor,iso_label,number)
     return render_curve_webpage_by_label(full_label)
-
-def url_for_label(label):
-    if label == "random":
-        return url_for(".random_curve")
-    return url_for(".by_ec_label", label=label)
 
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an
@@ -711,6 +713,7 @@ class ECSearchArray(SearchArray):
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Non-maximal primes",
+            short_label="Non-max. $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
@@ -750,6 +753,6 @@ class ECSearchArray(SearchArray):
             [count]]
 
         self.refine_array = [
-            [cond, jinv, rank, torsion, torsion_struct, cm],
-            [sha, isodeg, surj_primes, optimal, nonsurj_primes],
-            [bad_primes, num_int_pts, regulator]]
+            [cond, jinv, rank, torsion, torsion_struct],
+            [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
+            [num_int_pts, regulator, cm, optimal]]
