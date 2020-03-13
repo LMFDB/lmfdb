@@ -454,6 +454,8 @@ def labels_page():
 
 
 class G2CSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
@@ -646,7 +648,7 @@ class G2CSearchArray(SearchArray):
         )
 
         count = TextBox(
-            "count", label="Results to display", example=50, example_col=False
+            "count", label="Curves to display", example=50, example_col=False
         )
 
         self.browse_array = [

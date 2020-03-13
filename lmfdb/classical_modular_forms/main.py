@@ -1571,9 +1571,9 @@ class CMFSearchArray(SearchArray):
             return basic
         st = self._st(info)
         if st in ["List", "Dimensions", "Traces"]:
-            return [(st, "Search again")] + [(v, d) for v, d in basic if v != st]
+            return self._search_again(basic)
         elif st == "SpaceDimensions":
-            return [(st, "Search again")] + [(v, d) for v, d in spaces if v != st]
+            return self._search_again(spaces)
         else:
             select_box = SelectBox(
                 name="all_spaces",
