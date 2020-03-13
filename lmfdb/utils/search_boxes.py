@@ -224,6 +224,12 @@ class TextBox(SearchBox):
                 keys.append('value="%s"' % info[self.name])
         return '<input type="text" ' + " ".join(keys) + "/>"
 
+class TextBoxNoEg(TextBox):
+    def example_html(self, info=None):
+        return (
+            self.td(self.example_span_colspan)
+            + '<span class="formexample">%s</span></td>' % self.example_span
+        )
 
 class SelectBox(SearchBox):
     """
@@ -434,13 +440,24 @@ class SearchArray(UniqueRepresentation):
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
     sort_knowl = None
+    noun = "result"
+    plural_nown = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         return None
 
+    def _search_again(self, info, search_types):
+        if info is None:
+            return search_types
+        st = self._st(info)
+        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != st]
+
     def search_types(self, info):
         # Override this method to change the displayed search buttons
-        return [("List", "List of Results"), ("Random", "Random Result")]
+        if info is None:
+            return [("List", "List of %s" % self.plural_noun), ("Random", "Random %s" % self.noun)]
+        else:
+            return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
 
     def hidden(self, info):
         # Override this method to change the hidden inputs

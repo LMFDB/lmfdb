@@ -518,9 +518,12 @@ class AbvarSearchArray(SearchArray):
             [galois_group],
             [count],
         ]
-        self.search_types = lambda info: [('List', 'List of Results'),
-                                          ('Counts', 'Counts Table'),
-                                          ('Random', 'Random Result')]
+
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('List', 'List of isogeny classes'),
+            ('Counts', 'Counts table'),
+            ('Random', 'Random isogeny class')])
 
 def common_parse(info, query):
     info["search_array"] = AbvarSearchArray()
