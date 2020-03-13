@@ -4,9 +4,9 @@
 <select name="family">
 {% for c in info.family_list %}
     {% if info.family and c.name == info.family.name %}
-        <option value='{{ c.name }}' selected>{{c.name}}</option>
+        <option value='{{ c.name }}' selected>{{c.plain_name}}</option>
     {% else %}
-        <option value='{{ c.name }}'>{{c.name}}</option>
+        <option value='{{ c.name }}'>{{c.plain_name}}</option>
     {% endif %}
 {% endfor %}
 </select>
