@@ -17,6 +17,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
+    SearchArray, TextBox,
     search_wrap, parse_rational)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -733,3 +734,40 @@ def ecnf_code(**args):
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
 
+class ECNFSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
+    def __init__(self):
+        field = TextBox(
+            name="field",
+            label="Base field",
+            knowl="nf",
+            example="2.2.5.1",
+            example_span="2.2.5.1 or Qsqrt5")
+        include_base_change = SelectBox(
+            name="include_base_change",
+            label="Base change curves",
+            knowl="ec.base_change",
+            options=[("", "include"),
+                     ("off", "exclude"),
+                     ("only", "only")])
+        include_Q_curves = SelectBox(
+            name="include_Q_curves",
+            label=r"\(\Q\)-curves",
+            knowl="ec.q_curve",
+            options=[("", "include"),
+                     ("exclude", "exclude"),
+                     ("only", "only")])
+        conductor_norm = TextBox(
+            name="conductor_norm",
+            label="Conductor norm",
+            knowl="ec.conductor",
+            example="31",
+            example_span="31 or 1-100")
+        include_isogenous = SelectBox(
+            name="include_Q_curves",
+            label=r"\(\Q\)-curves",
+            knowl="ec.q_curve",
+            options=[("", "include"),
+                     ("exclude", "exclude"),
+                     ("only", "only")])
