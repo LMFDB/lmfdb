@@ -734,8 +734,7 @@ class ECSearchArray(SearchArray):
             name="regulator",
             label="Regulator",
             knowl="ec.q.regulator",
-            example="8.4-9.1",
-            example_span="7.3 or 8.4-9.0")
+            example="8.4-9.1")
 
         count = TextBox(
             name="count",
