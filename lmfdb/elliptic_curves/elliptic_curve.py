@@ -320,6 +320,11 @@ def by_triple_label(conductor,iso_label,number):
     full_label = curve_lmfdb_label(conductor,iso_label,number)
     return render_curve_webpage_by_label(full_label)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_curve")
+    return url_for(".by_ec_label", label=label)
+
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
