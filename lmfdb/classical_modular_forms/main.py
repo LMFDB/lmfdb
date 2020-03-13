@@ -1252,7 +1252,7 @@ def dynamic_statistics():
 
 
 class CMFSearchArray(SearchArray):
-    def __init__(self, search_type=None):
+    def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', 'unrestricted'),
@@ -1267,7 +1267,7 @@ class CMFSearchArray(SearchArray):
             label='Level',
             knowl='cmf.level',
             example='4',
-            example_span='e.g. 4, 1-20',
+            example_span='4, 1-20',
             select_box=level_quantifier)
 
         weight_quantifier = SelectBox(
@@ -1283,7 +1283,7 @@ class CMFSearchArray(SearchArray):
             label='Weight',
             knowl='cmf.weight',
             example='2',
-            example_span='e.g. 2, 4-8',
+            example_span='2, 4-8',
             select_box=weight_quantifier)
 
         character_quantifier = SelectBox(
@@ -1300,7 +1300,7 @@ class CMFSearchArray(SearchArray):
             label='Character',
             short_label='Char.',
             example='20.d',
-            example_span='e.g. 20.d',
+            example_span='20.d',
             select_box=character_quantifier)
 
         prime_quantifier = SelectBox(
@@ -1315,7 +1315,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.bad_prime',
             label=r'Bad \(p\)',
             example='2,3',
-            example_span='e.g. 2,3',
+            example_span='2,3',
             select_box=prime_quantifier)
 
         char_order = TextBox(
@@ -1323,13 +1323,13 @@ class CMFSearchArray(SearchArray):
             label='Character order',
             knowl='character.dirichlet.order',
             example='1',
-            example_span='e.g. 1, 2-4')
+            example_span='1, 2-4')
         char_primitive = TextBox(
             name='prim_label',
             knowl='character.dirichlet.primitive',
             label='Primitive character',
             example='1.a',
-            example_span='e.g. 1.a')
+            example_span='1.a')
 
         dim_quantifier = SelectBox(
             name='dim_type',
@@ -1341,7 +1341,7 @@ class CMFSearchArray(SearchArray):
             label='Dim.',
             knowl='cmf.dimension',
             example='1',
-            example_span='e.g. 2, 1-6',
+            example_span='2, 1-6',
             select_box=dim_quantifier)
         hdim = HiddenBox(
             name='dim',
@@ -1359,14 +1359,14 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.analytic_conductor',
             label='Analytic conductor',
             example='1-10',
-            example_span='e.g. 1-10')
+            example_span='1-10')
 
         Nk2 = TextBox(
             name='Nk2',
             knowl='cmf.nk2',
             label=r'\(Nk^2\)',
             example='40-100',
-            example_span='e.g. 40-100')
+            example_span='40-100')
 
         cm = SelectBox(
             name='cm',
@@ -1388,14 +1388,14 @@ class CMFSearchArray(SearchArray):
             label='CM/RM discriminant',
             knowl='cmf.self_twist',
             example='-3',
-            example_span='e.g. -3')
+            example_span='-3')
 
         inner_twist_count = TextBox(
             name='inner_twist_count',
             knowl='cmf.inner_twist_count',
             label='Inner twist count',
             example='1-',
-            example_span='e.g. 0, 1-, 2-3')
+            example_span='0, 1-, 2-3')
 
         is_self_dual = SelectBox(
             name='is_self_dual',
@@ -1408,21 +1408,21 @@ class CMFSearchArray(SearchArray):
             label='Coefficient ring index',
             knowl='cmf.coefficient_ring',
             example='1',
-            example_span='e.g. 1, 2-4')
+            example_span='1, 2-4')
 
         hecke_ring_generator_nbound = TextBox(
             name='hecke_ring_generator_nbound',
             label='Coefficient ring gens.',
             knowl='cmf.hecke_ring_generators',
             example='20',
-            example_span='e.g. 7, 1-10')
+            example_span='7, 1-10')
 
         analytic_rank= TextBox(
             name='analytic_rank',
             label='Analytic rank',
             knowl='cmf.analytic_rank',
             example='1',
-            example_span='e.g. 1, 2-4')
+            example_span='1, 2-4')
 
         projective_image = TextBox(
             name='projective_image',
