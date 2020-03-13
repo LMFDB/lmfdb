@@ -87,15 +87,15 @@ def genus1_lookup_equation(rec):
     else:
         return genus1_lookup_equation_nf(rec)
 
+# TODO: Figure out weird error...
+# AttributeError: 'unicode' object has no attribute 'get'
+# something going wrong with the rewrite
 def assign_curve_label(rec):
-    if rec['g'] == 0:
-        return None
-    elif rec['g'] == 1:
+    if rec['g'] == 1:
         rec['curve_label'] = genus1_lookup_equation(rec)
-        return "Searched for curve for %s" % rec['label']
     elif rec['g'] == 2:
-        f,h = curve_string_parser(rec)
-        rec['curve_label'] = genus1_lookup_equation(str([f,h]))
-        return "Searched for curve for %s" % rec['label']
-    else:
-        return None
+        if rec['base_field'] == [-1, 1]: # currently only g2 curves over QQ in LMFDB
+            f,h = curve_string_parser(rec)
+            rec['curve_label'] = genus2_lookup_equation(str([f,h]))
+            return "Searched for curve for %s" % rec['label']
+    return rec
