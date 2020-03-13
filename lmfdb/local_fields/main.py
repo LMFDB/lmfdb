@@ -372,6 +372,8 @@ def reliability():
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):
+    noun = "field"
+    plural_noun = "fields"
     def __init__(self):
         degree = TextBox(
             name='n',
