@@ -385,6 +385,10 @@ class DoubleSelectBox(SearchBox):
 
 class IncludeBox(SelectBox):
     _options = [("", "include"),
+                ("exclude", "exclude")]
+
+class IncludeOnlyBox(SelectBox):
+    _options = [("", "include"),
                 ("exclude", "exclude"),
                 ("only", "only")]
 
