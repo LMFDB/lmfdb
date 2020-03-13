@@ -246,12 +246,13 @@ class SelectBox(SearchBox):
     - ``short_label`` -- the label on the refine-search page, if different
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
+    _options = []
 
     def __init__(
         self,
         name=None,
         label=None,
-        options=[],
+        options=None,
         knowl=None,
         example=None,
         example_span=None,
@@ -285,6 +286,8 @@ class SelectBox(SearchBox):
             id=id,
             qfield=qfield,
         )
+        if options is None:
+            options = self._options
         self.options = options
         self.extra = extra
 
@@ -379,6 +382,38 @@ class DoubleSelectBox(SearchBox):
             + self.select_box2._input(info)
             + "</div>"
         )
+
+class IncludeBox(SelectBox):
+    _options = [("", "include"),
+                ("exclude", "exclude")]
+
+class IncludeOnlyBox(SelectBox):
+    _options = [("", "include"),
+                ("exclude", "exclude"),
+                ("only", "only")]
+
+class YesNoBox(SelectBox):
+    _options = [('yes', 'yes'),
+                ('', ''),
+                ('no', 'no')]
+
+class YesNoMaybeBox(SelectBox):
+    _options = [("yes", "yes"),
+                ("not_no", "yes or unknown"),
+                ("", ""),
+                ("not_yes", "no or unknown"),
+                ("no", "no"),
+                ("unknown", "unknown")]
+
+class ParityBox(SelectBox):
+    _options = [('', 'any parity'),
+                ('even', 'even only'),
+                ('odd', 'odd only')]
+
+class SubsetBox(SelectBox):
+    _options = [('', 'equal to'),
+                ('subset', 'subset of'),
+                ('supset', 'superset of')]
 
 class SearchButton(SearchBox):
     def __init__(self, value, description, width=170, **kwds):
