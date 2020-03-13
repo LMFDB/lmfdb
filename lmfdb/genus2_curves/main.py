@@ -12,7 +12,7 @@ from lmfdb.utils import (
     parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect,
+    SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect,
     StatsDisplay, formatters)
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
@@ -565,11 +565,10 @@ class G2CSearchArray(SearchArray):
             select_box=bad_quantifier,
         )
 
-        is_gl2_type = SelectBox(
+        is_gl2_type = YesNoBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
             label=r"$\GL_2$-type",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
         st_group = SelectBox(
@@ -624,27 +623,24 @@ class G2CSearchArray(SearchArray):
             ),
         )
 
-        locally_solvable = SelectBox(
+        locally_solvable = YesNoBox(
             name="locally_solvable",
             knowl="g2c.locally_solvable",
             label="Locally solvable",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
-        has_square_sha = SelectBox(
+        has_square_sha = YesNoBox(
             name="has_square_sha",
             knowl="g2c.analytic_sha",
             label=r"Order of &#1064; is square*",
             short_label=r"Square &#1064;*",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
-        geometrically_simple = SelectBox(
+        geometrically_simple = YesNoBox(
             name="is_simple_geom",
             knowl="ag.geom_simple",
             label="Geometrically simple",
             short_label=r"\(\overline{\Q}\)-simple",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
         count = TextBox(
