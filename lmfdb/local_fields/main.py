@@ -147,7 +147,7 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return local_field_search(request.args)
-    info = {'count': 50, 'search_array': LFSearchArray()}
+    info = {'search_array': LFSearchArray()}
     return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
