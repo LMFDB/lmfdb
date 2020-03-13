@@ -12,9 +12,9 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap,
+    search_wrap, count_wrap, YesNoMaybeBox,
 )
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
@@ -338,44 +338,31 @@ class AbvarSearchArray(SearchArray):
             example_col=False,
             advanced=True,
         )
-        simple = SelectBox(
+        simple = YesNoBox(
             "simple",
             label="Simple",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.simple",
         )
-        geom_simple = SelectBox(
+        geom_simple = YesNoBox(
             "geom_simple",
             label="Geometrically simple",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.geometrically_simple",
             short_label="Geom. simple",
         )
-        primitive = SelectBox(
+        primitive = YesNoBox(
             "primitive",
             label="Primitive",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="ag.primitive",
         )
-        uopts = [
-            ("yes", "yes"),
-            ("not_no", "yes or unknown"),
-            ("", "unrestricted"),
-            ("not_yes", "no or unknown"),
-            ("no", "no"),
-            ("unknown", "unknown"),
-        ]
-        polarizable = SelectBox(
+        polarizable = YesNoMaybeBox(
             "polarizable",
             label="Principally polarizable",
-            options=uopts,
             knowl="av.princ_polarizable",
             short_label="Princ polarizable",
         )
-        jacobian = SelectBox(
+        jacobian = YesNoMaybeBox(
             "jacobian",
             label="Jacobian",
-            options=uopts,
             knowl="ag.jacobian"
         )
         uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "Geometric decomposition")
