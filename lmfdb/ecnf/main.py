@@ -4,7 +4,7 @@
 
 import ast
 import re
-from six import StringIO
+from six import BytesIO
 import time
 from six.moves.urllib_parse import quote, unquote
 
@@ -446,8 +446,8 @@ def download_search(info):
         s = s.replace('[', '[*')
         s = s.replace(']', '*]')
         s += ';'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,

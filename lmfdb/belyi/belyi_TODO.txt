@@ -1,5 +1,6 @@
 Soon:
 - Improve the pages under "Learn more about" and add a reliability page
+- Knowl for passport, and improve label knowl
 - add conformal pictures in Lady Gaga box
 - Add a download to Sage button for Galois orbits of Belyi maps (also Pari?)
 - Upload the rest of our data
