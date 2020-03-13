@@ -10,6 +10,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
+    SearchArray, TextBox,
     search_wrap)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -363,3 +364,10 @@ def reliability():
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
+
+class LFSearchArray(SearchArray):
+    def __init__(self):
+        degree = TextBox(
+            name='n',
+            example='6',
+            example_span='6, or a range like 3..5')
