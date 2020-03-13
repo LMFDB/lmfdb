@@ -260,6 +260,7 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
+                    info['count'] = 50 # put count back in so that it doesn't show up as none in url
 
             except ValueError as err:
                 # Errors raised in postprocessing
