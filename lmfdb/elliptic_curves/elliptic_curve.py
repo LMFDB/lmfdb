@@ -64,10 +64,9 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
+    info = to_dict(request.args, search_array=ECSearchArray())
     if err_args is None:
         if request.args:
-            info = to_dict(request.args)
-            info['search_array'] = ECSearchArray()
             return elliptic_curve_search(info)
         else:
             err_args = {}
@@ -81,14 +80,11 @@ def rational_elliptic_curves(err_args=None):
                                                                        conductor_list_endpoints[1:])]
     rank_list = list(range(counts['max_rank'] + 1))
     torsion_list = list(range(1, 11)) + [12, 16]
-    info = {
-        'rank_list': rank_list,
-        'torsion_list': torsion_list,
-        'conductor_list': conductor_list,
-        'counts': counts,
-        'stats_url': url_for(".statistics"),
-        'search_array': ECSearchArray(),
-    }
+    info['rank_list'] = rank_list
+    info['torsion_list'] = torsion_list
+    info['conductor_list'] = conductor_list
+    info['counts'] = counts
+    info['stats_url'] = url_for(".statistics")
     t = r'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
     if err_args.get("err_msg"):
@@ -134,7 +130,7 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=ECSearchArray())
     info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
     info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
     if request.args:
