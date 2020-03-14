@@ -174,9 +174,8 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    info = {'search_array': ECNFSearchArray()}
+    info = to_dict(request.args, search_array=ECNFSearchArray())
     if request.args:
-        info.update(to_dict(request.args))
         return elliptic_curve_search(info)
     bread = get_bread()
 
@@ -286,7 +285,7 @@ def show_ecnf1(nf):
         return redirect(url_for(".index"))
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic Curves over %s' % nf_pretty
     info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
     if len(request.args) > 0:
@@ -307,7 +306,7 @@ def show_ecnf_conductor(nf, conductor_label):
         conductor_norm = conductor_label_norm(conductor_label)
     except ValueError:
         return search_input_error()
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic Curves over %s of Conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
