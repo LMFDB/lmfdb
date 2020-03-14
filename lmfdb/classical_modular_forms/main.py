@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, YesNoBox, SubsetBox, ParityBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
@@ -202,9 +202,8 @@ favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
 
 @cmf.route("/")
 def index():
-    info = {"search_array": CMFSearchArray()}
+    info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
-        info.update(to_dict(request.args))
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
@@ -420,8 +419,7 @@ def by_url_level(level):
         except ValueError:
             flash_error("%s is not a valid newform or space label", level)
             return redirect(url_for(".index"))
-    info = to_dict(request.args)
-    info["search_array"] = CMFSearchArray()
+    info = to_dict(request.args, search_array=CMFSearchArray())
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
     else:
@@ -869,9 +867,9 @@ def set_rows_cols(info, query):
         if primes:
             try:
                 rad = prod(ZZ(p) for p in primes.split(','))
-                if info['prime_quantifier'] == 'subsets':
+                if info['prime_quantifier'] in ['subset', 'subsets']: # subsets for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
-                elif info['prime_quantifier'] == 'append':
+                elif info['prime_quantifier'] in ['supset', 'append']: # append for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
             except (ValueError, TypeError):
                 pass
@@ -1112,10 +1110,10 @@ def self_twist_type_query_formatter(x):
 def level_primes_formatter(x):
     subset = x.get('$containedin')
     if subset:
-        return 'level_primes=%s&prime_quantifier=subsets' % (','.join(map(str, subset)))
+        return 'level_primes=%s&prime_quantifier=subset' % (','.join(map(str, subset)))
     supset = x.get('$contains')
     if supset:
-        return 'level_primes=%s&prime_quantifier=append' % (','.join(map(str, supset)))
+        return 'level_primes=%s&prime_quantifier=supset' % (','.join(map(str, supset)))
     raise ValueError
 
 def level_radical_formatter(x):
@@ -1239,12 +1237,8 @@ def statistics():
 
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-    else:
-        info = {}
+    info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
-    info["search_array"] = CMFSearchArray()
     title = 'Cuspidal Newforms: Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
@@ -1270,11 +1264,8 @@ class CMFSearchArray(SearchArray):
             example_span='4, 1-20',
             select_box=level_quantifier)
 
-        weight_quantifier = SelectBox(
+        weight_quantifier = ParityBox(
             name='weight_parity',
-            options=[('', 'any parity'),
-                     ('even', 'even only'),
-                     ('odd', 'odd only')],
             extra=['class="simult_select"', 'onchange="simult_change(event);"'],
             width=105)
 
@@ -1286,11 +1277,8 @@ class CMFSearchArray(SearchArray):
             example_span='2, 4-8',
             select_box=weight_quantifier)
 
-        character_quantifier = SelectBox(
+        character_quantifier = ParityBox(
             name='char_parity',
-            options=[('', 'any parity'),
-                     ('even', 'even only'),
-                     ('odd', 'odd only')],
             extra=['class="simult_select"', 'onchange="simult_change(event);"'],
             width=105)
 
@@ -1303,12 +1291,8 @@ class CMFSearchArray(SearchArray):
             example_span='20.d',
             select_box=character_quantifier)
 
-        prime_quantifier = SelectBox(
+        prime_quantifier = SubsetBox(
             name='prime_quantifier',
-            #width=105,
-            options=[('', 'equal to'),
-                     ('subsets', 'subset of'),
-                     ('append', 'superset of')],
             width=105)
         level_primes = TextBoxWithSelect(
             name='level_primes',
@@ -1397,11 +1381,10 @@ class CMFSearchArray(SearchArray):
             example='1-',
             example_span='0, 1-, 2-3')
 
-        is_self_dual = SelectBox(
+        is_self_dual = YesNoBox(
             name='is_self_dual',
             knowl='cmf.selfdual',
-            label='Is self-dual',
-            options=[('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ])
+            label='Is self-dual')
 
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',
