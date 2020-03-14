@@ -66,7 +66,7 @@ def abelian_varieties():
             return abelian_variety_search(info)
         assert False
     else:
-        return abelian_variety_browse(**args)
+        return abelian_variety_browse(info)
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
