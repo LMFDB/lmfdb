@@ -202,9 +202,8 @@ favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
 
 @cmf.route("/")
 def index():
-    info = {"search_array": CMFSearchArray()}
+    info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
-        info.update(to_dict(request.args))
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
@@ -420,8 +419,7 @@ def by_url_level(level):
         except ValueError:
             flash_error("%s is not a valid newform or space label", level)
             return redirect(url_for(".index"))
-    info = to_dict(request.args)
-    info["search_array"] = CMFSearchArray()
+    info = to_dict(request.args, search_array=CMFSearchArray())
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
     else:
@@ -1239,12 +1237,8 @@ def statistics():
 
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-    else:
-        info = {}
+    info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
-    info["search_array"] = CMFSearchArray()
     title = 'Cuspidal Newforms: Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
