@@ -10,7 +10,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg,
+    SearchArray, TextBox, TextBoxNoEg, to_dict,
     search_wrap, Downloader)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -145,9 +145,9 @@ def ratproc(inp):
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
-        return local_field_search(request.args)
-    info = {'search_array': LFSearchArray()}
+        return local_field_search(info)
     return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
