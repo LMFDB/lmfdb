@@ -327,29 +327,27 @@ def statistics():
 
 @nf_page.route("/")
 def number_field_render_webpage():
-    args = to_dict(request.args)
+    info = to_dict(request.args, search_array=NFSearchArray())
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
-    if not args:
+    if not request.args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000]
         discriminant_list = ["%s..%s" % (start, end - 1) for start, end in zip(
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
-        info = {
-            'degree_list': list(range(1, max_deg + 1)),
-            'signature_list': sig_list,
-            'class_number_list': list(range(1, 6)) + ['6..10'],
-            'count': '50',
-            'nfields': comma(nfields),
-            'maxdeg': max_deg,
-            'discriminant_list': discriminant_list
-        }
+        info['degree_list'] = list(range(1, max_deg + 1))
+        info['signature_list'] = sig_list
+        info['class_number_list'] = list(range(1, 6)) + ['6..10']
+        info['count'] = '50'
+        info['nfields'] = comma(nfields)
+        info['maxdeg'] = max_deg
+        info['discriminant_list'] = discriminant_list
         t = 'Global number fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
-        return number_field_search(args)
+        return number_field_search(info)
 
 
 @nf_page.route("/random")
@@ -1002,6 +1000,7 @@ class NFSearchArray(SearchArray):
             label="Galois group",
             knowl="nf.galois_group",
             example="C5",
+            example_colspan=3,
             example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
                 display_knowl("nf.galois_group.name", "list of group labels"),
@@ -1034,4 +1033,29 @@ class NFSearchArray(SearchArray):
             name="ram_primes",
             label="Ramified primes",
             knowl="nf.ramified_primes",
+            example="2,3",
             select_box=ram_quantifier)
+        ur_primes = TextBox(
+            name="ur_primes",
+            label="Unramified primes",
+            knowl="nf.unramified_prime",
+            example="2,3")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.browse_array = [
+            [degree, signature],
+            [discriminant, rd],
+            [gal],
+            [class_number, class_group],
+            [num_ram, cm_field],
+            [ram_primes, ur_primes],
+            [regulator],
+            [count]]
+
+        self.refine_array = [
+            [degree, signature, gal, class_number, class_group],
+            [regulator, num_ram, ram_primes, ur_primes],
+            [cm_field, discriminant, rd]]
