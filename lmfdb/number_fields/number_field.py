@@ -350,16 +350,6 @@ def number_field_render_webpage():
         return number_field_search(info)
 
 
-@nf_page.route("/random")
-def random_nfglobal():
-    label = db.nf_fields.random()
-    #This version leaves the word 'random' in the URL:
-    #return render_field_webpage({'label': label})
-    #This version uses the number field's own URL:
-    #url =
-    return redirect(url_for(".by_label", label=label))
-
-
 def coeff_to_nf(c):
     return NumberField(coeff_to_poly(c), 'a')
 
@@ -634,12 +624,19 @@ def format_coeffs(coeffs):
 #    return render_template("nf-index.html", info = info)
 
 
+def url_for_label(label):
+    return url_for(".by_label", label=label)
+
 @nf_page.route("/<label>")
 def by_label(label):
+    if label == "random":
+        #This version leaves the word 'random' in the URL:
+        #return render_field_webpage({'label': label})
+        return redirect(url_for_label(db.nf_fields.random()), 301)
     try:
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
-            return redirect(url_for(".by_label", label=nflabel), 301)
+            return redirect(url_for_label(nflabel), 301)
         return render_field_webpage({'label': nflabel})
     except ValueError as err:
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
@@ -747,6 +744,7 @@ def number_field_jump(info):
                         #'algebra':number_field_algebra,
                         'download':download_search},
              split_ors=['galt'],
+             url_for_label=url_for_label,
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list)
@@ -764,9 +762,9 @@ def number_field_search(info, query):
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='complement')
     # modes are now contained (in), exactly, include
-    if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
+    if 'ram_quantifier' in info and str(info['ram_quantifier']) in ['supset', 'include']:
         mode='append'
-    elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
+    elif 'ram_quantifier' in info and str(info['ram_quantifier']) in ['subset', 'contained']:
         mode='subsets'
     else:
         mode='exact'
@@ -984,13 +982,13 @@ class NFSearchArray(SearchArray):
             label="Discriminant",
             knowl="nf.discriminant",
             example="-1000..-1",
-            example_span="-3, or a range such as 1000..2000 or 1000-2000 or -1000..-1")
+            example_span="-3 or 1000-2000")
         rd = TextBox(
             name="rd",
             label="Root discriminant",
             knowl="nf.root_discriminant",
             example="1..4.3",
-            example_span="a range such as 1..4.3 or 3..10")
+            example_span="a range such as 1..4.3 or 3-10")
         cm_field = YesNoBox(
             name="cm_field",
             label="CM field",
@@ -1000,7 +998,7 @@ class NFSearchArray(SearchArray):
             label="Galois group",
             knowl="nf.galois_group",
             example="C5",
-            example_colspan=3,
+            example_span_colspan=4,
             example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
                 display_knowl("nf.galois_group.name", "list of group labels"),
@@ -1028,10 +1026,11 @@ class NFSearchArray(SearchArray):
             knowl="nf.ramified_primes",
             example=2)
         ram_quantifier = SubsetBox(
-            name="ram_quantifier") # Update options
+            name="ram_quantifier",
+            width=50)
         ram_primes = TextBoxWithSelect(
             name="ram_primes",
-            label="Ramified primes",
+            label="Ram. primes",
             knowl="nf.ramified_primes",
             example="2,3",
             select_box=ram_quantifier)
@@ -1057,5 +1056,5 @@ class NFSearchArray(SearchArray):
 
         self.refine_array = [
             [degree, signature, gal, class_number, class_group],
-            [regulator, num_ram, ram_primes, ur_primes],
-            [cm_field, discriminant, rd]]
+            [regulator, num_ram, ram_primes, ur_primes, cm_field],
+            [discriminant, rd]]
