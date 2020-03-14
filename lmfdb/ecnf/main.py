@@ -12,7 +12,6 @@ from flask import render_template, request, url_for, redirect, send_file, make_r
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
-from lmfdb.app import app
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
@@ -175,14 +174,15 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
+    info = {'search_array': ECNFSearchArray()}
     if request.args:
-        return elliptic_curve_search(request.args)
+        info.update(to_dict(request.args))
+        return elliptic_curve_search(info)
     bread = get_bread()
 
     # the dict data will hold additional information to be displayed on
     # the main browse and search page
 
-    info = {'search_array': ECNFSearchArray()}
 
     # info['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
@@ -542,7 +542,6 @@ def elliptic_curve_search(info, query):
 
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    info['search_array'] = ECNFSearchArray()
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
