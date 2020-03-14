@@ -92,7 +92,7 @@ def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
     if len(info) > 0:
         return genus2_curve_search(info)
-    info['stats'] = G2C_stats()}
+    info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] = lambda label: url_for_curve_label(label)
     curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
