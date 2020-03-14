@@ -66,7 +66,9 @@ def learnmore_list_remove(matchstring):
 def rational_elliptic_curves(err_args=None):
     if err_args is None:
         if request.args:
-            return elliptic_curve_search(request.args)
+            info = to_dict(request.args)
+            info['search_array'] = ECSearchArray()
+            return elliptic_curve_search(info)
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -311,7 +313,6 @@ def elliptic_curve_search(info, query):
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['iso'])
-    info['search_array'] = ECSearchArray()
 
 ##########################
 #  Specific curve pages
