@@ -13,7 +13,8 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
-    flash_error,
+    flash_error, display_knowl,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -965,3 +966,72 @@ def nf_code(**args):
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
+
+class NFSearchArray(SearchArray):
+    noun = "field"
+    plural_noun = "fields"
+    def __init__(self):
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="nf.degree",
+            example=3)
+        signature = TextBox(
+            name="signature",
+            label="Signature",
+            knowl="nf.signature",
+            example="[1,1]")
+        discriminant = TextBox(
+            name="discriminant",
+            label="Discriminant",
+            knowl="nf.discriminant",
+            example="-1000..-1",
+            example_span="-3, or a range such as 1000..2000 or 1000-2000 or -1000..-1")
+        rd = TextBox(
+            name="rd",
+            label="Root discriminant",
+            knowl="nf.root_discriminant",
+            example="1..4.3",
+            example_span="a range such as 1..4.3 or 3..10")
+        cm_field = YesNoBox(
+            name="cm_field",
+            label="CM field",
+            knowl="nf.cm_field")
+        gal = TextBoxNoEg(
+            name="galois_group",
+            label="Galois group",
+            knowl="nf.galois_group",
+            example="C5",
+            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+                display_knowl("group.small_group_label", "GAP id's"),
+                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("gg.label", "transitive group labels")))
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator",
+            knowl="nf.regulator",
+            example="1..3.5",
+            example_span="a range such as 1..3.5")
+        class_number = TextBox(
+            name="class_number",
+            label="Class number",
+            knowl="nf.class_number",
+            example="5")
+        class_group = TextBox(
+            name="class_group",
+            label="Class group structure",
+            knowl="nf.ideal_class_group",
+            example="[2,4]",
+            example_span="[ ], [3], or [2,4]")
+        num_ram = TextBox(
+            name="num_ram",
+            label="Number of ramified primes",
+            knowl="nf.ramified_primes",
+            example=2)
+        ram_quantifier = SubsetBox(
+            name="ram_quantifier") # Update options
+        ram_primes = TextBoxWithSelect(
+            name="ram_primes",
+            label="Ramified primes",
+            knowl="nf.ramified_primes",
+            select_box=ram_quantifier)
