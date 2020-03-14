@@ -56,9 +56,8 @@ def learnmore_list_remove(matchstring):
 
 @abvarfq_page.route("/")
 def abelian_varieties():
-    args = request.args
-    if args:
-        info = to_dict(args)
+    info = to_dict(request.args, search_array=AbvarSearchArray())
+    if request.args:
         # hidden_search_type for prev/next buttons
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
         if search_type == "Counts":
@@ -71,7 +70,7 @@ def abelian_varieties():
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
-    D = to_dict(request.args)
+    D = to_dict(request.args, search_array=AbvarSearchArray())
     if "g" not in D:
         D["g"] = g
     D["bread"] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
@@ -79,7 +78,7 @@ def abelian_varieties_by_g(g):
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
 def abelian_varieties_by_gq(g, q):
-    D = to_dict(request.args)
+    D = to_dict(request.args, search_array=AbvarSearchArray())
     if "g" not in D:
         D["g"] = g
     if "q" not in D:
@@ -513,7 +512,6 @@ class AbvarSearchArray(SearchArray):
             ('Random', 'Random isogeny class')])
 
 def common_parse(info, query):
-    info["search_array"] = AbvarSearchArray()
     parse_ints(info, query, "q", name="base field")
     parse_ints(info, query, "p", name="base cardinality")
     parse_ints(info, query, "g", name="dimension")
@@ -622,9 +620,7 @@ favorite_isocls_labels = [[
     ("6.2.ag_r_abd_bg_ay_u", "Large endomorphism degree"),
 ]]
 
-def abelian_variety_browse(**args):
-    info = to_dict(args)
-    info["search_array"] = AbvarSearchArray()
+def abelian_variety_browse(info):
     info["stats"] = AbvarFqStats()
     info["q_ranges"] = ["2", "3", "4", "5", "7-16", "17-25", "27-211", "223-1024"]
     info["iso_list"] = [
@@ -670,11 +666,7 @@ def statistics():
 
 @abvarfq_page.route("/dynamic_stats")
 def dynamic_statistics():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-    else:
-        info = {}
-    info["search_array"] = AbvarSearchArray()
+    info = to_dict(request.args, search_array=AbvarSearchArray())
     AbvarFqStats().dynamic_setup(info)
     title = "Abelian Varity Isogeny Classes: Dynamic Statistics"
     return render_template(

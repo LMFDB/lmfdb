@@ -89,10 +89,10 @@ def index():
 
 @g2c_page.route("/Q/")
 def index_Q():
-    if len(request.args) > 0:
-        return genus2_curve_search(request.args)
-    info = {'stats': G2C_stats()}
-    info["search_array"] = G2CSearchArray()
+    info = to_dict(request.args, search_array=G2CSearchArray())
+    if len(info) > 0:
+        return genus2_curve_search(info)
+    info['stats'] = G2C_stats()}
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] = lambda label: url_for_curve_label(label)
     curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
@@ -119,7 +119,7 @@ def by_url_curve_label(cond, alpha, disc, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
-    data = to_dict(request.args)
+    data = to_dict(request.args, search_array=G2CSearchArray())
     clabel = str(cond)+"."+alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
     if not db.g2c_curves.exists({'class':clabel}):
@@ -148,7 +148,7 @@ def by_url_isogeny_class_label(cond, alpha):
 
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
-    data = to_dict(request.args)
+    data = to_dict(request.args, search_array=G2CSearchArray())
     data['title'] = 'Genus 2 Curves of Conductor %s' % cond
     data['bread'] = [('Genus 2 Curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
     if len(request.args) > 0:
@@ -274,7 +274,6 @@ class G2C_download(Downloader):
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def genus2_curve_search(info, query):
-    info["search_array"] = G2CSearchArray()
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
