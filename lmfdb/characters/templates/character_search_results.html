@@ -1,48 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>Refine search</h2>
-
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-
-<table border="0">
-<tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='modulus' placeholder="13" size=6 value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor' placeholder="5" size=6 value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order' placeholder="2" size=6 value="{{args.order}}"></td>
-<td align=left>
-<select name='parity'>
-      <option value="">all</option>
-      <option value="even" {{ "selected" if args.parity == 'even'}}>even</option>
-      <option value="odd" {{ "selected" if args.parity == 'odd'}}>odd</option>
-</select>
-</td>
-<td align=left>
-<select name='primitive'>
-      <option value="">all</option>
-      <option value="yes" {{ "selected" if args.primitive == 'yes'}}>yes</option>
-      <option value="no" {{ "selected" if args.primitive == 'no'}}>no</option>
-</select>
-</td>
-</tr>
-<tr>
-<td colspan=2 align=left>Maximum number of results to display</td>
-<td align=left> <input type='text' name='limit'size=6 placeholder="50"  value="{{args.limit}}"> </td></tr>
-<tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" onclick='resetStart()'>Search again</button>
-</td> </tr>
-</table>
-
-</form>
+{% include 'refine_search_form.html' %}
 
 {% if not err %}
 

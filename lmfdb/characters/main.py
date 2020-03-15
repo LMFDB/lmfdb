@@ -5,7 +5,7 @@ from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, randint, euler_phi
-from lmfdb.utils import to_dict, flash_error
+from lmfdb.utils import to_dict, flash_error, SearchArray, TextBox, ParityBox, YesNoBox
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
         WebDirichletGroup,
@@ -56,7 +56,10 @@ def render_characterNavigation():
 def render_DirichletNavigation():
     args = to_dict(request.args)
 
-    info = {'args':args}
+    # Dirichlet characters use a different convention than the rest of the LMFDB,
+    # passing the info dictionary using **.  In order for info.search_array to work
+    # in the template, we include an inner info dictionary.
+    info = {'args':args, 'info':{'search_array':DirSearchArray()}}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
@@ -124,6 +127,7 @@ def render_DirichletNavigation():
             search = ListCharacters.CharacterSearch(args)
         except ValueError as err:
             info['err'] = str(err)
+            info['info'] = {'search_array': DirSearchArray()}
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
         info['title'] = 'Dirichlet Character Search Results'
@@ -131,6 +135,7 @@ def render_DirichletNavigation():
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('Search Results', '') ]
         info['credit'] = 'SageMath'
+        info['info']['search_array'] = DirSearchArray()
         return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'
@@ -481,3 +486,52 @@ def get_group_table(modulus, char_list):
     else:
         rows = [[(j * k) % modulus for k in char_list] for j in char_list]
     return headers, rows
+
+class DirSearchArray(SearchArray):
+    noun = "character"
+    plural_noun = "characters"
+    def __init__(self):
+        modulus = TextBox(
+            name="modulus",
+            label="Modulus",
+            knowl="character.dirichlet.modulus",
+            example=13)
+        conductor = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="character.dirichlet.conductor",
+            example=5)
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="character.dirichlet.order",
+            example=2)
+        parity = ParityBox(
+            name="parity",
+            label="Parity",
+            knowl="character.dirichlet.parity")
+        primitive = YesNoBox(
+            name="primitive",
+            label="Primitive",
+            knowl="character.dirichlet.primitive")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.browse_array = [
+            [modulus],
+            [conductor],
+            [order],
+            [parity],
+            [primitive],
+            [count]]
+
+        self.refine_array = [[modulus, conductor, order, parity, primitive]]
+
+    # Dirichlet characters don't use search_wrap, so we can't easily enable random results
+    def search_types(self, info):
+        if info is None:
+            return [("List", "Search")]
+        else:
+            return [("List", "Search again")]

@@ -190,7 +190,7 @@ class CharacterSearch:
             self.parity = parity_string(-1)
         if self.parity in ["Even","even"]:
             self.parity = parity_string(1)
-        self.limit = parse_limit(query.get('limit'))
+        self.limit = parse_limit(query.get('count'))
         if self.parity and not self.parity in [parity_string(-1),parity_string(1)]:
             flash_error("%s is not a valid value for parity.  It must be '%s' or '%s'", self.parity, parity_string(-1), parity_string(1))
             raise ValueError('parity')
