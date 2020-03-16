@@ -9,6 +9,8 @@ from lmfdb import db
 from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
+    IncludeBox, IncludeOnlyBox,
     teXify_pol, search_wrap)
 from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
@@ -49,9 +51,8 @@ def index():
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
-    args = request.args
-    if not args:
-        info = {}
+    info = to_dict(request.args, search_array=BMFSearchArray())
+    if not request.args:
         gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
         gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
@@ -79,7 +80,7 @@ def index():
         info['learnmore'] = []
         return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
     else:
-        return bianchi_modular_form_search(args)
+        return bianchi_modular_form_search(info)
 
 @bmf_page.route("/random")
 def random_bmf():    # Random Bianchi modular form
@@ -116,6 +117,11 @@ def bianchi_modular_form_postprocess(res, info, query):
                        "cm": lambda v: cm_info(v.pop('CM', '?'))},
              bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
                            ('Search Results', '.')],
+             url_for_label=lambda label: url_for(".render_bmf_webpage",
+                                                 **dict(zip(
+                                                     ['field_label', 'level_label', 'label_suffix'],
+                                                      label.split('-')
+                                                 ))),
              learnmore=learnmore_list,
              properties=lambda: [])
 
@@ -132,18 +138,18 @@ def bianchi_modular_form_search(info, query):
     elif info['sfe'] != "any":
         query['sfe'] = int(info['sfe'])
     if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
+        if info['include_cm'] in ['exclude', 'off']:
             query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
             query['CM'] = {'$ne': 0} # will exclude NULL values
-    if 'include_base_change' in info and info['include_base_change'] == 'off':
+    if 'include_base_change' in info and info['include_base_change'] in ['exclude', 'off']:
         query['bc'] = 0
     else:
         info['include_base_change'] = "on"
 
 @bmf_page.route('/<field_label>')
 def bmf_search_field(field_label):
-    return bianchi_modular_form_search(field_label=field_label)
+    return bianchi_modular_form_search({'field_label':field_label, 'search_array':BMFSearchArray()})
 
 @bmf_page.route('/gl2dims/<field_label>')
 def render_bmf_field_dim_table_gl2(**args):
@@ -389,3 +395,61 @@ def labels_page():
     return render_template("single.html", kid='mf.bianchi.labels',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+
+class BMFSearchArray(SearchArray):
+    noun = "form"
+    plural_noun = "forms"
+    def __init__(self):
+        field = TextBox(
+            name='field_label',
+            label='Base field',
+            knowl='nf',
+            example='2.0.4.1',
+            example_span='either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example_span_colspan=4)
+        level = TextBox(
+            name='level_norm',
+            label='Level norm',
+            knowl='mf.bianchi.level',
+            example='1',
+            example_span='e.g. 1 or 1-100')
+        dimension = TextBox(
+            name='dimension',
+            label='Dimension',
+            knowl='mf.bianchi.spaces',
+            example='1',
+            example_span='e.g. 1 or 2')
+
+        sign = SelectBox(
+            name='sfe',
+            label='Sign',
+            knowl='mf.bianchi.sign',
+            options=[("", "any"), ("+1", "+1"), ("-1", "-1")],
+            example_col=True
+        )
+        base_change = IncludeBox(
+            name='include_base_change',
+            label='Base change',
+            knowl='mf.bianchi.base_change'
+        )
+        CM = IncludeOnlyBox(
+            name='include_cm',
+            label='CM',
+            knowl='mf.bianchi.cm'
+        )
+        count = TextBox(
+            "count",
+            label="Results to display",
+            example=50,
+        )
+
+        self.browse_array = [
+            [field],
+            [level, sign],
+            [dimension, base_change],
+            [count, CM]
+        ]
+        self.refine_array = [
+            [field, level, dimension],
+            [sign, base_change, CM]
+        ]
