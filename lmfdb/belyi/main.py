@@ -19,6 +19,9 @@ from lmfdb.utils import (
     search_wrap,
     Downloader,
     StatsDisplay,
+    SearchArray,
+    TextBox,
+    SelectBox,
 )
 from . import belyi_page
 from .web_belyi import (
@@ -57,9 +60,10 @@ def learnmore_list_remove(matchstring):
 
 @belyi_page.route("/")
 def index():
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     if request.args:
-        return belyi_search(to_dict(request.args))
-    info = {"stats": Belyi_stats()}
+        return belyi_search(info)
+    info["stats"] = Belyi_stats()
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = (
@@ -130,7 +134,7 @@ def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
 
 @belyi_page.route("/<group>/<abc>")
 def by_url_belyi_search_group_triple(group, abc):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s and orders %s" % (group, abc)
     info["bread"] = [
         ("Belyi Maps", url_for(".index")),
@@ -198,7 +202,7 @@ def by_url_belyi_search_url(smthorlabel):
 
 @belyi_page.route("/<group>")
 def by_url_belyi_search_group(group):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s" % group
     info["bread"] = [
         ("Belyi Maps", url_for(".index")),
@@ -586,6 +590,7 @@ def belyi_galmap_text_download(label):
     err_title="Belyi Maps Search Input Error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
     projection=["label", "group", "deg", "g", "orbit_size", "geomtype"],
+    url_for_label=lambda label: url_for(".by_url_belyi_search_url", smthorlabel=label),
     cleaners={"geomtype": lambda v: geometry_types_dict[v["geomtype"]]},
     bread=lambda: [("Belyi Maps", url_for(".index")), ("Search Results", ".")],
     credit=lambda: credit_string,
@@ -725,3 +730,55 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("labels"),
     )
+
+class BelyiSearchArray(SearchArray):
+    noun = "map"
+    plural_noun = "maps"
+    def __init__(self):
+        deg = TextBox(
+            name="deg",
+            label="Degree",
+            knowl="belyi.degree",
+            example="5",
+            example_span="4, 5-6")
+        group = TextBox(
+            name="group",
+            label="Group",
+            knowl="belyi.group",
+            example="4T5")
+        abc = TextBox(
+            name="abc",
+            label="Orders",
+            knowl="belyi.orders",
+            example="5",
+            example_span="4, 5-6")
+        abc_list = TextBox(
+            name="abc_list",
+            label=r"\([a,b,c]\) triple",
+            knowl="belyi.abc",
+            example="[4,4,3]")
+        g = TextBox(
+            name="g",
+            label="Genus",
+            knowl="belyi.genus",
+            example="1",
+            example_span="1, 0-2")
+        orbit_size = TextBox(
+            name="orbit_size",
+            label="Orbit size",
+            knowl="belyi.orbit_size",
+            example="2",
+            example_span="2, 5-6")
+        geomtype = SelectBox(
+            name="geomtype",
+            label="Geometry type",
+            knowl="belyi.geometry_type",
+            options=list(geometry_types_dict.items()))
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example="50")
+
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
+
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype]]
