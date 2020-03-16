@@ -7,8 +7,7 @@ from lmfdb.utils import (
     flash_error, to_dict,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
-    IncludeOnlyBox,
+    SearchArray, TextBox, IncludeOnlyBox,
     search_wrap)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.web_number_field import WebNumberField
