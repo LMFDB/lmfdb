@@ -14,8 +14,9 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, flash_error,
-    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes, 
+    web_latex, to_dict, flash_error, display_knowl,
+    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeOnlyBox,
     parse_element_of, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
@@ -63,9 +64,10 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
+    info = to_dict(request.args, search_array=ECSearchArray())
     if err_args is None:
         if request.args:
-            return elliptic_curve_search(request.args)
+            return elliptic_curve_search(info)
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -78,13 +80,11 @@ def rational_elliptic_curves(err_args=None):
                                                                        conductor_list_endpoints[1:])]
     rank_list = list(range(counts['max_rank'] + 1))
     torsion_list = list(range(1, 11)) + [12, 16]
-    info = {
-        'rank_list': rank_list,
-        'torsion_list': torsion_list,
-        'conductor_list': conductor_list,
-        'counts': counts,
-        'stats_url': url_for(".statistics")
-    }
+    info['rank_list'] = rank_list
+    info['torsion_list'] = torsion_list
+    info['conductor_list'] = conductor_list
+    info['counts'] = counts
+    info['stats_url'] = url_for(".statistics")
     t = r'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
     if err_args.get("err_msg"):
@@ -130,7 +130,7 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=ECSearchArray())
     info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
     info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
     if request.args:
@@ -234,11 +234,17 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_curve")
+    return url_for(".by_ec_label", label=label)
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
+             url_for_label=url_for_label,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
@@ -626,3 +632,120 @@ def tor_struct_search_Q(prefill="any"):
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
+
+class ECSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
+    def __init__(self):
+        cond = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="ec.q.conductor",
+            example="389",
+            example_span="389 or 100-200")
+        rank = TextBox(
+            name="rank",
+            label="Rank",
+            knowl="ec.rank",
+            example="0")
+        torsion = TextBox(
+            name="torsion",
+            label="Torsion order",
+            knowl="ec.torsion_order",
+            example="2")
+        sha = TextBox(
+            name="sha",
+            label="Analytic order of &#1064;",
+            knowl="ec.q.analytic_sha_order",
+            example="4")
+        surj_primes = TextBox(
+            name="surj_primes",
+            label="Maximal primes",
+            knowl="ec.maximal_galois_rep",
+            example="2,3")
+        isodeg = TextBox(
+            name="isodeg",
+            label="Cyclic isogeny degree",
+            knowl="ec.isogeny",
+            example="16")
+        num_int_pts = TextBox(
+            name="num_int_pts",
+            label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            example="2",
+            example_span="2 or 4-15")
+
+        jinv = TextBox(
+            name="jinv",
+            label="j-invariant",
+            knowl="ec.q.j_invariant",
+            example="1728",
+            example_span="1728 or -4096/11")
+        cm = IncludeOnlyBox(
+            name="include_cm",
+            label="CM",
+            knowl="ec.complex_multiplication")
+        tor_opts = ([("", "any"),
+                     ("[]", "trivial")] +
+                    [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
+                    [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+        torsion_struct = SelectBox(
+            name="torsion_structure",
+            label="Torsion structure",
+            knowl="ec.torsion_subgroup",
+            options=tor_opts)
+        optimal = SelectBox(
+            name="optimal",
+            label="Curves per isogeny class",
+            knowl="ec.isogeny_class",
+            options=[("", "all"),
+                     ("on", "one")])
+        surj_quant = SelectBox(
+            name="surj_quantifier",
+            options=[("", "include"),
+                     ("exactly", "exactly")],
+            width=75)
+        nonsurj_primes = TextBoxWithSelect(
+            name="nonsurj_primes",
+            label="Non-maximal primes",
+            short_label="Non-max. $p$",
+            knowl="ec.maximal_galois_rep",
+            example="2,3",
+            select_box=surj_quant)
+        bad_quant = SelectBox(
+            name="bad_quantifier",
+            options=[("", "include"),
+                     ("exclude", "exclude"),
+                     ("exactly", "exactly"),
+                     ("subset", "subset of")],
+            width=75)
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            label="Bad primes",
+            knowl="ec.q.reduction_type",
+            example="5,13",
+            select_box=bad_quant)
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator",
+            knowl="ec.q.regulator",
+            example="8.4-9.1")
+
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.browse_array = [
+            [cond, jinv],
+            [rank, cm],
+            [torsion, torsion_struct],
+            [sha, optimal],
+            [surj_primes, nonsurj_primes],
+            [isodeg, bad_primes],
+            [num_int_pts, regulator],
+            [count]]
+
+        self.refine_array = [
+            [cond, jinv, rank, torsion, torsion_struct],
+            [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
+            [num_int_pts, regulator, cm, optimal]]
