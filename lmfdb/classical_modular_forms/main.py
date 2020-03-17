@@ -13,8 +13,8 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, YesNoBox, SubsetBox, ParityBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox, SubsetBox, ParityBox,
+    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -1144,7 +1144,6 @@ class CMF_stats(StatsDisplay):
         return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     extent_knowl = 'cmf.statistics_extent'
-
     table = db.mf_newforms
     baseurl_func = ".index"
     buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
@@ -1407,14 +1406,14 @@ class CMFSearchArray(SearchArray):
             example='1',
             example_span='1, 2-4')
 
-        projective_image = TextBox(
+        projective_image = TextBoxNoEg(
             name='projective_image',
             label='Projective image',
             knowl='cmf.projective_image',
             example='D15',
             example_span='wt. 1 only')
 
-        projective_image_type = SelectBox(
+        projective_image_type = SelectBoxNoEg(
             name='projective_image_type',
             knowl='cmf.projective_image',
             label='Projective image type',

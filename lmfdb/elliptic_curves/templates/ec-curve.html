@@ -421,8 +421,10 @@ representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
 {% if not data.data.CMD %}
 \(\GL(2,\F_p)\)
-{% endif %}
 for all primes \( p \)
+{% else %}
+for all primes \( p < 1000 \)
+{% endif %}
 {% if data.data.galois_data %} {# there are non-maximal primes #}
 except those listed.
 </p>

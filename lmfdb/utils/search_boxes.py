@@ -224,13 +224,6 @@ class TextBox(SearchBox):
                 keys.append('value="%s"' % info[self.name])
         return '<input type="text" ' + " ".join(keys) + "/>"
 
-class TextBoxNoEg(TextBox):
-    def example_html(self, info=None):
-        return (
-            self.td(self.example_span_colspan)
-            + '<span class="formexample">%s</span></td>' % self.example_span
-        )
-
 class SelectBox(SearchBox):
     """
     A select box for user input.
@@ -323,6 +316,19 @@ class SelectBox(SearchBox):
             " ".join(keys),
             "".join("\n" + " " * 10 + opt for opt in opts),
         )
+
+class NoEg(SearchBox):
+    def example_html(self, info=None):
+        return (
+            self.td(self.example_span_colspan)
+            + '<span class="formexample">%s</span></td>' % self.example_span
+        )
+
+class TextBoxNoEg(NoEg, TextBox):
+    pass
+
+class SelectBoxNoEg(NoEg, SelectBox):
+    pass
 
 class HiddenBox(SearchBox):
     def _input(self, info=None):
@@ -476,7 +482,7 @@ class SearchArray(UniqueRepresentation):
     """
     sort_knowl = None
     noun = "result"
-    plural_nown = "results"
+    plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         return None
