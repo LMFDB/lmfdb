@@ -10,8 +10,9 @@ from sage.all import ZZ, latex, gap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, flash_error, comma,
+    list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp, parse_restricted,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -84,9 +85,9 @@ def by_label(label):
 @galois_groups_page.route("/")
 def index():
     bread = get_bread()
-    if len(request.args) != 0:
-        return galois_group_search(request.args)
-    info = {'count': 50}
+    info = to_dict(request.args, search_array=GalSearchArray())
+    if request.args:
+        return galois_group_search(info)
     info['degree_list'] = list(range(2, 48))
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
@@ -99,6 +100,7 @@ def make_order_key(order):
              table=db.gps_transitive,
              title='Galois Group Search Results',
              err_title='Galois Group Search Input Error',
+             url_for_label=lambda label: url_for(".by_label", label=label),
              learnmore=learnmore_list,
              bread=lambda: get_bread([("Search Results", ' ')]),
              credit=lambda: GG_credit)
@@ -152,7 +154,11 @@ def galois_group_search(info, query):
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
-    parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
+    if info.get("parity") == "even":
+        query["parity"] = 1
+    elif info.get("parity") == "odd":
+        query["parity"] = -1
+    #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
     if 'order' in query and 'n' not in query:
         query['__sort__'] = ['order', 'gapid', 'n', 't']
 
@@ -308,3 +314,83 @@ def reliability():
                            credit=GG_credit, title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
+class GalSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    def __init__(self):
+        parity = ParityBox(
+            name="parity",
+            label="Parity",
+            knowl="gg.parity",
+            width=50,
+            short_width=170)
+        cyc = YesNoBox(
+            name="cyc",
+            label="Cyclic",
+            knowl="group.cyclic",
+            width=50,
+            short_width=170)
+        solv = YesNoBox(
+            name="solv",
+            label="Solvable",
+            knowl="group.solvable",
+            width=50,
+            short_width=170)
+        prim = YesNoBox(
+            name="prim",
+            label="Primitive",
+            knowl="gg.primitive",
+            width=50,
+            short_width=170)
+
+        n = TextBox(
+            name="n",
+            label="Degree",
+            knowl="gg.degree",
+            example="6",
+            example_span="6 or 4,6 or 2..5 or 4,6..8")
+        t = TextBox(
+            name="t",
+            label="$T$-number",
+            knowl="gg.tnumber",
+            example="3",
+            example_span="3 or 4,6 or 2..5 or 4,6..8")
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order",
+            example="6",
+            example_span="6 or 4,6 or 2..35 or 4,6..80")
+        gal = TextBoxNoEg(
+            name="gal",
+            label="Group",
+            knowl="group",
+            example="[8,3]",
+            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+                display_knowl("group.small_group_label", "GAP id's"),
+                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("gg.label", "transitive group labels")))
+        nilpotency = TextBox(
+            name="nilpotency",
+            label="Nilpotency class",
+            knowl="group.nilpotent",
+            example="1..100",
+            example_span="-1, or 1..3")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.bool_array = [[parity, cyc, solv, prim]]
+
+        self.browse_array = [[n], [t], [order], [gal], [nilpotency], [count]]
+
+        self.refine_array = [[parity, cyc, solv, prim], [n, t, order, gal, nilpotency]]
+
+    def main_table(self, info=None):
+        if info is None:
+            bool_table = self._print_table(self.bool_array, None, "vertical")
+            browse_table = self._print_table(self.browse_array, None, "horizontal")
+            return bool_table + "\n" + browse_table
+        else:
+            return SearchArray.main_table(self, info)
