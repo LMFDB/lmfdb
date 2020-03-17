@@ -13,9 +13,9 @@ class LocalFieldTest(LmfdbTest):
     def test_search_top_slope(self):
         L = self.tc.get('/LocalNumberField/?p=2&topslope=3.5')
         assert '81' in L.get_data(as_text=True) # number of matches
-        L = self.tc.get('/LocalNumberField/?p=2&topslope=topslope=3.4..3.55')
+        L = self.tc.get('/LocalNumberField/?p=2&topslope=3.4..3.55')
         assert '81' in L.get_data(as_text=True) # number of matches
-        L = self.tc.get('/LocalNumberField/?p=2&topslope=topslope=7/2')
+        L = self.tc.get('/LocalNumberField/?p=2&topslope=7/2')
         assert '81' in L.get_data(as_text=True) # number of matches
 
     def test_field_page(self):
