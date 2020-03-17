@@ -82,7 +82,7 @@ from .search_boxes import (
     SearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
     SelectBox, YesNoBox, YesNoMaybeBox, IncludeBox, IncludeOnlyBox,
-    ParityBox, SubsetBox,
+    ParityBox, SubsetBox, SelectBoxNoEg,
     SearchButton, SearchButtonWithSelect, RowSpacer)
 from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
