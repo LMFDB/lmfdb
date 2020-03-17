@@ -186,6 +186,7 @@ class TextBox(SearchBox):
         example_col=None,
         id=None,
         qfield=None,
+        extra=[],
     ):
         SearchBox.__init__(
             self,
@@ -205,9 +206,10 @@ class TextBox(SearchBox):
             id=id,
             qfield=qfield,
         )
+        self.extra = extra
 
     def _input(self, info):
-        keys = ['type="text"', 'name="%s"' % self.name]
+        keys = self.extra + ['type="text"', 'name="%s"' % self.name]
         if self.id is not None:
             keys.append('id="%s"' % self.id)
         if self.advanced:

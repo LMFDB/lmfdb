@@ -14,6 +14,7 @@ from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox,
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
@@ -575,3 +576,68 @@ def labels_page():
            credit=HGM_credit, title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))
 
+class HGMSearchArray(SearchArray):
+    def __init__(self):
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="hgm.degree",
+            example="4",
+            extra=['class="family"'])
+        weight = TextBox(
+            name="weight",
+            label="Weight",
+            knowl="hgm.weight",
+            example="3",
+            extra=['class="family"'])
+        famhodge = TextBox(
+            name="famhodge",
+            label="Family Hodge vector",
+            knowl="hgm.familyhodgevector",
+            example="[1,1,1,1]",
+            extra=['class="family"'])
+        A = TextBox(
+            name="A",
+            label="$A$",
+            knowl="hgm.defining_parameters",
+            example="[3,2,2]",
+            extra=['class="family"'])
+        B = TextBox(
+            name="B",
+            label="$B$",
+            knowl="hgm.defining_parameters",
+            example="[6,4]",
+            extra=['class="family"'])
+        p = SelectBox(
+            name="p",
+            label="Prime $p$",
+            options=[("",2),
+                     ("3",3),
+                     ("5",5),
+                     ("7",7)])
+        Ap = TextBox(
+            name="Ap",
+            label="$A_p$",
+            knowl="hgm.defining_parameter_ppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Bp = TextBox(
+            name="Bp",
+            label="$B_p$",
+            knowl="hgm.defining_parameter_ppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Apperp = TextBox(
+            name="Apperp",
+            label="$A^\perp_p$",
+            knowl="hgm.defining_parameter_primetoppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Bpperp = TextBox(
+            name="Bpperp",
+            label="$B^\perp_p$",
+            knowl="hgm.defining_parameter_primetoppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+
+        
