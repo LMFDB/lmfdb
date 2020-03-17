@@ -3,19 +3,58 @@ from sage.structure.unique_representation import UniqueRepresentation
 
 
 class TdElt(object):
-    def td(self, colspan=1):
-        keys = []
-        if colspan != 1:
-            keys.append(" colspan=%s" % colspan)
-        if self.advanced:
-            keys.append(' class="advanced"')
-        return "<td%s>" % ("".join(keys))
+    _wrap_type = 'td'
+    def _add_class(self, D, clsname):
+        if 'class' in D:
+            D['class'] = D['class'] + ' ' + clsname
+        else:
+            D['class'] = clsname
 
+    def _wrap(self, typ, **kwds):
+        keys = []
+        kwds = dict(kwds)
+        if hasattr(self, "wrap_mixins"):
+            kwds.update(self.wrap_mixins)
+        if self.advanced:
+            self._add_class(kwds, 'advanced')
+        for key, val in kwds.items():
+            keys.append(' %s="%s"' % (key, val))
+        return "<%s%s>" % (typ, "".join(keys))
+
+    def td(self, colspan=None, **kwds):
+        if colspan is not None:
+            kwds['colspan'] = colspan
+        return self._wrap("td", **kwds)
 
 class Spacer(TdElt):
-    def __init__(self, colspan=1, advanced=False):
+    def __init__(self, colspan=None, advanced=False):
         self.colspan = colspan
         self.advanced = advanced
+
+    def input_html(self, info=None):
+        return self.td(self.colspan) + "</td>"
+
+    def label_html(self, info=None):
+        return self.td(self.colspan) + "</td>"
+
+    def example_html(self, info=None):
+        return self.td() + "</td>"
+
+    def has_label(self, info=None):
+        return False
+
+class RowSpacer(Spacer):
+    def __init__(self, rowheight, advanced=False):
+        self.rowheight = rowheight
+        self.advanced = advanced
+
+    def tr(self, rowspan=0, **kwds): # used for row spacers
+        if rowspan is not None:
+            kwds['style'] = "height:%spx" % rowspan
+        return self._wrap("tr", **kwds)
+
+    def html(self, info=None):
+        return self.tr(self.rowheight) + "</tr>"
 
 
 class BasicSpacer(Spacer):
@@ -23,7 +62,7 @@ class BasicSpacer(Spacer):
         Spacer.__init__(self, colspan=colspan, advanced=advanced)
         self.msg = msg
 
-    def html(self, info=None):
+    def input_html(self, info=None):
         return self.td(self.colspan) + self.msg + "</td>"
 
 
@@ -52,22 +91,38 @@ class SearchBox(TdElt):
         name=None,
         label=None,
         knowl=None,
+        example=None,
+        example_span=None,
+        example_span_colspan=1,
         colspan=(1, 1, 1),
+        rowspan=(1, 1),
+        width=160,
+        short_width=None,
         short_label=None,
         advanced=False,
         example_col=False,
+        id=None,
         qfield=None,
     ):
         self.name = name
+        self.id = id
         self.label = label
         self.knowl = knowl
+        self.example = example
+        self.example_span = example if example_span is None else example_span
+        self.example_span_colspan = example_span_colspan
+        if example_col is None:
+            example_col = bool(self.example_span)
+        self.example_col = example_col
         self.label_colspan, self.input_colspan, self.short_colspan = colspan
+        self.label_rowspan, self.input_rowspan = rowspan
         if short_label is None:
             short_label = label
         self.short_label = short_label
         self.advanced = advanced
-        self.example_col = example_col
         self.qfield = name if qfield is None else qfield
+        self.width = width
+        self.short_width = self.width if short_width is None else short_width
 
     def _label(self, info):
         label = self.label if info is None else self.short_label
@@ -75,16 +130,25 @@ class SearchBox(TdElt):
             label = display_knowl(self.knowl, label)
         return label
 
+    def has_label(self, info):
+        label = self.label if info is None else self.short_label
+        return bool(label)
+
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
-        return self.td(colspan) + self._input(info) + "</td>"
+        return self.td(colspan, rowspan=self.input_rowspan) + self._input(info) + "</td>"
 
     def example_html(self, info=None):
-        if self.example_col:
+        if self.example_span:
+            return (
+                self.td(self.example_span_colspan)
+                + '<span class="formexample">e.g. %s</span></td>' % self.example_span
+            )
+        elif self.example_col:
             return "<td></td>"
 
 
@@ -114,34 +178,38 @@ class TextBox(SearchBox):
         example_span=None,
         example_span_colspan=1,
         colspan=(1, 1, 1),
+        rowspan=(1, 1),
         width=160,
         short_width=None,
         short_label=None,
         advanced=False,
         example_col=None,
+        id=None,
         qfield=None,
     ):
-        self.example = example
-        self.example_span = example if example_span is None else example_span
-        if example_col is None:
-            example_col = bool(self.example_span)
         SearchBox.__init__(
             self,
             name,
             label,
             knowl=knowl,
+            example=example,
+            example_span=example_span,
+            example_span_colspan=example_span_colspan,
             colspan=colspan,
+            rowspan=rowspan,
+            width=width,
+            short_width=short_width,
             short_label=short_label,
             advanced=advanced,
             example_col=example_col,
+            id=id,
             qfield=qfield,
         )
-        self.width = width
-        self.short_width = self.width if short_width is None else short_width
-        self.example_span_colspan = example_span_colspan
 
     def _input(self, info):
         keys = ['type="text"', 'name="%s"' % self.name]
+        if self.id is not None:
+            keys.append('id="%s"' % self.id)
         if self.advanced:
             keys.append('class="advanced"')
         if self.example is not None:
@@ -155,14 +223,6 @@ class TextBox(SearchBox):
             if self.name in info:
                 keys.append('value="%s"' % info[self.name])
         return '<input type="text" ' + " ".join(keys) + "/>"
-
-    def example_html(self, info=None):
-        if self.example_col:
-            return (
-                self.td(self.example_span_colspan)
-                + '<span class="formexample">e.g. %s</span></td>' % self.example_span
-            )
-
 
 class SelectBox(SearchBox):
     """
@@ -179,19 +239,25 @@ class SelectBox(SearchBox):
     - ``short_label`` -- the label on the refine-search page, if different
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
+    _options = []
 
     def __init__(
         self,
         name=None,
         label=None,
-        options=[],
+        options=None,
         knowl=None,
+        example=None,
+        example_span=None,
+        example_span_colspan=1,
         colspan=(1, 1, 1),
+        rowspan=(1, 1),
         width=170,
         short_width=None,
         short_label=None,
         advanced=False,
         example_col=False,
+        id=None,
         qfield=None,
         extra=[],
     ):
@@ -200,20 +266,28 @@ class SelectBox(SearchBox):
             name,
             label,
             knowl=knowl,
+            example=example,
+            example_span=example_span,
+            example_span_colspan=example_span_colspan,
             colspan=colspan,
+            rowspan=rowspan,
+            width=width,
+            short_width=short_width,
             short_label=short_label,
             advanced=advanced,
             example_col=example_col,
+            id=id,
             qfield=qfield,
         )
+        if options is None:
+            options = self._options
         self.options = options
-        self.width = width
-        self.short_width = self.width if short_width is None else short_width
-        self.example_col = example_col
         self.extra = extra
 
     def _input(self, info):
         keys = self.extra + ['name="%s"' % self.name]
+        if self.id is not None:
+            keys.append('id="%s"' % self.id)
         if self.advanced:
             keys.append('class="advanced"')
         if info is None:
@@ -243,12 +317,35 @@ class SelectBox(SearchBox):
             "".join("\n" + " " * 10 + opt for opt in opts),
         )
 
+class NoEg(SearchBox):
+    def example_html(self, info=None):
+        return (
+            self.td(self.example_span_colspan)
+            + '<span class="formexample">%s</span></td>' % self.example_span
+        )
 
-class CheckBox(SearchBox):
+class TextBoxNoEg(NoEg, TextBox):
+    pass
+
+class SelectBoxNoEg(NoEg, SelectBox):
+    pass
+
+class HiddenBox(SearchBox):
     def _input(self, info=None):
         keys = ['name="%s"' % self.name]
         if self.advanced:
             keys.append('class="advanced"')
+        if info is not None and info.get(self.name):
+            keys.append('value="%s"' % info.get(self.name))
+        return '<input type="hidden" %s>' % (" ".join(keys),)
+
+class CheckBox(SearchBox):
+    def _input(self, info=None):
+        keys = ['name="%s"' % self.name, 'value="yes"']
+        if self.advanced:
+            keys.append('class="advanced"')
+        if info is not None and info.get(self.name, False):
+            keys.append("checked")
         return '<input type="checkbox" %s>' % (" ".join(keys),)
 
 
@@ -292,93 +389,259 @@ class DoubleSelectBox(SearchBox):
             + "</div>"
         )
 
+class IncludeBox(SelectBox):
+    _options = [("", "include"),
+                ("exclude", "exclude")]
+
+class IncludeOnlyBox(SelectBox):
+    _options = [("", "include"),
+                ("exclude", "exclude"),
+                ("only", "only")]
+
+class YesNoBox(SelectBox):
+    _options = [('yes', 'yes'),
+                ('', ''),
+                ('no', 'no')]
+
+class YesNoMaybeBox(SelectBox):
+    _options = [("yes", "yes"),
+                ("not_no", "yes or unknown"),
+                ("", ""),
+                ("not_yes", "no or unknown"),
+                ("no", "no"),
+                ("unknown", "unknown")]
+
+class ParityBox(SelectBox):
+    _options = [('', 'any parity'),
+                ('even', 'even only'),
+                ('odd', 'odd only')]
+
+class SubsetBox(SelectBox):
+    _options = [('', 'equal to'),
+                ('subset', 'subset of'),
+                ('supset', 'superset of')]
+
+class SearchButton(SearchBox):
+    def __init__(self, value, description, width=170, **kwds):
+        kwds['label'] = kwds.get('label', '')
+        SearchBox.__init__(self, width=width, **kwds)
+        self.value = value
+        self.description = description
+
+    def td(self, colspan=None, **kwds):
+        kwds = dict(kwds)
+        self._add_class(kwds, 'button')
+        return SearchBox.td(self, colspan, **kwds)
+
+    def _input(self, info):
+        if info is None:
+            onclick = ""
+        else:
+            onclick = " onclick='resetStart()'"
+        btext = "<button type='submit' name='search_type' value='{val}' style='width: {width}px;'{onclick}>{desc}</button>"
+        return btext.format(
+            width=self.width,
+            val=self.value,
+            desc=self.description,
+            onclick=onclick,
+        )
+
+class SearchButtonWithSelect(SearchButton):
+    def __init__(self, value, description, select_box, **kwds):
+        self.select_box = select_box
+        SearchButton.__init__(self, value, description, **kwds)
+
+    def label_html(self, info=None):
+        colspan = self.label_colspan if info is None else self.short_colspan
+        return (
+            self.td(colspan)
+            + '<div style="display: flex; justify-content: space-between;">'
+            + self._label(info)
+            + '<span style="margin-left: 5px;"></span>'
+            + self.select_box._input(info)
+            + "</div>"
+            + "</td>"
+        )
 
 class SearchArray(UniqueRepresentation):
-    def __init__(
-        self,
-        browse_array,
-        refine_array,
-        search_types=[("List", "List of Results"), ("Random", "Random Result")],
-    ):
-        self.browse_array = browse_array
-        self.refine_array = refine_array
-        self.all_search = []
-        for array in [browse_array, refine_array]:
-            for row in array:
-                if isinstance(row, (list, tuple)):
-                    for col in row:
-                        if isinstance(col, SearchBox) and col not in self.all_search:
-                            self.all_search.append(col)
-        self.search_types = search_types
+    """
+    This class is used to represent the grid of inputs in a browse or search array.
+    The goal is to be able to use create one object for each input which can then
+    be reused in multiple locations.
 
-    def main_table(self, info=None):
+    You should set the following attributes/functions to make this work.
+
+    - ``browse_array`` and ``refine_array`` -- each a list of lists of ``SearchBox`` objects.
+        You can also override ``main_array()`` for more flexibility.
+        Will be passed ``info=None`` for the browse page, or the info dictionary for refining search
+    - ``sort_order`` -- a function of ``info`` returning a list of pairs, the url value
+        and display value for the sort options.  You may also want to set the ``sort_knowl`` attribute
+    - ``search_types`` -- returns a list of pairs giving the url value and display value
+        for the search buttons
+    - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
+    """
+    sort_knowl = None
+    noun = "result"
+    plural_noun = "results"
+    def sort_order(self, info):
+        # Override this method to add a dropdown for sort order
+        return None
+
+    def _search_again(self, info, search_types):
         if info is None:
-            # browse page
-            lines = []
-            for row in self.browse_array:
-                if isinstance(row, Spacer):
-                    lines.append("\n      " + row.html())
-                else:
-                    cols = []
-                    for box in row:
-                        cols.append(box.label_html())
-                        cols.append(box.input_html())
-                        ex = box.example_html()
-                        if ex:
-                            cols.append(ex)
-                    lines.append("".join("\n      " + col for col in cols))
+            return search_types
+        st = self._st(info)
+        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != st]
 
+    def search_types(self, info):
+        # Override this method to change the displayed search buttons
+        if info is None:
+            return [("List", "List of %s" % self.plural_noun), ("Random", "Random %s" % self.noun)]
         else:
-            # refine search page
-            lines = []
-            for row in self.refine_array:
-                if isinstance(row, Spacer):
-                    lines.append(row.html(info))
-                else:
-                    labels = []
-                    inputs = []
-                    for box in row:
-                        labels.append(box.label_html(info))
-                        inputs.append(box.input_html(info))
+            return [("List", "Search again"), ("Random", "Random %s" % self.noun)]
+
+    def hidden(self, info):
+        # Override this method to change the hidden inputs
+        return [("start", "start"), ("count", "count"), ("hst", "search_type")]
+
+    def main_array(self, info):
+        if info is None:
+            return self.browse_array
+        else:
+            return self.refine_array
+
+    def _print_table(self, grid, info, layout_type):
+        if not grid:
+            return ""
+        lines = []
+        for row in grid:
+            if isinstance(row, Spacer):
+                lines.append("\n      " + row.html())
+            elif layout_type == 'vertical':
+                if any(box.has_label(info) for box in row):
+                    labels = [box.label_html(info) for box in row]
                     lines.append("".join("\n      " + label for label in labels))
-                    lines.append("".join("\n      " + inp for inp in inputs))
+                inputs = [box.input_html(info) for box in row]
+                lines.append("".join("\n      " + inp for inp in inputs))
+            elif layout_type == 'horizontal':
+                cols = []
+                for box in row:
+                    cols.append(box.label_html(info))
+                    cols.append(box.input_html(info))
+                    ex = box.example_html(info)
+                    if ex:
+                        cols.append(ex)
+                lines.append("".join("\n      " + col for col in cols))
+            elif layout_type == 'box':
+                top_cols = []
+                bot_cols = []
+                for box in row:
+                    top_cols.append(box.label_html(info))
+                    bot_cols.append(box.input_html(info))
+                    ex = box.example_html(info)
+                    if ex:
+                        top_cols.append('<td width="170"></td>')
+                        bot_cols.append(ex)
+                lines.append("".join("\n      " + col for col in top_cols))
+                lines.append("".join("\n      " + col for col in bot_cols))
         return (
             '  <table border="0">'
             + "".join("\n    <tr>" + line + "\n    </tr>" for line in lines)
             + "\n  </table>"
         )
 
-    def buttons(self, info=None):
-        button_str = "<td class='button'><button type='submit' name='search_type' value='{val}' style='width: 170px;' {onclick} >{desc}</button></td>"
-        if info is None:
-            buttons = ["<td>Display: </td>"]
-            buttons += [
-                button_str.format(val=val, onclick="", desc=desc)
-                for val, desc in self.search_types
-            ]
-        else:
-            info["search_type"] = info.get("search_type", info.get("hst", "List"))
-            if info["search_type"] == "DynStats":
-                # The template dynamic_stats_input.html
-                # will take care of the Variables section
-                # and the button "Generate statistics"
-                return ""
-            else:
-                search_types = [(info["search_type"], "Search again")] + [
-                    (v, d) for v, d in self.search_types if v != info["search_type"]
-                ]
-                buttons = [
-                    button_str.format(val=val, onclick="onclick='resetStart()'", desc=desc)
-                    for val, desc in search_types
-            ]
+    def _st(self, info):
+        if info is not None:
+            return info.get("search_type", info.get("hst", "List"))
 
-        return (
-            '  <table border="0">'
-            + "\n    <tr>"
-            + "\n      ".join(buttons)
-            + "\n    <tr>"
-            + "\n  </table>"
-        )
+    def dynstats_array(self, info):
+        if self._st(info) == "DynStats":
+            array = [RowSpacer(30)]
+            vheader = BasicSpacer("Variables")
+            vheader.wrap_mixins = {"class": "table_h2"}
+            array.append([vheader])
+            for i in [1,2]:
+                cols = SelectBox(
+                    name="col%s",
+                    id="col%s_select" % i,
+                    label="",
+                    width=150,
+                    options=info["stats"]._dynamic_cols,
+                    extra=['onchange="set_buckets(this, \'buckets%s\')"'%i])
+                buckets = TextBox(
+                    name="buckets%s" % i,
+                    id="buckets%s" % i,
+                    label="Buckets" if i == 1 else "",
+                    knowl="stats.buckets" if i == 1 else None,
+                    width=310)
+                totals = CheckBox(
+                    name="totals%s" % i,
+                    label="Totals" if i == 1 else "",
+                    knowl="stats.totals" if i == 1 else None)
+                proportions = SelectBox(
+                    name="proportions",
+                    width=150,
+                    options=[("recurse", "Vs unconstrained"),
+                             ("rows", "By rows"),
+                             ("cols", "By columns"),
+                             ("none", "None")],
+                    label="Proportions" if i == 1 else "",
+                    rowspan=(1, 2),
+                    knowl="stats.proportions" if i == 1 else None)
+                if i == 1:
+                    array.append([cols, buckets, totals, proportions])
+                else:
+                    array.append([cols, buckets, totals])
+            return array
+        else:
+            return []
+
+    def hidden_inputs(self, info=None):
+        if info is None:
+            return ""
+        else:
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for (name, val) in self.hidden(info))
+
+    def main_table(self, info=None):
+        layout_type = "horizontal" if info is None else "vertical"
+        s = self._print_table(self.main_array(info), info, layout_type=layout_type)
+        dstats = self.dynstats_array(info)
+        if dstats:
+            s += "\n" + self._print_table(dstats, info, layout_type=layout_type)
+        return s
+
+    def has_advanced_inputs(self, info=None):
+        for row in self.main_array(info):
+            if isinstance(row, TdElt) and row.advanced:
+                return True
+            for col in row:
+                if col.advanced:
+                    return True
+        return False
+
+    def buttons(self, info=None):
+        st = self._st(info)
+        buttons = []
+        if st == "DynStats":
+            buttons.append(SearchButton("DynStats", "Generate statistics"))
+        else:
+            if st is None:
+                buttons.append(BasicSpacer("Display:"))
+            for but in self.search_types(info):
+                if isinstance(but, TdElt):
+                    buttons.append(but)
+                else:
+                    buttons.append(SearchButton(*but))
+            if st is not None:
+                sort = self.sort_order(info)
+                if sort:
+                    sort_box = SelectBox(
+                        name='sort_order',
+                        knowl=self.sort_knowl,
+                        options=sort,
+                        width=170)
+                    buttons.append(sort_box)
+        return self._print_table([RowSpacer(22), buttons], info, layout_type="vertical")
 
     def html(self, info=None):
-        return "\n".join([self.main_table(info), self.buttons(info)])
+        return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])

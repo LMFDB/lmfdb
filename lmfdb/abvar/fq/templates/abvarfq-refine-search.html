@@ -8,30 +8,8 @@
 </p>
 {% endif %}
 
-{% if info.search_type == 'DynStats' %}
-<script>
-var default_buckets = {};
-{% for col, buckets in info.stats._default_buckets %}
-default_buckets['{{col}}'] = '{{buckets}}';
-{% endfor %}
-function set_buckets(col_selecter, bucket_id) {
-  if (col_selecter.value in default_buckets) {
-    $('#' + bucket_id).val(default_buckets[col_selecter.value]);
-  }
-}
-</script>
-
-{% set search_header = 'Constraints' %}
-{% else %}
-{% set search_header = 'Refine search' %}
-{% endif %}
-<h2 id='search_h2'>{{search_header}}
-  <button id="advancedtoggle" href="#">Advanced search options</button>
-</h2>
-
 {% include 'refine_search_form.html' %}
 
-<script> show_advancedQ(); </script>
 {% if info.search_type == 'DynStats' %}
 <p>Note that the abelian varieties in the database may not be {{ KNOWL('rcs.rigor.av.fq', title='representative') }}.</p>
 {% endif %}

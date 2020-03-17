@@ -287,19 +287,24 @@ def str_to_CBF(s):
 
 
 
-def to_dict(args, exclude = []):
+def to_dict(args, exclude = [], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
     element in a list if the input was a list.
 
+    INPUT:
+
+    - ``args`` -- a dictionary
+    - ``exclude`` -- a list of keys to allow lists for.
+    - ``kwds`` -- also included in the result
+
     Example:
     >>> to_dict({"not_list": 1, "is_list":[2,3,4]})
     {'is_list': 4, 'not_list': 1}
     """
-    d = {}
-    for key in args:
-        values = args[key]
+    d = dict(kwds)
+    for key, values in args.items():
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]
