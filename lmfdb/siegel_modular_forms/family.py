@@ -35,6 +35,9 @@ class SiegelFamily (SageObject):
         self.latex_name = doc.get('latex_name')
         if not self.latex_name:
             self.latex_name =  Latex(self.name)
+        self.plain_name = doc.get('plain_name')
+        if not self.plain_name:
+            self.plain_name =  Latex(self.name)
         self.degree = doc.get('degree')
         self.dim_args_default = doc.get('dim_args_default')
         module = importlib.import_module('lmfdb.siegel_modular_forms.dimensions')

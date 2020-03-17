@@ -8,8 +8,9 @@ from sage.all import PolynomialRing, QQ, RR, latex
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, display_multiset,
+    web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
+    SearchArray, TextBox, TextBoxNoEg, to_dict,
     search_wrap, Downloader)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -144,9 +145,9 @@ def ratproc(inp):
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
-        return local_field_search(request.args)
-    info = {'count': 50}
+        return local_field_search(info)
     return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
@@ -154,11 +155,16 @@ def index():
 def by_label(label):
     clean_label = clean_input(label)
     if label != clean_label:
-        return redirect(url_for('.by_label',label=clean_label), 301)
+        return redirect(url_for_label(label=clean_label), 301)
     return render_field_webpage({'label': label})
 
+def url_for_label(label):
+    if label == "random":
+        return url_for('.random_field')
+    return url_for(".by_label", label=label)
+
 def local_field_jump(info):
-    return redirect(url_for(".by_label",label=info['jump_to']), 301)
+    return redirect(url_for_label(info['jump_to']), 301)
 
 class LF_download(Downloader):
     table = db.lf_fields
@@ -181,6 +187,7 @@ class LF_download(Downloader):
              shortcuts={'jump_to': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search Results", ' ')]),
              learnmore=learnmore_list,
+             url_for_label=url_for_label,
              credit=lambda:LF_credit)
 def local_field_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
@@ -192,6 +199,7 @@ def local_field_search(info,query):
     info['group_display'] = group_pretty_and_nTj
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
+    info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):
     data = None
@@ -376,3 +384,56 @@ def reliability():
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
+class LFSearchArray(SearchArray):
+    noun = "field"
+    plural_noun = "fields"
+    def __init__(self):
+        degree = TextBox(
+            name='n',
+            label='Degree',
+            knowl='lf.degree',
+            example='6',
+            example_span='6, or a range like 3..5')
+        qp = TextBox(
+            name='p',
+            label=r'Prime $p$ for base field $\Q_p$',
+            short_label='Prime $p$',
+            knowl='lf.qp',
+            example='3',
+            example_span='3, or a range like 3..7')
+        c = TextBox(
+            name='c',
+            label='Discriminant exponent $c$',
+            knowl='lf.discriminant_exponent',
+            example='8',
+            example_span='8, or a range like 2..6')
+        e = TextBox(
+            name='e',
+            label='Ramification index $e$',
+            knowl='lf.ramification_index',
+            example='3',
+            example_span='3, or a range like 2..6')
+        topslope = TextBox(
+            name='topslope',
+            label='Top slope',
+            knowl='lf.top_slope',
+            example='4/3',
+            example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+        gal = TextBoxNoEg(
+            name='gal',
+            label='Galois group $G$',
+            short_label='Galois group',
+            knowl='nf.galois_group',
+            example='5T3',
+            example_span='list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id's"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group labels')))
+        results = TextBox(
+            "count",
+            label="Results to display",
+            example=50,
+        )
+
+        self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
+        self.refine_array = [[degree, c, gal], [qp, e, topslope]]
