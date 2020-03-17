@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
-    clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp, parse_restricted,
+    clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
