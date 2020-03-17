@@ -476,7 +476,7 @@ class SearchArray(UniqueRepresentation):
     """
     sort_knowl = None
     noun = "result"
-    plural_nown = "results"
+    plural_noun = "results"
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         return None
