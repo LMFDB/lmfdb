@@ -1,4 +1,4 @@
-# This data is loaded into the smf_families postgres table
+# This data has been loaded into the smf_families postgres table and is no lonager used, changes here will have no effect!
 
 families = [
 {

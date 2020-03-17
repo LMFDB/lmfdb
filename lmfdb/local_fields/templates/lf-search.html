@@ -2,53 +2,7 @@
 
 {% block content %}
 
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-<table border="0">
-
-<tr>
-<td align=left>{{KNOWL('lf.degree',title='Degree')}}</td>
-<td align=left> <input type='text' name='n' placeholder='6' size=3 value="{{info.n}}"></td>
-<td align=left> {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent $c$')}}</td>
-<td align=left> <input type="text" name="c" placeholder='8' size="3" value="{{info.c}}" ></td>
-<td align=left> {{KNOWL('nf.galois_group',title='Galois group')}}</td>
-<td align=left> <input type="text" name="gal" placeholder='5T3' size="8" value="{{info.gal}}" ></td>
-</tr>
-
-<tr>
-<td align=left> {{KNOWL('lf.qp',title='Prime $p$')}}</td>
-<td align=left> <input type="text" name="p" placeholder='3' size="3" value="{{info.p}}" ></td>
-<td align=left> {{KNOWL('lf.ramification_index',title='Ramification index $e$')}}</td>
-<td align=left> <input type="text" name="e" placeholder='3' size="3" value="{{info.e}}" ></td>
-
-<td align=left> {{KNOWL('lf.top_slope',title='Top slope')}}</td>
-<td align=left> <input type="text" name="topslope" placeholder='4/3' size="8" value="{{info.topslope}}"></td>
-</tr>
-
-<tr>
-<td align=left colspan="2">
-<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
-</td></tr>
-</table>
-</form>
-
-{% if info.err is defined %}
-{% if info.label is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
-<td><button type='submit' value='Find'>Find</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a field label, e.g. 2.4.6.7</span></td>
-</tr>
-</table>
-</form>
-{% endif %}
-{% endif %}
-
+{% include 'refine_search_form.html' %}
 {% include 'matches.html' %}
 {% if info.number %}
 
