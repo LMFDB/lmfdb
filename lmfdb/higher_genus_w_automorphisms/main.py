@@ -15,7 +15,8 @@ from sage.all import Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error,
+    flash_error, to_dict,
+    SearchArray, TextBox, IncludeOnlyBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
@@ -143,13 +144,14 @@ def decjac_format(decjac_list):
 @higher_genus_w_automorphisms_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=HGCWASearchArray())
     if request.args:
-        return higher_genus_w_automorphisms_search(request.args)
+        return higher_genus_w_automorphisms_search(info)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = list(range(2, genus_max + 1))
-    info = {'count': 50,
-            'genus_list': genus_list,
-            'stats': HGCWAstats().stats()}
+    info['count'] = 50
+    info['genus_list'] = genus_list
+    info['stats'] = HGCWAstats().stats()
 
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                  ('Source of the data', url_for(".how_computed_page")),
@@ -212,6 +214,11 @@ def groups_per_genus(genus):
                            credit=credit,
                            title=title,
                            bread=bread)
+
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_passport")
+    return url_for(".by_label", label=label)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
@@ -549,6 +556,8 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
         title='Families of Higher Genus Curves with Automorphisms Search Results',
         err_title='Families of Higher Genus Curve Search Input Error',
         per_page=50,
+        url_for_label=url_for_label,
+        random_projection="passport_label",
         shortcuts={'jump_to': higher_genus_w_automorphisms_jump,
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
@@ -585,18 +594,14 @@ def higher_genus_w_automorphisms_search(info, query):
             query['full_auto'] = {'$exists': False}
     query['cc.1'] = 1
 
-    
     info['group_display'] = group_display
     info['sign_display'] = sign_display
 
     if 'sort_order' in info:
-        
-        if info['sort_order'] == '':   
+        if info['sort_order'] == '':
             query['__sort__'] = ['genus', 'group_order', 'g0','dim']
-        elif info['sort_order'] == 'genus':
-            query['__sort__'] = ['genus', 'group_order', 'g0', 'dim']
         elif info['sort_order'] == 'descgenus':
-            query['__sort__'] = [('genus',-1), 'group_order', 'g0', 'dim']    
+            query['__sort__'] = [('genus',-1), 'group_order', 'g0', 'dim']
         elif info['sort_order'] == 'g0':
             query['__sort__'] = ['g0', 'genus', 'group_order', 'dim']
         elif info['sort_order'] == 'descg0':
@@ -609,7 +614,6 @@ def higher_genus_w_automorphisms_search(info, query):
             query['__sort__'] = ['group_order', 'genus', 'g0', 'dim']
         elif info.get('sort_order') == 'descgroup_order':
             query['__sort__'] = [('group_order',-1), 'genus', 'g0', 'dim']
-            
 
     else:
         query['__sort__'] = ['genus', 'group_order',  'g0', 'dim']
@@ -1030,5 +1034,84 @@ def hgcwa_code_download(**args):
                      as_attachment=True,
                      add_etags=False)
 
+class HGCWASearchArray(SearchArray):
+    def __init__(self):
+        genus = TextBox(
+            name="genus",
+            label="Genus",
+            knowl="ag.curve.genus",
+            example="3",
+            example_span="4, or a range like 3..5")
+        g0 = TextBox(
+            name="g0",
+            label="Quotient genus",
+            knowl="curve.highergenus.aut.quotientgenus",
+            example="0",
+            example_span="4, or a range like 3..5")
+        signature = TextBox(
+            name="signature",
+            label="Signature",
+            knowl="curve.highergenus.aut.signature",
+            example="[0,2,3,3,6]",
+            example_span="[0,2,3,3,6] or [0;2,3,8]")
+        group_order = TextBox(
+            name="group_order",
+            label="Group order(s)",
+            knowl="group.order",
+            example="2..5",
+            example_span="12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)")
+        group = TextBox(
+            name="group",
+            label="Group identifier",
+            knowl="group.small_group_label",
+            example="[4,2]")
+        dim = TextBox(
+            name="dim",
+            label="Dimension of the family",
+            knowl="curve.highergenus.aut.dimension",
+            example="1",
+            example_span="1, or a range like 0..2")
+        inc_hyper = IncludeOnlyBox(
+            name="inc_hyper",
+            label="Hyperelliptic curve(s)",
+            knowl="ag.hyperelliptic_curve")
+        inc_cyc_trig = IncludeOnlyBox(
+            name="inc_cyc_trig",
+            label="Cyclic trigonal curve(s)",
+            knowl="ag.cyclic_trigonal")
+        inc_full = IncludeOnlyBox(
+            name="inc_full",
+            label="Full automorphism group",
+            knowl="curve.highergenus.aut.full")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example="50")
 
+        self.browse_array = [
+            [genus],
+            [g0],
+            [signature],
+            [group_order],
+            [group],
+            [dim],
+            [inc_hyper],
+            [inc_cyc_trig],
+            [inc_full],
+            [count]]
+
+        self.refine_array = [
+            [genus, dim, group_order, inc_hyper, inc_full],
+            [g0, signature, group, inc_cyc_trig]]
+
+    sort_knowl = "curve.highergenus.aut.sort_order"
+    def sort_order(self, info):
+        return [("", "genus"),
+                ("g0", "quotient genus"),
+                ("group_order", "group order"),
+                ("dim", "dimension"),
+                ("descgenus", "genus descending"),
+                ("descg0", "quotient genus descending"),
+                ("descgroup_order", "group order descending"),
+                ("descdim", "dimension descending")]
 

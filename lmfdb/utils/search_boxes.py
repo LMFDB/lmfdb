@@ -639,6 +639,7 @@ class SearchArray(UniqueRepresentation):
                 if sort:
                     sort_box = SelectBox(
                         name='sort_order',
+                        label='Sort order',
                         knowl=self.sort_knowl,
                         options=sort,
                         width=170)
