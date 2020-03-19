@@ -773,7 +773,7 @@ class BelyiSearchArray(SearchArray):
             name="geomtype",
             label="Geometry type",
             knowl="belyi.geometry_type",
-            options=list(geometry_types_dict.items()))
+            options=[("", "")] + list(geometry_types_dict.items()))
         count = TextBox(
             name="count",
             label="Results to display",
