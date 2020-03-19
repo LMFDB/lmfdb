@@ -13,8 +13,10 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
 from lmfdb.artin_representations import artin_representations_page
+#from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
     ArtinRepresentation, num2letters)
+
 
 LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
 ORBIT_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+$')
@@ -194,14 +196,14 @@ def render_artin_representation_webpage(label):
             return redirect(url_for(".index"))
     else: # it is an orbit
         try:
-            the_rep = ArtinRepresentation(label+'.a')
+            the_rep = ArtinRepresentation(newlabel+'.a')
         except:
             newlabel = parse_artin_orbit_label(newlabel)
             flash_error("Galois orbit of Artin representations %s is not in database", label)
             return redirect(url_for(".index"))
         # in this case we want all characters
         num_conj = the_rep.galois_conjugacy_size()
-        allchars = [ ArtinRepresentation(label+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
+        allchars = [ ArtinRepresentation(newlabel+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
     label = newlabel
     bread = get_bread([(label, ' ')])
