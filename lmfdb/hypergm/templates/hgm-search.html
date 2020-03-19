@@ -2,75 +2,7 @@
 
 {% block content %}
 
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-<table border="0">
-
-<tr>
-<td align=left> {{KNOWL('hgm.degree',title='Degree')}}</td>
-<td> {{KNOWL('hgm.weight', title="Weight")}} </td>
-<td align=left> {{KNOWL('hgm.familyhodgevector', title="Family Hodge vector")}}</td>
-<td align=left> $A$</td>
-<td align=left> $B$</td>
-</tr><tr>
-<td align=left> <input type='text' name='degree' size="8" value="{{info.degree}}" example='4'></td>
-<td><input type='text' name='weight' size="8" example='3' value="{{info.weight}}"> </td>
-<td align=left><input type='text' name='famhodge' size="8" value="{{info.famhodge}}" example='[1,1,1,1]'></td>
-<td align=left> <input type="text" name="A" size="8" value="{{info.A}}" example='[3,2,2]'></td>
-<td align=left> <input type="text" name="B" size="8" value="{{info.B}}" example='[6,4]'></td>
-
-{% if not info.family %}
-</tr><tr>
-<td align=left> {{KNOWL('hgm.conductor', title="Conductor")}}</td>
-<td align=left>$t$</td>
-<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}</td>
-<td align=left> $\epsilon$</td>
-</tr><tr>
-<td><input type='text' name='conductor' size=10 value="{{info.conductor}}" example='2^13 3^7'></td>
-<td align=left> <input type="text" name="t" size="3" value="{{info.t}}" example='3/2'></td>
-<td align=left><input type='text' name='hodge' size="8" value="{{info.hodge}}" example='[1,1,1,1]'></td>
-
-<td align=left> <input type="text" name="sign" size="3" value="{{info.sign}}" example='-1'></td>
-{% endif %}
-
-
-</tr><tr>
-
-<tr>
-
-</tr>
-
-
-<tr>
-<td>$p$
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart', title="$A_p$")}}</td>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart', title="$B_p$")}}</td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','$A^\perp_p$')}}
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','$B^\perp_p$')}}
-</tr><tr>
-<td><select name="p">
-  <option value="" {{ "selected" if info.p == '2'}}>2</option>
-  <option value="3" {{ "selected" if info.p == '3'}}>3</option>
-  <option value="5" {{ "selected" if info.p == '5'}}>5</option>
-  <option value="7" {{ "selected" if info.p == '7'}}>7</option>
-  </select>
-</td>
-<td><input type='text' name='Ap' size="8" value="{{info.Ap}}" example='[1,1,1,1]'></td>
-<td><input type='text' name='Bp' size="8" value="{{info.Bp}}" example='[1,1,1,1]'></td>
-<td><input type='text' name='Apperp' size="8" value="{{info.Apperp}}" example='[1,1,1,1]'></td>
-<td><input type='text' name='Bpperp' size="8" value="{{info.Bpperp}}" example='[1,1,1,1]'></td>
-</tr>
-
-
-<tr>
-<td align=left colspan="2"> 
-<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
-</td></tr>
-</table>
-{% if info.family %}
-<input type='hidden' name='family' value='{{ info.family }}'>
-{% endif %}
-</form>
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}
@@ -80,7 +12,7 @@
 <th>Label</th>
 <th>$A$</th>
 <th>$B$</th>
-{% if not info.family %}
+{% if info.search_type == "Motive" %}
     <th>$t$</th>
     <th>Conductor</th>
 {% endif %}
@@ -94,7 +26,7 @@
 {% for hgm in info.results: %}
 <tr>
 <td> 
-{% if info.family %}
+{% if info.search_type == "Family" %}
     <a href="{{url_for('.by_family_label', label=info.ab_label(hgm.A, hgm.B))}}"> 
     {{ info.ab_label(hgm.A, hgm.B) }}
     </a> 
@@ -106,7 +38,7 @@
 </td>
 <td>${{hgm.A}}$</td>
 <td>${{hgm.B}}$</td>
-{% if not info.family %}
+{% if info.search_type == "Motive" %}
     <td>${{info.display_t(hgm.t)}}$</td>
     <td>${{info.factorint(hgm.cond)}}$</td>
 {% endif %}
