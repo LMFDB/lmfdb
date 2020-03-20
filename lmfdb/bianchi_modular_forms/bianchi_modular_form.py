@@ -141,10 +141,10 @@ def bianchi_modular_form_search(info, query):
             query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
             query['CM'] = {'$ne': 0} # will exclude NULL values
-    if 'include_base_change' in info and info['include_base_change'] in ['exclude', 'off']:
+    if info.get('include_base_change', None) == 'exclude':
         query['bc'] = 0
-    else:
-        info['include_base_change'] = "on"
+    elif info.get('include_base_change', None) == 'only':
+        query['bc'] = {'$ne': 0}
 
 @bmf_page.route('/<field_label>')
 def bmf_search_field(field_label):
@@ -426,7 +426,7 @@ class BMFSearchArray(SearchArray):
             options=[("", "any"), ("+1", "+1"), ("-1", "-1")],
             example_col=True
         )
-        base_change = IncludeBox(
+        base_change = IncludeOnlyBox(
             name='include_base_change',
             label='Base change',
             knowl='mf.bianchi.base_change'
