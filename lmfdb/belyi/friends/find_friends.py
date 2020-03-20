@@ -5,7 +5,7 @@ from scripts.ecnf.import_utils import NFelt
 from ast import literal_eval
 
 # function stolen from Drew's branch g2c-eqn-lookup
-def genus2_lookup_equation(f):
+def genus2_lookup_equation_polys(f):
     f.replace(" ","")
     R = PolynomialRing(QQ,'x')
     if ("x" in f and "," in f) or "],[" in f:
@@ -30,6 +30,10 @@ def genus2_lookup_equation(f):
             return r['label']
     return None
 
+def genus2_lookup_equation(rec):
+    f,h = curve_string_parser(rec)
+    return genus2_lookup_equation_polys(str([f,h]))
+
 def genus1_lookup_equation_QQ(rec):
     assert rec['g'] == 1
     f,h = curve_string_parser(rec)
@@ -40,7 +44,7 @@ def genus1_lookup_equation_QQ(rec):
         ainvs2 = r['ainvs']
         E2 = EllipticCurve(ainvs2)
         if E.is_isomorphic(E2):
-            return r['label']
+            return r['lmfdb_label']
     print "Curve not found in database"
     return None
 
@@ -87,15 +91,31 @@ def genus1_lookup_equation(rec):
     else:
         return genus1_lookup_equation_nf(rec)
 
-# TODO: Figure out weird error...
-# AttributeError: 'unicode' object has no attribute 'get'
-# something going wrong with the rewrite
-def assign_curve_label(rec):
+def find_curve_label(rec):
     if rec['g'] == 1:
-        rec['curve_label'] = genus1_lookup_equation(rec)
+        print("Searched for curve for %s") % rec['label']
+        return genus1_lookup_equation(rec)
     elif rec['g'] == 2:
         if rec['base_field'] == [-1, 1]: # currently only g2 curves over QQ in LMFDB
             f,h = curve_string_parser(rec)
-            rec['curve_label'] = genus2_lookup_equation(str([f,h]))
-            return "Searched for curve for %s" % rec['label']
-    return rec
+            print("Searched for curve for %s") % rec['label']
+            return genus2_lookup_equation(rec)
+
+def curve_label_to_url(rec):
+    label = find_curve_label(rec)
+    if label:
+        curve_url = ''
+        if rec['g'] == 1:
+            curve_url += '/EllipticCurve'
+            if rec['base_field'] == [-1, 1]:
+                curve_url += '/Q'
+                curve_url += label.replace(".","/")
+            else:
+                label_spl = label.split("-")
+                #re.match(r"(\D+)(\d+)", "ab5").groups()
+                curve_url += "/%s/%s/%s"
+        if rec['g'] == 2:
+            curve_url += '/Genus2Curve'
+            if rec['base_field'] == [-1, 1]:
+                curve_url += '/Q'
+                curve_url += label.replace(".","/")
