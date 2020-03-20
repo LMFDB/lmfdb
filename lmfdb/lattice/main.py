@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import ast
 import re
-from six import StringIO
+from six import BytesIO
 import time
 
 from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error,
+    web_latex_split_on_pm, flash_error, to_dict,
+    SearchArray, TextBox,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
 from lmfdb.lattice import lattice_page
@@ -65,8 +66,8 @@ def learnmore_list_remove(matchstring):
 
 @lattice_page.route("/")
 def lattice_render_webpage():
-    args = request.args
-    if not args:
+    info = to_dict(request.args, search_array=LatSearchArray())
+    if not request.args:
         maxs=lattice_summary_data()
         dim_list = list(range(1, 11, 1))
         max_class_number = 20
@@ -74,7 +75,7 @@ def lattice_render_webpage():
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
+        info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
@@ -84,7 +85,7 @@ def lattice_render_webpage():
         info['max_det']=maxs[2]
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
-        return lattice_search(args)
+        return lattice_search(info)
 
 # Random Lattice
 @lattice_page.route("/random")
@@ -144,8 +145,8 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
@@ -184,6 +185,7 @@ def lattice_search_isometric(res, info, query):
                         'label':lambda info:lattice_by_label_or_name(info.get('label'))},
              projection=lattice_search_projection,
              postprocess=lattice_search_isometric,
+             url_for_label=lambda label: url_for(".render_lattice_webpage", label=label),
              bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')],
              learnmore=learnmore_list,
              properties=lambda: [])
@@ -419,3 +421,57 @@ def download_lattice_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
+
+class LatSearchArray(SearchArray):
+    noun = "lattice"
+    plural_noun = "lattices"
+    def __init__(self):
+        dim = TextBox(
+            name="dim",
+            label="Dimension",
+            knowl="lattice.dimension",
+            example="3",
+            example_span="3 or 2-5")
+        det = TextBox(
+            name="det",
+            label="Determinant",
+            knowl="lattice.determinant",
+            example="1",
+            example_span="1 or 10-100")
+        level = TextBox(
+            name="level",
+            label="Level",
+            knowl="lattice.level",
+            example="48",
+            example_span="48 or 40-100")
+        gram = TextBox(
+            name="gram",
+            label="Gram matrix",
+            knowl="lattice.gram",
+            example="[5,1,23]",
+            example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+        minimum = TextBox(
+            name="minimum",
+            label="Minimal vector length",
+            knowl="lattice.minimal_vector",
+            example="1")
+        class_number = TextBox(
+            name="class_number",
+            label="Class number",
+            knowl="lattice.class_number",
+            example="1")
+        aut = TextBox(
+            name="aut",
+            label="Automorphism group order",
+            short_label="Aut. group order",
+            knowl="lattice.group_order",
+            example="2",
+            example_span="696729600")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example="50")
+
+        self.browse_array = [[dim], [det], [level], [gram], [minimum], [class_number], [aut], [count]]
+
+        self.refine_array = [[dim, det, level, gram], [minimum, class_number, aut]]

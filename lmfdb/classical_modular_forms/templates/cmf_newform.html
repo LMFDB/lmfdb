@@ -186,6 +186,10 @@ function get_all_embeddings(num_embeddings) {
 
 {% endif %}
 
+<!-- Removed old code on special values that didn't seem to be used -->
+
+<!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
+
 <h2>{{KNOWL('cmf.inner_twist', title='Inner twists')}}</h2>
 {% if newform.inner_twist_count == 1 %}
 <p>This newform does not admit any ({{KNOWL('cmf.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('cmf.inner_twist',title='inner twists') }}.</p>
@@ -223,5 +227,8 @@ function get_all_embeddings(num_embeddings) {
 {{ newform.display_hecke_cutters() | safe }}
 {% endif %}
 
+<h2>{{KNOWL('cmf.heckecharpolys', title='Hecke Characteristic Polynomials')}}</h2>
+
+{{ newform.display_hecke_char_polys() | safe }}
 
 {% endblock %}

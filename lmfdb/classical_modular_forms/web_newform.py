@@ -22,7 +22,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, display_hecke_polys
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -967,6 +967,9 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
+    def display_hecke_char_polys(self, num_disp = 5):
+        return display_hecke_polys([self.label], num_disp)
+      
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'
