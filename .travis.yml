@@ -90,10 +90,13 @@ script:
     - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
 
 after_failure:
+    # what is the load on the server
+    - uptime
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
-    - ls -a
-      #- COVERALLS_PARALLEL=true coveralls
+    # what is the load on the server
+    - uptime
+    #- COVERALLS_PARALLEL=true coveralls
     - coveralls
