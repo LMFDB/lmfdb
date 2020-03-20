@@ -6,6 +6,7 @@ from ast import literal_eval
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ, QQ, PolynomialRing
 from sage.interfaces.magma import magma
+from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -100,6 +101,7 @@ def index_Q():
     info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["equation_search"] = has_magma()
     title = r'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), (r'$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -212,7 +214,16 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
+@cached_function
+def has_magma():
+    try:
+        magma.eval('2')
+        return True
+    except TypeError:
+        return False
 def genus2_lookup_equation(f):
+    if not has_magma():
+        return None
     f.replace(" ","")
     R = PolynomialRing(QQ,'x')
     if ("x" in f and "," in f) or "],[" in f:
@@ -227,13 +238,14 @@ def genus2_lookup_equation(f):
     try:
         C = magma.HyperellipticCurve(f)
         g2 = magma.G2Invariants(C)
-    except:
+    except TypeError:
         return None
     g2 = str([str(i) for i in g2]).replace(" ","")
     for r in db.g2c_curves.search({'g2_inv':g2}):
         eqn = literal_eval(r['eqn'])
         D = magma.HyperellipticCurve(R(eqn[0]),R(eqn[1]))
-        if magma.IsIsomorphic(C,D):
+        # there is recursive bug in sage
+        if str(magma.IsIsomorphic(C,D)) == 'true':
             return r['label']
     return None
 
@@ -260,7 +272,6 @@ def genus2_jump(info):
           re.match(r'^'+ZLIST_RE+r'$',jump) or
           re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
         label = genus2_lookup_equation(jump)
-        print "result", label
         if label:
             return redirect(url_for_curve_label(label),301)
         errmsg = "%s is not the equation of a genus 2 curve in the database"
