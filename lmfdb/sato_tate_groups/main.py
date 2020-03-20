@@ -10,6 +10,7 @@ from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
+    SearchArray, TextBox, SelectBox,
     parse_ints, parse_rational, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.sato_tate_groups import st_page
@@ -154,13 +155,20 @@ def learnmore_list_remove(matchstring):
 
 @st_page.route('/')
 def index():
+    info = to_dict(request.args, search_array=STSearchArray())
     if request.args:
-        return search(**request.args)
+        return search(info)
     weight_list= [0, 1]
     degree_list = list(range(1, 5, 1))
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
-    info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
+    for key, val in [('weight_list', weight_list),
+                     ('degree_list', degree_list),
+                     ('st0_list', st0_list),
+                     ('st0_dict', st0_dict),
+                     ('group_list', group_list),
+                     ('group_dict', group_dict)]:
+        info[key] = val
     title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -221,13 +229,13 @@ def search_by_label(label):
 
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
-def search(**args):
+def search(info):
     """ query processing for Sato-Tate groups -- returns rendered results page """
-    info = to_dict(args)
     if 'jump' in info:
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
+    search_type = info.get("search_type", info.get("hst", "List"))
     template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
                      'credit':credit_string,
                      'learnmore':learnmore_list()}
@@ -238,7 +246,11 @@ def search(**args):
     # if user clicked refine search always restart at 0
     if 'refine' in info:
         start = 0
-    ratonly = True if info.get('include_irrational','no').strip().lower() == 'no' else False
+    ratonly = (info.get('include_irrational','no').strip().lower() == 'no')
+    if search_type == "Random" and not ratonly:
+        info['err'] = err = 'Cannot select random irrational Sato-Tate group'
+        flash_error(err)
+        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
     query = {'rational':True} if ratonly else {}
     try:
         parse_ints(info,query,'weight','weight')
@@ -259,15 +271,21 @@ def search(**args):
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
-    if (not 'weight' in query or 0 in weight_list) and \
-       (not 'degree' in query or 1 in degree_list) and \
-       (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and \
-       (not 'trace_zero_density' in query or query['trace_zero_density'] == '0'):
+    if ((not 'weight' in query or 0 in weight_list) and
+        (not 'degree' in query or 1 in degree_list) and
+        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and
+        (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
         if not 'components' in query:
             components_list = range(1, 3 if ratonly else start + count + 1)
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
         nres = len(components_list) if 'components' in query or ratonly else INFINITY
+        if search_type == "Random" and nres > 0:
+            # Need to return mu(1) and mu(2) sometimes
+            otherlen = db.gps_sato_tate.count(query)
+            r = ZZ.random_element(nres + otherlen)
+            if r < nres:
+                return redirect(url_for(".by_label", label="0.1.%d" % components_list[r]), 307)
         for n in itertools.islice(components_list,start,start+count):
             results.append(mu_info(n))
     else:
@@ -276,6 +294,10 @@ def search(**args):
     if 'result_count' in info:
         nres += db.gps_sato_tate.count(query)
         return jsonify({"nres":str(nres)})
+    if search_type == "Random":
+        label = db.gps_sato_tate.random(query, "label")
+        if label is not None:
+            return redirect(url_for(".by_label", label=label), 307)
 
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
@@ -571,3 +593,61 @@ def labels_page():
     bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+class STSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    def __init__(self):
+        weight = TextBox(
+            name="weight",
+            label="Weight",
+            knowl="st_group.weight",
+            example="1",
+            example_span="1 or 0-3")
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="st_group.degree",
+            example="4",
+            example_span="4 or 1-6")
+        include_irrational = SelectBox(
+            name="include_irrational",
+            label="Include irrational",
+            knowl="st_group.rational",
+            options=[("", "no"),
+                     ("yes", "yes")])
+        identity_component = SelectBox(
+            name="identity_component",
+            label="Identity component",
+            short_label=r"$\mathrm{ST}^0$",
+            knowl="st_group.identity_component",
+            example_span="U(1) or USp(4)",
+            options=[("", "")] + [(r, r) for r in st0_list])
+        components = TextBox(
+            name="components",
+            label="Components",
+            knowl="st_group.components",
+            example="1",
+            example_span="1 (connected) or 4-12")
+        trace_zero_density = TextBox(
+            name="trace_zero_density",
+            label="Trace zero density",
+            knowl="st_group.trace_zero_density",
+            short_label="$\mathrm{P}[a_1=0]$",
+            example="1/2",
+            example_span="0, 1/2, or 3/8")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.browse_array = [
+            [weight],
+            [degree],
+            [include_irrational],
+            [identity_component],
+            [components],
+            [trace_zero_density],
+            [count]]
+
+        self.refine_array = [[weight, degree, include_irrational, identity_component, components, trace_zero_density]]
