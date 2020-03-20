@@ -279,7 +279,9 @@ def genus2_jump(info):
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         if has_magma():
-            errmsg += " or a univariate polynomial in $x$, e.g., x^5 + 1"
+            errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
+        else:
+            errmsg +="."
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
