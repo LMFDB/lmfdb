@@ -225,6 +225,7 @@ def genus2_lookup_equation(f):
     if not has_magma():
         return None
     f.replace(" ","")
+    # TODO allow other variables, if so, fix the error message accordingly
     R = PolynomialRing(QQ,'x')
     if ("x" in f and "," in f) or "],[" in f:
         if "],[" in f:
@@ -274,7 +275,7 @@ def genus2_jump(info):
         label = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(label),301)
-        errmsg = "%s is not the equation of a genus 2 curve in the database"
+        errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
     else:
         errmsg = "%s is not a valid genus 2 curve or isogeny class label"
     flash_error(errmsg, jump)
