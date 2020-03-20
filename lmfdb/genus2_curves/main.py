@@ -267,7 +267,7 @@ def genus2_jump(info):
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif (re.match(r'^'+POLY_RE+r'$',jump) or
+    elif has_magma() and (re.match(r'^'+POLY_RE+r'$',jump) or
           re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
           re.match(r'^'+ZLIST_RE+r'$',jump) or
           re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
