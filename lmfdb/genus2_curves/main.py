@@ -277,7 +277,9 @@ def genus2_jump(info):
             return redirect(url_for_curve_label(label),301)
         errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
     else:
-        errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+        errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
+        if has_magma():
+            errmsg += " or a univariate polynomial in $x$, e.g., x^5 + 1"
     flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
