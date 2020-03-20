@@ -7,8 +7,9 @@ The page you are looking for has produced a server error.
 </div>
 
 
+<span style='color:black'>
 <div>
-If you want to help improving the website please 
+To help us improve the website, please 
 <a href="{{ feedbackpage }}">report this page's URL</a>
 {% if request.referrer %}
 "{{ request.url }}" as well as the URL of the page you 
@@ -25,6 +26,7 @@ are coming from "{{ request.referrer }}".
 <div><a href="{{ request.referrer }}">jump back</a></div>
 {% endif %}
 
+</span>
 </div>
 
 {% endblock %}
