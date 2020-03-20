@@ -5,7 +5,7 @@ from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ, QQ, PolynomialRing
-from sage.interfaces.magma import magma
+from sage.all import magma # doing from sage.interfaces.magma import magma leads to some bugs
 from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
