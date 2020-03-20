@@ -58,8 +58,8 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
-		    file.write(json.dumps(orphaned_keys))
-		inv.log_dest.info("          Orphans written to Orph_"+ DB_name+'_'+coll_name+'.json')
+                    file.write(json.dumps(orphaned_keys))
+                inv.log_dest.info("          Orphans written to Orph_"+ DB_name+'_'+coll_name+'.json')
 
     inv.log_dest.info("_____________________________________________________________________________________________")
     inv.log_dest.info("Processing additional inventory")

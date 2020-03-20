@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
@@ -29,20 +30,20 @@ def qexpansion(field_label=None):
 
     field_label = None
 
-    v = S.next()
+    v = next(S)
     while True:
         # NN_label = v["level_label"] # never used
         v_label = v["label"]
 
-        print v_label
+        print(v_label)
 
         if v.get('q_expansion') is not None:
-            v = S.next()
+            v = next(S)
             continue
 
         if field_label is None or not field_label != v["field_label"]:
             field_label = v["field_label"]
-            print "...new field " + field_label
+            print("...new field " + field_label)
 
             coeffs = db.nf_fields.lookup(field_label, projection="coefficients")
             F_hmf = db.hmf_fields.lookup(field_label, projection=["ideals", "primes", "narrow_class_number"])
@@ -123,4 +124,4 @@ def qexpansion(field_label=None):
         # UPDATES DON'T WORK
         #db.hmf_forms.save(v)
 
-        v = S.next()
+        v = next(S)

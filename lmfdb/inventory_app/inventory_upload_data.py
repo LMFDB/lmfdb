@@ -1,6 +1,7 @@
-import lmfdb_inventory as inv
-import inventory_db_core as invc
-import inventory_live_data as ild
+from __future__ import print_function
+from __future__ import absolute_import
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as invc
 import datetime
 from lmfdb import db as lmfdb_db
 
@@ -23,8 +24,9 @@ def upload_scraped_inventory(structure_dat, uid):
         structure_dat -- JSON document containing all db/collections to upload
         uid -- UID string for uploading process
     """
+    from . import inventory_live_data as ild
 
-    n_dbs = len(structure_dat.keys())
+    n_dbs = len(structure_dat)
     progress_tracker = 0
 
     for db_name in structure_dat:
@@ -68,11 +70,11 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
 
         _c_id = invc.get_coll_id(db_entry['id'], full_coll_name)
         if not _c_id['exist']:
-	    #Collection doesn't exist, create it
+            #Collection doesn't exist, create it
             _c_id = invc.set_coll(db_entry['id'], full_coll_name, full_coll_name,  {'description':None}, dummy_info, 0)
         else:
-	    #Delete existing auto-table entries (no collection => no entries)
-           delete_collection_data(_c_id['id'], tbl='auto')
+            #Delete existing auto-table entries (no collection => no entries)
+            delete_collection_data(_c_id['id'], tbl='auto')
         try:
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
         except:
@@ -95,7 +97,7 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
     orphaned_keys = []
     if not fresh:
         try:
-	    #Trim any human table keys which are now redundant
+            #Trim any human table keys which are now redundant
             orphaned_keys = invc.trim_human_table(db_entry['id'], _c_id['id'])
         except:
             pass
@@ -196,11 +198,11 @@ def delete_collection_data(coll_id, tbl, dry_run=False):
         if not dry_run:
             lmfdb_db[fields_tbl].delete(rec_find)
         else:
-            print 'Finding '+str(rec_find)
-            print 'Operation would delete:'
+            print('Finding '+str(rec_find))
+            print('Operation would delete:')
             curs = lmfdb_db[fields_tbl].search(rec_find)
             for item in curs:
-                print item
+                print(item)
     except:
         pass
 

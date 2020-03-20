@@ -1,23 +1,23 @@
-The import script can be run by
+Adding new fields to the lmfdb involves computing more data for them,
+managing labels, and then importing them.
 
-  sage -python import_nf_data.py list of files to import
+Fields are represented in the form [polynomial in x, [list of ramified primes]]
+Polynomials should always be run through polredabs first
 
-Each file should consist of a single list of fields.  The format is
-described in the import script.  The file prep.gp can be used with
-pari to generate a file in the correct format.  In gp,
+To add new fields, we only process fields of a given degree one at a time
+  - optionally, dump existing fields by running dump_alldeg.py which creates
+    files p-alldeg-n where 1<n<48. Then remove any existing fields from your
+    list (so save the time it takes to reprocess them)
+  - run them through gp with prep.gp.  The main function is doall1 which is
+    takes as input a list of pairs [polynomial in x, [list of ramfied primes]]
+    Save the result in a file, referred to below as newstuff.prep
+  - dump labels with python using dump-label-data.py which dumps files 
+    called label-data-k where k is the degree.  This command takes as an 
+    optional argument a list of degrees to dump, otherwise it does them all
+  - make labels for the new ones (here k is the degree of the fields)
+      make-labels.py label-data-k newstuff.prep
+    which creates the file newstuff.prep.out
+    This command also fills in some fields to make the import step easier
+  - add the new stuff with
+      import_nf_data-new.py newstuff.prep.out
 
-\r prep.gp
-all = doall([list of polynomials])
-write("myoutputfile", all)
-
-Then myoutputfile can be imported as above.  The gp script will only
-work for polynomials of degree <12 because pari can only compute Galois
-groups in this range.
-
-...
-
-After renaming database to fields, 
-
-  create_random_object_index(nf, "fields")
-
-after loading jj.py

@@ -32,7 +32,7 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 </ul>
 
 <p>
-A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from the database
+A <a href={{url_for('.by_label', label='random')}}>random global number field</a> from the database
 </p>
 
 
@@ -41,7 +41,7 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
   {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h2>
 
 <form>
-<table border=0 cellpadding=5>
+<table border=0>
 <tr>
 <td>Field:&nbsp;&nbsp;</td>
 <td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
@@ -58,81 +58,7 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 
 <h2> Search for fields </h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">
-
-<table border=0 cellpadding=5>
-<tr>
-<td align=left>{{KNOWL('nf.degree', title='Degree')}} 
-  <td><input type='text' name='degree' size=10 example='3'> 
-<span class="formexample"> e.g. 3</span></td>
-<td>
-<td align=left>{{KNOWL('nf.signature', title='Signature')}} <td><input type='text' name='signature' size=10 example='[1,1]'> 
-<span class="formexample"> e.g. [1,1]</span>
-</tr>
-<tr>
-<td align=left>{{KNOWL('nf.discriminant', title='Discriminant')}}
-<td colspan="4"><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
-<span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
-</tr>
-<tr>
-<td align=left>{{KNOWL('nf.root_discriminant', title='Root discriminant')}}
-<td colspan="2"><input type='text' name='rd' size=10 size=10 example='1..4.3'> 
-<span class="formexample"> e.g. a range such as 1..4.3 or 3..10</span></td>
-
-  <td>{{ KNOWL('nf.cm_field', title='CM field') }}</td>
-  <td><select name='cm_field' width="105" style="width: 105px">
-     <option ></option>
-     <option value='True'>True</option>
-     <option value='False'>False</option>
-  </select></td>
-</tr>
-
-<tr>
-<td align=left>{{KNOWL('nf.galois_group', title='Galois group')}} 
-  <td colspan="2"><input type='text' name='galois_group' size=10 example='C5'>
-<span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
-
-<td align=left>{{KNOWL('nf.regulator', title='Regulator')}} 
-  <td colspan="2"><input type='text' name='regulator' size=10 example='1..3.5'>
-<span class="formexample"> e.g. a range such as 1..3.5</span></td>
-</tr>
-
-<tr>
-<td align=left>{{KNOWL('nf.class_number', title='Class number')}} 
-  <td><input type='text' name='class_number' size=10 example='5'>
-<span class="formexample"> e.g. 5</span></td>
-<td>
-<td align=left>{{KNOWL('nf.ideal_class_group', title = 'Class group')}} structure
-  <td><input type='text' name='class_group' size=10 example='[2,4]'>
-<span class="formexample"> e.g. [ ], [3], or [2,4]</span></td>
-</tr>
-
-<tr>
-<td align=left>{{KNOWL('nf.ramified_primes', title='Number of ramified primes')}} 
-   <td><input type='text' name='num_ram' size=10 example='2,3'>
-<span class="formexample"> e.g. 2,3</span></td>
-<td>
-<td>
-Set of {{KNOWL('nf.ramified_primes', title='ramified primes')}} 
-<select name='ram_quantifier'>
-  <option value='contained'>subset of</option>
-  <option value='exactly' selected='yes'>equal to</option>
-  <option value='include'>superset of</option>
-  </select>
-  <td><input type='text' name='ram_primes' size=10 example='2,3'>
-<span class="formexample"> e.g. 2,3</span></td>
-
-<tr>
-<td align=left>{{KNOWL('nf.unramified_prime', title='Unramified primes')}} 
-   <td><input type='text' name='ur_primes' size=10 example='2,3'>
-<span class="formexample"> e.g. 2,3</span></td>
-
-<tr>
-<td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
-<tr><td>
-<button type='submit'>Search</button></td>
-
-
-</table>
+  {{ info.search_array.html() | safe }}
 </form>
 
 

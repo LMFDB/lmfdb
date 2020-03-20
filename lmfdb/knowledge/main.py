@@ -11,6 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
+from __future__ import absolute_import
 import string
 import re
 import json
@@ -22,7 +23,7 @@ from flask import abort, flash, jsonify, make_response,\
                   request, url_for
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from knowl import Knowl, knowldb, knowl_title, knowl_exists
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -45,9 +46,14 @@ _cache_time = 120
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
-    if ID.startswith('belyi') and\
-            (ID.endswith('top') or ID.endswith('bottom')):
-        for c in "[],T":
+    if ID.endswith('top') or ID.endswith('bottom'):
+        if ID.startswith('belyi'):
+            extras = "[],T"
+        elif ID.startswith('hgm'):
+            extras = "AB"
+        else:
+            extras = ""
+        for c in extras:
             ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
@@ -84,20 +90,21 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+# priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('math$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
-md.inlinePatterns.add('math$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
-md.inlinePatterns.add('math\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
-md.inlinePatterns.add('math\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
+md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
+md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
 
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
+md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
 knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
-md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex), '<escape')
+md.inlinePatterns.register(KnowlTagPatternWithTitle(knowltagtitle_regex), 'knowltagtitle', 181)
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -170,8 +177,8 @@ def ref_to_link(txt):
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
         this_link = ""
         if ref.startswith("href"):
-            the_link = re.sub(".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(".*}{([^}]+)}\s*", r"\1", ref)
+            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
+            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
             this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
@@ -216,7 +223,7 @@ def md_latex_accents(text):
     return knowl_content
 
 def md_preprocess(text):
-    """
+    r"""
     Markdown preprocessor: html paragraph breaks before display math,
     \cite{MR:...} and \cite{arXiv:...} converted to links.
     """
@@ -234,7 +241,7 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
 
 
 @app.template_filter("render_knowl")
@@ -260,7 +267,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     # this, but not for the javascript markdown parser
     try:
         return render_template_string(render_me, **kwargs)
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 
@@ -498,7 +505,7 @@ def demote(ID, timestamp):
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
-    if len(request.args) > 0:
+    if request.args:
         try:
             info = to_dict(request.args)
             beta = None
@@ -651,7 +658,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     include *just* the string and not the response object.
     """
     # logger.debug("kwargs: %s", request.args)
-    kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
+    kwargs = kwargs or dict(((k, v) for k, v in request.args.items()))
     # logger.debug("kwargs: %s" , kwargs)
     if timestamp is None:
         # fetch and convert the ms timestamp to datetime
@@ -679,7 +686,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # the idea is to pass the keyword arguments of the knowl further along the chain
     # of links, in this case the title and the permalink!
     # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.iteritems()))
+    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.items()))
     logger.debug("kw_params: %s" % kw_params)
 
     # this is a very simple template based on no other template to render one single Knowl
@@ -753,7 +760,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
@@ -762,7 +769,7 @@ def index():
     cur_cat = request.args.get("category", "")
 
     filtermode = request.args.get("filtered")
-    from knowl import knowl_status_code, knowl_type_code
+    from .knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
         qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
         types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
@@ -786,7 +793,7 @@ def index():
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
-	    flash_error("The string %s is not a valid regular expression", keywords)
+            flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occured during knowl search", str(e))
 
@@ -829,9 +836,5 @@ def index():
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),
                            filtermode = filtermode,
-                           knowl_types=knowl_type_code.keys(),
+                           knowl_types=list(knowl_type_code),
                            types=types)
-
-
-
-

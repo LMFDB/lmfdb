@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import random
 from flask import url_for, request
 from lmfdb.utils import to_dict, ajax_url
@@ -33,7 +33,7 @@ def get_args_mwf(**kwds):
 
 def set_info_for_maass_form(data):
     ret = []
-    ret.append(["Eigenvalue", "\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)" + str(data['Eigenvalue'])])
+    ret.append(["Eigenvalue", r"\(\lambda=r^2 + \frac{1}{4} \ , \quad r= \ \)" + str(data['Eigenvalue'])])
     if data['Symmetry'] != "none":
         ret.append(["Symmetry", data['Symmetry']])
     if data['dbname'] == "HT":
@@ -156,22 +156,22 @@ class MWFTable(object):
         mwf_logger.debug("levels= {0}".format(levels))
         cur_level = data.get('level', None)
         cur_wt = data.get('weight', None)
-        print "cur_level=", cur_level
-        print "cur_wt=", cur_wt
+        print("cur_level=", cur_level)
+        print("cur_wt=", cur_wt)
         for N in levels:
             if cur_level and cur_level != N:
                 continue
             N = int(N)
             if N < level_ll or N > level_ul:
                 continue
-            print "N=", N
+            print("N=", N)
             weights = maass_db.weights(N)
-            print "weights=", weights
+            print("weights=", weights)
             self.wt = weights
             for k in weights:
                 if cur_wt is not None and cur_wt != k:
                     continue
-                print "k=", k
+                print("k=", k)
                 k = int(k)
                 evs = []
                 query = {'Level': N, 'Weight': k}
@@ -202,7 +202,7 @@ class MWFTable(object):
                 smalltbl = {'N': N, 'k': k, 'evs': evs, 'paging': paging}
                 if len(evs) > 0:
                     self.table.append(smalltbl)
-        print "table=", self.table
+        print("table=", self.table)
         self.cols = new_cols
 
     def rows(self):
@@ -218,17 +218,17 @@ def MakeTitle(level, weight, character):
     ret = "Maass cusp forms for "
     if level:
         if level == "1":
-            ret += "\(PSL(2,Z)\)"
+            ret += r"\(PSL(2,Z)\)"
         else:
-            ret += "\(\Gamma_0(" + str(level) + ")\)"
+            ret += r"\(\Gamma_0(" + str(level) + r")\)"
     else:
-        ret += "\(\Gamma_0(n)\)"
+        ret += r"\(\Gamma_0(n)\)"
     if weight:
         if float(weight) != 0:
             ret += ",k=" + weight
     if character:
         if character != "0":
-            ret += ",\(\chi_" + character + "\) (according to SAGE)"
+            ret += r",\(\chi_" + character + r"\) (according to SAGE)"
     return ret
 
 def ajax_once(callback, *arglist, **kwds):
@@ -236,9 +236,9 @@ def ajax_once(callback, *arglist, **kwds):
     """
 
     text = kwds.get('text', 'more')
-    print "text=", text
-    print "arglist=", arglist
-    print "kwds=", kwds
+    print("text=", text)
+    print("arglist=", arglist)
+    print("kwds=", kwds)
     # print "req=",request.args
     nonce = hex(random.randint(0, 1 << 128))
     res = callback()
@@ -252,7 +252,7 @@ def eval_maass_form(R, C, M, x, y):
     r"""
     
     """
-    raise NotImplementedError,""
+    raise NotImplementedError("")
     # the code below needs besselk_dp, see lpkbessel.pyx
     # s = 0
     # twopi = RR(2 * Pi)

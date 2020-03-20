@@ -4,8 +4,8 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
-    AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, cached_function)
+    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
+    QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
@@ -16,6 +16,7 @@ wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 dnc = 'data not computed'
+
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -166,18 +167,18 @@ cyclolookup = {n:label for label,n in cycloinfo.items()}
 cyclolookup[1] = '1.1.1.1'
 cyclolookup[3] = '2.0.3.1'
 cyclolookup[4] = '2.0.4.1'
-for n, label in cyclolookup.items():
-    if n % 2 == 1:
-        cyclolookup[2*n] = label
+for n, label in list(cyclolookup.items()):
+    if n % 2:
+        cyclolookup[2 * n] = label
 
 rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
 for n in [5,8,12]:
     rcyclolookup[n] = '2.2.%s.1'%n
-for n, label in rcyclolookup.items():
-    if n % 2 == 1:
-        rcyclolookup[2*n] = label
+for n, label in list(rcyclolookup.items()):
+    if n % 2:
+        rcyclolookup[2 * n] = label
 
 def na_text():
     return "Not computed"
@@ -190,7 +191,7 @@ def list2string(li):
 
 def string2list(s):
     s = str(s)
-    if s == '':
+    if not s:
         return []
     return [int(a) for a in s.split(',')]
 
@@ -207,7 +208,7 @@ def is_fundamental_discriminant(d):
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
-        return '\(\Q\)'
+        return r'\(\Q\)'
     if d == '2':  # quadratic field
         D = ZZ(int(D))
         if r == '0':
@@ -215,16 +216,16 @@ def field_pretty(label):
         # Don't prettify invalid quadratic field labels
         if not is_fundamental_discriminant(D):
             return label
-        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
+        return r'\(\Q(\sqrt{' + str(D if D%4 else D/4) + r'}) \)'
     if label in cycloinfo:
-        return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+        return r'\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
         if len(subs)==3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
-            if [z for z in subs if z._data is None] == []:
+            if not any(z._data is None for z in subs):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
@@ -232,10 +233,10 @@ def field_pretty(label):
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
-                return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
+                labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
+                return r'\(\Q(%s, %s)\)'%(labels[0],labels[1])
     if label in rcycloinfo:
-        return '\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
+        return r'\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
@@ -269,6 +270,7 @@ def modules2string(n, t, modlist):
             modlist[j][1] -= 1
     return ans
 
+@cached_function
 def nf_display_knowl(label, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -282,13 +284,13 @@ def nf_knowl_guts(label):
     out += "Global number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += "\(%s\)" % latex(wnf.poly())
+    out += r"\(%s\)" % latex(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        Dfact = "\(%s\)" % str(D)
+        Dfact = r"\(%s\)" % str(D)
     else:
-        Dfact = '%s = \(%s\)' % (str(D),Dfact)
+        Dfact = r'%s = \(%s\)' % (str(D),Dfact)
     out += '<br>Discriminant: '
     out += Dfact
     out += '<br>Signature: '
@@ -359,6 +361,7 @@ class WebNumberField:
     # For cyclotomic fields
     @classmethod
     def from_cyclo(cls, n):
+        n = int(n)
         if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
@@ -404,12 +407,12 @@ class WebNumberField:
         if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
-        t = self._data['galt']
+        t = int(self._data['galois_label'].split('T')[1])
         return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
-        return self._data['galt']
+        return int(self._data['galois_label'].split('T')[1])
 
     # return the Galois group
     def gg(self):
@@ -522,7 +525,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts)]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -566,7 +569,7 @@ class WebNumberField:
 
     def subfields_show(self):
         subs = self.subfields()
-        if subs == []:
+        if not subs:
             return []
         return display_multiset(subs, formatfield)
 
@@ -594,7 +597,7 @@ class WebNumberField:
 
     def unit_galois_action_show(self):
         ugm = self.unit_galois_action()
-        if ugm == []:
+        if not ugm:
             return ''
         n = self.degree()
         t = self.galois_t()
@@ -613,20 +616,26 @@ class WebNumberField:
             Qx = PolynomialRing(QQ,'x')
             # while [1] is a perfectly good basis for Z, gp seems to want []
             basis = [Qx(el.replace('a','x')) for el in self.zk()] if self.degree() > 1 else []
-            k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
+            k1 = pari( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
             self._data['gpK'] = k1
         return self._data['gpK']
 
     def generator_name(self):
         #Add special case code for the generator if desired:
         if self.gen_name=='phi':
-            return '\phi'
+            return r'\phi'
         else:
             return web_latex(self.gen_name)
 
     def variable_name(self):
         # For consistency with Sage number fields
         return self.gen_name
+
+    def root_of_1_order(self):
+        return self._data['torsion_order']
+
+    def root_of_1_gen(self):
+        return self._data['torsion_gen']
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):
@@ -640,6 +649,12 @@ class WebNumberField:
         if self.unit_rank() == 0:
             return 1
         return na_text()
+
+    def units_safe(self):  # fundamental units, if they are not too long
+        units = self.units()
+        if len(units) > 500:
+            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
+        return units
 
     def units(self):  # fundamental units
         res = None
@@ -674,9 +689,8 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return na_text()
         cg_list = self._data['class_group']
-        if cg_list == []:
+        if not cg_list:
             return 'Trivial'
-        #return cg_list
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
@@ -687,7 +701,11 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            return str(AbelianGroup(cg_list)) + ', order ' + self.class_number_latex()
+            if not cg_list:
+                return 'Trivial group, which has order $1$'
+            cg_list = [r'C_{%s}' % z for z in cg_list]
+            cg_string = r'\times '.join(cg_list)
+            return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
         return na_text()
 
     def class_number(self):
@@ -718,31 +736,17 @@ class WebNumberField:
             return '<span style="font-size: x-small">(GRH)</span>'
         return ''
 
+    def frobs(self):
+        return self._data['frobs']
+
     def conductor(self):
         """ Computes the conductor if the extension is abelian.
             It raises an exception if the field is not abelian.
         """
-        if not self.is_abelian():
+        cond = self._data['conductor']
+        if cond == 0: # Code for not an abelian field
             raise Exception('Invalid field for conductor')
-        D = self.disc()
-        plist = self.ramified_primes()
-        K = self.K()
-        f = ZZ(1)
-        for p in plist:
-            e = K.factor(p)[0][0].ramification_index()
-            if p == ZZ(2):
-                e = K.factor(p)[0][0].ramification_index()
-                # ramification index must be a power of 2
-                f *= e * 2
-                c = D.valuation(p)
-                res_deg = ZZ(self.degree() / e)
-                # adjust disc expo for unramified part
-                c = ZZ(c / res_deg)
-                if is_odd(c):
-                    f *= 2
-            else:
-                f *= p ** (e.valuation(p) + 1)
-        return f
+        return ZZ(cond)
 
     def artin_reps(self, nfgg=None):
         if nfgg is not None:
@@ -773,7 +777,7 @@ class WebNumberField:
             # cc is list, each has methods group, size, order, representative
             ccreps = [x.representative() for x in cc]
             ccns = [int(x.size()) for x in cc]
-            ccreps = [x.cycle_string() for x in ccreps]
+            ccreps = [Permutation(x).cycle_string() for x in ccreps]
             ccgen = '['+','.join(ccreps)+']'
             ar = nfgg.artin_representations() # list of artin reps from db
             arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
@@ -803,44 +807,8 @@ class WebNumberField:
 
         return []
 
-    def dirichlet_group(self, prime_bound=10000):
-        f = self.conductor()
-        if f == 1:  # To make the trivial case work correctly
-            return [1]
-        if euler_phi(f) > dir_group_size_bound:
-            return []
-        # Can do quadratic fields directly
-        if self.degree() == 2:
-            if is_odd(f):
-                return [1, f-1]
-            f1 = f/4
-            if is_odd(f1):
-                return [1, f-1]
-            # we now want f with all powers of 2 removed
-            f1 = f1/2
-            if is_even(f1):
-                raise Exception('Invalid conductor')
-            if (self.disc()/8) % 4 == 3:
-                return [1, 4*f1-1]
-            # Finally we want congruent to 5 mod 8 and -1 mod f1
-            if (f1 % 4) == 3:
-                return [1, 2*f1-1]
-            return [1, 6*f1-1]
-
-        from dirichlet_conrey import DirichletGroup_conrey
-        G = DirichletGroup_conrey(f)
-        K = self.K()
-        S = Set(G[1].kernel()) # trivial character, kernel is whole group
-
-        for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
-            a = P.norm() % f
-            if gcd(a,f)>1:
-                continue
-            S = S.intersection(Set(G[a].kernel()))
-            if len(S) == self.degree():
-                return list(S)
-
-        raise Exception('Failure in dirichlet group for K=%s using prime bound %s' % (K,prime_bound))
+    def dirichlet_group(self):
+        return self._data['dirichlet_group']
 
     def full_dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
@@ -860,7 +828,7 @@ class WebNumberField:
                 palgstr = [
                     list2string([int(c) for c in pol.coefficients(sparse=False)])
                     for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
+                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
                 return [
                     [
                         LF['label'],
@@ -868,7 +836,7 @@ class WebNumberField:
                         int(LF['e']),
                         int(LF['f']),
                         int(LF['c']),
-                        group_display_knowl(LF['n'], LF['galT']),
+                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
                         LF['t'],
                         LF['u'],
                         LF['slopes']
@@ -885,7 +853,7 @@ class WebNumberField:
     def make_code_snippets(self):
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
 
         # Fill in placeholders for this specific field:

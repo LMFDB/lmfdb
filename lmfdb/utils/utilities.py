@@ -3,6 +3,9 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+from six.moves import range
+from six import integer_types as six_integers
+from six import string_types
 
 import cmath
 import math
@@ -17,18 +20,26 @@ from copy import copy
 from functools import wraps
 from itertools import islice
 from types import GeneratorType
-from urllib import urlencode
+from six.moves.urllib_parse import urlencode
+from six import PY3
 
 from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
+# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
 from werkzeug.contrib.cache import SimpleCache
-from werkzeug import cached_property
-from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
+from werkzeug.utils import cached_property
+from sage.all import (CC, CBF, CDF,
+                      Factorization, NumberField,
+                      PolynomialRing, PowerSeriesRing, QQ,
+                      RealField, RR, RIF, TermOrder, ZZ)
+from sage.misc.functional import round
+from sage.all import floor, latex, prime_range, valuation
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
-def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
+
+def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
     """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
@@ -50,7 +61,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     sfacts_fc_list = [[(-g).list() if g[0] == -1 else g.list(), e] for g, e in sfacts_fc]
     return list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois, vari, p)
 
-def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari = 'T', p = None):
+def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari='T', p=None):
     """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
@@ -58,8 +69,9 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
-    gal_list=[]
-    ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
+    gal_list = []
+    order = TermOrder('M(0,-1,0,-1)')
+    ZZpT = PolynomialRing(ZZ, ['p', vari], order=order)
     ZZT = PolynomialRing(ZZ, vari)
     outstr = ''
     for g, e in sfacts_fc_list:
@@ -74,12 +86,12 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
         # casting from ZZT -> ZZpT
         if p is None:
-            gtoprint = dict( zip( zip( [0]*len(g), range(len(g))), g) )
+            gtoprint = {(0, i): gi for i, gi in enumerate(g)}
         else:
             gtoprint = {}
             for i, elt in enumerate(g):
                 if elt != 0:
-                    val =  ZZ(elt).valuation(p)
+                    val = ZZ(elt).valuation(p)
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
@@ -91,11 +103,11 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
     if galois:
         # 2 factors of degree 2
-        if len(sfacts_fc_list)==2:
+        if len(sfacts_fc_list) == 2:
             if len(sfacts_fc_list[0][0]) == 3 and len(sfacts_fc_list[1][0]) == 3:
                 troubletest = ZZT(sfacts_fc_list[0][0]).disc()*ZZT(sfacts_fc_list[1][0]).disc()
                 if troubletest.is_square():
-                    gal_list=[[2,1]]
+                    gal_list = [[2, 1]]
         return outstr, gal_list
     return outstr
 
@@ -109,8 +121,18 @@ def try_int(foo):
     except Exception:
         return foo
 
-def key_for_numerically_sort(elt, split="[\s\.\-]"):
-    return map(try_int, re.split(split, elt))
+def type_key(typ):
+    # For now we just use a simple mechanism: strings compare at the end.
+    if isinstance(typ, str):
+        return 1
+    else:
+        return 0
+
+def key_for_numerically_sort(elt, split=r"[\s\.\-]"):
+    # In Python 3 we can no longer compare ints and strings.
+    key = [try_int(k) for k in re.split(split, elt)]
+    return tuple((type_key(k), k) for k in key)
+
 
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=QQ):
@@ -265,19 +287,24 @@ def str_to_CBF(s):
 
 
 
-def to_dict(args, exclude = []):
+def to_dict(args, exclude = [], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
     element in a list if the input was a list.
 
+    INPUT:
+
+    - ``args`` -- a dictionary
+    - ``exclude`` -- a list of keys to allow lists for.
+    - ``kwds`` -- also included in the result
+
     Example:
     >>> to_dict({"not_list": 1, "is_list":[2,3,4]})
     {'is_list': 4, 'not_list': 1}
     """
-    d = {}
-    for key in args:
-        values = args[key]
+    d = dict(kwds)
+    for key, values in args.items():
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]
@@ -285,8 +312,10 @@ def to_dict(args, exclude = []):
             d[key] = values
     return d
 
+
 def is_exact(x):
-    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
@@ -479,10 +508,10 @@ def pol_to_html(p):
     '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
     """
     s = str(p)
-    s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
-    s = re.sub("\_(\d*)", "<sub>\\1</sub>", s)
-    s = re.sub("\*", "", s)
-    s = re.sub("x", "<i>x</i>", s)
+    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
+    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
+    s = re.sub(r"\*", r"", s)
+    s = re.sub(r"x", r"<i>x</i>", s)
     return s
 
 
@@ -492,7 +521,7 @@ def pol_to_html(p):
 ################################################################################
 
 def web_latex(x, enclose=True):
-    """
+    r"""
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
     `\(` and `\)` to tag it as an equation in html.
@@ -505,15 +534,15 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
-    if enclose == True:
-        return "\( %s \)" % latex(x)
+    if enclose:
+        return r"\( %s \)" % latex(x)
     return " %s " % latex(x)
 
 
 def web_latex_ideal_fact(x, enclose=True):
-    """
+    r"""
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
     `\)` to tag it as an equation in html.
@@ -532,13 +561,13 @@ def web_latex_ideal_fact(x, enclose=True):
     '\\( \\left(-a\\right)^{-1} \\)'
     """
     y = web_latex(x, enclose=enclose)
-    y = y.replace("(\\left(","\\left(")
-    y = y.replace("\\right))","\\right)")
+    y = y.replace(r"(\left(", r"\left(")
+    y = y.replace(r"\right))", r"\right)")
     return y
 
 
 def web_latex_split_on(x, on=['+', '-']):
-    """
+    r"""
     Convert input into a latex string. A different latex surround `\(` `\)` is
     used, with splits occuring at `on` (+ - by default).
 
@@ -547,18 +576,18 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
         for s in on:
-            A = A.replace(s, '\) ' + s + ' \( ')
+            A = A.replace(s, r'\) ' + s + r' \( ')
     return A
 
 
 # web_latex_split_on was not splitting polynomials, so we make an expanded version
 def web_latex_split_on_pm(x):
-    """
+    r"""
     Convert input into a latex string, with specific handling of expressions
     including `+` and `-`.
 
@@ -570,34 +599,34 @@ def web_latex_split_on_pm(x):
     on = ['+', '-']
  #   A = "\( %s \)" % latex(x)
     try:
-        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+        A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
     except:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace("\\left","")
-    A = A.replace("\\right","")
+    A = A.replace(r"\left","")
+    A = A.replace(r"\right","")
     for s in on:
-  #      A = A.replace(s, '\) ' + s + ' \( ')
-   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
-        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+  #      A = A.replace(s, r'\) ' + s + r' \( ')
+   #     A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
+        A = A.replace(s, r'\)' + r' \(\mathstrut ' + s + r'\mathstrut ')
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
     # encounters terms like (-3+x)
     for s in on:
-        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
+        A = A.replace(r'(\) \(\mathstrut ' + s, '(' + s)
+    A = A.replace(r'( {}', r'(')
+    A = A.replace(r'(\) \(', r'(')
+    A = A.replace(r'\(+', r'\(\mathstrut+')
+    A = A.replace(r'\(-', r'\(\mathstrut-')
+    A = A.replace(r'(  ', r'(')
+    A = A.replace(r'( ', r'(')
 
     return A
     # return web_latex_split_on(x)
 
 def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
-    """
+    r"""
     Convert input into a latex string, with splits into separate latex strings
     occurring on given regex `r`.
     CAUTION: this gives a different result than web_latex_split_on_pm
@@ -609,31 +638,31 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     """
 
     def insert_latex(s):
-        return s.group(1) + '\) \('
+        return s.group(1) + r'\) \('
 
-    if isinstance(x, (str, unicode)):
+    if isinstance(x, string_types):
         return x
     else:
-        A = "\( %s \)" % latex(x)
+        A = r"\( %s \)" % latex(x)
         c = re.compile(r)
-        A = A.replace('+', '\) \( {}+ ')
-        A = A.replace('-', '\) \( {}- ')
+        A = A.replace(r'+', r'\) \( {}+ ')
+        A = A.replace(r'-', r'\) \( {}- ')
 #        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
 #        A = A.replace('\\right)','\left.\\right)')
-        A = A.replace('\left(','\\bigl(')
-        A = A.replace('\\right)','\\bigr)')
+        A = A.replace(r'\left(',r'\bigl(')
+        A = A.replace(r'\right)',r'\bigr)')
         A = c.sub(insert_latex, A)
 
     # the above will be re-done using a more sophisticated method involving
     # regular expressions.  Below fixes bad spacing when the current approach
     # encounters terms like (-3+x)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
-    A = A.replace('+\) \(O','+O')
+    A = A.replace(r'( {}', r'(')
+    A = A.replace(r'(\) \(', r'(')
+    A = A.replace(r'\(+', r'\(\mathstrut+')
+    A = A.replace(r'\(-', r'\(\mathstrut-')
+    A = A.replace(r'(  ', r'(')
+    A = A.replace(r'( ', r'(')
+    A = A.replace(r'+\) \(O', r'+O')
     return A
 
 def display_knowl(kid, title=None, kwargs={}):
@@ -709,12 +738,16 @@ def make_bigint(s, cutoff=20, max_width=70):
     """
     Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
     def knowl_replacer(M):
-        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
+        if a[0:2] == r'<a':
+            return r'\)' + a + r'\('
+        else:
+            return a
     return Zmatcher.sub(knowl_replacer, s)
 
 
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
         lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
@@ -764,7 +797,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
     if cutoff:
         long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
@@ -809,7 +842,8 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
@@ -825,8 +859,8 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
     - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
-    plus = r"\mathstrut +\mathstrut \) "
-    minus = r"\mathstrut -\mathstrut \) "
+    plus = r" + "
+    minus = r" - "
     m = len(coeffs)
     while m and coeffs[m-1] == 0:
         m -= 1
@@ -846,23 +880,23 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         # this effectively disables the bigint
         bigint_cutoff = bigint_overallmin + 7
 
-    for n in reversed(xrange(m)):
+    for n in reversed(range(m)):
         c = coeffs[n]
         if n == 1:
             if superscript:
-                varpow = r"\(" + var
+                varpow = "" + var
             else:
-                varpow = r"\(%s_{1}"%var
+                varpow = r"%s_{1}"%var
         elif n > 1:
             if superscript:
-                varpow = r"\(%s^{%s}"%(var, n)
+                varpow = r"%s^{%s}"%(var, n)
             else:
-                varpow = r"\(%s_{%s}"%(var, n)
+                varpow = r"%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c, bigint_cutoff)
+                s += plus + str(c)
             elif c < 0:
-                s += minus + bigint_knowl(-c, bigint_cutoff)
+                s += minus + str(-c)
             break
         if c > 0:
             s += plus
@@ -871,14 +905,13 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c), bigint_cutoff) + " "
+            s += str(abs(c)) + " "
         s += varpow
-    if coeffs[0] == 0:
-        s += r"\)"
+    s += r"\)"
     if s.startswith(plus):
-        return s[len(plus):]
+        return r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
-        return r"\(-\)" + s[len(minus):]
+        return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
@@ -1148,7 +1181,7 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False):
+def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False, transparent=False, axes_pad=None):
     """
     Convert a plot object to base64-encoded png format.
 
@@ -1158,22 +1191,29 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    from StringIO import StringIO
+    if PY3:
+        from io import BytesIO as IO
+    else:
+        from StringIO import StringIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
-    from urllib import quote
+    from six.moves.urllib_parse import quote
 
-    virtual_file = StringIO()
-    fig = P.matplotlib()
+    virtual_file = IO()
+    fig = P.matplotlib(axes_pad=axes_pad)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
         for a in fig.axes:
             a.axis('off')
     if pad is not None:
         fig.tight_layout(pad=pad)
-    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
+    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+    if PY3:
+        buf = virtual_file.getbuffer()
+    else:
+        buf = virtual_file.buf
+    return "data:image/png;base64," + quote(b64encode(buf))
 
 class KeyedDefaultDict(defaultdict):
     """
@@ -1198,7 +1238,9 @@ def make_tuple(val):
         return val
 
 def range_formatter(x):
-    if isinstance(x, dict):
+    if x is None:
+        return 'Unknown'
+    elif isinstance(x, dict):
         if '$gte' in x:
             a = x['$gte']
         elif '$gt' in x:
@@ -1216,7 +1258,7 @@ def range_formatter(x):
         elif b is None:
             return "{0}-".format(a)
         elif a is None:
-            raise ValueError
+            return "..{0}".format(b)
         else:
             return "{0}-{1}".format(a,b)
     return str(x)
@@ -1235,7 +1277,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
+    if not isinstance(pol_str, string_types):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')
@@ -1261,7 +1303,7 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
     return o_str
 
 def add_space_if_positive(texified_pol):
-    """
+    r"""
     Add a space if texified_pol is positive to match alignment of positive and
     negative coefficients.
 
@@ -1273,5 +1315,5 @@ def add_space_if_positive(texified_pol):
     """
     if texified_pol[0] == '-':
         return texified_pol
-    return "\phantom{-}" + texified_pol
+    return r"\phantom{-}" + texified_pol
 

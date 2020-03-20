@@ -3,53 +3,41 @@
 {# Refine search page #}
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+  {% include 'hidden_search_inputs.html' %}
   <table>
     <tr>
-      <td>{{ KNOWL('artin.dimension',title="dimension") }}</td>
-      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15/></td>
-      <td><span class="formexample"> e.g. 1, 2-4 </span></td>
-    </tr>
+      <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+      <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+      <td>{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
+      <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
+      <td>{{ KNOWL('artin.parity',title="Parity") }}</td>
+
     <tr>
-      <td>{{ KNOWL('artin.conductor',title = "conductor") }}</td>
-      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15/></td>
-      <td><span class="formexample"> e.g. 50, 100-200</span></td>
+      <td><input type='text' name='dimension' value="{{info.dimension}}" style="width: 160px;" placeholder="2"/></td>
+      <td><input type='text' name='conductor' value="{{info.conductor}}" style="width: 160px;" placeholder="51,100-200"/></td>
+      <td><input type='text' name='group' value="{{info.group}}" style="width: 160px;" placeholder="A5"></td>
+      <td><input type='text' name='root_number' placeholder="1" value = "{{info.root_number}}" style="width: 160px;"/></td>
+      <td><select name='Is_Even' style="width: 170px">
+        <option value=''>All</option>
+        <option value='True' {{ "selected" if info.Is_Even == 'True'}} >Even</option>
+        <option value='False' {{ "selected" if info.Is_Even == 'False'}} >Odd</option>
+      </select></td>
     </tr>
+
     <tr>
-        <td>{{ KNOWL('artin.gg_quotient',title="group") }}</td>
-        <td><input type='text' name='group' value="{{info.group}}" size=15></td>
-        <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
-    </tr>
-    <tr>
-        <td>{{ KNOWL('artin.permutation_container',title="smallest permutation container") }}</td>
-        <td><input type='text' name='container' value="{{info.container}}" size=15></td>
-        <td><span class="formexample"> e.g. 4T3 or 6T10</span></td>
-    </tr>
-    <tr>
-      <td>{{KNOWL('artin.ramified_primes', 'ramified primes')}}</td>
-      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15/></td>
-      <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
-    </tr>
-    <tr>
-      <td>{{KNOWL('artin.unramified_primes', 'unramified primes')}}</td>
-      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15/></td>
-      <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('artin.root_number',title="root number") }}</td>
-      <td><input type='text' name='root_number' value = "{{info.root_number}}" size=15/></td>
-      <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
-    </tr>
-    <tr>
+      <td>{{ KNOWL('artin.permutation_container',title="Smallest container") }}</td>
+      <td>{{KNOWL('artin.ramified_primes', 'Ramified primes')}}</td>
+      <td>{{KNOWL('artin.unramified_primes', 'Unramified primes')}}</td>
       <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
-      <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" size=15/></td>
-      <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character</span></td>
     </tr>
     <tr>
-      <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{info.count}}" size=10></td>
+      <td><input type='text' name='container' value="{{info.container}}" style="width: 160px;" placeholder="6T13"></td>
+      <td><input type='text' name='ramified' value="{{info.ramified}}" style="width: 160px;" placeholder="2" /></td>
+      <td><input type='text' name='unramified' value = "{{info.unramified}}" style="width: 160px;" placeholder="5,7" /></td>
+      <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" style="width: 160px;" placeholder="1" /></td>
     </tr>
   <tr>
-    <td class="button"><button type='submit' value='Search'>Search again</button></td>
+    <td class="button"><button type='submit' value='Search' onclick='resetStart()'>Search again</button></td>
   </tr>
   </table>
 </form>
@@ -61,7 +49,7 @@
 </div>
 
 <div>
-	<table border=1 cellpadding=5 class="ntdata">
+	<table class="ntdata">
 
 	<thead><tr><th>{{KNOWL('artin.label', 'Label')}}</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>

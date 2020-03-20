@@ -1,11 +1,13 @@
 #!/usr/local/bin/sage -python
-import sys, time, os
-assert time
-import bson
-assert bson
+
+# This version writes the data to a file, deletes all records from the database,
+# then reloads from the files. 
+from __future__ import print_function
+from six import text_type
+import sys
+import os
 import re
 import json
-from sage.all import ZZ
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
@@ -14,40 +16,17 @@ while os.path.basename(mypath) != 'lmfdb':
     # now move up one more time...
 #mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
-sys.path.append(mypath+'/data_mgt/utilities')
 
-from rewrite import reindex_collection
+from lmfdb import db
+from lmfdb.backend.encoding import copy_dumps
 
-
-# load the password file
-import yaml
-pw_dict = yaml.load(open(os.path.join(mypath, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-
-# fire it up
-#from lmfdb import base
-#C= base.getDBConnection()
-from pymongo.mongo_client import MongoClient
-C= MongoClient(host='lmfdb-ib:37010')
-
-C['artin'].authenticate(username, password)
-
-art=C.artin
-rep=art.representations_new
-nfgal=art.field_data_new
+rep=db.artin_reps
+nfgal=db.artin_field_data
 
 count = 0
-old = 0
 
-#ASC = pymongo.ASCENDING
-#rep.create_index([('Dim', ASC), ('Hide', ASC),('Conductor_key', ASC)])
-#rep.create_index([('Hide', ASC), ('Conductor_key',ASC)])
-#rep.create_index([('Hide', ASC), ('Galois_nt',ASC)])
-#rep.create_index('NFGal')
-#rep.create_index('Baselabel')
-#nfgal.create_index('Polynomial')
-
+nottest = False
+nottest = True
 
 #utilities
 
@@ -75,100 +54,145 @@ def fix_local_factors(gconj):
 
 # Main programs
 
+# There are two parts since we need to deal with two files/databases
+# The two functions below take our for one entry as a dictionary, and reformats
+# the dictionary
+
 outrecs = []
-batchsize = 10000
 
 def artrepload(l):
   global count
-  global old
   global outrecs
-  global batchsize
-  #ar1 = rep.find_one({'Baselabel': l['Baselabel']})
-  #if ar1 is not None:
-    #print "Old representation"
-  #  old += 1
-  #  if (count+old) % 100==0:
-  #    print "%s new, %s old" %(str(count),str(old))
-  #  return
-  cond_key = make_cond_key(ZZ(l['Conductor']))
-  l['Conductor_key'] = cond_key
-  l['NFGal'] = makels(l['NFGal'])
+  l['Conductor'] = int(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
   # Extract containing representation from the label
   cont = l['Baselabel'].split('.')[2]
   l['Container'] = cont
+  for s in ['BadPrimes', 'HardPrimes']:
+    l[s] = [int(z) for z in l[s]]
+  l['Galn'] = l['Galois_nt'][0]
+  l['Galt'] = l['Galois_nt'][1]
+  del l['Galois_nt']
+  l['GalConjSigns'] = [z['Sign'] for z in l['GaloisConjugates']]
+  chival = int(l['Chi_of_complex'])
+  dim = int(l['Dim'])
+  minusones = (dim - chival)/2
+  iseven = (minusones % 2) == 0
+  ar1 = rep.lucky({'Baselabel': l['Baselabel'],'NFGal': l['NFGal']})
+  if ar1 is not None:
+    if 'Dets' not in ar1:
+        print(ar1)
+        l['Dets'] = []
+    else:
+        l['Dets'] = [str(z) for z in ar1['Dets']]
+        #print "type "+str(type(l['Dets']))
+    l['Is_Even'] = ar1['Is_Even']
+    if iseven != l['Is_Even']:
+      print("Is even mismatch: %s from %d and %d" % (str(l['Baselabel']), dim, chival))
+  else:
+    l['Is_Even'] = iseven
+    l['Dets'] = []
   #print str(l)
+  if not isinstance(l['Dets'], list):
+    print("Type error "+str(l['Baselabel'])+" , "+str(l['Dets'])+" "+str(type(l['Dets'])))
   count +=1
   outrecs.append(l)
-  if len(outrecs) > batchsize:
-    rep.insert_many(outrecs)
-    outrecs=[]
-  #rep.save(l)
-  if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+  if count % 10000==0:
+    print("Count %s" % count)
   return
 
 def nfgalload(l):
   global count
-  global old
   global outrecs
-  global batchsize
-  polstr = makels(l['Polynomial'])
-  #ff = nfgal.find_one({'Polynomial': polstr})
-  #if ff is not None:
-    # print "Old field"
-  #  old += 1
-  #  if (count+old) % 100==0:
-  #    print "%s new, %s old" %(str(count),str(old))
-  #  return 
-  l['Polynomial']=polstr
+
   artreps=l['ArtinReps']
   artreps=[{'Baselabel': z[0][0], 'GalConj': z[0][1], 'CharacterField': z[1],
     'Character': z[2]} for z in artreps]
   l['ArtinReps']=artreps
+  l['Size'] = int(l['Size'])
   outrecs.append(l)
-  if len(outrecs) > batchsize:
-    nfgal.insert_many(outrecs)
-    outrecs=[]
-  #nfgal.save(l)
   count +=1
-  if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+  if count % 10000==0:
+    print("Count %s" % count)
   return
 
+def strx(val, k):
+    if k == 'Algorithm':
+        return '"'+str(val)+'"'
+    if k == 'Baselabel':
+        return '"'+str(val)+'"'
+    return str(val)
 
+def fixdict(d):
+    kys = d.keys()
+    start = ['"'+str(k)+'": '+strx(d[k],k) for k in kys]
+    return "{"+','.join(start)+"}"
+
+def fixlist(d):
+    return [str(k) for k in d]
+
+reloadme = []
 # processing file names
 for path in sys.argv[1:]:
-    print path
+    print(path)
     count = 0
+    outrecs = []
     filename = os.path.basename(path)
     fn = open(path)
     if re.match(r'^nfgal', filename):
       case = 'nfgal'
-      if 'field_data_new' in art.collection_names():
-        print "Dropping field data new"
-        art.field_data_new.drop()
     if re.match(r'^art', filename):
       case = 'art rep'
-      if 'representations_new' in art.collection_names():
-        print "Dropping representations new"
-        art.representations_new.drop()
     for line in fn.readlines():
         line = line.strip()
         if re.match(r'\S',line):
             l = json.loads(line)
-	    if case == 'nfgal':
-	      nfgalload(l)
-	    if case == 'art rep':
-	      artrepload(l)
+            if case == 'nfgal':
+                nfgalload(l)
+            if case == 'art rep':
+                artrepload(l)
+    # We have loaded the file, now dump it
     if outrecs:
-	    if case == 'nfgal':
-	      nfgal.insert_many(outrecs)
-	    if case == 'art rep':
-	      rep.insert_many(outrecs)
-    if case == 'nfgal':
-      reindex_collection(art, 'field_data', 'field_data_new')
-    if case == 'art rep':
-      reindex_collection(art, 'representations', 'representations_new')
+        if case == 'nfgal':
+            fnout = open("nfgal.dump", "w")
+            cols = nfgal.col_type
+            del cols['id']
+            head1 = [str(z) for z in cols.keys()]
+            fnout.write('|'.join(head1)+"\n")
+            fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
+            for ent in outrecs:
+                for kk in head1:
+                    if isinstance(ent[kk], text_type):
+                        ent[kk] = str(ent[kk])
+                    if not isinstance(ent[kk], str):
+                        ent[kk] = json.dumps(ent[kk])
+                fnout.write('|'.join([ent[z].replace("'",'"') for z in head1])+'\n')
+            fnout.close()
+            reloadme.append('nfgal')
+        if case == 'art rep':
+            fnout = open("art.dump", "w")
+            cols = rep.col_type
+            del cols['id']
+            head1 = [str(z) for z in cols.keys()]
+            fnout.write('|'.join(head1)+"\n")
+            fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
+            for ent in outrecs:
+                for kk in head1:
+                    if isinstance(ent[kk], text_type):
+                        ent[kk] = str(ent[kk])
+                    if kk == 'Dets':
+                        ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
+                    elif not isinstance(ent[kk], str):
+                        ent[kk] = json.dumps(ent[kk])
+                fnout.write('|'.join([ent[z] for z in head1])+'\n')
+            fnout.close()
+            reloadme.append('art')
+    print("%s entries" % count)
     fn.close()
 
+if nottest:
+  for k in reloadme:
+    if k == 'nfgal':
+        nfgal.reload('nfgal.dump', sep='|')
+    if k == 'art':
+        rep.reload('art.dump', sep='|')

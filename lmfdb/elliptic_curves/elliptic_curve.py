@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-import ast, os, re, StringIO, tempfile, time
+import ast
+import os
+import re
+from six import BytesIO
+import tempfile
+import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
 from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
@@ -9,9 +14,10 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, web_latex_split_on_pm, flash_error,
-    parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
-    search_wrap)
+    web_latex, to_dict, flash_error, display_knowl,
+    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeOnlyBox,
+    parse_element_of, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -30,21 +36,16 @@ def ec_credit():
 #   Utility functions
 #########################
 
-def cmp_label(lab1, lab2):
+def sorting_label(lab1):
+    """
+    Provide a sorting key.
+    """
     a, b, c = parse_cremona_label(lab1)
-    id1 = int(a), class_to_int(b), int(c)
-    a, b, c = parse_cremona_label(lab2)
-    id2 = int(a), class_to_int(b), int(c)
-    return cmp(id1, id2)
-
+    return (int(a), class_to_int(b), int(c))
 
 #########################
 #    Top level
 #########################
-
-@app.route("/EC")
-def EC_redirect():
-    return redirect(url_for("ec.rational_elliptic_curves", **request.args))
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -54,7 +55,8 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 #########################
 #  Search/navigate
@@ -62,9 +64,10 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
+    info = to_dict(request.args, search_array=ECSearchArray())
     if err_args is None:
-        if len(request.args) != 0:
-            return elliptic_curve_search(request.args)
+        if request.args:
+            return elliptic_curve_search(info)
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -75,17 +78,15 @@ def rational_elliptic_curves(err_args=None):
     conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    rank_list = range(counts['max_rank'] + 1)
-    torsion_list = range(1,11) + [12, 16]
-    info = {
-        'rank_list': rank_list,
-        'torsion_list': torsion_list,
-        'conductor_list': conductor_list,
-        'counts': counts,
-        'stats_url': url_for(".statistics")
-    }
-    t = 'Elliptic Curves over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    rank_list = list(range(counts['max_rank'] + 1))
+    torsion_list = list(range(1, 11)) + [12, 16]
+    info['rank_list'] = rank_list
+    info['torsion_list'] = torsion_list
+    info['conductor_list'] = conductor_list
+    info['counts'] = counts
+    info['stats_url'] = url_for(".statistics")
+    t = r'Elliptic Curves over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
     if err_args.get("err_msg"):
         # this comes from elliptic_curve_jump_error
         flash_error(err_args.pop("err_msg"), err_args.pop("label"))
@@ -120,19 +121,19 @@ def statistics():
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
-    t = 'Elliptic Curves over $\Q$: Statistics'
+    t = r'Elliptic Curves over $\Q$: Statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_elliptic_curves")),
+             (r'$\Q$', url_for(".rational_elliptic_curves")),
              ('Statistics', ' ')]
     return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    info = to_dict(request.args)
-    info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
-    info['title'] = 'Elliptic Curves over $\Q$ of Conductor %s' % conductor
-    if len(request.args) > 0:
+    info = to_dict(request.args, search_array=ECSearchArray())
+    info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
+    info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
+    if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
@@ -155,7 +156,7 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label"
     else:
-        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$"
+        err_args['err_msg'] = r"%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
@@ -225,23 +226,29 @@ def download_search(info):
     res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_curve")
+    return url_for(".by_ec_label", label=label)
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
+             url_for_label=url_for_label,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
-                           ('$\Q$', url_for(".rational_elliptic_curves")),
+                           (r'$\Q$', url_for(".rational_elliptic_curves")),
                            ('Search Results', '.')],
              credit=ec_credit)
 
@@ -251,6 +258,8 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
+    parse_ints(info,query,'num_int_pts','num_int_pts')
+    parse_floats(info,query,'regulator','regulator')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -270,12 +279,32 @@ def elliptic_curve_search(info, query):
         mode = 'append'
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
+    if info.get('bad_quantifier') == 'exactly':
+        mode = 'exact'
+    elif info.get('bad_quantifier') == 'exclude':
+        mode = 'complement'
+    elif info.get('bad_quantifier') == 'subset':
+        mode = 'subsets'
+    else:
+        mode = 'append'
+    parse_primes(info, query, 'bad_primes', name='bad primes',
+                 qfield='bad_primes',mode=mode)
+    # The button which used to be labelled Optimal only no/yes"
+    # (default no) has been renamed "Curves per isogeny class all/one"
+    # (default one) but the only change in behavious is that we no
+    # longer treat class 990h (where the optial curve is #3 not #1) as
+    # special: the "one" option just restricts to curves whose
+    # 'number' is 1.
     if 'optimal' in info and info['optimal'] == 'on':
+        query.update({'number':1})
+
+        # Old behaviour was as follows:
         # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
         # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
         # Instead, we use this more complicated query:
-        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
+        # query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
+    info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
@@ -368,7 +397,7 @@ def render_isogeny_class(iso_class):
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
-                           properties2=class_data.properties,
+                           properties=class_data.properties,
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
@@ -395,7 +424,7 @@ def modular_form_display(label, number):
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
-    modform_string = web_latex_split_on_pm(modform)
+    modform_string = web_latex(modform)
     return modform_string
 
 # This function is now redundant since we store plots as
@@ -434,7 +463,7 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
-                         properties2=data.properties,
+                         properties=data.properties,
                          credit=ec_credit(),
                          data=data,
                          # set default show names but actually code snippets are filled in only when needed
@@ -498,7 +527,7 @@ def download_EC_all(label):
         data_list = [data]
     else:
         data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
-        if len(data_list) == 0:
+        if not data_list:
             return elliptic_curve_jump_error(label, {})
 
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
@@ -506,39 +535,38 @@ def download_EC_all(label):
     return response
 
 
-
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Elliptic Curve data over $\Q$'
+    t = r'Completeness of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Completeness', '')]
     return render_template("single.html", kid='dq.ec.extent',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Elliptic Curve data over $\Q$'
+    t = r'Source of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Source', '')]
     return render_template("single.html", kid='dq.ec.source',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the Elliptic Curve data over $\Q$'
+    t = r'Reliability of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Source', '')]
+             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Reliability', '')]
     return render_template("single.html", kid='dq.ec.reliability',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Elliptic Curves over $\Q$'
+    t = r'Labels for Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Labels', '')]
     return render_template("single.html", kid='ec.q.lmfdb_label',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
@@ -600,7 +628,124 @@ def tor_struct_search_Q(prefill="any"):
             gps.append(cyc(n))
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
-    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+    return "\n".join(["<select name='torsion_structure', style='width: 155px'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
+
+class ECSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
+    def __init__(self):
+        cond = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="ec.q.conductor",
+            example="389",
+            example_span="389 or 100-200")
+        rank = TextBox(
+            name="rank",
+            label="Rank",
+            knowl="ec.rank",
+            example="0")
+        torsion = TextBox(
+            name="torsion",
+            label="Torsion order",
+            knowl="ec.torsion_order",
+            example="2")
+        sha = TextBox(
+            name="sha",
+            label="Analytic order of &#1064;",
+            knowl="ec.q.analytic_sha_order",
+            example="4")
+        surj_primes = TextBox(
+            name="surj_primes",
+            label="Maximal primes",
+            knowl="ec.maximal_galois_rep",
+            example="2,3")
+        isodeg = TextBox(
+            name="isodeg",
+            label="Cyclic isogeny degree",
+            knowl="ec.isogeny",
+            example="16")
+        num_int_pts = TextBox(
+            name="num_int_pts",
+            label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            example="2",
+            example_span="2 or 4-15")
+
+        jinv = TextBox(
+            name="jinv",
+            label="j-invariant",
+            knowl="ec.q.j_invariant",
+            example="1728",
+            example_span="1728 or -4096/11")
+        cm = IncludeOnlyBox(
+            name="include_cm",
+            label="CM",
+            knowl="ec.complex_multiplication")
+        tor_opts = ([("", "any"),
+                     ("[]", "trivial")] +
+                    [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
+                    [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+        torsion_struct = SelectBox(
+            name="torsion_structure",
+            label="Torsion structure",
+            knowl="ec.torsion_subgroup",
+            options=tor_opts)
+        optimal = SelectBox(
+            name="optimal",
+            label="Curves per isogeny class",
+            knowl="ec.isogeny_class",
+            options=[("", "all"),
+                     ("on", "one")])
+        surj_quant = SelectBox(
+            name="surj_quantifier",
+            options=[("", "include"),
+                     ("exactly", "exactly")],
+            width=75)
+        nonsurj_primes = TextBoxWithSelect(
+            name="nonsurj_primes",
+            label="Non-maximal primes",
+            short_label="Non-max. $p$",
+            knowl="ec.maximal_galois_rep",
+            example="2,3",
+            select_box=surj_quant)
+        bad_quant = SelectBox(
+            name="bad_quantifier",
+            options=[("", "include"),
+                     ("exclude", "exclude"),
+                     ("exactly", "exactly"),
+                     ("subset", "subset of")],
+            width=75)
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            label="Bad primes",
+            knowl="ec.q.reduction_type",
+            example="5,13",
+            select_box=bad_quant)
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator",
+            knowl="ec.q.regulator",
+            example="8.4-9.1")
+
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example=50)
+
+        self.browse_array = [
+            [cond, jinv],
+            [rank, cm],
+            [torsion, torsion_struct],
+            [sha, optimal],
+            [surj_primes, nonsurj_primes],
+            [isodeg, bad_primes],
+            [num_int_pts, regulator],
+            [count]]
+
+        self.refine_array = [
+            [cond, jinv, rank, torsion, torsion_struct],
+            [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
+            [num_int_pts, regulator, cm, optimal]]

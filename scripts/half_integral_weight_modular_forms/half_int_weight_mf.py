@@ -25,7 +25,7 @@ where
        [3,2,1] represents x^2+2*x+3
    - clgp: (list of ints) the class group structure [a_1,a_2,...] where
 """
-
+from __future__ import print_function
 import sys
 import re
 import json
@@ -46,7 +46,7 @@ saving = True
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def makels(li):
   li2 = [str(x) for x in li]
@@ -79,10 +79,10 @@ def do_import(ll):
     form = forms.find_one({'label': label})
 
     if form is None:
-        print "new form"
+        print("new form")
         form = data
     else:
-        print "form already in database"
+        print("form already in database")
         form.update(data)
     if saving:
         forms.save(form)
@@ -90,7 +90,7 @@ def do_import(ll):
 # Loop over files
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     for line in fn.readlines():

@@ -1,6 +1,6 @@
 // This is the snap.svg script way of controlling the files.
 var s = Snap("#lmdfb_map");
-var svg_desc = "svg_description" // CSS selector for description div box
+var svg_desc = "svg_description"; // CSS selector for description div box
 var svg_examples = "svg_examples";
 var svg_element_currently_clicked = 0;
 var svg_element_currently_clicked_ID = "";
@@ -18,7 +18,7 @@ var tux = Snap.load("lmfdbmap/lmfdbmap.svg", function ( loadedFragment )
     s.append( loadedFragment );
 
     var JSON_entries, IDList = "";
-    for( i = 0; i < svg.json.length; i++)
+    for(var i = 0; i < svg.json.length; i++)
     {
         //This allows you to have multiple elements that trigger the description text
         JSON_entries = svg.json[i].id.split(",");
@@ -77,7 +77,7 @@ var fillNewInformation = function ( description_text, description_list, descript
     document.getElementById( svg_desc ).innerHTML += "<p>" + description_text + "</p>";
 
     //Fills related objects list/DIV
-    split_list = description_list.split(",");
+    var split_list = description_list.split(",");
     split_list_links = description_list_link.split(",");
     var list_html = document.getElementById( svg_examples );
 
@@ -87,13 +87,12 @@ var fillNewInformation = function ( description_text, description_list, descript
         list_html.innerHTML = "<p>Examples</p>";
 
         var temp_string = "";
-        for(i = 0; i < split_list.length; i++)
+        for(var i = 0; i < split_list.length; i++)
         {
       //      temp_string = temp_string + "<a href=\"" + split_list_links[i] + "\">\n" + "<li>" + split_list[i] + "</li>\n" + "</a>\n";
             temp_string = temp_string + "<li>" + split_list[i] + "</li>\n";
         };
-        list_html.innerHTML += "<ul>" + temp_string + "</ul>"
-
+        list_html.innerHTML += "<ul>" + temp_string + "</ul>";
     }
     else
     {
@@ -106,7 +105,7 @@ var fillNewInformation = function ( description_text, description_list, descript
 var change_opacity = function ( elements, opacity, bypass_if_statement = false )
 {
     var opaque_elements = elements.split(",");
-    for(i = 0; i < opaque_elements.length; i++)
+    for(var i = 0; i < opaque_elements.length; i++)
     {
     if( svg_element_currently_clicked_ID != elements || bypass_if_statement)
         {

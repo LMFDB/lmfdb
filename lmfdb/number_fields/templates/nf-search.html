@@ -2,74 +2,7 @@
 {% block content %}
 {# Refine search page #}
 
-<h2> Further refine search </h2>
-
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
-<table border="0">
-
-<tr>
-<td align=left> {{KNOWL('nf.degree', title='Degree')}} 
-<td align=left> {{KNOWL('nf.signature', title='Signature')}} 
-<td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} 
-<td align=left> {{KNOWL('nf.class_number', title='Class number')}} 
-<td align=left> {{KNOWL('nf.ideal_class_group', title='Class group')}} 
-<td align=left> {{KNOWL('nf.regulator', title='Regulator')}} 
-
-<tr>
-<td align=left> <input type='text' name='degree' size="10" value="{{info.degree}}">
-<td align=left> <input type='text' name='signature' size="10" value="{{info.signature}}">
-<td align=left> <input type='text' name='galois_group' size="10" value="{{info.galois_group}}">
-<td align=left> <input type='text' name='class_number' size="10" value="{{info.class_number}}">
-<td align=left> <input type='text' name='class_group' size="10" value="{{info.class_group}}">
-<td align=left> <input type='text' name='regulator' size="10" value="{{info.regulator}}">
-
-<tr>
-<td align=left colspan='2'> {{KNOWL('nf.ramified_primes', title='Number of ramified primes')}}
-<td align=left colspan='2'> Set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
-<td align=left> {{KNOWL('nf.unramified_prime', title='Unramified primes')}}
-<td align='left'> {{ KNOWL('nf.cm_field', title='CM field') }}</td>
-
-<tr>
-<td align=left colspan='2'> <input type='text' name='num_ram' size="10" value="{{info.num_ram}}">
-
-<td align=left colspan="2">
-<select name = "ram_quantifier">
-  <option value='contained' {{ "selected" if info.ram_quantifier == 'contained'}} >subset of</option>
-  <option value='' {{ "selected" if info.ram_quantifier != 'contained' and info.ram_quantifier != 'include'}} >equal to </option>
-  <option value='include' {{ "selected" if info.ram_quantifier == 'include'}}>superset of</option>
-</select>
- <input type='text' name='ram_primes' size="10" value="{{info.ram_primes}}"></td>
-
-<td align=left> <input type='text' name='ur_primes' size="10" value="{{info.ur_primes}}">
-
-<td><select name='cm_field' width="105" style="width: 105px">
-    <option ></option>
-    <option value='True' {{ "selected" if info.cm_field == 'True'}} >True</option>
-    <option value='False' {{ "selected" if info.cm_field == 'False'}} >False</option>
-  </select>
-
-<tr>
-<td align='left' colspan='2'> {{KNOWL('nf.discriminant', title='Discriminant')}} range 
-<td align='left' colspan='2'> {{KNOWL('nf.root_discriminant', title='Root discriminant')}} range 
-
-<tr>
-<td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
-<td align='left' colspan='2'> <input type='text' name='rd' size='20' value="{{info.rd}}"></td>
-
-{# 
-<tr>
-<td align='left' colspan='4'>Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
-</tr>
-#}
-
-<tr> 
-<td class="button" align=left><button type='submit' value='refine'>Search again</button></td> 
-</tr>
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% if info.err is defined %}
 {% if info.label is defined %}
@@ -91,14 +24,14 @@
 {% endif %}
 {% include 'matches.html' %}
 {% if info.number %}
-<table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>
+<table class="ntdata" id="fieldTab"`>
 <thead>
 <tr>
-<th>Label</th>
-<th>Polynomial</th>
-<th>Discriminant</th>
-<th>Galois group</th>
-<th>Class group</th>
+<th>{{KNOWL('nf.label', 'Label')}}</th>
+<th>{{KNOWL('nf.defining_polynomial', 'Polynomial')}}</th>
+<th>{{KNOWL('nf.discriminant', 'Discriminant')}}</th>
+<th>{{KNOWL('nf.galois_group', 'Galois group')}}</th>
+<th>{{KNOWL('nf.ideal_class_group', 'Class group')}}</th>
 </tr>
 </thead>
 <tbody>
@@ -112,7 +45,7 @@
 {# {% if field.class_group is defined %} #}
 {% if wnf.haskey('class_group') %}
   {% if field.class_group=='' %}
-    <td> Trivial 
+    <td> Trivial
   {% else %}
     <td>{{ wnf.class_group_invariants() }}
   {% endif %}
@@ -125,7 +58,6 @@
 {% endfor %}
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

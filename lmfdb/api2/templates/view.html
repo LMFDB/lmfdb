@@ -1,0 +1,42 @@
+{% extends "base_pretty.html" %}
+
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('API2.static', filename='viewer.js') }}"></script>
+<script type="text/javascript">
+
+    var dataRoot = '/api2/';
+    var dataSource = "{{data_url}}";
+    var offset = 0;
+    var defaultChunkSize = 10;
+    var hasMoreRecords = true;
+
+</script>
+<script type="text/javascript">
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      fetchInitial();
+    });
+
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} API2 Data {% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>Showing records <span id=num>???</span> of <span id=totnum> 0 </span> returned by API for {{data_url}}
+   </p>
+</div>
+<div id="dataDiv">
+
+</div>
+<p></p>
+<div id='buttonDiv'>
+  <input type="button" class = "button" id="EDprevbutt" value="Previous" onclick="this.blur();fetchPrev()" title="Get Previous Records"/>
+  <input type="button" class = "button" id="EDnextbutt" value="Next" onclick="this.blur();fetchNext()" title="Get Next Records"/>
+</div>
+
+{% endblock main_body %}

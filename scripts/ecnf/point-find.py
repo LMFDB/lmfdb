@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 r""" Functions to add ranks and generators to elliptic curves in the
 database by outputting a Magma script and parsing its output """
+from __future__ import print_function
 
 # 2019-02-27: converted to work with the postgres database (JEC)
 
 from lmfdb import db
 
-print "setting nfcurves and qcurves"
+print("setting nfcurves and qcurves")
 nfcurves = db.ec_nfcurves
 qcurves = db.ec_curves
 
@@ -86,7 +87,7 @@ def map_points(maps, source, Plist, verbose=False):
         return [Plist]
     Qlists = [[]] * ncurves
     Qlists[source] = Plist
-    if len(Plist) == 0:
+    if not Plist:
         return Qlists
     nfill = 1
     # print("Qlists = %s" % Qlists)

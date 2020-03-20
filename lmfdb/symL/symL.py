@@ -13,13 +13,15 @@ AUTHORS:
 #
 #                  http://www.gnu.org/licenses/
 ########################################################################
-
+from __future__ import print_function
+from __future__ import absolute_import
+from six.moves import range
 
 from sage.structure.sage_object import SageObject
 import sage.rings.all
 
 from sage.all import binomial
-from sympowlmfdb import sympowlmfdb
+from .sympowlmfdb import sympowlmfdb
 
 
 def tbin(a, b):
@@ -32,7 +34,7 @@ class SymmetricPowerLFunction(SageObject):
         if E.has_cm():
             raise ValueError("E should not be cm")
 
-        from sympowlmfdb import sympowlmfdb
+        from .sympowlmfdb import sympowlmfdb
         bad_primes, conductor, root_number = sympowlmfdb.local_data(E, m)
         self.bad_prime_euler = {}
         self.bad_primes = [i for (i, _) in bad_primes]
@@ -59,7 +61,7 @@ class SymmetricPowerLFunction(SageObject):
         x = R('x')
         F = R(1)
         ap = self.E.ap(p)
-        for i in range(0, (m - 1) / 2 + 1):
+        for i in range(0, (m - 1) // 2 + 1):
             s = m - 2 * i
             s2 = s // 2
 
@@ -153,14 +155,14 @@ def symmetricEulerFactor(E, m, p):
     t = R('t')
     F = 1
 
-    print type(F)
+    print(type(F))
 
-    for i in range(0, (m - 1) / 2 + 1):
+    for i in range(0, (m - 1) // 2 + 1):
         s = m - 2 * i
         s2 = s // 2
         ap = E.ap(p)
 
-        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in xrange(0, s2 + 1)])
+        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(s2 + 1)])
 
         if s % 2 != 0:
             TI = ap * TI

@@ -1,6 +1,7 @@
-import inventory_helpers as ih
-import lmfdb_inventory as inv
-import inventory_db_core as idc
+from __future__ import absolute_import, print_function
+from . import inventory_helpers as ih
+from . import lmfdb_inventory as inv
+from . import inventory_db_core as idc
 from lmfdb import db as lmfdb_db
 
 class UpdateFailed(Exception):
@@ -61,7 +62,7 @@ def update_fields(diff, storeRollback=True):
                     #If this fails try it as a field
                     if ih.is_probable_record_hash(change['item']):
                         updated = idc.update_record_description(_c_id['id'], {'hash':change["item"], change["field"]:change["content"]})
-                        if updated['err'] == False:
+                        if updated['err'] is False:
                             succeeded = True;
                     if not succeeded:
                         updated = idc.update_field(_c_id['id'], change["item"], change["field"], change["content"], type="human")
@@ -75,7 +76,7 @@ def update_fields(diff, storeRollback=True):
         except Exception as e:
             raise UpdateFailed(str(e))
 
-    except Exception as e:
+    except Exception:
         #inv.log_dest.error("Error updating fields "+ str(e))
         pass
 

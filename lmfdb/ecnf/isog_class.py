@@ -251,7 +251,7 @@ def make_graph(M):
                            left[1]: [-0.14, -0.15], right[1]: [0.14, -0.15],
                            left[2]: [-0.14, -0.3], right[2]: [0.14, -0.3]})
 
-    G.relabel(range(1, n + 1))
+    G.relabel(list(range(1, n + 1)))
     return G
 
 

@@ -16,7 +16,7 @@ assoc(entry, lis, bnd=-1) =my(b);b=#lis;if(bnd>-1,b=bnd);for(j=1,b,if(lis[j]==en
 
 /* Needs to be adjusted for higher degree polynomials */
 galt(pol) = return(polgalois(pol)[3]);
-galt(pol) = if(poldegree(pol)<12, return(polgalois(pol)[3]), return(galtord(pol)[1]));
+galt(pol) = if(poldegree(pol)<8, return(polgalois(pol)[3]), return(galtord(pol)[1]));
 
 mult(lis) =
 {
@@ -42,7 +42,21 @@ getsubs(pol)=
   return(mult(sbs));
 }
 
-load(p,n)=return(read(Str("/home/jj/data/localfields-lmfdb/file-src/p"p"d"n"all")));
+iscm(pol,subs)=
+{
+  my(deg,s2);
+  deg=poldegree(pol);
+  if(deg % 2 == 1, return(0));
+  if(polsturm(pol) != 0, return(0));
+  subs = apply(z->z[1],subs);
+  subs = apply(Polrev,subs);
+  s2 = select(z->poldegree(z)*2==deg, subs);
+  for(j=1,#s2,
+    if(polsturm(s2[j]) == deg/2, return(1)));
+  return(0);
+}
+
+load(p,n)=return(read(Str("/scratch/home/jj/local-fields/file-src/p"p"d"n"all")));
 
 onealg(pol,p)=
 {
@@ -88,7 +102,7 @@ doit(pol)=
     );
     localg = apply(z->onealg(pol,z), rmps);
     subs = getsubs(nf);
-    return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps,localg]);
+    return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps,localg,iscm(pol,subs)]);
     /* reg and units if slow */
     /* grh if certify is too slow */
 }
@@ -123,7 +137,7 @@ doit1(ll)=
     );
     localg = apply(z->onealg(pol,z), rmps);
     subs = getsubs(nf);
-    return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps, localg]);
+    return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps, localg,iscm(pol,subs)]);
     /* reg and units if slow */
     /* grh if certify is too slow */
 }

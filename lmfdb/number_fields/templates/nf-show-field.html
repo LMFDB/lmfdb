@@ -34,6 +34,7 @@ table.ntdata a {
              <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
              <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
             <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
+            <tr><td> $|{{ info.autstring|safe }}(K/\Q)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
   {% if info.is_abelian %}
             <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
@@ -83,22 +84,22 @@ table.ntdata a {
           {{ place_code('unit_group') }}
 
           <table>
-            <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
+            <tr><td>{{ KNOWL('nf.rank', title='Rank')}}:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
             <td>{{ place_code('unit_rank') }}</tr>
-            <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}
+            <tr><td>{{ KNOWL('nf.torsion', title='Torsion generator') }}:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}
             <td>{{ place_code('unit_torsion_gen') }}</tr>
 {% if info.unit_rank==1 %}
-            <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+            <tr><td>{{ KNOWL('nf.fundamental_units', title='Fundamental unit') }}:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
                 {{ info.grh_label|safe }}
               <td>{{ place_code('fundamental_units') }}
             </tr>
             {% endif %}
             {% if info.unit_rank>1 %}
-            <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
+            <tr><td>{{ KNOWL('nf.fundamental_units', title='Fundamental units') }}:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
                 {{ info.grh_label|safe }}
             <td>{{ place_code('fundamental_units') }}</tr>
             {% endif %}
-            <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
+            <tr><td>{{ KNOWL('nf.regulator', title='Regulator') }}:<td>&nbsp;&nbsp;<td>{{info.regulator}}
           {{ info.grh_label|safe }}
             <td>{{ place_code('regulator') }}
            </tr>

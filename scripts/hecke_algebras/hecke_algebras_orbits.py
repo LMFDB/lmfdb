@@ -8,7 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
-
+from __future__ import print_function
 import sys
 import re
 import json
@@ -29,7 +29,7 @@ saving = True
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def makels(li):
   li2 = [str(x) for x in li]
@@ -49,7 +49,7 @@ hecke_orb.create_index('level')
 hecke_orb.create_index('weight')
 hecke_orb.create_index('parent_label')
 
-print "finished indices"
+print("finished indices")
 
 
 ## Main importing function
@@ -64,10 +64,10 @@ def do_import(ll):
     alg_orb = hecke_orb.find_one({'parent_label': parent_label, 'orbit_label': orbit_label})
 
     if alg_orb is None:
-        print "new orbit"
+        print("new orbit")
         alg_orb = data
     else:
-        print "orbit already in the database"
+        print("orbit already in the database")
         alg_orb.update(data)
     if saving:
         hecke_orb.update({'orbit_label': orbit_label} , {"$set": alg_orb}, upsert=True)
@@ -77,7 +77,7 @@ def do_import(ll):
 # Loop over files
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     for line in fn.readlines():

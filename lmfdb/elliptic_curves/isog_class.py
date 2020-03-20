@@ -2,7 +2,7 @@
 from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND
 from lmfdb import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -52,7 +52,7 @@ class ECisog_class(object):
     def make_class(self):
         self.CM = self.cm
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
-        self.conductor = int(N)
+        self.conductor = N = int(N)
         # Extract the size of the isogeny class from the database
         self.ncurves = ncurves = self.class_size
         # Create a list of the curves in the class from the database
@@ -60,11 +60,31 @@ class ECisog_class(object):
         self.curves = [db.ec_curves.lucky({'iso':self.iso, number_key: i+1})
                           for i in range(ncurves)]
 
-        # Set optimality flags.  The optimal curve is number 1 except
-        # in one case which is labeled differently in the Cremona tables
-        self.optimality_known = (self.ncurves==1) or (self.conductor<60000)
+        # Set optimality flags.  The optimal curve is conditionally
+        # number 1 except in one case which is labeled differently in
+        # the Cremona tables.  We know which curve is optimal iff the
+        # optimality code for curve #1 is 1 (except for class 990h).
+
+        # Note that self is actually an elliptic curve, with number=1.
+
+        # The code here allows us to update the display correctly by
+        # changing one line in this file (defining OPTIMALITY_BOUND)
+        # without changing the data.
+
+        self.optimality_bound = OPTIMALITY_BOUND
+        self.optimality_known = (N<OPTIMALITY_BOUND) or (self.optimality==1) or (self.iso=='990h')
+        self.optimal_label = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+
+        if N<OPTIMALITY_BOUND:
+            for c in self.curves:
+                c['optimal'] = (c['number'] == (3 if self.iso=='990h' else 1))
+                c['optimality_known'] = True
+        else:
+            for c in self.curves:
+                c['optimal'] = (c['optimality']>0) # this curve possibly optimal
+                c['optimality_known'] = (c['optimality']==1) # this curve certainly optimal
+
         for c in self.curves:
-            c['optimal'] = (c['number']==(3 if self.iso == '990h' else 1))
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['label'])
@@ -79,7 +99,7 @@ class ECisog_class(object):
         from sage.matrix.all import Matrix
         if self.label_type == 'Cremona':
             # permute rows/cols
-            perm = lambda i: (c for c in self.curves if c['number']==i+1).next()['lmfdb_number']-1
+            perm = lambda i: next(c for c in self.curves if c['number']==i+1)['lmfdb_number']-1
             self.isogeny_matrix = [[self.isogeny_matrix[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         self.isogeny_matrix = Matrix(self.isogeny_matrix)
@@ -95,9 +115,12 @@ class ECisog_class(object):
 
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
-        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'related_objects':{'$contains':'EllipticCurve/Q/%s/%s' % (N, iso)}},'label')
-        self.newform_exists_in_db = self.newform_label is not None
-        if self.newform_label is not None:
+        self.newform_label = ".".join([str(N), str(2), 'a', iso])
+#        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'related_objects':{'$contains':'EllipticCurve/Q/%s/%s' % (N, iso)}},'label')
+#        self.newform_exists_in_db = self.newform_label is not None
+        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
+#        if self.newform_label is not None:
+        if self.newform_exists_in_db:
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
             self.newform_link = url_for("cmf.by_url_newform_label", level=N, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
@@ -134,7 +157,7 @@ class ECisog_class(object):
 
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
-                      ('$\Q$', url_for(".rational_elliptic_curves")),
+                      (r'$\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % N, url_for(".by_conductor", conductor=N)),
                       ('%s' % iso, ' ')]
         self.code = {}
@@ -228,5 +251,5 @@ def make_graph(M, vertex_labels=None):
     if vertex_labels:
         G.relabel(vertex_labels)
     else:
-        G.relabel(range(1,n+1))
+        G.relabel(list(range(1, n + 1)))
     return G

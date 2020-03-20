@@ -1,6 +1,7 @@
-import inventory_db_core as idc
+from __future__ import absolute_import
+from . import inventory_db_core as idc
 import datetime
-from scrape_frontend import get_scrape_progress
+from .scrape_frontend import get_scrape_progress
 
 #Max time before scrape is considered to have failed
 DEFAULT_MAX_TIME = 6

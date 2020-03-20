@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, re, time
 from collections import defaultdict
 
@@ -41,7 +42,7 @@ class Follower(object):
                 # Make failures red
                 if suffix == 'log' and redline.search(line):
                     line = '\033[91m' + line + '\033[0m'
-                print '[%s.%s]: %s' % (basename, suffix, line),
+                print('[%s.%s]: %s' % (basename, suffix, line), end=" ")
                 line = F.readline()
 
     def open_file(self, basename, suffix):
@@ -98,7 +99,7 @@ class Follower(object):
                     # Make failures red
                     if redline.search(line):
                         line = '\033[91m' + line + '\033[0m'
-                    print line,
+                    print(line, end=" ")
 
     def follow(self):
         """

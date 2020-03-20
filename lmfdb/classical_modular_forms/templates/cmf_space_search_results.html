@@ -1,6 +1,8 @@
-{% extends 'cmf_space_refine_search.html' %}
+{% extends 'homepage.html' %}
 
-{% block show_results %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}
@@ -12,5 +14,7 @@
 {% include 'download_search_results.html' %}
 {% endif %}
 {% endif %}
+
+{% include 'debug_info.html' %}
 
 {% endblock %}

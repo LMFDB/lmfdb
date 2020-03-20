@@ -3,7 +3,7 @@
 
 <h2> Further refine search </h2>
 <form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 <tr>
 <td align=left>{{ KNOWL('cmf.level', title='Level') }}</td>
@@ -30,9 +30,7 @@
 
 <tr>&nbsp;</tr>
 <tr>
-<td align=left colspan=2>Maximum number of Hecke Algebras to display</td>
-<td align=left><input type='text' name='count' size=10 value={{info.count}}></td>
-<td><button type='submit' size=10  value='refine'>Search again</button></td>
+<td><button type='submit' size=10  value='refine' onclick='resetStart()'>Search again</button></td>
 </tr>
 </table>
 </form>

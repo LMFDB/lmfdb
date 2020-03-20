@@ -6,7 +6,7 @@ Imports from a json file directly to the database.
 Data is imported directly to the table lf_fields 
 
 """
-
+from __future__ import print_function
 import sys
 from sage.all import QQ
 import re
@@ -73,7 +73,7 @@ count=0
 
 # loop over files, and in each, loop over lines
 for path in sys.argv[1:]:
-    print path
+    print(path)
     fn = open(path)
     tot = 0
     outrecs = []
@@ -97,6 +97,6 @@ for path in sys.argv[1:]:
 #pp(outrecs[0])
 #lf.insert_many(outrecs)
 
-print "Added %d records"% len(outrecs)
+print("Added %d records" % len(outrecs))
 
 
