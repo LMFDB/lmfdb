@@ -219,7 +219,7 @@ def has_magma():
     try:
         magma.eval('2')
         return True
-    except TypeError:
+    except (TypeError, RuntimeError):
         return False
 def genus2_lookup_equation(f):
     if not has_magma():
