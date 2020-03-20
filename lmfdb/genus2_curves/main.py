@@ -4,7 +4,9 @@ import re
 from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ
+from sage.all import ZZ, QQ, PolynomialRing
+from sage.all import magma # doing from sage.interfaces.magma import magma leads to some bugs
+from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -99,6 +101,7 @@ def index_Q():
     info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["equation_search"] = has_magma()
     title = r'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), (r'$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -211,25 +214,75 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
+@cached_function
+def has_magma():
+    try:
+        magma.eval('2')
+        return True
+    except (TypeError, RuntimeError):
+        return False
+def genus2_lookup_equation(f):
+    if not has_magma():
+        return None
+    f.replace(" ","")
+    # TODO allow other variables, if so, fix the error message accordingly
+    R = PolynomialRing(QQ,'x')
+    if ("x" in f and "," in f) or "],[" in f:
+        if "],[" in f:
+            e = f.split("],[")
+            f = [R(literal_eval(e[0][1:]+"]")),R(literal_eval("["+e[1][0:-1]))]
+        else:
+            e = f.split(",")
+            f = [R(str(e[0][1:])),R(str(e[1][0:-1]))]
+    else:
+        f = R(str(f))
+    try:
+        C = magma.HyperellipticCurve(f)
+        g2 = magma.G2Invariants(C)
+    except TypeError:
+        return None
+    g2 = str([str(i) for i in g2]).replace(" ","")
+    for r in db.g2c_curves.search({'g2_inv':g2}):
+        eqn = literal_eval(r['eqn'])
+        D = magma.HyperellipticCurve(R(eqn[0]),R(eqn[1]))
+        # there is recursive bug in sage
+        if str(magma.IsIsomorphic(C,D)) == 'true':
+            return r['label']
+    return None
+
+TERM_RE=r'(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?'
+STERM_RE=r'(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?'
+POLY_RE=TERM_RE+'('+STERM_RE+')*'
+ZLIST_RE=r'\[\d+(,\d+)*\]'
 
 def genus2_jump(info):
-    jump = info["jump"].strip()
+    jump = info["jump"].replace(" ","")
     if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
         return redirect(url_for_curve_label(jump), 301)
-    else:
-        if re.match(r'^\d+\.[a-z]+$', jump):
-            return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\d+\.[a-z]+$', jump):
+        return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+        # Handle direct Lhash input
+        c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
+        if c:
+            return redirect(url_for_isogeny_class_label(c), 301)
         else:
-            # Handle direct Lhash input
-            if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-                c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
-                if c:
-                    return redirect(url_for_isogeny_class_label(c), 301)
-                else:
-                    errmsg = "hash %s not found"
-            else:
-                errmsg = "%s is not a valid genus 2 curve or isogeny class label"
-        flash_error(errmsg, jump)
+            errmsg = "hash %s not found"
+    elif has_magma() and (re.match(r'^'+POLY_RE+r'$',jump) or
+          re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
+          re.match(r'^'+ZLIST_RE+r'$',jump) or
+          re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
+        label = genus2_lookup_equation(jump)
+        if label:
+            return redirect(url_for_curve_label(label),301)
+        errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
+    else:
+        errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
+        if has_magma():
+            errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
+        else:
+            errmsg +="."
+    flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
 class G2C_download(Downloader):
