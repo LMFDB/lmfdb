@@ -141,9 +141,9 @@ def bianchi_modular_form_search(info, query):
             query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
             query['CM'] = {'$ne': 0} # will exclude NULL values
-    if info.get('include_base_change', None) == 'exclude':
+    if info.get('include_base_change') =='exclude':
         query['bc'] = 0
-    elif info.get('include_base_change', None) == 'only':
+    elif info.get('include_base_change') == 'only':
         query['bc'] = {'$ne': 0}
 
 @bmf_page.route('/<field_label>')
