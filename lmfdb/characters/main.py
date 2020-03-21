@@ -59,7 +59,7 @@ def render_DirichletNavigation():
     # Dirichlet characters use a different convention than the rest of the LMFDB,
     # passing the info dictionary using **.  In order for info.search_array to work
     # in the template, we include an inner info dictionary.
-    info = {'args':args, 'info':{'search_array':DirSearchArray()}}
+    info = {'args':args, 'info':dict(args, search_array=DirSearchArray())}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
@@ -129,13 +129,12 @@ def render_DirichletNavigation():
             info['err'] = str(err)
             info['info'] = {'search_array': DirSearchArray()}
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
-        info['info'] = search.results()
+        info['info'].update(search.results())
         info['title'] = 'Dirichlet Character Search Results'
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('Search Results', '') ]
         info['credit'] = 'SageMath'
-        info['info']['search_array'] = DirSearchArray()
         return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'
