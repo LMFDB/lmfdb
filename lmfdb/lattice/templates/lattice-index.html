@@ -66,57 +66,7 @@ Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') 
 
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
-<table>
-<tr>
-<td>{{ KNOWL('lattice.dimension', title='Dimension') }}</td>
-<td><input type='text' name='dim' placeholder='3' size=10>
-<td><span class="formexample"> e.g. 3 or 2-5</td>
-</tr>
-
-<tr>
-<td>{{ KNOWL('lattice.determinant', title='Determinant') }}</td>
-<td><input type='text' name='det' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1 or 10-100</td>
-</tr>
-<tr>
-<td>{{ KNOWL('lattice.level', title='Level') }}</td>
-<td><input type='text' name='level' placeholder='48' size=10>
-<td><span class="formexample"> e.g. 48 or 40-100</td>
-</tr>
-
-<tr>
-<td>{{ KNOWL('lattice.gram', title='Gram matrix') }}</td>
-<td><input type='text' name='gram' placeholder='[5,1,23]' size=10>
-<td><span class="formexample"> e.g. $[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$</td>
-</tr>
-<tr>
-<td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}</td>
-<td><input type='text' name='minimum' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1</td>
-</tr>
-
-<tr>
-<td>{{ KNOWL('lattice.class_number', title='Class number') }}</td>
-<td><input type='text' name='class_number' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1</td>
-</tr>
-
-<tr>
-<td>{{ KNOWL('lattice.group_order', title='Automorphism group order') }}</td>
-<td><input type='text' name='aut' placeholder='2' size=10>
-<td><span class="formexample"> e.g. 696729600</td>
-</tr>
-
-<tr><td>Results to display</td>
-<td><input type='text' name='count' value=50 size=10>
-</td>
-</tr>
-
-<tr>
-<td colspan=3><button type='submit' value='Search'>Search</button>
-</td>
-</tr>
-</table>
+  {{ info.search_array.html() | safe }}
 </form>
 
 

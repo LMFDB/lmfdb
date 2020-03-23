@@ -45,54 +45,7 @@ Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') 
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
-<table>
-<tr>
-<td>{{ KNOWL('st_group.weight', title='Weight') }}</td>
-<td><input type='text' name='weight' placeholder='1' size=10></td>
-<td><span class="formexample"> e.g. 1 or 0-3</td>
-</tr>
-<tr>
-<td>{{ KNOWL('st_group.degree', title='Degree') }}</td>
-<td><input type='text' name='degree' placeholder='4' size=10></td>
-<td><span class="formexample"> e.g. 4 or 1-6</td>
-</tr>
-<tr>
-<td>{{KNOWL('st_group.rational',title='Include irrational')}}</td>
-<td><select name='include_irrational' width="155" style="width: 155px">
-        <option value='' selected>no</option>
-        <option value='yes'>yes</option>
-</select></td>
-<td><span class="formexample"> e.g. yes or no</td>
-</tr>
-<tr>
-<td>{{KNOWL('st_group.identity_component',title='Identity component')}}</td>
-<td><select name='identity_component' width="155" style="width: 155px">
-        <option ></option>
-    {% for r in info.st0_list %}
-        <option value='{{r}}'>{{r}}</option>
-    {% endfor %}
-</select></td>
-<td><span class="formexample"> e.g. U(1) or USp(4)</td>
-</tr>
-<tr>
-<td>{{ KNOWL('st_group.components', title='Components') }}</td>
-<td><input type='text' name='components' placeholder='1' size=10></td>
-<td><span class="formexample"> e.g. 1 (connected) or 4-12</td>
-</tr>
-<tr>
-<td>{{ KNOWL('st_group.trace_zero_density', title='Trace zero density')}}</td>
-<td><input type='text' name='trace_zero_density' placeholder='1/2' size=10></td>
-<td><span class="formexample"> e.g. 0, 1/2, or 3/8</td>
-</tr>
-<tr
-><td>Results to display</td>
-<td><input type='text' name='count' value=50 size=10 /></td>
-</tr>
-<tr>
-<td><button type='submit' value='Search'>Search</button>
-</td>
-</tr>
-</table>
+  {{ info.search_array.html() | safe }}
 </form>
 
 {% endblock %}

@@ -19,6 +19,9 @@ from lmfdb.utils import (
     search_wrap,
     Downloader,
     StatsDisplay,
+    SearchArray,
+    TextBox,
+    SelectBox,
 )
 from . import belyi_page
 from .web_belyi import (
@@ -57,9 +60,10 @@ def learnmore_list_remove(matchstring):
 
 @belyi_page.route("/")
 def index():
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     if request.args:
-        return belyi_search(to_dict(request.args))
-    info = {"stats": Belyi_stats()}
+        return belyi_search(info)
+    info["stats"] = Belyi_stats()
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = (
@@ -130,7 +134,7 @@ def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
 
 @belyi_page.route("/<group>/<abc>")
 def by_url_belyi_search_group_triple(group, abc):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s and orders %s" % (group, abc)
     info["bread"] = [
         ("Belyi Maps", url_for(".index")),
@@ -198,7 +202,7 @@ def by_url_belyi_search_url(smthorlabel):
 
 @belyi_page.route("/<group>")
 def by_url_belyi_search_group(group):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s" % group
     info["bread"] = [
         ("Belyi Maps", url_for(".index")),
@@ -355,6 +359,48 @@ def belyi_jump(info):
             flash_error("%s is not a valid Belyi map or passport label", jump)
     return redirect(url_for(".index"))
 
+def curve_string_parser(rec):
+    curve_str = rec["curve"]
+    curve_str = curve_str.replace("^", "**")
+    K = make_base_field(rec)
+    nu = K.gens()[0]
+    S0 = PolynomialRing(K, "x")
+    x = S0.gens()[0]
+    S = PolynomialRing(S0, "y")
+    y = S.gens()[0]
+    parts = curve_str.split("=")
+    lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
+    lhs_cs = lhs_poly.coefficients()
+    if len(lhs_cs) == 1:
+        h = S0(0)
+    elif len(lhs_cs) == 2:  # if there is a cross-term
+        h = lhs_poly.coefficients()[0]
+    else:
+        raise NotImplementedError("for genus > 2")
+    # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
+    f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
+    return f, h
+
+def hyperelliptic_polys_to_ainvs(f,h):
+    f_cs = f.coefficients(sparse = False)
+    h_cs = h.coefficients(sparse = False)
+    while len(h_cs) < 2: # pad coefficients of h with 0s to get length 2
+        h_cs += [0]
+    a3 = h_cs[0]
+    a1 = h_cs[1]
+    a6 = f_cs[0]
+    a4 = f_cs[1]
+    a2 = f_cs[2]
+    return [a1, a2, a3, a4, a6]
+
+def make_base_field(rec):
+    if rec["base_field"] == [-1, 1]:
+        K = QQ  # is there a Sage version of RationalsAsNumberField()?
+    else:
+        R = PolynomialRing(QQ, "T")
+        poly = R(rec["base_field"])
+        K = NumberField(poly, "nu")
+    return K
 
 class Belyi_download(Downloader):
     table = db.belyi_galmaps
@@ -373,6 +419,7 @@ class Belyi_download(Downloader):
         ],
     }
 
+    # could use static method instead of adding self
     def make_base_field_string(self, rec, lang):
         s = ""
         if lang == "magma":
@@ -394,38 +441,6 @@ class Belyi_download(Downloader):
         else:
             raise NotImplementedError("for genus > 2")
         return s
-
-    def make_base_field(self, rec):
-        if rec["base_field"] == [-1, 1]:
-            K = QQ  # is there a Sage version of RationalsAsNumberField()?
-        else:
-            R = PolynomialRing(QQ, "T")
-            poly = R(rec["base_field"])
-            K = NumberField(poly, "nu")
-        return K
-
-    # could use static method instead of adding self
-    def curve_string_parser(self, rec):
-        curve_str = rec["curve"]
-        curve_str = curve_str.replace("^", "**")
-        K = self.make_base_field(rec)
-        nu = K.gens()[0]
-        S0 = PolynomialRing(K, "x")
-        x = S0.gens()[0]
-        S = PolynomialRing(S0, "y")
-        y = S.gens()[0]
-        parts = curve_str.split("=")
-        lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
-        lhs_cs = lhs_poly.coefficients()
-        if len(lhs_cs) == 1:
-            h = 0
-        elif len(lhs_cs) == 2:  # if there is a cross-term
-            h = lhs_poly.coefficients()[0]
-        else:
-            raise NotImplementedError("for genus > 2")
-        # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
-        f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
-        return f, h
 
     def perm_maker(self, rec, lang):
         d = rec["deg"]
@@ -483,7 +498,7 @@ class Belyi_download(Downloader):
             s += "S<x> := PolynomialRing(K);\n"
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := EllipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X := EllipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
@@ -492,7 +507,7 @@ class Belyi_download(Downloader):
             s += "S<x> := PolynomialRing(K);\n"
             # curve_poly = rec['curve'].split("=")[1]
             # s += "X := HyperellipticCurve(%s);\n" % curve_poly; # need to worry about cross-term...
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X := HyperellipticCurve(S!%s,S!%s);\n" % (curve_polys[0], curve_polys[1])
             s += "// Define the map\n"
             s += "KX<x,y> := FunctionField(X);\n"
@@ -522,8 +537,9 @@ class Belyi_download(Downloader):
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 1:
             s += "S.<x> = PolynomialRing(K)\n"
-            curve_polys = self.curve_string_parser(rec)
-            s += "X = EllipticCurve([S(%s),S(%s)])\n" % (curve_polys[0], curve_polys[1])
+            f, h = curve_string_parser(rec)
+            ainvs = hyperelliptic_polys_to_ainvs(f,h)
+            s += "X = EllipticCurve(%s)\n" % ainvs
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
@@ -534,7 +550,7 @@ class Belyi_download(Downloader):
             s += "phi = %s" % rec["map"]
         elif rec["g"] == 2:
             s += "S.<x> = PolynomialRing(K)\n"
-            curve_polys = self.curve_string_parser(rec)
+            curve_polys = curve_string_parser(rec)
             s += "X = HyperellipticCurve(S(%s),S(%s))\n" % (curve_polys[0], curve_polys[1])
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
@@ -574,6 +590,7 @@ def belyi_galmap_text_download(label):
     err_title="Belyi Maps Search Input Error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
     projection=["label", "group", "deg", "g", "orbit_size", "geomtype"],
+    url_for_label=lambda label: url_for(".by_url_belyi_search_url", smthorlabel=label),
     cleaners={"geomtype": lambda v: geometry_types_dict[v["geomtype"]]},
     bread=lambda: [("Belyi Maps", url_for(".index")), ("Search Results", ".")],
     credit=lambda: credit_string,
@@ -713,3 +730,55 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("labels"),
     )
+
+class BelyiSearchArray(SearchArray):
+    noun = "map"
+    plural_noun = "maps"
+    def __init__(self):
+        deg = TextBox(
+            name="deg",
+            label="Degree",
+            knowl="belyi.degree",
+            example="5",
+            example_span="4, 5-6")
+        group = TextBox(
+            name="group",
+            label="Group",
+            knowl="belyi.group",
+            example="4T5")
+        abc = TextBox(
+            name="abc",
+            label="Orders",
+            knowl="belyi.orders",
+            example="5",
+            example_span="4, 5-6")
+        abc_list = TextBox(
+            name="abc_list",
+            label=r"\([a,b,c]\) triple",
+            knowl="belyi.abc",
+            example="[4,4,3]")
+        g = TextBox(
+            name="g",
+            label="Genus",
+            knowl="belyi.genus",
+            example="1",
+            example_span="1, 0-2")
+        orbit_size = TextBox(
+            name="orbit_size",
+            label="Orbit size",
+            knowl="belyi.orbit_size",
+            example="2",
+            example_span="2, 5-6")
+        geomtype = SelectBox(
+            name="geomtype",
+            label="Geometry type",
+            knowl="belyi.geometry_type",
+            options=[("", "")] + list(geometry_types_dict.items()))
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example="50")
+
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
+
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype]]

@@ -1,43 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Further refine search </h2>
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-<table border="0">
-
-<tr>
-<td align=left>{{ KNOWL('lattice.dimension', title='Dimension') }}</td>
-<td align=left>{{ KNOWL('lattice.determinant', title='Determinant') }}</td>
-<td align=left>{{ KNOWL('lattice.level', title='Level') }}</td>
-<td align=left>{{ KNOWL('lattice.gram', title='Gram matrix') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='dim' size=10 value="{{info.dim}}" placeholder="3"></td>
-<td align=left><input type='text' name='det' size=10 value="{{info.det}}" placeholder="1"></td>
-<td align=left><input type='text' name='level' size=10 value="{{info.level}}" placeholder="48"></td>
-<td align=left><input type='text' name='gram' size=10 value="{{info.gram}}" placeholder="[5,1,23]"></td>
-</tr>
-
-<tr>
-<td align=left>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}</td>
-<td align=left>{{ KNOWL('lattice.class_number', title='Class number') }}</td>
-<td align=left>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='minimum' size=10 value="{{info.minimum}}" placeholder="1"> </td>
-<td align=left><input type='text' name='class_number' size=10 value="{{info.class_number}}" placeholder="1"> </td>
-<td align=left><input type='text' name='aut' size=10 value="{{info.aut}}" placeholder="2"> </td>
-</tr>
-
-<tr>&nbsp;</tr>
-<tr>
-<td class="button"><button type='submit' size=10  value='refine' onclick='resetStart()'>Search again</button></td>
-</tr>
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}
