@@ -144,6 +144,14 @@ class Configuration(object):
             default="lmfdb",
         )
 
+        postgresqlgroup.add_argument(
+            "--postgresql-dbname",
+            dest="postgresql_dbname",
+            metavar="DBNAME",
+            help="PostgreSQL database name [default: %(default)s]",
+            default="lmfdb",
+        )
+
         # undocumented options
         parser.add_argument(
             "--enable-profiler",
@@ -277,7 +285,7 @@ class Configuration(object):
         self.postgresql_options = {
             "port": getint("postgresql", "port"),
             "host": get("postgresql", "host"),
-            "dbname": "lmfdb",
+            "dbname": get("postgresql", "dbname"),
         }
 
         # optional items
