@@ -633,7 +633,7 @@ class STSearchArray(SearchArray):
             name="trace_zero_density",
             label="Trace zero density",
             knowl="st_group.trace_zero_density",
-            short_label="$\mathrm{P}[a_1=0]$",
+            short_label=r"$\mathrm{P}[a_1=0]$",
             example="1/2",
             example_span="0, 1/2, or 3/8")
         count = TextBox(
