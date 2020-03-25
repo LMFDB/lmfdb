@@ -4,7 +4,9 @@ import re
 from ast import literal_eval
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ
+from sage.all import ZZ, QQ, PolynomialRing
+from sage.all import magma # doing from sage.interfaces.magma import magma leads to some bugs
+from sage.misc.cachefunc import cached_function
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -12,7 +14,7 @@ from lmfdb.utils import (
     parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect,
+    SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect,
     StatsDisplay, formatters)
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
@@ -89,16 +91,17 @@ def index():
 
 @g2c_page.route("/Q/")
 def index_Q():
-    if len(request.args) > 0:
-        return genus2_curve_search(request.args)
-    info = {'stats': G2C_stats()}
-    info["search_array"] = G2CSearchArray()
+    info = to_dict(request.args, search_array=G2CSearchArray())
+    if len(info) > 1:
+        return genus2_curve_search(info)
+    info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] = lambda label: url_for_curve_label(label)
     curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
     info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["equation_search"] = has_magma()
     title = r'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), (r'$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -119,7 +122,7 @@ def by_url_curve_label(cond, alpha, disc, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
-    data = to_dict(request.args)
+    data = to_dict(request.args, search_array=G2CSearchArray())
     clabel = str(cond)+"."+alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
     if not db.g2c_curves.exists({'class':clabel}):
@@ -148,7 +151,7 @@ def by_url_isogeny_class_label(cond, alpha):
 
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
-    data = to_dict(request.args)
+    data = to_dict(request.args, search_array=G2CSearchArray())
     data['title'] = 'Genus 2 Curves of Conductor %s' % cond
     data['bread'] = [('Genus 2 Curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
     if len(request.args) > 0:
@@ -211,25 +214,75 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
+@cached_function
+def has_magma():
+    try:
+        magma.eval('2')
+        return True
+    except (TypeError, RuntimeError):
+        return False
+def genus2_lookup_equation(f):
+    if not has_magma():
+        return None
+    f.replace(" ","")
+    # TODO allow other variables, if so, fix the error message accordingly
+    R = PolynomialRing(QQ,'x')
+    if ("x" in f and "," in f) or "],[" in f:
+        if "],[" in f:
+            e = f.split("],[")
+            f = [R(literal_eval(e[0][1:]+"]")),R(literal_eval("["+e[1][0:-1]))]
+        else:
+            e = f.split(",")
+            f = [R(str(e[0][1:])),R(str(e[1][0:-1]))]
+    else:
+        f = R(str(f))
+    try:
+        C = magma.HyperellipticCurve(f)
+        g2 = magma.G2Invariants(C)
+    except TypeError:
+        return None
+    g2 = str([str(i) for i in g2]).replace(" ","")
+    for r in db.g2c_curves.search({'g2_inv':g2}):
+        eqn = literal_eval(r['eqn'])
+        D = magma.HyperellipticCurve(R(eqn[0]),R(eqn[1]))
+        # there is recursive bug in sage
+        if str(magma.IsIsomorphic(C,D)) == 'true':
+            return r['label']
+    return None
+
+TERM_RE=r'(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?'
+STERM_RE=r'(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?'
+POLY_RE=TERM_RE+'('+STERM_RE+')*'
+ZLIST_RE=r'\[\d+(,\d+)*\]'
 
 def genus2_jump(info):
-    jump = info["jump"].strip()
+    jump = info["jump"].replace(" ","")
     if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
         return redirect(url_for_curve_label(jump), 301)
-    else:
-        if re.match(r'^\d+\.[a-z]+$', jump):
-            return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\d+\.[a-z]+$', jump):
+        return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+        # Handle direct Lhash input
+        c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
+        if c:
+            return redirect(url_for_isogeny_class_label(c), 301)
         else:
-            # Handle direct Lhash input
-            if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-                c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
-                if c:
-                    return redirect(url_for_isogeny_class_label(c), 301)
-                else:
-                    errmsg = "hash %s not found"
-            else:
-                errmsg = "%s is not a valid genus 2 curve or isogeny class label"
-        flash_error(errmsg, jump)
+            errmsg = "hash %s not found"
+    elif has_magma() and (re.match(r'^'+POLY_RE+r'$',jump) or
+          re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
+          re.match(r'^'+ZLIST_RE+r'$',jump) or
+          re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
+        label = genus2_lookup_equation(jump)
+        if label:
+            return redirect(url_for_curve_label(label),301)
+        errmsg = "y^2 = %s is not the equation of a genus 2 curve in the database"
+    else:
+        errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
+        if has_magma():
+            errmsg += ", or a univariate polynomial in $x$, e.g., x^5 + 1"
+        else:
+            errmsg +="."
+    flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
 class G2C_download(Downloader):
@@ -274,7 +327,6 @@ class G2C_download(Downloader):
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def genus2_curve_search(info, query):
-    info["search_array"] = G2CSearchArray()
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
@@ -454,6 +506,8 @@ def labels_page():
 
 
 class G2CSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
@@ -563,11 +617,10 @@ class G2CSearchArray(SearchArray):
             select_box=bad_quantifier,
         )
 
-        is_gl2_type = SelectBox(
+        is_gl2_type = YesNoBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
             label=r"$\GL_2$-type",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
         st_group = SelectBox(
@@ -622,34 +675,31 @@ class G2CSearchArray(SearchArray):
             ),
         )
 
-        locally_solvable = SelectBox(
+        locally_solvable = YesNoBox(
             name="locally_solvable",
             knowl="g2c.locally_solvable",
             label="Locally solvable",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
-        has_square_sha = SelectBox(
+        has_square_sha = YesNoBox(
             name="has_square_sha",
             knowl="g2c.analytic_sha",
             label=r"Order of &#1064; is square*",
             short_label=r"Square &#1064;*",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
-        geometrically_simple = SelectBox(
+        geometrically_simple = YesNoBox(
             name="is_simple_geom",
             knowl="ag.geom_simple",
             label="Geometrically simple",
             short_label=r"\(\overline{\Q}\)-simple",
-            options=[("", ""), ("True", "True"), ("False", "False")],
         )
 
         count = TextBox(
-            "count", label="Results to display", example=50, example_col=False
+            "count", label="Curves to display", example=50, example_col=False
         )
 
-        browse_array = [
+        self.browse_array = [
             [geometric_invariants],
             [conductor, is_gl2_type],
             [discriminant, st_group],
@@ -663,7 +713,7 @@ class G2CSearchArray(SearchArray):
             [bad_primes, count],
         ]
 
-        refine_array = [
+        self.refine_array = [
             [
                 conductor,
                 discriminant,
@@ -692,4 +742,3 @@ class G2CSearchArray(SearchArray):
                 locally_solvable,
             ],
         ]
-        SearchArray.__init__(self, browse_array, refine_array)

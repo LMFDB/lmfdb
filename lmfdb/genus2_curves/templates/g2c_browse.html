@@ -27,12 +27,27 @@ Some interesting curves:
 A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
 </p>
 
+{% if info['equation_search'] %}
+<h2>  Find a specific curve by equation or {{ KNOWL('g2c.label', title='label')}} </h2>
+{% else  %}
 <h2> Find a specific curve or isogeny class by {{ KNOWL('g2c.label', title='label')}} </h2>
+{% endif %}
 
 <form>
-<input type='text' name='jump' placeholder='169.a.169.1'>
-<button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 169.a.169.1 or 169.a or 1088.b </span>
+<input type='text' name='jump' placeholder='169.a.169.1' size=39>
+<button type='submit'>
+{% if info['equation_search'] %}
+  Find curve
+{% else %}
+  Search by label
+{% endif %}
+</button>
+<br><span class="formexample">
+  e.g. 169.a.169.1 or 169.a or 1088.b
+{% if info['equation_search'] %}
+  or x^5 + 1
+{% endif %}
+</span>
 </form>
 
 

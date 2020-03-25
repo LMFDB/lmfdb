@@ -12,7 +12,7 @@
 
 <p>
 <ul>
-{% for types in data.fields %}
+{% for types in info.fields %}
 <li>
 {{types[0]}}:
 {% for label,f in types[1] %}
@@ -29,7 +29,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 </p>
 <h3> Browse {{ KNOWL('ec',title='elliptic curves')}} by degree of base
   {{KNOWL('nf',title = "number field")}}:
-{% for d in data.degrees-%}
+{% for d in info.degrees-%}
 {%-if loop.index0-%}, {% endif %}
 <a href={{url_for('ecnf.statistics_by_degree', d=d)}}>{{d}}</a>
 {%-endfor-%}
@@ -38,7 +38,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 <p>
 <h3>Curves with interesting properties:</h3>
 <ul>
-{% for item in data.highlights %}
+{% for item in info.highlights %}
 <li><a href="{{item[1]}}">{{item[0]}}</a></li>
 {% endfor %}
 </ul>
@@ -60,119 +60,14 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 
 <p></p>
 <form id='search' onsubmit="cleanSubmit(this.id)">
-  <table>
-    <tr>
-     <td>{{ KNOWL('nf',title = "Base field") }}</td>
-     <td>
-     <input type='text' name='field' example="2.2.5.1" size=10 value="{{field_label}}" />
-     </td>
-     <td><span class="formexample"> e.g. 2.2.5.1 or Qsqrt5</span></td>
-  <td>{{ KNOWL('ec.base_change',title="Base change curves") }}</td>
-  <td>
-         <select name='include_base_change'>
-          {% set base_change_values = [('', 'include'), ('off', 'exclude'),  ('only', 'only')] %}
-          {% for val, text in base_change_values %}
-          <option value="{{ val }}">{{ text }}</option>
-          {% endfor %}
-         </select>
-  </td>
-     <td>{{ KNOWL('ec.q_curve',title="\(\Q\)-curves") }} </td>
-  <td>
-         <select name='include_Q_curves'>
-           <option value="" selected>include</option>
-           <option value="exclude">exclude</option>
-           <option value="only">only</option>
-         </select>
-  </td>
-
-    </tr>
-
-   <tr>
-     <td>{{ KNOWL('ec.conductor',title = "Conductor norm") }}</td>
-     <td>
-     <input type='text' name='conductor_norm' example="31" size=10 value="{{conductor_norm}}" />
-     </td>
-     <td><span class="formexample"> e.g. 31 or 1-100</span></td>
-
-  <td>{{ KNOWL('ec.isogeny',title="Isogenous curves") }}</td>
-  <td>
-         <select name='include_isogenous'>
-           <option value="off">exclude</option>
-           <option value="" selected>include</option>
-         </select>
-  </td>
-     <td>{{ KNOWL('ec.complex_multiplication',title =
-     "CM curves") }} </td>
-     <td>
-         <select name='include_cm'>
-           <option value="" selected>include</option>
-           <option value="exclude">exclude</option>
-           <option value="only">only</option>
-         </select>
-     </td>
- </tr>
-
-    <tr>
-          <td>
-          {{ KNOWL('ec.j_invariant', title="j-invariant") }}
-          </td>
-          <td colspan=2>
-          <input type='text' name='jinv' example="105474/49 + a*34213/49" size=20 value="{{jinv}}" />
-          </td>
-          <td colspan=2>
-          <span class="formexample">
-          e.g. 105474/49 + a*34213/49 over 2.0.7.1</span>
-          </td>
-
-          <td align=right>&nbsp; </td>
-          <td align=right>&nbsp; </td>
-          <td align=right>&nbsp; </td>
-      </tr>
-
-    <tr>
-          <td>
-          {{ KNOWL('ec.torsion_order',title="Torsion order") }}
-          </td>
-          <td>
-          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
-          </td>
-          <td>
-          <span class="formexample"> e.g. 2 </span>
-          </td>
-
-          <td>
-          {{ KNOWL('ec.torsion_subgroup', title="Torsion structure") }}
-          </td>
-          <td>
-            {{ tor_struct_search_nf()| safe }}
-          </td>
-          <td>
-          &nbsp;
-          </td>
-
-      </tr>
-    <tr>
-      <td>
-        {{ KNOWL('ec.isogeny',title="Cyclic isogeny degree") }}
-      </td>
-      <td>
-        <input type='text' name='isodeg' example="16" size=10 />
-      </td>
-      <td>
-        <span class="formexample"> e.g. 16 </span>
-      </td>
-      <td colspan=3>&nbsp;</td>
-    </tr>
-<tr><td>Results to display</td><td> <input type='text' name='count' value=50 size='10'></td></tr>
-<tr><td><button type='submit' value='Search'>Search</button></td></tr>
-</table>
+  {{ info.search_array.html() | safe }}
 </form>
 
 
 {% if DEBUG %}
 <hr>
 <div>
-Raw field data: {{ data.fields }}
+Raw field data: {{ info.fields }}
 </div>
 {% endif %}
 
