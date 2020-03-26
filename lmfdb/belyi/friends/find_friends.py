@@ -3,6 +3,7 @@ from lmfdb.ecnf.WebEllipticCurve import parse_NFelt, parse_ainvs
 from lmfdb.belyi.main import hyperelliptic_polys_to_ainvs, curve_string_parser
 from scripts.ecnf.import_utils import NFelt
 from ast import literal_eval
+import re
 
 # function stolen from Drew's branch g2c-eqn-lookup
 def genus2_lookup_equation_polys(f):
@@ -96,26 +97,36 @@ def find_curve_label(rec):
         print("Searched for curve for %s") % rec['label']
         return genus1_lookup_equation(rec)
     elif rec['g'] == 2:
-        if rec['base_field'] == [-1, 1]: # currently only g2 curves over QQ in LMFDB
-            f,h = curve_string_parser(rec)
+        if rec['base_field'] == [-1, 1]: # currently LMFDB only has g2 curves over QQ
             print("Searched for curve for %s") % rec['label']
             return genus2_lookup_equation(rec)
 
-def curve_label_to_url(rec):
+def find_curve_url(rec):
     label = find_curve_label(rec)
     if label:
         curve_url = ''
         if rec['g'] == 1:
             curve_url += '/EllipticCurve'
-            if rec['base_field'] == [-1, 1]:
+            if rec['base_field'] == [-1, 1]: # over QQ
                 curve_url += '/Q'
-                curve_url += label.replace(".","/")
-            else:
+                label_spl = label.split(".")
+                curve_url += '/%s' % label_spl[0] # conductor
+                curve_url += '/%s/%s' % re.match(r"(\D+)(\d+)", label_spl[1]).groups() # isog class and isomorphism index
+            else: # over number field
                 label_spl = label.split("-")
-                #re.match(r"(\D+)(\d+)", "ab5").groups()
-                curve_url += "/%s/%s/%s"
+                curve_url += "/%s/%s" % (label_spl[0], label_spl[1]) # field, conductor
+                curve_url += '/%s/%s' % re.match(r"(\D+)(\d+)", label_spl[2]).groups() # isog class and isomorphism index
         if rec['g'] == 2:
             curve_url += '/Genus2Curve'
             if rec['base_field'] == [-1, 1]:
                 curve_url += '/Q'
-                curve_url += label.replace(".","/")
+                curve_url += '/%s' % label.replace(".","/")
+        return curve_url
+
+def initialize_friends(rec):
+    rec[u'friends'] = []
+    return rec
+
+def assign_curve_friends(rec):
+    rec['friends'].append(find_curve_url(rec))
+    return rec
