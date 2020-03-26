@@ -73,6 +73,7 @@ class PostgresUserTable(PostgresBase):
         """
         try:
             import bcrypt
+            print(pwd)
             if not existing_hash:
                 existing_hash = bcrypt.gensalt().decode('utf-8')
             return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
@@ -143,7 +144,8 @@ class PostgresUserTable(PostgresBase):
             raise ValueError("User not present in database!")
         bcpass, oldpass = cur.fetchone()
         if bcpass:
-            if bcpass == self.bchash(pwd, existing_hash = bcpass):
+            print(bcpass, self.bchash(pwd, existing_hash = bcpass))
+            if bcpass.encode('utf-8') == self.bchash(pwd, existing_hash = bcpass):
                 return True
         else:
             for i in range(self.rmin, self.rmax + 1):
