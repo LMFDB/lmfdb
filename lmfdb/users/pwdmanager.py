@@ -73,7 +73,6 @@ class PostgresUserTable(PostgresBase):
         """
         try:
             import bcrypt
-            print(pwd)
             if not existing_hash:
                 existing_hash = bcrypt.gensalt().decode('utf-8')
             return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
