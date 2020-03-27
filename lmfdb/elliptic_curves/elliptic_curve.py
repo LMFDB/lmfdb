@@ -17,7 +17,7 @@ from lmfdb.utils import (
     web_latex, to_dict, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeOnlyBox,
-    parse_element_of, search_wrap)
+    YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -260,6 +260,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_floats(info,query,'regulator','regulator')
+    parse_bool(info,query,'semistable','semistable')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -729,6 +730,11 @@ class ECSearchArray(SearchArray):
             label="Regulator",
             knowl="ec.q.regulator",
             example="8.4-9.1")
+        semistable = YesNoBox(
+            name="semistable",
+            label="Semistable",
+            example="Yes",
+            knowl="ec.q.semistable")
 
         count = TextBox(
             name="count",
@@ -743,9 +749,9 @@ class ECSearchArray(SearchArray):
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
             [num_int_pts, regulator],
-            [count]]
+            [semistable, count]]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
             [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, optimal]]
+            [num_int_pts, regulator, cm, optimal, semistable]]
