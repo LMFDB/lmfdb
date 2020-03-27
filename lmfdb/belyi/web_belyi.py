@@ -178,6 +178,8 @@ class WebBelyiGalmap(object):
             data["curve"] = r"\mathbb{P}^1"
         else:
             data["curve"] = make_curve_latex(crv_str)
+        if galmap['curve_label']:
+            data['curve_label'] = galmap['curve_label']
 
         # change pairs of floats to complex numbers
         embeds = galmap["embeddings"]
