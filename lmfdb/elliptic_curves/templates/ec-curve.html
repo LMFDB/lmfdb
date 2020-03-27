@@ -353,6 +353,8 @@ text-align: center;
 }
 </style>
 
+<p>This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.q.semistable', title='semistable')}}.</p>
+
     {{ place_code('localdata') }}
 
 <table id = "local_data">
@@ -421,8 +423,10 @@ representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
 {% if not data.data.CMD %}
 \(\GL(2,\F_p)\)
-{% endif %}
 for all primes \( p \)
+{% else %}
+for all primes \( p < 1000 \)
+{% endif %}
 {% if data.data.galois_data %} {# there are non-maximal primes #}
 except those listed.
 </p>

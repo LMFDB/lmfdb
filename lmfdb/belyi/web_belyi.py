@@ -211,8 +211,12 @@ class WebBelyiGalmap(object):
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
+        # TODO: add portrait here, I think
         # Properties
-        properties = [
+        self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
+        plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
+        properties = [ (None, plot_link)] if self.plot is not None else []
+        properties += [
             ("Label", galmap["label"]),
             ("Group", str(galmap["group"])),
             ("Orders", str(galmap["abc"])),
@@ -221,6 +225,7 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
+        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
         self.friends.extend(names_and_urls(galmap['friends']))
