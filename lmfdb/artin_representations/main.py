@@ -82,6 +82,9 @@ def parse_artin_label(label, safe=False):
             return ''
     raise ValueError
 
+def both_labels(label):
+    return list(db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]}).values())
+
 # Is it a rep'n or an orbit, supporting old and new styles
 def parse_any(label):
     try:
@@ -96,15 +99,16 @@ def parse_any(label):
 
 
 def add_lfunction_friends(friends, label):
-    rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
-    if rec:
-        num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
-        for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
-            s = r['url'].split('/')
-            if r['type'] == 'CMF' and len(s) == num:
-                cmf_label = '.'.join(s[4:])
-                url = r['url'] if r['url'][0] == '/' else '/' + r['url']
-                friends.append(("Modular form " + cmf_label, url))
+    for label in both_labels(label):
+        rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
+        if rec:
+            num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
+            for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
+                s = r['url'].split('/')
+                if r['type'] == 'CMF' and len(s) == num:
+                    cmf_label = '.'.join(s[4:])
+                    url = r['url'] if r['url'][0] == '/' else '/' + r['url']
+                    friends.append(("Modular form " + cmf_label, url))
     return friends
 
 @artin_representations_page.route("/")
