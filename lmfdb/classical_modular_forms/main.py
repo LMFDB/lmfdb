@@ -4,7 +4,7 @@ import re
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
-                     cached_function, prime_range, prod
+                     cached_function, prime_range, prod, gcd
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -872,6 +872,10 @@ def set_rows_cols(info, query):
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] in ['supset', 'append']: # append for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
+                elif info['prime_quantifier'] in ['complement']:
+                    info['level_list'] = [N for N in info['level_list'] if gcd(N,rad) == 1]
+                elif info['prime_quantifier'] in ['exact']:
+                    info['level_list'] = [N for N in info['level_list'] if (rad == ZZ(N).radical())]
             except (ValueError, TypeError):
                 pass
     if not info['level_list']:
@@ -1291,9 +1295,13 @@ class CMFSearchArray(SearchArray):
             example_span='20.d',
             select_box=character_quantifier)
 
-        prime_quantifier = SubsetBox(
-            name='prime_quantifier',
-            width=105)
+        prime_quantifier = SelectBox(
+            name="prime_quantifier",
+            options=[("append", "include"),
+                     ("complement", "exclude"),
+                     ("exact", "exactly"),
+                     ("subsets", "subset of")],
+            width=75)
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
