@@ -360,7 +360,6 @@ def belyi_jump(info):
     return redirect(url_for(".index"))
 
 def curve_string_parser(rec):
-<<<<<<< HEAD
     if rec['g'] == 0:
         return None
     else:
