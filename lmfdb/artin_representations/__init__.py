@@ -25,5 +25,5 @@ register_search_function(
     "artin_representations",
     "Artin representations",
     "Search over Artin representations",
-    auto_search = 'artin_reps'
+    auto_search = 'artin_reps_new'
 )
