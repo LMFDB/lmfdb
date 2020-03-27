@@ -11,7 +11,8 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    search_wrap)
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, display_knowl,
+    search_wrap, to_dict)
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
@@ -113,12 +114,12 @@ def add_lfunction_friends(friends, label):
 
 @artin_representations_page.route("/")
 def index():
-    args = request.args
+    info = to_dict(request.args, search_array=ArtinSearchArray())
     bread = get_bread()
-    if len(args) == 0:
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list())
+    if not request.args:
+        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list(), info=info)
     else:
-        return artin_representation_search(args)
+        return artin_representation_search(info)
 
 def artin_representation_jump(info):
     label = info['natural']
@@ -138,6 +139,7 @@ def artin_representation_jump(info):
              err_title='Artin Representation Search Error',
              per_page=50,
              learnmore=learnmore_list,
+             url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
              shortcuts={'natural':artin_representation_jump},
              bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
              initfunc=lambda:ArtinRepresentation)
@@ -155,14 +157,17 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
-    parse_bool(info,query,'Is_Even')
+    # Backward support for old URLs
+    if 'Is_Even' in info:
+        info['parity'] = info.pop('Is_Even')
+    parse_bool(info,query,'parity',qfield='Is_Even')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
-    return artin_representation_search({'dimension': dim, 'conductor': conductor})
+    return artin_representation_search({'dimension': dim, 'conductor': conductor, 'search_array': ArtinSearchArray()})
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late.
@@ -173,7 +178,7 @@ support_credit = "Support by Paul-Olivier Dehaye."
 @artin_representations_page.route("/<label>")
 def render_artin_representation_webpage(label):
     if re.compile(r'^\d+$').match(label):
-        return artin_representation_search(**{'dimension': label})
+        return artin_representation_search(**{'dimension': label, 'search_array': ArtinSearchArray()})
 
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
@@ -324,3 +329,82 @@ def cande():
     return render_template("single.html", kid='rcs.cande.artin',
                            credit=tim_credit, title=t, bread=bread, 
                            learnmore=learnmore)
+
+class ArtinSearchArray(SearchArray):
+    noun = "representation"
+    plural_noun = "representations"
+    def __init__(self):
+        dimension = TextBox(
+            name="dimension",
+            label="Dimension",
+            knowl="artin.dimension",
+            example="2",
+            example_span="1, 2-4")
+        conductor = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="artin.conductor",
+            example="51,100-200")
+        group = TextBoxNoEg(
+            name="group",
+            label="Group",
+            knowl="artin.gg_quotient",
+            example="A5",
+            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+                display_knowl("group.small_group_label", "GAP id's"),
+                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("gg.label", "transitive group labels")))
+        parity = ParityBox(
+            name="parity",
+            label="Parity",
+            knowl="artin.parity")
+        container = TextBox(
+            name="container",
+            label="Smallest permutation container",
+            knowl="artin.permutation_container",
+            example="6T13",
+            example_span="6T13 or 7T6")
+        ramified = TextBox(
+            name="ramified",
+            label="Ramified primes",
+            knowl="artin.ramified_primes",
+            example="2",
+            example_span="2, 3 (no range allowed)")
+        unramified = TextBox(
+            name="unramified",
+            label="Unramified primes",
+            knowl="artin.unramified_primes",
+            example="5,7",
+            example_span="5, 7, 13 (no range allowed)")
+        root_number = TextBoxNoEg(
+            name="root_number",
+            label="Root number",
+            knowl="artin.root_number",
+            example="1",
+            example_span="at the moment, one of 1 or -1")
+        fsind = TextBoxNoEg(
+            name="frobenius_schur_indicator",
+            label="Frobenius-Schur indicator",
+            knowl="artin.frobenius_schur_indicator",
+            example="1",
+            example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")
+        count = TextBox(
+            name="count",
+            label="Results to display",
+            example="50")
+
+        self.browse_array = [
+            [dimension],
+            [conductor],
+            [group],
+            [parity],
+            [container],
+            [ramified],
+            [unramified],
+            [root_number],
+            [fsind],
+            [count]]
+
+        self.refine_array = [
+            [dimension, conductor, group, root_number, parity],
+            [container, ramified, unramified, fsind]]
