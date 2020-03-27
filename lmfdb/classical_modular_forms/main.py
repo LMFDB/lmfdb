@@ -13,8 +13,9 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox, SubsetBox, ParityBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect, SelectBoxNoEg,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
+    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    SubsetBox, ParityBox, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -1433,11 +1434,7 @@ class CMFSearchArray(SearchArray):
             name='num_forms',
             label='')
 
-        results = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-        )
+        results = CountBox()
 
         wt1only = BasicSpacer("Only for weight 1:")
 

@@ -423,6 +423,16 @@ class SubsetBox(SelectBox):
                 ('subset', 'subset of'),
                 ('supset', 'superset of')]
 
+class CountBox(TextBox):
+    def __init__(self):
+        TextBox.__init__(
+            self,
+            name="count",
+            label="Results to display",
+            example=50,
+            example_col=True,
+            example_span="")
+
 class SearchButton(SearchBox):
     def __init__(self, value, description, width=170, **kwds):
         kwds['label'] = kwds.get('label', '')
