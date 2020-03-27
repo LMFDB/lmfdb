@@ -221,11 +221,9 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
-        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
-        #if galmap['friends']:
-            #self.friends.append(names_and_urls(galmap['friends']))
+        self.friends.extend(names_and_urls(galmap['friends']))
 
         # Downloads
         if galmap["g"] <= 2:

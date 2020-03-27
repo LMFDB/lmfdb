@@ -106,7 +106,7 @@ def find_curve_url(rec):
     if label:
         curve_url = ''
         if rec['g'] == 1:
-            curve_url += '/EllipticCurve'
+            curve_url += 'EllipticCurve'
             if rec['base_field'] == [-1, 1]: # over QQ
                 curve_url += '/Q'
                 label_spl = label.split(".")
@@ -117,7 +117,7 @@ def find_curve_url(rec):
                 curve_url += "/%s/%s" % (label_spl[0], label_spl[1]) # field, conductor
                 curve_url += '/%s/%s' % re.match(r"(\D+)(\d+)", label_spl[2]).groups() # isog class and isomorphism index
         if rec['g'] == 2:
-            curve_url += '/Genus2Curve'
+            curve_url += 'Genus2Curve'
             if rec['base_field'] == [-1, 1]:
                 curve_url += '/Q'
                 curve_url += '/%s' % label.replace(".","/")
@@ -128,5 +128,13 @@ def initialize_friends(rec):
     return rec
 
 def assign_curve_friends(rec):
-    rec['friends'].append(find_curve_url(rec))
+    curve_url = find_curve_url(rec)
+    if curve_url:
+        rec['friends'].append(curve_url)
+    return rec
+
+def assign_curve_label(rec):
+    label = find_curve_label(rec)
+    if label:
+        rec['curve_label'] = label
     return rec
