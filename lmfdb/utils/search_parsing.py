@@ -820,9 +820,9 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None: process = lambda x: x
-    if inp in ["True", "yes", "1"]:
+    if inp in ["True", "yes", "1", "even"]: # artin reps use parse_bool for an is_even parity field
         query[qfield] = process(True)
-    elif inp in ["False", "no", "-1", "0"]:
+    elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
