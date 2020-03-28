@@ -11,8 +11,8 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, ParityBox, display_knowl,
-    search_wrap, to_dict)
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, SubsetBox, TextBoxWithSelect,
+    display_knowl, search_wrap, to_dict)
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
@@ -86,7 +86,7 @@ def index():
         return artin_representation_search(info)
 
 def artin_representation_jump(info):
-    label = info['natural']
+    label = info['jump']
     try:
         label = parse_artin_label(label)
     except ValueError:
@@ -104,16 +104,16 @@ def artin_representation_jump(info):
              per_page=50,
              learnmore=learnmore_list,
              url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
-             shortcuts={'natural':artin_representation_jump},
+             shortcuts={'jump':artin_representation_jump},
              bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
              initfunc=lambda:ArtinRepresentation)
 def artin_representation_search(info, query):
     query['Hide'] = 0
     info['sign_code'] = 0
     parse_primes(info,query,"unramified",name="Unramified primes",
-                 qfield="BadPrimes",mode="complement")
+                 qfield="BadPrimes",mode="exclude")
     parse_primes(info,query,"ramified",name="Ramified primes",
-                 qfield="BadPrimes",mode="append")
+                 qfield="BadPrimes",mode=info.get("ram_quantifier"))
     parse_element_of(info,query,"root_number",qfield="GalConjSigns")
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
@@ -296,6 +296,8 @@ def cande():
 class ArtinSearchArray(SearchArray):
     noun = "representation"
     plural_noun = "representations"
+    jump_example = "3.2e3_7e5.7t3.1c1"
+    jump_egspan = "e.g. 3.2e3_7e5.7t3.1c1"
     def __init__(self):
         dimension = TextBox(
             name="dimension",
@@ -327,11 +329,15 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.permutation_container",
             example="6T13",
             example_span="6T13 or 7T6")
-        ramified = TextBox(
+        ram_quantifier = SubsetBox(
+            name="ram_quantifier",
+            width=50)
+        ramified = TextBoxWithSelect(
             name="ramified",
             label="Ramified primes",
             knowl="artin.ramified_primes",
-            example="2",
+            example="2, 3",
+            select_box=ram_quantifier,
             example_span="2, 3 (no range allowed)")
         unramified = TextBox(
             name="unramified",
@@ -351,10 +357,7 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.frobenius_schur_indicator",
             example="1",
             example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [
             [dimension],

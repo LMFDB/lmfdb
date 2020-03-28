@@ -13,8 +13,8 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
-    flash_error, display_knowl,
-    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetBox, TextBoxWithSelect,
+    flash_error, display_knowl, CountBox,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -717,9 +717,9 @@ def download_search(info):
 
 
 def number_field_jump(info):
-    query = {'label_orig': info['natural']}
+    query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info,query,'natural',name="Label",qfield='label')
+        parse_nf_string(info,query,'jump',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
@@ -741,7 +741,7 @@ def number_field_jump(info):
              title='Global number field search results',
              err_title='Global number field search error',
              per_page=50,
-             shortcuts={'natural':number_field_jump,
+             shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
              split_ors=['galt'],
@@ -761,21 +761,9 @@ def number_field_search(info, query):
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
-                 qfield='ramps',mode='complement')
-    # modes are now contained (in), exactly, include
-    if 'ram_quantifier' in info and str(info['ram_quantifier']) in ['supset', 'include']:
-        mode='append'
-    elif 'ram_quantifier' in info and str(info['ram_quantifier']) in ['subset', 'contained']:
-        mode='subsets'
-    else:
-        mode='exact'
+                 qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps',mode=mode,radical='disc_rad')
-    # This seems not to be used
-    #if 'lucky' in info:
-    #    label = db.nf_fields.lucky(query, 0)
-    #    if label:
-    #        return redirect(url_for(".by_label", label=clean_input(label)))
+                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -967,6 +955,8 @@ def nf_code(**args):
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
+    jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -1026,7 +1016,7 @@ class NFSearchArray(SearchArray):
             label="Number of ramified primes",
             knowl="nf.ramified_primes",
             example=2)
-        ram_quantifier = SubsetBox(
+        ram_quantifier = SubsetNoExcludeBox(
             name="ram_quantifier",
             width=50)
         ram_primes = TextBoxWithSelect(
@@ -1040,10 +1030,7 @@ class NFSearchArray(SearchArray):
             label="Unramified primes",
             knowl="nf.unramified_prime",
             example="2,3")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        count = CountBox()
 
         self.browse_array = [
             [degree, signature],

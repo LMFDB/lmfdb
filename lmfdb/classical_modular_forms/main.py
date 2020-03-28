@@ -15,7 +15,7 @@ from lmfdb.utils import (
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
-    SubsetBox, ParityBox, CountBox, SelectBoxNoEg,
+    SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -649,8 +649,7 @@ def common_parse(info, query, na_check=False):
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
-    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
-    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
+    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
     if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
@@ -1250,10 +1249,12 @@ def dynamic_statistics():
 
 
 class CMFSearchArray(SearchArray):
+    jump_example="3.6.a.a"
+    jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
-            options=[('', 'unrestricted'),
+            options=[('', ''),
                      ('prime', 'prime'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
@@ -1268,7 +1269,7 @@ class CMFSearchArray(SearchArray):
             example_span='4, 1-20',
             select_box=level_quantifier)
 
-        weight_quantifier = ParityBox(
+        weight_quantifier = ParityMod(
             name='weight_parity',
             extra=['class="simult_select"', 'onchange="simult_change(event);"'],
             width=105)
@@ -1281,7 +1282,7 @@ class CMFSearchArray(SearchArray):
             example_span='2, 4-8',
             select_box=weight_quantifier)
 
-        character_quantifier = ParityBox(
+        character_quantifier = ParityMod(
             name='char_parity',
             extra=['class="simult_select"', 'onchange="simult_change(event);"'],
             width=105)
@@ -1295,13 +1296,9 @@ class CMFSearchArray(SearchArray):
             example_span='20.d',
             select_box=character_quantifier)
 
-        prime_quantifier = SelectBox(
+        prime_quantifier = SubsetBox(
             name="prime_quantifier",
-            options=[("append", "include"),
-                     ("complement", "exclude"),
-                     ("exact", "exactly"),
-                     ("subsets", "subset of")],
-            width=75)
+            width=50)
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1344,7 +1341,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='e.g 4.0.144.1, Qsqrt5')
+            example_span='4.0.144.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',
@@ -1426,7 +1423,7 @@ class CMFSearchArray(SearchArray):
             name='projective_image_type',
             knowl='cmf.projective_image',
             label='Projective image type',
-            options=[('', 'unrestricted'),
+            options=[('', ''),
                      ('Dn', 'Dn'),
                      ('A4', 'A4'),
                      ('S4', 'S4'),

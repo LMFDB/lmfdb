@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
-    SearchArray, TextBox, SelectBox, IncludeOnlyBox,
+    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
     teXify_pol, search_wrap)
 from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
@@ -87,7 +87,7 @@ def random_bmf():    # Random Bianchi modular form
     return bianchi_modular_form_by_label(label)
 
 def bianchi_modular_form_jump(info):
-    label = info['label']
+    label = info['jump']
     dat = label.split("-")
     if len(dat)==2: # assume field & level, display space
         return render_bmf_space_webpage(dat[0], dat[1])
@@ -106,7 +106,7 @@ def bianchi_modular_form_postprocess(res, info, query):
              table=db.bmf_forms,
              title='Bianchi Modular Form Search Results',
              err_title='Bianchi Modular Forms Search Input Error',
-             shortcuts={'label': bianchi_modular_form_jump},
+             shortcuts={'jump': bianchi_modular_form_jump},
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
                        "level_ideal": lambda v: teXify_pol(v['level_ideal']),
@@ -398,6 +398,8 @@ def labels_page():
 class BMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    jump_example = "2.0.4.1-65.2-a"
+    jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     def __init__(self):
         field = TextBox(
             name='field_label',
@@ -423,24 +425,20 @@ class BMFSearchArray(SearchArray):
             name='sfe',
             label='Sign',
             knowl='mf.bianchi.sign',
-            options=[("", "any"), ("+1", "+1"), ("-1", "-1")],
+            options=[("", ""), ("+1", "+1"), ("-1", "-1")],
             example_col=True
         )
-        base_change = IncludeOnlyBox(
+        base_change = ExcludeOnlyBox(
             name='include_base_change',
             label='Base change',
             knowl='mf.bianchi.base_change'
         )
-        CM = IncludeOnlyBox(
+        CM = ExcludeOnlyBox(
             name='include_cm',
             label='CM',
             knowl='mf.bianchi.cm'
         )
-        count = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-        )
+        count = CountBox()
 
         self.browse_array = [
             [field],

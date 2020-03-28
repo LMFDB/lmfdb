@@ -9,7 +9,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, TextBox,
+    SearchArray, TextBox, CountBox,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
 from lmfdb.lattice import lattice_page
@@ -467,10 +467,7 @@ class LatSearchArray(SearchArray):
             knowl="lattice.group_order",
             example="2",
             example_span="696729600")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [[dim], [det], [level], [gram], [minimum], [class_number], [aut], [count]]
 

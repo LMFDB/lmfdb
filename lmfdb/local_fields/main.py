@@ -10,7 +10,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, to_dict,
+    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict,
     search_wrap, Downloader)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -164,7 +164,7 @@ def url_for_label(label):
     return url_for(".by_label", label=label)
 
 def local_field_jump(info):
-    return redirect(url_for_label(info['jump_to']), 301)
+    return redirect(url_for_label(info['jump']), 301)
 
 class LF_download(Downloader):
     table = db.lf_fields
@@ -184,7 +184,7 @@ class LF_download(Downloader):
              title='Local Number Field Search Results',
              err_title='Local Field Search Input Error',
              per_page=50,
-             shortcuts={'jump_to': local_field_jump, 'download': LF_download()},
+             shortcuts={'jump': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search Results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
@@ -387,6 +387,8 @@ def reliability():
 class LFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    jump_example = "2.4.6.7"
+    jump_egspan = "e.g. 2.4.6.7"
     def __init__(self):
         degree = TextBox(
             name='n',
@@ -429,11 +431,7 @@ class LFSearchArray(SearchArray):
                 display_knowl('group.small_group_label', "GAP id's"),
                 display_knowl('nf.galois_group.name', 'list of group labels'),
                 display_knowl('gg.label', 'transitive group labels')))
-        results = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-        )
+        results = CountBox()
 
         self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
         self.refine_array = [[degree, c, gal], [qp, e, topslope]]

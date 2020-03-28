@@ -391,37 +391,50 @@ class DoubleSelectBox(SearchBox):
             + "</div>"
         )
 
-class IncludeBox(SelectBox):
+class ExcludeBox(SelectBox):
     _options = [("", "include"),
                 ("exclude", "exclude")]
 
-class IncludeOnlyBox(SelectBox):
-    _options = [("", "include"),
+class ExcludeOnlyBox(SelectBox):
+    _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
 
 class YesNoBox(SelectBox):
-    _options = [('yes', 'yes'),
-                ('', ''),
-                ('no', 'no')]
+    _options = [("", ""),
+                ("yes", "yes"),
+                ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
-    _options = [("yes", "yes"),
+    _options = [("", ""),
+                ("yes", "yes"),
                 ("not_no", "yes or unknown"),
-                ("", ""),
                 ("not_yes", "no or unknown"),
                 ("no", "no"),
                 ("unknown", "unknown")]
 
 class ParityBox(SelectBox):
+    _options = [('', ''),
+                ('even', 'even'),
+                ('odd', 'odd')]
+
+class ParityMod(SelectBox):
+    # For modifying a text box (shows only)
     _options = [('', 'any parity'),
                 ('even', 'even only'),
                 ('odd', 'odd only')]
 
+
 class SubsetBox(SelectBox):
-    _options = [('', 'equal to'),
-                ('subset', 'subset of'),
-                ('supset', 'superset of')]
+    _options = [('', 'include'),
+                ('exclude', 'exclude'),
+                ('exactly', 'exactly'),
+                ('subset', 'subset')]
+
+class SubsetNoExcludeBox(SelectBox):
+    _options = [('', 'include'),
+                ('exactly', 'exactly'),
+                ('subset', 'subset')]
 
 class CountBox(TextBox):
     def __init__(self):
@@ -658,3 +671,12 @@ class SearchArray(UniqueRepresentation):
 
     def html(self, info=None):
         return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
+
+    def jump_box(self, info):
+        jump_example = info.get("jump_example", getattr(self, "jump_example", ""))
+        jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
+        jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
+        # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
+        return """<input type='text' name='jump' placeholder='%s' style='width:%spx;'>
+<button type='submit'>Find</button>
+<br><span class='formexample'>%s</span>""" % (jump_example, jump_width, jump_egspan)

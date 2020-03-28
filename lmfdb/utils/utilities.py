@@ -174,7 +174,7 @@ def an_list(euler_factor_polynomial_fn,
             k += 1
     return result
 
-def coeff_to_poly(c, var='x'):
+def coeff_to_poly(c, var=None):
     """
     Convert a list or string representation of a polynomial to a sage polynomial.
 
@@ -184,6 +184,20 @@ def coeff_to_poly(c, var='x'):
     >>> coeff_to_poly("1 - 3*x + x**2")
     x**2 - 3*x + 1
     """
+    if isinstance(c, str):
+        # accept latex
+        c = c.replace("{", "").replace("}", "")
+        # autodetect variable name
+        if var is None:
+            varposs = set(re.findall(r"[A-Za-z_]+", c))
+            if len(varposs) == 1:
+                var = varposs.pop()
+            elif not(varposs):
+                var = 'x'
+            else:
+                raise ValueError("Polynomial must be univariate")
+    if var is None:
+        var = 'x'
     return PolynomialRing(QQ, var)(c)
 
 def coeff_to_power_series(c, var='q', prec=None):
