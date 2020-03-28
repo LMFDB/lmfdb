@@ -16,7 +16,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    SearchArray, TextBox, ExcludeOnlyBox, ExcludeBox, SelectBox, CountBox,
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
     search_wrap, parse_rational)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField

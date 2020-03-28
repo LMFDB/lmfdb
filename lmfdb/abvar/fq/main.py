@@ -13,7 +13,7 @@ from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
+    SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox,
 )
