@@ -73,6 +73,19 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
@@ -83,16 +96,19 @@ class ArtinRepresentation(object):
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
-                parts = x[0].split("c")
-                base = parts[0]
-                conjindex = int(parts[1])
+                parts = x[0].split(".")
+                base = "%s.%s.%s.%s"% tuple(parts[j] for j in (0,1,2,3))
+                if len(parts)<5: # Galois orbit
+                    conjindex=1
+                else:
+                    conjindex = letters2num(parts[4])
             elif len(x) == 2: # base and gorb index
                 base = x[0]
                 conjindex = x[1]
-                label = "%sc%s"%(str(x[0]),str(x[1]))
+                label = "%s.%s"%(str(x[0]),num2letters(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
-            self._data = db.artin_reps.lucky({'Baselabel':str(base)})
+            self._data = db.artin_reps_new.lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label'] = label
@@ -100,12 +116,12 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_reps_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
         # What about label?
-        return cls(data=db.artin_reps.lucky(*args, **kwds))
+        return cls(data=db.artin_reps_new.lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
@@ -122,6 +138,9 @@ class ArtinRepresentation(object):
 
     def conductor(self):
         return int(self._data["Conductor"])
+
+    def galorbindex(self):
+        return int(self._data['GalOrbIndex'])
 
     def NFGal(self):
         return [int(n) for n in self._data["NFGal"]]
@@ -266,6 +285,7 @@ class ArtinRepresentation(object):
             return self
         if 'central_character_as_artin_rep' in self._data:
             return self._data['central_character_as_artin_rep']
+        return ArtinRepresentation(self._data['Dets'][self.galorbindex()-1])
         myfunc = self.central_char_function()
         # Get the Artin field
         nfgg = self.number_field_galois_group()
@@ -644,18 +664,18 @@ class NumberFieldGaloisGroup(object):
             else:
                 coeffs = x[0]
             coeffs = [int(c) for c in coeffs]
-            self._data = db.artin_field_data.lucky({'Polynomial':coeffs})
+            self._data = db.artin_field_data_new.lucky({'Polynomial':coeffs})
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
                 raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_field_data_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
-        result = db.artin_field_data.lucky(*args, **kwds)
+        result = db.artin_field_data_new.lucky(*args, **kwds)
         if result is not None:
             return cls(data=result)
 
