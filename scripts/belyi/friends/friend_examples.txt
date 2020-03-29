@@ -1,9 +1,0 @@
-https://beta.lmfdb.org/Belyi/4T5/%5B4%2C4%2C3%5D/4/4/31/g1/a
-4T5-[4,4,3]-4-4-31-g1-a
-https://www.lmfdb.org/EllipticCurve/Q/48/a/6
-https://beta.lmfdb.org/Belyi/5T3/%5B5%2C4%2C4%5D/5/41/41/g1/a
-5T3-[5,4,4]-5-41-41-g1-a
-https://www.lmfdb.org/EllipticCurve/2.0.4.1/1250.3/a/3
-https://beta.lmfdb.org/Belyi/6T6/%5b6,6,3%5d/6/6/33/g2/a
-6T6-[6,6,3]-6-6-33-g2-a
-https://www.lmfdb.org/Genus2Curve/Q/1728/b/442368/1
