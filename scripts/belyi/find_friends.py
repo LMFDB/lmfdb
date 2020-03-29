@@ -2,36 +2,9 @@ from lmfdb import db
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 from lmfdb.belyi.main import hyperelliptic_polys_to_ainvs, curve_string_parser
 from scripts.ecnf.import_utils import NFelt
-from ast import literal_eval
-from sage.all import QQ, PolynomialRing, EllipticCurve
-from sage.all import magma 
+from sage.all import EllipticCurve
 import re
-
-# function stolen from Drew's branch g2c-eqn-lookup
-def genus2_lookup_equation_polys(f):
-    f.replace(" ","")
-    R = PolynomialRing(QQ,'x')
-    if ("x" in f and "," in f) or "],[" in f:
-        if "],[" in f:
-            e = f.split("],[")
-            f = [R(literal_eval(e[0][1:]+"]")),R(literal_eval("["+e[1][0:-1]))]
-        else:
-            e = f.split(",")
-            f = [R(str(e[0][1:])),R(str(e[1][0:-1]))]
-    else:
-        f = R(str(f))
-    try:
-        C = magma.HyperellipticCurve(f)
-        g2 = magma.G2Invariants(C)
-    except:
-        return None
-    g2 = str([str(i) for i in g2]).replace(" ","")
-    for r in db.g2c_curves.search({'g2_inv':g2}):
-        eqn = literal_eval(r['eqn'])
-        D = magma.HyperellipticCurve(R(eqn[0]),R(eqn[1]))
-        if magma.IsIsomorphic(C,D):
-            return r['label']
-    return None
+from lmfdb.genus2_curves.main import genus2_lookup_equation as genus2_lookup_equation_polys
 
 def genus2_lookup_equation(rec):
     f,h = curve_string_parser(rec)
@@ -66,7 +39,7 @@ def genus1_lookup_equation_nf(rec):
         K = E.base_field()
         j = E.j_invariant()
         j_str = NFelt(j)
-        j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'] , "jinv":j_str}))
+        j_matches = list(db.ec_nfcurves.search({"field_label":nf_rec['label'], "jinv":j_str}))
         for r in j_matches:
             ainvs2 = parse_ainvs(K, r['ainvs'])
             E2 = EllipticCurve(ainvs2)
