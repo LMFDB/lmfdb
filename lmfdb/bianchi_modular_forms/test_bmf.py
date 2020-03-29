@@ -46,7 +46,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check that jumping to a specific newform by label works.
         """
-        self.check_args(base_url+"?label=2.0.4.1-65.2-a", 'Analytic rank')
+        self.check_args(base_url+"?jump=2.0.4.1-65.2-a", 'Analytic rank')
 
 
     #

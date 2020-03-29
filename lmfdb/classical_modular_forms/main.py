@@ -858,7 +858,7 @@ def set_rows_cols(info, query):
             raise ValueError("Must include at least one level")
     if 'char_conductor' in query:
         info['level_list'] = [N for N in info['level_list'] if (N % query['char_conductor']) == 0]
-    if info['prime_quantifier'] == '':
+    if info.get('prime_quantifier') == 'exactly':
         rad = query.get('level_radical')
         if rad:
             info['level_list'] = [N for N in info['level_list'] if ZZ(N).radical() == rad]

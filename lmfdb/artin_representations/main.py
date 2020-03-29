@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, SubsetBox, TextBoxWithSelect,
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, SubsetNoExcludeBox, TextBoxWithSelect,
     display_knowl, search_wrap, to_dict)
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
@@ -366,7 +366,7 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.permutation_container",
             example="6T13",
             example_span="6T13 or 7T6")
-        ram_quantifier = SubsetBox(
+        ram_quantifier = SubsetNoExcludeBox(
             name="ram_quantifier",
             width=50)
         ramified = TextBoxWithSelect(

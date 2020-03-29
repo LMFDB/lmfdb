@@ -677,6 +677,6 @@ class SearchArray(UniqueRepresentation):
         jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
         jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
-        return """<input type='text' name='jump' placeholder='%s' style='width:%spx;'>
+        return """<input type='text' name='jump' placeholder='%s' style='width:%spx;' value='{{ info.jump }}'>
 <button type='submit'>Find</button>
 <br><span class='formexample'>%s</span>""" % (jump_example, jump_width, jump_egspan)

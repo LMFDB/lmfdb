@@ -48,7 +48,7 @@ def parse_newton_polygon(inp, query, qfield):
 @search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     fields = [nf_string_to_label(field) for field in inp.split(",")]
-    _parse_subset(fields, query, qfield, radical=None, product=None)
+    _parse_subset(fields, query, qfield, mode=None, radical=None, product=None)
 
 @search_parser  # (clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield):
@@ -56,6 +56,6 @@ def parse_galgrp(inp, query, qfield):
     try:
         gcs = complete_group_codes(inp)
         groups = [str(n) + "T" + str(t) for n, t in gcs]
-        _parse_subset(groups, query, qfield, radical=None, product=None)
+        _parse_subset(groups, query, qfield, mode=None, radical=None, product=None)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
