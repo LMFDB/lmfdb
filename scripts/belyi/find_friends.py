@@ -3,6 +3,8 @@ from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 from lmfdb.belyi.main import hyperelliptic_polys_to_ainvs, curve_string_parser
 from scripts.ecnf.import_utils import NFelt
 from ast import literal_eval
+from sage.all import QQ, PolynomialRing, EllipticCurve
+from sage.all import magma 
 import re
 
 # function stolen from Drew's branch g2c-eqn-lookup
