@@ -583,7 +583,7 @@ class HMFSearchArray(SearchArray):
             label='Base field',
             knowl='nf',
             example='2.0.4.1',
-            example_span='either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
             example_span_colspan=4)
 
         degree = TextBox(
