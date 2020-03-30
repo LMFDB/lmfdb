@@ -43,7 +43,7 @@ class Wrapper(object):
 
     def make_query(self, info, random=False):
         query = {}
-        template_kwds = {key: info.get(key, val) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
         except ValueError as err:
@@ -120,7 +120,7 @@ class SearchWrapper(Wrapper):
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
         random = info["search_type"].startswith("Random")
-        template_kwds = {key: info.get(key, val) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
             if info.get(key, "").strip():
                 try:
@@ -248,7 +248,7 @@ class CountWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data  # error page
         query, sort, table, title, err_title, template = data
-        template_kwds = {key: info.get(key, val) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
                 res = table.count(query, groupby=self.groupby)
