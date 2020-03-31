@@ -177,6 +177,7 @@ class TextBox(SearchBox):
         example=None,
         example_span=None,
         example_span_colspan=1,
+        example_value=False,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
         width=160,
@@ -207,6 +208,7 @@ class TextBox(SearchBox):
             qfield=qfield,
         )
         self.extra = extra
+        self.example_value = example_value
 
     def _input(self, info):
         keys = self.extra + ['type="text"', 'name="%s"' % self.name]
@@ -215,7 +217,10 @@ class TextBox(SearchBox):
         if self.advanced:
             keys.append('class="advanced"')
         if self.example is not None:
-            keys.append('example="%s"' % self.example)
+            if self.example_value and info is None:
+                keys.append('value="%s"' % self.example)
+            else:
+                keys.append('example="%s"' % self.example)
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -444,6 +449,7 @@ class CountBox(TextBox):
             label="Results to display",
             example=50,
             example_col=True,
+            example_value=True,
             example_span="")
 
 class SearchButton(SearchBox):
