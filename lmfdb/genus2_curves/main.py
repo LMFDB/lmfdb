@@ -484,21 +484,21 @@ def completeness_page():
 
 @g2c_page.route("/Q/Source")
 def source_page():
-    t = r'Source of Genus 2 curve data over $\Q$'
+    t = r'Source of genus 2 curve data over $\Q$'
     bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Source',''))
     return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Reliability")
 def reliability_page():
-    t = r'Reliability of Genus 2 curve data over $\Q$'
+    t = r'Reliability of genus 2 curve data over $\Q$'
     bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Reliability',''))
     return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Q/Labels")
 def labels_page():
-    t = r'Labels for Genus 2 curves over $\Q$'
+    t = r'Labels for genus 2 curves over $\Q$'
     bread = (('Genus 2 curves', url_for(".index")), ('$\\Q$', url_for(".index")),('Labels',''))
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
