@@ -301,7 +301,7 @@ class G2C_download(Downloader):
 @search_wrap(
     template="g2c_search_results.html",
     table=db.g2c_curves,
-    title="Genus 2 curve search Results",
+    title="Genus 2 curve search results",
     err_title="Genus 2 curves search input error",
     shortcuts={"jump": genus2_jump, "download": G2C_download()},
     projection=[
@@ -320,7 +320,7 @@ class G2C_download(Downloader):
     bread=lambda: [
         ("Genus 2 curves", url_for(".index")),
         (r"$\Q$", url_for(".index_Q")),
-        ("Search Results", "."),
+        ("Search results", "."),
     ],
     learnmore=learnmore_list,
     credit=lambda: credit_string,
