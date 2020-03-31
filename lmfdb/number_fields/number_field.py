@@ -1017,8 +1017,7 @@ class NFSearchArray(SearchArray):
             knowl="nf.ramified_primes",
             example=2)
         ram_quantifier = SubsetNoExcludeBox(
-            name="ram_quantifier",
-            width=50)
+            name="ram_quantifier")
         ram_primes = TextBoxWithSelect(
             name="ram_primes",
             label="Ram. primes",

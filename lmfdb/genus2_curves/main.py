@@ -591,7 +591,6 @@ class G2CSearchArray(SearchArray):
 
         bad_quantifier = SubsetBox(
             name="bad_quantifier",
-            width=50,
         )
 
         bad_primes = TextBoxWithSelect(

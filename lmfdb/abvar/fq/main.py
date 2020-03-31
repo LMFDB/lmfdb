@@ -449,7 +449,6 @@ class AbvarSearchArray(SearchArray):
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
         simple_quantifier = SubsetBox(
             "simple_quantifier",
-            width=50,
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",

@@ -85,6 +85,7 @@ class SearchBox(TdElt):
     """
     Class abstracting the input boxes used for LMFDB searches.
     """
+    _default_width = 160
 
     def __init__(
         self,
@@ -96,7 +97,7 @@ class SearchBox(TdElt):
         example_span_colspan=1,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
-        width=160,
+        width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -121,6 +122,8 @@ class SearchBox(TdElt):
         self.short_label = short_label
         self.advanced = advanced
         self.qfield = name if qfield is None else qfield
+        if width is None:
+            width = self._default_width
         self.width = width
         self.short_width = self.width if short_width is None else short_width
 
@@ -247,6 +250,7 @@ class SelectBox(SearchBox):
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
     _options = []
+    _default_width = 170
 
     def __init__(
         self,
@@ -259,7 +263,7 @@ class SelectBox(SearchBox):
         example_span_colspan=1,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
-        width=170,
+        width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -396,10 +400,6 @@ class DoubleSelectBox(SearchBox):
             + "</div>"
         )
 
-class ExcludeBox(SelectBox):
-    _options = [("", "include"),
-                ("exclude", "exclude")]
-
 class ExcludeOnlyBox(SelectBox):
     _options = [("", ""),
                 ("exclude", "exclude"),
@@ -424,19 +424,22 @@ class ParityBox(SelectBox):
                 ('odd', 'odd')]
 
 class ParityMod(SelectBox):
-    # For modifying a text box (shows only)
+    _default_width = 85
+    # For modifying a text box
     _options = [('', 'any parity'),
                 ('even', 'even only'),
                 ('odd', 'odd only')]
 
 
 class SubsetBox(SelectBox):
+    _default_width = 60
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
 class SubsetNoExcludeBox(SelectBox):
+    _default_width = 60
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
@@ -453,9 +456,10 @@ class CountBox(TextBox):
             example_span="")
 
 class SearchButton(SearchBox):
-    def __init__(self, value, description, width=170, **kwds):
+    _default_width = 170
+    def __init__(self, value, description, **kwds):
         kwds['label'] = kwds.get('label', '')
-        SearchBox.__init__(self, width=width, **kwds)
+        SearchBox.__init__(self, **kwds)
         self.value = value
         self.description = description
 
@@ -511,6 +515,7 @@ class SearchArray(UniqueRepresentation):
         for the search buttons
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
+    _ex_col_width = 170 # only used for box layout
     sort_knowl = None
     noun = "result"
     plural_noun = "results"
@@ -571,7 +576,7 @@ class SearchArray(UniqueRepresentation):
                     bot_cols.append(box.input_html(info))
                     ex = box.example_html(info)
                     if ex:
-                        top_cols.append('<td width="170"></td>')
+                        top_cols.append('<td width="%s"></td>' % self._ex_col_width)
                         bot_cols.append(ex)
                 lines.append("".join("\n      " + col for col in top_cols))
                 lines.append("".join("\n      " + col for col in bot_cols))

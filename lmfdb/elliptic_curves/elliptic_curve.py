@@ -691,8 +691,7 @@ class ECSearchArray(SearchArray):
             options=[("", ""),
                      ("on", "one")])
         surj_quant = SubsetNoExcludeBox(
-            name="surj_quantifier",
-            width=50)
+            name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Non-max. $p$",
@@ -701,8 +700,7 @@ class ECSearchArray(SearchArray):
             example="2,3",
             select_box=surj_quant)
         bad_quant = SubsetBox(
-            name="bad_quantifier",
-            width=50)
+            name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
             label="Bad $p$",

@@ -1271,8 +1271,7 @@ class CMFSearchArray(SearchArray):
 
         weight_quantifier = ParityMod(
             name='weight_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width=105)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         weight = TextBoxWithSelect(
             name='weight',
@@ -1284,8 +1283,7 @@ class CMFSearchArray(SearchArray):
 
         character_quantifier = ParityMod(
             name='char_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width=105)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         character = TextBoxWithSelect(
             name='char_label',
@@ -1297,8 +1295,7 @@ class CMFSearchArray(SearchArray):
             select_box=character_quantifier)
 
         prime_quantifier = SubsetBox(
-            name="prime_quantifier",
-            width=50)
+            name="prime_quantifier")
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',

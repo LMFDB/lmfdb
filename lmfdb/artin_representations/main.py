@@ -367,8 +367,7 @@ class ArtinSearchArray(SearchArray):
             example="6T13",
             example_span="6T13 or 7T6")
         ram_quantifier = SubsetNoExcludeBox(
-            name="ram_quantifier",
-            width=50)
+            name="ram_quantifier")
         ramified = TextBoxWithSelect(
             name="ramified",
             label="Ramified primes",

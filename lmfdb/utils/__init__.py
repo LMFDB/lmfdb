@@ -35,7 +35,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
            'SkipBox', 'CheckBox', 'CheckboxSpacer', 'DoubleSelectBox', 'HiddenBox',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
-           'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeBox', 'ExcludeOnlyBox',
+           'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
            'Downloader',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
@@ -81,7 +81,7 @@ from .search_wrapper import search_wrap, count_wrap
 from .search_boxes import (
     SearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
-    SelectBox, YesNoBox, YesNoMaybeBox, ExcludeBox, ExcludeOnlyBox,
+    SelectBox, YesNoBox, YesNoMaybeBox, ExcludeOnlyBox,
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
 from .downloader import Downloader
