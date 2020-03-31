@@ -7,7 +7,7 @@ from lmfdb.utils import (
     flash_error, to_dict,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
-    SearchArray, TextBox, IncludeOnlyBox,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     search_wrap)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -101,7 +101,7 @@ def learnmore_list_remove(matchstring):
 
 
 def hilbert_modular_form_jump(info):
-    lab = info['label'].strip()
+    lab = info['jump'].strip()
     info['label'] = lab
     try:
         split_full_label(lab)
@@ -114,7 +114,7 @@ def hilbert_modular_form_jump(info):
              title='Hilbert Modular Form Search Results',
              err_title='Hilbert Modular Form Search Error',
              per_page=50,
-             shortcuts={'label':hilbert_modular_form_jump},
+             shortcuts={'jump':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
              bread=lambda:[("Modular Forms", url_for('modular_forms')),
@@ -575,13 +575,15 @@ def statistics_by_degree(d):
 class HMFSearchArray(SearchArray):
     noun = "form"
     plural_noun = "forms"
+    jump_example = "2.2.5.1-31.1-a"
+    jump_egspan = "e.g. 2.2.5.1-31.1-a"
     def __init__(self):
         field = TextBox(
             name='field_label',
             label='Base field',
             knowl='nf',
             example='2.0.4.1',
-            example_span='either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
             example_span_colspan=4)
 
         degree = TextBox(
@@ -620,21 +622,17 @@ class HMFSearchArray(SearchArray):
             example='1',
             example_span='e.g. 1 or 2')
 
-        base_change = IncludeOnlyBox(
+        base_change = ExcludeOnlyBox(
             name='bc',
             label='Base change',
             knowl='mf.base_change',
         )
-        CM = IncludeOnlyBox(
+        CM = ExcludeOnlyBox(
             name='cm',
             label='CM',
             knowl='mf.cm',
         )
-        count = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-        )
+        count = CountBox()
 
         self.browse_array = [
             [field],

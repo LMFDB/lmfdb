@@ -16,7 +16,7 @@ from sage.all import Permutation
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, to_dict,
-    SearchArray, TextBox, IncludeOnlyBox,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
@@ -367,7 +367,7 @@ def evaluate_expr(expr, vars):
 
 
 def higher_genus_w_automorphisms_jump(info):
-    labs = info['jump_to']
+    labs = info['jump']
     if label_is_one_passport(labs):
         return render_passport({'passport_label': labs})
     elif label_is_one_family(labs):
@@ -558,7 +558,7 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
         per_page=50,
         url_for_label=url_for_label,
         random_projection="passport_label",
-        shortcuts={'jump_to': higher_genus_w_automorphisms_jump,
+        shortcuts={'jump': higher_genus_w_automorphisms_jump,
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
         bread=lambda: get_bread([("Search Results",'')]),
@@ -1035,6 +1035,10 @@ def hgcwa_code_download(**args):
                      add_etags=False)
 
 class HGCWASearchArray(SearchArray):
+    noun = "passport"
+    plural_noun = "passports"
+    jump_example = "2.12-4.0.2-2-2-3"
+    jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
     def __init__(self):
         genus = TextBox(
             name="genus",
@@ -1071,22 +1075,19 @@ class HGCWASearchArray(SearchArray):
             knowl="curve.highergenus.aut.dimension",
             example="1",
             example_span="1, or a range like 0..2")
-        inc_hyper = IncludeOnlyBox(
+        inc_hyper = ExcludeOnlyBox(
             name="inc_hyper",
             label="Hyperelliptic curve(s)",
             knowl="ag.hyperelliptic_curve")
-        inc_cyc_trig = IncludeOnlyBox(
+        inc_cyc_trig = ExcludeOnlyBox(
             name="inc_cyc_trig",
             label="Cyclic trigonal curve(s)",
             knowl="ag.cyclic_trigonal")
-        inc_full = IncludeOnlyBox(
+        inc_full = ExcludeOnlyBox(
             name="inc_full",
             label="Full automorphism group",
             knowl="curve.highergenus.aut.full")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [
             [genus],

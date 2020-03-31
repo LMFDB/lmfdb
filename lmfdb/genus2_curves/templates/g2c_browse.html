@@ -34,20 +34,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 {% endif %}
 
 <form>
-<input type='text' name='jump' placeholder='169.a.169.1' size=39>
-<button type='submit'>
-{% if info['equation_search'] %}
-  Find curve
-{% else %}
-  Search by label
-{% endif %}
-</button>
-<br><span class="formexample">
-  e.g. 169.a.169.1 or 169.a or 1088.b
-{% if info['equation_search'] %}
-  or x^5 + 1
-{% endif %}
-</span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 

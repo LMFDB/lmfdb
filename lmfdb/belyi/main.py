@@ -22,6 +22,7 @@ from lmfdb.utils import (
     SearchArray,
     TextBox,
     SelectBox,
+    CountBox,
 )
 from . import belyi_page
 from .web_belyi import (
@@ -739,6 +740,8 @@ def labels_page():
 class BelyiSearchArray(SearchArray):
     noun = "map"
     plural_noun = "maps"
+    jump_example = "4T5-[4,4,3]-4-4-31-g1-a"
+    jump_egspan = "e.g. 4T5-[4,4,3]-4-4-31-g1-a"
     def __init__(self):
         deg = TextBox(
             name="deg",
@@ -779,10 +782,7 @@ class BelyiSearchArray(SearchArray):
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
 

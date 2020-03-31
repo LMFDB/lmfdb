@@ -16,7 +16,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    SearchArray, TextBox, IncludeOnlyBox, IncludeBox, SelectBox,
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
     search_wrap, parse_rational)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -515,7 +515,7 @@ def elliptic_curve_search(info, query):
             if query.get('jinv'):
                 query['jinv'] = ','.join(query['jinv'])
 
-    if 'include_isogenous' in info and info['include_isogenous'] in ['exclude', 'off']: # off for backward compat with urls
+    if info.get('one') == "yes":
         info['number'] = 1
         query['number'] = 1
 
@@ -718,6 +718,8 @@ def ecnf_code(**args):
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
+    jump_example = "2.2.5.1-31.1-a1"
+    jump_egspan = "e.g. 2.2.5.1-31.1-a1"
     def __init__(self):
         field = TextBox(
             name="field",
@@ -725,45 +727,40 @@ class ECNFSearchArray(SearchArray):
             knowl="nf",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
-        include_base_change = IncludeOnlyBox(
+        include_base_change = ExcludeOnlyBox(
             name="include_base_change",
             label="Base change curves",
-            knowl="ec.base_change",
-            width=50,
-            short_width=170)
-        include_Q_curves = IncludeOnlyBox(
+            knowl="ec.base_change")
+        include_Q_curves = ExcludeOnlyBox(
             name="include_Q_curves",
             label=r"\(\Q\)-curves",
-            knowl="ec.q_curve",
-            width=50,
-            short_width=170)
+            knowl="ec.q_curve")
         conductor_norm = TextBox(
             name="conductor_norm",
             label="Conductor norm",
             knowl="ec.conductor",
             example="31",
             example_span="31 or 1-100")
-        include_isogenous = IncludeBox(
-            name="include_isogenous",
-            label=r"Isogenous curves",
-            knowl="ec.isogeny",
-            width=50,
-            short_width=170)
-        include_cm = IncludeOnlyBox(
+        one = SelectBox(
+            name="one",
+            label="Curves per isogeny class",
+            knowl="ec.isogeny_class",
+            options=[("", ""),
+                     ("yes", "one")])
+        include_cm = ExcludeOnlyBox(
             name="include_cm",
-            label="CM curves",
-            knowl="ec.complex_multiplication",
-            width=50,
-            short_width=170)
+            label="CM",
+            knowl="ec.complex_multiplication")
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
-            width=300,
+            knowl="ec.j_invariant",
+            width=675,
             short_width=160,
-            colspan=(1, 2, 1),
+            colspan=(1, 4, 1),
             example_span_colspan=2,
             example="105474/49 + a*34213/49",
-            example_span="105474/49 + a*34213/49 over 2.0.7.1")
+            example_span="")
         torsion = TextBox(
             name="torsion",
             label="Torsion order",
@@ -774,34 +771,29 @@ class ECNFSearchArray(SearchArray):
                 return "[%s]" % t, "C%s" % t
             else:
                 return "[%s,%s]" % t, "C%s&times;C%s" % t
-        tor_opts = ([("", "any"),
+        tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",
             knowl="ec.torsion_subgroup",
-            options=tor_opts,
-            width=50,
-            short_width=170)
+            options=tor_opts)
         isodeg = TextBox(
             name="isodeg",
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [
-            [field, include_base_change, include_Q_curves],
-            [conductor_norm, include_isogenous, include_cm],
             [jinv],
-            [torsion, torsion_structure],
-            [isodeg],
-            [count]]
+            [field, include_base_change],
+            [conductor_norm, include_Q_curves],
+            [torsion, include_cm],
+            [isodeg, torsion_structure],
+            [count, one]]
 
         self.refine_array = [
-            [field, conductor_norm, include_isogenous, include_base_change, include_Q_curves],
+            [field, conductor_norm, one, include_base_change, include_Q_curves],
             [jinv, isodeg, torsion, torsion_structure, include_cm]]

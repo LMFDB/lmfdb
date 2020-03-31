@@ -32,12 +32,12 @@
 
 {% if info.err is defined %}
 
-{% if info.label is defined %}
+{% if info.jump is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
 <td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
+<td ><input type='text' name='jump' size=60 value="{{info.jump}}"> </td>
 <td><button type='submit' value='Find'>Find</button></td>
 </tr>
 <tr>

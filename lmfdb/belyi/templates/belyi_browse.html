@@ -24,9 +24,7 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 <h2> Find a specific Belyi map or passport by {{ KNOWL('belyi.label', title='label')}} </h2>
 
 <form>
-<input type='text' name='jump' placeholder='4T5-[4,4,3]-4-4-31-g1-a'>
-<button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 4T5-[4,4,3]-4-4-31-g1-a </span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 

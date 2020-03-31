@@ -46,11 +46,11 @@ class CmfTest(LmfdbTest):
         assert "Source of Classical Modular Form Data" in data
 
     def test_badp(self):
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").get_data(as_text=True)
-        assert '343.1.d.a' in data
-        assert '343.2.a.a' in data
-        assert '7.7.d.a' in data
-        assert '686' in data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100&search_type=List").get_data(as_text=True)
+        assert '273.1.o.a' in data
+        assert '56.1.h.a' in data
+        assert '14.2.a.a' in data
+        assert '168' in data
 
     def test_level_bread(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/', follow_redirects = True)
