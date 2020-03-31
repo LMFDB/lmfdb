@@ -51,17 +51,11 @@ Browse by abstract group:
 A <a href={{url_for('.random_group')}}>random Galois group</a> from the database.
 </p>
 
-<h2>Find a specific Galois group</h2>
+<h2>Find a specific Galois group by {{KNOWL('gg.label',title="label")}}</h2>
 
-<div>
 <form>
-Search by {{KNOWL('gg.label',title="Galois group label")}}
-<input type="text" name="jump_to" value="" placeholder="8T14"> 
-<button type="submit" value="Find">Find</button>
-<span class="formexample"> e.g. 8T14</span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
-</div>
-
 
 <h2>Search</h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">

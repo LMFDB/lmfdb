@@ -79,9 +79,7 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
 <h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
 
 <form>
-<input type='text' name='jump' placeholder='3.6.a.a'>
-<button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 3.6.a.a, 55.3.d or 20.5 </span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {# SEARCHING #}

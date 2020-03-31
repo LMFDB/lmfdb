@@ -43,11 +43,11 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 A <a href={{url_for('.random_representation')}}>random Artin representation</a> from the database.
 </p>
 
-<h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
+<h2>Find a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
 
-<div><form>
-Artin representation: <input type='text' name='natural' size='50' example='4.5648.6t13.b.a'> <button type='submit' name='search' value='Go'>label</button> <span class="formexample">e.g., 4.5648.6t13.b.a</span></form></div>
-
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 <h2> Search for an Artin representation </h2>
 

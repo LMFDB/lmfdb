@@ -22,6 +22,7 @@ from lmfdb.utils import (
     SearchArray,
     TextBox,
     SelectBox,
+    CountBox,
 )
 from . import belyi_page
 from .web_belyi import (
@@ -360,28 +361,33 @@ def belyi_jump(info):
     return redirect(url_for(".index"))
 
 def curve_string_parser(rec):
-    curve_str = rec["curve"]
-    curve_str = curve_str.replace("^", "**")
-    K = make_base_field(rec)
-    nu = K.gens()[0]
-    S0 = PolynomialRing(K, "x")
-    x = S0.gens()[0]
-    S = PolynomialRing(S0, "y")
-    y = S.gens()[0]
-    parts = curve_str.split("=")
-    lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
-    lhs_cs = lhs_poly.coefficients()
-    if len(lhs_cs) == 1:
-        h = S0(0)
-    elif len(lhs_cs) == 2:  # if there is a cross-term
-        h = lhs_poly.coefficients()[0]
+    if rec['g'] == 0:
+        return None
     else:
-        raise NotImplementedError("for genus > 2")
-    # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
-    f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
-    return f, h
+        curve_str = rec["curve"]
+        curve_str = curve_str.replace("^", "**")
+        K = make_base_field(rec)
+        nu = K.gens()[0]
+        S0 = PolynomialRing(K, "x")
+        x = S0.gens()[0]
+        S = PolynomialRing(S0, "y")
+        y = S.gens()[0]
+        parts = curve_str.split("=")
+        lhs_poly = sage_eval(parts[0], locals={"x": x, "y": y, "nu": nu})
+        lhs_cs = lhs_poly.coefficients()
+        if len(lhs_cs) == 1:
+            h = S0(0)
+        elif len(lhs_cs) == 2:  # if there is a cross-term
+            h = lhs_poly.coefficients()[0]
+        else:
+            raise NotImplementedError("for genus > 2")
+        # rhs_poly = sage_eval(parts[1], locals = {'x':x, 'y':y, 'nu':nu})
+        f = sage_eval(parts[1], locals={"x": x, "y": y, "nu": nu})
+        return f, h
 
 def hyperelliptic_polys_to_ainvs(f,h):
+    R = f.parent()
+    K = R.base_ring()
     f_cs = f.coefficients(sparse = False)
     h_cs = h.coefficients(sparse = False)
     while len(h_cs) < 2: # pad coefficients of h with 0s to get length 2
@@ -391,7 +397,7 @@ def hyperelliptic_polys_to_ainvs(f,h):
     a6 = f_cs[0]
     a4 = f_cs[1]
     a2 = f_cs[2]
-    return [a1, a2, a3, a4, a6]
+    return [K(a1), K(a2), K(a3), K(a4), K(a6)]
 
 def make_base_field(rec):
     if rec["base_field"] == [-1, 1]:
@@ -734,6 +740,8 @@ def labels_page():
 class BelyiSearchArray(SearchArray):
     noun = "map"
     plural_noun = "maps"
+    jump_example = "4T5-[4,4,3]-4-4-31-g1-a"
+    jump_egspan = "e.g. 4T5-[4,4,3]-4-4-31-g1-a"
     def __init__(self):
         deg = TextBox(
             name="deg",
@@ -774,10 +782,7 @@ class BelyiSearchArray(SearchArray):
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
 

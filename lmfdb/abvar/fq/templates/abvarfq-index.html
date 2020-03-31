@@ -42,18 +42,9 @@
 </p>
 {% endfor %}
 
-<h2> Find a specific  {{KNOWL('av.isogeny_class',title="isogeny class") }} by <!--the {{ KNOWL('av.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or-->
-    {{ KNOWL('av.fq.lmfdb_label',title="label") }} </h2>
-<!--{% if err_msg %}
- <form action={{url_for('ec.rational_elliptic_curves')}}>
- {% else %}-->
+<h2> Find a specific {{KNOWL('av.isogeny_class',title="isogeny class") }} by {{ KNOWL('av.fq.lmfdb_label',title="label") }} or {{ KNOWL('av.fq.weil_polynomial',"Weil polynomial") }}</h2>
 <form>
-    <!--{% endif %}-->
-    <input type='text' name='label' size=25 example="2.16.am_cn">
-        <button type='submit' name='jump' value='abelian variety isogeny class label'
-            ><!--polynomial coefficients or--> isogeny class label</button>
-        <br><span class="formexample">e.g. 2.16.am_cn <!--or [0,1,1,-2,0] or [-3024, 46224]-->
-        </span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 <h2 id='search_h2'> Search
   <button id="advancedtoggle" href="#">Advanced search options</button>

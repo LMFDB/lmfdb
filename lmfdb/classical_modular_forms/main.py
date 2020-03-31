@@ -4,7 +4,7 @@ import re
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
-                     cached_function, prime_range, prod
+                     cached_function, prime_range, prod, gcd
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
@@ -13,8 +13,9 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, range_formatter, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox, SubsetBox, ParityBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect, SelectBoxNoEg,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
+    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
@@ -648,8 +649,7 @@ def common_parse(info, query, na_check=False):
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
-    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
-    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
+    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
     if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
@@ -858,7 +858,7 @@ def set_rows_cols(info, query):
             raise ValueError("Must include at least one level")
     if 'char_conductor' in query:
         info['level_list'] = [N for N in info['level_list'] if (N % query['char_conductor']) == 0]
-    if info['prime_quantifier'] == '':
+    if info.get('prime_quantifier') == 'exactly':
         rad = query.get('level_radical')
         if rad:
             info['level_list'] = [N for N in info['level_list'] if ZZ(N).radical() == rad]
@@ -871,6 +871,10 @@ def set_rows_cols(info, query):
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
                 elif info['prime_quantifier'] in ['supset', 'append']: # append for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
+                elif info['prime_quantifier'] in ['complement']:
+                    info['level_list'] = [N for N in info['level_list'] if gcd(N,rad) == 1]
+                elif info['prime_quantifier'] in ['exact']:
+                    info['level_list'] = [N for N in info['level_list'] if (rad == ZZ(N).radical())]
             except (ValueError, TypeError):
                 pass
     if not info['level_list']:
@@ -1245,10 +1249,12 @@ def dynamic_statistics():
 
 
 class CMFSearchArray(SearchArray):
+    jump_example="3.6.a.a"
+    jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
-            options=[('', 'unrestricted'),
+            options=[('', ''),
                      ('prime', 'prime'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
@@ -1263,10 +1269,9 @@ class CMFSearchArray(SearchArray):
             example_span='4, 1-20',
             select_box=level_quantifier)
 
-        weight_quantifier = ParityBox(
+        weight_quantifier = ParityMod(
             name='weight_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width=105)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         weight = TextBoxWithSelect(
             name='weight',
@@ -1276,10 +1281,9 @@ class CMFSearchArray(SearchArray):
             example_span='2, 4-8',
             select_box=weight_quantifier)
 
-        character_quantifier = ParityBox(
+        character_quantifier = ParityMod(
             name='char_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width=105)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         character = TextBoxWithSelect(
             name='char_label',
@@ -1291,8 +1295,7 @@ class CMFSearchArray(SearchArray):
             select_box=character_quantifier)
 
         prime_quantifier = SubsetBox(
-            name='prime_quantifier',
-            width=105)
+            name="prime_quantifier")
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1335,7 +1338,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='e.g 4.0.144.1, Qsqrt5')
+            example_span='4.0.144.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',
@@ -1417,7 +1420,7 @@ class CMFSearchArray(SearchArray):
             name='projective_image_type',
             knowl='cmf.projective_image',
             label='Projective image type',
-            options=[('', 'unrestricted'),
+            options=[('', ''),
                      ('Dn', 'Dn'),
                      ('A4', 'A4'),
                      ('S4', 'S4'),
@@ -1433,11 +1436,7 @@ class CMFSearchArray(SearchArray):
             name='num_forms',
             label='')
 
-        results = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-        )
+        results = CountBox()
 
         wt1only = BasicSpacer("Only for weight 1:")
 

@@ -19,18 +19,38 @@ from six.moves.configparser import ConfigParser
 import argparse
 import sys
 import os
+import random
+import string
+
+root_lmfdb_path = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+)
+
+
+def abs_path_lmfdb(filename):
+    return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
+
+
+def get_secret_key():
+    secret_key_file = abs_path_lmfdb("secret_key")
+    # if secret_key_file doesn't exist, create it
+    if not os.path.exists(secret_key_file):
+        with open(secret_key_file, "w") as F:
+            # generate a random ASCII string
+            F.write(
+                "".join(
+                    [
+                        random.choice(string.ascii_letters + string.digits)
+                        for n in range(32)
+                    ]
+                )
+            )
+    return open(secret_key_file).read()
 
 
 class Configuration(object):
     def __init__(self, writeargstofile=False):
-        default_config_file = "config.ini"
-        root_lmfdb_path = os.path.abspath(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-        )
-        if root_lmfdb_path != os.path.abspath(os.getcwd()):
-            default_config_file = os.path.relpath(
-                os.path.join(root_lmfdb_path, default_config_file), os.getcwd()
-            )
+        default_config_file = abs_path_lmfdb("config.ini")
 
         # 1: parsing command-line arguments
         parser = argparse.ArgumentParser(
