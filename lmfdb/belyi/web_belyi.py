@@ -4,6 +4,7 @@ from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
+from lmfdb.utils import names_and_urls
 from flask import url_for
 
 from lmfdb import db
@@ -109,7 +110,7 @@ class WebBelyiGalmap(object):
         data -- information about the map to be displayed
         plot -- currently empty
         properties -- information to be displayed in the properties box (including link plot if present)
-        friends -- labels of related objects
+        friends -- labels or URLs of related objects
         code -- code snippets for relevant attributes in data
         bread -- bread crumbs for home page
         title -- title to display on home page
@@ -177,6 +178,8 @@ class WebBelyiGalmap(object):
             data["curve"] = r"\mathbb{P}^1"
         else:
             data["curve"] = make_curve_latex(crv_str)
+        #if galmap['curve_label']:
+        #    data['curve_label'] = galmap['curve_label']
 
         # change pairs of floats to complex numbers
         embeds = galmap["embeddings"]
@@ -227,6 +230,7 @@ class WebBelyiGalmap(object):
         # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        self.friends.extend(names_and_urls(galmap['friends']))
 
         # Downloads
         if galmap["g"] <= 2:
@@ -304,7 +308,7 @@ class WebBelyiPassport(object):
         data -- information about the map to be displayed
         plot -- currently empty
         properties -- information to be displayed in the properties box (including link plot if present)
-        friends -- labels of related objects
+        friends -- labels or URLs of related objects
         code -- code snippets for relevant attributes in data, currently empty
         bread -- bread crumbs for home page
         title -- title to display on home page

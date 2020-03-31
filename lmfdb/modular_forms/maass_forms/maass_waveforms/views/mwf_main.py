@@ -224,7 +224,7 @@ def render_one_maass_waveform(maass_id, **kwds):
             res = f.download_text()
 
         strIO = BytesIO()
-        strIO.write(res.encode('utf-8'))
+        strIO.write(str(res).encode('utf-8'))
         strIO.seek(0)
         try:
             return send_file(strIO,

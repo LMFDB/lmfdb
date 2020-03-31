@@ -1,4 +1,5 @@
 password*
+secret_key
 config.ini
 
 *.pyc
