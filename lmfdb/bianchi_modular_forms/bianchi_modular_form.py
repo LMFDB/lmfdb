@@ -87,7 +87,7 @@ def random_bmf():    # Random Bianchi modular form
     return bianchi_modular_form_by_label(label)
 
 def bianchi_modular_form_jump(info):
-    label = info['jump']
+    label = info['jump'].strip()
     dat = label.split("-")
     if len(dat)==2: # assume field & level, display space
         return render_bmf_space_webpage(dat[0], dat[1])
