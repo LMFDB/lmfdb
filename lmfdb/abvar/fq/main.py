@@ -547,7 +547,7 @@ def common_parse(info, query):
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
 
 def jump(info):
-    jump_box = info["jump"] # only called when this present
+    jump_box = info["jump"].strip() # only called when this present
     try:
         validate_label(jump_box)
     except ValueError as err:

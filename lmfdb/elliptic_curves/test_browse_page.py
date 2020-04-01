@@ -57,12 +57,12 @@ class HomePageTest(LmfdbTest):
         r"""
         Check that the link to a specific curve works.
         """
-        self.check_args("/EllipticCurve/Q/?label=11.a2&jump=curve+or+isogeny+class+label",
+        self.check_args("/EllipticCurve/Q/?jump=11.a2",
                         r'\( y^2 + y = x^{3} -  x^{2} - 10 x - 20  \)')
-        self.check_args("/EllipticCurve/Q/?label=389.a&jump=curve+or+isogeny+class+label",
+        self.check_args("/EllipticCurve/Q/?jump=389.a",
                         'Elliptic curves in class 389.a')
-        self.check_args("/EllipticCurve/Q/?label=%5B0%2C1%2C1%2C-2%2C0%5D&jump=curve+or+isogeny+class+label", '\\(\\Z^2\\)')
-        self.check_args("/EllipticCurve/Q/?label=%5B-3024%2C+46224%5D+&jump=curve+or+isogeny+class+label",
+        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", '\\(\\Z^2\\)')
+        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+",
                         '\\(\\Z^2\\)')
 
     #

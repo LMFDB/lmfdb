@@ -154,13 +154,13 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
-        err_args['err_msg'] = "Please enter a non-empty label"
+        err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
         err_args['err_msg'] = r"%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
-    label = info.get('label', '').replace(" ", "")
+    label = info.get('jump', '').replace(" ", "")
     m = match_lmfdb_label(label)
     if m:
         try:
