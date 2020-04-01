@@ -455,7 +455,7 @@ def download_search(info):
                      add_etags=False)
 
 def elliptic_curve_jump(info):
-    label = info.get('label', '').replace(" ", "")
+    label = info.get('jump', '').replace(" ", "")
     if info.get('jump','') == "random":
         return random_curve()
     # This label should be a full isogeny class label or a full
