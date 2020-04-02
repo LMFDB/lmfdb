@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-# this is the caching wrapper, use it like this:
-# @app.route(....)
-# @cached()
-# def func(): ...
 from six.moves import range
 from six import integer_types as six_integers
 from six import string_types
