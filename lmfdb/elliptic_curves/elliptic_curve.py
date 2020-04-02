@@ -721,7 +721,6 @@ class ECSearchArray(SearchArray):
         cm_field = TextBox(
             name="cm_field",
             label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
-            #label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
             example="-4",
             example_span="-4 or -3,-8",
             knowl="None")
