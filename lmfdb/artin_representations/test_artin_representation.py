@@ -20,11 +20,11 @@ class ArtinRepTest(LmfdbTest):
         assert ('Odd' in L.get_data(as_text=True))
 
     # big degree fields ok
-    def test_big_degree(self):
+    def test_big_degree_old(self):
         L = self.tc.get('/ArtinRepresentation/2.1951e2.120.1c1')
         assert '24T201' in L.get_data(as_text=True) # Galois group
 
     # same but with new labels
-    def test_big_degree(self):
+    def test_big_degree_new(self):
         L = self.tc.get('/ArtinRepresentation/2.3806401.120.b.a')
         assert '24T201' in L.get_data(as_text=True) # Galois group
