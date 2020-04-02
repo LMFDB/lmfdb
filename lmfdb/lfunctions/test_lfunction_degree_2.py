@@ -95,10 +95,10 @@ class LfunctionTest(LmfdbTest):
                    "ModularForm/GL2/Q/holomorphic/36/2/a/a/",
                    'Modular')
         self.check(homepage,
-                   "/L/ArtinRepresentation/2.2e2_37.3t2.1c1",
+                   "/L/ArtinRepresentation/2.148.3t2.a.a",
                    'Artin')
         self.check(homepage,
-                   "/ArtinRepresentation/2.2e2_37.3t2.1c1",
+                   "/ArtinRepresentation/2.148.3t2.a.a",
                    'Artin')
         self.check(homepage,
                    "/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000",
@@ -107,22 +107,22 @@ class LfunctionTest(LmfdbTest):
                    "/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000",
                    'Modular')
         self.check(homepage,
-                   "/L/ArtinRepresentation/2.163.8t12.1c2",
+                   "/L/ArtinRepresentation/2.163.8t12.a.b",
                    'Artin')
         self.check(homepage,
-                   "/ArtinRepresentation/2.163.8t12.1c2",
+                   "/ArtinRepresentation/2.163.8t12.a.b",
                    'Artin')
         self.check(homepage,
-                   "/L/ArtinRepresentation/2.2e2_17.4t3.2c1",
+                   "/L/ArtinRepresentation/2.68.4t3.b.a",
                    'Artin')
         self.check(homepage,
-                   "/ArtinRepresentation/2.2e2_17.4t3.2c1",
+                   "/ArtinRepresentation/2.68.4t3.b.a",
                    'Artin')
         self.check(homepage,
-                   "/L/ArtinRepresentation/2.2e3_17.4t3.4c1",
+                   "/L/ArtinRepresentation/2.136.4t3.c.a",
                    'Artin')
         self.check(homepage,
-                   "/ArtinRepresentation/2.2e3_17.4t3.4c1",
+                   "/ArtinRepresentation/2.136.4t3.c.a",
                    'Artin')
         self.check(homepage,
                    "/L/EllipticCurve/Q/234446/a",
