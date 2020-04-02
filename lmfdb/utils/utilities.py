@@ -13,13 +13,12 @@ import tempfile
 import time
 from collections import defaultdict
 from copy import copy
-from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
 from six import PY3
 
-from flask import request, make_response, flash, url_for, current_app
+from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
 from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
