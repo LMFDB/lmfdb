@@ -105,6 +105,14 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('EllipticCurve/?start=0&torsion=1&isodeg=2')
         assert 'No matches' in L.get_data(as_text=True)
 
+    def test_cm_field_search(self):
+        r"""
+        Test that searching for CM field discriminant works
+        """
+        L = self.tc.get('/EllipticCurve/?cm_field=-4')
+        assert '1024.1-c1' in L.get_data(as_text=True)
+        assert '1.0.1-a1' not in L.get_data(as_text=True)
+
     def test_related_objects(self):
         for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',
                 ['Isogeny class 324.3-a',

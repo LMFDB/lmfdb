@@ -270,6 +270,7 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
+    parse_ints(info,query,field='cm_field',qfield='cm')
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
@@ -717,20 +718,31 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
+        cm_field = TextBox(
+            name="cm_field",
+            label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
+            #label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            example="-4",
+            example_span="-4 or -3,-8",
+            knowl="None")
 
         count = CountBox()
 
         self.browse_array = [
             [cond, jinv],
-            [rank, cm],
+            [rank, regulator],
             [torsion, torsion_struct],
+            [cm_field, cm],
             [sha, optimal],
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
-            [num_int_pts, regulator],
-            [count, semistable]]
+            [num_int_pts, semistable],
+            [count] 
+            ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
             [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, optimal, semistable]]
+            [num_int_pts, regulator, cm, cm_field, optimal],
+            [semistable]
+            ]

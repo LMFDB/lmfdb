@@ -17,7 +17,7 @@ from lmfdb.utils import (
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
-    search_wrap, parse_rational)
+    search_wrap, parse_rational, display_knowl)
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -538,7 +538,7 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-
+    parse_ints(info,query,field='cm_field',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
 
@@ -751,6 +751,14 @@ class ECNFSearchArray(SearchArray):
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication")
+        cm_field = TextBox(
+            name="cm_field",
+            label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
+            #label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            example="-4",
+            example_span="-4 or -3,-8",
+            knowl="None"
+            )
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
@@ -790,10 +798,14 @@ class ECNFSearchArray(SearchArray):
             [jinv],
             [field, include_base_change],
             [conductor_norm, include_Q_curves],
-            [torsion, include_cm],
-            [isodeg, torsion_structure],
-            [count, one]]
+            [torsion, torsion_structure],
+            [cm_field, include_cm],
+            [isodeg, one],
+            [count]
+            ]
 
         self.refine_array = [
-            [field, conductor_norm, one, include_base_change, include_Q_curves],
-            [jinv, isodeg, torsion, torsion_structure, include_cm]]
+            [field, conductor_norm, jinv, include_base_change, include_Q_curves],
+            [isodeg, torsion, torsion_structure, include_cm, cm_field],
+            [one]
+            ]
