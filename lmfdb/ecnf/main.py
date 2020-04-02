@@ -756,7 +756,7 @@ class ECNFSearchArray(SearchArray):
             label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
             example="-4",
             example_span="-4 or -3,-8",
-            knowl="None"
+            #knowl="None"
             )
         jinv = TextBox(
             name="jinv",

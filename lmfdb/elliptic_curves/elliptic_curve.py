@@ -723,7 +723,8 @@ class ECSearchArray(SearchArray):
             label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
             example="-4",
             example_span="-4 or -3,-8",
-            knowl="None")
+            #knowl="None"
+            )
 
         count = CountBox()
 
@@ -736,12 +737,12 @@ class ECSearchArray(SearchArray):
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
             [num_int_pts, semistable],
-            [count] 
+            [count]
             ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
             [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, cm_field, optimal],
-            [semistable]
+            [num_int_pts, regulator, cm, cm_field, semistable],
+            [optimal]
             ]
