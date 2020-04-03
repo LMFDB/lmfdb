@@ -538,7 +538,7 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-    parse_ints(info,query,field='cm_field',qfield='cm')
+    parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
 
@@ -751,11 +751,12 @@ class ECNFSearchArray(SearchArray):
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication")
-        cm_field = TextBox(
-            name="cm_field",
-            label= "%s field %s" % (display_knowl("ec.complex_multiplication", "CM"), display_knowl("nf.discriminant", "discriminant")),
+        cm_disc = TextBox(
+            name="cm_disc",
+            label= "CM discriminant",
             example="-4",
             example_span="-4 or -3,-8",
+            knowl="ec.complex_multiplication"
             )
         jinv = TextBox(
             name="jinv",
@@ -797,13 +798,13 @@ class ECNFSearchArray(SearchArray):
             [field, include_base_change],
             [conductor_norm, include_Q_curves],
             [torsion, torsion_structure],
-            [cm_field, include_cm],
+            [cm_disc, include_cm],
             [isodeg, one],
             [count]
             ]
 
         self.refine_array = [
             [field, conductor_norm, jinv, include_base_change, include_Q_curves],
-            [isodeg, torsion, torsion_structure, include_cm, cm_field],
+            [isodeg, torsion, torsion_structure, include_cm, cm_disc],
             [one]
             ]
