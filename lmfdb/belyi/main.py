@@ -106,7 +106,7 @@ def random_belyi_galmap():
 # Galmaps, passports, triples and groups routes
 ###############################################################################
 
-
+# TODO: this will have to change after updating labels...
 @belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
 def by_url_belyi_galmap_label(group, abc, sigma0, sigma1, sigmaoo, g, letnum):
     label = (
@@ -126,7 +126,7 @@ def by_url_belyi_galmap_label(group, abc, sigma0, sigma1, sigmaoo, g, letnum):
     )
     return render_belyi_galmap_webpage(label)
 
-
+# TODO: this will have to change after updating labels...
 @belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
 def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
     label = group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g
