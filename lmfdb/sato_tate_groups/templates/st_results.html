@@ -1,52 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>Refine search </h2>
-
-<form id='re-search' onsubmit='cleanSubmit(this.id)'>
-{% include 'hidden_search_inputs.html' %}
-
-<table>
-<td>{{ KNOWL('st_group.weight', title='Weight') }}</td>
-<td>{{ KNOWL('st_group.degree', title='Degree')}}</td>
-<td>{{ KNOWL('st_group.rational', title='Include irrational') }}</td>
-<td>{{ KNOWL('st_group.identity_component', title='$\mathrm{ST}^0$') }}</td>
-<td>{{ KNOWL('st_group.components', title='Components')}}</td>
-<td>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[a_1=0]$')}}</td>
-</tr>
-
-<tr>
-<td><input type='text' name='weight' placeholder='1' style="width: 100px" value="{{info.weight}}"></td>
-<td><input type='text' name='degree' placeholder='4' style="width: 100px" value="{{info.degree}}"></td>
-<td><select name='include_irrational' style="width: 110px" >
-    {% if info.include_irrational == 'yes' %}
-        <option value=''>no</option>
-        <option value='yes' selected>yes</option>
-    {% else %}
-        <option value='' selected>no</option>
-        <option value='yes'>yes</option>
-    {% endif %}
-</select></td>
-<td><select name='identity_component' style="width: 110px" >
-    <option ></option>
-    {% for G in info.st0_list %}
-        {% if  G == info.identity_component %}
-            <option value='{{G}}' selected>{{G}}</option>
-        {% else %}
-            <option value='{{G}}'>{{G}}</option>
-        {% endif %}
-    {% endfor %}
-</select></td>
-<td><input type='text' name='components' placeholder='1' style="width: 100px" value="{{info.components}}"></td>
-<td><input type='text' name='trace_zero_density' placeholder='1/2' style="width: 100px" value="{{info.trace_zero_density}}"></td>
-</tr>
-
-<tr>
-<td class="button"><button type='submit' style="width: 110px" onclick='resetStart()'>Search again</button></td>
-</tr>
-
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}

@@ -24,65 +24,13 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 <h2> Find a specific Belyi map or passport by {{ KNOWL('belyi.label', title='label')}} </h2>
 
 <form>
-<input type='text' name='jump' placeholder='4T5-[4,4,3]-4-4-31-g1-a'>
-<button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 4T5-[4,4,3]-4-4-31-g1-a </span>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
-  <table>
-    <tr>
-      <td>{{ KNOWL('belyi.degree', title='Degree') }}</td>
-      <td><input type='text' name='deg' placeholder='5' size=10>
-        <td><span class="formexample"> e.g. 4, 5-6 </span></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.group', title='Group') }}</td>
-      <td><input type='text' name='group' placeholder='4T5' size=10>
-        <td><span class="formexample"> e.g. 4T5 </span></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.orders', title='Orders') }}</td>
-      <td><input type='text' name='abc' placeholder='5' size=10>
-        <td><span class="formexample"> e.g. 4, 5-6 </td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.abc', title='\([a,b,c]\) triple') }}</td>
-      <td><input type='text' name='abc_list' placeholder='[4,4,3]' size=10>
-        <td><span class="formexample"> e.g. [4,4,3]</td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.genus', title='Genus') }}</td>
-      <td><input type='text' name='g' placeholder='1' size=10>
-        <td><span class="formexample"> e.g. 1, 0-2 </span></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.orbit_size', title='Orbit size') }}</td>
-      <td><input type='text' name='orbit_size' placeholder='2' size=10>
-        <td><span class="formexample"> e.g. 2, 5-6 </span></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('belyi.geometry_type', title='Geometry type') }}</td>
-      <td><select name='geomtype' style="width: 155px">
-          <option ></option>
-          {% for G in info.geometry_types_list %}
-          <option value='{{G}}'>{{info.geometry_types_dict[G]}}</option>
-          {% endfor %}
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <td>Results to display</td>
-      <td><input type='text' name='count' value=50 size=10></td>
-      <td><span class="formexample"> &nbsp;</td>
-    </tr>
-    <tr>
-      <td><button type='submit' value='Search'>Search</button></td>
-    </tr>
-  </table>
-
+  {{ info.search_array.html() | safe }}
 </form>
 
 <!-- Debugging! -->

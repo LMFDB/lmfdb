@@ -41,7 +41,7 @@ class HomePageTest(LmfdbTest):
         self.check(homepage, "/L/", 'Symmetric square')
         self.check(homepage, "/L/", 'Genus 2 curve')
         self.check(homepage, "/ModularForm/", r'Maass Forms')
-        self.check(homepage, "/EllipticCurve/Q/", 'curve, label or isogeny class label')
+        self.check(homepage, "/EllipticCurve/Q/", 'by coefficients')
         self.check(homepage, "/NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')
 
     # Box 4

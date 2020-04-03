@@ -61,7 +61,7 @@
             {{KNOWL("doc.knowl.identifier",title="Identifier")}}
           </td>
           <td>
-            <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
+            {{ k.id }}
           </td>
         </tr>
         {% if renamable %}

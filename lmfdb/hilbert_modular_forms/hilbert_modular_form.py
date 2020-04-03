@@ -4,9 +4,10 @@ from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error,
+    flash_error, to_dict,
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     search_wrap)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -47,9 +48,8 @@ def random_hmf():    # Random Hilbert modular form
 
 @hmf_page.route("/")
 def hilbert_modular_form_render_webpage():
-    args = request.args
-    if len(args) == 0:
-        info = {}
+    info = to_dict(request.args, search_array=HMFSearchArray())
+    if not request.args:
         t = 'Hilbert Modular Forms'
         bread = [("Modular Forms", url_for('modular_forms')),
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
@@ -57,7 +57,7 @@ def hilbert_modular_form_render_webpage():
         info['counts'] = get_counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
-        return hilbert_modular_form_search(args)
+        return hilbert_modular_form_search(info)
 
 
 
@@ -101,7 +101,7 @@ def learnmore_list_remove(matchstring):
 
 
 def hilbert_modular_form_jump(info):
-    lab = info['label'].strip()
+    lab = info['jump'].strip()
     info['label'] = lab
     try:
         split_full_label(lab)
@@ -114,14 +114,17 @@ def hilbert_modular_form_jump(info):
              title='Hilbert Modular Form Search Results',
              err_title='Hilbert Modular Form Search Error',
              per_page=50,
-             shortcuts={'label':hilbert_modular_form_jump},
+             shortcuts={'jump':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
              bread=lambda:[("Modular Forms", url_for('modular_forms')),
                            ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list,
-             credit=lambda:hmf_credit,
+             url_for_label=lambda label: url_for('.render_hmf_webpage',
+                                                 field_label=split_full_label(label)[0],
+                                                 label=label),
+             credit=lambda: hmf_credit,
              properties=lambda: [])
 def hilbert_modular_form_search(info, query):
     parse_nf_string(info,query,'field_label',name="Field")
@@ -569,3 +572,76 @@ def statistics_by_degree(d):
     return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
+class HMFSearchArray(SearchArray):
+    noun = "form"
+    plural_noun = "forms"
+    jump_example = "2.2.5.1-31.1-a"
+    jump_egspan = "e.g. 2.2.5.1-31.1-a"
+    def __init__(self):
+        field = TextBox(
+            name='field_label',
+            label='Base field',
+            knowl='nf',
+            example='2.0.4.1',
+            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example_span_colspan=4)
+
+        degree = TextBox(
+            name='deg',
+            label='Base field degree',
+            knowl='nf.degree',
+            example='2',
+            example_span='e.g. 2, 2..3')
+
+        discriminant = TextBox(
+            name='disc',
+            label='Base field discriminant',
+            knowl='nf.discriminant',
+            example='5',
+            example_span='e.g. 5 or 1-100')
+
+        weight = TextBox(
+            name='weight',
+            label='Weight',
+            knowl='mf.hilbert.weight_vector',
+            example='[2,2]',
+            example_span='e.g. 2 or [2,2]'
+        )
+
+        level = TextBox(
+            name='level_norm',
+            label='Level norm',
+            knowl='mf.hilbert.level_norm',
+            example='1',
+            example_span='e.g. 1 or 1-100')
+
+        dimension = TextBox(
+            name='dimension',
+            label='Dimension',
+            knowl='mf.hilbert.dimension',
+            example='1',
+            example_span='e.g. 1 or 2')
+
+        base_change = ExcludeOnlyBox(
+            name='bc',
+            label='Base change',
+            knowl='mf.base_change',
+        )
+        CM = ExcludeOnlyBox(
+            name='cm',
+            label='CM',
+            knowl='mf.cm',
+        )
+        count = CountBox()
+
+        self.browse_array = [
+            [field],
+            [degree, discriminant],
+            [level, weight],
+            [dimension, base_change],
+            [count, CM]
+        ]
+        self.refine_array = [
+            [field, degree, discriminant, CM],
+            [weight, level, dimension, base_change],
+        ]

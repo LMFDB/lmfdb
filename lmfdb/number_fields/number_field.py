@@ -13,7 +13,8 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
-    flash_error,
+    flash_error, display_knowl, CountBox,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -326,39 +327,27 @@ def statistics():
 
 @nf_page.route("/")
 def number_field_render_webpage():
-    args = to_dict(request.args)
+    info = to_dict(request.args, search_array=NFSearchArray())
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
-    if not args:
+    if not request.args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000]
         discriminant_list = ["%s..%s" % (start, end - 1) for start, end in zip(
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
-        info = {
-            'degree_list': list(range(1, max_deg + 1)),
-            'signature_list': sig_list,
-            'class_number_list': list(range(1, 6)) + ['6..10'],
-            'count': '50',
-            'nfields': comma(nfields),
-            'maxdeg': max_deg,
-            'discriminant_list': discriminant_list
-        }
+        info['degree_list'] = list(range(1, max_deg + 1))
+        info['signature_list'] = sig_list
+        info['class_number_list'] = list(range(1, 6)) + ['6..10']
+        info['count'] = '50'
+        info['nfields'] = comma(nfields)
+        info['maxdeg'] = max_deg
+        info['discriminant_list'] = discriminant_list
         t = 'Global number fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
-        return number_field_search(args)
-
-
-@nf_page.route("/random")
-def random_nfglobal():
-    label = db.nf_fields.random()
-    #This version leaves the word 'random' in the URL:
-    #return render_field_webpage({'label': label})
-    #This version uses the number field's own URL:
-    #url =
-    return redirect(url_for(".by_label", label=label))
+        return number_field_search(info)
 
 
 def coeff_to_nf(c):
@@ -636,12 +625,19 @@ def format_coeffs(coeffs):
 #    return render_template("nf-index.html", info = info)
 
 
+def url_for_label(label):
+    return url_for(".by_label", label=label)
+
 @nf_page.route("/<label>")
 def by_label(label):
+    if label == "random":
+        #This version leaves the word 'random' in the URL:
+        #return render_field_webpage({'label': label})
+        return redirect(url_for_label(db.nf_fields.random()), 301)
     try:
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
-            return redirect(url_for(".by_label", label=nflabel), 301)
+            return redirect(url_for_label(nflabel), 301)
         return render_field_webpage({'label': nflabel})
     except ValueError as err:
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
@@ -721,9 +717,9 @@ def download_search(info):
 
 
 def number_field_jump(info):
-    query = {'label_orig': info['natural']}
+    query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info,query,'natural',name="Label",qfield='label')
+        parse_nf_string(info,query,'jump',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
@@ -745,10 +741,11 @@ def number_field_jump(info):
              title='Global number field search results',
              err_title='Global number field search error',
              per_page=50,
-             shortcuts={'natural':number_field_jump,
+             shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
              split_ors=['galt'],
+             url_for_label=url_for_label,
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list)
@@ -764,21 +761,9 @@ def number_field_search(info, query):
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
-                 qfield='ramps',mode='complement')
-    # modes are now contained (in), exactly, include
-    if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-        mode='append'
-    elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-        mode='subsets'
-    else:
-        mode='exact'
+                 qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps',mode=mode,radical='disc_rad')
-    # This seems not to be used
-    #if 'lucky' in info:
-    #    label = db.nf_fields.lucky(query, 0)
-    #    if label:
-    #        return redirect(url_for(".by_label", label=clean_input(label)))
+                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -966,3 +951,97 @@ def nf_code(**args):
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
+
+class NFSearchArray(SearchArray):
+    noun = "field"
+    plural_noun = "fields"
+    jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
+    jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
+    def __init__(self):
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="nf.degree",
+            example=3)
+        signature = TextBox(
+            name="signature",
+            label="Signature",
+            knowl="nf.signature",
+            example="[1,1]")
+        discriminant = TextBox(
+            name="discriminant",
+            label="Discriminant",
+            knowl="nf.discriminant",
+            example="-1000..-1",
+            example_span="-3 or 1000-2000")
+        rd = TextBox(
+            name="rd",
+            label="Root discriminant",
+            knowl="nf.root_discriminant",
+            example="1..4.3",
+            example_span="a range such as 1..4.3 or 3-10")
+        cm_field = YesNoBox(
+            name="cm_field",
+            label="CM field",
+            knowl="nf.cm_field")
+        gal = TextBoxNoEg(
+            name="galois_group",
+            label="Galois group",
+            knowl="nf.galois_group",
+            example="C5",
+            example_span_colspan=4,
+            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+                display_knowl("group.small_group_label", "GAP id's"),
+                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("gg.label", "transitive group labels")))
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator",
+            knowl="nf.regulator",
+            example="1..3.5",
+            example_span="a range such as 1..3.5")
+        class_number = TextBox(
+            name="class_number",
+            label="Class number",
+            knowl="nf.class_number",
+            example="5")
+        class_group = TextBox(
+            name="class_group",
+            label="Class group structure",
+            knowl="nf.ideal_class_group",
+            example="[2,4]",
+            example_span="[ ], [3], or [2,4]")
+        num_ram = TextBox(
+            name="num_ram",
+            label="Number of ramified primes",
+            knowl="nf.ramified_primes",
+            example=2)
+        ram_quantifier = SubsetNoExcludeBox(
+            name="ram_quantifier")
+        ram_primes = TextBoxWithSelect(
+            name="ram_primes",
+            label="Ram. primes",
+            knowl="nf.ramified_primes",
+            example="2,3",
+            select_box=ram_quantifier)
+        ur_primes = TextBox(
+            name="ur_primes",
+            label="Unramified primes",
+            knowl="nf.unramified_prime",
+            example="2,3")
+        count = CountBox()
+
+        self.browse_array = [
+            [degree, signature],
+            [discriminant, rd],
+            [gal],
+            [class_number, class_group],
+            [num_ram, cm_field],
+            [ram_primes, ur_primes],
+            [regulator],
+            [count]]
+
+        self.refine_array = [
+            [degree, signature, gal, class_number, class_group],
+            [regulator, num_ram, ram_primes, ur_primes, cm_field],
+            [discriminant, rd]]

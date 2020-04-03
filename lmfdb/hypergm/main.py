@@ -14,6 +14,7 @@ from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
@@ -260,16 +261,16 @@ def poly_with_factored_coeffs(c, p):
 
 @hypergm_page.route("/")
 def index():
-    if len(request.args) != 0:
-        return hgm_search(request.args)
-    info = {'count': 50}
+    info = to_dict(request.args, search_array=HGMSearchArray())
+    if request.args:
+        return hgm_search(info)
     return render_template(
-            "hgm-index.html",
-            title=r"Hypergeometric Motives over $\Q$",
-            bread=get_bread(),
-            credit=HGM_credit,
-            info=info,
-            learnmore=learnmore_list())
+        "hgm-index.html",
+        title=r"Hypergeometric Motives over $\Q$",
+        bread=get_bread(),
+        credit=HGM_credit,
+        info=info,
+        learnmore=learnmore_list())
 
 def hgm_family_circle_plot_data(AB):
     A, B = AB.split("_")
@@ -318,34 +319,42 @@ def hgm_family_constant_image(AB):
 
 @hypergm_page.route("/<label>")
 def by_family_label(label):
-    return hgm_search({'jump_to': label})
+    return render_hgm_family_webpage(normalize_family(label))
 
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
-    return hgm_search({'jump_to': label+'_'+t})
+    full_label = normalize_family(label) + "_" + t
+    return render_hgm_webpage(full_label)
 
 def hgm_jump(info):
-    label = clean_input(info['jump_to'])
+    label = clean_input(info['jump'])
     if HGM_LABEL_RE.match(label):
-        return render_hgm_webpage(normalize_motive(label))
+        return redirect(url_for_label(normalize_motive(label)), 301)
     if HGM_FAMILY_LABEL_RE.match(label):
-        return render_hgm_family_webpage(normalize_family(label))
+        return redirect(url_for_label(normalize_family(label)), 301)
     flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
     return redirect(url_for(".index"))
+
+def url_for_label(label):
+    if label.count("_") == 2:
+        ab, t = label.rsplit("_", 1)
+        return url_for(".by_label", label=ab, t=t)
+    else:
+        return url_for(".by_family_label", label=label)
 
 @search_wrap(template="hgm-search.html",
              table=db.hgm_motives,  # overridden if family search
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
              per_page=50,
-             shortcuts={'jump_to': hgm_jump},
+             shortcuts={'jump': hgm_jump},
+             url_for_label=url_for_label,
              bread=lambda: get_bread([("Search Results", '')]),
              credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
-    family_search = False
-    if info.get('Submit Family') or info.get('family'):
-        family_search = True
+    info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
+    if search_type in ["Family", "RandomFamily"]:
         query['__title__'] = r'Hypergeometric Family over $\Q$ Search Result'
         query['__err_title__'] = r'Hypergeometric Family over $\Q$ Search Input Error'
         query['__table__'] = db.hgm_families
@@ -381,7 +390,7 @@ def hgm_search(info, query):
     parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=True)
     parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
     # Make a version to search reversed way
-    if not family_search:
+    if search_type not in ["Family", "RandomFamily"]:
         parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
@@ -394,7 +403,6 @@ def hgm_search(info, query):
     info['make_t_label'] = make_t_label
     info['ab_label'] = ab_label
     info['display_t'] = display_t
-    info['family'] = family_search
     info['factorint'] = factorint
 
 def render_hgm_webpage(label):
@@ -575,3 +583,160 @@ def labels_page():
            credit=HGM_credit, title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))
 
+class HGMSearchArray(SearchArray):
+    jump_example = "A2.2_B1.1_t1.2"
+    jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
+    def __init__(self):
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="hgm.degree",
+            example="4",
+            extra=['class="family"'])
+        weight = TextBox(
+            name="weight",
+            label="Weight",
+            knowl="hgm.weight",
+            example="3",
+            extra=['class="family"'])
+        famhodge = TextBox(
+            name="famhodge",
+            label="Family Hodge vector",
+            knowl="hgm.familyhodgevector",
+            example="[1,1,1,1]",
+            extra=['class="family"'])
+        A = TextBox(
+            name="A",
+            label="$A$",
+            knowl="hgm.defining_parameters",
+            example="[3,2,2]",
+            extra=['class="family"'])
+        B = TextBox(
+            name="B",
+            label="$B$",
+            knowl="hgm.defining_parameters",
+            example="[6,4]",
+            extra=['class="family"'])
+        p = SelectBox(
+            name="p",
+            label="Prime $p$",
+            example_col=True,
+            options=[("",2),
+                     ("3",3),
+                     ("5",5),
+                     ("7",7)])
+        Ap = TextBox(
+            name="Ap",
+            label="$A_p$",
+            knowl="hgm.defining_parameter_ppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Bp = TextBox(
+            name="Bp",
+            label="$B_p$",
+            knowl="hgm.defining_parameter_ppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Apperp = TextBox(
+            name="Apperp",
+            label=r"$A^\perp_p$",
+            knowl="hgm.defining_parameter_primetoppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        Bpperp = TextBox(
+            name="Bpperp",
+            label=r"$B^\perp_p$",
+            knowl="hgm.defining_parameter_primetoppart",
+            example="[2,2,1,1]",
+            extra=['class="family"'])
+        spacer = BasicSpacer("")
+
+        conductor = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="hgm.conductor",
+            example="64",
+            example_span="a value, like 32, a list, like 32,64, or a range like 1..10000")
+        hodge = TextBox(
+            name="hodge",
+            label="Hodge vector",
+            knowl="mot.hodgevector",
+            example="[1,1,1,1]")
+        t = TextBox(
+            name="t",
+            label="Specialization point $t$",
+            knowl="hgm.specpoint",
+            example="3/2",
+            example_span="3/2 (1 has an associated degree drop and is always in the database)")
+        sign = TextBoxNoEg(
+            name="sign",
+            label=r"Root number $\epsilon$",
+            knowl="lfunction.sign",
+            example="-1",
+            example_span="1 or -1, with -1 occurring only in the symplectic case")
+        # The following two boxes are not yet enabled
+        #generic = YesNoBox(
+        #    name="generic",
+        #    label="Generic",
+        #    knowl="hgm.generic")
+        #irreducible = YesNoBox(
+        #    name="irreducible",
+        #    label="Irreducible",
+        #    knowl="hgm.irreducible")
+        count = CountBox()
+
+        self.family_array = [
+            [degree, weight],
+            [famhodge, A, B],
+            [p, Ap, Bp],
+            [spacer, Apperp, Bpperp]]
+
+        self.motive_array = [
+            [conductor],
+            [hodge],
+            [t],
+            [sign],
+            [count]]
+
+        self.refine_family_array = [
+            [degree, weight, famhodge, A, B],
+            [p, Ap, Bp, Apperp, Bpperp]]
+
+        self.refine_motive_array = [
+            [degree, weight, famhodge, A, B],
+            [conductor, t, hodge, sign],
+            [p, Ap, Bp, Apperp, Bpperp]]
+
+    def search_types(self, info):
+        st = self._st(info)
+        if st is None:
+            # We need a custom button for the family search so that it can be clicked by javascript
+            class FamilySearchButton(SearchButton):
+                def _input(self, info):
+                    btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
+                    return btext.format(width=self.width, desc=self.description)
+            return [("Motive", "List of motives"),
+                    FamilySearchButton("Family", "List of families"),
+                    ("Random", "Random motive"),
+                    ("RandomFamily", "Random family")]
+        elif st == "Family":
+            return [("Family", "Search again"),
+                    ("RandomFamily", "Random family")]
+        else:
+            return [("Motive", "Search again"),
+                    ("Random", "Random motive")]
+
+    def main_array(self, info):
+        # Unused for info=None, since the browse page uses family_html() and motive_html() instead
+        if self._st(info) == "Family":
+            return self.refine_family_array
+        else:
+            return self.refine_motive_array
+
+    def family_html(self):
+        return self._print_table(self.family_array, None, "horizontal")
+
+    def motive_html(self):
+        table = self._print_table(self.motive_array, None, "horizontal")
+        buttons = self.buttons()
+        return "\n".join([table, buttons])

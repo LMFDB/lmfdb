@@ -453,9 +453,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
             query[qfield][kwd] = inp
         else:
             query[qfield] = {kwd: inp}
-    if mode == 'complement':
+    if mode == 'exclude':
         add_condition('$notcontains')
-    elif mode == 'subsets':
+    elif mode == 'subset':
         # sadly, jsonb GIN indexes don't support <@, so we don't want to use
         # $containedin if we can help it.
         # Even more sadly, even switching to querying on the radical doesn't help,
@@ -466,9 +466,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         #else:
         add_condition('$containedin')
-    elif mode == 'append':
+    elif mode == 'include' or not mode: # include is the default
         add_condition('$contains')
-    elif mode == 'exact' or mode == '': # empty mode since exact is often default
+    elif mode == 'exactly':
         if radical is not None:
             query[radical] = product(inp)
             return
@@ -487,7 +487,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         raise ValueError("Unrecognized mode: programming error in LMFDB code")
 
 @search_parser
-def parse_subset(inp, query, qfield, parse_singleton=None, mode='append', radical=None, product=prod):
+def parse_subset(inp, query, qfield, parse_singleton=None, mode=None, radical=None, product=prod):
     # Note that you can do sanity checking using parse_singleton
     # Just raise a ValueError if it fails.
     inp = inp.split(',')
@@ -511,9 +511,9 @@ def _multiset_encode(L):
     return distinguished
 
 @search_parser(clean_info=True)
-def parse_submultiset(inp, query, qfield, mode='append'):
+def parse_submultiset(inp, query, qfield, mode=None):
     # Only multisets of strings are supported.
-    if mode == 'complement':
+    if mode == 'exclude':
         # Searches for multisets whose multiplicity is strictly less than the
         # provided set at each given element.  This notion reduces to
         # the standard complement in the multiplicity free case.
@@ -820,9 +820,9 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None: process = lambda x: x
-    if inp in ["True", "yes", "1"]:
+    if inp in ["True", "yes", "1", "even"]: # artin reps use parse_bool for an is_even parity field
         query[qfield] = process(True)
-    elif inp in ["False", "no", "-1", "0"]:
+    elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"

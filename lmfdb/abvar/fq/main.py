@@ -7,14 +7,15 @@ import time
 
 from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
+from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
-    to_dict, flash_error, integer_options, display_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer,
+    to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
+    SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap,
+    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox,
 )
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
@@ -56,9 +57,8 @@ def learnmore_list_remove(matchstring):
 
 @abvarfq_page.route("/")
 def abelian_varieties():
-    args = request.args
-    if args:
-        info = to_dict(args)
+    info = to_dict(request.args, search_array=AbvarSearchArray())
+    if request.args:
         # hidden_search_type for prev/next buttons
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
         if search_type == "Counts":
@@ -67,11 +67,11 @@ def abelian_varieties():
             return abelian_variety_search(info)
         assert False
     else:
-        return abelian_variety_browse(**args)
+        return abelian_variety_browse(info)
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
-    D = to_dict(request.args)
+    D = to_dict(request.args, search_array=AbvarSearchArray())
     if "g" not in D:
         D["g"] = g
     D["bread"] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
@@ -79,7 +79,7 @@ def abelian_varieties_by_g(g):
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
 def abelian_varieties_by_gq(g, q):
-    D = to_dict(request.args)
+    D = to_dict(request.args, search_array=AbvarSearchArray())
     if "g" not in D:
         D["g"] = g
     if "q" not in D:
@@ -177,6 +177,8 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 class AbvarSearchArray(SearchArray):
+    jump_example = "2.16.am_cn"
+    jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
     def __init__(self):
         qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
@@ -338,44 +340,31 @@ class AbvarSearchArray(SearchArray):
             example_col=False,
             advanced=True,
         )
-        simple = SelectBox(
+        simple = YesNoBox(
             "simple",
             label="Simple",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.simple",
         )
-        geom_simple = SelectBox(
+        geom_simple = YesNoBox(
             "geom_simple",
             label="Geometrically simple",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="av.geometrically_simple",
             short_label="Geom. simple",
         )
-        primitive = SelectBox(
+        primitive = YesNoBox(
             "primitive",
             label="Primitive",
-            options=[("yes", "yes"), ("", "unrestricted"), ("no", "no")],
             knowl="ag.primitive",
         )
-        uopts = [
-            ("yes", "yes"),
-            ("not_no", "yes or unknown"),
-            ("", "unrestricted"),
-            ("not_yes", "no or unknown"),
-            ("no", "no"),
-            ("unknown", "unknown"),
-        ]
-        polarizable = SelectBox(
+        polarizable = YesNoMaybeBox(
             "polarizable",
             label="Principally polarizable",
-            options=uopts,
             knowl="av.princ_polarizable",
             short_label="Princ polarizable",
         )
-        jacobian = SelectBox(
+        jacobian = YesNoMaybeBox(
             "jacobian",
             label="Jacobian",
-            options=uopts,
             knowl="ag.jacobian"
         )
         uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "Geometric decomposition")
@@ -458,12 +447,8 @@ class AbvarSearchArray(SearchArray):
             advanced=True,
         )
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
-        simple_quantifier = SelectBox(
+        simple_quantifier = SubsetBox(
             "simple_quantifier",
-            width=85,
-            options=[("", "include"),
-                     ("contained", "subset"),
-                     ("exactly", "exactly")],
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",
@@ -476,14 +461,9 @@ class AbvarSearchArray(SearchArray):
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
-        count = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-            example_col=False
-        )
+        count = CountBox()
 
-        refine_array = [
+        self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
             [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
@@ -494,7 +474,7 @@ class AbvarSearchArray(SearchArray):
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
         ]
-        browse_array = [
+        self.browse_array = [
             [q, primitive],
             [p, simple],
             [g, geom_simple],
@@ -518,13 +498,14 @@ class AbvarSearchArray(SearchArray):
             [galois_group],
             [count],
         ]
-        search_types = [('List', 'List of Results'),
-                        ('Counts', 'Counts Table'),
-                        ('Random', 'Random Result')]
-        SearchArray.__init__(self, browse_array, refine_array, search_types=search_types)
+
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('List', 'List of isogeny classes'),
+            ('Counts', 'Counts table'),
+            ('Random', 'Random isogeny class')])
 
 def common_parse(info, query):
-    info["search_array"] = AbvarSearchArray()
     parse_ints(info, query, "q", name="base field")
     parse_ints(info, query, "p", name="base cardinality")
     parse_ints(info, query, "g", name="dimension")
@@ -546,12 +527,10 @@ def common_parse(info, query):
     parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])
     parse_string_start(info, query, "abvar_point_count", qfield="abvar_counts_str", first_field="abvar_count")
     parse_string_start(info, query, "curve_point_count", qfield="curve_counts_str", first_field="curve_count")
-    if info.get("simple_quantifier") == "contained":
-        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="subsets")
-    elif info.get("simple_quantifier") == "exactly":
-        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="exact")
+    if info.get("simple_quantifier") in ["subset", "exactly"]:
+        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode=info.get("simple_quantifier"))
     else:
-        parse_submultiset(info, query, "simple_factors", mode="append")
+        parse_submultiset(info, query, "simple_factors")
     if info.get("use_geom_decomp") == "on":
         dimstr = "geom_dim"
         nf_qfield = "geometric_number_fields"
@@ -567,13 +546,44 @@ def common_parse(info, query):
     parse_nf_string(info, query, "number_field", qfield=nf_qfield)
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
 
+def jump(info):
+    jump_box = info["jump"].strip() # only called when this present
+    try:
+        validate_label(jump_box)
+    except ValueError as err:
+        # Also accept polynomials
+        try:
+            poly = coeff_to_poly(jump_box)
+        except ValueError:
+            raise err
+        cdict = poly.dict()
+        deg = poly.degree()
+        if deg % 2 == 1:
+            raise ValueError("Polynomial degree must be even")
+        g = deg//2
+        lead = cdict.get(deg)
+        if lead == 1: # accept monic normalization
+            cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
+        if cdict[0] != 1:
+            raise ValueError("Polynomial must have constant or leading coefficient 1")
+        q = cdict[deg].nth_root(g)
+        for i in range(1, g):
+            if cdict[2*g-i] != q**i * cdict[i]:
+                raise ValueError("Polynomial must be a Weil polynomial")
+        def extended_code(c):
+            if c < 0:
+                return 'a' + cremona_letter_code(-c)
+            return cremona_letter_code(c)
+        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i)) for i in range(1, g+1)))
+    return by_label(jump_box)
+
 @search_wrap(
     template="abvarfq-search-results.html",
     table=db.av_fq_isog,
     title="Abelian Variety Search Results",
     err_title="Abelian Variety Search Input Error",
     shortcuts={
-        "jump": lambda info: by_label(info.get("label", "")),
+        "jump": jump,
         "download": download_search,
     },
     postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
@@ -633,9 +643,7 @@ favorite_isocls_labels = [[
     ("6.2.ag_r_abd_bg_ay_u", "Large endomorphism degree"),
 ]]
 
-def abelian_variety_browse(**args):
-    info = to_dict(args)
-    info["search_array"] = AbvarSearchArray()
+def abelian_variety_browse(info):
     info["stats"] = AbvarFqStats()
     info["q_ranges"] = ["2", "3", "4", "5", "7-16", "17-25", "27-211", "223-1024"]
     info["iso_list"] = [
@@ -681,11 +689,7 @@ def statistics():
 
 @abvarfq_page.route("/dynamic_stats")
 def dynamic_statistics():
-    if len(request.args) > 0:
-        info = to_dict(request.args)
-    else:
-        info = {}
-    info["search_array"] = AbvarSearchArray()
+    info = to_dict(request.args, search_array=AbvarSearchArray())
     AbvarFqStats().dynamic_setup(info)
     title = "Abelian Varity Isogeny Classes: Dynamic Statistics"
     return render_template(
