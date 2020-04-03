@@ -398,7 +398,7 @@ def l_function_artin_page(label):
         return redirect(url_for(".l_function_artin_page", label=newlabel), 301)
     from lmfdb.artin_representations.main import both_labels
     for elt in both_labels(label):
-        if db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+elt}):
+        if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
             label = elt
             return render_single_Lfunction(ArtinLfunctionDB, {'label': label}, request)
     else:
@@ -995,7 +995,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         label = args[1]
         from lmfdb.artin_representations.main import both_labels
         for elt in both_labels(label):
-            if db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+elt}):
+            if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
                 label = elt
                 return ArtinLfunctionDB(label=label)
         else:
