@@ -1,6 +1,5 @@
 os: linux
 dist: trusty
-language: python
 
 env:
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/bianchi_modular_forms/test_bmf.py
@@ -106,11 +105,11 @@ install:
     # assert parallel
     - parallel --version
     # install the latest pyflakes
-    - pip3 install pyflakes
+    - pip3 install pyflakes --user
     # install a version of pylint having --py3k
-    - pip2 install pylint
+    - pip2 install pylint --user
     # install the latest coveralls
-    - pip install coveralls
+    - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
 
     # install SAGE with GAP already built in
