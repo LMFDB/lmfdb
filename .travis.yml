@@ -1,90 +1,46 @@
 os: linux
 dist: trusty
 
-
-jobs:
-  include:
-    - name: 8.8
-      env:
-        global:
-          - SAGE_VERSION=8.8
-        local:
-          - TESTFILE=lmfdb/bianchi_modular_forms/test_bmf.py
-          - TESTFILE=lmfdb/abvar/fq/test_av.py
-          - TESTFILE=lmfdb/abvar/fq/test_browse_page.py
-          - TESTFILE=lmfdb/galois_groups/test_galoisgroup.py
-          - TESTFILE=lmfdb/siegel_modular_forms/test_siegel_modular_forms.py
-          - TESTFILE=lmfdb/genus2_curves/test_genus2_curves.py
-          - TESTFILE=lmfdb/lfunctions/test_lfunctions.py
-          - TESTFILE=lmfdb/lfunctions/test_lfunction_degree_2.py
-          - TESTFILE=lmfdb/sato_tate_groups/test_st.py
-          - TESTFILE=lmfdb/hilbert_modular_forms/test_hmf.py
-          - TESTFILE=lmfdb/belyi/test_belyi.py
-          - TESTFILE=lmfdb/tests/test_utils.py
-          - TESTFILE=lmfdb/tests/test_spelling.py
-          - TESTFILE=lmfdb/tests/test_template_namespace.py
-          - TESTFILE=lmfdb/tests/test_acknowlegments.py
-          - TESTFILE=lmfdb/tests/test_homepage.py
-          - TESTFILE=lmfdb/tests/test_tensor_products.py
-          - TESTFILE=lmfdb/tests/test_dynamic_knowls.py
-          - TESTFILE=lmfdb/tests/test_root.py
-          - TESTFILE=lmfdb/hecke_algebras/test_hecke_algebras.py
-          - TESTFILE=lmfdb/elliptic_curves/test_ell_curves.py
-          - TESTFILE=lmfdb/elliptic_curves/test_browse_page.py
-          - TESTFILE=lmfdb/lattice/test_lattice.py
-          - TESTFILE=lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py
-          - TESTFILE=lmfdb/knowledge/test_knowls.py
-          - TESTFILE=lmfdb/local_fields/test_localfields.py
-          - TESTFILE=lmfdb/users/test_users.py
-          - TESTFILE=lmfdb/artin_representations/test_artin_representation.py
-          - TESTFILE=lmfdb/classical_modular_forms/test_cmf.py
-          - TESTFILE=lmfdb/ecnf/test_ecnf.py
-          - TESTFILE=lmfdb/ecnf/test_isog_class.py
-          - TESTFILE=lmfdb/api/test_api.py
-          - TESTFILE=lmfdb/characters/test_characters.py
-          - TESTFILE=lmfdb/number_fields/test_numberfield.py
-          - TESTFILE=lmfdb/higher_genus_w_automorphisms/test_hgcwa.py
-
-    - name: 9.1.beta9
-      env:
-        global:
-          - SAGE_VERSION=9.1.beta9
-        local:
-          - TESTFILE=lmfdb/bianchi_modular_forms/test_bmf.py
-          - TESTFILE=lmfdb/abvar/fq/test_av.py
-          - TESTFILE=lmfdb/abvar/fq/test_browse_page.py
-          - TESTFILE=lmfdb/galois_groups/test_galoisgroup.py
-          - TESTFILE=lmfdb/siegel_modular_forms/test_siegel_modular_forms.py
-          - TESTFILE=lmfdb/genus2_curves/test_genus2_curves.py
-          - TESTFILE=lmfdb/lfunctions/test_lfunctions.py
-          - TESTFILE=lmfdb/lfunctions/test_lfunction_degree_2.py
-          - TESTFILE=lmfdb/sato_tate_groups/test_st.py
-          - TESTFILE=lmfdb/hilbert_modular_forms/test_hmf.py
-          - TESTFILE=lmfdb/belyi/test_belyi.py
-          - TESTFILE=lmfdb/tests/test_utils.py
-          - TESTFILE=lmfdb/tests/test_spelling.py
-          - TESTFILE=lmfdb/tests/test_template_namespace.py
-          - TESTFILE=lmfdb/tests/test_acknowlegments.py
-          - TESTFILE=lmfdb/tests/test_homepage.py
-          - TESTFILE=lmfdb/tests/test_tensor_products.py
-          - TESTFILE=lmfdb/tests/test_dynamic_knowls.py
-          - TESTFILE=lmfdb/tests/test_root.py
-          - TESTFILE=lmfdb/hecke_algebras/test_hecke_algebras.py
-          - TESTFILE=lmfdb/elliptic_curves/test_ell_curves.py
-          - TESTFILE=lmfdb/elliptic_curves/test_browse_page.py
-          - TESTFILE=lmfdb/lattice/test_lattice.py
-          - TESTFILE=lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py
-          - TESTFILE=lmfdb/knowledge/test_knowls.py
-          - TESTFILE=lmfdb/local_fields/test_localfields.py
-          - TESTFILE=lmfdb/users/test_users.py
-          - TESTFILE=lmfdb/artin_representations/test_artin_representation.py
-          - TESTFILE=lmfdb/classical_modular_forms/test_cmf.py
-          - TESTFILE=lmfdb/ecnf/test_ecnf.py
-          - TESTFILE=lmfdb/ecnf/test_isog_class.py
-          - TESTFILE=lmfdb/api/test_api.py
-          - TESTFILE=lmfdb/characters/test_characters.py
-          - TESTFILE=lmfdb/number_fields/test_numberfield.py
-          - TESTFILE=lmfdb/higher_genus_w_automorphisms/test_hgcwa.py
+env:
+  SAGE_VERSION:
+    -8.8
+    -9.1.beta9
+  TESTFILE:
+  - lmfdb/bianchi_modular_forms/test_bmf.py
+  - lmfdb/abvar/fq/test_av.py
+  - lmfdb/abvar/fq/test_browse_page.py
+  - lmfdb/galois_groups/test_galoisgroup.py
+  - lmfdb/siegel_modular_forms/test_siegel_modular_forms.py
+  - lmfdb/genus2_curves/test_genus2_curves.py
+  - lmfdb/lfunctions/test_lfunctions.py
+  - lmfdb/lfunctions/test_lfunction_degree_2.py
+  - lmfdb/sato_tate_groups/test_st.py
+  - lmfdb/hilbert_modular_forms/test_hmf.py
+  - lmfdb/belyi/test_belyi.py
+  - lmfdb/tests/test_utils.py
+  - lmfdb/tests/test_spelling.py
+  - lmfdb/tests/test_template_namespace.py
+  - lmfdb/tests/test_acknowlegments.py
+  - lmfdb/tests/test_homepage.py
+  - lmfdb/tests/test_tensor_products.py
+  - lmfdb/tests/test_dynamic_knowls.py
+  - lmfdb/tests/test_root.py
+  - lmfdb/hecke_algebras/test_hecke_algebras.py
+  - lmfdb/elliptic_curves/test_ell_curves.py
+  - lmfdb/elliptic_curves/test_browse_page.py
+  - lmfdb/lattice/test_lattice.py
+  - lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py
+  - lmfdb/knowledge/test_knowls.py
+  - lmfdb/local_fields/test_localfields.py
+  - lmfdb/users/test_users.py
+  - lmfdb/artin_representations/test_artin_representation.py
+  - lmfdb/classical_modular_forms/test_cmf.py
+  - lmfdb/ecnf/test_ecnf.py
+  - lmfdb/ecnf/test_isog_class.py
+  - lmfdb/api/test_api.py
+  - lmfdb/characters/test_characters.py
+  - lmfdb/number_fields/test_numberfield.py
+  - lmfdb/higher_genus_w_automorphisms/test_hgcwa.py
 
 # blocklist
 branches:
