@@ -16,6 +16,7 @@ from sage.calculus.var import var
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
+SIGNED_LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))((,|-|(..))(\d+|(\d*-(\d+)?)))*$')
 FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
@@ -25,7 +26,7 @@ QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 LIST_RAT_RE = re.compile(r'^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$')
-SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
+SIGNED_LIST_PAIR_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 ## RE from number_field.py
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
@@ -339,7 +340,7 @@ def parse_rational(inp, query, qfield):
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints(inp, query, qfield, parse_singleton=int):
-    if LIST_RE.match(inp):
+    if SIGNED_LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
         raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
@@ -396,10 +397,10 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: 
+    if parse_one is None:
         parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
-    if SIGNED_LIST_RE.match(inp):
+    if SIGNED_LIST_PAIR_RE.match(inp):
         parsed = parse_range3(inp, split0 = True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
@@ -597,7 +598,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                             query[qf] = v
                     else:
                         if v != query[qf]:
-                            query[qf] = -1 
+                            query[qf] = -1
                 else:
                     query[qf] = v
         elif split:
@@ -605,7 +606,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         else:
             inp = '[%s]'%','.join([str(a) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
-            
+
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, keepbrackets=False, extractor=None):
     if (not BRACKETED_RAT_RE.match(inp) or
@@ -962,10 +963,10 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
                     sub_query[qfield]['$elemMatch'] = elemMatch_operand[0]
                 else:
                     sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
-            # we could add more than one $elemMatch operand, but 
-            # at the moment, the operator $all cannot handle other $ operators 
+            # we could add more than one $elemMatch operand, but
+            # at the moment, the operator $all cannot handle other $ operators
             # A workaround would be to wrap everything around with an $and
-            # but that doesn't end up speeding up things. 
+            # but that doesn't end up speeding up things.
         else:
             key = qfield + '.' + str(index_shift)
             sub_query[key] = parse_range2(part, key, parse_singleton)[1]
