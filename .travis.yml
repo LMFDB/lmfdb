@@ -26,7 +26,6 @@ env:
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/elliptic_curves/test_browse_page.py
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/lattice/test_lattice.py
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py
-  - SAGE_VERSION=8.8 TESTFILE=lmfdb/knowledge/test_knowls.py
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/local_fields/test_localfields.py
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/users/test_users.py
   - SAGE_VERSION=8.8 TESTFILE=lmfdb/artin_representations/test_artin_representation.py
@@ -61,7 +60,6 @@ env:
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/elliptic_curves/test_browse_page.py
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/lattice/test_lattice.py
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py
-  - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/knowledge/test_knowls.py
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/local_fields/test_localfields.py
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/users/test_users.py
   - SAGE_VERSION=9.1beta9 TESTFILE=lmfdb/artin_representations/test_artin_representation.py
@@ -152,7 +150,7 @@ script:
     - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # check that we travis isn't missing any test_ file
-    - test $(find lmfdb -name 'test_*'  | wc -l) -eq 35
+    - test $(find lmfdb -name 'test_*'  | wc -l) -eq 34
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
