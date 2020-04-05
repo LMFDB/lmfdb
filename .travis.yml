@@ -82,6 +82,8 @@ before_script:
     - free -m
     # what is the load on the server
     - uptime
+    # Check that pytest is installed
+    - ${SAGE} -sh -c "pytest --version"
     # Do a naive test to initialize the config file
     - ${SAGE} -sh -c 'pytest lmfdb/tests/test_spelling.py'
 
@@ -94,8 +96,6 @@ script:
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # check that we travis isn't missing any test_ file
     - test $(find lmfdb -name 'test_*'  | wc -l) -eq 34
-    # Check that pytest is installed
-    - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
     - ${SAGE} -sh -c 'parallel -j ${jobs} -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
 
