@@ -97,7 +97,7 @@ script:
     - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # This runs without fail
-    - ${SAGE} -sh -c 'parallel -j ${jobs} -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
+    - ${SAGE} -sh -c 'parallel -j ${jobs} --joblog joblog -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
 
 after_failure:
     # what is the load on the server
@@ -106,6 +106,8 @@ after_failure:
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
+    # show joblog
+    - cat joblog
     # what is the load on the server
     - uptime
     # #- COVERALLS_PARALLEL=true coveralls
