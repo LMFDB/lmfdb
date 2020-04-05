@@ -36,6 +36,8 @@ addons:
 
 
 install:
+    # number of cpus
+    - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
     # assert parallel
     - parallel --version
     # install the latest pyflakes
