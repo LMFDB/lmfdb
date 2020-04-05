@@ -90,7 +90,7 @@ script:
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
-    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb ${TESTFILE}"
+    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb ${TESTFILES}"
 
 after_failure:
     # what is the load on the server
