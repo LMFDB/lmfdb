@@ -71,6 +71,8 @@ install:
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print(G)'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
+    - echo ${TESTFILES} | tr ' ' '\n' > inputfile
+    - cat inputfile
 
 before_script:
     # assert that devmirror.lmfdb.xyz accepts our connections
@@ -92,7 +94,7 @@ script:
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
-    - ${SAGE} -sh -c "parallel pytest --verbose -s --cov=lmfdb ::: $(echo ${TESTFILES})"
+    - ${SAGE} -sh -c "parallel -a inputfile pytest --verbose -s --cov=lmfdb"
 
 after_failure:
     # what is the load on the server
