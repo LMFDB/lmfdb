@@ -84,7 +84,11 @@ def parse_artin_label(label, safe=False):
     raise ValueError
 
 def both_labels(label):
-    return list(db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]}).values())
+    both = db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]})
+    if both:
+        return list(both.values())
+    else:
+        return [label]
 
 # Is it a rep'n or an orbit, supporting old and new styles
 def parse_any(label):

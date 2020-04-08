@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-# this is the caching wrapper, use it like this:
-# @app.route(....)
-# @cached()
-# def func(): ...
 from six.moves import range
 from six import integer_types as six_integers
 from six import string_types
@@ -17,16 +13,13 @@ import tempfile
 import time
 from collections import defaultdict
 from copy import copy
-from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
 from six import PY3
 
-from flask import request, make_response, flash, url_for, current_app
+from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
-# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
-from werkzeug.contrib.cache import SimpleCache
 from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
@@ -1052,23 +1045,6 @@ def flash_error(errmsg, *args):
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
-cache = SimpleCache()
-def cached(timeout=15 * 60, key='cache::%s::%s'):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            cache_key = key % (request.path, request.args)
-            rv = cache.get(cache_key)
-            if rv is None:
-                rv = f(*args, **kwargs)
-                cache.set(cache_key, rv, timeout=timeout)
-            ret = make_response(rv)
-            # this header basically says that any cache can store this infinitely long
-            # set this down to 600, because we have pagespeed now (hsy)
-            ret.headers['Cache-Control'] = 'max-age=600, public'
-            return ret
-        return decorated_function
-    return decorator
 
 ################################################################################
 #  Ajax utilities
