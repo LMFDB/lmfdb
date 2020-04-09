@@ -20,6 +20,7 @@ postgres_infix_ops = {
     "$gt": ">",
     "$ne": "!=",
     "$like": "LIKE",
+    "$ilike": "ILIKE",
     "$regex": "~",
 }
 
