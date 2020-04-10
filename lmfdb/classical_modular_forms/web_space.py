@@ -213,7 +213,6 @@ def display_hecke_polys(form_labels, num_disp = 5):
     for p, lpoly in hecke_polys_orbits.items():
         if lpoly.strip() == "":
             lpoly = "1";
-        print(lpoly)
         if loop_count < num_disp:
             polys.append('  <tr>')
         else:
