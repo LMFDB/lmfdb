@@ -7,7 +7,7 @@ import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime, cm_j_invariants_and_orders
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
@@ -718,12 +718,16 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
-        cm_disc = TextBox(
+        cm_opts = [("","")]
+        for t in cm_j_invariants_and_orders(QQ):
+            if not (t[0], t[0]) in cm_opts:
+                cm_opts.append((t[0], t[0]))
+        cm_disc = SelectBox(
             name="cm_disc",
             label="CM discriminant",
-            example="-4",
-            example_span="-4 or -3,-8",
-            knowl="ec.complex_multiplication"
+            example="-3",
+            knowl="ec.complex_multiplication",
+            options=cm_opts
             )
 
         count = CountBox()
