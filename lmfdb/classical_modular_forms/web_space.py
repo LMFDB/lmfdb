@@ -191,7 +191,6 @@ def display_hecke_polys(form_labels, num_disp = 5):
             coeffs = poly_item['lpoly_factorization']
             #t2 = clock()
             F_p = list_factored_to_factored_poly_otherorder(coeffs)
-            print(F_p)
             #t3 = clock()
             #factor_time += (t3-t2)
             F_p = make_bigint(r'\( %s \)' % F_p)
