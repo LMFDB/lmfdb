@@ -369,9 +369,12 @@ class LfunctionTest(LmfdbTest):
     def test_Lartin(self):
         L = self.tc.get('/L/ArtinRepresentation/2.23.3t2.1c1/', follow_redirects=True)
         assert '0.1740363269' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.23.3t2.1c1/', follow_redirects=True)
+        # same in new labels
+        L = self.tc.get('/L/ArtinRepresentation/2.23.3t2.b.a/', follow_redirects=True)
+        assert '0.1740363269' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.23.3t2.b.a/', follow_redirects=True)
         assert '5.1156833288' in L.get_data(as_text=True)
-        L = self.tc.get('/L/ArtinRepresentation/4.1609.5t5.1c1/', follow_redirects=True)
+        L = self.tc.get('/L/ArtinRepresentation/4.1609.5t5.a.a/', follow_redirects=True)
         assert '0.0755586459' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/', follow_redirects=True)
         assert '3.50464340448' in L.get_data(as_text=True)
@@ -577,7 +580,7 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):
-        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.2e2_17.4t3.2c1/')
+        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.68.4t3.b.a/')
         assert 'OK' in str(L)
 
     def test_LecPlot(self):
