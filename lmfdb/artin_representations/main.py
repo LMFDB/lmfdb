@@ -138,7 +138,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps_new,
+             table=db.artin_reps,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,
