@@ -1004,7 +1004,7 @@ class PostgresBase(object):
             except ValueError:
                 logging.warning(
                     "{} of {} with name {}".format(kind, tablename, name)
-                    + " uses a restricted suffix. ".format(source)
+                    + " uses a restricted suffix. "
                     + "The name will be extended with a _ in the swap"
                 )
                 target_name = original_name + "_" + target
