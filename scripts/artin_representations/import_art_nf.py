@@ -21,8 +21,8 @@ sys.path.append(mypath)
 from lmfdb import db
 from lmfdb.backend.encoding import copy_dumps
 
-rep=db.artin_reps_new
-nfgal=db.artin_field_data_new
+rep=db.artin_reps
+nfgal=db.artin_field_data
 
 count = 0
 
