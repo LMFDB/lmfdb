@@ -771,6 +771,16 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     parts[2] = str(prod(raise_power(c) for c in parts[2].split("_")))
     return ".".join(parts)
 
+def input_to_subfield(inp):
+    result = inp
+    result = '.'.join(result)
+    return return result
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_subfield(inp, query, qfield):
+    query[qfield] = input_to_subfield(inp)
+
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)

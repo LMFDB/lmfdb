@@ -764,6 +764,7 @@ def number_field_search(info, query):
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
+    parse_subfield(info, query, 'subfield', name='Subfield',mode='include')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1029,6 +1030,11 @@ class NFSearchArray(SearchArray):
             label="Unramified primes",
             knowl="nf.unramified_prime",
             example="2,3")
+        subfield = TextBox(
+            name="subfield",
+            label="Subfield",
+            knowl="nf.subfield_entry",
+            example="2.2.5.1 or x^2-5")
         count = CountBox()
 
         self.browse_array = [
@@ -1038,10 +1044,10 @@ class NFSearchArray(SearchArray):
             [class_number, class_group],
             [num_ram, cm_field],
             [ram_primes, ur_primes],
-            [regulator],
+            [regulator, subfield],
             [count]]
 
         self.refine_array = [
             [degree, signature, gal, class_number, class_group],
             [regulator, num_ram, ram_primes, ur_primes, cm_field],
-            [discriminant, rd]]
+            [discriminant, rd, subfield]]
