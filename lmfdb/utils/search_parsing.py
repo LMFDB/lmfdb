@@ -8,7 +8,7 @@ import re
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, PolynomialRing
+from sage.all import ZZ, QQ, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
@@ -771,14 +771,102 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     parts[2] = str(prod(raise_power(c) for c in parts[2].split("_")))
     return ".".join(parts)
 
+# Similar to parsing a number field name, but with different output,
+# here coefficients low to high separated by .,
+# and different behavior if the entry is not in the database
 def input_to_subfield(inp):
-    result = inp
-    result = '.'.join(result)
-    return return result
+    def finish(result):
+        return '.'.join([str(z) for z in result])
+
+    def notq():
+        raise SearchParsingError("The rational numbers $\Q$ cannot be a proper intermediate field.")
+
+    # Change unicode dash with minus sign
+    inp = inp.replace(u'\u2212', '-')
+
+    # remove non-ascii characters from inp
+    # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
+    inp = re.sub(r'[^\x00-\x7f]', r'', inp)
+    if len(inp) == 0:
+        return None
+
+    # Do we have a nf label
+    if re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',inp):
+        from lmfdb import db
+        myfield = db.nf_fields.lookup(inp)
+        if myfield:
+            return finish(myfield['coeffs'])
+        else:
+            raise SearchParsingError("It is not the label for a subfield in the database.")
+
+    F = inp.lower() # keep original if needed
+    # Is it a polynomial
+    if 'x' in F:
+        F1 = F.replace('^', '**')
+        R = PolynomialRing(ZZ, 'x')
+        pol = PolynomialRing(QQ,'x')(str(F1))
+        pol *= pol.denominator()
+        if not pol.is_irreducible():
+            raise SearchParsingError("It is not an irreducible polynomial.")
+        coeffs = R(pari(pol).polredabs()).coefficients(sparse=False)
+        if coeffs == [0,1]:
+            notq()
+        return finish(coeffs)
+    # Nicknames
+    if F == 'q':
+        notq()
+    if F in ['qi', 'q(i)']:
+        return '1.0.1'
+    if F[0] == 'q':
+        if '(' in F and ')' in F:
+            F=F.replace('(','').replace(')','')
+            inp=inp.replace('(','').replace(')','')
+        if F[1:5] in ['sqrt', 'root']:
+            try:
+                d = ZZ(str(F[5:])).squarefree_part()
+            except (TypeError, ValueError):
+                d = 0
+            if d == 0 or d == 1:
+                raise SearchParsingError("After {0}, the remainder must be a nonzero integer which is not a perfect square.  Use {0}5 or {0}-11 for example.".format(inp[:5]))
+            # Recursion has it use polredabs to get the polynomial
+            return input_to_subfield("x^2 - (%s)" % d)
+        # Look for cyclotomic
+        if F[0:5] == 'qzeta':
+            if '_' in F:
+                F = F.replace('_','')
+            match_obj = re.match(r'^qzeta(\d+)(\+|plus)?$', F)
+            if not match_obj:
+                raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+
+            d = ZZ(str(match_obj.group(1)))
+            if d % 4 == 2:
+                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
+            if d < 1:
+                raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+            if d==1: # asking for Q
+                notq()
+
+            if match_obj.group(2):  # asking for the totally real field
+                from lmfdb.number_fields.web_number_field import rcyclolookup
+                if d < 5: # again, asking for subfield Q
+                    notq()
+                if d in rcyclolookup:
+                    return input_to_subfield(rcyclolookup[d])
+                else:
+                    raise SearchParsingError("Subfield %s is not available." % F)
+                f = pari.polcyclo(d)
+                return input_to_subfield(str(f))
+                # Want polcyclo here
+                raise SearchParsingError('%s is not in the database.' % F)
+            f = pari.polcyclo(d)
+            return input_to_subfield(str(f))
+    raise SearchParsingError('It is not a valid field nickname or label, or a defining polynomial.')
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_subfield(inp, query, qfield):
-    query[qfield] = input_to_subfield(inp)
+    sf = input_to_subfield(inp)
+    if sf: # Might return none
+        query[qfield] = {'$contains': sf}
 
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling

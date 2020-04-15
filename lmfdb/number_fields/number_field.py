@@ -17,7 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, search_wrap)
+    parse_floats, parse_subfield, search_wrap)
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data,
@@ -764,7 +764,7 @@ def number_field_search(info, query):
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
-    parse_subfield(info, query, 'subfield', name='Subfield',mode='include')
+    parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1032,9 +1032,11 @@ class NFSearchArray(SearchArray):
             example="2,3")
         subfield = TextBox(
             name="subfield",
-            label="Subfield",
-            knowl="nf.subfield_entry",
-            example="2.2.5.1 or x^2-5")
+            label="Intermediate field",
+            knowl="nf.intermediate_fields",
+            example_span="2.2.5.1 or x^2-5 or a "+
+                display_knowl("nf.nickname", "field nickname"),
+            example="x^2-5")
         count = CountBox()
 
         self.browse_array = [
