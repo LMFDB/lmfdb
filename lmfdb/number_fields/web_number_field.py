@@ -563,8 +563,11 @@ class WebNumberField:
         return [cnt, [], []]
 
     def subfields(self):
-        if not self.haskey('subs'):
+        if not self.haskey('subfields'):
             return []
+        sf = [z.replace('.',',') for z in self._data['subfields']]
+        sfm = self._data['subfield_mults']
+        return [[sf[j],sfm[j]] for j in range(len(sf))]
         return self._data['subs']
 
     def subfields_show(self):
