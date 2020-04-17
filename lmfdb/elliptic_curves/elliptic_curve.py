@@ -720,15 +720,15 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
-        #cm_opts = []
-        #for t in cm_j_invariants_and_orders(QQ):
-            #el = (t[0]*t[1]**2, t[0]*t[1]**2)
-            #if not el in cm_opts:
-                #cm_opts.append(el)
-        #cm_opts.sort(reverse=True)
-        #cm_opts.insert(0, ("",""))
-        cm_opts = [('', ''), (-3, -3), (-4, -4), (-7, -7), (-8, -8), (-11, -11), (-12, -12), (-16, -16), (-19, -19),
-                (-27, -27), (-28, -28), (-43, -43), (-67, -67), (-163, -163)]
+        cm_opts = []
+        for t in cm_j_invariants_and_orders(QQ):
+            el = (str(t[0]*t[1]**2), t[0]*t[1]**2)
+            if not el in cm_opts:
+                cm_opts.append(el)
+        cm_opts = sorted(cm_opts, key =lambda el: el[1], reverse = True)
+        cm_opts.insert(0, ("",""))
+        #cm_opts = [('', ''), (-3, -3), (-4, -4), (-7, -7), (-8, -8), (-11, -11), (-12, -12), (-16, -16), (-19, -19),
+                #(-27, -27), (-28, -28), (-43, -43), (-67, -67), (-163, -163)]
         cm_disc = SelectBox(
             name="cm_disc",
             label="CM discriminant",
