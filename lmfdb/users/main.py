@@ -315,7 +315,25 @@ def logout():
 
 
 @login_page.route("/admin")
-@login_required
 @admin_required
 def admin():
     return "success: only admins can read this!"
+
+
+@app.route("/restartserver")
+@admin_required
+def restart():
+    from subprocess import Popen, PIPE
+    from six.moves.urllib.parse import urlparse
+    urlparts = urlparse(request.url)
+    if urlparts.netloc == "beta.lmfdb.org":
+        command = ['bash', '/home/lmfdb/restart-dev']
+    elif urlparts.netloc in  ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
+        command = ['bash', '/home/lmfdb/restart-web']
+    else:
+        command = None
+    if command:
+        out = Popen(command, stdout=PIPE).communicate()[0]
+        return out.replace('\n', '<br>')
+    else:
+        return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
