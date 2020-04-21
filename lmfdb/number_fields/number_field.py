@@ -540,8 +540,9 @@ def render_field_webpage(args):
             if not sibdeg[2]:
                 sibdeg[2] = dnc
             else:
+                nsibs = len(sibdeg[2])
                 sibdeg[2] = ', '.join(sibdeg[2])
-                if len(sibdeg[2])<sibdeg[1]:
+                if nsibs<sibdeg[1]:
                     sibdeg[2] += ', some '+dnc
 
         resinfo.append(('sib', siblings[0]))
