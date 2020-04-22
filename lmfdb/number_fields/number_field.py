@@ -17,7 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, search_wrap)
+    parse_floats, parse_subfield, search_wrap)
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data,
@@ -540,8 +540,9 @@ def render_field_webpage(args):
             if not sibdeg[2]:
                 sibdeg[2] = dnc
             else:
+                nsibs = len(sibdeg[2])
                 sibdeg[2] = ', '.join(sibdeg[2])
-                if len(sibdeg[2])<sibdeg[1]:
+                if nsibs<sibdeg[1]:
                     sibdeg[2] += ', some '+dnc
 
         resinfo.append(('sib', siblings[0]))
@@ -764,6 +765,7 @@ def number_field_search(info, query):
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
+    parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1029,6 +1031,13 @@ class NFSearchArray(SearchArray):
             label="Unramified primes",
             knowl="nf.unramified_prime",
             example="2,3")
+        subfield = TextBox(
+            name="subfield",
+            label="Intermediate field",
+            knowl="nf.intermediate_fields",
+            example_span="2.2.5.1 or x^2-5 or a "+
+                display_knowl("nf.nickname", "field nickname"),
+            example="x^2-5")
         count = CountBox()
 
         self.browse_array = [
@@ -1038,10 +1047,10 @@ class NFSearchArray(SearchArray):
             [class_number, class_group],
             [num_ram, cm_field],
             [ram_primes, ur_primes],
-            [regulator],
+            [regulator, subfield],
             [count]]
 
         self.refine_array = [
             [degree, signature, gal, class_number, class_group],
             [regulator, num_ram, ram_primes, ur_primes, cm_field],
-            [discriminant, rd]]
+            [discriminant, rd, subfield]]
