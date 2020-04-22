@@ -7,7 +7,7 @@ import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime 
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db

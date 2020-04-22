@@ -399,7 +399,7 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None:
         parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
-    if SIGNED_LIST_PAIR_RE.match(inp):
+    if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, split0 = True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
