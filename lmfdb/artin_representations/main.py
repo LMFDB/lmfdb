@@ -84,7 +84,11 @@ def parse_artin_label(label, safe=False):
     raise ValueError
 
 def both_labels(label):
-    return list(db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]}).values())
+    both = db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]})
+    if both:
+        return list(both.values())
+    else:
+        return [label]
 
 # Is it a rep'n or an orbit, supporting old and new styles
 def parse_any(label):
@@ -134,7 +138,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps_new,
+             table=db.artin_reps,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,

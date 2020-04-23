@@ -301,7 +301,7 @@ def nf_knowl_guts(label):
         out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", label=label)),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
     out += '</div>'
     return out
 
@@ -563,8 +563,11 @@ class WebNumberField:
         return [cnt, [], []]
 
     def subfields(self):
-        if not self.haskey('subs'):
+        if not self.haskey('subfields'):
             return []
+        sf = [z.replace('.',',') for z in self._data['subfields']]
+        sfm = self._data['subfield_mults']
+        return [[sf[j],sfm[j]] for j in range(len(sf))]
         return self._data['subs']
 
     def subfields_show(self):

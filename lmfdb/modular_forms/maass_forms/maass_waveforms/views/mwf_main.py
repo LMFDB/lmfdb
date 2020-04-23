@@ -469,7 +469,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
         else:
             # row=row.values()
             table.append(row)
-    mwf_logger.debug("nrows:".format(nrows))
+    mwf_logger.debug("nrows: {}".format(nrows))
     evs = {'table': {}}
     evs['table']['data'] = table
     evs['table']['nrows'] = nrows
