@@ -297,7 +297,7 @@ def render_artin_representation_webpage(label):
 def random_representation():
     rep = db.artin_reps.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
-    label = rep['Baselabel']+"c"+str(num+1)
+    label = rep['Baselabel']+"."+num2letters(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @artin_representations_page.route("/Labels")
