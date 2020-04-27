@@ -234,7 +234,8 @@ def statistics():
     nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)//2)]
             for deg in range(23)]
     # Galois groups
-    nt_stats = nfstatdb.column_counts(['degree', 'galt'])
+    nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
+    nt_stats = {(key[0],int(key[1].split('T')[1])): value for (key,value) in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -689,7 +690,7 @@ def download_search(info):
     for f in res:
         pol = Qx(f['coeffs'])
         D = f['disc_abs'] * f['disc_sign']
-        gal_t = f['galt']
+        gal_t = int(f['galois_label'].split('T')[1])
         if 'class_group' in f:
             cl = f['class_group']
         else:
@@ -745,7 +746,6 @@ def number_field_jump(info):
              shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
-             split_ors=['galt'],
              url_for_label=url_for_label,
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
