@@ -159,7 +159,12 @@ function knowl_click_handler($el) {
       } else {
         var sibebar_width = sidebar.offsetWidth;
       }
-      var header_width = document.getElementById("header").offsetWidth;
+      var header = document.getElementById("header");
+      if ( header == undefined ) {
+        var header_width = row_width;
+      } else {
+        var header_width = header.offsetWidth;
+      }
       var desired_main_width =  header_width - sibebar_width;
       log("row_width: " + row_width);
       log("desired_main_width: " + desired_main_width);
