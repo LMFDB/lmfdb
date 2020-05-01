@@ -31,6 +31,8 @@ from .web_belyi import (
 )
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
 
+from scripts.belyi.new_labels import add_dot_seps
+
 credit_string = "Michael Musty, Sam Schiavone, and John Voight"
 
 ###############################################################################
@@ -68,11 +70,16 @@ def index():
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = (
-        "7T6-[7,4,4]-7-421-421-g1-b",
-        "7T7-[7,12,12]-7-43-43-g2-d",
-        "7T5-[7,7,3]-7-7-331-g2-a",
-        "6T15-[5,5,5]-51-51-51-g1-a",
-        "7T7-[6,6,6]-61-61-322-g1-a",
+        #"7T6-[7,4,4]-7-421-421-g1-b",
+        #"7T7-[7,12,12]-7-43-43-g2-d",
+        #"7T5-[7,7,3]-7-7-331-g2-a",
+        #"6T15-[5,5,5]-51-51-51-g1-a",
+        #"7T7-[6,6,6]-61-61-322-g1-a",
+        "7T6-7_4.2.1_4.2.1-b",
+        "7T7-7_4.3_4.3-d",
+        "7T5-7_7_3.3.1-a",
+        "6T15-5.1_5.1_5.1-a",
+        "7T7-6.1_6.1_3.2.2-a",
     )
     info["belyi_galmap_list"] = [
         {"label": label, "url": url_for_belyi_galmap_label(label)}
@@ -107,29 +114,19 @@ def random_belyi_galmap():
 ###############################################################################
 
 # TODO: this will have to change after updating labels...
-@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
-def by_url_belyi_galmap_label(group, abc, sigma0, sigma1, sigmaoo, g, letnum):
-    label = (
-        group
-        + "-"
-        + abc
-        + "-"
-        + sigma0
-        + "-"
-        + sigma1
-        + "-"
-        + sigmaoo
-        + "-"
-        + g
-        + "-"
-        + letnum
-    )
+#@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
+@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>")
+def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
+    #label = ( group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g + "-" + letnum)
+    label = "{}-{}_{}_{}-{}".format(group,sigma0,sigma1,sigmaoo,letnum)
     return render_belyi_galmap_webpage(label)
 
 # TODO: this will have to change after updating labels...
-@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
-def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
-    label = group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g
+#@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
+@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
+def by_url_belyi_passport_label(group, sigma0, sigma1, sigmaoo):
+    #label = group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g
+    label = "{}-{}_{}_{}".format(group,sigma0,sigma1,sigmaoo)
     return render_belyi_passport_webpage(label)
 
 
@@ -158,6 +155,7 @@ def by_url_belyi_search_group_triple(group, abc):
     return belyi_search(info)
 
 
+#TODO: Update for new labels
 @belyi_page.route("/<smthorlabel>")
 def by_url_belyi_search_url(smthorlabel):
     split = smthorlabel.split("-")
@@ -260,28 +258,28 @@ def render_belyi_passport_webpage(label):
 
 def url_for_belyi_galmap_label(label):
     slabel = label.split("-")
+    sigmas = slabel[1]
+    sigma_spl = sigmas.split("_")
     return url_for(
         ".by_url_belyi_galmap_label",
         group=slabel[0],
-        abc=slabel[1],
-        sigma0=slabel[2],
-        sigma1=slabel[3],
-        sigmaoo=slabel[4],
-        g=slabel[5],
-        letnum=slabel[6],
+        sigma0=sigma_spl[0],
+        sigma1=sigma_spl[1],
+        sigmaoo=sigma_spl[2],
+        letnum=slabel[2]
     )
 
 
 def url_for_belyi_passport_label(label):
     slabel = label.split("-")
+    sigmas = slabel[1]
+    sigma_spl = sigmas.split("_")
     return url_for(
         ".by_url_belyi_passport_label",
         group=slabel[0],
-        abc=slabel[1],
-        sigma0=slabel[2],
-        sigma1=slabel[3],
-        sigmaoo=slabel[4],
-        g=slabel[5],
+        sigma0=sigma_spl[0],
+        sigma1=sigma_spl[1],
+        sigmaoo=sigma_spl[2]
     )
 
 
