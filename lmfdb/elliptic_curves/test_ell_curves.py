@@ -83,6 +83,10 @@ class EllCurveTest(LmfdbTest):
         assert '14.a2' in L.get_data(as_text=True)
         assert not('11.a1' in L.get_data(as_text=True))
 
+    def test_cm_disc_search(self):
+        self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
+        self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
+
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.get_data(as_text=True)
