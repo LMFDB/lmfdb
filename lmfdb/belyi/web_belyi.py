@@ -129,9 +129,9 @@ class WebBelyiGalmap(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 6:
-                galmap = db.belyi_galmaps.lucky({"plabel": label})
+                galmap = db.belyi_galmaps_test.lucky({"plabel": label})
             elif len(slabel) == 7:
-                galmap = db.belyi_galmaps.lucky({"label": label})
+                galmap = db.belyi_galmaps_test.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -326,7 +326,7 @@ class WebBelyiPassport(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 6:
-                passport = db.belyi_passports.lucky({"plabel": label})
+                passport = db.belyi_passports_test.lucky({"plabel": label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
         except AttributeError:
@@ -353,7 +353,7 @@ class WebBelyiPassport(object):
         data["pass_size"] = passport["pass_size"]
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps.search(
+        galmaps_for_plabel = db.belyi_galmaps_test.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []
