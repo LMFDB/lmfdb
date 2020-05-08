@@ -213,7 +213,6 @@ class WebBelyiGalmap(object):
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
-        # TODO: add portrait here, I think
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
@@ -401,9 +400,15 @@ class WebBelyiPassport(object):
         # Friends
         self.friends = []
 
+        #TODO: finish fixing this
         # Breadcrumbs
-
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data["plabel"].split("-")
+        label_spl = data["plabel"].split("-")
+        groupstr = label_spl[0]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        #groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data["plabel"].split("-")
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [

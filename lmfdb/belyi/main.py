@@ -30,7 +30,6 @@ from .web_belyi import (
     WebBelyiPassport,
 )
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
-
 from scripts.belyi.new_labels import add_dot_seps
 
 credit_string = "Michael Musty, Sam Schiavone, and John Voight"
@@ -113,7 +112,6 @@ def random_belyi_galmap():
 # Galmaps, passports, triples and groups routes
 ###############################################################################
 
-# TODO: this will have to change after updating labels...
 #@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>")
 def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
@@ -121,7 +119,6 @@ def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
     label = "{}-{}_{}_{}-{}".format(group,sigma0,sigma1,sigmaoo,letnum)
     return render_belyi_galmap_webpage(label)
 
-# TODO: this will have to change after updating labels...
 #@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
 def by_url_belyi_passport_label(group, sigma0, sigma1, sigmaoo):
@@ -155,7 +152,6 @@ def by_url_belyi_search_group_triple(group, abc):
     return belyi_search(info)
 
 
-#TODO: Update for new labels
 @belyi_page.route("/<smthorlabel>")
 def by_url_belyi_search_url(smthorlabel):
     split = smthorlabel.split("-")
@@ -164,36 +160,29 @@ def by_url_belyi_search_url(smthorlabel):
         split = split[:-1]
     if len(split) == 1:
         return by_url_belyi_search_group(group=split[0])
-    elif len(split) <= 5:
-        # not all the sigmas and g
-        return redirect(
-            url_for(".by_url_belyi_search_group_triple", group=split[0], abc=split[1]),
-            301,
-        )
-    elif len(split) == 6:
+    elif len(split) == 2: # passport
+        sigma_spl = (split[1]).split('_')
         return redirect(
             url_for(
                 ".by_url_belyi_passport_label",
                 group=split[0],
-                abc=split[1],
-                sigma0=split[2],
-                sigma1=split[3],
-                sigmaoo=split[4],
-                g=split[5],
+                sigma0=sigmaspl[0],
+                sigma1=sigmaspl[1],
+                sigmaoo=sigmaspl[2],
             ),
             301,
         )
-    elif len(split) == 7:
+    elif len(split) == 3: # galmap
+        sigma_spl = (split[1]).split('_')
         return redirect(
             url_for(
                 ".by_url_belyi_galmap_label",
                 group=split[0],
                 abc=split[1],
-                sigma0=split[2],
-                sigma1=split[3],
-                sigmaoo=split[4],
-                g=split[5],
-                letnum=split[6],
+                sigma0=sigmaspl[0],
+                sigma1=sigmaspl[1],
+                sigmaoo=sigmaspl[2],
+                letnum=split[2],
             ),
             301,
         )
@@ -229,7 +218,9 @@ def render_belyi_galmap_webpage(label):
         info={},
         data=belyi_galmap.data,
         code=belyi_galmap.code,
-        bread=belyi_galmap.bread,
+        #TODO: fix this
+        #bread=belyi_galmap.bread,
+        bread=[],
         learnmore=learnmore_list(),
         title=belyi_galmap.title,
         downloads=belyi_galmap.downloads,
@@ -248,7 +239,9 @@ def render_belyi_passport_webpage(label):
         properties=belyi_passport.properties,
         credit=credit_string,
         data=belyi_passport.data,
-        bread=belyi_passport.bread,
+        #TODO: fix this
+        #bread=belyi_passport.bread,
+        bread=[],
         learnmore=learnmore_list(),
         title=belyi_passport.title,
         friends=belyi_passport.friends,
@@ -258,8 +251,7 @@ def render_belyi_passport_webpage(label):
 
 def url_for_belyi_galmap_label(label):
     slabel = label.split("-")
-    sigmas = slabel[1]
-    sigma_spl = sigmas.split("_")
+    sigma_spl = slabel[1].split("_")
     return url_for(
         ".by_url_belyi_galmap_label",
         group=slabel[0],
@@ -272,8 +264,7 @@ def url_for_belyi_galmap_label(label):
 
 def url_for_belyi_passport_label(label):
     slabel = label.split("-")
-    sigmas = slabel[1]
-    sigma_spl = sigmas.split("_")
+    sigma_spl = slabel[1].split("_")
     return url_for(
         ".by_url_belyi_passport_label",
         group=slabel[0],
@@ -282,12 +273,12 @@ def url_for_belyi_passport_label(label):
         sigmaoo=sigma_spl[2]
     )
 
-
 def belyi_passport_from_belyi_galmap_label(label):
     return "-".join(label.split("-")[:-1])
 
-
 # either a passport label or a galmap label
+# TODO: update for new labels
+# is this even used anywhere?
 @cached_function
 def break_label(label):
     """
@@ -299,10 +290,11 @@ def break_label(label):
     "12T5", [4,4,3], [[10,4],[11,1],[3,1]], 1, None
     """
     splitlabel = label.split("-")
-    if len(splitlabel) == 6:
+    sigma_spl = (splitlabel[1]).split('_')
+    if len(splitlabel) == 2: # passports
         group, abc, l0, l1, l2, genus = splitlabel
         gal = None
-    elif len(splitlabel) == 7:
+    elif len(splitlabel) == 3: # galmap
         group, abc, l0, l1, l2, genus, gal = splitlabel
     else:
         raise ValueError("the label must have 5 or 6 dashes")
@@ -315,7 +307,7 @@ def break_label(label):
         else:
             elt = [int(t) for t in list(elt)]
     genus = int(genus[1:])
-    return group, abc, lambdas, genus, gal
+    return group, lambdas, genus, gal
 
 
 def belyi_group_from_label(label):
@@ -349,10 +341,14 @@ def belyi_orbit_from_label(label):
 
 def belyi_jump(info):
     jump = info["jump"].strip()
-    if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+-[a-z]+$", jump):
+    #TODO: these regexes need to be updated for new labels
+    #if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+-[a-z]+$", jump):
+    if re.match(r"^\d+T\d+-\d+_\d+_\d+-[a-z]+$", jump):
         return redirect(url_for_belyi_galmap_label(jump), 301)
     else:
-        if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+$", jump):
+    #TODO: these regexes need to be updated for new labels
+        #if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+$", jump):
+        if re.match(r"^\d+T\d+-\d+_\d+_\d$", jump):
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
             flash_error("%s is not a valid Belyi map or passport label", jump)
@@ -600,6 +596,8 @@ def belyi_galmap_text_download(label):
     credit=lambda: credit_string,
     learnmore=learnmore_list,
 )
+
+#TODO: this probably needs to be updated, too
 def belyi_search(info, query):
     info["geometry_types_list"] = geometry_types_list
     info["geometry_types_dict"] = geometry_types_dict
@@ -738,8 +736,10 @@ def labels_page():
 class BelyiSearchArray(SearchArray):
     noun = "map"
     plural_noun = "maps"
-    jump_example = "4T5-[4,4,3]-4-4-31-g1-a"
-    jump_egspan = "e.g. 4T5-[4,4,3]-4-4-31-g1-a"
+    #jump_example = "4T5-[4,4,3]-4-4-31-g1-a"
+    jump_example = "4T5-4_4_3.1-a"
+    #jump_egspan = "e.g. 4T5-[4,4,3]-4-4-31-g1-a"
+    jump_egspan = "e.g. 4T5-4_4_3.1-a"
     def __init__(self):
         deg = TextBox(
             name="deg",
