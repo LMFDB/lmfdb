@@ -591,21 +591,21 @@ class HMFSearchArray(SearchArray):
             label='Base field degree',
             knowl='nf.degree',
             example='2',
-            example_span='e.g. 2, 2..3')
+            example_span='2, 2..3')
 
         discriminant = TextBox(
             name='disc',
             label='Base field discriminant',
             knowl='nf.discriminant',
             example='5',
-            example_span='e.g. 5 or 1-100')
+            example_span='5 or 1-100')
 
         weight = TextBox(
             name='weight',
             label='Weight',
             knowl='mf.hilbert.weight_vector',
             example='[2,2]',
-            example_span='e.g. 2 or [2,2]'
+            example_span='2 or [2,2]'
         )
 
         level = TextBox(
@@ -613,14 +613,14 @@ class HMFSearchArray(SearchArray):
             label='Level norm',
             knowl='mf.hilbert.level_norm',
             example='1',
-            example_span='e.g. 1 or 1-100')
+            example_span='1 or 1-100')
 
         dimension = TextBox(
             name='dimension',
             label='Dimension',
             knowl='mf.hilbert.dimension',
             example='1',
-            example_span='e.g. 1 or 2')
+            example_span='1 or 2')
 
         base_change = ExcludeOnlyBox(
             name='bc',
