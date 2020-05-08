@@ -223,7 +223,7 @@ class TextBox(SearchBox):
             if self.example_value and info is None:
                 keys.append('value="%s"' % self.example)
             else:
-                keys.append('example="%s"' % self.example)
+                keys.append('placeholder="%s"' % self.example)
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
