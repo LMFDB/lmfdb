@@ -30,7 +30,6 @@ from .web_belyi import (
     WebBelyiPassport,
 )
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
-from scripts.belyi.new_labels import add_dot_seps
 
 credit_string = "Michael Musty, Sam Schiavone, and John Voight"
 
@@ -157,9 +156,9 @@ def by_url_belyi_search_url(smthorlabel):
             url_for(
                 ".by_url_belyi_passport_label",
                 group=split[0],
-                sigma0=sigmaspl[0],
-                sigma1=sigmaspl[1],
-                sigmaoo=sigmaspl[2],
+                sigma0=sigma_spl[0],
+                sigma1=sigma_spl[1],
+                sigmaoo=sigma_spl[2],
             ),
             301,
         )
@@ -170,9 +169,9 @@ def by_url_belyi_search_url(smthorlabel):
                 ".by_url_belyi_galmap_label",
                 group=split[0],
                 abc=split[1],
-                sigma0=sigmaspl[0],
-                sigma1=sigmaspl[1],
-                sigmaoo=sigmaspl[2],
+                sigma0=sigma_spl[0],
+                sigma1=sigma_spl[1],
+                sigmaoo=sigma_spl[2],
                 letnum=split[2],
             ),
             301,
@@ -269,32 +268,26 @@ def belyi_passport_from_belyi_galmap_label(label):
 @cached_function
 def split_label(label):
     """
-    >>> split_label("4T5-[4,4,3]-4-4-31-g1-a")
-    "4T5", [4,4,3], [[4],[4],[3,1]], 1, "a"
-    >>> split_label("4T5-[4,4,3]-4-4-31-g1")
-    "4T5", [4,4,3], [[4],[4],[3,1]], 1, None
-    >>> split_label("12T5-[4,4,3]-10,4-11,1-31-g1")
-    "12T5", [4,4,3], [[10,4],[11,1],[3,1]], 1, None
+    >>> split_label("7T6-7_4.2.1_4.2.1-a")
+    "7T6", [[7],[4,2,1],[4,2,1]], "a"
+    >>> split_label("7T6-7_4.2.1_4.2.1")
+    "7T6", [[7],[4,2,1],[4,2,1]], None
     """
     splitlabel = label.split("-")
+    group = splitlabel[0]
     sigma_spl = (splitlabel[1]).split('_')
+    ls = []
+    for el in sigma_spl:
+        l_i_str = el.split(".")
+        l_i = [int(c) for c in l_i_str]
+        ls.append(l_i)
     if len(splitlabel) == 2: # passports
-        group, abc, l0, l1, l2, genus = splitlabel
         gal = None
     elif len(splitlabel) == 3: # galmap
-        group, abc, l0, l1, l2, genus, gal = splitlabel
+        gal = splitlabel[-1]
     else:
-        raise ValueError("the label must have 5 or 6 dashes")
-
-    abc = [int(z) for z in abc[1:-1].split(",")]
-    lambdas = [l0, l1, l2]
-    for i, elt in lambdas:
-        if "," in elt:
-            elt = [int(t) for t in elt.split(",")]
-        else:
-            elt = [int(t) for t in list(elt)]
-    genus = int(genus[1:])
-    return group, lambdas, genus, gal
+        raise ValueError("the label must have 1 or 2 dashes")
+    return group, ls, gal
 
 
 def belyi_group_from_label(label):
@@ -305,16 +298,8 @@ def belyi_degree_from_label(label):
     return int(split_label(label)[0].split("T")[0])
 
 
-def belyi_abc_from_label(label):
-    return split_label(label)[1]
-
-
 def belyi_lambdas_from_label(label):
-    return split_label(label)[2]
-
-
-def belyi_genus_from_label(label):
-    return split_label(label)[3]
+    return split_label(label)[1]
 
 
 def belyi_orbit_from_label(label):
