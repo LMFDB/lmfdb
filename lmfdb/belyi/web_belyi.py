@@ -131,6 +131,7 @@ class WebBelyiGalmap(object):
             if len(slabel) == 2: # passport label length
                 galmap = db.belyi_galmaps_test.lucky({"plabel": label})
             elif len(slabel) == 3: # galmap label length
+                print("We are here; label = %s" % slabel)
                 galmap = db.belyi_galmaps_test.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
@@ -252,9 +253,14 @@ class WebBelyiGalmap(object):
             self.downloads = []
 
         # Breadcrumbs
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data["label"].split(
-            "-"
-        )
+        label_spl = data["label"].split("-")
+        groupstr = label_spl[0]
+        letnum = label_spl[2]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        #groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data["label"].split("-")
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [

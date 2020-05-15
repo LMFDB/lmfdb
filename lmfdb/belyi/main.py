@@ -210,6 +210,7 @@ def render_belyi_galmap_webpage(label):
     try:
         belyi_galmap = WebBelyiGalmap.by_label(label)
     except (KeyError, ValueError) as err:
+        raise
         return abort(404, err.args)
     return render_template(
         "belyi_galmap.html",
@@ -280,13 +281,13 @@ def belyi_passport_from_belyi_galmap_label(label):
 # TODO: update for new labels
 # is this even used anywhere?
 @cached_function
-def break_label(label):
+def split_label(label):
     """
-    >>> break_label("4T5-[4,4,3]-4-4-31-g1-a")
+    >>> split_label("4T5-[4,4,3]-4-4-31-g1-a")
     "4T5", [4,4,3], [[4],[4],[3,1]], 1, "a"
-    >>> break_label("4T5-[4,4,3]-4-4-31-g1")
+    >>> split_label("4T5-[4,4,3]-4-4-31-g1")
     "4T5", [4,4,3], [[4],[4],[3,1]], 1, None
-    >>> break_label("12T5-[4,4,3]-10,4-11,1-31-g1")
+    >>> split_label("12T5-[4,4,3]-10,4-11,1-31-g1")
     "12T5", [4,4,3], [[10,4],[11,1],[3,1]], 1, None
     """
     splitlabel = label.split("-")
@@ -311,27 +312,27 @@ def break_label(label):
 
 
 def belyi_group_from_label(label):
-    return break_label(label)[0]
+    return split_label(label)[0]
 
 
 def belyi_degree_from_label(label):
-    return int(break_label(label)[0].split("T")[0])
+    return int(split_label(label)[0].split("T")[0])
 
 
 def belyi_abc_from_label(label):
-    return break_label(label)[1]
+    return split_label(label)[1]
 
 
 def belyi_lambdas_from_label(label):
-    return break_label(label)[2]
+    return split_label(label)[2]
 
 
 def belyi_genus_from_label(label):
-    return break_label(label)[3]
+    return split_label(label)[3]
 
 
 def belyi_orbit_from_label(label):
-    return break_label(label)[-1]
+    return split_label(label)[-1]
 
 
 ################################################################################
