@@ -14,6 +14,7 @@ db.belyi_galmaps_test.add_column('old_label', 'text')
 db.belyi_galmaps_test.add_column('old_plabel', 'text')
 db.belyi_passports_test.add_column('old_plabel', 'text')
 # update labels
-load("/scratch/home/sschiavo/github/lmfdb/scripts/belyi/new_labels.py") # load label-changing functions
+#load("/scratch/home/sschiavo/github/lmfdb/scripts/belyi/new_labels.py") # load label-changing functions
+from scripts.belyi import update_label_galmap, update_label_passport
 db.belyi_galmaps_test.rewrite(update_label_galmap)
 db.belyi_passports_test.rewrite(update_label_passport)
