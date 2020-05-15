@@ -55,9 +55,8 @@ class BelyiTest(LmfdbTest):
     def test_orbit_size_search(self):
         self.check_args("/Belyi/?orbit_size=20-", "7T7-6.1_5.2_4.2.1-a")
 
-    # there's something wrong with the search feature for geomtype...FIXME
     def test_geom_type_search(self):
-        self.check_args("/Belyi/?geomtype=H", "6T8-[4,4,3]-411-411-33-g0-a")
+        self.check_args("/Belyi/?geomtype=H", "6T8-4.1.1_4.1.1_3.3-a")
 
     def test_count_search(self):
         self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
