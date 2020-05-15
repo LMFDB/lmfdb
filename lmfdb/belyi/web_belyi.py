@@ -227,7 +227,6 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
-        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
         self.friends.extend(names_and_urls(galmap['friends']))
@@ -260,7 +259,7 @@ class WebBelyiGalmap(object):
         sigmas = label_spl[1]
         sigma0, sigma1, sigmaoo = sigmas.split("_")
         abcstr = str(data['abc']).replace(' ', '')
-        #groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data["label"].split("-")
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [
@@ -406,7 +405,6 @@ class WebBelyiPassport(object):
         # Friends
         self.friends = []
 
-        #TODO: finish fixing this
         # Breadcrumbs
         label_spl = data["plabel"].split("-")
         groupstr = label_spl[0]
@@ -414,7 +412,7 @@ class WebBelyiPassport(object):
         sigmas = label_spl[1]
         sigma0, sigma1, sigmaoo = sigmas.split("_")
         abcstr = str(data['abc']).replace(' ', '')
-        #groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data["plabel"].split("-")
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [

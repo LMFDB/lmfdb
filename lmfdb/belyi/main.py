@@ -69,11 +69,6 @@ def index():
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = (
-        #"7T6-[7,4,4]-7-421-421-g1-b",
-        #"7T7-[7,12,12]-7-43-43-g2-d",
-        #"7T5-[7,7,3]-7-7-331-g2-a",
-        #"6T15-[5,5,5]-51-51-51-g1-a",
-        #"7T7-[6,6,6]-61-61-322-g1-a",
         "7T6-7_4.2.1_4.2.1-b",
         "7T7-7_4.3_4.3-d",
         "7T5-7_7_3.3.1-a",
@@ -112,17 +107,13 @@ def random_belyi_galmap():
 # Galmaps, passports, triples and groups routes
 ###############################################################################
 
-#@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>")
 def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
-    #label = ( group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g + "-" + letnum)
     label = "{}-{}_{}_{}-{}".format(group,sigma0,sigma1,sigmaoo,letnum)
     return render_belyi_galmap_webpage(label)
 
-#@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
 def by_url_belyi_passport_label(group, sigma0, sigma1, sigmaoo):
-    #label = group + "-" + abc + "-" + sigma0 + "-" + sigma1 + "-" + sigmaoo + "-" + g
     label = "{}-{}_{}_{}".format(group,sigma0,sigma1,sigmaoo)
     return render_belyi_passport_webpage(label)
 
@@ -210,7 +201,6 @@ def render_belyi_galmap_webpage(label):
     try:
         belyi_galmap = WebBelyiGalmap.by_label(label)
     except (KeyError, ValueError) as err:
-        raise
         return abort(404, err.args)
     return render_template(
         "belyi_galmap.html",
@@ -219,9 +209,7 @@ def render_belyi_galmap_webpage(label):
         info={},
         data=belyi_galmap.data,
         code=belyi_galmap.code,
-        #TODO: fix this
-        #bread=belyi_galmap.bread,
-        bread=[],
+        bread=belyi_galmap.bread,
         learnmore=learnmore_list(),
         title=belyi_galmap.title,
         downloads=belyi_galmap.downloads,
@@ -240,9 +228,7 @@ def render_belyi_passport_webpage(label):
         properties=belyi_passport.properties,
         credit=credit_string,
         data=belyi_passport.data,
-        #TODO: fix this
-        #bread=belyi_passport.bread,
-        bread=[],
+        bread=belyi_passport.bread,
         learnmore=learnmore_list(),
         title=belyi_passport.title,
         friends=belyi_passport.friends,
@@ -279,7 +265,7 @@ def belyi_passport_from_belyi_galmap_label(label):
 
 # either a passport label or a galmap label
 # TODO: update for new labels
-# is this even used anywhere?
+# Note: this function is not currently used anywhere
 @cached_function
 def split_label(label):
     """
@@ -342,13 +328,9 @@ def belyi_orbit_from_label(label):
 
 def belyi_jump(info):
     jump = info["jump"].strip()
-    #TODO: these regexes need to be updated for new labels
-    #if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+-[a-z]+$", jump):
     if re.match(r"^\d+T\d+-\d+_\d+_\d+-[a-z]+$", jump):
         return redirect(url_for_belyi_galmap_label(jump), 301)
     else:
-    #TODO: these regexes need to be updated for new labels
-        #if re.match(r"^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+$", jump):
         if re.match(r"^\d+T\d+-\d+_\d+_\d$", jump):
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
@@ -598,7 +580,6 @@ def belyi_galmap_text_download(label):
     learnmore=learnmore_list,
 )
 
-#TODO: this probably needs to be updated, too
 def belyi_search(info, query):
     info["geometry_types_list"] = geometry_types_list
     info["geometry_types_dict"] = geometry_types_dict
@@ -737,9 +718,7 @@ def labels_page():
 class BelyiSearchArray(SearchArray):
     noun = "map"
     plural_noun = "maps"
-    #jump_example = "4T5-[4,4,3]-4-4-31-g1-a"
     jump_example = "4T5-4_4_3.1-a"
-    #jump_egspan = "e.g. 4T5-[4,4,3]-4-4-31-g1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"
     def __init__(self):
         deg = TextBox(
