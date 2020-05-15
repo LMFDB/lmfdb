@@ -404,7 +404,7 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
-        if not self.haskey('galt'):
+        if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])

@@ -66,10 +66,6 @@ function properties_collapser(evt) {
 $(function() {
  /* properties box collapsable click handlers */
  $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
- /* providing watermark examples in those forms, that have an 'example=...' attribute */
- /* Add extra spaces so that if you type in exactly the example it does not disappear */
- $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
- $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
 
@@ -159,7 +155,12 @@ function knowl_click_handler($el) {
       } else {
         var sibebar_width = sidebar.offsetWidth;
       }
-      var header_width = document.getElementById("header").offsetWidth;
+      var header = document.getElementById("header");
+      if ( header == undefined ) {
+        var header_width = row_width;
+      } else {
+        var header_width = header.offsetWidth;
+      }
       var desired_main_width =  header_width - sibebar_width;
       log("row_width: " + row_width);
       log("desired_main_width: " + desired_main_width);
