@@ -11,61 +11,55 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/random", "Monodromy group")
 
     def test_by_galmap_label(self):
-        self.check_args("/Belyi/6T15-[5,4,4]-51-42-42-g1-b", "A_6")
+        #self.check_args("/Belyi/6T15-[5,4,4]-51-42-42-g1-b", "A_6")
+        self.check_args("/Belyi/6T15-5.1_4.2_4.2-b", "A_6")
 
     def test_passport_label(self):
-        self.check_args("/Belyi/5T4-[5,3,3]-5-311-311-g0-a", "5T4-[5,3,3]-5-311-311-g0")
+        #self.check_args("/Belyi/5T4-[5,3,3]-5-311-311-g0-a", "5T4-[5,3,3]-5-311-311-g0")
+        self.check_args("/Belyi/5T4-5_3.1.1_3.1.1-a", "5T4-5_3.1.1_3.1.1")
 
     def test_passport(self):
-        self.check_args("/Belyi/9T33-[10,15,2]-522-531-22221-g0-a", "3.1.14175.1")
+        #self.check_args("/Belyi/9T33-[10,15,2]-522-531-22221-g0-a", "3.1.14175.1")
+        self.check_args("/Belyi/9T33-5.2.2_5.3.1_2.2.2.2.1-a", "3.1.14175.1")
 
     # web pages
 
     def test_urls(self):
+        # galmap
         self.check_args(
-            "/Belyi/4T5-[4,3,2]-4-31-211-g0-a", "Belyi map 4T5-[4,3,2]-4-31-211-g0-a"
+            "/Belyi/4T5-4_3.1_2.1.1-a", "Belyi map 4T5-4_3.1_2.1.1-a"
         )
+        # passport
         self.check_args(
-            "/Belyi/4T5-[4,3,2]-4-31-211-g0-", "Passport 4T5-[4,3,2]-4-31-211-g0"
+            "/Belyi/4T5-4_3.1_2.1.1", "Passport 4T5-4_3.1_2.1.1"
         )
-        self.check_args(
-            "/Belyi/4T5-[4,3,2]-4-31-211-g0", "Passport 4T5-[4,3,2]-4-31-211-g0"
-        )
-        self.check_args(
-            "/Belyi/4T5-[4,3,2]-4-31-211-",
-            "Belyi maps with group 4T5 and orders [4,3,2]",
-        )
-        self.check_args(
-            "/Belyi/4T5-[4,3,2]-4-31-", "Belyi maps with group 4T5 and orders [4,3,2]"
-        )
-        self.check_args("/Belyi/4T5-[4,3,2]", "Belyi maps with group 4T5")
 
     # searches
 
     def test_deg_range(self):
         L = self.tc.get("/Belyi/?deg=2-7")
-        assert "5T4-[5,3,3]-5-311-311-g0-a" in L.get_data(as_text=True)
+        assert "5T4-5_3.1.1_3.1.1-a" in L.get_data(as_text=True)
 
     def test_group_search(self):
-        self.check_args("/Belyi/?group=7T5", "7T5-[7,7,3]-7-7-331-g2-a")
+        self.check_args("/Belyi/?group=7T5", "7T5-7_7_3.3.1-a")
 
     def test_abc_search(self):
-        self.check_args("/Belyi/?abc=2-4", "6T10-[4,4,3]-42-42-33-g1-a")
+        self.check_args("/Belyi/?abc=2-4", "6T10-4.2_4.2_3.3-a")
 
     def test_abc_list_search(self):
-        self.check_args("/Belyi/?abc_list=[7,6,6]", "7T7-[7,6,6]-7-3211-3211-g0-a")
+        self.check_args("/Belyi/?abc_list=[7,6,6]", "7T7-7_3.2.1.1_3.2.1.1-a")
 
     def test_genus_search(self):
-        self.check_args("/Belyi/?genus=2", "6T6-[6,6,3]-6-6-33-g2-a")
+        self.check_args("/Belyi/?g=2", "6T6-6_6_3.3-a")
 
     def test_orbit_size_search(self):
-        self.check_args("/Belyi/?orbit_size=20-", "7T7-[6,10,4]-61-52-421-g1-a")
+        self.check_args("/Belyi/?orbit_size=20-", "7T7-6.1_5.2_4.2.1-a")
 
     def test_geom_type_search(self):
-        self.check_args("/Belyi/?geomtype=H", "6T8-[4,4,3]-411-411-33-g0-a")
+        self.check_args("/Belyi/?geomtype=H", "6T8-4.1.1_4.1.1_3.3-a")
 
     def test_count_search(self):
-        self.check_args("/Belyi/?count=20", "5T1-[5,5,5]-5-5-5-g2-c")
+        self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
 
     # downloads
 
@@ -76,7 +70,7 @@ class BelyiTest(LmfdbTest):
         # genus 0 example
             # magma
         page = self.tc.get(
-            "/Belyi/download_galmap_to_magma/7T6-%5B7%2C2%2C6%5D-7-22111-322-g0-a",
+            "/Belyi/download_galmap_to_magma/7T6-7_2.2.1.1.1_3.2.2-a",
             follow_redirects=True,
         )
         assert (
@@ -85,7 +79,7 @@ class BelyiTest(LmfdbTest):
         )
             # sage
         page = self.tc.get(
-            "/Belyi/download_galmap_to_sage/7T6-%5B7%2C2%2C6%5D-7-22111-322-g0-a",
+            "/Belyi/download_galmap_to_sage/7T6-7_2.2.1.1.1_3.2.2-a",
             follow_redirects=True,
         )
         assert(
@@ -96,7 +90,7 @@ class BelyiTest(LmfdbTest):
         # genus 1 example
             # magma
         page = self.tc.get(
-            "/Belyi/download_galmap_to_magma/6T15-%5B5%2C5%2C5%5D-51-51-51-g1-c",
+            "/Belyi/download_galmap_to_magma/6T15-5.1_5.1_5.1-c",
             follow_redirects=True,
         )
         assert (
@@ -105,7 +99,7 @@ class BelyiTest(LmfdbTest):
         )
             # sage
         page = self.tc.get(
-            "/Belyi/download_galmap_to_sage/6T15-%5B5%2C5%2C5%5D-51-51-51-g1-c",
+            "/Belyi/download_galmap_to_sage/6T15-5.1_5.1_5.1-c",
             follow_redirects=True,
         )
         assert (
@@ -115,7 +109,7 @@ class BelyiTest(LmfdbTest):
         # genus 2 example
             # magma
         page = self.tc.get(
-            "/Belyi/download_galmap_to_magma/7T5-%5B7%2C7%2C3%5D-7-7-331-g2-a",
+            "/Belyi/download_galmap_to_magma/7T5-7_7_3.3.1-a",
             follow_redirects=True,
         )
         assert (
@@ -124,7 +118,7 @@ class BelyiTest(LmfdbTest):
         )
             # sage
         page = self.tc.get(
-            "/Belyi/download_galmap_to_sage/7T5-%5B7%2C7%2C3%5D-7-7-331-g2-a",
+            "/Belyi/download_galmap_to_sage/7T5-7_7_3.3.1-a",
             follow_redirects=True,
         )
         assert (
@@ -135,15 +129,15 @@ class BelyiTest(LmfdbTest):
     # friends
     def test_friends(self):
         for url, friends in [
-            ('/Belyi/4T5/[4%2C4%2C3]/4/4/31/g1/a',
+            ('/Belyi/4T5/4/4/3.1/a',
                 ('Passport',
                     'Curve 48.a6',)
                 ),
-            ('/Belyi/5T3/[5%2C4%2C4]/5/41/41/g1/a',
+            ('/Belyi/5T3/5/4.1/4.1/a',
                 ('Passport',
                     'Curve 2.0.4.1-1250.3-a3',)
                 ),
-            ('/Belyi/6T6/[6%2C6%2C3]/6/6/33/g2/a',
+            ('/Belyi/6T6/6/6/3.3/a',
                 ('Passport',
                     'Curve 1728.b.442368.1',)
                 )
@@ -151,4 +145,3 @@ class BelyiTest(LmfdbTest):
             data = self.tc.get(url).get_data(as_text=True)
             for friend in friends:
                 assert friend in data
-

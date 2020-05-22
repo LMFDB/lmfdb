@@ -128,16 +128,16 @@ class WebBelyiGalmap(object):
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 6:
-                galmap = db.belyi_galmaps.lucky({"plabel": label})
-            elif len(slabel) == 7:
-                galmap = db.belyi_galmaps.lucky({"label": label})
+            if len(slabel) == 2: # passport label length
+                galmap = db.belyi_galmaps_test.lucky({"plabel": label})
+            elif len(slabel) == 3: # galmap label length
+                galmap = db.belyi_galmaps_test.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
             raise ValueError("Invalid Belyi map label %s." % label)
         if not galmap:
-            if len(slabel) == 6:
+            if len(slabel) == 2:
                 raise KeyError(
                     "Belyi map passport label %s not found in the database." % label
                 )
@@ -213,9 +213,8 @@ class WebBelyiGalmap(object):
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
-        # TODO: add portrait here, I think
         # Properties
-        self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
+        self.plot = db.belyi_galmap_portraits_test.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
         properties = [ (None, plot_link)] if self.plot is not None else []
         properties += [
@@ -227,7 +226,6 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
-        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
         self.friends.extend(names_and_urls(galmap['friends']))
@@ -253,9 +251,14 @@ class WebBelyiGalmap(object):
             self.downloads = []
 
         # Breadcrumbs
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data["label"].split(
-            "-"
-        )
+        label_spl = data["label"].split("-")
+        groupstr = label_spl[0]
+        letnum = label_spl[2]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [
@@ -325,8 +328,8 @@ class WebBelyiPassport(object):
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 6:
-                passport = db.belyi_passports.lucky({"plabel": label})
+            if len(slabel) == 2:
+                passport = db.belyi_passports_test.lucky({"plabel": label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
         except AttributeError:
@@ -353,7 +356,7 @@ class WebBelyiPassport(object):
         data["pass_size"] = passport["pass_size"]
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps.search(
+        galmaps_for_plabel = db.belyi_galmaps_test.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []
@@ -402,8 +405,13 @@ class WebBelyiPassport(object):
         self.friends = []
 
         # Breadcrumbs
-
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data["plabel"].split("-")
+        label_spl = data["plabel"].split("-")
+        groupstr = label_spl[0]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [
