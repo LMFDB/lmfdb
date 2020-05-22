@@ -32,3 +32,8 @@ def update_label_passport(rec):
     rec['old_label'] = rec['plabel']
     rec['plabel'] = convert_label_passport(rec)
     return rec
+
+def update_label_portrait(rec):
+    rec['old_label'] = rec['label']
+    rec['label'] = convert_label_galmap(rec)
+    return rec

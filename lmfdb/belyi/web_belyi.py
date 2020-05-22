@@ -131,7 +131,6 @@ class WebBelyiGalmap(object):
             if len(slabel) == 2: # passport label length
                 galmap = db.belyi_galmaps_test.lucky({"plabel": label})
             elif len(slabel) == 3: # galmap label length
-                print("We are here; label = %s" % slabel)
                 galmap = db.belyi_galmaps_test.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
@@ -215,7 +214,7 @@ class WebBelyiGalmap(object):
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
         # Properties
-        self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
+        self.plot = db.belyi_galmap_portraits_test.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
         properties = [ (None, plot_link)] if self.plot is not None else []
         properties += [
