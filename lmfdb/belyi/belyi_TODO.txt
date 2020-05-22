@@ -7,8 +7,7 @@ Soon:
 - browsing passports in general? adding passport knowl on main browse page
 - search passports
 - browse columns: degs and gs...column names for db in sage?
-- revamp labels (e.g., 7T7-6.1_5.2_4.2.1)
-- put orbit in title of galmap pages
+- fix breadcrumbs (top of galmap pages)
 
 Short term:
 - add friends: specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good reduction outside of 2 and 3?
