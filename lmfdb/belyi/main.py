@@ -313,10 +313,12 @@ def belyi_orbit_from_label(label):
 
 def belyi_jump(info):
     jump = info["jump"].strip()
-    if re.match(r"^\d+T\d+-\d+_\d+_\d+-[a-z]+$", jump):
+    if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+-[a-z]+$", jump):
+        # 7T6-7_4.2.1_4.2.1-b
         return redirect(url_for_belyi_galmap_label(jump), 301)
     else:
-        if re.match(r"^\d+T\d+-\d+_\d+_\d$", jump):
+        if re.match(r"^\d+T\d+-(\d+\.)*\d+_(\d+\.)*\d+_(\d+\.)*\d+$", jump):
+        # 7T6-7_4.2.1_4.2.1
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
             flash_error("%s is not a valid Belyi map or passport label", jump)
