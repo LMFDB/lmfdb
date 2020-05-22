@@ -611,7 +611,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             commit=commit,
         )
         if data:
-            cols = SQL(", ").join(map(Identifier, table.search_cols))
+            cols = SQL(", ").join(map(Identifier, ["id"] + table.search_cols))
             self._execute(
                 SQL("INSERT INTO {0} ( {1} ) SELECT {1} FROM {2}").format(
                     Identifier(new_name), cols, Identifier(table.search_table)
@@ -619,7 +619,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 commit=commit,
             )
             if extra_columns:
-                extra_cols = SQL(", ").join(map(Identifier, table.extra_cols))
+                extra_cols = SQL(", ").join(map(Identifier, ["id"] + table.extra_cols))
                 self._execute(
                     SQL("INSERT INTO {0} ( {1} ) SELECT {1} FROM {2}").format(
                         Identifier(new_name + "_extras"), extra_cols,
@@ -627,6 +627,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     ),
                     commit=commit,
                 )
+            db[new_name].stats.refresh_stats()
 
     def create_table(
         self,
