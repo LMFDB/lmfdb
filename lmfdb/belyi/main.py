@@ -98,7 +98,7 @@ def index():
 
 @belyi_page.route("/random")
 def random_belyi_galmap():
-    label = db.belyi_galmaps_test.random()
+    label = db.belyi_galmaps.random()
     return redirect(url_for_belyi_galmap_label(label), 307)
 
 
@@ -371,7 +371,7 @@ def make_base_field(rec):
     return K
 
 class Belyi_download(Downloader):
-    table = db.belyi_galmaps_test
+    table = db.belyi_galmaps
     title = "Belyi maps"
     columns = "triples"
     data_format = ["permutation_triples"]
@@ -445,7 +445,7 @@ class Belyi_download(Downloader):
 
     def download_galmap_magma(self, label, lang="magma"):
         s = ""
-        rec = db.belyi_galmaps_test.lookup(label)
+        rec = db.belyi_galmaps.lookup(label)
         s += "// Magma code for Belyi map with label %s\n\n" % label
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
@@ -486,7 +486,7 @@ class Belyi_download(Downloader):
 
     def download_galmap_sage(self, label, lang="sage"):
         s = ""
-        rec = db.belyi_galmaps_test.lookup(label)
+        rec = db.belyi_galmaps.lookup(label)
         s += "# Sage code for Belyi map with label %s\n\n" % label
         s += "\n# Group theoretic data\n\n"
         s += "d = %s\n" % rec["deg"]
@@ -533,7 +533,7 @@ class Belyi_download(Downloader):
         return self._wrap(s, label, lang=lang)
 
     def download_galmap_text(self, label, lang="text"):
-        data = db.belyi_galmaps_test.lookup(label)
+        data = db.belyi_galmaps.lookup(label)
         return self._wrap(Json.dumps(data),
         label,
         title='Data for embedded Belyi map with label %s,'%label)
@@ -553,7 +553,7 @@ def belyi_galmap_text_download(label):
 
 @search_wrap(
     template="belyi_search_results.html",
-    table=db.belyi_galmaps_test,
+    table=db.belyi_galmaps,
     title="Belyi map search results",
     err_title="Belyi Maps Search Input Error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
@@ -616,9 +616,9 @@ class Belyi_stats(StatsDisplay):
     """
 
     def __init__(self):
-        ngalmaps = comma(db.belyi_galmaps_test.stats.count())
-        npassports = comma(db.belyi_passports_test.stats.count())
-        max_deg = comma(db.belyi_passports_test.max("deg"))
+        ngalmaps = comma(db.belyi_galmaps.stats.count())
+        npassports = comma(db.belyi_passports.stats.count())
+        max_deg = comma(db.belyi_passports.max("deg"))
         deg_knowl = display_knowl("belyi.degree", title="degree")
         belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
         stats_url = url_for(".statistics")
@@ -631,7 +631,7 @@ class Belyi_stats(StatsDisplay):
             % (ngalmaps, npassports, deg_knowl, max_deg)
         )
 
-    table = db.belyi_galmaps_test
+    table = db.belyi_galmaps
     baseurl_func = ".index"
     row_titles = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
