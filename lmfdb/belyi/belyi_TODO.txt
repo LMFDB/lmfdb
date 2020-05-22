@@ -1,15 +1,12 @@
 Soon:
 - Improve the pages under "Learn more about" and add a reliability page
 - Knowl for passport, and improve label knowl
-- add conformal pictures in Lady Gaga box
-- Add a download to Sage button for Galois orbits of Belyi maps (also Pari?)
 - Upload the rest of our data
 - Browse maps by base field, and see statistics on base field data
 - Browse by orbit size on Belyi main page
 - browsing passports in general? adding passport knowl on main browse page
 - search passports
 - browse columns: degs and gs...column names for db in sage?
-- Add more friends, specifically curves of genus 1 and 2 listed in the LMFDB; also modular forms?
 - revamp labels (e.g., 7T7-6.1_5.2_4.2.1)
 - put orbit in title of galmap pages
 
