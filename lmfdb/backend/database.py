@@ -627,7 +627,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     ),
                     commit=commit,
                 )
-            db[new_name].stats.refresh_stats()
+            self[new_name].stats.refresh_stats()
 
     def create_table(
         self,
