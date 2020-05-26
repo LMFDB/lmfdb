@@ -87,9 +87,9 @@ from . import rep_galois_modl
 assert rep_galois_modl
 from . import hecke_algebras
 assert hecke_algebras
-import groups
+from . import groups
 assert groups
-import groups.abstract
+from .groups import abstract
 assert groups.abstract
 from . import inventory_app
 assert inventory_app
