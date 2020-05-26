@@ -19,7 +19,8 @@
         <th>Conjugacy Classes</th>
       </tr>
     </thead>
- 
+
+   
     <tbody>
       {% for braid in info.topological_class %}
       <tr>
@@ -31,8 +32,12 @@
         </td>
         
         <td>
+	
             {% for element in braid %}
-              {{element[2]}} <br>
+	        
+                     {{element[2]}}
+	       
+	 <br>
             {% endfor %}
         </td>
       </tr>

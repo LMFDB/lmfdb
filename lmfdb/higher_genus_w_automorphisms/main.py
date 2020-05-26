@@ -978,12 +978,15 @@ def topological_action(fam, cc):
        if str(element['braid']) in Lbraid:
            Lbraid[str(element['braid'])].append([element['passport_label'],
                                               element['total_label'],
-                                              cc_display(ast.literal_eval(element['con']))])
+                                              ' '])
+                                              #cc_display(ast.literal_eval(element['con']))])
        else:
            Lbraid[str(element['braid'])] = [[element['passport_label'],
                                          element['total_label'],
                                          cc_display(ast.literal_eval(element['con']))]]
 
+
+           
     # Sort braid ascending
     sorted_braid = []
     braid_key = Lbraid.keys()
