@@ -588,6 +588,7 @@ def jump(info):
     },
     postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
     url_for_label=url_for_label,
+    learnmore=learnmore_list,
     bread=lambda: get_bread(("Search Results", " ")),
     credit=lambda: abvarfq_credit,
 )
@@ -673,6 +674,7 @@ def search_input_error(info=None, bread=None):
         info=info,
         title="Abelian Variety Search Input Error",
         bread=bread,
+        learnmore=learnmore_list()
     )
 
 @abvarfq_page.route("/stats")
