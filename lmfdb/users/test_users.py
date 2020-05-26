@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # testing users blueprint
+from __future__ import absolute_import
 from lmfdb.tests import LmfdbTest
-from main import login_page
+from .main import login_page
 from lmfdb.users.main import userdb
 
 class UsersTestCase(LmfdbTest):
@@ -19,4 +20,4 @@ class UsersTestCase(LmfdbTest):
 
     def test_user(self, id='cremona'):
         p = self.tc.get("/users/profile/%s" % id)
-        assert id in p.data
+        assert id in p.get_data(as_text=True)

@@ -5,11 +5,11 @@ Initial version Dan Yasaki, modified by Aurel Page (2017)
 """
 
 import os
-sys.path.append("../..");
+sys.path.append("../..")
 from pymongo.mongo_client import MongoClient
 from lmfdb.WebNumberField import WebNumberField
 
-print "getting connection"
+print("getting connection")
 C = MongoClient(port=int(37010))
 C['admin'].authenticate('lmfdb','lmfdb')
 hmfs = C.hmfs
@@ -17,7 +17,7 @@ forms = hmfs.forms
 fields = hmfs.fields
 flabels = fields.distinct('label')
 
-print "authenticating on the hmfs database"
+print("authenticating on the hmfs database")
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.pardir, os.pardir, "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -60,14 +60,14 @@ def find_discrepancies():
     with open('numap2-done-fields.txt','w') as donefile:
         with open('hmf-numap-Np-missing.txt','w') as datafile:
             for flabel in flabels:
-                print flabel
+                print(flabel)
                 F = fields.find_one({'label':flabel})
                 primes = F['primes']
                 for f in forms.find({'field_label':flabel}):
                     num_ap = len(f['hecke_eigenvalues'])
                     discrepancy = len(primes) - num_ap
                     if discrepancy != 0:
-                      print f['label']
+                      print(f['label'])
                       Np = F['primes'][num_ap - 1].split(',')[0][1:]  #already a string
                       datafile.write(':'.join([f['label'],str(num_ap),Np,str(discrepancy)])+'\n')
                 donefile.write(flabel+'\n')
@@ -109,24 +109,24 @@ def check_form(f, dofix=False):
     if type(f) == str:
         f = forms.find_one({'label':f})
     form_label = f['label']
-    print "\tchecking form " + form_label
+    print("\tchecking form " + form_label)
     nb, nbap = truncation_bound(f)
     if nb < nbap:
-        print ("\tform needs fixing: %s eigenvalues -> truncate at %s eigenvalues" % (nbap, nb));
+        print("\tform needs fixing: %s eigenvalues -> truncate at %s eigenvalues" % (nbap, nb))
         ev = f['hecke_eigenvalues']
         ev = ev[0:nb]
         update = {"$set":{'hecke_eigenvalues':ev}}
         if dofix:
             res = forms.update_one({'label':form_label}, update)
             assert res.acknowledged and res.modified_count == 1
-            print "\tform fixed";
+            print("\tform fixed")
             return 2
         else:
             return 1
     return 0
 
 def check_field(field_label, dofix=False):
-    print "\nchecking field " + field_label
+    print("\nchecking field " + field_label)
     nbforms = 0
     nbtodo = 0
     nbfixed = 0

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from main import (login_page, login_manager, admin_required, knowl_reviewer_required,
+from __future__ import absolute_import
+from .main import (login_page, login_manager, admin_required, knowl_reviewer_required,
                   housekeeping, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT)
 assert admin_required  # silence pyflakes
 assert knowl_reviewer_required  # silence pyflakes
@@ -10,10 +11,6 @@ from lmfdb.app import app
 from lmfdb.logger import make_logger
 from distutils.version import StrictVersion
 
-
-# secret key, necessary for sessions, and sessions are
-# in turn necessary for users to login
-app.secret_key = '9af"]ßÄ!_°$2ha€42~µ…010'
 
 login_manager.init_app(app)
 

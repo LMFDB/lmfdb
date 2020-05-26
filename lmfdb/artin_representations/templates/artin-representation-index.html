@@ -43,71 +43,16 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 A <a href={{url_for('.random_representation')}}>random Artin representation</a> from the database.
 </p>
 
-<h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
+<h2>Find a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
 
-<div><form>
-Artin representation: <input type='text' name='natural' size='50' example='3.2e3_7e5.7t3.1c1'> <button type='submit' name='search' value='Go'>label</button> <span class="formexample">e.g., 3.2e3_7e5.7t3.1c1</span></form></div>
-
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 <h2> Search for an Artin representation </h2>
-Enter values into one or more boxes to restrict the search.
-<p></p>
+
 <form id="search" onsubmit="cleanSubmit(this.id)">
-  <table>
-    <tr>
-        <td align="left">{{ KNOWL('artin.dimension',title="dimension") }}</td>
-        <td><input type='text' name='dimension' placeholder="2" size=15></td>
-        <td><span class="formexample"> e.g. 1, 2-4 </span></td>
-    </tr>
-
-    <tr>
-        <td align="left">{{ KNOWL('artin.conductor',title = "conductor") }}</td>
-        <td><input type='text' name='conductor' placeholder="50-100,150-210" size=15></td>
-        <td><span class="formexample"> e.g. 50, 100-200</span></td>
-    </tr>
-
-    <tr>
-        <td align="left">{{ KNOWL('artin.gg_quotient',title="group") }}</td>
-        <td><input type='text' name='group' placeholder="A5" size=15></td>
-        <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
-    </tr>
-
-    <tr>
-        <td align="left">{{ KNOWL('artin.permutation_container',title="smallest permutation container") }}</td>
-        <td><input type='text' name='container' placeholder="6T13" size=15></td>
-        <td><span class="formexample"> e.g. 6T13 or 7T6</span></td>
-
-    <tr>
-        <td align="left">{{ KNOWL('artin.ramified_primes', title="ramified primes") }}</td>
-        <td><input type='text' name='ramified' placeholder="2" size=15></td>
-        <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
-    </tr>
-    
-    <tr>
-        <td align="left">{{ KNOWL('artin.unramified_primes', title="unramified primes") }}</td>
-        <td><input type='text' name='unramified' placeholder="5,7" size=15></td>
-        <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
-    </tr>
-    
-    <tr>
-        <td align="left">{{ KNOWL('artin.root_number',title="root number") }}</td>
-        <td><input type='text' name='root_number' placeholder="1" size=15></td>
-        <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
-    </tr>
-
-    <tr>
-        <td align="left">{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
-        <td><input type='text' name='frobenius_schur_indicator' placeholder="1" size=15></td>
-        <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character </span></td>
-    </tr>
-
-    <tr>
-        <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value='50' size='10'></td>
-    </tr>
-  </table>
-  
-
-<td><button type='submit' value='Search'>Search</button></td>
+  {{ info.search_array.html() | safe }}
 </form>
 {# 
     <br>

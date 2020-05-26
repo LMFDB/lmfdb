@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder, make_bigint
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -22,7 +22,7 @@ def get_bread(**kwds):
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
+             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
@@ -157,6 +157,84 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 
+def trace_expansion_generic(space, prec_max=10):
+    prec = min(len(space.traces)+1, prec_max)
+    return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
+
+def display_hecke_polys(form_labels, num_disp = 5):
+    """
+    Display a table of the characteristic polynomials of the Hecke operators for small primes
+    Right now, the number of primes presented by default is 5, but that could be changed easily
+    The rest could be seen by using "show more" / "show less" - 
+    The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
+    replaced by a call to a single class/function with some parameters.
+  
+    INPUT:
+ 
+    - ``form_labels`` - a list of strings, the labels of the newforms in the space
+    - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
+    """
+    #from time import clock
+    def th_wrap(kwl, title):
+        return '    <th>%s</th>' % display_knowl(kwl, title=title)
+    def td_wrap(val):
+        return '    <td>$%s$</th>' % val
+    num_forms = len(form_labels)
+    orbit_codes = []
+    for label in form_labels:
+        data = db.mf_newforms.lookup(label, ['hecke_orbit_code'])
+        orbit_codes.append(data['hecke_orbit_code'])
+    hecke_polys_orbits = {}
+    #factor_time = 0
+    for orbit_code in orbit_codes:
+        for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
+            coeffs = poly_item['lpoly_factorization']
+            #t2 = clock()
+            F_p = list_factored_to_factored_poly_otherorder(coeffs)
+            #t3 = clock()
+            #factor_time += (t3-t2)
+            F_p = make_bigint(r'\( %s \)' % F_p)
+            if (F_p != "1") and (len(F_p) > 0):
+                if (F_p[0] != '(') and (num_forms > 1):
+                    F_p = '(' + F_p + ')'
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
+            else:
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+    #print "factoring took " + str(factor_time)
+    if not hecke_polys_orbits:
+        return "There are no characteristic polynomials of Hecke operators in the database"
+    polys = ['<div style="max-width: 100%; overflow-x: auto;">',
+             '<table class="ntdata">', '<thead>', '  <tr>',
+             th_wrap('p', '$p$'),
+             th_wrap('lpoly', '$F_p(T)$'),
+             '  </tr>', '</thead>', '<tbody>']
+    loop_count = 0
+    for p, lpoly in hecke_polys_orbits.items():
+        if lpoly == "":
+            lpoly = "1";
+        if loop_count < num_disp:
+            polys.append('  <tr>')
+        else:
+            polys.append('  <tr class="more nodisplay">')
+        polys.extend([td_wrap(p), '<td>' + lpoly + '</th>'])
+        polys.append('  </tr>')
+        loop_count += 1
+    if loop_count > num_disp:
+        polys.append('''
+            <tr class="less toggle">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+                </td>
+            </tr>
+            <tr class="more toggle nodisplay">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+                </td>
+            </tr>
+            ''')
+        polys.extend(['</tbody>', '</table>', '</div>'])
+    return '\n'.join(polys)
+
 class DimGrid(object):
     def __init__(self, grid=None):
         if grid is None:
@@ -211,7 +289,7 @@ class DimGrid(object):
                      'new':data['eis_new_dim'],
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
-
+    
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
@@ -226,7 +304,7 @@ class WebNewformSpace(object):
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         self.char_conrey = self.conrey_indexes[0]
-        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
@@ -246,7 +324,7 @@ class WebNewformSpace(object):
             ('Dimension',str(self.dim)),
         ]
         if self.num_forms is not None:
-            self.properties.append(('Newforms',str(self.num_forms)))
+            self.properties.append(('Newform subspaces',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
@@ -276,7 +354,7 @@ class WebNewformSpace(object):
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
+        self.title = r"Space of Modular Forms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
         self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
@@ -307,6 +385,10 @@ class WebNewformSpace(object):
             ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
         return self.char_orbit_link + ord_deg
 
+    def display_hecke_char_polys(self, num_disp = 5):
+        form_labels = [nf['label'] for nf in self.newforms]
+        return display_hecke_polys(form_labels, num_disp)
+    
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
 
@@ -352,8 +434,7 @@ class WebNewformSpace(object):
         return ALdim_table(self.AL_dims, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
-        prec = min(len(self.traces)+1, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
+        return trace_expansion_generic(self, prec_max)
 
     def hecke_cutter_display(self):
         return ", ".join(r"\(%d\)" % p for p in self.hecke_cutter_primes)
@@ -411,7 +492,7 @@ class WebGamma1Space(object):
         if self.num_spaces is not None:
             self.properties.append(('Nonzero newspaces',str(self.num_spaces)))
         if self.num_forms is not None:
-            self.properties.append(('Newforms',str(self.num_forms)))
+            self.properties.append(('Newform subspaces',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if self.trace_bound is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
@@ -421,7 +502,7 @@ class WebGamma1Space(object):
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
         ]
-        self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
+        self.title = r"Space of Modular Forms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []
 
     @staticmethod
@@ -463,7 +544,7 @@ class WebGamma1Space(object):
         return common_latex(*(self._vec() + ["S",1,"old"]))
 
     def header_latex(self):
-        return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + '\)'
+        return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + r'\)'
 
     def _link(self, N, i=None, form=None, typ="new", label=True):
         if form is not None:
@@ -504,20 +585,24 @@ class WebGamma1Space(object):
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
                                              number=space['conrey_indexes'][0])
-            chi_rep += '">\({}\)</a>'.format(chi_str)
+            chi_rep += r'">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
             link = self._link(space['level'], space['char_orbit_label'])
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
-            elif len(forms) == 0:
+            elif not forms:
                 ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
-                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
+                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], list(zip(forms[1:], dims[1:]))))
         return ans
 
     def trace_expansion(self, prec_max=10):
-        prec = min(len(self.traces)+1, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
+        return trace_expansion_generic(self, prec_max)
+    
+    def display_hecke_char_polys(self, num_disp = 5):
+        newforms = list(db.mf_newforms.search({'level':self.level, 'weight':self.weight}, ['label']));
+        form_labels = [newform['label'] for newform in newforms]
+        return display_hecke_polys(form_labels, num_disp)

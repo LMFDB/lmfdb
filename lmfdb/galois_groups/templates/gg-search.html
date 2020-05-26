@@ -9,126 +9,16 @@ table.ntdata a {
 }
 </style>
 
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<table border="0">
-
-          <tr>
-            <td colspan="6" align="center">
-            <table>
-              <tr>
-                <td align="center">{{KNOWL('gg.parity', 'Parity')}}</td>
-                <td align="center">{{KNOWL('group.cyclic', 'Cyclic')}}</td>
-                <td align="center">{{KNOWL('group.solvable', 'Solvable')}}</td>
-                <td align="center">{{KNOWL('gg.primitive', 'Primitive')}}</td>
-              </tr>
-              <tr>
-                <td> <select name='parity'>
- {% if info.parity=='1' %}
-                   <option value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option selected='yes' value='1'>Even</option>
- {% elif info.parity=='-1' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% endif %}
-                  </select>
-                </td>
-                <td> <select name='cyc'>
- {% if info.cyc=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.cyc=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
-                  </select>
-                </td>
-                <td> <select name='solv'>
- {% if info.solv=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.solv=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
-                  </select>
-                </td>
-                <td> <select name='prim'>
- {% if info.prim=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.prim=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
-                  </select>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-
-<tr>
-<td align=left> 
-{{KNOWL('gg.degree',title='degree')}} <td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
-</td>
-
-<td align=left> 
-{{KNOWL('gg.tnumber',title='$t$')}} 
-<td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
-
-<td align=left> 
-{{KNOWL('group.order',title='order')}} 
-<td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
-<td align=left> 
-{{KNOWL('group.small_group_label',title='GAP id')}} 
-<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
-</tr>
-
-<tr>
-<td align='left' colspan='8'>Maximum number of groups to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
-</tr>
-<tr>
-<td align=left colspan="2"> 
-<button type='submit' value='refine'>Search again</button>
-</td></tr>
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% if info.err is defined %}
-{% if info.label is defined %}
+{% if info.jump is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
     <td>
       Search by {{KNOWL('gg.label',title="label")}}
-      <input type="text" name="jump_to" value="{{info.label}}">
+      <input type="text" name="jump" value="{{info.jump}}">
       <button type="submit" value="Find">Find</button>
     </td>
     <td>
@@ -143,7 +33,7 @@ table.ntdata a {
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table border=1 cellpadding=5 class="ntdata">
+<table border=0 cellpadding=3 class="ntdata">
 <thead>
 <tr>
 <th>{{KNOWL('gg.label', title='Label')}}</th>
@@ -177,7 +67,6 @@ table.ntdata a {
 
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'dummy_download_search_results.html' %}
 <p>

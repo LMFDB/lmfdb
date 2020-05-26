@@ -3,18 +3,21 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR
+from sage.all import PolynomialRing, QQ, RR, latex
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, display_multiset,
+    web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    search_wrap)
+    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict,
+    search_wrap, Downloader)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+from lmfdb.number_fields.web_number_field import (
+    WebNumberField, string2list, nf_display_knowl)
 
 import re
 
@@ -34,13 +37,22 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(coeffs)))
+
+def lf_formatfield(coef):
+    coef = string2list(coef)
+    thefield = WebNumberField.from_coeffs(coef)
+    thepoly = '$%s$' % latex(coeff_to_poly(coef))
+    if thefield._data is None:
+        return thepoly
+    return nf_display_knowl(thefield.get_label(),thepoly)
 
 def local_algebra_data(labels):
     labs = labels.split(',')
@@ -57,7 +69,8 @@ def local_algebra_data(labels):
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        ans += group_display_knowl(f['gal'][0],f['gal'][1])
+        galnt = [int(z) for z in f['galois_label'].split('T')]
+        ans += group_display_knowl(galnt[0],galnt[1])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -70,10 +83,10 @@ def local_field_data(label):
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
     ans = 'Local number field %s%s<br><br>'% (label, nicename)
-    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
-    gt = f['gal']
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
-    ans += 'Degree: %s<br>' % str(gt)
+    ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
@@ -108,11 +121,13 @@ def format_lfield(coefmult,p):
         return ''
     return lf_display_knowl(data['label'], name = prettyname(data))
 
+
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
-    if subdata == []:
+    if not subdata:
         return ''
     return display_multiset(subdata, format_lfield, p)
+
 
 # Encode string for rational into our special format
 def ratproc(inp):
@@ -130,9 +145,9 @@ def ratproc(inp):
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
-        return local_field_search(request.args)
-    info = {'count': 50}
+        return local_field_search(info)
     return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
@@ -140,31 +155,51 @@ def index():
 def by_label(label):
     clean_label = clean_input(label)
     if label != clean_label:
-        return redirect(url_for('.by_label',label=clean_label), 301)
+        return redirect(url_for_label(label=clean_label), 301)
     return render_field_webpage({'label': label})
 
+def url_for_label(label):
+    if label == "random":
+        return url_for('.random_field')
+    return url_for(".by_label", label=label)
+
 def local_field_jump(info):
-    return redirect(url_for(".by_label",label=info['jump_to']), 301)
+    return redirect(url_for_label(info['jump']), 301)
+
+class LF_download(Downloader):
+    table = db.lf_fields
+    title = 'Local Number Fields'
+    columns = ['p', 'coeffs']
+    data_format = ['p', '[coeffs]']
+    data_description = 'defining the local field over Qp by adjoining a root of f(x).'
+    function_body = {'magma':['Prec := 100; // Default precision of 100',
+                              'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
+                     'sage':['Prec = 100 # Default precision of 100',
+                             "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
+                     'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
+
 
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
              title='Local Number Field Search Results',
              err_title='Local Field Search Input Error',
              per_page=50,
-             shortcuts={'jump_to': local_field_jump},
+             shortcuts={'jump': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search Results", ' ')]),
              learnmore=learnmore_list,
+             url_for_label=url_for_label,
              credit=lambda:LF_credit)
 def local_field_search(info,query):
-    parse_galgrp(info,query,'gal',qfield=('n','galT'))
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     info['group_display'] = group_pretty_and_nTj
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
+    info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):
     data = None
@@ -174,9 +209,9 @@ def render_field_webpage(args):
         data = db.lf_fields.lookup(label)
         if data is None:
             if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
-                flash_error("Field <span style='color:black'>%s</span> was not found in the database.", label)
+                flash_error("Field %s was not found in the database.", label)
             else:
-                flash_error("<span style='color:black'>%s</span> is not a valid label for a local number field.", label)
+                flash_error("%s is not a valid label for a local number field.", label)
             return redirect(url_for(".index"))
         title = 'Local Number Field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
@@ -185,20 +220,20 @@ def render_field_webpage(args):
         e = data['e']
         f = data['f']
         cc = data['c']
-        gt = data['gal']
+        gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+' over $\Q_{%d}$.'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}$.'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
-            ('Base', '\(%s\)' % Qp),
-            ('Degree', '\(%s\)' % data['n']),
-            ('e', '\(%s\)' % e),
-            ('f', '\(%s\)' % f),
-            ('c', '\(%s\)' % cc),
+            ('Base', r'\(%s\)' % Qp),
+            ('Degree', r'\(%s\)' % data['n']),
+            ('e', r'\(%s\)' % e),
+            ('f', r'\(%s\)' % f),
+            ('c', r'\(%s\)' % cc),
             ('Galois group', group_pretty_and_nTj(gn, gt)),
         ]
         # Look up the unram poly so we can link to it
@@ -211,14 +246,11 @@ def render_field_webpage(args):
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
-        Pxt=PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
-            # Eliminate t from the eisenstein polynomial
-            eisenp = Pxt(str(data['eisen']).replace('y','x'))
-            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = web_latex(eisenp)
 
         else:
@@ -241,7 +273,7 @@ def render_field_webpage(args):
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
-            gsm = web_latex(coeff_to_poly(gsm))
+            gsm = lf_formatfield(','.join([str(b) for b in gsm]))
 
 
         info.update({
@@ -276,7 +308,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -301,15 +333,15 @@ def prettyname(ent):
 
 def printquad(code, p):
     if code == [1, 0]:
-        return('$\Q_{%s}$' % p)
+        return(r'$\Q_{%s}$' % p)
     if code == [1, 1]:
-        return('$\Q_{%s}(\sqrt{*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{*})$' % p)
     if code == [-1, 1]:
-        return('$\Q_{%s}(\sqrt{-*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{-*})$' % p)
     s = code[0]
     if code[1] == 1:
         s = str(s) + '*'
-    return('$\Q_{' + str(p) + '}(\sqrt{' + str(s) + '})$')
+    return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
 def search_input_error(info, bread):
@@ -352,3 +384,54 @@ def reliability():
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
+class LFSearchArray(SearchArray):
+    noun = "field"
+    plural_noun = "fields"
+    jump_example = "2.4.6.7"
+    jump_egspan = "e.g. 2.4.6.7"
+    def __init__(self):
+        degree = TextBox(
+            name='n',
+            label='Degree',
+            knowl='lf.degree',
+            example='6',
+            example_span='6, or a range like 3..5')
+        qp = TextBox(
+            name='p',
+            label=r'Prime $p$ for base field $\Q_p$',
+            short_label='Prime $p$',
+            knowl='lf.qp',
+            example='3',
+            example_span='3, or a range like 3..7')
+        c = TextBox(
+            name='c',
+            label='Discriminant exponent $c$',
+            knowl='lf.discriminant_exponent',
+            example='8',
+            example_span='8, or a range like 2..6')
+        e = TextBox(
+            name='e',
+            label='Ramification index $e$',
+            knowl='lf.ramification_index',
+            example='3',
+            example_span='3, or a range like 2..6')
+        topslope = TextBox(
+            name='topslope',
+            label='Top slope',
+            knowl='lf.top_slope',
+            example='4/3',
+            example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+        gal = TextBoxNoEg(
+            name='gal',
+            label='Galois group $G$',
+            short_label='Galois group',
+            knowl='nf.galois_group',
+            example='5T3',
+            example_span='list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id's"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group labels')))
+        results = CountBox()
+
+        self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
+        self.refine_array = [[degree, c, gal], [qp, e, topslope]]

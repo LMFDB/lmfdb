@@ -22,22 +22,8 @@
     }
   }
 
-function show_moreless(ml) {
-  $('.more').hide();
-  $('.less').hide();
-  $('.'+ml).show();
-}
 </script>
 
-<style type="text/css">
-table.ntdata tr.toggle { font-size: 80%; text-align: right; }
-table.ntdata tr.toggle:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
-table.ntdata tr.toggle a:hover { background: {{color.table_ntdata_background_c1}}; }
-/*
-   table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
-   table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
- */
-</style>
 
 {% if dirichlet_arithmetic -%}
 <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
@@ -63,7 +49,7 @@ table.ntdata tr.toggle a:hover { background: {{color.table_ntdata_background_c1}
 
 {% if knowltype and label %}
 {% set KNOWL_ID = "lfunction.%s.%s"|format(knowltype,label) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2> 
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>

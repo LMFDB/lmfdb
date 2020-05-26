@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import sage.repl.preparse
 from sage.repl.preparse import preparse
@@ -7,7 +8,7 @@ from sage.interfaces.magma import magma
 from sage.all import ZZ
 
 from lmfdb.base import getDBConnection
-print "getting connection"
+print("getting connection")
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
@@ -30,7 +31,7 @@ w, e, x = P.gens()
 def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True):
     nstr = str(n)
 
-    if fileprefix == None:
+    if fileprefix is None:
         fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr 
     ff = open(fileprefix + "/dir.tmp", 'r')
     files = ff.readlines()
@@ -44,12 +45,12 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
 
 
 def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
+    if fileprefix is None:
         fileprefix="."
-    hmff = file(os.path.join(fileprefix,hmf_filename))
+    hmff = open(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
-        ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+    if ferrors is None:
+        ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -76,20 +77,20 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
     field_label = None
     co = str(coeffs)[1:-1].replace(" ","")
     for i in range(cnt):
-        nf = fields_matching.next()
+        nf = next(fields_matching)
         print("Comparing coeffs %s with %s" % (nf['coeffs'], co))
         if nf['coeffs'] == co:
             field_label = nf['label']
     assert field_label is not None
-    print "...found!"
+    print("...found!")
 
     # Find the field in the HMF database
     print("Finding field %s in HMF..." % field_label)
     F_hmf = hmf_fields.find_one({"label": field_label})
     assert F_hmf is not None    # only proceed if field already in database
-    print "...found!"
+    print("...found!")
 
-    print "Computing ideals..."
+    print("Computing ideals...")
     ideals_str = F_hmf['ideals']
     # ideals = [eval(preparse(c)) for c in ideals_str] # doesn't appear to be used
     # ideals_norms = [c[0] for c in ideals] # doesn't appear to be used
@@ -97,7 +98,7 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
     magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
     # Add the list of primes
-    print "Computing primes..."
+    print("Computing primes...")
     v = hmff.readline()  # Skip line
     v = hmff.readline()
     assert v[:9] == 'PRIMES :='
@@ -110,7 +111,7 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
         assert magma('&and[primes_indices[j] gt primes_indices[j-1] : j in [2..#primes_indices]]')
         resort = False
     except AssertionError:
-        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!"
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!")
         resort = True
         magma.eval('_, sigma := Sort(primes_indices, func<x,y | x-y>);')
         magma.eval('perm := [[xx : xx in x] : x in CycleDecomposition(sigma) | #x gt 1]')
@@ -123,7 +124,7 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
         primes_indices = eval(magma.eval('primes_indices'))
         primes_str = [ideals_str[j - 1] for j in primes_indices]
         assert len(primes_array) == len(primes_str)
-        print "...comparing..."
+        print("...comparing...")
         for i in range(len(primes_array)):
             assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
                         + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
@@ -137,4 +138,4 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
         else:
             F_hmf['primes'] = primes_str
             hmf_fields.save(F_hmf)
-            print "...saved!"
+            print("...saved!")

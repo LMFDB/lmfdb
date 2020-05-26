@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from six.moves import range
 import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
@@ -10,6 +10,7 @@ from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
+    SearchArray, TextBox, SelectBox, CountBox,
     parse_ints, parse_rational, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.sato_tate_groups import st_page
@@ -18,12 +19,12 @@ from lmfdb.sato_tate_groups import st_page
 # Globals
 ###############################################################################
 
-MU_LABEL_RE = '^0\.1\.[1-9][0-9]*$'
+MU_LABEL_RE = r'^0\.1\.[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
-NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
-SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
-ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
-ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
+NU1_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
+SU2_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
+ST_LABEL_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
+ST_LABEL_SHORT_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
 INFINITY = -1
 
@@ -55,7 +56,7 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
-    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(map(str, m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
+    return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def get_name(label):
     if re.match(MU_LABEL_RE, label):
@@ -99,12 +100,12 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    if re.match('SO\(1\)\_\d+', st0_name):
-        return '\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match('U\(1\)\_\d+', st0_name):
-        return '\\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match('SU\(2\)\_\d+', st0_name):
-        return '\\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'SO\(1\)\_\d+', st0_name):
+        return r'\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'U\(1\)\_\d+', st0_name):
+        return r'\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match(r'SU\(2\)\_\d+', st0_name):
+        return r'\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
@@ -115,15 +116,15 @@ def sg_pretty(sg_label):
     
 # dictionary for quick and dirty prettification that does not access the database
 st_pretty_dict = {
-    'USp(4)':'\\mathrm{USp}(4)',
-    'U(2)':'\\mathrm{U}(2)',
-    'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)':'\\mathrm{U}(1)',
-    'N(U(1))':'N(\\mathrm{U}(1))'
+    'USp(4)':r'\mathrm{USp}(4)',
+    'U(2)':r'\mathrm{U}(2)',
+    'SU(2)':r'\mathrm{SU}(2)',
+    'U(1)':r'\mathrm{U}(1)',
+    'N(U(1))':r'N(\mathrm{U}(1))'
 }
 
 def st_pretty(st_name):
-    if re.match('mu\([1-9][0-9]*\)', st_name):
+    if re.match(r'mu\([1-9][0-9]*\)', st_name):
         return '\\' + st_name
     return st_pretty_dict.get(st_name,st_name)
 
@@ -140,9 +141,13 @@ def learnmore_list():
             ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
-# Return the learnmore list with the matchstring entry removed
+
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    """
+    Return the learnmore list with the matchstring entry removed.
+    """
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 ###############################################################################
 # Pages
@@ -150,13 +155,20 @@ def learnmore_list_remove(matchstring):
 
 @st_page.route('/')
 def index():
-    if len(request.args) != 0:
-        return search(**request.args)
+    info = to_dict(request.args, search_array=STSearchArray())
+    if request.args:
+        return search(info)
     weight_list= [0, 1]
-    degree_list=range(1, 5, 1)
+    degree_list = list(range(1, 5, 1))
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
-    info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
+    for key, val in [('weight_list', weight_list),
+                     ('degree_list', degree_list),
+                     ('st0_list', st0_list),
+                     ('st0_dict', st0_dict),
+                     ('group_list', group_list),
+                     ('group_dict', group_dict)]:
+        info[key] = val
     title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -217,24 +229,28 @@ def search_by_label(label):
 
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
-def search(**args):
+def search(info):
     """ query processing for Sato-Tate groups -- returns rendered results page """
-    info = to_dict(args)
     if 'jump' in info:
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
+    search_type = info.get("search_type", info.get("hst", "List"))
     template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
                      'credit':credit_string,
                      'learnmore':learnmore_list()}
     title = 'Sato-Tate Group Search Results'
     err_title = 'Sato-Tate Groups Search Input Error'
-    count = parse_count(info, 25)
+    count = parse_count(info, 50)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
     if 'refine' in info:
         start = 0
-    ratonly = True if info.get('rational_only','no').strip().lower() == 'yes' else False
+    ratonly = (info.get('include_irrational','no').strip().lower() == 'no')
+    if search_type == "Random" and not ratonly:
+        info['err'] = err = 'Cannot select random irrational Sato-Tate group'
+        flash_error(err)
+        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
     query = {'rational':True} if ratonly else {}
     try:
         parse_ints(info,query,'weight','weight')
@@ -255,15 +271,21 @@ def search(**args):
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
-    if (not 'weight' in query or 0 in weight_list) and \
-       (not 'degree' in query or 1 in degree_list) and \
-       (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and \
-       (not 'trace_zero_density' in query or query['trace_zero_density'] == '0'):
+    if ((not 'weight' in query or 0 in weight_list) and
+        (not 'degree' in query or 1 in degree_list) and
+        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and
+        (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
         if not 'components' in query:
-            components_list = xrange(1,3 if ratonly else start+count+1)
+            components_list = range(1, 3 if ratonly else start + count + 1)
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
         nres = len(components_list) if 'components' in query or ratonly else INFINITY
+        if search_type == "Random" and nres > 0:
+            # Need to return mu(1) and mu(2) sometimes
+            otherlen = db.gps_sato_tate.count(query)
+            r = ZZ.random_element(nres + otherlen)
+            if r < nres:
+                return redirect(url_for(".by_label", label="0.1.%d" % components_list[r]), 307)
         for n in itertools.islice(components_list,start,start+count):
             results.append(mu_info(n))
     else:
@@ -272,6 +294,10 @@ def search(**args):
     if 'result_count' in info:
         nres += db.gps_sato_tate.count(query)
         return jsonify({"nres":str(nres)})
+    if search_type == "Random":
+        label = db.gps_sato_tate.random(query, "label")
+        if label is not None:
+            return redirect(url_for(".by_label", label=label), 307)
 
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
@@ -293,8 +319,8 @@ def search(**args):
                 results.append(v)
     else:
         info['number'] = 'infinity'
-        info['start'] = start
-        info['count'] = count
+    info['start'] = start
+    info['count'] = count
 
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
@@ -315,10 +341,10 @@ def mu_info(n):
     rec['degree'] = 1
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'mu(%d)'%n
-    rec['pretty'] = '\mu(%d)'%n
+    rec['pretty'] = r'\mu(%d)'%n
     rec['real_dimension'] = 0
     rec['components'] = int(n)
-    rec['ambient'] = '\mathrm{O}(1)' if n <= 2 else '\mathrm{U}(1)'
+    rec['ambient'] = r'\mathrm{O}(1)' if n <= 2 else r'\mathrm{U}(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
@@ -335,13 +361,13 @@ def mu_info(n):
     if n == 1:
         rec['supgroups'] = st_link("0.1.2")
     elif n > 2:
-        rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+        rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    rec['probabilities'] = [['\\mathrm{P}[a_1=%d]=\\frac{1}{%d}'%(m,n)] for m in rational_traces]
+    rec['probabilities'] = [[r'\mathrm{P}[a_1=%d]=\frac{1}{%d}'%(m,n)] for m in rational_traces]
     return rec
 
 def mu_portrait(n):
@@ -368,7 +394,7 @@ def su2_mu_info(w,n):
     rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
-    rec['ambient'] = '\mathrm{U}(2)'
+    rec['ambient'] = r'\mathrm{U}(2)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SU(2)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
@@ -381,8 +407,8 @@ def su2_mu_info(w,n):
     rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
     rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
     rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
@@ -416,11 +442,11 @@ def nu1_mu_info(w,n):
     rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
     rec['components'] = int(2*n)
-    rec['ambient'] = '\mathrm{U}(2)'
+    rec['ambient'] = r'\mathrm{U}(2)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'U(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&0\\\\0&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha = 1,\\ \\alpha\\in\\mathbb{C}\\right\\}'
+    rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&0\\0&\bar\alpha\end{bmatrix}:\alpha\bar\alpha = 1,\ \alpha\in\mathbb{C}\right\}'
     rec['component_group'] = 'D_{%d}'%n
     rec['abelian'] = boolean_name(n <= 2)
     rec['cyclic'] = boolean_name(n <= 1)
@@ -429,8 +455,8 @@ def nu1_mu_info(w,n):
     rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
     rec['numgens'] = 2
     rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
     rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
@@ -515,14 +541,14 @@ def render_st_group(info, portrait=None):
     if portrait:
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
     prop2 += [
-        ('Name', '\(%s\)'%info['pretty']),
+        ('Name', r'\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
         ('Real dimension', '%d'%info['real_dimension']),
         ('Components', '%d'%info['components']),
-        ('Contained in','\(%s\)'%info['ambient']),
-        ('Identity Component', '\(%s\)'%info['identity_component']),
-        ('Component group', '\(%s\)'%info['component_group']),
+        ('Contained in',r'\(%s\)'%info['ambient']),
+        ('Identity Component', r'\(%s\)'%info['identity_component']),
+        ('Component group', r'\(%s\)'%info['component_group']),
     ]
     bread = [
         ('Sato-Tate Groups', url_for('.index')),
@@ -530,9 +556,9 @@ def render_st_group(info, portrait=None):
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    title = r'Sato-Tate Group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
-                           properties2=prop2,
+                           properties=prop2,
                            credit=credit_string,
                            info=info,
                            bread=bread,
@@ -567,3 +593,60 @@ def labels_page():
     bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+class STSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    jump_example = "1.4.USp(4)"
+    jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.1.2.1a or N(U(1)), or 1.4.10.1.1a or 1.4.USp(4)"
+    def __init__(self):
+        weight = TextBox(
+            name="weight",
+            label="Weight",
+            knowl="st_group.weight",
+            example="1",
+            example_span="1 or 0-3")
+        degree = TextBox(
+            name="degree",
+            label="Degree",
+            knowl="st_group.degree",
+            example="4",
+            example_span="4 or 1-6")
+        include_irrational = SelectBox(
+            name="include_irrational",
+            label="Include irrational",
+            knowl="st_group.rational",
+            options=[("", "no"),
+                     ("yes", "yes")])
+        identity_component = SelectBox(
+            name="identity_component",
+            label="Identity component",
+            short_label=r"$\mathrm{ST}^0$",
+            knowl="st_group.identity_component",
+            example_span="U(1) or USp(4)",
+            options=[("", "")] + [(r, r) for r in st0_list])
+        components = TextBox(
+            name="components",
+            label="Components",
+            knowl="st_group.components",
+            example="1",
+            example_span="1 (connected) or 4-12")
+        trace_zero_density = TextBox(
+            name="trace_zero_density",
+            label="Trace zero density",
+            knowl="st_group.trace_zero_density",
+            short_label=r"$\mathrm{P}[a_1=0]$",
+            example="1/2",
+            example_span="0, 1/2, or 3/8")
+        count = CountBox()
+
+        self.browse_array = [
+            [weight],
+            [degree],
+            [include_irrational],
+            [identity_component],
+            [components],
+            [trace_zero_density],
+            [count]]
+
+        self.refine_array = [[weight, degree, include_irrational, identity_component, components, trace_zero_density]]

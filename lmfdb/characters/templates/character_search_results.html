@@ -4,42 +4,40 @@
 <h2>Refine search</h2>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 
+{# the front page doesn't have a way to control number of characters
+<input type='hidden' name='limit' value="{{args.limit}}"> #}
 <table border="0">
 <tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='primitive') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
 </tr>
 
 <tr>
-<td align=left><input type='text' name='modulus' size=6 value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
+<td align=left><input type='text' name='modulus' placeholder="13" style="width:160px;" value="{{args.modulus}}"></td>
+<td align=left><input type='text' name='conductor' placeholder="5" style="width:160px;" value="{{args.conductor}}"></td>
+<td align=left><input type='text' name='order' placeholder="2" style="width:160px;" value="{{args.order}}"></td>
 <td align=left>
-<select name='parity'>
+<select name='parity' style="width:170px;">
       <option value="">all</option>
-      <option value="Even" {{ "selected" if args.parity == 'Even'}}>even</option>
-      <option value="Odd" {{ "selected" if args.parity == 'Odd'}}>odd</option>
+      <option value="even" {{ "selected" if args.parity == 'even'}}>even</option>
+      <option value="odd" {{ "selected" if args.parity == 'odd'}}>odd</option>
 </select>
 </td>
 <td align=left>
-<select name='primitive'>
+<select name='primitive' style="width:170px;">
       <option value="">all</option>
-      <option value="Yes" {{ "selected" if args.primitive == 'Yes'}}>yes</option>
-      <option value="No" {{ "selected" if args.primitive == 'No'}}>no</option>
+      <option value="yes" {{ "selected" if args.primitive == 'yes'}}>yes</option>
+      <option value="no" {{ "selected" if args.primitive == 'no'}}>no</option>
 </select>
 </td>
 </tr>
 <tr>
-<td colspan=2 align=left>maximum results to display</td>
-<td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td></tr>
-<tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" name='refine' value='1'>Search again</button>
+<td class="button"><button type='submit' width="170" style="width: 170px" onclick='resetStart()'>Search again</button>
 </td> </tr>
 </table>
 
@@ -69,7 +67,8 @@ table td.params {
 {% endif %}
 </h2>
 
-<table>
+<table class=ntdata>
+<thead>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.galois_orbit_label', title='Orbit label')}}</th>
@@ -79,6 +78,7 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
+</thead>
 
 {% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>

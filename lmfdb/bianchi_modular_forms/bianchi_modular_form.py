@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-
+from six import string_types
 import re
 
-from flask import render_template, url_for, request, redirect, flash
-from markupsafe import Markup
+from flask import render_template, url_for, request, redirect
 from sage.all import latex
 
 from lmfdb import db
 from lmfdb.utils import (
-    to_dict, web_latex_ideal_fact,
+    to_dict, web_latex_ideal_fact, flash_error,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
+    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
     teXify_pol, search_wrap)
 from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
@@ -29,10 +29,12 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 def bc_info(bc):
-    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
+    return 'yes' if bc > 0 else 'yes (twist)' if bc < 0 else 'no'
+
 
 def cm_info(cm):
     try:
@@ -48,13 +50,12 @@ def index():
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
-    args = request.args
-    if len(args) == 0:
-        info = {}
+    info = to_dict(request.args, search_array=BMFSearchArray())
+    if not request.args:
         gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
-        gl2_names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
-        sl2_names = gl2_names + ["\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
+        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
+        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
@@ -62,13 +63,13 @@ def index():
         bc_examples.append(('base-change of a newform with rational coefficients',
                          '2.0.4.1-100.2-a',
                          url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='100.2', label_suffix='a'),' (with an associated elliptic curve which is a base-change)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
                          '2.0.4.1-16384.1-d',
                          url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='16384.1', label_suffix='d'),' (with an associated elliptic curve which is not a base-change)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
                          '2.0.3.1-6561.1-b',
                          url_for('.render_bmf_webpage',field_label='2.0.3.1', level_label='6561.1', label_suffix='b'),' (with no associated elliptic curve)'))
-        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
+        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
                          '2.0.7.1-10000.1-b',
                          url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
 
@@ -78,7 +79,7 @@ def index():
         info['learnmore'] = []
         return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
     else:
-        return bianchi_modular_form_search(args)
+        return bianchi_modular_form_search(info)
 
 @bmf_page.route("/random")
 def random_bmf():    # Random Bianchi modular form
@@ -86,7 +87,7 @@ def random_bmf():    # Random Bianchi modular form
     return bianchi_modular_form_by_label(label)
 
 def bianchi_modular_form_jump(info):
-    label = info['label']
+    label = info['jump'].strip()
     dat = label.split("-")
     if len(dat)==2: # assume field & level, display space
         return render_bmf_space_webpage(dat[0], dat[1])
@@ -105,7 +106,7 @@ def bianchi_modular_form_postprocess(res, info, query):
              table=db.bmf_forms,
              title='Bianchi Modular Form Search Results',
              err_title='Bianchi Modular Forms Search Input Error',
-             shortcuts={'label': bianchi_modular_form_jump},
+             shortcuts={'jump': bianchi_modular_form_jump},
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
                        "level_ideal": lambda v: teXify_pol(v['level_ideal']),
@@ -115,6 +116,11 @@ def bianchi_modular_form_postprocess(res, info, query):
                        "cm": lambda v: cm_info(v.pop('CM', '?'))},
              bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
                            ('Search Results', '.')],
+             url_for_label=lambda label: url_for(".render_bmf_webpage",
+                                                 **dict(zip(
+                                                     ['field_label', 'level_label', 'label_suffix'],
+                                                      label.split('-')
+                                                 ))),
              learnmore=learnmore_list,
              properties=lambda: [])
 
@@ -131,18 +137,18 @@ def bianchi_modular_form_search(info, query):
     elif info['sfe'] != "any":
         query['sfe'] = int(info['sfe'])
     if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
+        if info['include_cm'] in ['exclude', 'off']:
             query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
             query['CM'] = {'$ne': 0} # will exclude NULL values
-    if 'include_base_change' in info and info['include_base_change'] == 'off':
+    if info.get('include_base_change') =='exclude':
         query['bc'] = 0
-    else:
-        info['include_base_change'] = "on"
+    elif info.get('include_base_change') == 'only':
+        query['bc'] = {'$ne': 0}
 
 @bmf_page.route('/<field_label>')
 def bmf_search_field(field_label):
-    return bianchi_modular_form_search(field_label=field_label)
+    return bianchi_modular_form_search({'field_label':field_label, 'search_array':BMFSearchArray()})
 
 @bmf_page.route('/gl2dims/<field_label>')
 def render_bmf_field_dim_table_gl2(**args):
@@ -179,10 +185,10 @@ def bmf_field_dim_table(**args):
     query['field_label'] = field_label
     if gl_or_sl=='gl2_dims':
         info['group'] = 'GL(2)'
-        info['bgroup'] = '\GL(2,\mathcal{O}_K)'
+        info['bgroup'] = r'\GL(2,\mathcal{O}_K)'
     else:
         info['group'] = 'SL(2)'
-        info['bgroup'] = '\SL(2,\mathcal{O}_K)'
+        info['bgroup'] = r'\SL(2,\mathcal{O}_K)'
     if level_flag == 'all':
         query[gl_or_sl] = {'$exists': True}
     else:
@@ -244,7 +250,7 @@ def render_bmf_space_webpage(field_label, level_label):
              (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
              (level_label, '')]
     friends = []
-    properties2 = []
+    properties = []
 
     if not field_label_regex.match(field_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
@@ -274,7 +280,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_gen'] = latex(I.gens_reduced()[0])
                 info['level_fact'] = web_latex_ideal_fact(I.factor(), enclose=False)
                 dim_data = data['gl2_dims']
-                weights = dim_data.keys()
+                weights = list(dim_data)
                 weights.sort(key=lambda w: int(w))
                 for w in weights:
                     dim_data[w]['dim']=dim_data[w]['cuspidal_dim']
@@ -298,10 +304,10 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
                 info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
                 info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] - 2*info['nnf2']
-                properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
+                properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
-    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties2=properties2, friends=friends, learnmore=learnmore_list())
+    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
@@ -311,7 +317,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     info = {}
     title = "Bianchi cusp forms"
     data = None
-    properties2 = []
+    properties = []
     friends = []
     bread = [('Modular Forms', url_for('modular_forms')), ('Bianchi Modular Forms', url_for(".index"))]
     try:
@@ -322,28 +328,31 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
                  (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=data.field_label)),
                  (data.level_label, url_for('.render_bmf_space_webpage', field_label=data.field_label, level_label=data.level_label)),
                  (data.short_label, '')]
-        properties2 = data.properties2
+        properties = data.properties
         friends = data.friends
     except ValueError:
         raise
         info['err'] = "No Bianchi modular form in the database has label {}".format(label)
-    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=properties2, friends=friends, info=info, learnmore=learnmore_list())
+    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties=properties, friends=friends, info=info, learnmore=learnmore_list())
 
 def bianchi_modular_form_by_label(lab):
     if lab == '':
         # do nothing: display the top page
         return redirect(url_for(".index"))
-    if isinstance(lab, basestring):
+    if isinstance(lab, string_types):
         res = db.bmf_forms.lookup(lab)
     else:
         res = lab
         lab = res['label']
 
     if res is None:
-        flash(Markup("No Bianchi modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No Bianchi modular form in the database has label or name %s", lab)
         return redirect(url_for(".index"))
     else:
-        return redirect(url_for(".render_bmf_webpage", field_label = res['field_label'], level_label = res['level_label'], label_suffix = res['label_suffix']))
+        return redirect(url_for(".render_bmf_webpage",
+                        field_label=res['field_label'],
+                        level_label=res['level_label'],
+                        label_suffix=res['label_suffix']))
 
 @bmf_page.route("/Source")
 def how_computed_page():
@@ -385,3 +394,59 @@ def labels_page():
     return render_template("single.html", kid='mf.bianchi.labels',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+
+class BMFSearchArray(SearchArray):
+    noun = "form"
+    plural_noun = "forms"
+    jump_example = "2.0.4.1-65.2-a"
+    jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
+    def __init__(self):
+        field = TextBox(
+            name='field_label',
+            label='Base field',
+            knowl='nf',
+            example='2.0.4.1',
+            example_span=r'either a field label, e.g. 2.0.4.1 for \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1',
+            example_span_colspan=4)
+        level = TextBox(
+            name='level_norm',
+            label='Level norm',
+            knowl='mf.bianchi.level',
+            example='1',
+            example_span='e.g. 1 or 1-100')
+        dimension = TextBox(
+            name='dimension',
+            label='Dimension',
+            knowl='mf.bianchi.spaces',
+            example='1',
+            example_span='e.g. 1 or 2')
+
+        sign = SelectBox(
+            name='sfe',
+            label='Sign',
+            knowl='mf.bianchi.sign',
+            options=[("", ""), ("+1", "+1"), ("-1", "-1")],
+            example_col=True
+        )
+        base_change = ExcludeOnlyBox(
+            name='include_base_change',
+            label='Base change',
+            knowl='mf.bianchi.base_change'
+        )
+        CM = ExcludeOnlyBox(
+            name='include_cm',
+            label='CM',
+            knowl='mf.bianchi.cm'
+        )
+        count = CountBox()
+
+        self.browse_array = [
+            [field],
+            [level, sign],
+            [dimension, base_change],
+            [count, CM]
+        ]
+        self.refine_array = [
+            [field, level, dimension],
+            [sign, base_change, CM]
+        ]

@@ -3,84 +3,23 @@
 
 <h2> Further refine search </h2>
 
-<form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
-<table>
-<tr>
-<td>Field</td>
-<td>{{ KNOWL('mf.bianchi.level', title='Level') }} norm</td>
-<td>{{ KNOWL('mf.bianchi.newform', title='dimension') }}</td>
-<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
-<td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
-<td>{{ KNOWL('mf.bianchi.cm', title='CM') }}</td>
-</tr>
-<tr>
-<td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
-<td><input type='text' name='level_norm' placeholder='1' size=10 value={{info.level_norm}}>
-<td><input type='text' name='dimension' placeholder='1' size=3  value={{info.dimension}}>
-<td> <select name='sfe'>
-    {% if info.sfe == "any" %}
-    <option value="any" selected>any</option>
-    <option value="+1">+1</option>
-    <option value="-1">-1</option>
-    {% elif info.sfe == "+1" %}
-    <option value="any">any</option>
-    <option value="+1" selected>+1</option>
-    <option value="-1">-1</option>
-    {% else %}
-    <option value="any">any</option>
-    <option value="+1">+1</option>
-    <option value="-1" selected>-1</option>
-    {% endif %}
-  </select>
-<td> <select name='include_base_change'>
-    {% if info.include_base_change == "off" %}
-    <option value="off" selected>exclude</option>
-    <option value="on" >include</option>
-    {% else %}
-    <option value="off">exclude</option>
-    <option value="on" selected>include</option>
-    {% endif %}
-  </select>
-<td>
-  <select name='include_cm'>
-    {% if info.include_cm == "only" %}
-    <option value="include">include</option>
-    <option value="exclude">exclude</option>
-    <option value="only" selected>only</option>
-    {% elif info.include_cm == "exclude" %}
-    <option value="include">include</option>
-    <option value="exclude" selected>exclude</option>
-    <option value="only">only</option>
-    {% else %}
-    <option value="include" selected>include</option>
-    <option value="exclude">exclude</option>
-    <option value="only">only</option>
-    {% endif %}
-  </select>
-</td>
-</tr>
-<tr>
-<td>Maximum number</td>
-<td><input type='text' name='count' value={{info.count}} size=10></td>
-<td colspan=3><button type='submit' value='Search'>Search</button></td>
-</tr>
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}
 <table class="ntdata">
+  <thead>
 <tr>
-<th>Field</th>
+<th>{{ KNOWL('nf', title='Base field') }}</th>
 <th>{{ KNOWL('mf.bianchi.level', title='Level') }} </th>
-<th>Label</th>
+<th>{{ KNOWL('mf.bianchi.labels', title='Label') }} </th>
 <th>{{ KNOWL('mf.bianchi.newform', title='Dimension') }} </th>
 <th>{{ KNOWL('mf.bianchi.sign', title='Sign') }} </th>
 <th>{{ KNOWL('mf.bianchi.base_change', title='Base change') }} </th>
 <th>{{ KNOWL('mf.bianchi.cm', title='CM') }} </th>
 </tr>
+  </thead>
+    <tbody>
 {% for form in info.results: %}
 <tr>
 <td>{{form.field_label}}</td>
@@ -94,8 +33,8 @@
 <td align='center'>{{form.cm}}</td>
 </tr>
 {% endfor %}
+<tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'dummy_download_search_results.html' %}
 {% endif %}

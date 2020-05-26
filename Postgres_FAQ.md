@@ -13,7 +13,7 @@ Changes
 
 1. What's an overview of the changes?
 
-   There is a new file, `lmfdb/backend/database.py`, containing the
+   There is a new folder, `lmfdb/backend/`, containing the
    main components of the new interface to the Postgres database.
    Postgres is a mature, open-source implementation of SQL.  One of
    the main differences is that Postgres is a strongly-typed
@@ -115,8 +115,8 @@ Database Interface
 
    The `info` argument is a dictionary that will be updated with
    various data that is commonly needed by templates populated by the
-   search functions.  For more details, see the documentation in
-   `backend/database.py`.
+   search functions.  For more details, see the documentation in the folder
+   `lmfdb/backend`.
 
 1. What if I only want a single entry, for example with a specified label?
 
@@ -158,11 +158,11 @@ Database Interface
 
    If use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
-   `lmfdb.backend.database`). You can see lots of examples of this
-   paradigm in `lmfdb/backend/database.py`.
+   `lmfdb.backend`). You can see lots of examples of this
+   paradigm in `lmfdb/backend/`.
 
    ```python
-   sage: from lmfdb.backend.database import db, SQL
+   sage: from lmfdb.backend import db, SQL
    sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2
@@ -221,20 +221,40 @@ Note that you need editor priviledges to add, delete or modify data.
 
 1. How do I create a new table?
 
-    The following example creates a new postgres table with name
-    `test_table` and three columns: `dim` of type `smallint` (a 2-byte
-    signed integer), `discriminant` of type `numeric` (an arbitrary
-    precision integer/decimal) and `label` of type `text`.  For more
-    details see the documentation of the `create_table` function.
+   If you want to add a new table to the lmfdb, see the `create_table`
+   method.  You will need to provide a name (try to follow the naming
+   conventions, where the first few characters indicate the general
+   area of your table, separated by an underscore from the main name,
+   which is often a single word).  You then give a dictionary whose
+   keys are postgres types and values are lists of columns with that
+   type.  The next argument is the column which should be used in the
+   `lookup` method.  You should provide a default sort order if your
+   table will be the primary table behind a section of the website
+   (auxiliary tables may not need a sort order).  The `id_ordered`
+   argument specifies whether the `id` column should match your sort
+   order (which can make indexes smaller and simpler but updating data
+   more time-consuming).  You can give columns for an extra table (see
+   the question two prior), using the same format as the second
+   argument.  Finally, you can specify the order of columns, which
+   will be used in `copy_from` and `copy_to` by default.
 
-    ```python
-    sage: from lmfdb import db
-    sage: cols = {'smallint': ['dim'], 'numeric': ['discriminant'], 'text': ['label']}
-    sage: db.create_table("test_table", cols, label_col="label", sort=['dim', 'discriminant'])
-    ```
+   ```python
+   db.create_table(name='halfmf_forms',
+                   search_columns={'smallint': ['dim', 'weight', 'level', 'dimtheta'],
+                                   'text': ['label'],
+                                   'jsonb': ['thetas', 'newpart'],
+                                   'numeric': ['character']},
+                   label_col='label',
+                   sort=['level', 'label'],
+                   id_ordered=False,
+                   search_order=['dim', 'weight', 'thetas', 'level', 'character',
+                                 'label', 'dimtheta', 'newpart'])
+   ```
 
-    Once this table exists, you can access it via the object
-    `db.test_table`, which is of type `PostgresTable`.
+   Once this table exists, you can access it via the object
+    `db.halfmf_forms`, which is of type `PostgresTable`.
+
+   Conversely, to remove a table from the LMFDB you can use `drop_table`.
 
 1. How do I see the type of a column?
 
@@ -256,7 +276,16 @@ Note that you need editor priviledges to add, delete or modify data.
    ```
 
    This column will be NULL for existing rows.
+   
+1. How do I delete a column?
 
+   If you want to delete a column to an existing table, use the
+   `drop_column` method.
+
+   ```python
+   sage: db.test_table.drop_column("bad_primes")
+   ```
+   
 1. How do I insert new data?
 
    There are two main methods for adding data to a table.
@@ -297,10 +326,15 @@ Note that you need editor priviledges to add, delete or modify data.
 
 1. How do I update data?
 
-   There are a number of methods for updating data.  One option is
+   There are a number of methods for updating data.  We present them
+   in rough order of ease of use, and roughly reverse order in terms of speed.
+
+   The first option is
    `upsert`, which takes a query and dictionary containing values to
    be set and updates a single row satisfying the query.  If no row
-   satisfies the query, a new row will be added.
+   satisfies the query, a new row will be added.  If multiple rows
+   satisfy the query, an error will be raised.  Note that columns
+   not contained in the specified data will be left unchanged.
 
    ```python
    sage: db.test_table.upsert({'discriminant': 12}, {'label':'1.12.B'})
@@ -324,7 +358,25 @@ Note that you need editor priviledges to add, delete or modify data.
    sage: db.test_table.rewrite(func, {'discriminant':{'$le':25}})
    ```
 
-   Under the hood, this function uses the `reload` method, which is
+   Sometimes the new data cannot be derived from existing data.  In this case
+   the `update_from_file` function can be used, which allows you to specify
+   new values for any subset of columns and of rows.  For example:
+
+   ```python
+   sage: db.test_table.update_from_file("test.txt", label_col="label", sep=":")
+   ```
+
+   Example contents of `test.txt`:
+
+   ```
+   label:discriminant:bar
+   text:numeric:text
+
+   1.12.A:33:hello
+   2.30.A:90:world
+   ```
+
+   Under the hood, the `rewrite` function uses `reload`, which is
    also available for use directly.  It takes as input files
    containing the desired data for the table (for basic usage, you can
    just give one file; others are available if your table has an
@@ -343,14 +395,15 @@ Note that you need editor priviledges to add, delete or modify data.
    3    20      3.20.B  [2,5]
    ```
 
-   The `reload` method is the fastest option, but requires you to
+   The `reload` method supports arbitrary changes to the data, but requires you to
    produce an appropriate file.
 
 1. What if I change my mind and want to revert to the old version of a table, from before a reload?
 
    You can use the `reload_revert` method to switch back to the old
    version.  Note that this will also work for the `rewrite` method,
-   since it relies on `reload`.  If you want to undo a `reload_all`,
+   since it relies on `reload`, and for the `update_from_file` method
+   (unless `inplace=True` was used).  If you want to undo a `reload_all`,
    see the `reload_all_revert` method on `db`.
 
    There is no built-in way to undo direct additions to tables via
@@ -415,40 +468,6 @@ Note that you need editor priviledges to add, delete or modify data.
    method to reset it (changing the `id` column to match the correct
    order).  Many of the methods that modify tables include an option
    to `resort` afterward.
-
-1. How do I create a new table?
-
-   If you want to add a new table to the lmfdb, see the `create_table`
-   method.  You will need to provide a name (try to follow the naming
-   conventions, where the first few characters indicate the general
-   area of your table, separated by an underscore from the main name,
-   which is often a single word).  You then give a dictionary whose
-   keys are postgres types and values are lists of columns with that
-   type.  The next argument is the column which should be used in the
-   `lookup` method.  You should provide a default sort order if your
-   table will be the primary table behind a section of the website
-   (auxiliary tables may not need a sort order).  The `id_ordered`
-   argument specifies whether the `id` column should match your sort
-   order (which can make indexes smaller and simpler but updating data
-   more time-consuming).  You can give columns for an extra table (see
-   the question two prior), using the same format as the second
-   argument.  Finally, you can specify the order of columns, which
-   will be used in `copy_from` and `copy_to` by default.
-
-   ```python
-   db.create_table(name='halfmf_forms',
-                   search_columns={'smallint': ['dim', 'weight', 'level', 'dimtheta'],
-                                   'text': ['label'],
-                                   'jsonb': ['thetas', 'newpart'],
-                                   'numeric': ['character']},
-                   label_col='label',
-                   sort=['level', 'label'],
-                   id_ordered=False,
-                   search_order=['dim', 'weight', 'thetas', 'level', 'character',
-                                 'label', 'dimtheta', 'newpart'])
-   ```
-
-   Conversely, to remove a table from the LMFDB you can use `drop_table`.
 
 1. What other methods should I be aware of for modifying data?
 

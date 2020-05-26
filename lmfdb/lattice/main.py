@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-import ast, re, StringIO, time
+import ast
+import re
+from six import BytesIO
+import time
 
-from flask import render_template, request, url_for, redirect, make_response, flash, send_file
-from markupsafe import Markup
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
+from flask import render_template, request, url_for, redirect, make_response, send_file
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
-    web_latex_split_on_pm,
+    web_latex_split_on_pm, flash_error, to_dict,
+    SearchArray, TextBox, CountBox,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
 from lmfdb.lattice import lattice_page
@@ -32,11 +35,11 @@ def print_q_expansion(list):
 
 def my_latex(s):
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\\zeta', ss)
     ss += ""
     return ss
 
@@ -56,23 +59,23 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
 
 @lattice_page.route("/")
 def lattice_render_webpage():
-    args = request.args
-    if len(args) == 0:
+    info = to_dict(request.args, search_array=LatSearchArray())
+    if not request.args:
         maxs=lattice_summary_data()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        dim_list = list(range(1, 11, 1))
+        max_class_number = 20
+        class_number_list = list(range(1, max_class_number + 1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
+        info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
@@ -82,7 +85,7 @@ def lattice_render_webpage():
         info['max_det']=maxs[2]
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
-        return lattice_search(args)
+        return lattice_search(info)
 
 # Random Lattice
 @lattice_page.route("/random")
@@ -107,9 +110,9 @@ def lattice_by_label_or_name(lab):
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".lattice_render_webpage"))
 
 #download
@@ -142,8 +145,8 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
@@ -182,6 +185,7 @@ def lattice_search_isometric(res, info, query):
                         'label':lambda info:lattice_by_label_or_name(info.get('label'))},
              projection=lattice_search_projection,
              postprocess=lattice_search_isometric,
+             url_for_label=lambda label: url_for(".render_lattice_webpage", label=label),
              bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')],
              learnmore=learnmore_list,
              properties=lambda: [])
@@ -193,7 +197,7 @@ def lattice_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -208,7 +212,7 @@ def render_lattice_webpage(**args):
     if f is None:
         t = "Integral Lattices Search Error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(f)
@@ -299,7 +303,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):
@@ -417,3 +421,54 @@ def download_lattice_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
+
+class LatSearchArray(SearchArray):
+    noun = "lattice"
+    plural_noun = "lattices"
+    def __init__(self):
+        dim = TextBox(
+            name="dim",
+            label="Dimension",
+            knowl="lattice.dimension",
+            example="3",
+            example_span="3 or 2-5")
+        det = TextBox(
+            name="det",
+            label="Determinant",
+            knowl="lattice.determinant",
+            example="1",
+            example_span="1 or 10-100")
+        level = TextBox(
+            name="level",
+            label="Level",
+            knowl="lattice.level",
+            example="48",
+            example_span="48 or 40-100")
+        gram = TextBox(
+            name="gram",
+            label="Gram matrix",
+            knowl="lattice.gram",
+            example="[5,1,23]",
+            example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+        minimum = TextBox(
+            name="minimum",
+            label="Minimal vector length",
+            knowl="lattice.minimal_vector",
+            example="1")
+        class_number = TextBox(
+            name="class_number",
+            label="Class number",
+            knowl="lattice.class_number",
+            example="1")
+        aut = TextBox(
+            name="aut",
+            label="Automorphism group order",
+            short_label="Aut. group order",
+            knowl="lattice.group_order",
+            example="2",
+            example_span="696729600")
+        count = CountBox()
+
+        self.browse_array = [[dim], [det], [level], [gram], [minimum], [class_number], [aut], [count]]
+
+        self.refine_array = [[dim, det, level, gram], [minimum, class_number, aut]]

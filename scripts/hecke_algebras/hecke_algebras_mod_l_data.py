@@ -3,7 +3,7 @@
 
 Author: Samuele Anni
 """
-
+from __future__ import print_function
 import os
 
 from pymongo.mongo_client import MongoClient
@@ -52,8 +52,8 @@ def check_mod_l_data(orbit_label, index, ell, ll, fix=False):
         if 'structure' not in o.keys():
             print("NOT stored")
             if fix:
-                d=do_import(ll);
-                print d;
+                d=do_import(ll)
+                print(d)
                 hecke_orb_l.update({"_id": o["_id"]}, {"$set":{'field': d['field'], 'structure': d['structure'],'properties': d['properties'], 'operators': d['operators']}}, upsert=True)
                 print("Fixed orbit label %s index %s" % (orbit_label, o['index']))
         else:

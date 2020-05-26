@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 pw_filename = "../../../xyzzy"
 password = open(pw_filename, "r").readlines()[0].strip()
 
@@ -12,8 +12,8 @@ art=C.artin
 rep=art.representations
 nfgal=art.field_data
 
-print "rep is artin representations"
-print "nfgal is the nfgalois group database"
+print("rep is artin representations")
+print("nfgal is the nfgalois group database")
 
 artargs = {'Dim': {'$gte': 2, '$lte': 9}, 'Hide': 0}
 allarts=rep.find(artargs)
@@ -21,7 +21,7 @@ allarts=rep.find(artargs)
 logfile=open("artlist", "w")
 
 for a in allarts:
-  print "."
+  print(".")
   baselabel = str(a['Baselabel'])
   numconj = len(a['GaloisConjugates'])
   for j in range(numconj):

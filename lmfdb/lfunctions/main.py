@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import flask
-from flask import render_template, url_for, request, make_response
+from __future__ import absolute_import
+from flask import (render_template, url_for, request, make_response,
+                   abort, redirect)
 
 from sage.all import srange, spline, line, latex, is_prime,  factor
 
@@ -8,17 +9,17 @@ import tempfile
 import os
 import re
 
-import LfunctionPlot
+from . import LfunctionPlot
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
+from .Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_HMFDB, Lfunction_BMF,
                        Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
                        SymmetricPowerLfunction, HypergeometricMotiveLfunction,
                        Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
-from LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
-from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
+from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
+from .Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
@@ -26,9 +27,11 @@ from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
-from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
+from lmfdb.artin_representations.main import parse_artin_label
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float
 from lmfdb.app import is_debug_mode
 from lmfdb import db
+from six import string_types
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -43,7 +46,7 @@ def get_degree(degree_string):
 @l_function_page.route("/")
 def l_function_top_page():
     # Don't duplicate the code in app.py
-    return flask.redirect(url_for('l_functions'),301)
+    return redirect(url_for('l_functions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():
@@ -93,7 +96,7 @@ def l_function_degree4_browse_page():
 def l_function_degree_page(degree):
     degree = get_degree(degree)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
@@ -106,10 +109,10 @@ def l_function_degree_page(degree):
 def l_function_cuspform_browse_page(degree):
     deg = get_degree(degree)
     if deg < 0:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(0.501),LfunctionPlot.getOneGraphHtmlHolo(1)]
-    return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_1(N)\)', **info)
+    return render_template("cuspformGL2.html", title=r'L-functions of Cusp Forms on \(\Gamma_1(N)\)', **info)
 
 
 # L-function of GL(2) maass forms browsing page ##############################################
@@ -139,10 +142,10 @@ def l_function_ec_browse_page():
 def l_function_maass_gln_browse_page(degree):
     degree = get_degree(degree)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree)
     if not contents:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(degree, [("Maass Form", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
     info["contents"] = contents
@@ -189,10 +192,10 @@ def l_function_browse_page(degree, gammasignature):
     degree = get_degree(degree)
     nice_gammasignature = parse_codename(gammasignature)
     if degree < 0:
-        return flask.abort(404)
+        return abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)
     if not contents:
-        return flask.abort(404)
+        return abort(404)
     info = {"bread": get_bread(degree, [(gammasignature, url_for('.l_function_browse_page',
                                             degree='degree' + str(degree), gammasignature=gammasignature))])}
     info["contents"] = contents
@@ -214,7 +217,7 @@ def l_function_riemann_page():
 @l_function_page.route("/Character/Dirichlet/1/1/")
 @l_function_page.route("/NumberField/1.1.1.1/")
 def l_function_riemann_redirect():
-    return flask.redirect(url_for('.l_function_riemann_page'), code=301)
+    return redirect(url_for('.l_function_riemann_page'), code=301)
 
 
 # L-function of Dirichlet character ############################################
@@ -237,7 +240,7 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return flask.redirect(url_for('.l_function_ec_page', conductor_label = conductor,
+        return redirect(url_for('.l_function_ec_page', conductor_label = conductor,
                                       isogeny_class_label = isogeny), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
@@ -264,16 +267,16 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
         conrey_index = '.'.join(map(str, [level, weight, character, hecke_orbit]))
         newform_label = convert_newformlabel_from_conrey(conrey_index)
         level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
-        return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+        return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
-        return flask.abort(404, 'Invalid character label')
+        return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -287,7 +290,7 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -307,7 +310,7 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
-    return flask.redirect(url_for('.l_function_cmf_page',
+    return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
                                     char_orbit_label=char_orbit_label,
@@ -318,12 +321,12 @@ def l_function_cmf_redirect_a1(level, weight, character):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
 def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
-    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+    return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
 def l_function_cmf_orbit_redirecit_aa(level, weight):
-    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+    return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
@@ -344,13 +347,13 @@ def l_function_hmf_page(field, label, character, number):
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
 def l_function_hmf_redirect_1(field, label, character):
-    return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
+    return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
 def l_function_hmf_redirect_2(field, label):
-    return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
+    return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
 
 
@@ -372,7 +375,7 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 # L-function of Siegel modular form    #########################################
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
 def l_function_siegel_specimen_page(weight, orbit, number):
-    return flask.redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
+    return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
 def l_function_siegel_page(weight, orbit, number):
@@ -390,6 +393,9 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
+    newlabel = parse_artin_label(label, safe=True)
+    if newlabel != label:
+        return redirect(url_for(".l_function_artin_page", label=newlabel), 301)
     instance = db.lfunc_instances.lucky({'url': artin_url(label)})
     return render_single_Lfunction(ArtinLfunctionDB if instance else ArtinLfunction, {'label': label}, request)
 
@@ -410,7 +416,7 @@ def l_function_ec_sym_page(power, conductor, isogeny):
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return flask.redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
+        return redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
                                       isogeny = isogeny, power = power), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
@@ -443,7 +449,7 @@ def l_function_by_trace_hash_page(trace_hash):
     if lhash is None:
         errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
         return render_lfunction_exception(errmsg)
-    return flask.redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
+    return redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
 
 
 ################################################################################
@@ -466,7 +472,7 @@ def render_single_Lfunction(Lclass, args, request):
 
 def render_lfunction_exception(err):
     try:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
     except:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
@@ -481,15 +487,16 @@ def learnmore_list(path, remove=None):
         ('Source of the data', url_for('.source', prepath=prepath)),
         ('Reliability of the data', url_for('.reliability', prepath=prepath))]
     if remove:
-        return filter(lambda t:t[0].find(remove) <0, learnmore)
+        return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
+
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
     info = L.info
     info['args'] = args
-    info['properties2'] = set_gaga_properties(L)
+    info['properties'] = set_gaga_properties(L)
 
     set_bread_and_friends(info, L, request)
 
@@ -565,8 +572,8 @@ def set_bread_and_friends(info, L, request):
     friendlink = splitlink[0] + splitlink[2]
 
     if L.Ltype() == 'riemann':
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
-                           ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage',
+        info['friends'] = [(r'\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
+                           (r'Dirichlet Character \(\chi_{1}(1,\cdot)\)',url_for('characters.render_Dirichletwebpage',
                                                                                   modulus=1, number=1)),
                            ('Artin Representation 1.1.1t1.1c1', url_for('artin_representations.render_artin_representation_webpage',label='1.1.1t1.1c1'))]
         info['bread'] = get_bread(1, [('Riemann Zeta', request.path)])
@@ -597,7 +604,7 @@ def set_bread_and_friends(info, L, request):
             info['friends'] = [('Maass Form ', friendlink)]
             info['bread'] = get_bread(2, [('Maass Form',
                                            url_for('.l_function_maass_browse_page')),
-                                          ('\(' + L.texname + '\)', request.path)])
+                                          (r'\(' + L.texname + r'\)', request.path)])
 
         else:
             if L.fromDB and not L.selfdual:
@@ -822,7 +829,7 @@ def render_plotLfunction(request, *args):
             return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return flask.abort(404)
+        return abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
@@ -844,7 +851,7 @@ def getLfunctionPlot(request, *args):
             hasattr(pythonL, 'primitive') and
             not pythonL.primitive):
             # we stored them ready to display
-            zeros = map(float, pythonL.positive_zeros.split(","))
+            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
             if len(zeros) >= 25:
                 zero_range = zeros[24]
             else:
@@ -866,18 +873,19 @@ def getLfunctionPlot(request, *args):
     p = line(F_interp)
 
     styleLfunctionPlot(p, 10)
-    fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn)
-    data = file(fn).read()
-    os.remove(fn)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
+        p.save(filename=fn.name)
+    with open(fn.name, 'rb') as f:
+        data = f.read()
+    os.remove(fn.name)
     return data
+
 
 def styleLfunctionPlot(p, fontsize):
     p.fontsize(fontsize)
-    p.axes_color((0.5,0.5,0.5))
-    p.tick_label_color((0.5,0.5,0.5))
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
     p.axes_width(0.2)
-
 
 
 def render_zerosLfunction(request, *args):
@@ -891,7 +899,7 @@ def render_zerosLfunction(request, *args):
             return render_lfunction_exception(err)
 
     if not L:
-        return flask.abort(404)
+        return abort(404)
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
@@ -904,7 +912,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, str):
+    if isinstance(website_zeros, string_types):
         return website_zeros
 
     positiveZeros = []
@@ -912,11 +920,13 @@ def render_zerosLfunction(request, *args):
 
     for zero in website_zeros:
         if abs(float(zero)) < 1e-10:
-            zero = 0
-        if float(zero) < 0:
-            negativeZeros.append(str(zero))
+            zero = "0"
         else:
-            positiveZeros.append(str(zero))
+            zero = display_float(zero, 12, 'round')
+        if float(zero) < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
@@ -977,8 +987,9 @@ def generateLfunctionFromUrl(*args, **kwds):
         return DedekindZeta(label=str(args[1]))
 
     elif args[0] == "ArtinRepresentation":
-        instance = db.lfunc_instances.lucky({'url': artin_url(args[1])})
-        return ArtinLfunctionDB(label=str(args[1])) if instance else ArtinLfunction(label=str(args[1]))
+        label = parse_artin_label(args[1], safe=True)
+        instance = db.lfunc_instances.lucky({'url': artin_url(label)})
+        return ArtinLfunctionDB(label=label) if instance else ArtinLfunction(label=label)
 
     elif args[0] == "SymmetricPower":
         return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
@@ -1173,7 +1184,7 @@ def processMaassNavigation(numrecs=35):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
-    s = '<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
+    s = r'<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
     i = 0
     maxinlevel = 4

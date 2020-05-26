@@ -8,7 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
-
+from __future__ import print_function
 import os
 import os.path
 
@@ -36,7 +36,7 @@ def add_lattice_nf(ll):
     n_field,gram_input = ll
     gram_input=[[int(i) for i in l] for l in gram_input] 
 
-    R = PolynomialRing(QQ, 'x');
+    R = PolynomialRing(QQ, 'x')
     nf_label = poly_to_field_label(R(n_field))
 
     lattice = l1.find_one({'gram': gram_input })
@@ -48,8 +48,8 @@ def add_lattice_nf(ll):
             lat_label =result[0]['label']
             is_lat_in = "yes"
         elif len(result)>1:
-            print "... need to be checked ..."
-            print "***********"
+            print("... need to be checked ...")
+            print("***********")
         else :
             lat_label = "new"
             is_lat_in = gram_input
@@ -60,13 +60,13 @@ def add_lattice_nf(ll):
     try:
         lab=nf_label+lat_label
     except:
-        print nf_label, lat_label
-        print "fail"
+        print(nf_label, lat_label)
+        print("fail")
             
     res=l2.find_one({'label': lab })
     if res is None:
-        print "new data"
+        print("new data")
         if saving:
             l2.insert_one({'nf_label': nf_label, 'lat_label': lat_label, 'is_lat_in' : is_lat_in, 'label': lab})
     else:
-        print "data already in the database"
+        print("data already in the database")

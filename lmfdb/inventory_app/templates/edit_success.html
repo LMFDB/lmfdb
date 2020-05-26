@@ -3,7 +3,7 @@
 {% block extra_script %}
   <script type="text/javascript">
     //Create a js object of the fields from server.
-    var pageKey ="{{db_name}}"+"."+"{{table_name}}";
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
     var myStore = sessionStorage;
     myStore.removeItem('list'+pageKey);
   </script>

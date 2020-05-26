@@ -3,7 +3,7 @@ from sage.all import (
     cached_function, floor, Gamma1, dimension_new_cusp_forms,
     dimension_eis, dimension_cusp_forms, dimension_modular_forms)
 
-from lmfdb.backend.database import db, SQL
+from lmfdb.backend import db, SQL
 from .mf import MfChecker, check_analytic_conductor
 from .verification import overall, slow, fast, accumulate_failures
 

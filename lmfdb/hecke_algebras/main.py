@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+from six import BytesIO
+import time
 
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect, make_response,  send_file
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
 from lmfdb import db
-from lmfdb.utils import parse_ints, clean_input, search_wrap
+from lmfdb.utils import parse_ints, clean_input, search_wrap, flash_error
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 
@@ -30,7 +32,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
@@ -38,8 +40,8 @@ def learnmore_list_remove(matchstring):
 @hecke_algebras_page.route("/")
 def hecke_algebras_render_webpage():
     args = request.args
-    if len(args) == 0:
-        weight_list= range(2, 20, 2)
+    if not args:
+        weight_list = list(range(2, 20, 2))
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
         favourite_list = ["1.12.1","139.2.1","239.2.1","9.16.1"]
@@ -73,9 +75,9 @@ def hecke_algebras_by_label(lab):
     if db.hecke_algebras.exists({'label':lab}):
         return render_hecke_algebras_webpage(label=lab)
     if hecke_algebras_label_regex.match(lab):
-        flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The Hecke Algebra %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No Hecke Algebras in the database has label %s", lab)
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def hecke_algebras_by_orbit_label(lab):
@@ -84,9 +86,9 @@ def hecke_algebras_by_orbit_label(lab):
         ol=sp[0]+'.'+sp[1]+'.'+sp[2]
         return render_hecke_algebras_webpage(label=ol)
     if hecke_algebras_orbit_label_regex.match(lab):
-        flash(Markup("The Hecke Algebra orbit <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The Hecke Algebra orbit %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No Hecke Algebras orbit in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No Hecke Algebras orbit in the database has label %s", lab)
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def download_search(info):
@@ -129,8 +131,8 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
@@ -159,10 +161,10 @@ def hecke_algebras_search(info, query):
         parse_ints(info, query, field, name)
     if info.get('ell'):
         if int(info.get('ell'))>13:
-            flash(Markup("No data for primes or integers greater than $13$ is available"), "error")
+            flash_error("No data for primes or integers greater than $13$ is available")
             return redirect(url_for(".hecke_algebras_render_webpage"))
         elif int(info.get('ell')) not in [2,3,5,7,11,13]:
-            flash(Markup("No data for integers which are not primes"), "error")
+            flash_error("No data for integers which are not primes")
             return redirect(url_for(".hecke_algebras_render_webpage"))
     if info.get('orbit_label'):
         check=[int(i) for i in info['orbit_label'].split(".")]
@@ -172,14 +174,14 @@ def hecke_algebras_search(info, query):
                     if info.get(field):
                         int(info.get(field))
             except ValueError:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(info.get('orbit_label'))),"error")
+                flash_error("Orbit label %s and input Level or Weight are not compatible", info.get('orbit_label'))
                 return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('level'))),"error")
+                flash_error("Orbit label %s and Level %s are not compatible inputs", info.get('orbit_label'), info.get('level'))
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'weight' in info and info.get('weight'):
             if int(info.get('weight'))!=check[1]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('weight'))), "error")
+                flash_error("Orbit label %s and Weight %s are not compatible inputs", info.get('orbit_label'), info.get('weight'))
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'ell' in info and info.get('ell'):
             return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
@@ -209,7 +211,7 @@ def render_hecke_algebras_webpage(**args):
     if data is None:
         t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
+        flash_error("%s is not a valid label for a Hecke Algebras in the database.", lab)
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -267,7 +269,7 @@ def render_hecke_algebras_webpage(**args):
     else:
         info['friends'] = []
     t = "Hecke Algebra %s" % info['label']
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
 
@@ -294,7 +296,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     if data is None:
         t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database." % (lab)),"error")
+        flash_error("%s is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database.", lab)
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -363,7 +365,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
 
     t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
-    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
+    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
 
 
 

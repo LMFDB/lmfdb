@@ -108,7 +108,6 @@ white-space: pre in order to keep line breaks! #}
       {{data.mw.int_points}}
       </p>
     </div>
-    <div> Note: only one of each pair $\pm P$ is listed. </div>
     {%else %}
     <div> None </div>
     {%endif %}
@@ -276,20 +275,67 @@ white-space: pre in order to keep line breaks! #}
       For more coefficients, see the Downloads section to the right.
     </p>
 
+    {#
     <h4> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
       and {{ KNOWL('ec.q.optimal', title='optimality') }}</h4>
-    {{ place_code('moddeg') }}
-      {% if data.data.degree==0 %}
-      Not available
-      {% else %}
-      {{ data.data.degree }}
-      {% endif %}
-      . This curve is
-      {% if not data.data.Gamma0optimal %}
-      <i>not</i>
-      {% endif %}
-      \( \Gamma_0(N) \)-optimal.
-    </p>
+    #}
+        <p>
+        <table>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('moddeg') }}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}:</td>
+        <td>
+	  {% if data.data.degree==0 %}
+	  Not available
+	  {% else %}
+	  {{ data.data.degree }}
+	  {% endif %}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.optimal', title='\( \Gamma_0(N) \)-optimal') }}:</td>
+        <td>
+	  {% if data.data.optimality_code==1 %}yes{% elif data.data.optimality_code==0 %}no{% else %}unknown<sup>*</sup> (one of {{ data.data.optimality_code }} curves in this isogeny class which might be optimal){% endif %}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.manin_constant', title='Manin constant') }}:</td>
+	<td>{{ data.data.manin_constant }} {% if not data.data.manin_known %} (conditional<sup>*</sup>){% endif %}</td>
+        </tr>
+	</table>
+
+	{% if not data.data.optimality_known or not data.data.manin_known %}
+	<sup>*</sup>
+
+	{% if not data.data.optimality_known %} The optimal curve in
+	each isogeny class has not been determined in all cases for
+	conductors over {{ data.data.optimality_bound }}.{% endif %}
+
+	{% if not data.data.manin_known %}
+	The Manin constant is correct provided that {% if
+	data.data.number ==1 %} this curve {% else %} curve {{
+	data.data.optimal_label }} {% endif %} is optimal.{% endif %}
+
+	{% endif %}
+	</p>
+
+	{#
+	{% if data.data.degree==0 %}
+	Not available
+	{% else %}
+	{{ data.data.degree }}
+	{% endif %}
+	. This curve is
+	{% if not data.data.Gamma0optimal %}
+	<i>not</i>
+	{% endif %}
+	\( \Gamma_0(N) \)-optimal.
+	#}
 
     <p>
       <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>
@@ -306,6 +352,8 @@ padding : 4px;
 text-align: center;
 }
 </style>
+
+<p>This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.</p>
 
     {{ place_code('localdata') }}
 
@@ -375,8 +423,10 @@ representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
 {% if not data.data.CMD %}
 \(\GL(2,\F_p)\)
-{% endif %}
 for all primes \( p \)
+{% else %}
+for all primes \( p < 1000 \)
+{% endif %}
 {% if data.data.galois_data %} {# there are non-maximal primes #}
 except those listed.
 </p>
@@ -519,19 +569,20 @@ No Iwasawa invariant data is available for this curve.
 </p>
 {% endif %}
 
-    <h2> Isogenies </h2>
+
+<h2>{{ KNOWL('ec.isogeny', title='Isogenies') }} </h2>
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
 {% if data.data.isogeny_degrees %}
 This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
 {{ data.data.isogeny_degrees}}.
 <br>
-Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
+Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
 consists of {{data.class_size}} curves linked by isogenies of
 {% if data.one_deg %}degree{% else %}degrees dividing{% endif %}
  {{data.class_deg}}.
 {% else %}
-This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
+This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
     consists of this curve only.
 </p>
 {% endif %}

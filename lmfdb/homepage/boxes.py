@@ -18,7 +18,7 @@ def load_boxes():
     boxes = []
     _curdir = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(_curdir, "index_boxes.yaml")) as boxfile:
-        listboxes = yaml.load_all(boxfile)
+        listboxes = yaml.load_all(boxfile, Loader=yaml.FullLoader)
         for b in listboxes:
             B = Box(b['title'])
             B.content = b['content']

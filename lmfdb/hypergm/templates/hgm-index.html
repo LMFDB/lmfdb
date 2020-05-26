@@ -7,29 +7,12 @@
     tr.topline td, tr.topline th { border-top: 2px solid black; }
 </style>
 
-
-<div>
-A cusp-index of degree $d$ is a weakly increasing 
-list of positive integers $[u_1,\dots,u_k]$ with $\sum_{i=1}^k \phi(u_i) = d$. 
-Hypergeometric families $H(A,B)$ are indexed by pairs 
-$(A,B)$ of cusp-indices of a common degree having no common entries.  
-</div>
 <p>
-
-<div>
-Hypergeometric motives $H(A,B,t)$ in a family $H(A,B)$ are 
-indexed by rational numbers
-$t \not \in \{0,1\}$.  For example $H([3],[1,1],t)$ is the
-motive $H^1(E_{1728t},{\Bbb Q})$ where
-$E_{j}$ is an elliptic curve with $j$-invariant $1728j$.  
-Also special hypergeometric motives $H(A,B,1)$ are defined, having degree
-$1$ or $2$ less than the other $H(A,B,t)$.  
-</div>
 
       <h2>Browse {{KNOWL('hgm.familes', title="Hypergeometric Families")}}</h2>
 
 <div>
-The table gives for each degree $n$ and weight $w$ shown, 
+The table gives for each degree $d$ and weight $w$ shown, 
 the number of corresponding hypergeometric families.  
 </div>
 
@@ -173,170 +156,51 @@ the number of corresponding hypergeometric families.
 </table>
 </div>
 <p>
-Families above are separated by type -- those with odd weight and
+Families above are separated by type &ndash; those with odd weight and
 even degree are symplectic, otherwise they are orthogonal.  Boxes
 are blank for combinations of weight and degree which cannot occur.
 
+<p>
+A <a href={{url_for('.random_family')}}>random family of hypergeometric motives</a> from the database.
+</p>
+<p>
+A <a href={{url_for('.random_motive')}}>random hypergeometric motive</a> from the database.
+</p>
 
 
-    <h2>Find a specific HGM</h2>
+<h2>Find a specific HGM by {{KNOWL('hgm.field.label',title="label")}}</h2>
 
-    <form name="search" method = "get" action="{{search}}">
-        <table class="">
-	  <tr>
-	    <td>
-	  Search by {{KNOWL('hgm.label',title="label")}}
-          <input type="text" name="jump_to" value="" placeholder="A2.2_B1.1_t1.2">
-	    </td>
-	    <td>
-          <button type="submit" value="Find">Find</button>
-	      </td>
-	      <td>
-		<span class="formexample">an HGM label encoding the triple 
-$(A, B, t)$ </span>
-	      </td>
-	    </tr>
-	  </table>
-	  </form>
+<form name="search" method = "get" action="{{search}}">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 
 <h3> Search for families of HGMs</h3>
 <form id="hgmsearch" onsubmit="cleanSubmit(this.id)">
-<p>
-Enter values into one or more boxes to restrict the list of families returned.
-</p>
-<table border=0 cellpadding=5>
-<tr>
-<td align=left> {{KNOWL('hgm.degree', title="degree")}}
-  <td><input type='text' name='degree' size=10 example='4'> 
-<span class="formexample"> e.g. 4</span></td>
-<td>
-<td align=left> {{KNOWL('hgm.weight', title="weight")}}
-<td><input type='text' name='weight' size=10 example='3'> 
-<span class="formexample"> e.g. 3 </span></td>
+  <p>
+    Enter values into one or more boxes to restrict the list of families returned.
+  </p>
+  {{ info.search_array.family_html() | safe }}
 
-<td align=right colspan=4> {{KNOWL('hgm.familyhodgevector', title="family Hodge vector")}}
-  <td><input type='text' name='famhodge' size=10 example='[1,1,1,1]'> 
-<span class="formexample"> e.g. [1,1,1,1]</span></td>
-<td>
+  <h3> Search for individual HGMs</h3>
+  <p>
+    Enter values into the boxes above and the boxes below to obtain the
+    list of corresponding hypergeometric motives.
+  </p>
+  {{ info.search_array.motive_html() | safe }}
+</form>
 
-<tr>
-<td align=left>{{KNOWL('hgm.defining_parameters', 'A')}}
-  <td><input type='text' name='A' size=10 example='[3,2,2]'> 
-<span class="formexample"> e.g. [3,2,2]</span></td>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameters', 'B')}}
-  <td><input type='text' name='B' size=10 example='[6,4]'> 
-<span class="formexample"> e.g. [6,4] </span></td>
 
-<tr>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart','A<sub>2</sub>',p=2)}}
-  <td><input type='text' name='A2' size=10 example='[2,2,1,1]'>
-<span class="formexample"> e.g. [2,2,1,1]</span></td>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart','B<sub>2</sub>',p=2)}}
-<td><input type='text' name='B2' size=10 example='[4,2,2]'>
-<span class="formexample"> e.g. [4,2,2] </span></td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','A<sup>2</sup>',p=2)}}
-  <td><input type='text' name='Au2' size=10 example='[2,2,1,1]'>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','B<sup>2</sup>',p=2)}}
-<td><input type='text' name='Bu2' size=10 example='[4,2,2]'>
+{# If the user hits enter while in a family input box, trigger
+   family search instead of motive search #}
 
-<tr>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart','A<sub>3</sub>',p=3)}}
-  <td><input type='text' name='A3' size=10 example='[3]'>
-<span class="formexample"> e.g. [3]</span></td>
-<td>
-<td align=left> {{KNOWL('hgm.defining_parameter_ppart','B<sub>3</sub>',p=3)}}
-<td><input type='text' name='B3' size=10 example='[3]'>
-<span class="formexample"> e.g. [3] </span></td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','A<sup>3</sup>',p=3)}}
-  <td><input type='text' name='Au3' size=10 example='[2,2,1,1]'>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','B<sup>3</sup>',p=3)}}
-<td><input type='text' name='Bu3' size=10 example='[4,2,2]'>
-
-<tr>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart','A<sub>5</sub>',p=5)}}
-  <td><input type='text' name='A5' size=10 example='[ ]'>
-<span class="formexample"> e.g. [ ]</span></td>
-<td>
-<td align=left> {{KNOWL('hgm.defining_parameter_ppart','B<sub>5</sub>',p=5)}}
-<td><input type='text' name='B5' size=10 example='[ ]'>
-<span class="formexample"> e.g. [ ] </span></td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','A<sup>5</sup>',p=5)}}
-  <td><input type='text' name='Au5' size=10 example='[2,2,1,1]'>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','B<sup>5</sup>',p=5)}}
-<td><input type='text' name='Bu5' size=10 example='[4,2,2]'>
-
-<tr>
-<td align=left>{{KNOWL('hgm.defining_parameter_ppart','A<sub>7</sub>',p=7)}}
-  <td><input type='text' name='A7' size=10 example='[ ]'>
-<span class="formexample"> e.g. [ ]</span></td>
-<td>
-<td align=left> {{KNOWL('hgm.defining_parameter_ppart','B<sub>7</sub>',p=7)}}
-<td><input type='text' name='B7' size=10 example='[ ]'>
-<span class="formexample"> e.g. [ ] </span></td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','A<sup>7</sup>',p=7)}}
-  <td><input type='text' name='Au7' size=10 example='[2,2,1,1]'>
-<td>
-<td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','B<sup>7</sup>',p=7)}}
-<td><input type='text' name='Bu7' size=10 example='[4,2,2]'>
-</table>
-
-<h3> Search for individual HGMs</h3>
-Enter values into the boxes above and the boxes below to obtain the
-list of corresponding hypergeometric motives.  
-<table>
-<tr>
-<td align=left> {{KNOWL('hgm.conductor', title="conductor")}}
-  <td><input type='text' name='conductor' size=10 example='64'>
-<span class="formexample"> e.g. a value, like 32, a list, like 32,64, or a range like 1..10000
-</span></td>
-<tr>
-<td align=left> {{KNOWL('mot.hodgevector', title="Hodge vector")}}
-  <td><input type='text' name='hodge' size=10 example='[1,1,1,1]'> 
-<span class="formexample"> e.g. [1,1,1,1]</span></td>
-<tr>
-<td align=left> {{KNOWL('hgm.specpoint', title="specialization point $t$")}}
-  <td><input type='text' name='t' size=10 example='3/2'>
-<span class="formexample"> e.g. 3/2 
-(1 has an associated degree drop and is always in the database) 
-</span></td>
-<tr>
-<td align=left> {{KNOWL('lfunction.sign', title="sign of functional equation $\epsilon$")}}
-  <td><input type='text' name='sign' size=10 example='-1'>
-<span class="formexample"> 
-1 or -1, with -1 occurring only in the symplectic case
-</span></td>
-
-{#  Need data in the database for these
-<tr>
-<td align=left> {{KNOWL('hgm.generic', title="Generic")}}
-  <td><input type='text' name='generic' size=10 example='yes'>
-<span class="formexample"> 
-(yes or no, with no rare, expecially in symplectic cases) 
-</span></td>
-</tr>
-<tr>
-<td align=left> {{KNOWL('hgm.irreducible', title="Irreducible")}}
-  <td><input type='text' name='irreducible' size=10 example='yes'>
-<span class="formexample"> 
-(yes or no, with no very rare) 
-</span></td>
-</tr>
-#}
-
-<tr> <td> Maximum number of results to display </td>
-     <td><input type="text" name="count" value="{{info.count}}" size="10"></td>
-          </tr>
-  </table>
-        <button type="submit" name="Submit" value="Search">Search for motives</button>
-        <button type="submit" name="Submit Family" value="Search Family">Search for families</button>
-      </form>
-
+<script type="text/javascript">
+  $(".family").keyup(function(e) {
+      if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+          $("#family").click();
+      }
+});
+</script>
 
 
 

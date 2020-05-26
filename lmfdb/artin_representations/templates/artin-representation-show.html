@@ -8,7 +8,7 @@
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>${{ object.conductor_equation() }} $</tr>
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
-                $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$</tr>
+                $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</tr>
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
@@ -33,30 +33,23 @@
     The roots of $f$ are computed in an extension of $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
     </div>
     <div>
-    Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: ${{object.number_field_galois_group().computation_minimal_polynomial().latex()}}$
+    Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: ${{object.number_field_galois_group().computation_minimal_polynomial_latex()}}$
     </div>
     {% else %}
     The roots of $f$ are computed in $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
     {% endif %}
    <div>
     Roots:
-    {#
-    <center>
-      <table class="ntdata">
-      <tbody>
+      <center>
+      <table>
         {% for root in object.number_field_galois_group().computation_roots()%}
-          <tr> <td>$r_{{loop.index}}$</td><td>${{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td></tr>
+        <tr>
+          <td> $r_{ {{loop.index}} }$</td>
+          <td> $=$ </td>
+          <td>${{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td>
         {% endfor %}
-        
-      </tbody>
-      </table>
+        </table>
       </center>
-      #}
-      \[ \begin{aligned}
-        {% for root in object.number_field_galois_group().computation_roots()%}
-          r_{ {{loop.index}} } &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
-        {% endfor %}
-        \end{aligned}\]
     </div>
     
     <h3>Generators of the action on the roots 
@@ -77,7 +70,7 @@
         </thead>
       <tbody>
         {% for gen in object.number_field_galois_group().G_gens()%}
-        <tr> <td><center>${{gen.cycle_string()}}$</center></td></tr>
+        <tr> <td><center>${{cycle_string(gen)}}$</center></td></tr>
         {% endfor %}
       </tbody>
       </table>
@@ -99,7 +92,7 @@
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
             <tr {% if loop.index == object.number_field_galois_group().index_complex_conjugation()%}class="bluehighlight"{%endif%}> 
-                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{gen.representative().cycle_string()}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
+                <td align="center">${{gen.size()}}$</td><td align="center">${{gen.order()}}$</td><td align="center">${{cycle_string(gen.representative())}}$</td><td align="center">${{ object.character_formatted()[loop.index - 1] }}$</td></tr>
         {% endfor %}
       </tbody>
       </table>

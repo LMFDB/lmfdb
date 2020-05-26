@@ -35,62 +35,58 @@
 </p>
 
 <h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }} or {{KNOWL('character.dirichlet.modulus', title="modulus") }} </h2>
+  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
 <form>
-    <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
+    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
     <button type='submit' name='lookup' value='1'> Find  </button>
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13.</span>
+    <br>
+    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
 </form>
 
 <h2> Search for characters </h2>
-Enter criteria into one or more boxes to restrict the search.
-<p></p>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
         <tr>
-            <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
-            <td> <input type='text' name='modulus' value="{{args.modulus}}" size = '10' placeholder="13"></td>
+            <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}</td>
+            <td> <input type='text' name='modulus' value="{{args.modulus}}" style="width:160px;" placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
 
         <tr>
-            <td> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} </td>
-            <td> <input type='text' name='conductor' value="{{args.conductor}}" size = '10' placeholder="5"></td>
+            <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td>
+            <td> <input type='text' name='conductor' value="{{args.conductor}}" style="width:160px;" placeholder="5"></td>
             <td><span class="formexample"> e.g. 5 </span></td>
         </tr>
 
         <tr>
-            <td> {{ KNOWL('character.dirichlet.order', title="order") }} </td>
-            <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
+            <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td>
+            <td> <input type='text' name='order' value="{{args.order}}" style="width:160px;" placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
         <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.parity', title='parity') }}</td>
+            <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
             <td align=left>
-                <select name='parity'>
+                <select name='parity', style="width: 170px">
                       <option value="">any</option>
-                      <option value="Even">even</option>
-                      <option value="Odd">odd</option>
+                      <option value="even">even</option>
+                      <option value="odd">odd</option>
                 </select>
             </td>
         </tr>
         <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='primitive') }}</td>
+            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
             <td align=left>
-                <select name='primitive'>
+                <select name='primitive', style="width: 170px">
                       <option value="">any</option>
-                      <option value="Yes">yes</option>
-                      <option value="No">no</option>
+                      <option value="yes">yes</option>
+                      <option value="no">no</option>
                 </select>
                 </select>
             </td>
         </tr>
+        <tr><td><button type='submit' > Search </button></td></tr>
     </table>
-    <p></p>
-    <td>
-        <button type='submit' name='search' value='1' > Search </button>
-    </td>
 </form>
 
 {#
@@ -99,7 +95,7 @@ Enter criteria into one or more boxes to restrict the search.
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
-            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" size='10' placeholder="13" required></td>
+            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" style="width:160px;" placeholder="13" required></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
     </table>

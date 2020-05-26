@@ -3,6 +3,7 @@ All the funtions needed in `import_ecnf_data.py` that don't need acces to the ec
 """
 # Label of an ideal I in a quadratic field: string formed from the
 # Norm and HNF of the ideal
+from __future__ import print_function
 import re
 from sage.all import cm_j_invariants_and_orders, ZZ, QQ
 from lmfdb.ecnf.WebEllipticCurve import ideal_HNF
@@ -129,7 +130,7 @@ def isoclass(line):
     # Parse the line and form the full label:
     data = split(line)
     if len(data) < 5:
-        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
+        print("isoclass line %s does not have 5 fields (excluding gens), skipping" % line)
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
@@ -210,5 +211,23 @@ def make_curve_data_line(ec):
                      rk, rk_bds, an_rk,
                      ngens] + gens + [sha]
     return " ".join(output_fields)
+
+
+
+
+def make_galrep_line(ec):
+    r""" for ec a curve object from the database, create a line of text to
+    match the corresponding raw input line from a galdata file.
+
+    Output line contains n+1 fields where n is the number of non-maximal primes.
+
+    full_label image_code image_code ... image_code
+
+    Sample output line:
+
+    2.0.4.1-1010.1-a1 2B 3B.1.2 
+    
+    """
+    return " ".join([ec['label']] + ec['galois_images'])
 
 

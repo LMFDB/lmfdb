@@ -6,6 +6,7 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
+from __future__ import absolute_import
 import math, re
 
 from flask import url_for, request
@@ -18,7 +19,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-        web_latex, round_to_half_int, round_CBF_to_half_int,
+        web_latex, round_to_half_int, round_CBF_to_half_int, display_float,
         display_complex, str_to_CBF,
         Downloader,
         names_and_urls)
@@ -29,13 +30,13 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from Lfunction_base import Lfunction
+from .Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from Lfunctionutilities import (
+from .Lfunctionutilities import (
         string2number, get_bread,
         compute_local_roots_SMF2_scalar_valued,)
-from LfunctionComp import isogeny_class_cm
-from LfunctionDatabase import (
+from .LfunctionComp import isogeny_class_cm
+from .LfunctionDatabase import (
         get_lfunction_by_Lhash,
         get_instances_by_Lhash,
         get_instances_by_Lhash_and_trace_hash,
@@ -61,7 +62,7 @@ def validate_required_args(errmsg, args, *keys):
 def validate_integer_args(errmsg, args, *keys):
     for key in keys:
         if key in args:
-            if not isinstance(args[key],int) and not re.match('^\d+$',args[key].strip()):
+            if not isinstance(args[key],int) and not re.match(r'^\d+$',args[key].strip()):
                 raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
 def constructor_logger(object, args):
@@ -106,7 +107,7 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data.get('Lhash');
+    L.Lhash = data.get('Lhash')
     L.algebraic = data.get('algebraic')
     L.degree = data.get('degree')
     L.level = int(data.get('conductor'))
@@ -204,15 +205,15 @@ def makeLfromdata(L):
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
         pairtoCC = lambda x: CC(*tuple(x))
-        L.localfactors = map(lambda x: map(pairtoCC, x), L.localfactors)
-        L.bad_lfactors = [ [p, map(pairtoCC, elt)] for p, elt in L.bad_lfactors]
+        L.localfactors = [[pairtoCC(q) for q in x] for x in L.localfactors]
+        L.bad_lfactors = [[p, [pairtoCC(q) for q in elt]]
+                          for p, elt in L.bad_lfactors]
 
     # add missing bad factors
     known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
     for p in sorted([elt[0] for elt in L.level_factored]):
         if p not in known_bad_lfactors:
             L.bad_lfactors.append([p, [1, None]])
-
 
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
@@ -223,14 +224,14 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
-        count = 0;
+        count = 0
         for i, elt in enumerate(L.dirichlet_coefficients_arithmetic):
             if elt != 0:
-                count += 1;
+                count += 1
                 if count > L.numcoeff:
                     L.dirichlet_coefficients_arithmetic = \
-                        L.dirichlet_coefficients_arithmetic[:i];
-                    break;
+                        L.dirichlet_coefficients_arithmetic[:i]
+                    break
     else:
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)]
 
@@ -248,14 +249,14 @@ def makeLfromdata(L):
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
-    L.positive_zeros_raw = map(str, data['positive_zeros'])
-    L.accuracy = data.get('accuracy', None);
+    L.positive_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in data['positive_zeros']]
+    L.accuracy = data.get('accuracy', None)
 
     def convert_zeros(accuracy, list_zeros):
-        two_power = 2 ** L.accuracy;
+        two_power = 2 ** L.accuracy
         # the zeros were stored with .str(truncate = false)
         # we recover all the bits
-        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros];
+        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros]
         # we convert them back to floats and we want to display their truncated version
         return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
 
@@ -270,8 +271,8 @@ def makeLfromdata(L):
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
-        L.dual_accuracy = dual_L_data.get('accuracy', None);
-        L.negative_zeros_raw = map(str, dual_L_data['positive_zeros'])
+        L.dual_accuracy = dual_L_data.get('accuracy', None)
+        L.negative_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in dual_L_data['positive_zeros']]
         if L.dual_accuracy is not None:
             L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)
     L.negative_zeros = L.negative_zeros_raw[:zero_truncation]
@@ -357,17 +358,11 @@ def apply_coeff_info(L, coeff_info):
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
 
-
-
-    convert_euler_Lpoly = lambda poly_coeffs: map(lambda c: convert_coefficient(c, base_power_int)[1], poly_coeffs)
-    L.bad_lfactors = [ [p, convert_euler_Lpoly(poly)] for p, poly in L.bad_lfactors]
-    L.localfactors = map(convert_euler_Lpoly, L.localfactors)
+    convert_euler_Lpoly = lambda poly_coeffs: [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+    L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
+                      for p, poly in L.bad_lfactors]
+    L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
     L.coefficient_field = "CDF"
-
-
-
-
-
 
 
 def generateSageLfunction(L):
@@ -489,7 +484,7 @@ class Lfunction_Dirichlet(Lfunction):
         # Use ConreyCharacter to check primitivity (it can handle a huge modulus
         if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
             raise ValueError('Unable to construct Dirichlet L-function,',
-                             'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
+                             r'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
 
         # Load data from the database
         self.label = str(self.charactermodulus) + "." + str(self.characternumber)
@@ -498,7 +493,7 @@ class Lfunction_Dirichlet(Lfunction):
         try:
             self.lfunc_data = get_lfunction_by_Lhash(Lhash)
         except:
-            raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
+            raise KeyError(r'No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
 
         # Extract the data
         makeLfromdata(self)
@@ -535,7 +530,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\overline{\\chi},1-s)"
+            self.texnamecompleted1ms_arithmetic = r"\Lambda(\overline{\chi},1-s)"
         title_end = ("where $\\chi$ is the Dirichlet character with label "
                      + self.label)
         self.credit = 'Sage'
@@ -702,13 +697,12 @@ class Lfunction_from_db(Lfunction):
                 lang = 'text',
                 title = 'Dirichlet coefficients of %s' % self.url)
 
-
     def download(self):
         filename = self.url.replace('/','_')
         data  = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
-                data[k] = map(str, data[k])
+                data[k] = list(map(str, data[k]))
             else:
                 data[k] = str(data[k])
         data.pop('level_factored')
@@ -718,14 +712,11 @@ class Lfunction_from_db(Lfunction):
                 lang = 'text',
                 title = 'The L-function object of %s' % self.url)
 
-
-
-
     @lazy_attribute
     def chilatex(self):
         try:
             if int(self.characternumber) != 1:
-                return "character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+                return r"character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
             else:
                 return "trivial character"
         except KeyError:
@@ -965,13 +956,12 @@ class Lfunction_EC(Lfunction_from_db):
         """base_field of the EC"""
         return self.field_label
 
-
     def _parse_labels(self):
         """Set field, conductor, isogeny information from labels."""
         (self.field_degree,
             self.field_real_signature,
             self.field_absdisc,
-            self.field_index)  = map(int, self.field_label.split("."))
+            self.field_index) = list(map(int, self.field_label.split(".")))
         #field_signature = [self.field_real_signature,
         #        (self.field_degree - self.field_real_signature) // 2]
         # number of actual Gamma functions
@@ -1587,7 +1577,7 @@ class DedekindZeta(Lfunction):
                     j += 1
                 dir_group.pop(j)
                 self.factorization = (r'\(\zeta_K(s) =\) ' +
-                                      '<a href="/L/Riemann/">\(\zeta(s)\)</a>')
+                                      r'<a href="/L/Riemann/">\(\zeta(s)\)</a>')
                 fullchargroup = wnf.full_dirichlet_group()
                 for j in dir_group:
                     chij = fullchargroup[j]
@@ -1595,11 +1585,11 @@ class DedekindZeta(Lfunction):
                     myj = j % mycond
                     self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
                                            % (mycond, myj, mycond, myj))
-            elif len(wnf.factor_perm_repn())>0:
+            elif wnf.factor_perm_repn():
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'
-                                           +'\(\zeta(s)\)</a>')
+                                           +r'\(\zeta(s)\)</a>')
                 for j in range(len(ar)):
                     if nfgg[j]>0:
                         the_rep = ar[j]
@@ -1643,7 +1633,7 @@ class DedekindZeta(Lfunction):
 
 
 class ArtinLfunctionDB(Lfunction_from_db):
-    """Class representing a Hilbert modular form L-function stored in the database
+    """Class representing an Artin representation L-function stored in the database
 
     Compulsory parameters: label
 
@@ -1792,7 +1782,8 @@ class HypergeometricMotiveLfunction(Lfunction):
         try:
             self.arith_coeffs = self.motive["coeffs"]
         except:
-            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
+            self.arith_coeffs = [Integer(k)
+                                 for k in self.motive["coeffs_string"]]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.)
                                        for n, x in enumerate(self.arith_coeffs)]
         self.sign = self.motive["sign"]
@@ -1887,7 +1878,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe
-        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
+        pairs_fe = list(zip(self.kappa_fe, self.lambda_fe))
         self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
         self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
@@ -1898,9 +1889,9 @@ class SymmetricPowerLfunction(Lfunction):
         self.selfdual = True
 
         # Text for the web page
-        self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m
-        self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
-        self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
+        self.texname = r"L(s, E, \mathrm{sym}^{%d})" % self.m
+        self.texnamecompleteds = r"\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
+        self.texnamecompleted1ms = (r"\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
         self.credit = ' '
 
@@ -1925,7 +1916,7 @@ class SymmetricPowerLfunction(Lfunction):
                 return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
                         " Power")
 
-        self.info['title'] = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
+        self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
 

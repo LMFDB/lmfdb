@@ -8,6 +8,14 @@ var tagStringClose = '</conflict>';
 
 //---------- Editor update and viewer ----------------------------
 
+function isDisplayed(name){
+  return table_fields.indexOf(name) != -1;
+}
+
+function isEditable(fieldname){
+  return table_edit.indexOf(fieldname) != -1;
+}
+
 function updateBlock(obj){
     //Handle updates to block text etc
     var block = mainBlockList.getBlock("#"+obj.id);
@@ -304,7 +312,7 @@ function populateEditorPage(blockList, startVisible=true){
     fieldDiv = document.createElement('div');
     fieldDiv.id = fields[i];
     fieldDiv.class = 'collapser';
-    headerDiv = document.createElement('div');
+    var headerDiv = document.createElement('div');
     headerDiv.id = 'Header'+id_delimiter+id;
     headerDiv.class = 'header';
     var butt = createCollapserButt(id, open=startVisible);
@@ -322,9 +330,11 @@ function populateEditorPage(blockList, startVisible=true){
     var block;
     for(var blockId in blocks){
       block = blockList.getBlock(blocks[blockId]);
-      if(!block) continue;
-      var item = createItemDiv(block.fieldname, block.key, block.special);
-      fieldDiv.appendChild(item);
+      if(block){
+        var locked = !isEditable(block.key);
+        var item = createItemDiv(block.fieldname, block.key, block.special, locked);
+        fieldDiv.appendChild(item);
+      }
     }
       //Add block-reset button
       butt = createResetButt(fields[i]);
@@ -342,7 +352,7 @@ function populateEditorPage(blockList, startVisible=true){
   $( document ).trigger( "blockListReady");
 }
 
-function createItemDiv(item, field, special){
+function createItemDiv(item, field, special, locked){
 
   var docElementId = 'Box'+id_delimiter+item+id_delimiter+field;
 
@@ -358,13 +368,17 @@ function createItemDiv(item, field, special){
   textBox.cols = 75;
   textBox.rows = 1;
   textBox.id = docElementId;
-  textBox.classList.add("edit_input");
-  textBox.oninput = (function() {
-		return function() {
-			updateBlock(this);
-		};
-	})();
-
+  if(locked){
+    textBox.readOnly = true;
+    textBox.classList.add("locked_input");
+  }else{
+    textBox.classList.add("edit_input");
+    textBox.oninput = (function() {
+	  	return function() {
+		  	updateBlock(this);
+		  };
+	  })();
+  }
   if(special){
     div.appendChild(textBox);
   }else{
@@ -436,7 +450,7 @@ function toggleTypePopup(box_id, data){
   var box = document.getElementById(box_id);
   if(!box) return;
 
-  has_selectors = (document.getElementsByName(box_id + "_drop")).length > 0;
+  var has_selectors = (document.getElementsByName(box_id + "_drop")).length > 0;
   var div;
   if(has_selectors){
     div = document.getElementById(box_id+'_drop');
@@ -517,3 +531,18 @@ function createDOMPopButton(box_id, options){
 }
 
 //---------- End editor DOM creation -----------------------------
+
+// --------- Extra controls --------------------------------------
+
+function updateCNameLock(element, allowed){
+  //CName editing is allowed IFF the field is blank OR you're an Admin
+  if(element.key != "c_name") return;
+  if(allowed || element.text == ""){
+    var el = document.getElementById(element.docElementId.substr(1, element.docElementId.length-1));
+    if(el){
+      el.readOnly = false;
+      el.classList.remove("locked_input");
+      el.classList.add("edit_input");
+    }
+  }
+}

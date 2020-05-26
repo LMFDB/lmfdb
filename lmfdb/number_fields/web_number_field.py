@@ -4,8 +4,8 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
-    AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, cached_function)
+    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
+    QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
@@ -17,6 +17,7 @@ wnflog = make_logger("WNF")
 dir_group_size_bound = 10000
 dnc = 'data not computed'
 
+
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
 cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
@@ -27,68 +28,157 @@ cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
   '22.0.39471584120695485887249589623.1': 23, '8.0.5308416.1': 24,
   '20.0.2910383045673370361328125.1': 25,
   '18.0.2954312706550833698643.1': 27, '12.0.1157018619904.1': 28,
+  '28.0.3053134545970524535745336759489912159909.1':29,
+  '30.0.17761887753093897979823770061456102763834271.1':31,
   '16.0.18446744073709551616.1': 32, '20.0.328307557444402776721569.1': 33,
   '24.0.304383340063522342681884765625.1': 35,
   '12.0.1586874322944.1': 36,
+  '36.0.7710105884424969623139759010953858981831553019262380893.1':37,
   '24.0.1706902865139206151939937338729.1': 39,
   '16.0.1048576000000000000.1': 40,
+  '40.0.791717805254439023624865699561776475898803884688668051353443161.1':41,
+  '42.0.9380082945933081406113456619151991432292083579779389915131296484043.1':43,
   '20.0.5829995856912430117421056.1': 44,
   '24.0.572565594852444156646728515625.1': 45,
+  '46.0.1755511210260049172778020908173078657717675374080672665297567056535308458607.1':47,
   '16.0.1846757322198614016.1': 48,
+  '42.0.118181386580595879976868414312001964434038548836769923458287039207.1':49,
+  '32.0.352701833122210710593389803720131611763844129.1':51,
   '24.0.53885714612646242347927893704704.1': 52,
+  '40.0.28789677222138897176527746894292024300433695316314697265625.1':55,
   '24.0.22459526297810799636782730182656.1': 56,
+  '36.0.11636034958735032166924075841251447518799351583251569.1':57,
   '16.0.104976000000000000.1': 60,
+  '36.0.1310656710125779295611091389185381649163216325999081.1':63,
+  '32.0.1461501637330902918203684832716283019655932542976.1':64,
+  '32.0.35190667333271321019306672876612934335729762304.1':68,
+  '44.0.48891877682180103607391812819535352418736437208892474989920547427561.1':69,
   '24.0.42247883974617233597120303333376.1': 72,
-  '24.0.711435861303500483618465120256.1': 84}
+  '40.0.29534212676193502024324377686070874915458261966705322265625.1':75,
+  '36.0.2063964752380648518006363619171361060603216996551622656.1':76,
+  '32.0.4722366482869645213696000000000000000000000000.1':80,
+  '24.0.711435861303500483618465120256.1':84,
+  '40.0.37371137649685869661036271274571515833850102932794388078657536.1':88,
+  '44.0.27408730583433337351085467861786155262978057758761987414355526669041664.1':92,
+  '32.0.14648040110065267094876580444599852735215435776.1':96,
+  '40.0.9313225746154785156250000000000000000000000000000000000000000.1':100,
+  '36.0.599781089369859106058502013153430001897393515831230464.1':108,
+  '32.0.47330370277129322496000000000000000000000000.1':120,
+  '40.0.118511797886229481159007653491590053243629014721874976833536.1':132}
 # Real cyclotomic subfields
-rcycloinfo = {'3.3.49.1': 7, '3.3.81.1': 9, '5.5.14641.1': 11, '6.6.371293.1': 13,
-  '4.4.1125.1': 15, '4.4.2048.1': 16, '8.8.410338673.1': 17,
-  '9.9.16983563041.1': 19, '4.4.2000.1': 20, '6.6.453789.1': 21,
-  '11.11.41426511213649.1': 23, '4.4.2304.1': 24, '10.10.762939453125.1': 25,
-  '9.9.31381059609.1': 27, '6.6.1075648.1': 28, '14.14.10260628712958602189.1': 29,
-  '15.15.756943935220796320321.1': 31, '8.8.2147483648.1': 32,
-  '10.10.572981288913.1': 33, '12.12.551709470703125.1': 35, '6.6.1259712.1': 36,
-  '18.18.456487940826035155404146917.1': 37, '12.12.1306484927252973.1': 39,
-  '8.8.1024000000.1': 40, '20.20.4394336169668803158610484050361.1': 41,
-  '21.21.467056167777397914441056671494001.1': 43, '10.10.2414538435584.1': 44,
-  '12.12.756680642578125.1': 45,
-  '23.23.6111571184724799803076702357055363809.1': 47, '8.8.1358954496.1': 48,
-  '21.21.129934811447123020117172145698449.1': 49,
-  '16.16.18780357640955901417873.1': 51, '12.12.7340688973975552.1': 52,
-  '20.20.169675210983039290802001953125.1': 55, '12.12.4739148267126784.1': 56,
-  '18.18.107870454521778261425837337.1': 57, '8.8.324000000.1': 60,
-  '18.18.36202993110042424993725741.1': 63,
-  '16.16.604462909807314587353088.1': 64, '16.16.187591757103747287810048.1': 68,
-  '22.22.6992272712228843238468603052945581.1': 69,
-  '12.12.6499837226778624.1': 72, '20.20.171855208463966846466064453125.1': 75,
-  '18.18.1436650532447139184230793216.1': 76,
-  '16.16.68719476736000000000000.1': 80, '12.12.843466573910016.1': 84,
-  '20.20.6113193735657808322804901216256.1': 88,
-  '22.22.165555823163769559238834502754107392.1': 92,
-  '16.16.121029087867608368152576.1': 96,
-  '20.20.3051757812500000000000000000000.1': 100,
-  '18.18.774455350146061749097070592.1': 108,
-  '16.16.6879707136000000000000.1': 120,
-  '20.20.344255425354822086003595935744.1': 132}
-# Reverse lookup for newforms
+rcycloinfo = {'3.3.49.1': 7, '3.3.81.1': 9, '5.5.14641.1': 11, 
+  '6.6.371293.1': 13, '4.4.1125.1':15, '4.4.2048.1':16,
+  '8.8.410338673.1':17, '9.9.16983563041.1':19, '4.4.2000.1':20,
+  '6.6.453789.1':21, '11.11.41426511213649.1':23, '4.4.2304.1':24,
+  '10.10.762939453125.1':25, '9.9.31381059609.1':27, '6.6.1075648.1':28,
+  '14.14.10260628712958602189.1':29, '15.15.756943935220796320321.1':31,
+  '8.8.2147483648.1':32, '10.10.572981288913.1':33,
+  '12.12.551709470703125.1':35, '6.6.1259712.1':36,
+  '18.18.456487940826035155404146917.1':37, '12.12.1306484927252973.1':39,
+  '8.8.1024000000.1':40, '20.20.4394336169668803158610484050361.1':41,
+  '21.21.467056167777397914441056671494001.1':43, '10.10.2414538435584.1':44,
+  '12.12.756680642578125.1':45,
+  '23.23.6111571184724799803076702357055363809.1':47,
+  '8.8.1358954496.1':48,
+  '21.21.129934811447123020117172145698449.1':49,
+  '16.16.18780357640955901417873.1':51,
+  '12.12.7340688973975552.1':52,
+  '26.26.12790771483610519443342791266451996229460693.1':53,
+  '20.20.169675210983039290802001953125.1':55,
+  '12.12.4739148267126784.1':56,
+  '18.18.107870454521778261425837337.1':57,
+  '29.29.38358032782038398419973086399760468678777161743121.1':59,
+  '8.8.324000000.1':60,
+  '30.30.5950661074415937716058277355262049126611998411687341.1':61,
+  '18.18.36202993110042424993725741.1':63,
+  '16.16.604462909807314587353088.1':64,
+  '24.24.12252192985362453861836887359619140625.1':65,
+  '33.33.27189028279553414235049966267283185807800188603627566700161.1':67,
+  '16.16.187591757103747287810048.1':68,
+  '22.22.6992272712228843238468603052945581.1':69,
+  '35.35.876564456148583685580741416193317498080031692578600918378223281.1':71,
+  '12.12.6499837226778624.1':72,
+  '36.36.164550840223975716663655069866834081172656515609690871995791535257.1':73,
+  '20.20.171855208463966846466064453125.1':75,
+  '18.18.1436650532447139184230793216.1':76,
+  '30.30.17581401814197409148890873176573567284303576419397.1':77,
+  '39.39.1287743804278744050410620426954739687963064854495168753870500853746064161.1':79,
+  '16.16.68719476736000000000000.1':80,
+  '27.27.706965049015104706497203195837614914543357369.1':81,
+  '41.41.57959375186337998161464929843210464026538099255933595673241672975683189751201.1':83,
+  '12.12.843466573910016.1':84,
+  '32.32.488368614066527220997452797221673658430576324462890625.1':85,
+  '28.28.14603047886206093768209337615200705673567789821.1':87,
+  '20.20.6113193735657808322804901216256.1':88,
+  '44.44.666454163935483494165986073535521413339908119119439689887653437787720225729135378569.1':89,
+  '36.36.129739382499069208406967320777552926214641189868504834496493597.1':91,
+  '22.22.165555823163769559238834502754107392.1':92,
+  '30.30.254863675513583304379979153001217903140700917991797.1':93,
+  '36.36.223775506846460533290697977531706040570972271263599395751953125.1':95,
+  '16.16.121029087867608368152576.1':96,
+  '30.30.38731022422755868071217069332926190761458900976553.1':99,
+  '20.20.3051757812500000000000000000000.1':100,
+  '24.24.904052273370722339459533425108859224064.1':104,
+  '24.24.161761786626698377317203521728515625.1':105,
+  '18.18.774455350146061749097070592.1':108,
+  '36.36.2987052991985699215206951151365900403178222386352058024870316677.1':111,
+  '24.24.376808323956052112639025409344139165696.1':112,
+  '44.44.181375764426442332776050749828434842919201892356144879261148162186145782470703125.1':115,
+  '28.28.819569564076950716311987772907236898045117333504.1':116,
+  '36.36.334717470607298852954929976123524497086119009458311989825932357.1':117,
+  '16.16.6879707136000000000000.1':120,
+  '40.40.2760549293355133823580852196951954752012701839690650502926252551414931561.1':123,
+  '30.30.19071681753690303660125890064344467877570851377250304.1':124,
+  '32.32.3138550867693340381917894711603833208051177722232017256448.1':128,
+  '42.42.98118980687896783910098639727548084722605054105289047332129555342401833439729.1':129,
+  '20.20.344255425354822086003595935744.1':132,
+  '36.36.65028396011052373244549315269863064140390224754810333251953125.1':135,
+  '32.32.151142765320815856472639544599622796222554813389533609984.1':136,
+  '24.24.5106705043047168064000000000000000000.1':140,
+  '46.46.165269405800315006446654642733283089940652236420810887453559572571427563258244528313989.1':141,
+  '24.24.708801874985091845381344307009569161216.1':144,
+  '42.42.1236219045653317330764639083558080790009887216550178193020957667462329030021.1':147,
+  '36.36.529834441956838404754859356629890081471398054377951743656484405248.1':148,
+  '36.36.141834577785145976449731181827603110001579056521289025332042530816.1':152,
+  '24.24.28637078059459331679625147758321598464.1':156,
+  '32.32.20282409603651670423947251286016000000000000000000000000.1':160,
+  '40.40.870502932794550416715512205314557822885758691905429612124950249853404839936.1':164,
+  '40.40.100383397447978918530459891214693626269465146363712847232818603515625.1':165,
+  '24.24.11935913115234869169771450911000887296.1':168,
+  '42.42.41254041074227118944013302420247071185885898029927512658248841159725538158313472.1':172,
+  '40.40.41090000389047069406072163992081637611400284636821909168682596532209319936.1':176,
+  '24.24.9606056659007943744000000000000000000.1':180,
+  '44.44.482179487665033966874817964307376476160282778171317425736173928285756467369658548224.1':184,
+  '46.46.123533119255810717326269698346313186386460569318540167792790808431593601417039621597954048.1':188,
+  '32.32.62912853223226562597999842165869507304166444172308381696.1':192,
+  '42.42.519767234928222794437622861788597020192717533652199079454480438860528408854528.1':196,
+  '40.40.10240000000000000000000000000000000000000000000000000000000000000000000000.1':200,
+  '32.32.1514842838499144573219529960757824409341479409296605184.1':204,
+  '36.36.41216642617644769738384985747906299013992369570201489573102485504.1':216,
+  '40.40.31654584865659568778929513407372752241664000000000000000000000000000000.1':220,
+  '36.36.799622233646074762983150698451178476894456963777140963130998784.1':228,
+  '32.32.203282392447840896882957090816000000000000000000000000.1':240,
+  '36.36.90067643300370785938616861622694756230952958181429238736879616.1':252,
+  '40.40.130305099804548492884220428175380349368393046678311823693003457545895936.1':264,
+  '44.44.860115008245742907292219227824365111518443501386754869093198564719785672888549376.1':276,
+  '40.40.32473210254684090614318847656250000000000000000000000000000000000000000.1':300}
+
 cyclolookup = {n:label for label,n in cycloinfo.items()}
 cyclolookup[1] = '1.1.1.1'
 cyclolookup[3] = '2.0.3.1'
 cyclolookup[4] = '2.0.4.1'
-for n, label in cyclolookup.items():
-    if label.split('.')[0] == '24':
-        # LMFDB doesn't actually include fields of dimension 24
-        cyclolookup.pop(n)
-    elif n % 2 == 1:
-        cyclolookup[2*n] = label
+for n, label in list(cyclolookup.items()):
+    if n % 2:
+        cyclolookup[2 * n] = label
+
 rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
 for n in [5,8,12]:
     rcyclolookup[n] = '2.2.%s.1'%n
-for n, label in rcyclolookup.items():
-    if n % 2 == 1:
-        rcyclolookup[2*n] = label
+for n, label in list(rcyclolookup.items()):
+    if n % 2:
+        rcyclolookup[2 * n] = label
 
 def na_text():
     return "Not computed"
@@ -101,7 +191,7 @@ def list2string(li):
 
 def string2list(s):
     s = str(s)
-    if s == '':
+    if not s:
         return []
     return [int(a) for a in s.split(',')]
 
@@ -118,7 +208,7 @@ def is_fundamental_discriminant(d):
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
-        return '\(\Q\)'
+        return r'\(\Q\)'
     if d == '2':  # quadratic field
         D = ZZ(int(D))
         if r == '0':
@@ -126,16 +216,16 @@ def field_pretty(label):
         # Don't prettify invalid quadratic field labels
         if not is_fundamental_discriminant(D):
             return label
-        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
+        return r'\(\Q(\sqrt{' + str(D if D%4 else D/4) + r'}) \)'
     if label in cycloinfo:
-        return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+        return r'\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
         if len(subs)==3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
-            if [z for z in subs if z._data is None] == []:
+            if not any(z._data is None for z in subs):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
@@ -143,10 +233,10 @@ def field_pretty(label):
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
-                return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
+                labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
+                return r'\(\Q(%s, %s)\)'%(labels[0],labels[1])
     if label in rcycloinfo:
-        return '\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
+        return r'\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
@@ -180,6 +270,7 @@ def modules2string(n, t, modlist):
             modlist[j][1] -= 1
     return ans
 
+@cached_function
 def nf_display_knowl(label, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -193,13 +284,13 @@ def nf_knowl_guts(label):
     out += "Global number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += "\(%s\)" % latex(wnf.poly())
+    out += r"\(%s\)" % latex(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        Dfact = "\(%s\)" % str(D)
+        Dfact = r"\(%s\)" % str(D)
     else:
-        Dfact = '%s = \(%s\)' % (str(D),Dfact)
+        Dfact = r'%s = \(%s\)' % (str(D),Dfact)
     out += '<br>Discriminant: '
     out += Dfact
     out += '<br>Signature: '
@@ -210,7 +301,7 @@ def nf_knowl_guts(label):
         out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", label=label)),label)
     out += '</div>'
     return out
 
@@ -270,6 +361,7 @@ class WebNumberField:
     # For cyclotomic fields
     @classmethod
     def from_cyclo(cls, n):
+        n = int(n)
         if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
@@ -315,12 +407,12 @@ class WebNumberField:
         if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
-        t = self._data['galt']
+        t = int(self._data['galois_label'].split('T')[1])
         return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
-        return self._data['galt']
+        return int(self._data['galois_label'].split('T')[1])
 
     # return the Galois group
     def gg(self):
@@ -407,11 +499,12 @@ class WebNumberField:
             for s in sibcnts:
                 repcounts[s[0][0]] += s[1]
             gc = 0
-            if galord<24:
+            if galord<48:
                 del repcounts[galord]
                 if self.degree() < galord:
                     gc = 1 
-            repcounts[self.degree()] -= numae
+            if numae>0:
+                repcounts[self.degree()] -= numae
             if repcounts[self.degree()] == 0:
                 del repcounts[self.degree()]
             self._data['repdata'] = [repcounts, numae, gc]
@@ -432,7 +525,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts)]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -476,7 +569,7 @@ class WebNumberField:
 
     def subfields_show(self):
         subs = self.subfields()
-        if subs == []:
+        if not subs:
             return []
         return display_multiset(subs, formatfield)
 
@@ -504,7 +597,7 @@ class WebNumberField:
 
     def unit_galois_action_show(self):
         ugm = self.unit_galois_action()
-        if ugm == []:
+        if not ugm:
             return ''
         n = self.degree()
         t = self.galois_t()
@@ -523,20 +616,26 @@ class WebNumberField:
             Qx = PolynomialRing(QQ,'x')
             # while [1] is a perfectly good basis for Z, gp seems to want []
             basis = [Qx(el.replace('a','x')) for el in self.zk()] if self.degree() > 1 else []
-            k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
+            k1 = pari( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
             self._data['gpK'] = k1
         return self._data['gpK']
 
     def generator_name(self):
         #Add special case code for the generator if desired:
         if self.gen_name=='phi':
-            return '\phi'
+            return r'\phi'
         else:
             return web_latex(self.gen_name)
 
     def variable_name(self):
         # For consistency with Sage number fields
         return self.gen_name
+
+    def root_of_1_order(self):
+        return self._data['torsion_order']
+
+    def root_of_1_gen(self):
+        return self._data['torsion_gen']
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):
@@ -549,10 +648,13 @@ class WebNumberField:
             return self._data['regulator']
         if self.unit_rank() == 0:
             return 1
-        if self.haskey('class_number'):
-            K = self.K()
-            return K.regulator()
         return na_text()
+
+    def units_safe(self):  # fundamental units, if they are not too long
+        units = self.units()
+        if len(units) > 500:
+            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
+        return units
 
     def units(self):  # fundamental units
         res = None
@@ -587,9 +689,8 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return na_text()
         cg_list = self._data['class_group']
-        if cg_list == []:
+        if not cg_list:
             return 'Trivial'
-        #return cg_list
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
@@ -600,7 +701,11 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            return str(AbelianGroup(cg_list)) + ', order ' + self.class_number_latex()
+            if not cg_list:
+                return 'Trivial group, which has order $1$'
+            cg_list = [r'C_{%s}' % z for z in cg_list]
+            cg_string = r'\times '.join(cg_list)
+            return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
         return na_text()
 
     def class_number(self):
@@ -631,31 +736,17 @@ class WebNumberField:
             return '<span style="font-size: x-small">(GRH)</span>'
         return ''
 
+    def frobs(self):
+        return self._data['frobs']
+
     def conductor(self):
         """ Computes the conductor if the extension is abelian.
             It raises an exception if the field is not abelian.
         """
-        if not self.is_abelian():
+        cond = self._data['conductor']
+        if cond == 0: # Code for not an abelian field
             raise Exception('Invalid field for conductor')
-        D = self.disc()
-        plist = self.ramified_primes()
-        K = self.K()
-        f = ZZ(1)
-        for p in plist:
-            e = K.factor(p)[0][0].ramification_index()
-            if p == ZZ(2):
-                e = K.factor(p)[0][0].ramification_index()
-                # ramification index must be a power of 2
-                f *= e * 2
-                c = D.valuation(p)
-                res_deg = ZZ(self.degree() / e)
-                # adjust disc expo for unramified part
-                c = ZZ(c / res_deg)
-                if is_odd(c):
-                    f *= 2
-            else:
-                f *= p ** (e.valuation(p) + 1)
-        return f
+        return ZZ(cond)
 
     def artin_reps(self, nfgg=None):
         if nfgg is not None:
@@ -686,7 +777,7 @@ class WebNumberField:
             # cc is list, each has methods group, size, order, representative
             ccreps = [x.representative() for x in cc]
             ccns = [int(x.size()) for x in cc]
-            ccreps = [x.cycle_string() for x in ccreps]
+            ccreps = [Permutation(x).cycle_string() for x in ccreps]
             ccgen = '['+','.join(ccreps)+']'
             ar = nfgg.artin_representations() # list of artin reps from db
             arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
@@ -716,44 +807,8 @@ class WebNumberField:
 
         return []
 
-    def dirichlet_group(self, prime_bound=10000):
-        f = self.conductor()
-        if f == 1:  # To make the trivial case work correctly
-            return [1]
-        if euler_phi(f) > dir_group_size_bound:
-            return []
-        # Can do quadratic fields directly
-        if self.degree() == 2:
-            if is_odd(f):
-                return [1, f-1]
-            f1 = f/4
-            if is_odd(f1):
-                return [1, f-1]
-            # we now want f with all powers of 2 removed
-            f1 = f1/2
-            if is_even(f1):
-                raise Exception('Invalid conductor')
-            if (self.disc()/8) % 4 == 3:
-                return [1, 4*f1-1]
-            # Finally we want congruent to 5 mod 8 and -1 mod f1
-            if (f1 % 4) == 3:
-                return [1, 2*f1-1]
-            return [1, 6*f1-1]
-
-        from dirichlet_conrey import DirichletGroup_conrey
-        G = DirichletGroup_conrey(f)
-        K = self.K()
-        S = Set(G[1].kernel()) # trivial character, kernel is whole group
-
-        for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
-            a = P.norm() % f
-            if gcd(a,f)>1:
-                continue
-            S = S.intersection(Set(G[a].kernel()))
-            if len(S) == self.degree():
-                return list(S)
-
-        raise Exception('Failure in dirichlet group for K=%s using prime bound %s' % (K,prime_bound))
+    def dirichlet_group(self):
+        return self._data['dirichlet_group']
 
     def full_dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
@@ -773,7 +828,7 @@ class WebNumberField:
                 palgstr = [
                     list2string([int(c) for c in pol.coefficients(sparse=False)])
                     for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
+                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
                 return [
                     [
                         LF['label'],
@@ -781,7 +836,7 @@ class WebNumberField:
                         int(LF['e']),
                         int(LF['f']),
                         int(LF['c']),
-                        group_display_knowl(LF['n'], LF['galT']),
+                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
                         LF['t'],
                         LF['u'],
                         LF['slopes']
@@ -798,7 +853,7 @@ class WebNumberField:
     def make_code_snippets(self):
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
 
         # Fill in placeholders for this specific field:

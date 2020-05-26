@@ -5,9 +5,9 @@
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='index_viewer.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
-    var mainBlockList = new BlockList("{{db_name}}", "{{table_name}}");
-    var pageKey ="{{db_name}}"+"."+"{{table_name}}";
-    var pageId = {'db':"{{db_name}}", 'table':"{{table_name}}"};
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
     var index_fields = {{index_fields | safe}};
 
 </script>
@@ -27,12 +27,12 @@
 </script>
 {% endblock extra_script %}
 
-{% block title_block %} Showing <span id=nicename>{{nice_name}}</span> [{{table_name}}]{% endblock title_block %}
+{% block title_block %} Showing <span id=nicename>{{nice_name}}</span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
 
 {% block main_body %}
 <div>
-    <p>The following is the list of all indices on this table. </p>
-    <p>By default, keys are sorted in increasing order.</p>
+    <p>The following is the list of all indices on this collection (last refreshed on <span id=scandate></span>) </p>
+    <p>Each entry has a name, a set of keys, and the ordering for each key, where -1: descending, 1: ascending, 2d: using 2d ordering
 </div>
 <div id = 'dataDiv'>
 </div>

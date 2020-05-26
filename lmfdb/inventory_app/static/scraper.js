@@ -2,7 +2,7 @@
 
 function rescanAll(db){
 
-  var info = {'db':db, 'table':null};
+  var info = {'db':db, 'coll':null};
   console.log(info);
   cont = confirm('This action may take some time. Are you sure?');
   if(cont){
@@ -10,9 +10,9 @@ function rescanAll(db){
   }
 }
 
-function rescan(db, table){
+function rescan(db, coll){
 
-  var info = {'db':db, 'table':table};
+  var info = {'db':db, 'coll':coll};
   console.log(info);
   cont = confirm('This action may take some time. Are you sure?');
   if(cont){
@@ -34,7 +34,7 @@ function sendRescanRequest(info, dest){
     console.log(XHR.response);
     var response = JSON.parse(XHR.response);
     if(response.locks){
-      alert('Scraping already in progress on (some of) requested table(s). Try again later.');
+      alert('Scraping already in progress on (some of) requested collection(s). Try again later.');
     }else if(response.err){
       alert('Error submitting request. Please try again.');
     }else{
@@ -90,12 +90,12 @@ function checkCompletion(progress){
 function showProgress(progress){
   var span = document.getElementById('progressSpan');
   console.log(progress);
-  span.innerHTML = progress.progress_in_current+"% done on table "+progress.curr_table+" of "+progress.n_tables;
+  span.innerHTML = progress.progress_in_current+"% done on collection "+progress.curr_coll+" of "+progress.n_colls;
 }
 
 function isComplete(progress){
 
-//  if(progress['curr_table'] == progress['n_tables'] && progress['progress_in_current'] >= 100) return true;
+//  if(progress['curr_coll'] == progress['n_colls'] && progress['progress_in_current'] >= 100) return true;
   if(progress.progress_in_current >= 100) return true;
   return false;
 }
@@ -119,24 +119,24 @@ function fillSummary(data){
   div.appendChild(h2);
 
   var key, keyDiv;
-  for(var table in data.orphan){
+  for(var coll in data.orphan){
     var innerDiv = document.createElement('div');
     h2 = document.createElement('h2');
-    h2.innerHTML = 'Table ' + table + ':</br>';
+    h2.innerHTML = 'Collection ' + coll + ':</br>';
     innerDiv.appendChild(h2);
-    if(data.gone[table] == {}){
+    if(data.gone[coll] == {}){
       keyDiv = document.createElement('div');
       keyDiv.innerHTML = 'The following keys were removed:</br>';
-      for(key of data.gone[table]){
+      for(key of data.gone[coll]){
         keyDiv.innerHTML = keyDiv.innerHTML + key +'</br>';
       }
       innerDiv.appendChild(keyDiv);
     }
 
-    if(data.orphan[table]){
+    if(data.orphan[coll]){
       keyDiv = document.createElement('div');
       keyDiv.innerHTML = 'The following keys were removed and had data:</br>';
-      for(key of data.orphan[table]){
+      for(key of data.orphan[coll]){
         keyDiv.innerHTML = keyDiv.innerHTML + key.name + '</br>';
       }
       innerDiv.appendChild(keyDiv);

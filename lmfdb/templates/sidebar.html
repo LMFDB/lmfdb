@@ -176,7 +176,10 @@
   {%- if entry.part2 -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
-      {%- if BETA or not pt2.status -%}
+      {%- if BETA and pt2.status == "notonbeta" -%}
+      {%- elif not BETA and pt2.status == "notonbeta" -%}
+          <span class="subtitle">{{ pt2.url | safe }}</span>
+      {%- elif BETA or not pt2.status -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
       {%- endif -%}
       {%- if pt2.part3 -%}

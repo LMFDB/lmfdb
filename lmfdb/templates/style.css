@@ -646,14 +646,20 @@ table a[knowl] {
 table.ntdata a {
   display: block;
 }
+
 table.chardata a {
   display: inline;
 }
+
 table td.top {
   vertical-align:top;
 }
 table.ntdata td {
   white-space: nowrap;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table a:hover {
@@ -661,23 +667,32 @@ table a:hover {
 }
 
 
+
 table td.spacing {
   height: 20px;
 }
 
+
 table.ntdata {
   width: auto;
-  border: 0;
+  border: 3px;
   margin-top: 15px;
   margin-bottom: 15px;
 }
-table.ntdata thead tr {
+table.ntdata thead th {
   background: {{ color.table_ntdata_background }};
+}
+table.ntdata > thead {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
 table.ntdata th {
   text-align: left;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table.ntdata > tr.odd,
@@ -692,6 +707,10 @@ table.ntdata > thead > tr:first-child {
     background: {{color.table_ntdata_background_c1}};
 }
 
+table.ntdata > tbody > tr:last-child {
+    border-bottom:  2px solid {{ color.table_ntdata_border }};
+}
+
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
 table.ntdata > thead > tr.even,
@@ -699,6 +718,13 @@ table.ntdata > tr:nth-child(even),
 table.ntdata > tbody > tr:nth-child(even),
 table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
+}
+table.ntdata tr.toggle { font-size: 80%; text-align: left; }
+table.ntdata tr.toggle:nth-child(2n) { 
+    background: {{color.table_ntdata_background_c1}};
+}
+table.ntdata tr.toggle a:hover {
+  background: {{color.table_ntdata_background_c1}};
 }
 
 table.ntdata tr.line {
@@ -711,6 +737,37 @@ table.ntdata tr.endsection {
 table.right_align_table td {
   text-align: right;
 }
+
+
+
+
+table.number_table td
+{
+text-align:right;
+border:0px;
+cellpadding:3px;
+
+}
+
+
+table.number_table {border-collapse:collapse;}
+
+table.number_table tr:nth-child(even) {
+    background: {{color.table_ntdata_background_cn}};
+}
+
+table.number_table thead th {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table thead th:first-child{
+border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table tbody th  {
+  border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
 
 /* TODO: where? */
 div.literature {
@@ -935,6 +992,7 @@ td.right {
 table.ntdata .middle {
     vertical-align: middle;
 }
+
 table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
 }
@@ -1767,7 +1825,6 @@ div.box {
 div.codebox {
     padding: 5px;
     text-padding: 10px;
-    overflow: auto;
     border: 1px solid {{color.knowl_thin_border}};
     border-radius: 5px;
     background-color: {{color.knowl_background}};
@@ -2245,4 +2302,12 @@ span.normgp {
 
 span.activesubgp {
     background: {{color.col_main_ll}};
+/* the button to show advanced search options */
+#advancedtoggle {
+    margin-left: 20px;
+}
+
+/* the advanced search options themselves, hidden by default */
+.advanced {
+    display: none;
 }

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
+from six.moves import range
 
 import re
 from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
-from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger
+from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger, parity_string, bool_string
 try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from flask import flash
-from markupsafe import Markup
+from lmfdb.utils import flash_error
 
 # utility functions #
 
@@ -35,32 +35,32 @@ def parse_interval(arg, name):
     elif re.match('^[0-9]+..[0-9]+$', arg):
         s = arg.split('..')
         a,b = (int(s[0]), int(s[1]))
-    elif re.match('^\[[0-9]+..[0-9]+\]$', arg):
+    elif re.match(r'^\[[0-9]+..[0-9]+\]$', arg):
         s = arg[1:-1].split('..')
         a,b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:
-        flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)"%(arg,name)), "error")
-        raise ValueError("invalid "+name)
+        flash_error("%s is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)", arg, name)
+        raise ValueError("invalid " + name)
     return a,b
 
 def parse_limit (arg):
     if not arg:
-        return 25
+        return 50
     limit = -1
     arg = arg.replace  (' ','')
     if re.match('^[0-9]+$', arg):
         limit = int(arg)
     if limit > 100:
-        flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100."%arg), "error")
+        flash_error("%s is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100.", arg)
         raise ValueError("limit")
     return limit
 
 def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
-    headers = range(1, limit)
+    headers = list(range(1, limit))
     headers.append("more")
     entries = {}
-    rows = range(a, b + 1)
+    rows = list(range(a, b + 1))
     for row in rows:
         G = DirichletGroup_conrey(row)
         for chi in G:
@@ -75,7 +75,7 @@ def get_character_modulus(a, b, limit=7):
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
-    for k, v in entries.iteritems():
+    for k, v in entries.items():
         l = []
         v = sorted(v)
         while v:
@@ -143,7 +143,7 @@ def info_from_db_orbit(orbit):
     orbit_letter = cremona_letter_code(orbit_index - 1)
     orbit_label = "{}.{}".format(mod, orbit_letter)
     order = orbit['order']
-    is_odd = 'Odd' if _is_odd(orbit['parity']) else 'Even'
+    is_odd = parity_string(orbit['parity'])
     is_prim = _is_primitive(orbit['is_primitive'])
     results = []
     for num in orbit['galois_orbit']:
@@ -186,43 +186,51 @@ class CharacterSearch:
         self.conductor = query.get('conductor')
         self.order = query.get('order')
         self.parity = query.get('parity')
-        self.primitive = query.get('primitive')
+        if self.parity in ["Odd","odd"]:
+            self.parity = parity_string(-1)
+        if self.parity in ["Even","even"]:
+            self.parity = parity_string(1)
         self.limit = parse_limit(query.get('limit'))
-        if self.parity and not self.parity in ['Odd','Even']:
-            flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'"),"error")
+        if self.parity and not self.parity in [parity_string(-1),parity_string(1)]:
+            flash_error("%s is not a valid value for parity.  It must be '%s' or '%s'", self.parity, parity_string(-1), parity_string(1))
             raise ValueError('parity')
-        if self.primitive and not self.primitive in ['Yes','No']:
-            flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'"),"error")
+        self.primitive = query.get('primitive')
+        if self.primitive in ["Yes","yes"]:
+            self.primitive = bool_string(True)
+        if self.primitive in ["No","no"]:
+            self.primitive = bool_string(False)
+        if self.primitive and not self.primitive in [bool_string(True),bool_string(False)]:
+            flash_error("%s is not a valid value for primitive.  It must be %s or %s", self.primitive, bool_string(True), bool_string(False))
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
-            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
+            flash_error("Searching is limited to characters of modulus less than $10^4$")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
-            flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
+            flash_error("For order searching the minimum modulus needs to be less than $10^3$")
             raise ValueError('modulus')
 
         self.cmin, self.cmax = parse_interval(self.conductor, 'conductor') if self.conductor else (1, self.mmax)
         self.omin, self.omax = parse_interval(self.order, 'order') if self.order else (1, self.cmax)
         self.cmax = min(self.cmax,self.mmax)
         self.omax = min(self.omax,self.cmax)
-        if self.primitive == 'Yes':
+        if self.primitive == bool_string(True):
             self.cmin = max([self.cmin,self.mmin])
         self.cmin += 1 if self.cmin%4 == 2 else 0
         self.cmax -= 1 if self.cmax%4 == 2 else 0
-        if self.primitive == 'Yes':
+        if self.primitive == bool_string(True):
             self.mmin = max([self.cmin,self.mmin])
             self.mmax = min([self.cmax,self.mmax])
             self.cmin,self.cmax = self.mmin,self.mmax
-        if self.parity == "Odd":
+        if self.parity == parity_string(-1):
             self.omin += 1 if self.omin%2 else 0
             self.omax -= 1 if self.omax%2 else 0
         self.mmin = max(self.mmin,self.cmin,self.omin)
 
         if self.parity:
-            self.is_odd = True if self.parity == 'Odd' else False
+            self.is_odd = True if self.parity == parity_string(-1) else False
         if self.primitive:
-            self.is_primitive = True if self.primitive == 'Yes' else False
+            self.is_primitive = True if self.primitive == bool_string(True) else False
 
         self.start = int(query.get('start', '0'))
 

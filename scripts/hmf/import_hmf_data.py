@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+from six import string_types
 import os
 import sage
 from sage.repl import preparse
@@ -6,7 +8,7 @@ from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
 
 from lmfdb.base import getDBConnection
-print "getting connection"
+print("getting connection")
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
@@ -52,7 +54,7 @@ def add_narrow_classno_data():
          magma.eval('F<w> := NumberField(Polynomial([' + str(Fcoeff) + ']));')
          hplus = magma.eval('NarrowClassNumber(F);')
          hmf_fields.update({ '_id': F['_id'] }, { "$set": {'narrow_class_no': int(hplus)} })
-         print Fcoeff, hplus
+         print(Fcoeff, hplus)
 
 def import_all_data(n):
     nstr = str(n)
@@ -66,14 +68,14 @@ def import_all_data(n):
 
     files = [f for f in files if f.find('_old') == -1]
     for file_name in files:
-        print file_name
+        print(file_name)
         import_data(file_name)
 
 
 def import_data(hmf_filename):
-    hmff = file(hmf_filename)
+    hmff = open(hmf_filename)
 
-    ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+    ferrors = open('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -90,25 +92,25 @@ def import_data(hmf_filename):
     magma.eval('ZF := Integers(F);')
 
     # Find the corresponding field in the database of number fields
-    print "Finding field..."
+    print("Finding field...")
     fields_matching = fields.find({"signature": [n, int(0)],
                                    "discriminant": d})
     cnt = fields_matching.count()
     assert cnt >= 1
     field_label = None
     for i in range(cnt):
-        nf = fields_matching.next()
+        nf = next(fields_matching)
         if nf['coefficients'] == coeffs:
             field_label = nf['label']
     assert field_label is not None
-    print "...found!"
+    print("...found!")
 
     # Find the field in the HMF database
-    print "Finding field in HMF..."
+    print("Finding field in HMF...")
     F_hmf = hmf_fields.find_one({"label": field_label})
     if F_hmf is None:
         # Create list of ideals
-        print "...adding!"
+        print("...adding!")
         ideals = eval(preparse(magma.eval('nice_idealstr(F);')))
         ideals_str = [str(c) for c in ideals]
         hmf_fields.insert({"label": field_label,
@@ -117,9 +119,9 @@ def import_data(hmf_filename):
                            "ideals": ideals_str})
         F_hmf = hmf_fields.find_one({"label": field_label})
     else:
-        print "...found!"
+        print("...found!")
 
-    print "Computing ideals..."
+    print("Computing ideals...")
     ideals_str = F_hmf['ideals']
     ideals = [eval(preparse(c)) for c in ideals_str]
     ideals_norms = [c[0] for c in ideals]
@@ -127,7 +129,7 @@ def import_data(hmf_filename):
     magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
     # Add the list of primes
-    print "Computing primes..."
+    print("Computing primes...")
     v = hmff.readline()  # Skip line
     v = hmff.readline()
     assert v[:9] == 'PRIMES :='
@@ -140,7 +142,7 @@ def import_data(hmf_filename):
         assert magma('&and[primes_indices[j] gt primes_indices[j-1] : j in [2..#primes_indices]]')
         resort = False
     except AssertionError:
-        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!"
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!")
         resort = True
         magma.eval('_, sigma := Sort(primes_indices, func<x,y | x-y>);')
         magma.eval('perm := [[xx : xx in x] : x in CycleDecomposition(sigma) | #x gt 1]')
@@ -152,7 +154,7 @@ def import_data(hmf_filename):
     primes_indices = eval(magma.eval('primes_indices'))
     primes_str = [ideals_str[j - 1] for j in primes_indices]
     assert len(primes_array) == len(primes_str)
-    print "...comparing..."
+    print("...comparing...")
     for i in range(len(primes_array)):
         assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
                      + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
@@ -162,7 +164,7 @@ def import_data(hmf_filename):
     else:
         F_hmf['primes'] = primes_str
         hmf_fields.save(F_hmf)
-    print "...saved!"
+    print("...saved!")
 
     # Collect levels
     v = hmff.readline()
@@ -176,7 +178,7 @@ def import_data(hmf_filename):
             break
 
     # Finally, newforms!
-    print "Starting newforms!"
+    print("Starting newforms!")
     while v != '':
         v = hmff.readline()[1:-3]
         if len(v) == 0:
@@ -245,7 +247,7 @@ def import_data(hmf_filename):
             leftout += 1
             hecke_eigenvalues = hecke_eigenvalues[:-1]
         if leftout > 0:
-            print "Left out", leftout
+            print("Left out", leftout)
 
         info = {"label": label,
                 "short_label": short_label,
@@ -259,16 +261,16 @@ def import_data(hmf_filename):
                 "hecke_polynomial": str(hecke_polynomial),
                 "hecke_eigenvalues": hecke_eigenvalues,
                 "AL_eigenvalues": [[str(a[0]), str(a[1])] for a in AL_eigenvalues]}
-        print info['label']
+        print(info['label'])
 
         existing_forms = hmf_forms.find({"label": label})
         assert existing_forms.count() <= 1
         if existing_forms.count() == 0:
             hmf_forms.insert(info)
         else:
-            existing_form = existing_forms.next()
+            existing_form = next(existing_forms)
             assert info['hecke_eigenvalues'] == existing_form['hecke_eigenvalues']
-            print "...duplicate"
+            print("...duplicate")
 
 # def parse_label_old(field_label, weight, level_ideal, label_suffix):
 #    label_str = field_label + str(weight) + str(level_ideal) + label_suffix
@@ -289,7 +291,7 @@ def repair_fields(D):
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
     F['primes'] = primes
 
-    hmff = file("data_2_" + (4 - len(str(D))) * '0' + str(D))
+    hmff = open("data_2_" + (4 - len(str(D))) * '0' + str(D))
 
     # Parse field data
     for i in range(7):
@@ -320,21 +322,21 @@ def repair_fields_add_ideal_labels(D):
 
 
 def attach_new_label(f):
-    print f['label']
+    print(f['label'])
     F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
     # P is used implicitly in the eval() calls below.  When these are
-    # removed, this will not longer be neceesary, but until then the
+    # removed, this will not longer be necessary, but until then the
     # assert statement is for pyflakes.
     assert P
 
-    if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
+    if isinstance(f['level_ideal'], string_types):
         N = eval(f['level_ideal'])
     else:
         N = f['level_ideal']
     if type(N) != list or len(N) != 3:
-        print f, N, type(N)
+        print(f, N, type(N))
         raise ValueError("{} does not define a valid level ideal".format(N))
 
     f['level_ideal'] = [N[0], N[1], str(N[2])]
@@ -344,10 +346,10 @@ def attach_new_label(f):
         f['level_ideal_label'] = ideal_label
         f['label'] = parse_label(f['field_label'], f['weight'], f['level_ideal_label'], f['label_suffix'])
         hmf_forms.save(f)
-        print f['label']
+        print(f['label'])
     except ValueError:
         hmf_forms.remove(f)
-        print "REMOVED!"
+        print("REMOVED!")
 
 # Old function used to make a stats yaml file.
 def make_stats_dict():
