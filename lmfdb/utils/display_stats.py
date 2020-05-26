@@ -555,7 +555,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = '\(\\mathrm{avg}\\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -569,8 +569,16 @@ class StatsDisplay(UniqueRepresentation):
                 if col in buckets:
                     headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
                 else:
+                    try:
+                        dup_free = set(headers[i])
+                    except TypeError:
+                        # The headers may not all be hashable
+                        dup_free = []
+                        for h in headers[i]:
+                            if h not in dup_free:
+                                dup_free.append(h)
                     headers[i] = [formatter[col](val) for val in
-                                  sorted(set(headers[i]), key=sort_key[col], reverse=reverse[col])]
+                                  sorted(dup_free, key=sort_key[col], reverse=reverse[col])]
             row_headers, col_headers = headers
             grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
             # _total_grid is used for recursive proportions; such proportioners

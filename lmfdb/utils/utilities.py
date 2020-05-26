@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-# this is the caching wrapper, use it like this:
-# @app.route(....)
-# @cached()
-# def func(): ...
 from six.moves import range
 from six import integer_types as six_integers
 from six import string_types
@@ -17,20 +13,19 @@ import tempfile
 import time
 from collections import defaultdict
 from copy import copy
-from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
+from six import PY3
 
-from flask import request, make_response, flash, url_for, current_app
+from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
-# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
-from werkzeug.contrib.cache import SimpleCache
 from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
+from sage.misc.functional import round
 from sage.all import floor, latex, prime_range, valuation
 from sage.structure.element import Element
 
@@ -119,9 +114,17 @@ def try_int(foo):
     except Exception:
         return foo
 
+def type_key(typ):
+    # For now we just use a simple mechanism: strings compare at the end.
+    if isinstance(typ, str):
+        return 1
+    else:
+        return 0
 
 def key_for_numerically_sort(elt, split=r"[\s\.\-]"):
-    return tuple(try_int(k) for k in re.split(split, elt))
+    # In Python 3 we can no longer compare ints and strings.
+    key = [try_int(k) for k in re.split(split, elt)]
+    return tuple((type_key(k), k) for k in key)
 
 
 def an_list(euler_factor_polynomial_fn,
@@ -164,7 +167,7 @@ def an_list(euler_factor_polynomial_fn,
             k += 1
     return result
 
-def coeff_to_poly(c, var='x'):
+def coeff_to_poly(c, var=None):
     """
     Convert a list or string representation of a polynomial to a sage polynomial.
 
@@ -174,6 +177,20 @@ def coeff_to_poly(c, var='x'):
     >>> coeff_to_poly("1 - 3*x + x**2")
     x**2 - 3*x + 1
     """
+    if isinstance(c, str):
+        # accept latex
+        c = c.replace("{", "").replace("}", "")
+        # autodetect variable name
+        if var is None:
+            varposs = set(re.findall(r"[A-Za-z_]+", c))
+            if len(varposs) == 1:
+                var = varposs.pop()
+            elif not(varposs):
+                var = 'x'
+            else:
+                raise ValueError("Polynomial must be univariate")
+    if var is None:
+        var = 'x'
     return PolynomialRing(QQ, var)(c)
 
 def coeff_to_power_series(c, var='q', prec=None):
@@ -277,19 +294,24 @@ def str_to_CBF(s):
 
 
 
-def to_dict(args, exclude = []):
+def to_dict(args, exclude = [], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
     element in a list if the input was a list.
 
+    INPUT:
+
+    - ``args`` -- a dictionary
+    - ``exclude`` -- a list of keys to allow lists for.
+    - ``kwds`` -- also included in the result
+
     Example:
     >>> to_dict({"not_list": 1, "is_list":[2,3,4]})
     {'is_list': 4, 'not_list': 1}
     """
-    d = {}
-    for key in args:
-        values = args[key]
+    d = dict(kwds)
+    for key, values in args.items():
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]
@@ -1023,23 +1045,6 @@ def flash_error(errmsg, *args):
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
-cache = SimpleCache()
-def cached(timeout=15 * 60, key='cache::%s::%s'):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            cache_key = key % (request.path, request.args)
-            rv = cache.get(cache_key)
-            if rv is None:
-                rv = f(*args, **kwargs)
-                cache.set(cache_key, rv, timeout=timeout)
-            ret = make_response(rv)
-            # this header basically says that any cache can store this infinitely long
-            # set this down to 600, because we have pagespeed now (hsy)
-            ret.headers['Cache-Control'] = 'max-age=600, public'
-            return ret
-        return decorated_function
-    return decorator
 
 ################################################################################
 #  Ajax utilities
@@ -1176,12 +1181,15 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    from StringIO import StringIO
+    if PY3:
+        from io import BytesIO as IO
+    else:
+        from StringIO import StringIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
     from six.moves.urllib_parse import quote
 
-    virtual_file = StringIO()
+    virtual_file = IO()
     fig = P.matplotlib(axes_pad=axes_pad)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
@@ -1191,7 +1199,11 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+    if PY3:
+        buf = virtual_file.getbuffer()
+    else:
+        buf = virtual_file.buf
+    return "data:image/png;base64," + quote(b64encode(buf))
 
 class KeyedDefaultDict(defaultdict):
     """

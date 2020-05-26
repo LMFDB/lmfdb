@@ -52,10 +52,14 @@ app.logger.addHandler(logger_file_handler())
 if app.debug:
     try:
         from flask_debugtoolbar import DebugToolbarExtension
-        app.config['SECRET_KEY'] = '''shh, it's a secret'''
         toolbar = DebugToolbarExtension(app)
     except ImportError:
         pass
+
+# secret key, necessary for sessions, and sessions are
+# in turn necessary for users to login
+from .utils.config import get_secret_key
+app.secret_key = get_secret_key()
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -475,17 +479,6 @@ def citing():
     b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
     return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
-@app.route("/citation/citations")
-def citations():
-    t = "LMFDB Citations"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
-    return render_template('citations.html', title=t, body_class='', bread=b)
-
-@app.route("/citation/citations_bib")
-def citations_bib():
-    t = "LMFDB Citations (BiBTeX Entries)"
-    return render_template('citations_content_bib.html', title=t, body_class='')
-
 @app.route("/contact")
 def contact():
     t = "Contact and Feedback"
@@ -496,7 +489,7 @@ def root_static_file(name):
     def static_fn():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
-            return open(fn).read()
+            return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)

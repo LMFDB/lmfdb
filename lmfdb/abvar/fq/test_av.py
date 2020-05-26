@@ -2,12 +2,6 @@ from lmfdb.tests import LmfdbTest
 
 
 class AVTest(LmfdbTest):
-    def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
-
-    def not_check_args(self, path, text):
-        assert not (text in self.tc.get(path, follow_redirects=True).data)
-
     # All tests should pass
     def test_polynomial(self):
         r"""
@@ -19,7 +13,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the base field gets displayed correctly
         """
-        self.check_args("/Variety/Abelian/Fq/2/25/ac_b", "\F_{5^{2}}")
+        self.check_args("/Variety/Abelian/Fq/2/25/ac_b", r"\F_{5^{2}}")
 
     def test_frob_angles(self):
         r"""
@@ -89,7 +83,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the plot of the Newton polygon is included and computed correctly
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
         # The following is part of the base64 encoded image of the Newton
         # polygon for this isogeny class.
         assert r"data:image/png;base64,iVBORw0KGgo" in page
@@ -98,7 +92,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the plot showing the roots of the Weil polynomial displays correctly
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
         # The following is part of the base64 encoded image of the circle plot
         # for this isogeny class.
         assert r"data:image/png;base64,iVBORw0KGgo" in page
@@ -107,28 +101,28 @@ class AVTest(LmfdbTest):
         r"""
         Check that the property box displays.
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data.replace("\n", "").replace(" ", "")
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True).replace("\n", "").replace(" ", "")
         assert '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
-        assert '<tdclass="label">BaseField</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
+        assert r'<tdclass="label">BaseField</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
         self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
     def test_split_Frobenius_angles(self):
         r"""
         Check that the Frobenius angles are split into multiple math elements
         """
-        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
-        assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page
+        page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True)
+        assert r"$\pm0.150432950460$, $\pm0.544835058382$" in page
 
     def test_av_download(self):
         r"""
         Test downloading on search results page.
         """
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
-        self.assertTrue("Below is a list" in response.data)
-        self.assertTrue("32*x^10" in response.data)
+        self.assertTrue("Below is a list" in response.get_data(as_text=True))
+        self.assertTrue("32*x^10" in response.get_data(as_text=True))

@@ -5,10 +5,13 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
+import os
 
-from lmfdb.backend.database import db, PostgresBase, DelayCommit
+from lmfdb.backend.base import PostgresBase
+from lmfdb.backend import db, DelayCommit
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
+from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
@@ -230,7 +233,7 @@ class KnowlBackend(PostgresBase):
             restrictions = SQL("")
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1} ORDER BY id, timestamp DESC").format(sqlfields, restrictions)
         secondary_restrictions = []
-        if len(filters) > 0:
+        if filters:
             secondary_restrictions.append(SQL("knowls.{0} = ANY(%s)").format(Identifier("status")))
             values.append([knowl_status_code[q] for q in filters if q in knowl_status_code])
         else:
@@ -640,6 +643,17 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+def knowl_url_prefix():
+    """
+    why is this function needed?
+    if you're running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
+    """
+    flask_options = Configuration().get_flask()
+    if "COCALC_PROJECT_ID" in os.environ:
+        return 'https://cocalc.com/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
+    else:
+        return ""
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}

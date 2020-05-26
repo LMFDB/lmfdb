@@ -2,7 +2,7 @@ from six.moves import range
 
 import ast
 import re
-from six import StringIO
+from six import BytesIO
 import time
 
 from flask import make_response, send_file, request, render_template, redirect, url_for
@@ -54,7 +54,7 @@ def learnmore_list_remove(matchstring):
 @rep_galois_modl_page.route("/")
 def rep_galois_modl_render_webpage():
     args = request.args
-    if len(args) == 0:
+    if not args:
         # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
         dim_list= list(range(1, 11, 1))
@@ -62,7 +62,7 @@ def rep_galois_modl_render_webpage():
         class_number_list=list(range(1, max_class_number+1, 1))
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
+#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det'] // 1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
@@ -125,8 +125,8 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 

@@ -2,7 +2,7 @@
 import ast
 import os
 import re
-from six import StringIO
+from six import BytesIO
 import tempfile
 import time
 
@@ -14,9 +14,10 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, flash_error,
-    parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
-    search_wrap)
+    web_latex, to_dict, flash_error, display_knowl,
+    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
+    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
+    YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -63,9 +64,10 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
+    info = to_dict(request.args, search_array=ECSearchArray())
     if err_args is None:
-        if len(request.args) != 0:
-            return elliptic_curve_search(request.args)
+        if request.args:
+            return elliptic_curve_search(info)
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -78,13 +80,11 @@ def rational_elliptic_curves(err_args=None):
                                                                        conductor_list_endpoints[1:])]
     rank_list = list(range(counts['max_rank'] + 1))
     torsion_list = list(range(1, 11)) + [12, 16]
-    info = {
-        'rank_list': rank_list,
-        'torsion_list': torsion_list,
-        'conductor_list': conductor_list,
-        'counts': counts,
-        'stats_url': url_for(".statistics")
-    }
+    info['rank_list'] = rank_list
+    info['torsion_list'] = torsion_list
+    info['conductor_list'] = conductor_list
+    info['counts'] = counts
+    info['stats_url'] = url_for(".statistics")
     t = r'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
     if err_args.get("err_msg"):
@@ -130,10 +130,10 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    info = to_dict(request.args)
+    info = to_dict(request.args, search_array=ECSearchArray())
     info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
     info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
-    if len(request.args) > 0:
+    if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
@@ -154,13 +154,13 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
-        err_args['err_msg'] = "Please enter a non-empty label"
+        err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
         err_args['err_msg'] = r"%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
-    label = info.get('label', '').replace(" ", "")
+    label = info.get('jump', '').replace(" ", "")
     m = match_lmfdb_label(label)
     if m:
         try:
@@ -226,19 +226,25 @@ def download_search(info):
     res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
-    strIO = StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_curve")
+    return url_for(".by_ec_label", label=label)
+
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
+             url_for_label=url_for_label,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
@@ -253,6 +259,8 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
+    parse_floats(info,query,'regulator','regulator')
+    parse_bool(info,query,'semistable','semistable')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -262,24 +270,17 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
+    #parse_ints(info,query,field='cm_disc',qfield='cm')
+    if 'cm_disc' in info:
+        query['cm'] = info['cm_disc']
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
-                 qfield='nonmax_primes', mode='complement')
-    if info.get('surj_quantifier') == 'exactly':
-        mode = 'exact'
-    else:
-        mode = 'append'
+                 qfield='nonmax_primes', mode='exclude')
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                 qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
-    if info.get('bad_quantifier') == 'exactly':
-        mode = 'exact'
-    elif info.get('bad_quantifier') == 'exclude':
-        mode = 'complement'
-    else:
-        mode = 'append'
+                 qfield='nonmax_primes',mode=info.get('surj_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
-                 qfield='bad_primes',mode=mode)
+                 qfield='bad_primes',mode=info.get('bad_quantifier'))
     # The button which used to be labelled Optimal only no/yes"
     # (default no) has been renamed "Curves per isogeny class all/one"
     # (default one) but the only change in behavious is that we no
@@ -518,13 +519,12 @@ def download_EC_all(label):
         data_list = [data]
     else:
         data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
-        if len(data_list) == 0:
+        if not data_list:
             return elliptic_curve_jump_error(label, {})
 
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 
 @ec_page.route("/Completeness")
@@ -550,9 +550,9 @@ def reliability_page():
     t = r'Reliability of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Source', '')]
+             ('Reliability', '')]
     return render_template("single.html", kid='dq.ec.reliability',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
@@ -624,3 +624,129 @@ def tor_struct_search_Q(prefill="any"):
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
+
+class ECSearchArray(SearchArray):
+    noun = "curve"
+    plural_noun = "curves"
+    jump_example = "11.a2"
+    jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
+    def __init__(self):
+        cond = TextBox(
+            name="conductor",
+            label="Conductor",
+            knowl="ec.q.conductor",
+            example="389",
+            example_span="389 or 100-200")
+        rank = TextBox(
+            name="rank",
+            label="Rank",
+            knowl="ec.rank",
+            example="0")
+        torsion = TextBox(
+            name="torsion",
+            label="Torsion order",
+            knowl="ec.torsion_order",
+            example="2")
+        sha = TextBox(
+            name="sha",
+            label="Analytic order of &#1064;",
+            knowl="ec.q.analytic_sha_order",
+            example="4")
+        surj_primes = TextBox(
+            name="surj_primes",
+            label="Maximal primes",
+            knowl="ec.maximal_galois_rep",
+            example="2,3")
+        isodeg = TextBox(
+            name="isodeg",
+            label="Cyclic isogeny degree",
+            knowl="ec.isogeny",
+            example="16")
+        num_int_pts = TextBox(
+            name="num_int_pts",
+            label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
+            example="2",
+            example_span="2 or 4-15")
+
+        jinv = TextBox(
+            name="jinv",
+            label="j-invariant",
+            knowl="ec.q.j_invariant",
+            example="1728",
+            example_span="1728 or -4096/11")
+        cm = ExcludeOnlyBox(
+            name="include_cm",
+            label="CM",
+            knowl="ec.complex_multiplication")
+        tor_opts = ([("", ""),
+                     ("[]", "trivial")] +
+                    [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
+                    [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
+        torsion_struct = SelectBox(
+            name="torsion_structure",
+            label="Torsion structure",
+            knowl="ec.torsion_subgroup",
+            options=tor_opts)
+        optimal = SelectBox(
+            name="optimal",
+            label="Curves per isogeny class",
+            knowl="ec.isogeny_class",
+            options=[("", ""),
+                     ("on", "one")])
+        surj_quant = SubsetNoExcludeBox(
+            name="surj_quantifier")
+        nonsurj_primes = TextBoxWithSelect(
+            name="nonsurj_primes",
+            label="Non-max. $p$",
+            short_label="Non-max. $p$",
+            knowl="ec.maximal_galois_rep",
+            example="2,3",
+            select_box=surj_quant)
+        bad_quant = SubsetBox(
+            name="bad_quantifier")
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            label="Bad $p$",
+            knowl="ec.q.reduction_type",
+            example="5,13",
+            select_box=bad_quant)
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator",
+            knowl="ec.q.regulator",
+            example="8.4-9.1")
+        semistable = YesNoBox(
+            name="semistable",
+            label="Semistable",
+            example="Yes",
+            knowl="ec.semistable")
+        cm_opts = [('', ''), ('-3', -3), ('-4', -4), ('-7', -7), ('-8', -8), ('-11', -11), ('-12', -12), ('-16', -16),
+                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163)]
+        cm_disc = SelectBox(
+            name="cm_disc",
+            label="CM discriminant",
+            example="-3",
+            knowl="ec.complex_multiplication",
+            options=cm_opts
+            )
+
+        count = CountBox()
+
+        self.browse_array = [
+            [cond, jinv],
+            [rank, regulator],
+            [torsion, torsion_struct],
+            [cm_disc, cm],
+            [sha, optimal],
+            [surj_primes, nonsurj_primes],
+            [isodeg, bad_primes],
+            [num_int_pts, semistable],
+            [count]
+            ]
+
+        self.refine_array = [
+            [cond, jinv, rank, torsion, torsion_struct],
+            [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
+            [num_int_pts, regulator, cm, cm_disc, semistable],
+            [optimal]
+            ]

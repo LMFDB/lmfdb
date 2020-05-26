@@ -73,6 +73,19 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
@@ -83,13 +96,16 @@ class ArtinRepresentation(object):
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
-                parts = x[0].split("c")
-                base = parts[0]
-                conjindex = int(parts[1])
+                parts = x[0].split(".")
+                base = "%s.%s.%s.%s"% tuple(parts[j] for j in (0,1,2,3))
+                if len(parts)<5: # Galois orbit
+                    conjindex=1
+                else:
+                    conjindex = letters2num(parts[4])
             elif len(x) == 2: # base and gorb index
                 base = x[0]
                 conjindex = x[1]
-                label = "%sc%s"%(str(x[0]),str(x[1]))
+                label = "%s.%s"%(str(x[0]),num2letters(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
             self._data = db.artin_reps.lucky({'Baselabel':str(base)})
@@ -122,6 +138,9 @@ class ArtinRepresentation(object):
 
     def conductor(self):
         return int(self._data["Conductor"])
+
+    def galorbindex(self):
+        return int(self._data['GalOrbIndex'])
 
     def NFGal(self):
         return [int(n) for n in self._data["NFGal"]]
@@ -266,6 +285,7 @@ class ArtinRepresentation(object):
             return self
         if 'central_character_as_artin_rep' in self._data:
             return self._data['central_character_as_artin_rep']
+        return ArtinRepresentation(self._data['Dets'][self.galorbindex()-1])
         myfunc = self.central_char_function()
         # Get the Artin field
         nfgg = self.number_field_galois_group()
@@ -791,7 +811,7 @@ class NumberFieldGaloisGroup(object):
         PR = PowerSeriesRing(PolynomialRing(QQ, 'a'), 'p')
         myroots = [web_latex(PR(x), enclose=False) for x in myroots]
         # change p into its value
-        myroots = [re.sub(r'([a)\d]) *p', r'\1\cdot '+str(p), z) for z in myroots]
+        myroots = [re.sub(r'([a)\d]) *p', r'\1\\cdot '+str(p), z) for z in myroots]
         return [z.replace('p',str(p)) for z in myroots]
 
     def index_complex_conjugation(self):
@@ -861,7 +881,7 @@ class NumberFieldGaloisGroup(object):
         except KeyError:
             raise KeyError("Expecting to find key %s, whose entries have type %s, in %s. For info, keys there have entries of type %s" % \
                 (cycle_type, type(cycle_type[0]), self._from_cycle_type_to_conjugacy_class_index_dict,
-                 type(self._from_cycle_type_to_conjugacy_class_index_dict.keys()[0][0])))
+                 type(list(self._from_cycle_type_to_conjugacy_class_index_dict)[0][0])))
         return fn_to_use(p)
 
     def from_prime_to_conjugacy_class_index(self, p):

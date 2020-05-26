@@ -5,12 +5,12 @@ function fetch(offset, chunk){
   //Fetch the json data for this page, using the url given and specified offset
 
   var XHR = new XMLHttpRequest();
-  url = dataRoot + dataSource;
+  var url = dataRoot + dataSource;
   var params = extractGetParams();
   params = addGetParam(params, '_view_start', offset);
   params = addGetParam(params, '_max_count', chunk);
 
-  newUrl = urlFromParams(url, params);
+  var newUrl = urlFromParams(url, params);
   console.log(newUrl);
   
   XHR.open('GET', newUrl);
@@ -44,7 +44,7 @@ function extractGetParams(){
   var params = window.location.search.substring(1);
   var paramsArray = params.split('&');
   var splitArray = [];
-  for( item in paramsArray){
+  for(var item in paramsArray){
     splitArray.push(paramsArray[item].split('='));
   }
   return splitArray;
@@ -52,7 +52,7 @@ function extractGetParams(){
 
 function addGetParam(params, name, value){
 
-  for(item in params){
+  for(var item in params){
     if(params[item][0] == name){
       params[item][1] = value;
       return params;
@@ -67,7 +67,7 @@ function urlFromParams(url, params){
   
   if(params.length > 0) url = url +'?';
   var pairs = [];
-  for(item in params){
+  for(var item in params){
     console.log(params[item]);
     if (params[item]!=""){
       pairs.push(params[item][0]+'='+params[item][1]);
@@ -82,7 +82,7 @@ function onLoadingFail(){
     Print message, disable prev.next buttons
 */
   console.log("Failed to fetch page data");
-  div = document.getElementById('dataDiv');
+  var div = document.getElementById('dataDiv');
   div.innerHTML = "<span class='err_text'>Failed to fetch page data. URL may not be valid</span>";
 
   $("input[type='button'][id*=ED").each(function() {
@@ -98,7 +98,7 @@ function fetchInitial(){
 
 function clearData(){
 
-  dataDiv = document.getElementById('dataDiv');
+  var dataDiv = document.getElementById('dataDiv');
   dataDiv.innerHTML = '';
 }
 
@@ -106,11 +106,11 @@ function fillPage(data){
 /* Fill the data
   Update the start and end and counts, and create one block per record
 */
-  recordList = data.data.records;
+  var recordList = data.data.records;
   console.log("Fetched "+recordList.length +" records");
   updateRecordInfo(data.data.view_start, data.data.view_start + data.data.view_count -1, data.data.record_count);
 
-  dataDiv = document.getElementById('dataDiv');
+  var dataDiv = document.getElementById('dataDiv');
 
   var first_num = data.data.view_start;
   for(var i = 0; i < recordList.length; i++){

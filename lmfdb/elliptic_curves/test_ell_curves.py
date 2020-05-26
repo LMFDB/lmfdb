@@ -3,66 +3,60 @@ from lmfdb.tests import LmfdbTest
 
 
 class EllCurveTest(LmfdbTest):
-
-    def check_args_with_timeout(self, path, text):
-        timeout_error = 'The search query took longer than expected!'
-        data = self.tc.get(path, follow_redirects=True).data
-        assert (text in data) or (timeout_error in data)
-
     # All tests should pass
     #
     def test_int_points(self):
         L = self.tc.get('/EllipticCurve/Q/234446/a/1')
-        assert '4532, 302803' in L.data
+        assert '4532, 302803' in L.get_data(as_text=True)
 
     def test_by_curve_label(self):
         L = self.tc.get('/EllipticCurve/Q/400/e/3')
-        assert '15, 50' in L.data
+        assert '15, 50' in L.get_data(as_text=True)
 
     def test_by_iso_label(self):
         L = self.tc.get('/EllipticCurve/Q/12350/s/')
-        assert '[1, -1, 1, -3655, -83403]' in L.data
+        assert '[1, -1, 1, -3655, -83403]' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/12350/s')
-        assert 'You should be redirected automatically to target URL:' in L.data
-        assert '/EllipticCurve/Q/12350/s/' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
+        assert '/EllipticCurve/Q/12350/s/' in L.get_data(as_text=True)
 
     def test_Cremona_label_mal(self):
-        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
-        assert '12qx' in L.data and 'does not define a recognised elliptic curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/?jump=Cremona%3A12qx', follow_redirects=True)
+        assert '12qx' in L.get_data(as_text=True) and 'does not define a recognised elliptic curve' in L.get_data(as_text=True)
 
     def test_missing_curve(self):
         L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
-        assert '13.a1' in L.data and 'No curve' in L.data
+        assert '13.a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
-        assert '13a1' in L.data and 'No curve' in L.data
+        assert '13a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '[0, 1, 0, -2133408, 1198675188]' in L.data
+        assert '[0, 1, 0, -2133408, 1198675188]' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/210/')
-        assert '[1, 0, 0, 729, -176985]' in L.data
+        assert '[1, 0, 0, 729, -176985]' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/210')
-        assert 'You should be redirected automatically to target URL:' in L.data
-        assert '/EllipticCurve/Q/210/' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
+        assert '/EllipticCurve/Q/210/' in L.get_data(as_text=True)
 
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]')
-        assert 'You should be redirected automatically to target URL:' in L.data
-        assert '/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.get_data(as_text=True)
+        assert '/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/' in L.get_data(as_text=True)
 
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '41616.bi2' in L.data
+        assert '41616.bi2' in L.get_data(as_text=True)
 
     def test_jbad_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2.3&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert 'Error' in L.data
-        assert 'rational number' in L.data
+        assert 'Error' in L.get_data(as_text=True)
+        assert 'rational number' in L.get_data(as_text=True)
 
     def test_tors_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=[7]&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '858.k1' in L.data
-        assert '[1, -1, 1, 9588, 2333199]' in L.data
+        assert '858.k1' in L.get_data(as_text=True)
+        assert '[1, -1, 1, 9588, 2333199]' in L.get_data(as_text=True)
 
     def test_SurjPrimes_search(self):
         self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]');
@@ -72,58 +66,62 @@ class EllCurveTest(LmfdbTest):
 
     def test_BadPrimes_search(self):
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=include&bad_primes=3%2C5')
-        assert '15.a1' in L.data
-        assert '30.a1' in L.data
-        assert not('11.a1' in L.data)
+        assert '15.a1' in L.get_data(as_text=True)
+        assert '30.a1' in L.get_data(as_text=True)
+        assert not('11.a1' in L.get_data(as_text=True))
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exclude&bad_primes=3%2C5')
-        assert not('15.a1' in L.data)
-        assert not('30.a1' in L.data)
-        assert '11.a1' in L.data
+        assert not('15.a1' in L.get_data(as_text=True))
+        assert not('30.a1' in L.get_data(as_text=True))
+        assert '11.a1' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exactly&bad_primes=3%2C5')
-        assert '15.a1' in L.data
-        assert not('30.a1' in L.data)
-        assert not('11.a1' in L.data)
+        assert '15.a1' in L.get_data(as_text=True)
+        assert not('30.a1' in L.get_data(as_text=True))
+        assert not('11.a1' in L.get_data(as_text=True))
 
     def test_num_int_pts_search(self):
         L = self.tc.get('/EllipticCurve/Q/?num_int_pts=1')
-        assert '14.a2' in L.data
-        assert not('11.a1' in L.data)
+        assert '14.a2' in L.get_data(as_text=True)
+        assert not('11.a1' in L.get_data(as_text=True))
+
+    def test_cm_disc_search(self):
+        self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
+        self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
-        assert '[0, -1, 1, 0, 0]' in L.data
+        assert '[0, -1, 1, 0, 0]' in L.get_data(as_text=True)
 
     def test_dl_qexp(self):
         L = self.tc.get('/EllipticCurve/Q/download_qexp/66.c3/100')
-        assert '0,1,1,1,1,-4,1,-2,1,1,-4,1,1,4,-2,-4,1,-2,1,0,-4,-2,1,-6,1,11,4,1,-2,10,-4,-8,1,1,-2,8,1,-2,0,4,-4,2,-2,4,1,-4,-6,-2,1,-3,11,-2,4,4,1,-4,-2,0,10,0,-4,-8,-8,-2,1,-16,1,-12,-2,-6,8,2,1,-6,-2,11,0,-2,4,10,-4,1,2,4,-2,8,4,10,1,10,-4,-8,-6,-8,-2,0,1,-2,-3,1,11' in L.data
+        assert '0,1,1,1,1,-4,1,-2,1,1,-4,1,1,4,-2,-4,1,-2,1,0,-4,-2,1,-6,1,11,4,1,-2,10,-4,-8,1,1,-2,8,1,-2,0,4,-4,2,-2,4,1,-4,-6,-2,1,-3,11,-2,4,4,1,-4,-2,0,10,0,-4,-8,-8,-2,1,-16,1,-12,-2,-6,8,2,1,-6,-2,11,0,-2,4,10,-4,1,2,4,-2,8,4,10,1,10,-4,-8,-6,-8,-2,0,1,-2,-3,1,11' in L.get_data(as_text=True)
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '[1, -1, 1, -3, 3]' in L.data
+        assert '[1, -1, 1, -3, 3]' in L.get_data(as_text=True)
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '[0, 1, 0, -73824640, -244170894880]' in L.data
-        assert '226920.h1' in L.data
+        assert '[0, 1, 0, -73824640, -244170894880]' in L.get_data(as_text=True)
+        assert '226920.h1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=81&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '101592.p1' in L.data
+        assert '101592.p1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=8.999&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert 'Error' in L.data
+        assert 'Error' in L.get_data(as_text=True)
 
     def test_disc_factor(self):
         """
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert r'\(-1 \cdot 163^{9} \)' in L.data
+        assert r'\(-1 \cdot 163^{9} \)' in L.get_data(as_text=True)
 
     def test_torsion_growth(self):
         """
         Test for torsion growth data
         """
         L = self.tc.get('/EllipticCurve/Q/392/c/1')
-        assert ' is strictly larger than ' in L.data
-        assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data
+        assert ' is strictly larger than ' in L.get_data(as_text=True)
+        assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.get_data(as_text=True)
 
     def test_990h(self):
         """
@@ -137,13 +135,13 @@ class EllCurveTest(LmfdbTest):
           '<td align="center">[6]</td>',
           '<td align="center">',
           '1728</td>',
-          '<td>\(\Gamma_0(N)\)-optimal</td>'
+          r'<td>\(\Gamma_0(N)\)-optimal</td>'
         ])
-        self.assertTrue(row in L.data,
+        self.assertTrue(row in L.get_data(as_text=True),
                         "990.i appears to have the wrong optimal curve.")
 
         L = self.tc.get('EllipticCurve/Q/990h/')
         #print row
-        #print L.data
-        self.assertTrue(row in L.data,
+        #print L.get_data(as_text=True)
+        self.assertTrue(row in L.get_data(as_text=True),
                         "990h appears to have the wrong optimal curve.")

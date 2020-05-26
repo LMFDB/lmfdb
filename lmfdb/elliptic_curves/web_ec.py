@@ -98,36 +98,30 @@ def EC_ainvs(E):
     """
     return [int(a) for a in E.ainvs()]
 
-def make_y_coord(ainvs,x):
+def make_y_coords(ainvs,x):
     a1, a2, a3, a4, a6 = ainvs
     f = ((x + a2) * x + a4) * x + a6
     b = (a1*x + a3)
     d = (RR(b*b + 4*f)).sqrt()
     y = ZZ((-b+d)/2)
-    return y, ZZ(d)
+    return [y, -b-y] if d else [y]
+
+def pm_pt(P):
+    return r"\(({},\pm {})\)".format(P[0],P[1]) if P[1] else web_latex(P)
 
 def make_integral_points(self):
-    ainvs = self.ainvs
-    xcoord_integral_points = self.xintcoords 
-    int_pts = []
-    for x in xcoord_integral_points:
-        y, d = make_y_coord(ainvs,x)
-        int_pts.append((x, y))
-    if len(xcoord_integral_points) != 0:
-        int_pts_str = ', '.join(web_latex(el) for el in int_pts)
-    return int_pts_str
+    a1, _, a3, _, _ = ainvs = self.ainvs
+    if a1 or a3:
+        int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in self.xintcoords], [])
+        return ', '.join(web_latex(P) for P in int_pts)
+    else:
+        int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in self.xintcoords]
+        return ', '.join(pm_pt(P) for P in int_pts)
 
 def count_integral_points(c):
     ainvs = c['ainvs']
-    #xcoord_integral_points = c.xintcoords 
-    num_int_pts = 0
-    for x in c["xcoord_integral_points"]:
-        y, d = make_y_coord(ainvs,x)
-        if d == 0:
-            num_int_pts += 1
-        else:
-            num_int_pts += 2
-    return num_int_pts
+    xcoords = c['xcoord_integral_points']
+    return sum([len(make_y_coords(ainvs,x)) for x in xcoords])
 
 class WebEC(object):
     """

@@ -94,8 +94,9 @@ class ECNF_stats(StatsDisplay):
         return int(nflabel.split('.',1)[0])
     def _fields_by(self, func):
         D = defaultdict(list)
-        for label in self.field_counts:
-            D[func(label)].append(label)
+        for label, count in self.field_counts.items():
+            if count:
+                D[func(label)].append(label)
         for fields in D.values():
             fields.sort(key=sort_field)
         return D

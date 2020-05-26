@@ -12,7 +12,7 @@ TODO
 from flask import url_for
 from collections import Counter
 
-from lmfdb.utils import encode_plot
+from lmfdb.utils import encode_plot, display_float
 from lmfdb.logger import make_logger
 
 from lmfdb import db
@@ -206,7 +206,7 @@ class AbvarFq_isoclass(object):
             ("Base Field", "$%s$" % (self.field(self.q))),
             ("Dimension", "$%s$" % (self.g)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-            ("Ordinary", "Yes" if self.is_ordinary == 1 else "No"),
+            ("Ordinary", "Yes" if self.is_ordinary() == 1 else "No"),
             ("$p$-rank", "$%s$" % (self.p_rank)),
         ]
         if self.has_principal_polarization != 0:
@@ -231,12 +231,13 @@ class AbvarFq_isoclass(object):
         ans = ""
         eps = 0.00000001
         for angle in self.angles:
+            angstr = display_float(angle, 12, 'round')
             if ans != "":
                 ans += ", "
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r"$\pm" + str(angle) + "$"
+                angle = r"$\pm" + angstr + "$"
             else:
-                angle = "$" + str(angle) + "$"
+                angle = "$" + angstr + "$"
             ans += angle
         return ans
 
@@ -318,7 +319,7 @@ class AbvarFq_isoclass(object):
         # When degree > 1 we find the factorization by looking at the extension database
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
-            if factors == []:
+            if not factors:
                 return "The data at degree %s is missing." % degree, do_describe
             ans = "The base change of $A$ to ${0}$ is ".format(self.ext_field(degree))
         else:

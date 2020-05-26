@@ -198,7 +198,7 @@ Rank not available.
 {% else %}
 <b>Rank:</b> \( {{ ec.rank }} \)
 {% endif %}
- {{ place_code('rank') }}
+<p>{{ place_code('rank') }}</p>
 
 {% if ec.rank_bounds[0] %}
 {% if ec.gens == 'not available' %}
@@ -211,6 +211,7 @@ Generator:
 Generators:
 {% endif %}</b>
 {{ ec.gens }}
+{{ place_code('gens') }}
 </p>
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
@@ -219,14 +220,15 @@ Generators:
 {{ KNOWL('ec.canonical_height', title="Heights") }}:
 {% endif %}</b>
 {% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
+{{ place_code('heights') }}
 </p>
 {% endif %}
 {% endif %}
- {{ place_code('gens') }}
 
 <p>
 <b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
 {{ ec.reg }}
+{% if not ec.rank_bounds[0] %} {{ place_code('gens') }} {% endif %}
  {{ place_code('reg') }}
 </p>
 </div>
@@ -239,7 +241,7 @@ Generators:
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
-<tr><td colspan=2> {{ place_code('ntors') }}</td></tr>
+<!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
 <th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
@@ -327,7 +329,7 @@ The mod \( p \) Galois Representation data has not yet been computed for this cu
 <p>
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois Representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
-for all primes \( p \)
+for all primes \( p < 1000 \)
 {% if ec.galois_data %} {# there are non-maximal primes #}
 except those listed.
 </p>

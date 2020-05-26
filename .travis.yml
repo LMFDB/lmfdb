@@ -1,6 +1,11 @@
-language: sage
-sudo: false
+os: linux
 dist: trusty
+
+env:
+  - SAGE_VERSION=8.8 TESTFILES="lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/genus2_curves/test_genus2_curves.py lmfdb/lfunctions/test_lfunction_degree_2.py lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_homepage.py lmfdb/tests/test_tensor_products.py"
+  - SAGE_VERSION=8.8 TESTFILES="lmfdb/lfunctions/test_lfunctions.py lmfdb/classical_modular_forms/test_cmf.py lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py lmfdb/lattice/test_lattice.py lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py lmfdb/local_fields/test_localfields.py lmfdb/users/test_users.py lmfdb/artin_representations/test_artin_representation.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py  lmfdb/higher_genus_w_automorphisms/test_hgcwa.py"
+  - SAGE_VERSION=9.1.beta9 TESTFILES="lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/genus2_curves/test_genus2_curves.py lmfdb/lfunctions/test_lfunction_degree_2.py lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_homepage.py lmfdb/tests/test_tensor_products.py"
+  - SAGE_VERSION=9.1.beta9 TESTFILES="lmfdb/lfunctions/test_lfunctions.py lmfdb/classical_modular_forms/test_cmf.py lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py lmfdb/lattice/test_lattice.py lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py lmfdb/local_fields/test_localfields.py lmfdb/users/test_users.py lmfdb/artin_representations/test_artin_representation.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py"
 
 # blocklist
 branches:
@@ -31,25 +36,34 @@ addons:
 
 
 install:
+    # number of cpus
+    - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
+    - export jobs=$(python -c "import multiprocessing;print(2*multiprocessing.cpu_count())")
     # assert parallel
     - parallel --version
     # install the latest pyflakes
     - pip3 install pyflakes --user
+    # install a version of pylint having --py3k
+    - pip2 install pylint --user
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
 
     # install SAGE with GAP already built in
     # see: https://github.com/edgarcosta/binary-pkg
-    - export SAGE_VERSION=8.8
+    # - export SAGE_VERSION=8.8 # this is now set in env above
+    - echo $SAGE_VERSION
     - export SAGE_DIR=${HOME}/SageMath
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
-    - wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    # travis_wait extends the default 10 minute timeout to 30 minutes
     # what is the load on the server
     - uptime
+      #- wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    - wget  --no-verbose https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    # what is the load on the server
+    - uptime
+    # travis_wait extends the default 10 minute timeout to 40 minutes
     - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
 
     # trigger the patch once script
@@ -58,6 +72,8 @@ install:
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print(G)'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
+    - echo ${TESTFILES} | tr ' ' '\n' > inputfile
+    - cat inputfile
 
 before_script:
     # assert that devmirror.lmfdb.xyz accepts our connections
@@ -66,20 +82,33 @@ before_script:
     - free -m
     # what is the load on the server
     - uptime
+    # check that we travis isn't missing any test_ file
+    - test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 34
+    # Check that pytest is installed
+    - ${SAGE} -sh -c "pytest --version"
+    # Do a naive test to initialize the config file
+    - ${SAGE} -sh -c 'pytest lmfdb/tests/test_spelling.py'
 
 script:
     # run pyflakes
     - pyflakes . > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
-    # Check that pytest is installed
-    - ${SAGE} -sh -c "pytest --version"
+    # run pylint --py3k (with some temporary exceptions)
+    - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
     # This runs without fail
-    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
+    - ${SAGE} -sh -c 'parallel -j ${jobs} --joblog joblog -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
 
 after_failure:
+    # what is the load on the server
+    - uptime
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
-    - ls -a
-      #- COVERALLS_PARALLEL=true coveralls
-    - coveralls
+    # show joblog
+    - cat joblog
+    # what is the load on the server
+    - uptime
+    # #- COVERALLS_PARALLEL=true coveralls
+    # - coveralls

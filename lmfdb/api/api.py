@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from six import string_types
-import sys
-if sys.version_info > (3,):
+from __future__ import print_function
+from six import string_types, PY3
+if PY3:
     buffer = memoryview
 
 from six.moves.urllib_parse import unquote
@@ -315,7 +315,10 @@ def api_query(table, id = None):
 
     if format.lower() == "json":
         #return flask.jsonify(**data) # can't handle binary data
-        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
+        if PY3:
+            return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
+        else:
+            return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,

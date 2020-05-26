@@ -27,7 +27,7 @@
   {% endif %}
   {% if space.num_forms is not none %}
   <tr>
-    <td> {{ KNOWL('cmf.newform', title='Newforms') }}: </td>
+    <td> {{ KNOWL('cmf.newform_subspace', title='Newform subspaces') }}: </td>
     <td></td>
     <td></td>
     <td> \( {{ space.num_forms }} \) </td>
@@ -142,7 +142,7 @@ function show_qexp(qstyle) {
       <th>{{ KNOWL('cmf.label',title='Label') }}</th>
       <th> {{ KNOWL('cmf.character', title='\(\chi\)') }}</th>
       <th>{{ KNOWL('cmf.newform',title='Newforms') }}</th>
-      <th>{{ KNOWL('cmf.dimension_galois_orbit',title='Dimension')}}</th>
+      <th>{{ KNOWL('cmf.dimension',title='Dimension')}}</th>
       <th>{{ KNOWL('character.dirichlet.degree',title='\(\chi\) degree') }}</th>
     </tr>
   </thead>
@@ -178,5 +178,9 @@ function show_qexp(qstyle) {
   \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
 </div>
 {% endif %}
+
+<h2>{{KNOWL('cmf.heckecharpolys', title='Hecke Characteristic Polynomials')}}</h2>
+
+{{ space.display_hecke_char_polys() | safe }}
 
 {% endblock %}

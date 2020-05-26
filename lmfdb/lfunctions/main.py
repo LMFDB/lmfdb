@@ -27,9 +27,11 @@ from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
-from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
+from lmfdb.artin_representations.main import parse_artin_label
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float
 from lmfdb.app import is_debug_mode
 from lmfdb import db
+from six import string_types
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -391,8 +393,16 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
-    instance = db.lfunc_instances.lucky({'url': artin_url(label)})
-    return render_single_Lfunction(ArtinLfunctionDB if instance else ArtinLfunction, {'label': label}, request)
+    newlabel = parse_artin_label(label, safe=True)
+    if newlabel != label:
+        return redirect(url_for(".l_function_artin_page", label=newlabel), 301)
+    from lmfdb.artin_representations.main import both_labels
+    for elt in both_labels(label):
+        if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
+            label = elt
+            return render_single_Lfunction(ArtinLfunctionDB, {'label': label}, request)
+    else:
+        return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
@@ -870,7 +880,7 @@ def getLfunctionPlot(request, *args):
     styleLfunctionPlot(p, 10)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
         p.save(filename=fn.name)
-    with open(fn.name) as f:
+    with open(fn.name, 'rb') as f:
         data = f.read()
     os.remove(fn.name)
     return data
@@ -907,7 +917,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, str):
+    if isinstance(website_zeros, string_types):
         return website_zeros
 
     positiveZeros = []
@@ -915,11 +925,13 @@ def render_zerosLfunction(request, *args):
 
     for zero in website_zeros:
         if abs(float(zero)) < 1e-10:
-            zero = 0
-        if float(zero) < 0:
-            negativeZeros.append(str(zero))
+            zero = "0"
         else:
-            positiveZeros.append(str(zero))
+            zero = display_float(zero, 12, 'round')
+        if float(zero) < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
@@ -980,8 +992,15 @@ def generateLfunctionFromUrl(*args, **kwds):
         return DedekindZeta(label=str(args[1]))
 
     elif args[0] == "ArtinRepresentation":
-        instance = db.lfunc_instances.lucky({'url': artin_url(args[1])})
-        return ArtinLfunctionDB(label=str(args[1])) if instance else ArtinLfunction(label=str(args[1]))
+        label = args[1]
+        from lmfdb.artin_representations.main import both_labels
+        for elt in both_labels(label):
+            if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
+                label = elt
+                return ArtinLfunctionDB(label=label)
+        else:
+            label = parse_artin_label(label, safe=True)
+            return ArtinLfunction(label=label)
 
     elif args[0] == "SymmetricPower":
         return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],

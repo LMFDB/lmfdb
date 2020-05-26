@@ -16,7 +16,7 @@ def findvar(L):
     for x in L:
         for c in x:
             if c.isalpha():
-                return c.encode()
+                return c
     return None
 
 def str2fieldelt(F,strg):
@@ -27,7 +27,7 @@ def str2fieldelt(F,strg):
 
     strg is a string representing an element of F
     """
-    return F(strg.encode())
+    return F(strg)
 
 def str2ideal(F,strg):
     """Given a string strg representing an ideal of the number field F,

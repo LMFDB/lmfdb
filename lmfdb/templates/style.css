@@ -1282,6 +1282,7 @@ div.limit-height {
     border: 1px solid {{color.black}};
 }
 
+/* FIXME: I think we no longer use this */
 .watermark {
     color: {{color.grey}} !important;
 }

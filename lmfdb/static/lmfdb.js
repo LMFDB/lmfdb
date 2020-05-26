@@ -66,10 +66,6 @@ function properties_collapser(evt) {
 $(function() {
  /* properties box collapsable click handlers */
  $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
- /* providing watermark examples in those forms, that have an 'example=...' attribute */
- /* Add extra spaces so that if you type in exactly the example it does not disappear */
- $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
- $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
 
@@ -159,7 +155,12 @@ function knowl_click_handler($el) {
       } else {
         var sibebar_width = sidebar.offsetWidth;
       }
-      var header_width = document.getElementById("header").offsetWidth;
+      var header = document.getElementById("header");
+      if ( header == undefined ) {
+        var header_width = row_width;
+      } else {
+        var header_width = header.offsetWidth;
+      }
       var desired_main_width =  header_width - sibebar_width;
       log("row_width: " + row_width);
       log("desired_main_width: " + desired_main_width);
@@ -179,7 +180,7 @@ function knowl_click_handler($el) {
 
       //compute max number of columns in the table
       var cols = Array.from(tr_tag.children()).reduce((acc, td) => acc + td.colSpan, 0)
-      cols = Array.from(tr_tag.siblings()).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
+      cols = Array.from(tr_tag.siblings("tr")).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
       log("cols: " + cols);
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();
@@ -238,8 +239,9 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
-      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+      // log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+	  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
+      $output.load(url_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {
@@ -332,17 +334,17 @@ $(function() {
 });
 
 function decrease_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
-  newstart = parseInt(startelem.val())-count;
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
+  var newstart = parseInt(startelem.val())-count;
   if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
   $('form[id='+form_id+']').submit()
 };
 function increase_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
   startelem.val(parseInt(startelem.val())+count);
   $('form[id='+form_id+']').submit()
 };

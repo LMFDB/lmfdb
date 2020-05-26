@@ -23,7 +23,7 @@ from flask import abort, flash, jsonify, make_response,\
                   request, url_for
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -46,9 +46,14 @@ _cache_time = 120
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
-    if ID.startswith('belyi') and\
-            (ID.endswith('top') or ID.endswith('bottom')):
-        for c in "[],T":
+    if ID.endswith('top') or ID.endswith('bottom'):
+        if ID.startswith('belyi'):
+            extras = "[],T"
+        elif ID.startswith('hgm'):
+            extras = "AB"
+        else:
+            extras = ""
+        for c in extras:
             ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
@@ -236,7 +241,7 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
 
 
 @app.template_filter("render_knowl")
@@ -500,7 +505,7 @@ def demote(ID, timestamp):
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
-    if len(request.args) > 0:
+    if request.args:
         try:
             info = to_dict(request.args)
             beta = None
@@ -621,11 +626,11 @@ def save_form():
                 flash_error(str(err), "error")
             else:
                 if k.sed_safety == 1:
-                    flash(Markup("Knowl rename process started. You can change code references using".format(NEWID)))
+                    flash(Markup("Knowl rename process started. You can change code references using"))
                     flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
                     flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
                 elif k.sed_safety == -1:
-                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID)))
+                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
@@ -831,9 +836,5 @@ def index():
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),
                            filtermode = filtermode,
-                           knowl_types=knowl_type_code.keys(),
+                           knowl_types=list(knowl_type_code),
                            types=types)
-
-
-
-

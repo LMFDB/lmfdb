@@ -230,7 +230,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
         # all) has norm > maxnorm:
         nmin = min(ns)
         if nmin > maxnorm:
-            raise StopIteration
+            return
 
         # extract smallest prime and its index:
         i = ns.index(nmin)
@@ -262,7 +262,7 @@ def exp_vec_wt_iter(w, wts):
     if w==0:
         yield [0 for _ in wts]
     elif len(wts):
-        for v0 in range(1+w/wts[-1]):
+        for v0 in range(1+w//wts[-1]):
             w1 = w-wts[-1]*v0
             if w1==0:
                 yield [0]* (len(wts)-1) + [v0]

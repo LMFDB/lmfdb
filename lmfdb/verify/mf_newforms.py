@@ -1,7 +1,9 @@
 from __future__ import print_function
 from sage.all import prime_range, Integer, kronecker_symbol, PolynomialRing, ComplexField, ZZ, gap, infinity
 
-from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
+from lmfdb.backend import db
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycopg2.sql import SQL, Literal
 from lmfdb.utils import names_and_urls
 from .mf import MfChecker
 from .verification import overall, overall_long, slow, fast, accumulate_failures
@@ -182,13 +184,6 @@ class mf_newforms(MfChecker):
         return (self.check_array_bound('cm_discs', -1) +
                 self.check_array_bound('rm_discs', 1, upper=False) +
                 self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
-
-    @overall(max_failures=100)
-    def check_self_twist_proved(self):
-        """
-        check that self_twist_proved is set (log warning if not, currently there is 1 where it is not set)
-        """
-        return self.check_values({'self_twist_proved':True})
 
     @overall
     def check_fricke_eigenval(self):

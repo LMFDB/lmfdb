@@ -11,11 +11,11 @@ logger = make_logger("abvarfq")
 def yn(t):
     return "yes" if (t and t != "no") else "no"
 def ynu(t):
-    if t in [0, "unknown"]:
+    if t in [0, "0", "unknown"]:
         return "unknown"
-    elif t in [1, "yes"]:
+    elif t in [1, "1", "yes"]:
         return "yes"
-    elif t in [-1, "no"]:
+    elif t in [-1, "-1", "no"]:
         return "no"
     else:
         print(t)

@@ -10,7 +10,7 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 # in the database, instead of trying to extract this from a URL
 def name_and_object_from_url(url, check_existence=False):
     # the import is here to avoid circular imports
-    from lmfdb.backend.database import db
+    from lmfdb.backend import db
     from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
     url_split = url.rstrip('/').lstrip('/').split("/")
     name = '??'
@@ -20,37 +20,64 @@ def name_and_object_from_url(url, check_existence=False):
         # every EC instance was added from EC
         obj_exists = True
         if url_split[1] == 'Q':
-            # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:])
-            if check_existence:
-                obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
+            if len(url_split) == 4: # isogeny class
+                # EllipticCurve/Q/341641/a
+                label_isogeny_class = ".".join(url_split[-2:])
+                if check_existence:
+                    obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
+            elif len(url_split) == 5: # curve
+                # EllipticCurve/Q/48/a/6
+                label_curve = ".".join(url_split[-3:-1]) + url_split[-1]
+                if check_existence:
+                    obj_exists = db.ec_curves.exists({"lmfdb_label" : label_curve})
+            else:
+                raise NotImplementedError
         else:
-            # EllipticCurve/2.2.140.1/14.1/a
-            field, cond, isog = url_split[-3:]
-            # in the cond is written in the old format
-            cond = convert_IQF_label(field, cond)
-            label_isogeny_class =  "-".join([field, cond, isog])
-            if check_existence:
-                obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class
+            if len(url_split) == 4: # isogeny class
+                # EllipticCurve/2.2.140.1/14.1/a
+                field, cond, isog = url_split[-3:]
+                # in the cond is written in the old format
+                cond = convert_IQF_label(field, cond)
+                label_isogeny_class =  "-".join([field, cond, isog])
+                if check_existence:
+                    obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
+            elif len(url_split) == 5: # curve
+                # EllipticCurve/2.0.4.1/1250.3/a/3
+                field, cond, isog, ind = url_split[-4:]
+                # if the cond is written in the old format
+                cond = convert_IQF_label(field, cond)
+                label_curve =  "-".join([field, cond, isog]) + ind
+                if check_existence:
+                    obj_exists = db.ec_nfcurves.exists({"label" : label_curve})
+        if len(url_split) == 4: # isogeny class
+            name = 'Isogeny class ' + label_isogeny_class
+        elif len(url_split) == 5: # curve
+            name = 'Curve ' + label_curve
 
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
         assert url_split[1] == "Dirichlet"
-        name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
+        name = r"Dirichlet Character \(\chi_{%s} (%s, \cdot) \)" %  tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
         obj_exists = True
         if check_existence:
             obj_exists = db.char_dir_values.exists({"label" : label})
 
     elif url_split[0] == "Genus2Curve":
-        # Genus2Curve/Q/310329/a
-        assert url_split[1] == 'Q'
-        label_isogeny_class = ".".join(url_split[-2:])
         obj_exists = True
-        if check_existence:
-            obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class
+        assert url_split[1] == 'Q'
+        if len(url_split) == 4: # isog class
+            # Genus2Curve/Q/310329/a
+            label_isogeny_class = ".".join(url_split[-2:])
+            if check_existence:
+                obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
+            name = 'Isogeny class ' + label_isogeny_class
+        if len(url_split) == 6: # curve
+            # Genus2Curve/Q/1728/b/442368/1
+            label_curve = ".".join(url_split[-4:])
+            if check_existence:
+                obj_exists = db.g2c_curves.exists({"label" : label_curve})
+            name = 'Curve ' + label_curve
 
 
     elif url_split[0] == "ModularForm":

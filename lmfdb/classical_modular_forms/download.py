@@ -83,11 +83,11 @@ class CMF_download(Downloader):
             'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_generic = [
-            'from sage.all import PolynomialRing, NumberField',
+            'from sage.all import PolynomialRing, NumberField, ZZ',
             'R = PolynomialRing(QQ, "x")',
             'f = R(poly_data)',
             'K = NumberField(f, "a")',
-            'betas = [K([c/den for c in num]) for num, den in basis_data]',
+            'betas = [K([c/ZZ(den) for c in num]) for num, den in basis_data]',
             'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_sparse_cyclotomic = [

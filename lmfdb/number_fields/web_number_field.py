@@ -191,7 +191,7 @@ def list2string(li):
 
 def string2list(s):
     s = str(s)
-    if s == '':
+    if not s:
         return []
     return [int(a) for a in s.split(',')]
 
@@ -225,7 +225,7 @@ def field_pretty(label):
         if len(subs)==3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
-            if [z for z in subs if z._data is None] == []:
+            if not any(z._data is None for z in subs):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
@@ -301,7 +301,7 @@ def nf_knowl_guts(label):
         out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
     out += '</div>'
     return out
 
@@ -361,6 +361,7 @@ class WebNumberField:
     # For cyclotomic fields
     @classmethod
     def from_cyclo(cls, n):
+        n = int(n)
         if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
@@ -403,7 +404,7 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
-        if not self.haskey('galt'):
+        if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
@@ -524,7 +525,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts)]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -562,13 +563,16 @@ class WebNumberField:
         return [cnt, [], []]
 
     def subfields(self):
-        if not self.haskey('subs'):
+        if not self.haskey('subfields'):
             return []
+        sf = [z.replace('.',',') for z in self._data['subfields']]
+        sfm = self._data['subfield_mults']
+        return [[sf[j],sfm[j]] for j in range(len(sf))]
         return self._data['subs']
 
     def subfields_show(self):
         subs = self.subfields()
-        if subs == []:
+        if not subs:
             return []
         return display_multiset(subs, formatfield)
 
@@ -596,7 +600,7 @@ class WebNumberField:
 
     def unit_galois_action_show(self):
         ugm = self.unit_galois_action()
-        if ugm == []:
+        if not ugm:
             return ''
         n = self.degree()
         t = self.galois_t()
@@ -688,7 +692,7 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return na_text()
         cg_list = self._data['class_group']
-        if cg_list == []:
+        if not cg_list:
             return 'Trivial'
         return '$%s$'%str(cg_list)
 
@@ -700,9 +704,9 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            if cg_list == []:
+            if not cg_list:
                 return 'Trivial group, which has order $1$'
-            cg_list = [r'C_{%s}'% z for z in cg_list]
+            cg_list = [r'C_{%s}' % z for z in cg_list]
             cg_string = r'\times '.join(cg_list)
             return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
         return na_text()

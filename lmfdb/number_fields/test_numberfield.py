@@ -2,14 +2,10 @@
 from lmfdb.tests import LmfdbTest
 
 class NumberFieldTest(LmfdbTest):
-
     # All tests should pass
-    def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).data
-
     def test_Q(self):
-        self.check_args('/NumberField/Q', '\chi_{1}')
-        self.check_args('/NumberField/1.1.1.1', '\chi_{1}')
+        self.check_args('/NumberField/Q', r'\chi_{1}')
+        self.check_args('/NumberField/1.1.1.1', r'\chi_{1}')
 
     def test_hard_degree10(self):
         self.check_args('/NumberField/10.10.1107649855354064.1', '10T36')
@@ -19,7 +15,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/16.0.13307764731675384304522756096.1', '16T1535')
 
     def test_search_ramif_cl_deg(self):
-        self.check_args('/NumberField/?degree=5&signature=&galois_group=&class_number=&class_group=[2%2C2]&ur_primes=7&discriminant=&ram_quantifier=some&ram_primes=2%2C3%2C5&count=20', '5.1.27000000000.8')
+        self.check_args('/NumberField/?degree=5&class_group=[2%2C2]&ur_primes=7&discriminant=&ram_quantifier=exactly&ram_primes=2%2C3%2C5', '5.1.27000000000.8')
 
     def test_abelian_conductor(self):
         self.check_args('/NumberField/5.5.5719140625.2', '275') # conductor
@@ -28,16 +24,16 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'Not computed')
 
     def test_search_poly_mean2parser(self):
-        self.check_args('/NumberField/?natural=X**3-4x%2B2&search=Go', '148') # discriminant
+        self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '148') # discriminant
 
     def test_search_zeta(self):
-        self.check_args('/NumberField/?natural=Qzeta23&search=Go', '[3]') # class group
+        self.check_args('/NumberField/?jump=Qzeta23&search=Go', '[3]') # class group
 
     def test_search_sqrt(self):
-        self.check_args('/NumberField/?natural=Qsqrt-163&search=Go', '41') # minpoly
+        self.check_args('/NumberField/?jump=Qsqrt-163&search=Go', '41') # minpoly
 
     def test_search_disc(self):
-        self.check_args('/NumberField/?degree=&signature=&galois_group=&class_number=&class_group=&ur_primes=&discriminant=1988-2014&ram_quantifier=all&ram_primes=&count=', '401') # factor of one of the discriminants
+        self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
 
     def test_url_label(self):
         self.check_args('/NumberField/2.2.5.1', '0.481211825') # regulator
