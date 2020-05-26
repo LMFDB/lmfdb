@@ -703,7 +703,7 @@ class EventHandler {
   updateDrag(event) {
     if(this.activeNode) {
         if(this.options.moveNodeOnDrag) {
-			this.activeNode.center = this.offset(event);
+			this.activeNode.center[0] = this.offset(event)[0];
       }
       this.options.updateNodeDrag(this.activeNode, event);
     }
@@ -714,7 +714,7 @@ class EventHandler {
       var node = this.activeNode;
       var position = this.renderer.untranslate(this.offset(event));
       node.layoutPosX = position[0];
-      node.layoutPosY = position[1];
+      // node.layoutPosY = position[1];
       this.options.endNodeDrag(this.activeNode);
       this.activeNode = null;
     }
