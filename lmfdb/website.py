@@ -89,9 +89,9 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import inventory_app
 assert inventory_app
-import groups
+from . import groups
 assert groups
-import groups.abstract
+from .groups import abstract
 assert groups.abstract
 
 from .lmfdb_database import db
