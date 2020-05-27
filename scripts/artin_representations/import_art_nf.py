@@ -82,6 +82,9 @@ def artrepload(l):
   l['Dets'] = [z['Det'] for z in l['GaloisConjugates']]
   for j in range(len(l['GaloisConjugates'])):
     del l['GaloisConjugates'][j]['Det']
+  aproj = l['GaloisConjugates'][0]['Proj']
+  aproj = {'GAP': aproj[0], 'nTj': aproj[1], 'Polynomial': aproj[2]}
+  l['Proj'] = aproj
   chival = int(l['Chi_of_complex'])
   dim = int(l['Dim'])
   minusones = (dim - chival)/2
