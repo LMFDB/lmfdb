@@ -216,6 +216,13 @@ class ArtinRepresentation(object):
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
 
+    def projective_group(self):
+        return 'Group'
+
+    def projective_field(self):
+        projfield = self._data['Proj']
+        return 'Field knowl'
+
     def number_field_galois_group(self):
         try:
             return self._nf
