@@ -249,7 +249,8 @@ def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
 def formatfield(coef):
-    coef = string2list(coef)
+    if isinstance(coef, str):
+        coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1

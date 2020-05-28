@@ -5,8 +5,9 @@ from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
-from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.galois_groups.transitive_group import (
+    group_display_knowl, group_display_short, small_group_display_knowl)
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
 
@@ -217,11 +218,22 @@ class ArtinRepresentation(object):
         return self._data["GaloisConjugates"]
 
     def projective_group(self):
-        return 'Group'
+        proj = self._data['Proj']
+        gapid = proj['GAP']
+        if gapid[0]:
+            return small_group_display_knowl(gapid[0], gapid[1])
+        ntj = proj['nTj']
+        if ntj[0]:
+            return group_display_knowl(ntj[0], ntj[1])
+        return 'data not computed'
 
     def projective_field(self):
-        projfield = self._data['Proj']
-        return 'Field knowl'
+        projfield = self._data['Proj']['Polynomial']
+        if projfield == [0]:
+            return 'data not computed'
+        if projfield == [0,1]:
+            return formatfield(projfield)
+        return 'Galois closure of ' + formatfield(projfield)
 
     def number_field_galois_group(self):
         try:
