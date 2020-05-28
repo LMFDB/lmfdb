@@ -36,12 +36,6 @@ def makels(li):
   li2 = [str(x) for x in li]
   return ','.join(li2)
 
-# turn a conductor into a sortable string
-# this uses length 4 prefix
-def make_cond_key(D):
-  D1 = int(D.log(10))
-  return '%04d%s'%(D1,str(D))
-
 maxint = (2**63)-1
 
 def int_or_string(a):
@@ -82,7 +76,7 @@ def artrepload(l):
   l['Dets'] = [z['Det'] for z in l['GaloisConjugates']]
   for j in range(len(l['GaloisConjugates'])):
     del l['GaloisConjugates'][j]['Det']
-  aproj = l['GaloisConjugates'][0]['Proj']
+  aproj = l['Proj']
   aproj = {'GAP': aproj[0], 'nTj': aproj[1], 'Polynomial': aproj[2]}
   l['Proj'] = aproj
   chival = int(l['Chi_of_complex'])
