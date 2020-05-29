@@ -174,6 +174,8 @@ for path in sys.argv[1:]:
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
+                    elif kk in ['Proj_GAP', 'Proj_nTj', 'Proj_Polynomial']:
+                        ent[kk] = copy_dumps(ent[kk], 'int[]', recursing=False)
                     elif not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([ent[z] for z in head1])+'\n')
