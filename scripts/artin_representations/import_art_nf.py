@@ -51,7 +51,7 @@ def fix_local_factors(gconj):
 
 # There are two parts since we need to deal with two files/databases
 # The two functions below take our for one entry as a dictionary, and reformats
-# the dictionary
+# the dictionary 
 
 outrecs = []
 
