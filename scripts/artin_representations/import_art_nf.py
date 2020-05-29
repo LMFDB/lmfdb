@@ -77,8 +77,10 @@ def artrepload(l):
   for j in range(len(l['GaloisConjugates'])):
     del l['GaloisConjugates'][j]['Det']
   aproj = l['Proj']
-  aproj = {'GAP': aproj[0], 'nTj': aproj[1], 'Polynomial': aproj[2]}
-  l['Proj'] = aproj
+  l['Proj_GAP'] = aproj[0]
+  l['Proj_nTj'] = aproj[1]
+  l['Proj_Polynomial'] = aproj[2]
+  del l['Proj']
   chival = int(l['Chi_of_complex'])
   dim = int(l['Dim'])
   minusones = (dim - chival)/2
@@ -172,6 +174,8 @@ for path in sys.argv[1:]:
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
+                    elif kk in ['Proj_GAP', 'Proj_nTj', 'Proj_Polynomial']:
+                        ent[kk] = copy_dumps(ent[kk], 'int[]', recursing=False)
                     elif not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([ent[z] for z in head1])+'\n')
