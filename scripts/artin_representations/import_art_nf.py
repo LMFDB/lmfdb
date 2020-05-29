@@ -1,7 +1,7 @@
 #!/usr/local/bin/sage -python
 
 # This version writes the data to a file, deletes all records from the database,
-# then reloads from the files. 
+# then reloads from the files.
 from __future__ import print_function
 from six import text_type
 import sys
@@ -36,12 +36,6 @@ def makels(li):
   li2 = [str(x) for x in li]
   return ','.join(li2)
 
-# turn a conductor into a sortable string
-# this uses length 4 prefix
-def make_cond_key(D):
-  D1 = int(D.log(10))
-  return '%04d%s'%(D1,str(D))
-
 maxint = (2**63)-1
 
 def int_or_string(a):
@@ -57,7 +51,7 @@ def fix_local_factors(gconj):
 
 # There are two parts since we need to deal with two files/databases
 # The two functions below take our for one entry as a dictionary, and reformats
-# the dictionary
+# the dictionary 
 
 outrecs = []
 
@@ -82,6 +76,9 @@ def artrepload(l):
   l['Dets'] = [z['Det'] for z in l['GaloisConjugates']]
   for j in range(len(l['GaloisConjugates'])):
     del l['GaloisConjugates'][j]['Det']
+  aproj = l['Proj']
+  aproj = {'GAP': aproj[0], 'nTj': aproj[1], 'Polynomial': aproj[2]}
+  l['Proj'] = aproj
   chival = int(l['Chi_of_complex'])
   dim = int(l['Dim'])
   minusones = (dim - chival)/2
