@@ -218,17 +218,16 @@ class ArtinRepresentation(object):
         return self._data["GaloisConjugates"]
 
     def projective_group(self):
-        proj = self._data['Proj']
-        gapid = proj['GAP']
+        gapid = self._data['Proj_GAP']
         if gapid[0]:
             return small_group_display_knowl(gapid[0], gapid[1])
-        ntj = proj['nTj']
+        ntj = self._data['Proj_nTj']
         if ntj[0]:
             return group_display_knowl(ntj[0], ntj[1])
         return 'data not computed'
 
     def projective_field(self):
-        projfield = self._data['Proj']['Polynomial']
+        projfield = self._data['Proj_Polynomial']
         if projfield == [0]:
             return 'data not computed'
         if projfield == [0,1]:
