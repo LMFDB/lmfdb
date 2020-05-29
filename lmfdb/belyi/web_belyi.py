@@ -298,7 +298,7 @@ class WebBelyiGalmap(object):
         ]
 
         # Title
-        self.title = "Belyi map " + data["label"]
+        self.title = "Belyi map orbit " + data["label"]
 
         # Code snippets (only for curves)
         self.code = {}
