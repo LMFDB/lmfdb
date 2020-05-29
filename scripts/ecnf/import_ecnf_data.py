@@ -138,6 +138,7 @@ import pprint
 from lmfdb import db
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
+from lmfdb.utils.trace_hash import TraceHashClass
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
 from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, make_galrep_line, split, numerify_iso_label, NFelt, get_cm, point_string
@@ -401,6 +402,8 @@ def curves(line, verbose=False):
     non_minimal_primes = [ideal_to_string(P) for P in E.non_minimal_primes()]
     minD = ideal_to_string(E.minimal_discriminant_ideal())
 
+    trace_hash = TraceHashClass(class_label, E)
+
     edata = {
         'field_label': field_label,
         'degree': deg,
@@ -424,6 +427,7 @@ def curves(line, verbose=False):
         'torsion_order': ntors,
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
+        'trace_hash': trace_hash,
         'equation': str(latex(E)), # no "\(", "\)"
         'local_data': local_data,
         'minD': minD,
@@ -439,20 +443,16 @@ def add_heights(data, verbose = False):
     parsing the input files since curves() knows tha a-invariants but
     not the gens and curve_data() vice versa.
     """
-    if 'heights' in data and 'reg' in data:
-        return data
     ngens = data.get('ngens', 0)
     if ngens == 0:
         data['heights'] = []
         data['reg'] = float(1)
+        if verbose:
+            print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
         return data
     # Now there is work to do
     K = nf_lookup(data['field_label'])
-    if 'ainvs' in data:
-        ainvs = data['ainvs']
-    else:
-        ainvs = nfcurves.find_one({'label':data['label']})['ainvs']
-    ainvsK = parse_ainvs(K, ainvs)  # list of K-elements
+    ainvsK = parse_ainvs(K, data['ainvs'])  # list of K-elements
     E = EllipticCurve(ainvsK)
     gens = [E(parse_point(K,x)) for x in data['gens']]
     data['heights'] = [float(P.height()) for P in gens]
@@ -496,6 +496,51 @@ def isoclass(line):
              'isogeny_degrees': isogeny_degrees}
     return label, edata
 
+def curve_data(line):
+    r""" Parses one line from a curve_data file.  Returns the label and a dict
+    containing fields with keys .
+
+    Input line fields (8 or more); the first 4 are the standard labels, then:
+
+    5: rank                   int or ?
+    6: rank_bounds      [int,int] or ?
+    7: analytic_rank          int or ?
+    8: ngens (number of generators of infinite order which follow) int
+    9...8+ngens: gens (number of fields equals ngens or absent if ngens=0) point-string
+    9+ngens:  sha_an          int or ?
+
+    Sample input line (with rank=1 and one generator):
+
+    2.0.7.1 6272.2 b 1 1 [1,1] ? 1 [[212171/44521,420628/44521],[1122660159/9393931,-4754550437/9393931],[1,0]] ?
+    """
+    data = line.split()
+    ngens = int(data[7])
+    if len(data)!=9+ngens:
+        print("line {} does not have 9 fields (excluding gens), skipping".format(line))
+    field_label = data[0]       # string
+    conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
+    iso_label = data[2]         # string
+    number = int(data[3])       # int
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    label = "%s-%s" % (field_label, short_label)
+    r = data[4]
+    r = None if r=='?' else int(r)
+    rb = data[5]
+    rb = None if rb=='?' else [int(t) for t in rb[1:-1].split(",")]
+    ar = data[6]
+    ar = None if ar=='?' else int(ar)
+    gens = data[8:8+ngens]
+
+    mwdata = {'rank': r,
+              'rank_bounds': rb,
+              'analytic_rank': ar,
+              'ngens': ngens,
+              'gens': gens,
+              }
+    return label, mwdata
+    
 def read1isogmats(base_path, filename_suffix):
     r""" Returns a dictionary whose keys are labels of individual curves,
     and whose values are the isogeny_matrix and isogeny_degrees for
@@ -619,18 +664,13 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     duplicates and cause problems if any of the the labels are already
     in the database; otherwise uses upsert() which will update a
     single row, or add a row.
-
-    NB We do *not* yet have a function curve_data() to parse a line
-    from a curve_data file!  So if you include curve_data in the list
-    of filesnames to be processed, this will fail (but not until after
-    the curves file has been processed).
     """
     curves_filename = 'curves.%s' % (filename_suffix)
-    #curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, isoclass_filename, galrep_filename]
-#    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
+#    file_list = [curves_filename, isoclass_filename, galrep_filename]
+    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
 #    file_list = [galrep_filename]
@@ -654,9 +694,9 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         for line in h.readlines():
             #if count==20: break # for testing
             label, data = parse(line)
+            count += 1
             if count % 100 == 0:
                 print("read %s from %s (%s so far)" % (label, f, count))
-            count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
             curve = data_to_insert[label]
@@ -669,7 +709,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         print("finished reading %s lines from file %s" % (count, f))
 
     vals = data_to_insert.values()
-    print("adding heights of gens")
+    print("adding heights of gens, field label = {}".format(vals[0]['field_label']))
     for val in vals:
         val = add_heights(val)
 
@@ -685,25 +725,38 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
             else:
                 print("error: label {} not in isogmats!".format(lab))
 
+    columns = Set(nfcurves.col_type.keys()) - ['id']
+    if test:
+        print("First val:")
+        pprint.pprint(vals[0])
+        for v in vals:
+            k = Set(v.keys())
+            if k!=columns:
+                print("record {} is incomplete:".format(v['label']))
+                k1 = columns-k
+                if k1:
+                    print(" - no entries for columns {}".format(k1))
+                k1 = k-columns
+                if k1:
+                    print(" - entries for invalid columns {}".format(k1))
+
     if insert:
         if test:
-            print("(not) inserting all data")
-            #nfcurves.insert_many(vals)
-            print("First val:")
-            for v in vals[:1]:
-                pprint.pprint(v)
+            print("not inserting all data using insert_many()")
         else:
-            print("inserting all data ({} items)".format(len(vals)))
+            print("inserting all data ({} items) using insert_many()".format(len(vals)))
             nfcurves.insert_many(vals)
     else:
-        count = 0
-        print("inserting data one curve at a time...")
-        for val in vals:
-            #print val
-            nfcurves.upsert({'label': val['label']}, val)
-            count += 1
-            if count % 100 == 0:
-                print("inserted %s" % (val['label']))
+        if test:
+            print("not inserting all data using upsert()")
+        else:
+            count = 0
+            print("inserting data one curve at a time using upsert()...")
+            for val in vals:
+                nfcurves.upsert({'label': val['label']}, val)
+                count += 1
+                if count % 100 == 0:
+                    print("inserted %s" % (val['label']))
 
 #
 #
@@ -777,7 +830,7 @@ def make_isoclass_line(ec):
 #
 ########################################################
 
-def check_database_consistency(table, field=None, degree=None, ignore_ranks=False):
+def check_database_consistency(table, field=None, degree=None, ignore_ranks=True):
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
     """
@@ -808,6 +861,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
                       'jinv': str_type,
                       'cm': int_type,
                       'ngens': int_type,
+                      'analytic_rank': int_type,
                       'rank': int_type,
                       'rank_bounds': list_type, # 2 ints
                       #'analytic_rank': int_type,
@@ -835,14 +889,32 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     }
 
     key_set = Set(keys_and_types.keys())
+    table_key_set = Set(table.col_type)- ['id']
+    if key_set==table_key_set:
+        print("key set matches the table keys exactly")
+    else:
+        print("key set and table keys differ:")
+        diff1 = [k for k in table_key_set if not k in key_set]
+        print("{} keys in table not in key set: {}".format(len(diff1),diff1))
+        diff2 = [k for k in key_set if not k in table_key_set]
+        print("{} keys in key set not in table keys: {}".format(len(diff2),diff2))
+        print()
+        print("{} keys in key set:".format(len(key_set)))
+        print(key_set)
+        print()
+        print("{} keys in table keys:".format(len(table_key_set)))
+        print(table_key_set)
+        return
 #
-#   As of April 2017 rank data is only computed for imaginary
-#   quadratic fields so we need to be able to say to ignore the
+#   Rank data is only computed for imaginary quadratic fields and
+#   small conductor norm so we need to be able to say to ignore the
 #   associated keys.  Also (not yet implemented) if we compute rank
 #   upper and lower bounds then the rank key is not set, and this
-#   script should allow for that.
+#   script should allow for that.  The 'analytic_rank' column is only
+#   set for conductor norm up to 20000, for some fields.  So the only
+#   workable option now is ignore_ranks=True.
 #
-    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens', 'heights', 'old_heights']
+    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens', 'heights']
 #
 #   As of April 2017 we have mod p Galois representration data for all
 #   curves except some of those over degree 6 fields since over these
@@ -851,6 +923,10 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 #
     galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
+
+#  Only the first curve in each isogeny class has the 'isogeny_matrix' column filled
+
+    curve_1_keys = ['isogeny_matrix']
 
     query = {}
     if field is not None:
@@ -864,7 +940,9 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
         if count%1000==0:
             print("Checked {} entries...".format(count))
         expected_keys = key_set
-        if ignore_ranks:
+        if c['number']>1:
+            expected_keys = expected_keys - curve_1_keys
+        if ignore_ranks or c['conductor_norm']>1000:
             expected_keys = expected_keys - rank_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys

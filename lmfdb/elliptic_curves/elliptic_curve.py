@@ -245,6 +245,7 @@ def url_for_label(label):
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
              url_for_label=url_for_label,
+             learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
@@ -270,6 +271,9 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
+    #parse_ints(info,query,field='cm_disc',qfield='cm')
+    if 'cm_disc' in info:
+        query['cm'] = info['cm_disc']
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
@@ -717,20 +721,33 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
+        cm_opts = [('', ''), ('-3', -3), ('-4', -4), ('-7', -7), ('-8', -8), ('-11', -11), ('-12', -12), ('-16', -16),
+                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163)]
+        cm_disc = SelectBox(
+            name="cm_disc",
+            label="CM discriminant",
+            example="-3",
+            knowl="ec.complex_multiplication",
+            options=cm_opts
+            )
 
         count = CountBox()
 
         self.browse_array = [
             [cond, jinv],
-            [rank, cm],
+            [rank, regulator],
             [torsion, torsion_struct],
+            [cm_disc, cm],
             [sha, optimal],
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
-            [num_int_pts, regulator],
-            [count, semistable]]
+            [num_int_pts, semistable],
+            [count]
+            ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
             [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, optimal, semistable]]
+            [num_int_pts, regulator, cm, cm_disc, semistable],
+            [optimal]
+            ]

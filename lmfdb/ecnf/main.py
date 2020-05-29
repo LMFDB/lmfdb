@@ -17,7 +17,8 @@ from lmfdb.utils import (
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
-    search_wrap, parse_rational)
+    search_wrap, parse_rational
+    )
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -483,6 +484,7 @@ def url_for_label(label):
              cleaners={'numb':lambda e: str(e['number']),
                        'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              url_for_label=url_for_label,
+             learnmore=learnmore_list,
              bread=lambda:[('Elliptic Curves', url_for(".index")), ('Search Results', '.')],
              credit=lambda:ecnf_credit)
 def elliptic_curve_search(info, query):
@@ -538,14 +540,14 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-
+    parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
-    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
+    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 
 @ecnf_page.route("/browse/")
@@ -751,6 +753,13 @@ class ECNFSearchArray(SearchArray):
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication")
+        cm_disc = TextBox(
+            name="cm_disc",
+            label= "CM discriminant",
+            example="-4",
+            example_span="-4 or -3,-8",
+            knowl="ec.complex_multiplication"
+            )
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
@@ -790,10 +799,14 @@ class ECNFSearchArray(SearchArray):
             [jinv],
             [field, include_base_change],
             [conductor_norm, include_Q_curves],
-            [torsion, include_cm],
-            [isodeg, torsion_structure],
-            [count, one]]
+            [torsion, torsion_structure],
+            [cm_disc, include_cm],
+            [isodeg, one],
+            [count]
+            ]
 
         self.refine_array = [
-            [field, conductor_norm, one, include_base_change, include_Q_curves],
-            [jinv, isodeg, torsion, torsion_structure, include_cm]]
+            [field, conductor_norm, jinv, include_base_change, include_Q_curves],
+            [isodeg, torsion, torsion_structure, include_cm, cm_disc],
+            [one]
+            ]
