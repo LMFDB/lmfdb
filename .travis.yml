@@ -83,7 +83,7 @@ before_script:
     # what is the load on the server
     - uptime
     # check that we travis isn't missing any test_ file
-    - test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 34
+    - test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 35
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # Do a naive test to initialize the config file
