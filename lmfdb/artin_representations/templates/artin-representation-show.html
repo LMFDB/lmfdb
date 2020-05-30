@@ -8,7 +8,10 @@
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>${{ object.conductor_equation() }} $</tr>
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
-                $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</tr>
+                {% if wnf %}
+                {{wnf.knowl()|safe}} defined by
+                {%endif%}
+                $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>

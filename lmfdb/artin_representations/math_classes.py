@@ -219,11 +219,16 @@ class ArtinRepresentation(object):
 
     def projective_group(self):
         gapid = self._data['Proj_GAP']
+        smallg = None
         if gapid[0]:
-            return small_group_display_knowl(gapid[0], gapid[1])
+            smallg = db.gps_small.lookup('%s.%s' % (gapid[0], gapid[1]))
+            if smallg:
+                return small_group_display_knowl(gapid[0], gapid[1])
         ntj = self._data['Proj_nTj']
-        if ntj[0]:
+        if ntj[1]:
             return group_display_knowl(ntj[0], ntj[1])
+        if smallg:
+            return 'Group with GAP id [%s, %s]' % (gapid[0],gapid[1])
         return 'data not computed'
 
     def projective_field(self):
