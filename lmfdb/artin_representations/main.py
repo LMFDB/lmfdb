@@ -182,9 +182,7 @@ def parse_projective_group(inp, query, qfield):
             query[qfield] = [-1,-2] # we don't have it
     else:
         try:
-            print ("************************************ ", inp)
             mycode = complete_group_code(inp.upper())[0]
-            print ("************************************ ", mycode)
             query['Proj_nTj'] = [mycode[0],mycode[1]]
         except:
             raise ValueError("Allowed values are A4, S4, A5, or Dn for an integer n>1, a GAP id, such as [4,1] or [12,5], a transitive group in nTj notation, such as 5T1, or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>.")
