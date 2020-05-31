@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
 import os, yaml
+from six import text_type
 
 from flask import url_for
 from sage.all import (
@@ -249,7 +250,7 @@ def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
 def formatfield(coef):
-    if isinstance(coef, str) or isinstance(coef, unicode):
+    if isinstance(coef, text_type):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
