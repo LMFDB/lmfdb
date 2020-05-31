@@ -39,6 +39,7 @@ addons:
 
 install:
     - lsb_release -a
+    - sudo cat /etc/ca-certificates.conf
     - sudo update-ca-certificates
     # number of cpus
     - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
