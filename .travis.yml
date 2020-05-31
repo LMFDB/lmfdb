@@ -40,6 +40,7 @@ addons:
 
 install:
     - lsb_release -a
+    - sudo update-ca-certificates
     # number of cpus
     - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
     - export jobs=$(python -c "import multiprocessing;print(2*multiprocessing.cpu_count())")
