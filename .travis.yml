@@ -40,6 +40,8 @@ addons:
 install:
     - lsb_release -a
     - sudo cat /etc/ca-certificates.conf
+    - sudo sed -i 's|mozilla/AddTrust_External_Root.crt|!mozilla/AddTrust_External_Root.crt|g' /etc/ca-certificates.conf
+    - sudo cat /etc/ca-certificates.conf
     - sudo update-ca-certificates
     # number of cpus
     - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
