@@ -33,9 +33,11 @@ addons:
             - python-pip
             # to run nosetests in parallel
             - parallel
+            - neofetch
 
 
 install:
+    - neofetch
     # number of cpus
     - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
     - export jobs=$(python -c "import multiprocessing;print(2*multiprocessing.cpu_count())")
