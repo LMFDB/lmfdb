@@ -26,7 +26,6 @@ addons:
             - tar
             - git
             - openssl
-            - libssl
             - libssl-dev
             # needed for pyflakes
             - python3-pip
