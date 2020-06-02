@@ -122,10 +122,12 @@
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Diagram')}}</h3>
 <p>
+<table>
+<tr><td>
 <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
   Sorry, your browser doesn't support the subgroup diagram.
 </canvas>
-
+<td valign="top">
 <script type="text/javascript">
 {{ info.dojs|safe }}
 </script>
@@ -133,6 +135,7 @@
 <div id="selectedsub">
 Click on a subgroup in the diagram to see information about it.
 </div>
+</table>
 
 <h3>Series</h3>
 <table>
