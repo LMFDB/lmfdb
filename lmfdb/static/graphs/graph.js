@@ -47,7 +47,7 @@ Graph = class {
         this.highlit = null;
 	}
        
-	addNode(value, posn, orders, options) {
+	addNode(value, posnx, orders, options) {
 		var key = value[1].toString();
 		var node = this.nodeSet[key];
         //dbug = [value, posn, orders, this.nodes, node];
@@ -56,41 +56,29 @@ Graph = class {
 			this.nodeSet[key] = node;
 			this.nodes.push(node);
 			options['raw'] = value[2];
-			options['html'] = this.fakehtml(value[2]);
-			options['display'] = this.typeset(value[2], 'math'+value[1]);
+			//options['html'] = this.fakehtml(value[2]);
+			//options['display'] = this.typeset(value[2], 'math'+value[1]);
             node.label = value[0];
             node.ccsize = value[3];
             node.level = orders.indexOf(value[4]);
             node.image = new Image();
-            node.image.src= value[5];
-            node.ready=false;
+            node.image.src = value[5];
+            node.ready = false;
 
-            node.posn = posn;
+            node.posn = posnx;
 			node.setOptions(options);
             //console.log(options['raw']);
 		}
 		return node;
 	}
 
-	addNodes(values, orders) {
+	addNodes(values, orders, xcoords) {
 		for(var j=0, item; item = values[j]; j++) {
 			for(var k=0, item2; item2 = item[k]; k++) {
-				this.addNode(item2, [j,k], orders, {});
+                var myx = Math.max(k, xcoords[item2[1]-1]);
+				this.addNode(item2, myx, orders, {});
 			}
 		}
-	}
-
-    // Does not work
-	typeset(latex, divid) {
-		var out='<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="100">\n';
-        out += '<foreignObject x="0" y="0" width="100" height="100">';
-    out += '<div id="'+divid+'" xmlns="http://www.w3.org/1999/xhtml" style="font-family:Times; font-size:15px" align="center">\n';
-        //out += '\\('+latex+'\\)';
-        out += this.fakehtml(latex);
-        out += '</div></foreignObject></svg>';
-        //this.mathSVG(latex,divid);
-        return out;
-	  return latex;
 	}
 
     // makes html, but doesn't work well as a foreign object
@@ -103,13 +91,6 @@ Graph = class {
         latex = latex.replace(/\\rtimes/, ':');
         latex = latex.replace(/\\times/, '&times;');
         return latex;
-	}
-
-	math2svg(latex) {
-		var str = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Times; font-size:15px">$';
-		str += latex;
-        str += '$</div>';
-		return str;
 	}
 
 	// Uniqueness must be ensured by caller
@@ -363,8 +344,13 @@ class Layout {
 		this.c = 0.01; //0.01;
 		this.maxVertexMovement = 10;
 		this.margin = 5;
+        this.doiter=true;
 	}
 
+    setiter(val) {
+      this.doiter=val;
+    }
+    
     islinear() {
         var g = this.graph;
         if(g.nodes.length == g.edges.length+1) return true;
@@ -380,12 +366,14 @@ class Layout {
             this.graph.layoutMaxX = 20;
         } else {
             this.layoutPrepare();
-            this.layoutIteration();
-            this.spread();
-            for (var i = 0; i < this.iterations; i++) {
+            if (this.doiter) {
+              this.layoutIteration();
+              this.spread();
+              for (var i = 0; i < this.iterations; i++) {
                 this.layoutIteration();
+              }
             }
-            //this.centering();
+            ////this.centering();
             this.layoutCalcBounds();
         }
 	}
@@ -404,6 +392,7 @@ class Layout {
 				node.layoutForceX = 0;
         }
 		this.numlevs = this.levs.length;
+            
 
 		//for (var i=0, node; node = this.graph.nodes[i]; i++) {
 			//node.connected = new Array();
@@ -424,12 +413,26 @@ class Layout {
 					this.levs[thisLevel] = new Array();
 				}
 			    this.levs[thisLevel].push(node);
-                node.layoutPosX = node.posn[1]; /* Math.round(Math.random()*100); */
-                totx += node.posn[1];
+                node.layoutPosX = node.posn;
+                totx += node.posn;
                 node.layoutPosY = -10*thisLevel;
 				node.layoutForceX = 0;
         }
 		this.numlevs = this.levs.length;
+
+        // Make trivial and whole group come at the start and end
+        var wholeg = this.levs[this.numlevs-1][0];
+        var triv = this.levs[0][0];
+        for (var i = 0; i < this.graph.nodes.length; i++) {
+          if(this.graph.nodes[i].label==wholeg.label) {
+            this.graph.nodes[i] = this.graph.nodes[0];
+            this.graph.nodes[0]=wholeg;
+          }
+          if(this.graph.nodes[i].label==triv.label) {
+            this.graph.nodes[i] = this.graph.nodes[this.graph.nodes.length-1];
+            this.graph.nodes[this.graph.nodes.length-1]=triv;
+          }
+        }
 		//for (var i = 0, lev; lev = this.levs[i]; i++) {
 		//    for(var k=0, len=lev.length; k<len; k++) {
 	//			var node = lev[k];
@@ -540,7 +543,7 @@ class Layout {
             var repulsiveForce = this.k * this.k;
             if(Math.abs(dx)<0.5) {
                 //if(node1.level < node2.level) factor *= -1;
-                dx = 15;
+                dx = 1;
             }
             node2.layoutForceX += factor*repulsiveForce * dx / d2;
             node1.layoutForceX -= factor*repulsiveForce * dx / d2;
@@ -764,15 +767,17 @@ function clearsubinfo() {
   mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
 }
 
-function make_sdiagram(canv,ambient, nodes, edges, orders) {
+function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
   var g = new Graph(ambient);
-  g.addNodes(nodes, orders);
+  g.addNodes(nodes, orders,xcoords);
 
   for(var j=0, edge; edge=edges[j]; j++) {
     g.addEdge(edge[0],edge[1]);
   }
 
   var layout = new Layout(g);
+  var doiterations= (xcoords[0]==0);
+  layout.setiter(doiterations);
   layout.layout();
 
   var renderer = new Renderer(document.getElementById(canv),g);
