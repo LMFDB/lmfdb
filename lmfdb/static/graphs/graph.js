@@ -324,7 +324,7 @@ class Renderer {
 		for (var i = 0, node; node= this.graph.nodes[i]; i++) {
 			if(node.selected) { return(node); }
 		}
-		alert('Could not find selected subgroup from diagram');
+		//alert('Could not find selected subgroup from diagram');
 		return(null);
     }
 
@@ -694,7 +694,11 @@ class EventHandler {
 			this.renderer.unselectNodes();
 			this.activeNode.select();
 			this.renderer.draw();
-		  }
+		  } else {
+            clearsubinfo();
+			this.renderer.unselectNodes();
+			this.renderer.draw();
+          }
 		  event.stopPropagation();
 		  event.preventDefault();
 		}
@@ -753,6 +757,11 @@ function showsubinfo(node, ambient) {
       renderMathInElement(mydiv, katexOpts);
       $(".subgp").hover(highlight_group, unhighlight_group);
       });
+}
+
+function clearsubinfo() {
+  var mydiv = document.getElementById("selectedsub");
+  mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
 }
 
 function make_sdiagram(canv,ambient, nodes, edges, orders) {
