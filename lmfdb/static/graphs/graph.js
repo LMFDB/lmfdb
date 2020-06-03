@@ -56,7 +56,6 @@ Graph = class {
 			this.nodeSet[key] = node;
 			this.nodes.push(node);
 			options['raw'] = value[2];
-			//options['html'] = this.fakehtml(value[2]);
 			//options['display'] = this.typeset(value[2], 'math'+value[1]);
             node.label = value[0];
             node.ccsize = value[3];
@@ -64,6 +63,7 @@ Graph = class {
             node.image = new Image();
             node.image.src = value[5];
             node.ready = false;
+            node.key = key;
 
             node.posn = posnx;
 			node.setOptions(options);
@@ -79,18 +79,6 @@ Graph = class {
 				this.addNode(item2, myx, orders, {});
 			}
 		}
-	}
-
-    // makes html, but doesn't work well as a foreign object
-	fakehtml(latex) {
-		latex = latex.replace(/_(\d+)/, '<sub>$1</sub>');
-        latex = latex.replace(/_{(\d+)}/, '<sub>$1</sub>');
-        latex = latex.replace(/\^{(\d+)}/, '<sup>$1</sup>');
-        latex = latex.replace(/\^(\d+)/, '<sup>$1</sup>');
-        latex = latex.replace(/(\w+)/, '<i>$1</i>');
-        latex = latex.replace(/\\rtimes/, ':');
-        latex = latex.replace(/\\times/, '&times;');
-        return latex;
 	}
 
 	// Uniqueness must be ensured by caller
@@ -767,9 +755,13 @@ function clearsubinfo() {
   mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
 }
 
+/* Make ourg a global variable */
+var ourg;
+
 function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
-  var g = new Graph(ambient);
+  g = new Graph(ambient);
   g.addNodes(nodes, orders,xcoords);
+  ourg = g;
 
   for(var j=0, edge; edge=edges[j]; j++) {
     g.addEdge(edge[0],edge[1]);
@@ -792,3 +784,10 @@ function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
   return renderer;
 }
 
+function getpositions() {
+  var mylist="[";
+  for (var i = 0; i < ourg.nodes.length; i++) {
+    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"],"
+  }
+  return mylist;
+}
