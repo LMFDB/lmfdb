@@ -250,6 +250,7 @@ class Renderer {
 
 		var tan = (target[1] - source[1]) / (target[0] - source[0]);
         var extra = Math.abs(tan)< 0.7 ? 8 : 0;
+        extra = -4;
 		var theta = Math.atan(tan);
 		if(source[0] <= target[0]) {theta = Math.PI+theta}
         var img = edge.source.image
