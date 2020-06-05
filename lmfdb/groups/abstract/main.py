@@ -209,8 +209,7 @@ def render_abstract_group(args):
         info['dojs'] += ');'
         #print info['dojs']
         totsubs = len(gp.subgroups)
-        wide = totsubs > (len(layers[0])-2)*4; # boolean
-        info['wide'] = wide
+        info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
 
 
         factored_order = web_latex(gp.order_factor(),False)
