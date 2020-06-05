@@ -52,10 +52,6 @@ url: http://www.maths.bris.ac.uk/people/faculty/maarb/
 name: Robert Bradshaw
 affil: Google Inc.
 ---
-name: Michael Bush
-affil: Washington and Lee
-url: https://bushm.academic.wlu.edu/
----
 name: Chris Brady
 affil: University of Warwick
 ---
@@ -75,6 +71,10 @@ name: Sarunas Burdulis
 affil: Dartmouth College
 url: https://math.dartmouth.edu/~sarunas/
 ---
+name: Michael Bush
+affil: Washington and Lee
+url: https://bushm.academic.wlu.edu/
+---
 name: Frédéric Chapoton
 affil: CNRS et Université de Strasbourg
 ---
@@ -93,7 +93,7 @@ name: Brian Conrey
 affil: University of Bristol and AIM
 url: http://www.aimath.org/conrey/
 ---
-name: Lewis Coomes
+name: Lewis Combes
 affil: University of Sheffield
 ---
 name: Edgar Costa
