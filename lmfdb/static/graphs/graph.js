@@ -56,7 +56,6 @@ Graph = class {
 			this.nodeSet[key] = node;
 			this.nodes.push(node);
 			options['raw'] = value[2];
-			//options['display'] = this.typeset(value[2], 'math'+value[1]);
             node.label = value[0];
             node.ccsize = value[3];
             node.level = orders.indexOf(value[4]);
@@ -249,8 +248,7 @@ class Renderer {
 		var target = edge.target.center;
 
 		var tan = (target[1] - source[1]) / (target[0] - source[0]);
-        var extra = Math.abs(tan)< 0.7 ? 8 : 0;
-        extra = -4;
+        var extra = Math.abs(tan)< 0.7 ? 4 : -4;
 		var theta = Math.atan(tan);
 		if(source[0] <= target[0]) {theta = Math.PI+theta}
         var img = edge.source.image
