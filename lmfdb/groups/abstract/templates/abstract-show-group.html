@@ -136,6 +136,12 @@
 Click on a subgroup in the diagram to see information about it.
 </div>
 </table>
+{% if user_is_authenticated %}
+<button onclick="getpositions()">Get positions</button>
+<br>
+<div id="positions">
+</div>
+{% endif %}
 
 <h3>Series</h3>
 <table>
