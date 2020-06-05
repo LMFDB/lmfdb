@@ -136,7 +136,7 @@
 Click on a subgroup in the diagram to see information about it.
 </div>
 </table>
-{% if user_is_authenticated %}
+{% if user_is_authenticated and BETA %}
 <button onclick="getpositions()">Get positions</button>
 <br>
 <p>
