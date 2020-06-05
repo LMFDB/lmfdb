@@ -17,7 +17,7 @@ from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
     group_pretty_image)
 
-credit_string = "Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, and Andrew Sutherland"
+credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
