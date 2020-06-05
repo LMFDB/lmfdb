@@ -788,7 +788,11 @@ function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
 function getpositions() {
   var mylist="[";
   for (var i = 0; i < ourg.nodes.length; i++) {
-    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"],"
+    mylist +=  i>0 ? ',' : '';
+    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"]";
   }
+  var mydiv = document.getElementById("positions");
+  mydiv.innerHTML = mylist;
+  
   return mylist;
 }
