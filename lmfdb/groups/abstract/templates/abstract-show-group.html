@@ -122,6 +122,26 @@
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Diagram')}}</h3>
 <p>
+{% if info.wide %}
+<canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+  Sorry, your browser doesn't support the subgroup diagram.
+</canvas>
+
+<script type="text/javascript">
+{{ info.dojs|safe }}
+</script>
+{% if user_is_authenticated and BETA %}
+<button onclick="getpositions()">Get positions</button>
+<br>
+<p>
+<div id="positions">
+</div>
+{% endif %}
+<h4>Subgroup information</h4>
+<div id="selectedsub">
+Click on a subgroup in the diagram to see information about it.
+</div>
+{% else %}
 <table>
 <tr><td>
 <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
@@ -142,6 +162,7 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 <div id="positions">
 </div>
+{% endif %}
 {% endif %}
 
 <h3>Series</h3>
