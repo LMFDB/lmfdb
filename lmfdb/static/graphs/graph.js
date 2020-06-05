@@ -758,11 +758,13 @@ function clearsubinfo() {
 
 /* Make ourg a global variable */
 var ourg;
+var ambientlabel;
 
 function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
   g = new Graph(ambient);
   g.addNodes(nodes, orders,xcoords);
   ourg = g;
+  ambientlabel=ambient;
 
   for(var j=0, edge; edge=edges[j]; j++) {
     g.addEdge(edge[0],edge[1]);
@@ -786,11 +788,12 @@ function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
 }
 
 function getpositions() {
-  var mylist="[";
+  var mylist="[\""+ambientlabel+"\",[";
   for (var i = 0; i < ourg.nodes.length; i++) {
     mylist +=  i>0 ? ',' : '';
     mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"]";
   }
+  mylist += "]]";
   var mydiv = document.getElementById("positions");
   mydiv.innerHTML = mylist;
   
