@@ -446,9 +446,9 @@ class KnowlBackend(PostgresBase):
         for kid in kids:
             try:
                 if sys.version_info[0] == 3:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').decode('utf-8').split(u'\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').split(u'\n--\n'))
                 else:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n'))
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).split(u'\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
