@@ -334,7 +334,10 @@ def restart():
     else:
         command = None
     if command:
-        out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0] if sys.version_info[0] == 3 else Popen(command, stdout=PIPE).communicate()[0]
+        if sys.version_info[0] == 3:
+            out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
+        else:
+            Popen(command, stdout=PIPE).communicate()[0]
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
