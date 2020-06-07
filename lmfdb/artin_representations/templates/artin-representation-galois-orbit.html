@@ -12,6 +12,8 @@
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
+        <tr><td> {{ KNOWL('artin.projective_image', title='Projective image') }}: <td> {{ object.projective_group()|safe}} </tr>
+        <tr><td> {{ KNOWL('artin.projective_field', title='Projective field') }}: <td> {{ object.projective_field()|safe}} </tr>
     </table>
 
 
