@@ -1121,7 +1121,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     assert meta["name"] == tablename
 
                     with open(search_table_file, "r") as F:
-                        search_columns_pairs = self._read_header_lines(F)
+                        search_columns_pairs = self._read_header_lines(F, sep=sep)
 
                     search_columns = defaultdict(list)
                     for name, typ in search_columns_pairs:
@@ -1133,7 +1133,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                         if not os.path.exists(extras_file):
                             raise ValueError("extras file missing for {0}".format(tablename))
                         with open(extras_file, "r") as F:
-                            extras_columns_pairs = self._read_header_lines(F)
+                            extras_columns_pairs = self._read_header_lines(F, sep=sep)
                         extra_columns = defaultdict(list)
                         for name, typ in extras_columns_pairs:
                             if name != "id":
