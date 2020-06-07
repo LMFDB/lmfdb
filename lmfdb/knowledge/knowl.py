@@ -445,7 +445,7 @@ class KnowlBackend(PostgresBase):
         matches = []
         for kid in kids:
             try:
-                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],,encoding='utf8').decode('utf-8').split(u'\n--\n'))
+                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf8').decode('utf-8').split(u'\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
