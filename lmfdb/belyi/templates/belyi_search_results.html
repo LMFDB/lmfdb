@@ -14,18 +14,22 @@
     <th>{{ KNOWL('belyi.label', title='Label') }}</th>
     <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
     <th>{{ KNOWL('belyi.group', title='Group') }}</th>
+    <th>{{ KNOWL('belyi.abc', title='abc') }}</th>
+    <th>{{ KNOWL('belyi.ramification_type', title='Ramification type') }}</th>
     <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
     <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
-    <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
+    <th>{{ KNOWL('belyi.moduli_field', title='Moduli field') }}</th>
 </tr></thead><tbody>
 {% for galmap in info.results: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
-    <td align=center> {{galmap.deg}} </td>
-    <td align=center> {{galmap.group}} </td>
-    <td align=center> {{galmap.g}}</td>
-    <td align=center> {{galmap.orbit_size}} </td>
-    <td align=center> {{galmap.geomtype}} </td>
+    <td> {{galmap.deg}} </td>
+    <td> {{galmap.group}} </td>
+    <td> {{galmap.abc}}</td>
+    <td> {{galmap.lambdas}}</td>
+    <td> {{galmap.g}}</td>
+    <td> {{galmap.orbit_size}} </td>
+    <td> {{info['nf_link'](galmap) | safe}} </td>
 </tr>
 {% endfor %}
 </tbody>
