@@ -10,6 +10,7 @@ def assign_passport_triples(rec):
     rec['triples'] = trips
     return rec
 
+# can actually pull from galmaps like triples above
 def assign_automorphism_group(rec):
     """
     Given a passport rec, compute its automorphism group as the centralizer of its monodromy group
