@@ -17,7 +17,6 @@ from psycopg2 import (
 )
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from sage.cpython.string import bytes_to_str
 
 from .encoding import Json
 from lmfdb.utils import reraise
@@ -325,7 +324,7 @@ class PostgresBase(object):
                     else:
                         query = query.as_string(self.conn)
                     if isinstance(query, bytes): # PY3 compatibility
-                        query = bytes_to_str(query)
+                        query = query.decode("utf-8")
                     self.logger.info(query + " ran in \033[91m {0!s}s \033[0m".format(t))
                     if slow_note is not None:
                         self.logger.info(

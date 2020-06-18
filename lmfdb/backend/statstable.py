@@ -7,7 +7,6 @@ from collections import defaultdict
 
 from psycopg2 import DatabaseError
 from psycopg2.sql import SQL, Identifier, Literal
-from sage.all import cartesian_product_iterator, binomial
 
 from lmfdb.utils import KeyedDefaultDict, make_tuple
 
@@ -606,6 +605,7 @@ class PostgresStatsTable(PostgresBase):
         Iterates over the cartesian product of the buckets formed, yielding in each case
         a dictionary that can be used as a query.
         """
+        from sage.all import cartesian_product_iterator
         expanded_buckets = []
         for col, divisions in buckets.items():
             parse_singleton = pg_to_py[self.table.col_type[col]]
@@ -1094,6 +1094,7 @@ class PostgresStatsTable(PostgresBase):
 
         Returns a boolean: whether any counts were stored.
         """
+        from sage.all import cartesian_product_iterator
         if split_list and threshold is not None:
             raise ValueError("split_list and threshold not simultaneously supported")
         where, values, constraint, ccols, cvals, allcols = self._process_constraint(cols, constraint)
@@ -1273,6 +1274,7 @@ ORDER BY v.ord LIMIT %s"""
         - ``max_depth`` -- the maximum number of columns to include
         - ``threshold`` -- only counts above this value will be included.
         """
+        from sage.all import binomial
         with DelayCommit(self, silence=True):
             if cols is None:
                 cols = self._common_cols()

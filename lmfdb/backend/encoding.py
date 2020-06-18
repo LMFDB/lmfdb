@@ -12,40 +12,57 @@ import datetime
 
 from psycopg2.extras import Json as pgJson
 from psycopg2.extensions import adapt, ISQLQuote
-from sage.all import ceil
-from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
-from sage.rings.complex_number import ComplexNumber
-from sage.rings.complex_field import ComplexField
-from sage.rings.integer import Integer
-from sage.rings.rational import Rational
-from sage.rings.integer_ring import ZZ
-from sage.rings.rational_field import QQ
-from sage.rings.infinity import infinity
-from sage.rings.number_field.number_field_element import NumberFieldElement
-from sage.rings.number_field.number_field import (
-    NumberField,
-    CyclotomicField,
-    NumberField_generic,
-    NumberField_cyclotomic,
-)
-from sage.rings.number_field.number_field_rel import NumberField_relative
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.power_series_poly import PowerSeries_poly
-from sage.modules.free_module_element import vector, FreeModuleElement
+try:
+    from sage.all import ceil
+    from sage.rings.complex_number import ComplexNumber
+    from sage.rings.complex_field import ComplexField
+    from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
+    from sage.rings.integer import Integer
+    from sage.rings.rational import Rational
+    from sage.rings.integer_ring import ZZ
+    from sage.rings.rational_field import QQ
+    from sage.rings.infinity import infinity
+    from sage.rings.number_field.number_field_element import NumberFieldElement
+    from sage.rings.number_field.number_field import (
+        NumberField,
+        CyclotomicField,
+        NumberField_generic,
+        NumberField_cyclotomic,
+    )
+    from sage.rings.number_field.number_field_rel import NumberField_relative
+    from sage.rings.polynomial.polynomial_element import Polynomial
+    from sage.rings.power_series_poly import PowerSeries_poly
+    from sage.modules.free_module_element import vector, FreeModuleElement
+except ModuleNotFoundError:
+    # Sage not installed
+    SAGE_MODE = False
+else:
+    SAGE_MODE = True
+    class LmfdbRealLiteral(RealLiteral):
+        """
+        A real number that prints using the string used to construct it.
+        """
 
+        def __init__(self, parent, x=0, base=10):
+            if not isinstance(x, string_types):
+                x = str(x)
+            RealLiteral.__init__(self, parent, x, base)
 
-class LmfdbRealLiteral(RealLiteral):
-    """
-    A real number that prints using the string used to construct it.
-    """
+        def __repr__(self):
+            return self.literal
 
-    def __init__(self, parent, x=0, base=10):
-        if not isinstance(x, string_types):
-            x = str(x)
-        RealLiteral.__init__(self, parent, x, base)
+    class RealEncoder(object):
+        def __init__(self, value):
+            self._value = value
 
-    def __repr__(self):
-        return self.literal
+        def getquoted(self):
+            if isinstance(self._value, RealLiteral):
+                return self._value.literal
+            else:
+                return str(self._value)
+
+        def __str__(self):
+            return self.getquoted()
 
 
 def numeric_converter(value, cur=None):
@@ -64,11 +81,15 @@ def numeric_converter(value, cur=None):
     if value is None:
         return None
     if "." in value:
-        # The following is a good guess for the bit-precision,
-        # but we use LmfdbRealLiterals to ensure that our number
-        # prints the same as we got it.
-        prec = ceil(len(value) * 3.322)
-        return LmfdbRealLiteral(RealField(prec), value)
+        if SAGE_MODE:
+            # The following is a good guess for the bit-precision,
+            # but we use LmfdbRealLiterals to ensure that our number
+            # prints the same as we got it.
+            prec = ceil(len(value) * 3.322)
+            return LmfdbRealLiteral(RealField(prec), value)
+        else:
+            # Sage isn't installed, so we fall back on Python floats
+            return float(value)
     else:
         return Integer(value)
 
@@ -107,20 +128,6 @@ class Array(object):
         return str(self.getquoted())
 
 
-class RealEncoder(object):
-    def __init__(self, value):
-        self._value = value
-
-    def getquoted(self):
-        if isinstance(self._value, RealLiteral):
-            return self._value.literal
-        else:
-            return str(self._value)
-
-    def __str__(self):
-        return self.getquoted()
-
-
 class Json(pgJson):
     @classmethod
     def dumps(cls, obj):
@@ -149,13 +156,13 @@ class Json(pgJson):
                     "__ComplexList__": 0,  # encoding version
                     "data": [[z.real, z.imag] for z in obj],
                 }
-            elif obj and all(isinstance(z, Rational) for z in obj):
+            elif SAGE_MODE and obj and all(isinstance(z, Rational) for z in obj):
                 return {
                     "__QQList__": 0,  # encoding version
                     "data": [[int(z.numerator()), int(z.denominator())] for z in obj],
                 }
             elif (
-                obj
+                SAGE_MODE and obj
                 and all(isinstance(z, NumberFieldElement) for z in obj)
                 and all(z.parent() is obj[0].parent() for z in obj[1:])
             ):
@@ -169,7 +176,7 @@ class Json(pgJson):
             else:
                 return [cls.prep(x, escape_backslashes) for x in obj]
         elif isinstance(obj, dict):
-            if obj and all(isinstance(k, (int, Integer)) for k in obj):
+            if obj and all(isinstance(k, int) or SAGE_MODE and isinstance(k, Integer) for k in obj):
                 return {
                     "__IntDict__": 0,  # encoding version
                     "data": [
@@ -181,20 +188,20 @@ class Json(pgJson):
                 return {k: cls.prep(v, escape_backslashes) for k, v in obj.items()}
             else:
                 raise TypeError("keys must be strings or integers")
-        elif isinstance(obj, FreeModuleElement):
+        elif SAGE_MODE and isinstance(obj, FreeModuleElement):
             return {
                 "__Vector__": 0,  # encoding version
                 "base": cls.prep(obj.base_ring(), escape_backslashes),
                 "data": [cls.prep(c, escape_backslashes)["data"] for c in obj],
             }
-        elif isinstance(obj, Integer):
+        elif SAGE_MODE and isinstance(obj, Integer):
             return int(obj)
-        elif isinstance(obj, Rational):
+        elif SAGE_MODE and isinstance(obj, Rational):
             return {
                 "__Rational__": 0,  # encoding version
                 "data": [int(obj.numerator()), int(obj.denominator())],
             }
-        elif isinstance(obj, RealNumber):
+        elif SAGE_MODE and isinstance(obj, RealNumber):
             return {
                 "__RealLiteral__": 0,  # encoding version
                 "data": obj.literal
@@ -203,22 +210,20 @@ class Json(pgJson):
                 "prec": int(obj.parent().precision()),
             }
         elif isinstance(obj, complex):
-            # As noted above, support for Sage complex numbers
-            # would be easy to add
             return {"__complex__": 0, "data": [obj.real, obj.imag]}  # encoding version
-        elif isinstance(obj, ComplexNumber):
+        elif SAGE_MODE and isinstance(obj, ComplexNumber):
             return {
                 "__Complex__": 0,  # encoding version
                 "prec": int(obj.prec()),
                 "data": [str(obj.real()), str(obj.imag())],
             }
-        elif isinstance(obj, NumberFieldElement):
+        elif SAGE_MODE and isinstance(obj, NumberFieldElement):
             return {
                 "__NFElt__": 0,  # encoding version
                 "parent": cls.prep(obj.parent(), escape_backslashes),
                 "data": [cls.prep(c, escape_backslashes)["data"] for c in obj.list()],
             }
-        elif isinstance(obj, NumberField_generic):
+        elif SAGE_MODE and isinstance(obj, NumberField_generic):
             if isinstance(obj, NumberField_relative):
                 return {
                     "__NFRelative__": 0,  # encoding version
@@ -236,24 +241,24 @@ class Json(pgJson):
                     "vname": obj.variable_name(),
                     "data": cls.prep(obj.absolute_polynomial(), escape_backslashes),
                 }
-        elif obj is ZZ:
+        elif SAGE_MODE and obj is ZZ:
             return {
                 "__IntegerRing__": 0,  # encoding version
                 "data": 0,
             }  # must be present for decoding
-        elif obj is QQ:
+        elif SAGE_MODE and obj is QQ:
             return {
                 "__RationalField__": 0,  # encoding version
                 "data": 0,
             }  # must be present for decoding
-        elif isinstance(obj, Polynomial):
+        elif SAGE_MODE and isinstance(obj, Polynomial):
             return {
                 "__Poly__": 0,  # encoding version
                 "vname": obj.variable_name(),
                 "base": cls.prep(obj.base_ring(), escape_backslashes),
                 "data": [cls.prep(c, escape_backslashes)["data"] for c in obj.list()],
             }
-        elif isinstance(obj, PowerSeries_poly):
+        elif SAGE_MODE and isinstance(obj, PowerSeries_poly):
             if obj.base_ring() is ZZ:
                 data = [int(c) for c in obj.list()]
             else:
@@ -310,41 +315,57 @@ class Json(pgJson):
             if len(obj) == 2 and "__ComplexList__" in obj:
                 return [complex(*v) for v in obj["data"]]
             elif len(obj) == 2 and "__QQList__" in obj:
+                assert SAGE_MODE
                 return [QQ(tuple(v)) for v in obj["data"]]
             elif len(obj) == 3 and "__NFList__" in obj and "base" in obj:
+                assert SAGE_MODE
                 base = cls.extract(obj["base"])
                 return [cls._extract(base, c) for c in obj["data"]]
             elif len(obj) == 2 and "__IntDict__" in obj:
-                return {Integer(k): cls.extract(v) for k, v in obj["data"]}
+                if SAGE_MODE:
+                    return {Integer(k): cls.extract(v) for k, v in obj["data"]}
+                else:
+                    return {int(k): cls.extract(v) for k, v in obj["data"]}
             elif len(obj) == 3 and "__Vector__" in obj and "base" in obj:
+                assert SAGE_MODE
                 base = cls.extract(obj["base"])
                 return vector([cls._extract(base, v) for v in obj["data"]])
             elif len(obj) == 2 and "__Rational__" in obj:
+                assert SAGE_MODE
                 return Rational(*obj["data"])
             elif len(obj) == 3 and "__RealLiteral__" in obj and "prec" in obj:
+                assert SAGE_MODE
                 return LmfdbRealLiteral(RealField(obj["prec"]), obj["data"])
             elif len(obj) == 2 and "__complex__" in obj:
                 return complex(*obj["data"])
             elif len(obj) == 3 and "__Complex__" in obj and "prec" in obj:
+                assert SAGE_MODE
                 return ComplexNumber(ComplexField(obj["prec"]), *obj["data"])
             elif len(obj) == 3 and "__NFElt__" in obj and "parent" in obj:
+                assert SAGE_MODE
                 return cls._extract(cls.extract(obj["parent"]), obj["data"])
             elif (
                 len(obj) == 3
                 and ("__NFRelative__" in obj or "__NFAbsolute__" in obj)
                 and "vname" in obj
             ):
+                assert SAGE_MODE
                 poly = cls.extract(obj["data"])
                 return NumberField(poly, name=obj["vname"])
             elif len(obj) == 2 and "__NFCyclotomic__" in obj:
+                assert SAGE_MODE
                 return CyclotomicField(obj["data"])
             elif len(obj) == 2 and "__IntegerRing__" in obj:
+                assert SAGE_MODE
                 return ZZ
             elif len(obj) == 2 and "__RationalField__" in obj:
+                assert SAGE_MODE
                 return QQ
             elif len(obj) == 3 and "__RationalPoly__" in obj and "vname" in obj:
+                assert SAGE_MODE
                 return QQ[obj["vname"]]([QQ(tuple(v)) for v in obj["data"]])
             elif (len(obj) == 4 and "__Poly__" in obj and "vname" in obj and "base" in obj):
+                assert SAGE_MODE
                 base = cls.extract(obj["base"])
                 return base[obj["vname"]]([cls._extract(base, c) for c in obj["data"]])
             elif (
@@ -354,6 +375,7 @@ class Json(pgJson):
                 and "base" in obj
                 and "prec" in obj
             ):
+                assert SAGE_MODE
                 base = cls.extract(obj["base"])
                 prec = infinity if obj["prec"] == "inf" else int(obj["prec"])
                 return base[[obj["vname"]]]([cls._extract(base, c) for c in obj["data"]], prec=prec)
@@ -414,9 +436,9 @@ def copy_dumps(inp, typ, recursing=False):
             elif subtyp != typ[:-2]:
                 raise ValueError("Array dimensions must be uniform")
         return "{" + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + "}"
-    elif isinstance(inp, RealLiteral):
+    elif SAGE_MODE and isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (Integer, float, RealNumber) + six_integers):
+    elif isinstance(inp, (float,) + six_integers) or SAGE_MODE and isinstance(inp, (Integer, RealNumber)):
         return str(inp).replace("L", "")
     elif typ == "boolean":
         return "t" if inp else "f"
