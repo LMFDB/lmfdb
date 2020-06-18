@@ -43,6 +43,9 @@ class WebHyperGeometricFamily(object):
         self.beta = cyc_to_QZ(self.B)
         self.hodge = data['famhodge']
         self.bezout = matrix(self.bezout)
+        self.hinf = matrix(self.hinf)
+        self.h0 = matrix(self.h0)
+        self.h1 = matrix(self.h1)
         #FIXME
         self.rotation_number = self.imprim
 
@@ -124,6 +127,18 @@ class WebHyperGeometricFamily(object):
     def bezout_det(self):
         return self.bezout.det()
 
+    @lazy_attribute
+    def hinf_latex(self):
+        return(latex(self.hinf))
+
+    @lazy_attribute
+    def h0_latex(self):
+        return(latex(self.h0))
+
+    @lazy_attribute
+    def h1_latex(self):
+        return(latex(self.h1))
+    
     @lazy_attribute
     def bezout_latex(self):
         return latex(self.bezout)
