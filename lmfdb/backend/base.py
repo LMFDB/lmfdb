@@ -19,9 +19,8 @@ from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 
 from .encoding import Json
-from lmfdb.utils import reraise
 from lmfdb.logger import make_logger
-from .utils import DelayCommit, QueryLogFilter
+from .utils import reraise, DelayCommit, QueryLogFilter
 
 
 # This list is used when creating new tables
