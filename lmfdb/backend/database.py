@@ -50,7 +50,7 @@ def setup_connection(conn):
     register_json(conn, loads=Json.loads)
     try:
         from sage.all import Integer, RealNumber
-    except ModuleNotFoundError:
+    except ImportError:
         pass
     else:
         register_adapter(Integer, AsIs)

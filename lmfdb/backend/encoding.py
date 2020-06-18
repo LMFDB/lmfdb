@@ -33,7 +33,7 @@ try:
     from sage.rings.polynomial.polynomial_element import Polynomial
     from sage.rings.power_series_poly import PowerSeries_poly
     from sage.modules.free_module_element import vector, FreeModuleElement
-except ModuleNotFoundError:
+except ImportError:
     # Sage not installed
     SAGE_MODE = False
 else:
