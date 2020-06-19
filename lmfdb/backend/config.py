@@ -1,5 +1,5 @@
-
-
+# -*- coding: utf-8 -*-
+from __future__ import print_function, absolute_import
 import os, argparse
 from six.moves.configparser import ConfigParser
 from collections import defaultdict
