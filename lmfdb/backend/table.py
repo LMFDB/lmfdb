@@ -2,11 +2,7 @@
 from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
-import inspect
 import os
-import shutil
-import signal
-import subprocess
 import tempfile
 import time
 

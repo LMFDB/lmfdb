@@ -28,12 +28,9 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 
 from __future__ import absolute_import
-from .lmfdb_database import LMFDBDatabase
 from .utils import DelayCommit
 
 assert DelayCommit
 from psycopg2.sql import SQL
 
 assert SQL
-
-db = LMFDBDatabase()

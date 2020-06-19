@@ -2,13 +2,9 @@
 from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
-from six.moves.configparser import ConfigParser
 import csv
-import datetime
 import logging
 import os
-import signal
-import subprocess
 import time
 import traceback
 from collections import defaultdict, Counter

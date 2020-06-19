@@ -1,10 +1,15 @@
 
 import os
+import shutil
+import subprocess
+import inspect
+import signal
+import datetime
+from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
 from .database import PostgresDatabase
 from .searchtable import PostgresSearchTable
 from .statstable import PostgresStatsTable
-from six.moves.configparser import ConfigParser
 
 class LMFDBStatsTable(PostgresStatsTable):
     saving = True
@@ -224,20 +229,6 @@ class LMFDBDatabase(PostgresDatabase):
     def __init__(self, **kwargs):
         # This will write the default configuration file if needed
         config = Configuration()
-        #configfile = abs_path_lmfdb("config.ini")
-        #secretsfile = abs_path_lmfdb("password.ini")
-        #if not os.path.exists(secretsfile):
-        #    oldpass = abs_path_lmfdb("password")
-        #    if os.path.exists(oldpass):
-        #        cfgp = ConfigParser()
-        #        with open(oldpass) as Fold:
-        #            passwd = Fold.readlines()[0].strip()
-        #        cfgp.add_section("postgresql")
-        #        cfgp.set("postgresql", "user", "webserver")
-        #        cfgp.set("postgresql", "password", passwd)
-        #        cfgp.write(secretsfile)
-        #    else:
-        #        secretsfile = None
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
 
