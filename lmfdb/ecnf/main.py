@@ -487,7 +487,6 @@ def url_for_label(label):
              cleaners={'numb':lambda e: str(e['number']),
                        'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              url_for_label=url_for_label,
-             learnmore=learnmore_list,
              bread=lambda:[('Elliptic Curves', url_for(".index")), ('Search Results', '.')],
              credit=lambda:ecnf_credit)
 def elliptic_curve_search(info, query):
@@ -550,7 +549,7 @@ def elliptic_curve_search(info, query):
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
-    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
+    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
 
 
 @ecnf_page.route("/browse/")
@@ -724,7 +723,7 @@ class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     jump_example = "2.2.5.1-31.1-a1"
-    jump_egspan = "e.g. 2.2.5.1-31.1-a1"
+    jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     def __init__(self):
         field = TextBox(
             name="field",
