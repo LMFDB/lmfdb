@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
-import os
+import os, sys
 
 from lmfdb.backend.base import PostgresBase
 from lmfdb.backend import db, DelayCommit
@@ -445,7 +445,10 @@ class KnowlBackend(PostgresBase):
         matches = []
         for kid in kids:
             try:
-                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n'))
+                if sys.version_info[0] == 3:
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').split(u'\n--\n'))
+                else:
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).split(u'\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
@@ -460,10 +463,14 @@ class KnowlBackend(PostgresBase):
         - -1 if the knowl is referenced but cannot be safely replaced.
         """
         try:
-            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
+            if sys.version_info[0] == 3:
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+            else:
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
         except subprocess.CalledProcessError: # no matches
             return 0
-        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')]).split('\n')
+
+        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')],encoding='utf-8').split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
     def start_rename(self, knowl, new_name, who):
@@ -561,7 +568,10 @@ class KnowlBackend(PostgresBase):
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
         all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
-        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
+        if sys.version_info[0] == 3:
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""],encoding='utf-8').split('\n--\n')
+        else:
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')

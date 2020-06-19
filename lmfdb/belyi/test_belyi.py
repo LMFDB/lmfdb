@@ -27,7 +27,7 @@ class BelyiTest(LmfdbTest):
     def test_urls(self):
         # galmap
         self.check_args(
-            "/Belyi/4T5-4_3.1_2.1.1-a", "Belyi map 4T5-4_3.1_2.1.1-a"
+            "/Belyi/4T5-4_3.1_2.1.1-a", "Belyi map orbit 4T5-4_3.1_2.1.1-a"
         )
         # passport
         self.check_args(

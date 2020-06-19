@@ -13,8 +13,6 @@ import traceback
 from collections import defaultdict, Counter
 from glob import glob
 
-from sage.all import Integer, RealNumber
-
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder
 from psycopg2.extensions import (
@@ -28,7 +26,7 @@ from psycopg2.extensions import (
 )
 from psycopg2.extras import register_json
 
-from .encoding import Json, RealEncoder, numeric_converter
+from .encoding import Json, numeric_converter
 from .base import PostgresBase, _meta_tables_cols
 from .searchtable import PostgresSearchTable
 from .utils import DelayCommit
@@ -48,10 +46,16 @@ def setup_connection(conn):
     NUMERICL = new_array_type((oid,), "NUMERIC[]", NUMERIC)
     register_type(NUMERIC, conn)
     register_type(NUMERICL, conn)
-    register_adapter(Integer, AsIs)
-    register_adapter(RealNumber, RealEncoder)
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
+    try:
+        from sage.all import Integer, RealNumber
+    except ImportError:
+        pass
+    else:
+        register_adapter(Integer, AsIs)
+        from .encoding import RealEncoder
+        register_adapter(RealNumber, RealEncoder)
 
 
 class PostgresDatabase(PostgresBase):
@@ -1121,7 +1125,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     assert meta["name"] == tablename
 
                     with open(search_table_file, "r") as F:
-                        search_columns_pairs = self._read_header_lines(F)
+                        search_columns_pairs = self._read_header_lines(F, sep=sep)
 
                     search_columns = defaultdict(list)
                     for name, typ in search_columns_pairs:
@@ -1133,7 +1137,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                         if not os.path.exists(extras_file):
                             raise ValueError("extras file missing for {0}".format(tablename))
                         with open(extras_file, "r") as F:
-                            extras_columns_pairs = self._read_header_lines(F)
+                            extras_columns_pairs = self._read_header_lines(F, sep=sep)
                         extra_columns = defaultdict(list)
                         for name, typ in extras_columns_pairs:
                             if name != "id":
