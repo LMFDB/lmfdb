@@ -3,7 +3,7 @@ import os
 from lmfdb.utils.config import Configuration
 from .database import PostgresDatabase
 from .searchtable import PostgresSearchTable
-from .lmfdb_statstable import PostgresStatsTable
+from .statstable import PostgresStatsTable
 from six.moves.configparser import ConfigParser
 
 class LMFDBStatsTable(PostgresStatsTable):
