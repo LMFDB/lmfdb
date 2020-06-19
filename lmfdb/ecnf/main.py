@@ -461,13 +461,16 @@ def elliptic_curve_jump(info):
         return random_curve()
     # This label should be a full isogeny class label or a full
     # curve label (including the field_label component)
-    try:
+    if re.search("\\d$", label):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
-    except ValueError:
+        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    elif re.search("[a-z]$", label):
+            nf, cond_label, iso_label = split_class_label(label.strip())
+            return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
+    else:
+        flash_error("%s is not a valid elliptic curve or isogeny class label.", label)
         info['err'] = ''
         return redirect(url_for("ecnf.index"))
-
-    return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
 def url_for_label(label):
     if label == 'random':
