@@ -7,9 +7,9 @@ import signal
 import datetime
 from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
-from .database import PostgresDatabase
-from .searchtable import PostgresSearchTable
-from .statstable import PostgresStatsTable
+from lmfdb.backend.database import PostgresDatabase
+from lmfdb.backend.searchtable import PostgresSearchTable
+from lmfdb.backend.statstable import PostgresStatsTable
 
 class LMFDBStatsTable(PostgresStatsTable):
     saving = True
