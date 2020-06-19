@@ -344,3 +344,5 @@ class LMFDBDatabase(PostgresDatabase):
                 pipe.send_signal(signal.SIGTERM)
         else:
             return pipe
+
+db = LMFDBDatabase()
