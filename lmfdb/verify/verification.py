@@ -9,7 +9,7 @@ from datetime import datetime
 from timeout_decorator import timeout, TimeoutError
 from sage.all import Integer, vector, ZZ
 
-from lmfdb.backend import db
+from lmfdb.lmfdb_database import db
 from psycopg2.sql import SQL, Composable, Literal
 from lmfdb.backend.utils import IdentifierWrapper as Identifier
 

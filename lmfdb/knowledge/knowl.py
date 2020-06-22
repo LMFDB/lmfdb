@@ -8,7 +8,8 @@ import subprocess
 import os, sys
 
 from lmfdb.backend.base import PostgresBase
-from lmfdb.backend import db, DelayCommit
+from lmfdb.backend import DelayCommit
+from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
