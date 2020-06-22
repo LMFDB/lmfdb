@@ -169,7 +169,7 @@ def login(**kwargs):
     name = request.form["name"]
     password = request.form["password"]
     next = request.form["next"]
-    remember = True if request.form["remember"] == "on" else False
+    remember = request.form.get("remember") == "on"
     user = LmfdbUser(name)
     if user and user.authenticate(password):
         login_user(user, remember=remember)
