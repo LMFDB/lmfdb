@@ -492,6 +492,8 @@ def td_wrapr(val):
     return r' <td align="right">\(%s\)</td>' % val
 def td_wrapc(val):
     return r' <td align="center">\(%s\)</td>' % val
+def td_wrapcn(val):
+    return r' <td align="center">%s</td>' % val
 
 def point_string(P):
     return '(' + ' : '.join(map(str, P)) + ')'
@@ -528,13 +530,14 @@ def mw_gens_table(invs,gens,hts,pts):
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
-def local_table(D,N,tama,bad_lpolys):
+def local_table(D,N,tama,bad_lpolys,cluster_pics):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', r'ord(\(N\))'),
               th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
               th_wrap('g2c.bad_lfactors', 'L-factor'),
+              th_wrap('ag.cluster_picture', 'Cluster picture'),
               '</tr>', '</thead>', '<tbody>']
     for p in D.prime_divisors():
         loctab.append('  <tr>')
@@ -548,7 +551,12 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp)])
+        Cluslist = [r for r in cluster_pics if r[0] == p]
+        if Cluslist:
+            Clus = '<a href="' + Cluslist[0][1] + '"><img src="' + Cluslist[0][2] + '" /></a>'
+        else:
+            Clus = ''
+        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
@@ -598,8 +606,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, is_curve=True):
-        self.make_object(curve, endo, tama, ratpts, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, clus, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -637,9 +645,16 @@ class WebG2C(object):
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
             ratpts = {}
-        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
+        clus = []
+        for x in tama:
+            if x['p'] != 2:
+                clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
+                clusimg = clusentry['image']
+                clusthmb = clusentry['image'] # change to thumbnail later
+                clus.append([x['p'], clusimg, clusthmb])
+        return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, ratpts, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -730,7 +745,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
-            data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
+            data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'],clus)
 
         else:
             # invariants specific to isogeny class
