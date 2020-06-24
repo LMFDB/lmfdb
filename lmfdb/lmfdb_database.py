@@ -233,7 +233,7 @@ class LMFDBDatabase(PostgresDatabase):
         config = Configuration()
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
-        self.__editor = None
+        self.__editor = config.logging_options["editor"]
 
     def login(self):
         """
