@@ -245,6 +245,7 @@ def url_for_label(label):
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
              url_for_label=url_for_label,
+             learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),

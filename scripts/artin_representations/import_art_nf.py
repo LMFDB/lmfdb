@@ -1,7 +1,7 @@
 #!/usr/local/bin/sage -python
 
 # This version writes the data to a file, deletes all records from the database,
-# then reloads from the files. 
+# then reloads from the files.
 from __future__ import print_function
 from six import text_type
 import sys
@@ -36,12 +36,6 @@ def makels(li):
   li2 = [str(x) for x in li]
   return ','.join(li2)
 
-# turn a conductor into a sortable string
-# this uses length 4 prefix
-def make_cond_key(D):
-  D1 = int(D.log(10))
-  return '%04d%s'%(D1,str(D))
-
 maxint = (2**63)-1
 
 def int_or_string(a):
@@ -57,7 +51,7 @@ def fix_local_factors(gconj):
 
 # There are two parts since we need to deal with two files/databases
 # The two functions below take our for one entry as a dictionary, and reformats
-# the dictionary
+# the dictionary 
 
 outrecs = []
 
@@ -82,6 +76,11 @@ def artrepload(l):
   l['Dets'] = [z['Det'] for z in l['GaloisConjugates']]
   for j in range(len(l['GaloisConjugates'])):
     del l['GaloisConjugates'][j]['Det']
+  aproj = l['Proj']
+  l['Proj_GAP'] = aproj[0]
+  l['Proj_nTj'] = aproj[1]
+  l['Proj_Polynomial'] = aproj[2]
+  del l['Proj']
   chival = int(l['Chi_of_complex'])
   dim = int(l['Dim'])
   minusones = (dim - chival)/2
@@ -175,6 +174,8 @@ for path in sys.argv[1:]:
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
+                    elif kk in ['Proj_GAP', 'Proj_nTj', 'Proj_Polynomial']:
+                        ent[kk] = copy_dumps(ent[kk], 'int[]', recursing=False)
                     elif not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([ent[z] for z in head1])+'\n')

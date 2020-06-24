@@ -3,7 +3,8 @@ from __future__ import print_function
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, range_formatter
+from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
+from lmfdb.backend.utils import range_formatter
 from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 

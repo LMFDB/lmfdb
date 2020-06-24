@@ -4,7 +4,7 @@ from sage.all import (
     Gamma0, floor, cached_function, dimension_new_cusp_forms,
     dimension_eis, dimension_cusp_forms, dimension_modular_forms)
 
-from lmfdb.backend import db, SQL
+from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker, check_analytic_conductor
 from .verification import overall, overall_long, fast, slow, accumulate_failures
 

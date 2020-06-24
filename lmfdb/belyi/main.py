@@ -30,6 +30,7 @@ from .web_belyi import (
     WebBelyiPassport,
 )
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
+from lmfdb.classical_modular_forms.web_newform import field_display_gen
 
 credit_string = "Michael Musty, Sam Schiavone, and John Voight"
 
@@ -559,9 +560,8 @@ def belyi_galmap_text_download(label):
     title="Belyi map search results",
     err_title="Belyi Maps Search Input Error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
-    projection=["label", "group", "deg", "g", "orbit_size", "geomtype"],
+    projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "moduli_field", "moduli_field_label"],
     url_for_label=lambda label: url_for(".by_url_belyi_search_url", smthorlabel=label),
-    cleaners={"geomtype": lambda v: geometry_types_dict[v["geomtype"]]},
     bread=lambda: [("Belyi Maps", url_for(".index")), ("Search Results", ".")],
     credit=lambda: credit_string,
     learnmore=learnmore_list,
@@ -605,6 +605,9 @@ def belyi_search(info, query):
     for fld in ["geomtype", "group"]:
         if info.get(fld):
             query[fld] = info[fld]
+
+
+    info["nf_link"] = lambda elt: field_display_gen(elt.get('moduli_field_label'), elt.get('moduli_field'), truncate=16)
 
 
 ################################################################################

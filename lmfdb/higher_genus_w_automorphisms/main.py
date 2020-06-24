@@ -68,6 +68,17 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Labeling convention', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
+
 def tfTOyn(bool):
     if bool:
         return "Yes"
@@ -165,17 +176,12 @@ def index():
     info['genus_list'] = genus_list
     info['stats'] = HGCWAstats().stats()
 
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                 ('Source of the data', url_for(".how_computed_page")),
-                 ('Reliability of the data', url_for(".reliability_page")),
-                 ('Labeling convention', url_for(".labels_page"))]
-
     return render_template("hgcwa-index.html",
                            title="Families of Higher Genus Curves with Automorphisms",
                            bread=bread,
                            credit=credit,
                            info=info,
-                           learnmore=learnmore)
+                           learnmore=learnmore_list())
 
 
 @higher_genus_w_automorphisms_page.route("/random")
@@ -190,7 +196,8 @@ def statistics():
     }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
-    return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
+   
+    return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
@@ -221,10 +228,12 @@ def groups_per_genus(genus):
     bread = get_bread([('Statistics', url_for('.statistics')),
                        ('Groups per Genus', url_for('.statistics')),
                        (str(genus), ' ')])
+       
     return render_template("hgcwa-stats-groups-per-genus.html",
                            info=info,
                            credit=credit,
                            title=title,
+                           learnmore=learnmore_list(),
                            bread=bread)
 
 def url_for_label(label):
@@ -574,6 +583,7 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
         bread=lambda: get_bread([("Search Results",'')]),
+        learnmore=learnmore_list,     
         credit=lambda: credit)
 def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
@@ -723,26 +733,22 @@ def render_family(args):
         bread_gp = label_to_breadcrumbs(br_gp)
 
         bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
-        learnmore =[('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
-                    ('Reliability of the data', url_for(".reliability_page")),
-                ('Labeling convention', url_for(".labels_page"))]
 
         if len(Ltopo_rep) == 0 or len(dataz) == 1:
-            downloads = [('Download Magma code', url_for(".hgcwa_code_download", label=label, download_type='magma')),
-                             ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+            downloads = [('Code to Magma', url_for(".hgcwa_code_download", label=label, download_type='magma')),
+                             ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
-            downloads = [('Magma code', None),
+            downloads = [('Code to Magma', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                              (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
-                             ('Gap code', None),
+                             ('Code to Gap', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
                              (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
-                               learnmore=learnmore, downloads=downloads, credit=credit)
+                               learnmore=learnmore_list(), downloads=downloads, credit=credit)
 
 
 def render_passport(args):
@@ -923,26 +929,23 @@ def render_passport(args):
             (bread_sign, urlstrng),
             (data['cc'][0], ' ')])
 
-        learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                     ('Source of the data', url_for(".how_computed_page")),
-                     ('Reliability of the data', url_for(".reliability_page")),
-                     ('Labeling convention', url_for(".labels_page"))]
-
         if numb == 1 or braid_length == 0:
-            downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                             ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+            downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+            
         else:
-            downloads = [('Magma code', None),
+            downloads = [('Code to Magma', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
-                             ('Gap code', None),
+                             ('Code to Gap', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))]
+
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
-                               learnmore=learnmore, downloads=downloads,
+                               learnmore=learnmore_list(), downloads=downloads,
                                credit=credit)
 
 
@@ -1008,7 +1011,8 @@ def topological_action(fam, cc):
 
 
 def search_input_error(info, bread):
-    return render_template("hgcwa-search.html", info=info, title='Families of Higher Genus Curve Search Input Error', bread=bread, credit=credit)
+   
+    return render_template("hgcwa-search.html", info=info, title='Families of Higher Genus Curve Search Input Error', learnmore=learnmore_list(),bread=bread, credit=credit)
 
 
 
@@ -1016,13 +1020,10 @@ def search_input_error(info, bread):
 def completeness_page():
     t = 'Completeness of the Automorphisms of Curves Data'
     bread = get_bread([("Completeness", )])
-    learnmore = [('Source of the data', url_for(".how_computed_page")),
-                 ('Reliability of the data', url_for(".reliability_page")),
-                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore,
+                           learnmore=learnmore_list_remove('Completeness'),
                            credit=credit)
 
 
@@ -1030,11 +1031,8 @@ def completeness_page():
 def labels_page():
     t = 'Label Scheme for the Data'
     bread = get_bread([("Labels", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                 ('Source of the data', url_for(".how_computed_page")),
-                 ('Reliability of the data', url_for(".reliability_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
-                           learnmore=learnmore,
+                           learnmore=learnmore_list_remove('Label'),
                            title=t,
                            bread=bread,
                            credit=credit)
@@ -1044,14 +1042,11 @@ def labels_page():
 def reliability_page():
     t = 'Reliability of the Automorphisms of Curve Data'
     bread = get_bread([("Reliability", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                 ('Source of the data', url_for(".how_computed_page")),
-                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.reliability',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore,
+                           learnmore=learnmore_list_remove('Reliability'),
                            credit=credit)
 
 
@@ -1059,14 +1054,11 @@ def reliability_page():
 def how_computed_page():
     t = 'Source of the Automorphisms of Curve Data'
     bread = get_bread([("Source", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                 ('Reliability of the data', url_for(".reliability_page")),
-                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.source',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore,
+                           learnmore=learnmore_list_remove('Source'),
                            credit=credit)
 
 

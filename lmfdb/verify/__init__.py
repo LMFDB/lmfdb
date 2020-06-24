@@ -4,7 +4,7 @@
 
 import os, importlib
 
-import lmfdb.backend as database
+import lmfdb.lmfdb_database as database
 from lmfdb.app import is_running
 if is_running():
     raise RuntimeError("Cannot verify while running website (SQL injection vulnerabilities)")
