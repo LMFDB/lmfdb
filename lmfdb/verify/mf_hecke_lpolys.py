@@ -1,7 +1,7 @@
 
 from sage.all import prime_range
 
-from lmfdb.backend import db, SQL
+from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker
 from .verification import overall, overall_long, accumulate_failures
 
