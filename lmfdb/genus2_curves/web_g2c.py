@@ -553,7 +553,7 @@ def local_table(D,N,tama,bad_lpolys,cluster_pics):
             Lp = '?'
         Cluslist = [r for r in cluster_pics if r[0] == p]
         if Cluslist:
-            Clus = '<a href="' + Cluslist[0][1] + '"><img src="' + Cluslist[0][2] + '" /></a>'
+            Clus = '<a href="' + Cluslist[0][1] + '"><img src="' + Cluslist[0][2] + '" height=19 style="position: relative; top: 50%; transform: translateY(10%);" /></a>'
         else:
             Clus = ''
         loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
@@ -650,7 +650,7 @@ class WebG2C(object):
             if x['p'] != 2:
                 clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
                 clusimg = clusentry['image']
-                clusthmb = clusentry['image'] # change to thumbnail later
+                clusthmb = clusentry['thumbnail']
                 clus.append([x['p'], clusimg, clusthmb])
         return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
 
