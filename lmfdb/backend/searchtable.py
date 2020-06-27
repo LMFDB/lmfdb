@@ -278,7 +278,7 @@ class PostgresSearchTable(PostgresTable):
         EXAMPLES::
 
             sage: from lmfdb import db
-            sage: sage: db.nf_fields._parse_dict({})
+            sage: db.nf_fields._parse_dict({})
             []
             sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
             '[1, 2]'

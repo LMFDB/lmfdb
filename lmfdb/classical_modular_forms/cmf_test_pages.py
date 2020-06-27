@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from lmfdb.tests import LmfdbTest
-from lmfdb.backend.database import PostgresDatabase
+from lmfdb.lmdfb_database import LMFDBDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt, ceil
 import multiprocessing
@@ -42,7 +42,7 @@ class CMFTest(LmfdbTest):
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
         logging.getLogger().disabled = True
-        db = PostgresDatabase()
+        db = LMFDBDatabase()
         logging.getLogger().disabled = False
         res = []
         errors = []
@@ -64,7 +64,7 @@ class CMFTest(LmfdbTest):
     @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
         logging.getLogger().disabled = True
-        db = PostgresDatabase()
+        db = LMFDBDatabase()
         logging.info.disabled = False
         errors = []
         res = []

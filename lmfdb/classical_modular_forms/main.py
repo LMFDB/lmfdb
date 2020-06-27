@@ -11,12 +11,13 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap, range_formatter, display_float,
+    search_wrap, display_float,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
     StatsDisplay, proportioners, totaler)
+from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
@@ -867,13 +868,13 @@ def set_rows_cols(info, query):
         if primes:
             try:
                 rad = prod(ZZ(p) for p in primes.split(','))
-                if info['prime_quantifier'] in ['subset', 'subsets']: # subsets for backward compat in urls
+                if info.get('prime_quantifier') in ['subset', 'subsets']: # subsets for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
-                elif info['prime_quantifier'] in ['supset', 'append']: # append for backward compat in urls
+                elif info.get('prime_quantifier') in ['supset', 'append']: # append for backward compat in urls
                     info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
-                elif info['prime_quantifier'] in ['complement']:
+                elif info.get('prime_quantifier') in ['complement']:
                     info['level_list'] = [N for N in info['level_list'] if gcd(N,rad) == 1]
-                elif info['prime_quantifier'] in ['exact']:
+                elif info.get('prime_quantifier') in ['exact']:
                     info['level_list'] = [N for N in info['level_list'] if (rad == ZZ(N).radical())]
             except (ValueError, TypeError):
                 pass

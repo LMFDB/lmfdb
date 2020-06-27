@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import
-import re
+import sys, re
+from collections import defaultdict
 
 from psycopg2.sql import SQL, Identifier, Placeholder
 
-from lmfdb.utils import SearchParsingError
+class SearchParsingError(ValueError):
+    """
+    Used for errors raised when parsing search boxes
+    """
+    pass
 
 ##################################################################
 # query language                                                 #
@@ -199,3 +204,68 @@ class DelayCommit(object):
             self.obj.conn.commit()
         if exc_type is not None:
             self.obj.conn.rollback()
+
+# Reraise an exception, possibly with a different message, type, or traceback.
+if sys.version_info.major < 3:  # Python 2?
+    # Using exec avoids a SyntaxError in Python 3.
+    exec("""def reraise(exc_type, exc_value, exc_traceback=None):
+            # Reraise an exception, possibly with a different message, type, or traceback.
+                raise exc_type, exc_value, exc_traceback""")
+else:
+    def reraise(exc_type, exc_value, exc_traceback=None):
+        """
+        Reraise an exception, possibly with a different message, type, or traceback.
+        """
+        if exc_value is None:
+            exc_value = exc_type()
+        if exc_value.__traceback__ is not exc_traceback:
+            raise exc_value.with_traceback(exc_traceback)
+        raise exc_value
+
+def range_formatter(x):
+    if x is None:
+        return 'Unknown'
+    elif isinstance(x, dict):
+        if '$gte' in x:
+            a = x['$gte']
+        elif '$gt' in x:
+            a = x['$gt'] + 1
+        else:
+            a = None
+        if '$lte' in x:
+            b = x['$lte']
+        elif '$lt' in x:
+            b = x['$lt'] - 1
+        else:
+            b = None
+        if a == b:
+            return str(a)
+        elif b is None:
+            return "{0}-".format(a)
+        elif a is None:
+            return "..{0}".format(b)
+        else:
+            return "{0}-{1}".format(a,b)
+    return str(x)
+
+class KeyedDefaultDict(defaultdict):
+    """
+    A defaultdict where the default value takes the key as input.
+    """
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError((key,))
+        self[key] = value = self.default_factory(key)
+        return value
+
+def make_tuple(val):
+    """
+    Converts lists and dictionaries into tuples, recursively.  The main application
+    is so that the result can be used as a dictionary key.
+    """
+    if isinstance(val, (list, tuple)):
+        return tuple(make_tuple(x) for x in val)
+    elif isinstance(val, dict):
+        return tuple((make_tuple(a), make_tuple(b)) for a,b in val.items())
+    else:
+        return val
