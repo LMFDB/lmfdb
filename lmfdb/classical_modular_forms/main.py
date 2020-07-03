@@ -916,6 +916,7 @@ def dimension_space_postprocess(res, info, query):
     urlgen_info.pop('number', None)
     urlgen_info.pop('numforms', None)
     urlgen_info.pop('dim', None)
+    urlgen_info.pop('search_array', None)
     def url_generator_list(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'Spaces'
@@ -958,8 +959,10 @@ def dimension_space_postprocess(res, info, query):
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
+    # Remove entries that are unused for dimension tables
     urlgen_info.pop('hidden_search_type', None)
     urlgen_info.pop('number', None)
+    urlgen_info.pop('search_array', None)
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
