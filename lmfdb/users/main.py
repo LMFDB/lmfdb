@@ -169,7 +169,7 @@ def login(**kwargs):
     name = request.form["name"]
     password = request.form["password"]
     next = request.form["next"]
-    remember = True if request.form["remember"] == "on" else False
+    remember = request.form.get("remember") == "on"
     user = LmfdbUser(name)
     if user and user.authenticate(password):
         login_user(user, remember=remember)
@@ -337,7 +337,7 @@ def restart():
         if sys.version_info[0] == 3:
             out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
         else:
-            Popen(command, stdout=PIPE).communicate()[0]
+            out = Popen(command, stdout=PIPE).communicate()[0]
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
