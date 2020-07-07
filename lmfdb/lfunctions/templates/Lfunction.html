@@ -147,7 +147,7 @@
   <tr>
     <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
     <td>&nbsp;=&nbsp;</td>
-    <td> {{ rank }}
+    <td> ${{ rank }}$
     </td>
   </tr>
 
@@ -192,7 +192,7 @@
     <td> not available </td>
     {% else %}
     <td>&nbsp;$\approx$&nbsp;</td>
-    <td> {{ sv_edge_arithmetic[1] }}</td>
+    <td> ${{ sv_edge_arithmetic[1] }}$ </td>
     {% endif %}
   </tr>
   <tr class="analytic nodisplay">
@@ -202,7 +202,7 @@
     <td> not available </td>
     {% else %}
     <td>&nbsp;$\approx$&nbsp;</td>
-    <td> {{ sv_edge_analytic[1] }} </td>
+    <td> ${{ sv_edge_analytic[1] }}$ </td>
     {% endif %}
   </tr>
   {% endif %}
