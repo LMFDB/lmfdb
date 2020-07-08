@@ -53,3 +53,17 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
     def idG_showing(self):
         L = self.tc.get('/HigherGenus/C/Aut/2.2-1.1.2-2.1')
         assert 'Id(G)' in L.get_data(as_text=True)
+
+    def top_inequiv(self):
+        L = self.tc.get('/HigherGenus/C/Aut/3.8-2.0.2-2-4-4')
+        assert 'topologically inequivalent' in L.get_data(as_text=True)
+
+    def braid_inequiv(self):
+        L = self.tc.get('HigherGenus/C/Aut/3.8-3.0.2-2-4-4.1')
+        assert 'braid inequivalent' in L.get_data(as_text=True)
+
+    def braid_summary_pages(self):
+        L = self.tc.get('/HigherGenus/C/Aut/3.8-3.0.2-2-4-4/T.1.1')
+        assert 'braid inequivalent' in L.get_data(as_text=True)
+
+        
