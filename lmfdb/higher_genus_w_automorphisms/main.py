@@ -1082,11 +1082,10 @@ def hgcwa_code_download(**args):
     import time
     label = args['label']
 
-    #Choose lang
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' \
-        or args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
+    #Choose language
+    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or  args['download_type']=='rep_magma':
         lang = 'magma'
-    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' :
+    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type']=='rep_gap':
         lang = 'gap'
     else:
         lang = args['download_type']

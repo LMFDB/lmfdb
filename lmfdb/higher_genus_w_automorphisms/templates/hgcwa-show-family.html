@@ -102,11 +102,11 @@
       <p>
       {% if info.topological_num == 1%}
         <p>
-          Displaying the representative for the unique action up to {{KNOWL('curve.highergenus.aut.refinedpassport',title='topological equivalence')}}.
+          Displaying the representative for the unique action up to {{KNOWL('curve.highergenus.aut.topological_equivalence',title='topological equivalence')}}.
         </p>
       {% else %}
         <p>
-          Displaying representatives for {{info.topological_num}} topologically inequivalent actions.
+          Displaying representatives for {{info.topological_num}} {{KNOWL('curve.highergenus.aut.topological_equivalence',title='topologically inequivalent')}} actions.
         </p>
       {% endif %}
       </p>
