@@ -991,11 +991,11 @@ def topological_action(fam, cc):
                                          element['total_label'],
                                          cc_display(ast.literal_eval(element['con']))]]
 
-
            
     # Sort braid ascending
     sorted_braid = []
-    braid_key = Lbraid.keys()
+    braid_key = list(Lbraid.keys())    
+#    braid_key = Lbraid.keys()
     key_for_sorted = list(map(lambda key: ast.literal_eval(key), braid_key))
     key_for_sorted.sort()
 
