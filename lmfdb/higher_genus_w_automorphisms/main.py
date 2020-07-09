@@ -959,7 +959,6 @@ def topological_action(fam, cc):
      #Get the equivalence class
     topo_class = list(db.hgcwa_passports.search({'label': fam, 'topological': cc_list}))
 
-    g = topo_class[0]['genus']
     GG = ast.literal_eval(topo_class[0]['group'])
     gn = GG[0]
     gt = GG[1]
