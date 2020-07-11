@@ -22,7 +22,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats
 from collections import defaultdict
 
 logger = make_logger("hgcwa")
@@ -162,7 +162,6 @@ def index():
     genus_list = list(range(2, genus_max + 1))
     info['count'] = 50
     info['genus_list'] = genus_list
-    info['stats'] = HGCWAstats().stats()
 
     return render_template("hgcwa-index.html",
                            title="Families of Higher Genus Curves with Automorphisms",
@@ -180,7 +179,7 @@ def random_passport():
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': HGCWAstats().stats(),
+        'stats': get_stats().stats()
     }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
@@ -189,14 +188,20 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    group_stats = db.hgcwa_passports.stats.get_oldstat('bygenus/' + genus + '/group')
-
+    group_stats = db.hgcwa_passports.count({'genus':genus}, ['group'])
     # Redirect to 404 if statistic is not found
     if not group_stats:
         return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
 
-    # Groups are stored in sorted order
-    groups = group_stats['counts']
+    # Sort groups in group_stats
+    groups = [[group[0], gen_vectors] for group, gen_vectors in group_stats.items()]
+    def sort_key(entry):
+        group = entry[0]
+        m = hgcwa_group.match(group)
+        order = int(m.group(1))
+        number = int(m.group(2))
+        return (order, number)
+    groups.sort(key = sort_key)
 
     # Create isomorphism classes
     iso_classes = []
