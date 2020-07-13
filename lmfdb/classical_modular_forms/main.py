@@ -1537,7 +1537,7 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return self.browse_array
         search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Dimensions', 'Traces']:
+        if search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
             return self.refine_array
         elif search_type in ['Spaces', 'SpaceTraces']:
             return self.space_array
