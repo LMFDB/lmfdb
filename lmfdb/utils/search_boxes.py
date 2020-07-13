@@ -598,7 +598,7 @@ class SearchArray(UniqueRepresentation):
             array.append([vheader])
             for i in [1,2]:
                 cols = SelectBox(
-                    name="col%s",
+                    name="col%s" % i,
                     id="col%s_select" % i,
                     label="",
                     width=150,
