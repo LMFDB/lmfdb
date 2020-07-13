@@ -35,6 +35,12 @@ class CmfTest(LmfdbTest):
         assert "projective image" in page.get_data(as_text=True)
         assert "character order" in page.get_data(as_text=True)
 
+    def test_dynamic_stats(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
+        data = page.get_data(as_text=True)
+        for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
+            assert x in data
+
     def test_sidebar(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").get_data(as_text=True)
         assert 'Labels for Classical Modular Forms' in data
