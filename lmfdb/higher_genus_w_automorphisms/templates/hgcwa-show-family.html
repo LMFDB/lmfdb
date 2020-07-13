@@ -5,14 +5,6 @@
 {% block content %}
 
 
-<style>
-.tab button.active {
-    background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
-}
-</style>
-<!-- add in style.css -->
-
-
 <h2> Family Information</h2>
 
   <table>
@@ -124,18 +116,14 @@
 <script>
 function openData(evt, dataType) {
     var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(dataType).style.display = "block";
-    evt.currentTarget.className += " active";
+    $(".tabcontent").hide();
+    $(".tablinks").removeClass("active");
+    $(evt.target).addClass("active");
+    $("#"+dataType).css("display", "block");
 }
-document.getElementById("defaultOpen").click();
+$(document).ready(function() {
+    $("#defaultOpen").click();
+});
 </script>
-  
+
 {% endblock %}

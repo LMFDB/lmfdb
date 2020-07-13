@@ -603,6 +603,11 @@ button.inactive:hover {
     border: 2px solid {{color.button_border_inactive}};
 }
 
+/* HGCWA */
+.tab button.active {
+    background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
+}
+
 body.knowl form button:hover,
 body.knowl form select:hover {
     background:    {{color.knowl_hover}};

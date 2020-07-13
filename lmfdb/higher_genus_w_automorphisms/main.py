@@ -699,18 +699,15 @@ def render_family(args):
             #Topological equivalence
             if 'topological' in dat:
                 if dat['topological'] == dat['cc']:
-                    x1=[] #A list of permutations of generating vectors of topo_rep
+                    x1 = [] #A list of permutations of generating vectors of topo_rep
                     for perm in dat['gen_vectors']:
                         x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
                     Ltopo_rep.append([dat['total_label'],
-                                      x1, 
+                                      x1,
                                       dat['label'],
-                                      'T.' + '.'.join(str(x) for x in dat['cc']), 
-                                      dat['cc']]) #2nd to last element is used for webpage tag  
+                                      'T.' + '.'.join(str(x) for x in dat['cc']),
+                                      dat['cc']]) #2nd to last element is used for webpage tag
 
-        #Lall.sort(key=lambda x: x[3][0]) #Sort passport label
-        #Ltopo_rep.sort(key=lambda x: x[4][0])
-        
         #Add topological equivalence to info
         info.update({'topological_rep': Ltopo_rep})
         info.update({'topological_num': len(Ltopo_rep)})
@@ -813,7 +810,7 @@ def render_passport(args):
         Ldata = []
         HypColumn = False
         Lfriends = []
-        Lbraid=[]
+        Lbraid = []
         for i in range(0, min(numgenvecs,numb)):
             dat = dataz[i]
             x1 = dat['total_label']
@@ -851,18 +848,18 @@ def render_passport(args):
 
         #Generate braid representatives
         if 'braid' in dataz[0]:
-            braid_data = list(filter(lambda entry: entry['braid'] == entry['cc'], list(dataz)))
+            braid_data = [entry for entry in dataz if entry['braid'] == entry['cc']]
             for dat in braid_data:
-                x5=[]
+                x5 = []
                 for perm in dat['gen_vectors']:
                     x5.append(sep.join(split_perm(Permutation(perm).cycle_string())))
                 Lbraid.append([dat['total_label'], x5])
 
         braid_length = len(Lbraid)
-        
+
         #Add braid equivalence into info
-        info.update({'braid': Lbraid, 
-                    'braid_numb': braid_length, 
+        info.update({'braid': Lbraid,
+                    'braid_numb': braid_length,
                     'braid_disp_numb': min(braid_length, numbraidreps)})
 
         if 'eqn' in data:
@@ -903,7 +900,7 @@ def render_passport(args):
             full_gn = full_G[0]
             full_gt = full_G[1]
 
-            full_gp_string=str(full_gn) + '.' + str(full_gt)
+            full_gp_string = str(full_gn) + '.' + str(full_gt)
             full_pretty_group = sg_pretty(full_gp_string)
             info.update({'fullauto': full_pretty_group,
                          'signH': sign_display(ast.literal_eval(data['signH'])),
@@ -963,54 +960,51 @@ def topological_action(fam, cc):
     gn = GG[0]
     gt = GG[1]
 
-    gp_string=str(gn) + '.' + str(gt)
-    pretty_group=sg_pretty(gp_string)
+    gp_string = str(gn) + '.' + str(gt)
+    pretty_group = sg_pretty(gp_string)
 
     bread_sign = label_to_breadcrumbs(br_sign)
     bread_gp = label_to_breadcrumbs(br_gp)
 
-    bread = get_bread([(br_g, '../?genus='+br_g),('$'+pretty_group+'$','../?genus='+br_g + '&group='+bread_gp),
-                            (bread_sign, '../'+fam),
-                            ('Topological Orbit for ' + str(cc_list[0]) + ', ' + str(cc_list[1]), ' ') ])
+    bread = get_bread(
+        [(br_g, '../?genus=' + br_g),
+         ('$%s$' % pretty_group, '../?genus=%s&group=%s' % (br_g, bread_gp)),
+         (bread_sign, '../' + fam),
+         ('Topological Orbit for %s, %s' % (cc_list[0], cc_list[1]), ' ')
+        ]
+    )
 
     title = 'One Orbit Under Topological Action'
 
     downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=representative, download_type='rep_magma')),
                       ('Download Gap code', url_for(".hgcwa_code_download", label=representative, download_type='rep_gap'))]
 
-    Lbraid={}
+    Lbraid = {}
 
     for element in topo_class:
        if str(element['braid']) in Lbraid:
-           Lbraid[str(element['braid'])].append([element['passport_label'],
-                                              element['total_label'],
-                                              ' '])
-                                              #cc_display(ast.literal_eval(element['con']))])
+           Lbraid[str(element['braid'])].append(
+               (element['passport_label'],
+                element['total_label'],
+                ' '))
+           # We include the space so that we don't have duplicate conjugacy
+           # classes displayed
        else:
-           Lbraid[str(element['braid'])] = [[element['passport_label'],
-                                         element['total_label'],
-                                         cc_display(ast.literal_eval(element['con']))]]
+           Lbraid[str(element['braid'])] = [
+               (element['passport_label'],
+                element['total_label'],
+                cc_display(ast.literal_eval(element['con'])))]
 
-           
     # Sort braid ascending
-    sorted_braid = []
-    braid_key = list(Lbraid.keys())    
-#    braid_key = Lbraid.keys()
-    key_for_sorted = list(map(lambda key: ast.literal_eval(key), braid_key))
-    key_for_sorted.sort()
+    key_for_sorted = sorted(ast.literal_eval(key) for key in Lbraid)
+    sorted_braid = [Lbraid[str(key)] for key in key_for_sorted]
 
-    for key in key_for_sorted:
-        sorted_braid.append(Lbraid[str(key)])
-
-    info = {'topological_class': sorted_braid, 'representative': representative, 'braid_num': len(braid_key)}
+    info = {'topological_class': sorted_braid, 'representative': representative, 'braid_num': len(Lbraid)}
 
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread, downloads=downloads)
 
-    
-
 
 def search_input_error(info, bread):
-   
     return render_template("hgcwa-search.html", info=info, title='Families of Higher Genus Curve Search Input Error', learnmore=learnmore_list(),bread=bread, credit=credit)
 
 
@@ -1082,7 +1076,7 @@ def hgcwa_code_download(**args):
     label = args['label']
 
     #Choose language
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or  args['download_type']=='rep_magma':
+    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or args['download_type']=='rep_magma':
         lang = 'magma'
     elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type']=='rep_gap':
         lang = 'gap'
@@ -1111,21 +1105,21 @@ def hgcwa_code_download(**args):
         fam, cc_1, cc_2 = split_vector_label(label)
         cc_list = [int(cc_1), int(cc_2)]
         search_data = list(db.hgcwa_passports.search({"label": fam}))
-        data = list(filter(lambda entry : entry['topological'] == cc_list, search_data))
+        data = [entry for entry in search_data if entry['topological'] == cc_list]
 
     elif label_is_one_passport(label):
         search_data = list(db.hgcwa_passports.search({"passport_label" : label}))
         if lang == args['download_type']:
             data = search_data
         else:
-            data = list(filter(lambda entry : entry['braid'] == entry['cc'], search_data))
+            data = [entry for entry in search_data if entry['braid'] == entry['cc']]
 
     elif label_is_one_family(label):
         search_data = list(db.hgcwa_passports.search({"label" : label}))
         if lang == args['download_type']:
             data = search_data
         else:
-            data = list(filter(lambda entry : entry['topological'] == entry['cc'], search_data))
+            data = [entry for entry in search_data if entry['topological'] == entry['cc']]
 
     code += s + code_list['gp_comment'][lang] + '\n'
     code += code_list['group'][lang] + str(data[0]['group']) + ';\n'
