@@ -1364,11 +1364,11 @@ class CMFSearchArray(SearchArray):
         cm = SelectBox(
             name='cm',
             options=[('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')],
-            width=80)
+            width=82)
         rm = SelectBox(
             name='rm',
             options=[('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')],
-            width=80)
+            width=82)
         self_twist = DoubleSelectBox(
             label='Self-twists',
             knowl='cmf.self_twist',
