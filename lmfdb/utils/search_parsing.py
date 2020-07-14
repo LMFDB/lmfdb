@@ -774,7 +774,7 @@ def input_to_subfield(inp):
         return '.'.join([str(z) for z in result])
 
     def notq():
-        raise SearchParsingError("The rational numbers $\Q$ cannot be a proper intermediate field.")
+        raise SearchParsingError(r"The rational numbers $\Q$ cannot be a proper intermediate field.")
 
     # Change unicode dash with minus sign
     inp = inp.replace(u'\u2212', '-')

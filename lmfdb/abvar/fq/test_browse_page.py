@@ -57,6 +57,8 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=32-100&g=2-4", "6409")
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=4..7&g=2..4", "2953")
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=1%2C3%2C5", "30543")
+        # check that the links are functional
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts", "/Variety/Abelian/Fq/?search_type=List&amp;g=5&amp;q=3")
         # and that it deals with invalid input
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=x", "not a valid input")
 

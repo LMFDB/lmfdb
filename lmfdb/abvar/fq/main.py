@@ -618,6 +618,7 @@ def abelian_variety_count(info, query):
 
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
+        info_copy.pop("search_array", None)
         info_copy["search_type"] = "List"
         info_copy["g"] = g
         info_copy["q"] = q
