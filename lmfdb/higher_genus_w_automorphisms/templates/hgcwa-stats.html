@@ -4,6 +4,7 @@
 {% set max_cols = 10 %}
 {% set genus_detail = info.stats.genus_detail %}
 {% set dim_detail = info.stats.dim_detail %}
+{% set bounds = info.bounds %}
 
 <style>
 table.ntdata th.center {
@@ -78,7 +79,204 @@ table.ntdata td {
 </div>
 {% endfor %}
 
-<br>
+
+<h2>Distinct families by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.families[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct refined passports by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.refined_passports[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct generating vectors by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.gen_vectors[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct groups by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.groups[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct topological orbits by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.topologicals[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct braid orbits by genus and quotient genus</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{bounds.genus_min + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = bounds.genus_min + j %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        -
+        {% else %}
+        {{genus_detail[j].g0_counts.braids[g0]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 
 <h2> Distribution by dimension </h2>

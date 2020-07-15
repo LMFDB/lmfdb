@@ -179,7 +179,8 @@ def random_passport():
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': get_stats().stats()
+        'stats': get_stats().stats(),
+        'bounds': get_stats().bounds()
     }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
