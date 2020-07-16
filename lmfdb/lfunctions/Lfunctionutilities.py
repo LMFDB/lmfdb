@@ -746,26 +746,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
 ##################################################################
 
 def scientific_notation_helper(lval_string):
-    efind1 = lval_string.find('e')
-    if efind1 > -1:
-        efind2 = lval_string[efind1+1:].find('e')
-        if efind2 > -1:
-            efind2 = efind1+efind2+1
-            l_beg = lval_string[:efind1]
-            l_mid = lval_string[efind1+1:efind2]
-            l_end = lval_string[efind2+1:]
-            new_real = l_beg+'\\times 10^{'+l_mid[:l_mid.find(' ')]+'}'
-            new_im = l_mid[l_mid.find(' '):] + '\\times 10^{' + l_end[:l_end.find('i')]+'}i'
-            new_l_string = new_real+new_im
-        else:
-            l_beg = lval_string[:efind1]
-            l_end = lval_string[efind1+1:]
-            new_real = l_beg + '\\times 10^{' + l_end[:l_end.find(' ')]+'}'
-            new_im = l_end[l_end.find(' '):]
-            new_l_string = new_real+new_im
-    else:
-        new_l_string = lval_string
-    return(new_l_string)
+    return(re.sub(r"[Ee](-?\d+)",r"\\times10^{\1}",lval_string))
 
 
 ###############################################################

@@ -147,7 +147,7 @@
   <tr>
     <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
     <td>&nbsp;=&nbsp;</td>
-    <td> ${{ rank }}$
+    <td> \({{ rank }}\)
     </td>
   </tr>
 
@@ -156,7 +156,7 @@
   <tr>
     <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
     <td>&nbsp;=&nbsp;</td>
-    <td> ${{ functionalequationSelberg }}$
+    <td> \({{ functionalequationSelberg }}\)
     </td>
   </tr>
 
@@ -164,45 +164,45 @@
 
   {% if sv_critical_arithmetic %}
   <tr class="arithmetic">
-    <td> ${{ sv_critical_arithmetic[0] }}$ </td>
+    <td> \({{ sv_critical_arithmetic[0] }}\) </td>
     {% if sv_critical_arithmetic[1] == "0" %}
-    <td>&nbsp;$=$&nbsp;</td>
+    <td>&nbsp;\(=\)&nbsp;</td>
     {% else %}
-    <td>&nbsp;$\approx$&nbsp;</td>
+    <td>&nbsp;\(\approx\)&nbsp;</td>
     {% endif %}
-    <td> ${{ sv_critical_arithmetic[1] }}$ </td>
+    <td> \({{ sv_critical_arithmetic[1] }}\) </td>
   </tr>
   <tr class="analytic nodisplay">
-    <td> ${{ sv_critical_analytic[0] }}$ </td>
+    <td> \({{ sv_critical_analytic[0] }}\) </td>
     {% if sv_critical_analytic[1] == "0" %}
-    <td>&nbsp;$=$&nbsp;</td>
+    <td>&nbsp;\(=\)&nbsp;</td>
     {% else %}
-    <td>&nbsp;$\approx$&nbsp;</td>
+    <td>&nbsp;\(\approx\)&nbsp;</td>
     {% endif %}
 
-    <td> ${{ sv_critical_analytic[1] }}$ </td>
+    <td> \({{ sv_critical_analytic[1] }}\) </td>
   </tr>
   {% endif %}
 
   {% if sv_edge_arithmetic %}
   <tr class="arithmetic">
-    <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+    <td> \({{ sv_edge_arithmetic[0] }}\) </td>
     {% if sv_edge_arithmetic[1] == 'not computed' %}
     <td>&nbsp;</td>
     <td> not available </td>
     {% else %}
-    <td>&nbsp;$\approx$&nbsp;</td>
-    <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+    <td>&nbsp;\(\approx\)&nbsp;</td>
+    <td> \({{ sv_edge_arithmetic[1] }}\) </td>
     {% endif %}
   </tr>
   <tr class="analytic nodisplay">
-    <td> ${{ sv_edge_analytic[0] }}$ </td>
+    <td> \({{ sv_edge_analytic[0] }}\) </td>
     {% if sv_edge_analytic[1] == 'not computed' %}
     <td>&nbsp;</td>
     <td> not available </td>
     {% else %}
-    <td>&nbsp;$\approx$&nbsp;</td>
-    <td> ${{ sv_edge_analytic[1] }}$ </td>
+    <td>&nbsp;\(\approx\)&nbsp;</td>
+    <td> \({{ sv_edge_analytic[1] }}\) </td>
     {% endif %}
   </tr>
   {% endif %}
