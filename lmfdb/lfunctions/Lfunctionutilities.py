@@ -740,6 +740,15 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
+
+##################################################################
+#Function to help display Lvalues when scientific notation is used
+##################################################################
+
+def scientific_notation_helper(lval_string):
+    return(re.sub(r"[Ee](-?\d+)",r"\\times10^{\1}",lval_string))
+
+
 ###############################################################
 # Functions for Siegel dirichlet series
 ###############################################################

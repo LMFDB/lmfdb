@@ -3,7 +3,7 @@ from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
-                                specialValueTriple)
+                                 specialValueTriple,scientific_notation_helper)
 
 
 #############################################################################
@@ -172,8 +172,8 @@ class Lfunction(object):
                arith_center = str(ZZ(1)/2 + self.motivic_weight/2)
             svt_crit = specialValueTriple(self, 0.5, '\\frac12',arith_center)
             info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
-            info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
-            info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
+            info['sv_critical_analytic'] = [svt_crit[0], scientific_notation_helper(svt_crit[2])]
+            info['sv_critical_arithmetic'] = [svt_crit[1], scientific_notation_helper(svt_crit[2])]
 
             if self.motivic_weight % 2 == 1:
                arith_edge = "\\frac{" + str(2 + self.motivic_weight) + "}{2}"
@@ -182,8 +182,8 @@ class Lfunction(object):
 
             svt_edge = specialValueTriple(self, 1, '1',arith_edge)
             info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
-            info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
-            info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+            info['sv_edge_analytic'] = [svt_edge[0], scientific_notation_helper(svt_edge[2])]
+            info['sv_edge_arithmetic'] = [svt_edge[1], scientific_notation_helper(svt_edge[2])]
 
             chilatex = r"$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) + r", \cdot )$"
             info['chi'] = ''
