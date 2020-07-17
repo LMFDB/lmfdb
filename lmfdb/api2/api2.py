@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from unicodedata import normalize
 from lmfdb.api2 import api2_page
 from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons
@@ -28,7 +27,7 @@ def demo():
 
 @api2_page.route("/<other>")
 def other(other):
-    return Response(utils.build_api_error(other), mimetype='application/json')    
+    return Response(utils.build_api_error(other), mimetype='application/json')
 
 @api2_page.route("/livepg/<db>")
 def live_page_pg(db):
@@ -84,14 +83,12 @@ def list_searchers():
 
 @api2_page.route("/description/<searcher>")
 def list_descriptions(searcher):
-    dbstr = normalize('NFKD', searcher).encode('ascii','ignore')
-
-    if (searcher.startswith("<") and searcher.endswith(">")): 
+    if (searcher.startswith("<") and searcher.endswith(">")):
         title = "API Description"
         return render_template("example.html", **locals())
 
     try:
-        val = searchers[dbstr]
+        val = searchers[searcher]
     except KeyError:
         val = None
 
@@ -100,18 +97,16 @@ def list_descriptions(searcher):
     else:
         return Response(utils.build_api_error(searcher), mimetype='application/json')
     if lst:
-        return Response(utils.build_api_descriptions(dbstr, lst, request=request), mimetype='application/json')
+        return Response(utils.build_api_descriptions(searcher, lst, request=request), mimetype='application/json')
 
 @api2_page.route("/inventory/<searcher>")
 def list_responses(searcher):
-    dbstr = normalize('NFKD', searcher).encode('ascii','ignore')
-
-    if (searcher.startswith("<") and searcher.endswith(">")):     
+    if (searcher.startswith("<") and searcher.endswith(">")):
         title = "API Description"
         return render_template("example.html", **locals())
 
     try:
-        val = searchers[dbstr]
+        val = searchers[searcher]
     except KeyError:
         val = None
 
@@ -120,22 +115,21 @@ def list_responses(searcher):
     else:
         return Response(utils.build_api_error(searcher), mimetype='application/json')
     if lst:
-        return Response(utils.build_api_inventory(dbstr, lst, request=request), mimetype='application/json')
+        return Response(utils.build_api_inventory(searcher, lst, request=request), mimetype='application/json')
+
 
 @api2_page.route("/data/<searcher>")
 def get_data(searcher):
-    dbstr = normalize('NFKD', searcher).encode('ascii','ignore')
-
-    if (searcher.startswith("<") and searcher.endswith(">")):     
+    if (searcher.startswith("<") and searcher.endswith(">")):
         title = "API Description"
         return render_template("example.html", **locals())
 
     try:
-        val = searchers[dbstr]
+        val = searchers[searcher]
     except KeyError:
         val = None
 
-    if not val : return Response(utils.build_api_error(searcher), mimetype='application/json')
+    if not val: return Response(utils.build_api_error(searcher), mimetype='application/json')
 
     search = val.auto_search(request)
 
