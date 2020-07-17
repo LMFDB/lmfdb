@@ -89,6 +89,8 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import inventory_app
 assert inventory_app
+from . import maass_forms
+assert maass_forms
 
 from .lmfdb_database import db
 if db.is_verifying:

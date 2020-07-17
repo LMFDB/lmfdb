@@ -1,0 +1,18 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>
+{{KNOWL_INC('mf.maass.mwf.weight0')}}
+</div>
+
+<div>
+The database contains {{dbcount}} Maass forms of weight 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to 997.
+</div>
+
+<h2> Browse {{ KNOWL('mf.maass.mwf', title='Maass forms') }}</h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+{% endblock %}
