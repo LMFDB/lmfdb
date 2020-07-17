@@ -1044,7 +1044,6 @@ def flash_error(errmsg, *args):
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
-
 ################################################################################
 #  Ajax utilities
 ################################################################################
