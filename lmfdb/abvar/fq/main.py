@@ -554,19 +554,19 @@ def jump(info):
         # Also accept polynomials
         try:
             poly = coeff_to_poly(jump_box)
-        except ValueError:
-            raise err
-        cdict = poly.dict()
-        deg = poly.degree()
-        if deg % 2 == 1:
-            raise ValueError("Polynomial degree must be even")
+            cdict = poly.dict()
+            deg = poly.degree()
+            if deg % 2 == 1:
+                raise ValueError
+        except Exception:
+            raise ValueError("%s is not valid input.  Expected a label or Weil polynomial.")
         g = deg//2
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
             cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
-            raise ValueError("Polynomial must have constant or leading coefficient 1")
+            raise ValueError("%s is not valid input.  Polynomial must have constant or leading coefficient 1")
         try:
             q = lead.nth_root(g)
             if not ZZ(q).is_prime_power():
@@ -575,7 +575,7 @@ def jump(info):
                 if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
-            raise ValueError("Polynomial must be a Weil polynomial")
+            raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
