@@ -12,7 +12,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
-    SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -120,7 +120,7 @@ def galois_group_search(info, query):
                 a = ZZ(interval)
                 if a != 1 and not a.is_prime():
                     return True
-    if info.get('jump_to','').strip():
+    if info.get('jump','').strip():
         jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
           "8T1", "8T2", "8T3", "8T5", "9T1", "9T2", "10T1", "11T1", "12T1",
           "12T2", "12T5", "13T1", "14T1", "15T1", "16T1", "16T2", "16T3", 
@@ -135,18 +135,18 @@ def galois_group_search(info, query):
           "36T7", "36T9", "37T1", "38T1", "39T1", "40T1", "40T2", "40T3", 
           "40T4", "40T5", "40T7", "40T8", "40T13", "41T1", "42T1", "43T1", 
           "44T1", "44T2", "44T3", "45T1", "45T2", "46T1", "47T1"]
-        strip_label = info.get('jump_to','').strip().upper()
+        strip_label = info.get('jump','').strip().upper()
         # If the user entered a simple label
         if re.match(r'^\d+T\d+$',strip_label):
             return redirect(url_for('.by_label', label=strip_label), 301)
         parse_galgrp(info, query, qfield=['label','n'], 
-            name='a Galois group label', field='jump_to', list_ok=False,
+            name='a Galois group label', field='jump', list_ok=False,
             err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
         if query.get('label', '') in jump_list:
             return redirect(url_for('.by_label', label=query['label']), 301)
 
         else: # convert this to a regular search
-            info['gal'] = info['jump_to']
+            info['gal'] = info['jump']
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
@@ -248,7 +248,7 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        if db.nf_fields.exists({'degree': n, 'galt': t}):
+        if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Order', r'\(%s\)' % order),
@@ -317,31 +317,25 @@ def reliability():
 class GalSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    jump_example = "8T14"
+    jump_egspan = "e.g. 8T14"
     def __init__(self):
         parity = ParityBox(
             name="parity",
             label="Parity",
-            knowl="gg.parity",
-            width=50,
-            short_width=170)
+            knowl="gg.parity")
         cyc = YesNoBox(
             name="cyc",
             label="Cyclic",
-            knowl="group.cyclic",
-            width=50,
-            short_width=170)
+            knowl="group.cyclic")
         solv = YesNoBox(
             name="solv",
             label="Solvable",
-            knowl="group.solvable",
-            width=50,
-            short_width=170)
+            knowl="group.solvable")
         prim = YesNoBox(
             name="prim",
             label="Primitive",
-            knowl="gg.primitive",
-            width=50,
-            short_width=170)
+            knowl="gg.primitive")
 
         n = TextBox(
             name="n",
@@ -365,6 +359,7 @@ class GalSearchArray(SearchArray):
             name="gal",
             label="Group",
             knowl="group",
+            example_span_colspan=8,
             example="[8,3]",
             example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
@@ -376,21 +371,8 @@ class GalSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="1..100",
             example_span="-1, or 1..3")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        count = CountBox()
 
-        self.bool_array = [[parity, cyc, solv, prim]]
-
-        self.browse_array = [[n], [t], [order], [gal], [nilpotency], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [count]]
 
         self.refine_array = [[parity, cyc, solv, prim], [n, t, order, gal, nilpotency]]
-
-    def main_table(self, info=None):
-        if info is None:
-            bool_table = self._print_table(self.bool_array, None, "vertical")
-            browse_table = self._print_table(self.browse_array, None, "horizontal")
-            return bool_table + "\n" + browse_table
-        else:
-            return SearchArray.main_table(self, info)

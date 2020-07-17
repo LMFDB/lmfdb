@@ -1,10 +1,14 @@
-language: sage
-sudo: false
-dist: trusty
+os: linux
+dist: xenial
 
 env:
-  - SAGE_VERSION=8.8
-  - SAGE_VERSION=9.0
+  - SAGE_VERSION=9.1 TESTFILES="lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/genus2_curves/test_genus2_curves.py" #7
+  - SAGE_VERSION=9.1 TESTFILES="lmfdb/lfunctions/test_lfunctions.py lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py lmfdb/tests/test_homepage.py" #7
+  - SAGE_VERSION=9.1 TESTFILES="lmfdb/classical_modular_forms/test_cmf.py lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py" #7
+  - SAGE_VERSION=9.1 TESTFILES="lmfdb/local_fields/test_localfields.py lmfdb/users/test_users.py lmfdb/artin_representations/test_artin_representation.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py" #7
+  - SAGE_VERSION=9.1 TESTFILES="lmfdb/lfunctions/test_lfunction_degree_2.py lmfdb/lattice/test_lattice.py lmfdb/modular_forms/maass_forms/maass_waveforms/test_mwf.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py" #6
+
+# 4*7 + 6 + test_workshoplinks.py + test_external.py = 36 total number of test files
 
 # blocklist
 branches:
@@ -32,9 +36,18 @@ addons:
             - python-pip
             # to run nosetests in parallel
             - parallel
+            # update wget
+            - wget
 
 
 install:
+    - lsb_release -a
+    # fix expired certs
+    - sudo sed -i 's|mozilla/AddTrust_External_Root.crt|!mozilla/AddTrust_External_Root.crt|g' /etc/ca-certificates.conf
+    - sudo update-ca-certificates
+    # number of cpus
+    - python -c "import multiprocessing;print(multiprocessing.cpu_count())"
+    - export jobs=$(python -c "import multiprocessing;print(2*multiprocessing.cpu_count())")
     # assert parallel
     - parallel --version
     # install the latest pyflakes
@@ -56,7 +69,7 @@ install:
     # what is the load on the server
     - uptime
       #- wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    - wget  --no-verbose https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    - wget --progress=dot:giga https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
     # what is the load on the server
     - uptime
     # travis_wait extends the default 10 minute timeout to 40 minutes
@@ -68,6 +81,8 @@ install:
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print(G)'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
+    - echo ${TESTFILES} | tr ' ' '\n' > inputfile
+    - cat inputfile
 
 before_script:
     # assert that devmirror.lmfdb.xyz accepts our connections
@@ -76,6 +91,12 @@ before_script:
     - free -m
     # what is the load on the server
     - uptime
+    # check that we travis isn't missing any test_ file
+    - test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
+    # Check that pytest is installed
+    - ${SAGE} -sh -c "pytest --version"
+    # Do a naive test to initialize the config file
+    - ${SAGE} -sh -c 'pytest lmfdb/tests/test_spelling.py'
 
 script:
     # run pyflakes
@@ -84,10 +105,8 @@ script:
     # run pylint --py3k (with some temporary exceptions)
     - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
-    # Check that pytest is installed
-    - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
-    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
+    - travis_wait 20 ${SAGE} -sh -c 'parallel -j ${jobs} --joblog joblog -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
 
 after_failure:
     # what is the load on the server
@@ -96,7 +115,9 @@ after_failure:
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
 
 after_success:
+    # show joblog
+    - cat joblog
     # what is the load on the server
     - uptime
-    #- COVERALLS_PARALLEL=true coveralls
-    - coveralls
+    # #- COVERALLS_PARALLEL=true coveralls
+    # - coveralls

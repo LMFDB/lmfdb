@@ -5,8 +5,9 @@ from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
-from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.galois_groups.transitive_group import (
+    group_display_knowl, group_display_short, small_group_display_knowl)
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
 
@@ -73,6 +74,19 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
@@ -83,13 +97,16 @@ class ArtinRepresentation(object):
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
-                parts = x[0].split("c")
-                base = parts[0]
-                conjindex = int(parts[1])
+                parts = x[0].split(".")
+                base = "%s.%s.%s.%s"% tuple(parts[j] for j in (0,1,2,3))
+                if len(parts)<5: # Galois orbit
+                    conjindex=1
+                else:
+                    conjindex = letters2num(parts[4])
             elif len(x) == 2: # base and gorb index
                 base = x[0]
                 conjindex = x[1]
-                label = "%sc%s"%(str(x[0]),str(x[1]))
+                label = "%s.%s"%(str(x[0]),num2letters(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
             self._data = db.artin_reps.lucky({'Baselabel':str(base)})
@@ -122,6 +139,9 @@ class ArtinRepresentation(object):
 
     def conductor(self):
         return int(self._data["Conductor"])
+
+    def galorbindex(self):
+        return int(self._data['GalOrbIndex'])
 
     def NFGal(self):
         return [int(n) for n in self._data["NFGal"]]
@@ -197,6 +217,28 @@ class ArtinRepresentation(object):
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
 
+    def projective_group(self):
+        gapid = self._data['Proj_GAP']
+        smallg = None
+        if gapid[0]:
+            smallg = db.gps_small.lookup('%s.%s' % (gapid[0], gapid[1]))
+            if smallg:
+                return small_group_display_knowl(gapid[0], gapid[1])
+        ntj = self._data['Proj_nTj']
+        if ntj[1]:
+            return group_display_knowl(ntj[0], ntj[1])
+        if smallg:
+            return 'Group with GAP id [%s, %s]' % (gapid[0],gapid[1])
+        return 'data not computed'
+
+    def projective_field(self):
+        projfield = self._data['Proj_Polynomial']
+        if projfield == [0]:
+            return 'data not computed'
+        if projfield == [0,1]:
+            return formatfield(projfield)
+        return 'Galois closure of ' + formatfield(projfield)
+
     def number_field_galois_group(self):
         try:
             return self._nf
@@ -266,6 +308,7 @@ class ArtinRepresentation(object):
             return self
         if 'central_character_as_artin_rep' in self._data:
             return self._data['central_character_as_artin_rep']
+        return ArtinRepresentation(self._data['Dets'][self.galorbindex()-1])
         myfunc = self.central_char_function()
         # Get the Artin field
         nfgg = self.number_field_galois_group()

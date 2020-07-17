@@ -13,12 +13,11 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
-    flash_error, display_knowl,
-    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetBox, TextBoxWithSelect,
+    flash_error, display_knowl, CountBox,
+    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, search_wrap)
-from lmfdb.local_fields.main import show_slope_content
+    parse_floats, parse_subfield, search_wrap)
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data,
@@ -235,7 +234,8 @@ def statistics():
     nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)//2)]
             for deg in range(23)]
     # Galois groups
-    nt_stats = nfstatdb.column_counts(['degree', 'galt'])
+    nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
+    nt_stats = {(key[0],int(key[1].split('T')[1])): value for (key,value) in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -443,6 +443,7 @@ def render_field_webpage(args):
             if ramified_algebras_data[j] is None:
                 loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
             else:
+                from lmfdb.local_fields.main import show_slope_content
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
@@ -540,8 +541,9 @@ def render_field_webpage(args):
             if not sibdeg[2]:
                 sibdeg[2] = dnc
             else:
+                nsibs = len(sibdeg[2])
                 sibdeg[2] = ', '.join(sibdeg[2])
-                if len(sibdeg[2])<sibdeg[1]:
+                if nsibs<sibdeg[1]:
                     sibdeg[2] += ', some '+dnc
 
         resinfo.append(('sib', siblings[0]))
@@ -688,7 +690,7 @@ def download_search(info):
     for f in res:
         pol = Qx(f['coeffs'])
         D = f['disc_abs'] * f['disc_sign']
-        gal_t = f['galt']
+        gal_t = int(f['galois_label'].split('T')[1])
         if 'class_group' in f:
             cl = f['class_group']
         else:
@@ -717,9 +719,9 @@ def download_search(info):
 
 
 def number_field_jump(info):
-    query = {'label_orig': info['natural']}
+    query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info,query,'natural',name="Label",qfield='label')
+        parse_nf_string(info,query,'jump',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
@@ -741,10 +743,9 @@ def number_field_jump(info):
              title='Global number field search results',
              err_title='Global number field search error',
              per_page=50,
-             shortcuts={'natural':number_field_jump,
+             shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
-             split_ors=['galt'],
              url_for_label=url_for_label,
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
@@ -761,21 +762,10 @@ def number_field_search(info, query):
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
-                 qfield='ramps',mode='complement')
-    # modes are now contained (in), exactly, include
-    if 'ram_quantifier' in info and str(info['ram_quantifier']) in ['supset', 'include']:
-        mode='append'
-    elif 'ram_quantifier' in info and str(info['ram_quantifier']) in ['subset', 'contained']:
-        mode='subsets'
-    else:
-        mode='exact'
+                 qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps',mode=mode,radical='disc_rad')
-    # This seems not to be used
-    #if 'lucky' in info:
-    #    label = db.nf_fields.lucky(query, 0)
-    #    if label:
-    #        return redirect(url_for(".by_label", label=clean_input(label)))
+                 qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
+    parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -967,6 +957,8 @@ def nf_code(**args):
 class NFSearchArray(SearchArray):
     noun = "field"
     plural_noun = "fields"
+    jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
+    jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -1026,9 +1018,8 @@ class NFSearchArray(SearchArray):
             label="Number of ramified primes",
             knowl="nf.ramified_primes",
             example=2)
-        ram_quantifier = SubsetBox(
-            name="ram_quantifier",
-            width=50)
+        ram_quantifier = SubsetNoExcludeBox(
+            name="ram_quantifier")
         ram_primes = TextBoxWithSelect(
             name="ram_primes",
             label="Ram. primes",
@@ -1040,10 +1031,14 @@ class NFSearchArray(SearchArray):
             label="Unramified primes",
             knowl="nf.unramified_prime",
             example="2,3")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        subfield = TextBox(
+            name="subfield",
+            label="Intermediate field",
+            knowl="nf.intermediate_fields",
+            example_span="2.2.5.1 or x^2-5 or a "+
+                display_knowl("nf.nickname", "field nickname"),
+            example="x^2-5")
+        count = CountBox()
 
         self.browse_array = [
             [degree, signature],
@@ -1052,10 +1047,10 @@ class NFSearchArray(SearchArray):
             [class_number, class_group],
             [num_ram, cm_field],
             [ram_primes, ur_primes],
-            [regulator],
+            [regulator, subfield],
             [count]]
 
         self.refine_array = [
             [degree, signature, gal, class_number, class_group],
             [regulator, num_ram, ram_primes, ur_primes, cm_field],
-            [discriminant, rd]]
+            [discriminant, rd, subfield]]

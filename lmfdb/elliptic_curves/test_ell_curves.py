@@ -21,7 +21,7 @@ class EllCurveTest(LmfdbTest):
         assert '/EllipticCurve/Q/12350/s/' in L.get_data(as_text=True)
 
     def test_Cremona_label_mal(self):
-        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
+        L = self.tc.get('/EllipticCurve/Q/?jump=Cremona%3A12qx', follow_redirects=True)
         assert '12qx' in L.get_data(as_text=True) and 'does not define a recognised elliptic curve' in L.get_data(as_text=True)
 
     def test_missing_curve(self):
@@ -82,6 +82,10 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/?num_int_pts=1')
         assert '14.a2' in L.get_data(as_text=True)
         assert not('11.a1' in L.get_data(as_text=True))
+
+    def test_cm_disc_search(self):
+        self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
+        self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')

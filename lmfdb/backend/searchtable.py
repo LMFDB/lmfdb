@@ -149,6 +149,7 @@ class PostgresSearchTable(PostgresTable):
             - ``$exists`` -- if True, require not null; if False, require null.
             - ``$startswith`` -- for text columns, matches strings that start with the given string.
             - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
+            - ``$ilike`` -- for text columns, matches strings according to the ILIKE, the case-insensitive version of LIKE in PostgreSQL.
             - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
             - ``$raw`` -- a string to be inserted as SQL after filtering against SQL injection
         - ``value`` -- The value to compare to.  The meaning depends on the key.
@@ -277,7 +278,7 @@ class PostgresSearchTable(PostgresTable):
         EXAMPLES::
 
             sage: from lmfdb import db
-            sage: sage: db.nf_fields._parse_dict({})
+            sage: db.nf_fields._parse_dict({})
             []
             sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
             '[1, 2]'

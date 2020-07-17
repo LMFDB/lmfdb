@@ -44,15 +44,14 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 </ul>
 </p>
 
-<h2> Find a specific curve by {{ KNOWL('ec.curve_label',title='label')}}</h2>
+<h2> Find a specific curve or {{ KNOWL('ec.isogeny_class',title="isogeny class") }} by {{ KNOWL('ec.curve_label',title='label')}}</h2>
+
 <form>
-<input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
-<button type='submit' name='jump' value='label' >label</button>
-<br><span class="formexample">e.g. 2.2.5.1-31.1-a1</span>
-{% if err_msg %}
-<br>
-<span class="errmsg">{{err_msg}}</span>
-{% endif %}
+  {{ info.search_array.jump_box(info) | safe }}
+  {% if err_msg %}
+  <br>
+  <span class="errmsg">{{err_msg}}</span>
+  {% endif %}
 </form>
 
 

@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 import os
 import time
+import six
 
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
@@ -52,10 +53,14 @@ app.logger.addHandler(logger_file_handler())
 if app.debug:
     try:
         from flask_debugtoolbar import DebugToolbarExtension
-        app.config['SECRET_KEY'] = '''shh, it's a secret'''
         toolbar = DebugToolbarExtension(app)
     except ImportError:
         pass
+
+# secret key, necessary for sessions, and sessions are
+# in turn necessary for users to login
+from .utils.config import get_secret_key
+app.secret_key = get_secret_key()
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -127,22 +132,18 @@ def git_infos():
         from subprocess import Popen, PIPE
         # cwd should be the root of git repo
         cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..")
-        git_rev_cmd = '''git rev-parse HEAD'''
-        git_date_cmd = '''git show --format="%ci" -s HEAD'''
-        git_contains_cmd = '''git branch --contains HEAD'''
-        git_reflog_cmd = '''git reflog -n5'''
-        git_graphlog_cmd = '''git log --graph  -n 10'''
-        rev = Popen([git_rev_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        date = Popen([git_date_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        graphlog = Popen([git_graphlog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        pairs = [[git_rev_cmd, rev],
-                [git_date_cmd, date],
-                [git_contains_cmd, contains],
-                [git_reflog_cmd, reflog],
-                [git_graphlog_cmd, graphlog]]
-        summary = "\n".join("$ %s\n%s" % (c, o) for c, o in pairs)
+        commands = ['''git rev-parse HEAD''',
+                    '''git show --format="%ci" -s HEAD''',
+                    '''git branch --contains HEAD''',
+                    '''git reflog -n5''',
+                    '''git log --graph  -n 10''']
+        kwdargs = {'shell': True, 'stdout' : PIPE, 'cwd' : cwd}
+        if six.PY3:
+            kwdargs['encoding'] = 'utf-8'
+        pairs = [(c, Popen(c, **kwdargs).communicate()[0]) for c in commands]
+        rev = pairs[0][1]
+        date = pairs[0][1]
+        summary = "\n".join("$ %s\n%s" % p for p in pairs)
         return rev, date, summary
     except Exception:
         return '-', '-', '-'

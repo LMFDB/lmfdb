@@ -7,14 +7,15 @@ import time
 
 from flask import abort, render_template, url_for, request, redirect, send_file
 from sage.rings.all import PolynomialRing, ZZ
+from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
-    to_dict, flash_error, integer_options, display_knowl,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
+    to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
+    SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap, YesNoMaybeBox,
+    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox,
 )
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
@@ -176,6 +177,8 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 class AbvarSearchArray(SearchArray):
+    jump_example = "2.16.am_cn"
+    jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
     def __init__(self):
         qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
@@ -444,12 +447,8 @@ class AbvarSearchArray(SearchArray):
             advanced=True,
         )
         dim4d = dim5d = SkipBox(example_span="0 or 1", advanced=True)
-        simple_quantifier = SelectBox(
+        simple_quantifier = SubsetBox(
             "simple_quantifier",
-            width=85,
-            options=[("", "include"),
-                     ("contained", "subset"),
-                     ("exactly", "exactly")],
         )
         simple_factors = TextBoxWithSelect(
             "simple_factors",
@@ -462,12 +461,7 @@ class AbvarSearchArray(SearchArray):
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
-        count = TextBox(
-            "count",
-            label="Results to display",
-            example=50,
-            example_col=False
-        )
+        count = CountBox()
 
         self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
@@ -533,12 +527,10 @@ def common_parse(info, query):
     parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])
     parse_string_start(info, query, "abvar_point_count", qfield="abvar_counts_str", first_field="abvar_count")
     parse_string_start(info, query, "curve_point_count", qfield="curve_counts_str", first_field="curve_count")
-    if info.get("simple_quantifier") == "contained":
-        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="subsets")
-    elif info.get("simple_quantifier") == "exactly":
-        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode="exact")
+    if info.get("simple_quantifier") in ["subset", "exactly"]:
+        parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode=info.get("simple_quantifier"))
     else:
-        parse_submultiset(info, query, "simple_factors", mode="append")
+        parse_submultiset(info, query, "simple_factors")
     if info.get("use_geom_decomp") == "on":
         dimstr = "geom_dim"
         nf_qfield = "geometric_number_fields"
@@ -554,17 +546,55 @@ def common_parse(info, query):
     parse_nf_string(info, query, "number_field", qfield=nf_qfield)
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
 
+def jump(info):
+    jump_box = info["jump"].strip() # only called when this present
+    try:
+        validate_label(jump_box)
+    except ValueError as err:
+        # Also accept polynomials
+        try:
+            poly = coeff_to_poly(jump_box)
+        except ValueError:
+            raise err
+        cdict = poly.dict()
+        deg = poly.degree()
+        if deg % 2 == 1:
+            raise ValueError("Polynomial degree must be even")
+        g = deg//2
+        lead = cdict[deg]
+        if lead == 1: # accept monic normalization
+            lead = cdict[0]
+            cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
+        if cdict.get(0) != 1:
+            raise ValueError("Polynomial must have constant or leading coefficient 1")
+        try:
+            q = lead.nth_root(g)
+            if not ZZ(q).is_prime_power():
+                raise ValueError
+            for i in range(1, g):
+                if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
+                    raise ValueError
+        except ValueError:
+            raise ValueError("Polynomial must be a Weil polynomial")
+        def extended_code(c):
+            if c < 0:
+                return 'a' + cremona_letter_code(-c)
+            return cremona_letter_code(c)
+        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
+    return by_label(jump_box)
+
 @search_wrap(
     template="abvarfq-search-results.html",
     table=db.av_fq_isog,
     title="Abelian Variety Search Results",
     err_title="Abelian Variety Search Input Error",
     shortcuts={
-        "jump": lambda info: by_label(info.get("label", "")),
+        "jump": jump,
         "download": download_search,
     },
     postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
     url_for_label=url_for_label,
+    learnmore=learnmore_list,
     bread=lambda: get_bread(("Search Results", " ")),
     credit=lambda: abvarfq_credit,
 )
@@ -588,6 +618,7 @@ def abelian_variety_count(info, query):
 
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
+        info_copy.pop("search_array", None)
         info_copy["search_type"] = "List"
         info_copy["g"] = g
         info_copy["q"] = q
@@ -650,6 +681,7 @@ def search_input_error(info=None, bread=None):
         info=info,
         title="Abelian Variety Search Input Error",
         bread=bread,
+        learnmore=learnmore_list()
     )
 
 @abvarfq_page.route("/stats")

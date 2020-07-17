@@ -4,6 +4,7 @@ from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
+from lmfdb.utils import names_and_urls
 from flask import url_for
 
 from lmfdb import db
@@ -109,7 +110,7 @@ class WebBelyiGalmap(object):
         data -- information about the map to be displayed
         plot -- currently empty
         properties -- information to be displayed in the properties box (including link plot if present)
-        friends -- labels of related objects
+        friends -- labels or URLs of related objects
         code -- code snippets for relevant attributes in data
         bread -- bread crumbs for home page
         title -- title to display on home page
@@ -127,16 +128,16 @@ class WebBelyiGalmap(object):
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 6:
+            if len(slabel) == 2: # passport label length
                 galmap = db.belyi_galmaps.lucky({"plabel": label})
-            elif len(slabel) == 7:
+            elif len(slabel) == 3: # galmap label length
                 galmap = db.belyi_galmaps.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
             raise ValueError("Invalid Belyi map label %s." % label)
         if not galmap:
-            if len(slabel) == 6:
+            if len(slabel) == 2:
                 raise KeyError(
                     "Belyi map passport label %s not found in the database." % label
                 )
@@ -177,6 +178,8 @@ class WebBelyiGalmap(object):
             data["curve"] = r"\mathbb{P}^1"
         else:
             data["curve"] = make_curve_latex(crv_str)
+        #if galmap['curve_label']:
+        #    data['curve_label'] = galmap['curve_label']
 
         # change pairs of floats to complex numbers
         embeds = galmap["embeddings"]
@@ -210,7 +213,6 @@ class WebBelyiGalmap(object):
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
-        # TODO: add portrait here, I think
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
@@ -224,9 +226,9 @@ class WebBelyiGalmap(object):
         ]
         self.properties = properties
 
-        # TODO: add curve
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        self.friends.extend(names_and_urls(galmap['friends']))
 
         # Downloads
         if galmap["g"] <= 2:
@@ -249,9 +251,14 @@ class WebBelyiGalmap(object):
             self.downloads = []
 
         # Breadcrumbs
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data["label"].split(
-            "-"
-        )
+        label_spl = data["label"].split("-")
+        groupstr = label_spl[0]
+        letnum = label_spl[2]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [
@@ -291,7 +298,7 @@ class WebBelyiGalmap(object):
         ]
 
         # Title
-        self.title = "Belyi map " + data["label"]
+        self.title = "Belyi map orbit " + data["label"]
 
         # Code snippets (only for curves)
         self.code = {}
@@ -304,7 +311,7 @@ class WebBelyiPassport(object):
         data -- information about the map to be displayed
         plot -- currently empty
         properties -- information to be displayed in the properties box (including link plot if present)
-        friends -- labels of related objects
+        friends -- labels or URLs of related objects
         code -- code snippets for relevant attributes in data, currently empty
         bread -- bread crumbs for home page
         title -- title to display on home page
@@ -321,7 +328,7 @@ class WebBelyiPassport(object):
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 6:
+            if len(slabel) == 2:
                 passport = db.belyi_passports.lucky({"plabel": label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
@@ -398,8 +405,13 @@ class WebBelyiPassport(object):
         self.friends = []
 
         # Breadcrumbs
-
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data["plabel"].split("-")
+        label_spl = data["plabel"].split("-")
+        groupstr = label_spl[0]
+        gstr = str(data['g'])
+        sigmas = label_spl[1]
+        sigma0, sigma1, sigmaoo = sigmas.split("_")
+        abcstr = str(data['abc']).replace(' ', '')
+        # does lambdasstr need to be updated?
         lambdasstr = "%s-%s-%s" % (sigma0, sigma1, sigmaoo)
         lambdasgstr = lambdasstr + "-" + gstr
         self.bread = [

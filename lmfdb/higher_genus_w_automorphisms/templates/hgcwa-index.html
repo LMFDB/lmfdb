@@ -39,31 +39,16 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 <p>A <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
 
 
-    <h2>Find specific automorphisms of higher genus curves</h2>
+<h2>Find specific automorphisms of higher genus curves by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}</h2>
 
-    <form name="search" method = "get" action="{{url_for('.index')}}">
-        <table class="">
-	  <tr>
-	    <td>
-	  Search by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}
-          <input type="text" name="jump_to" value="" placeholder="2.12-4.0.2-2-2-3">
-	    </td>
-	    <td>
-          <button type="submit" value="Find">Find</button>
-	      </td>
-	      <td>
-		<span class="formexample">family or passport label, e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2 </span>
-	      </td>
-	    </tr>
-	  </table>
-	  </form>
+<form name="search" method = "get" action="{{url_for('.index')}}">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+<h2>Search</h2>
+<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
 
 
-
-        <h2>Search</h2>
-        <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
-          {{ info.search_array.html() | safe }}
-        </form>
-
-
-      {% endblock %}
+{% endblock %}

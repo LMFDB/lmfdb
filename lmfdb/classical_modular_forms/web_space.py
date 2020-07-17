@@ -194,7 +194,7 @@ def display_hecke_polys(form_labels, num_disp = 5):
             #t3 = clock()
             #factor_time += (t3-t2)
             F_p = make_bigint(r'\( %s \)' % F_p)
-            if (F_p != "1") and (len(F_p) > 0):
+            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
                 if (F_p[0] != '(') and (num_forms > 1):
                     F_p = '(' + F_p + ')'
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
@@ -210,7 +210,7 @@ def display_hecke_polys(form_labels, num_disp = 5):
              '  </tr>', '</thead>', '<tbody>']
     loop_count = 0
     for p, lpoly in hecke_polys_orbits.items():
-        if lpoly == "":
+        if lpoly.strip() == "":
             lpoly = "1";
         if loop_count < num_disp:
             polys.append('  <tr>')

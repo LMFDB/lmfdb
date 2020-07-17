@@ -230,7 +230,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
         # all) has norm > maxnorm:
         nmin = min(ns)
         if nmin > maxnorm:
-            raise StopIteration
+            return
 
         # extract smallest prime and its index:
         i = ns.index(nmin)

@@ -8,11 +8,12 @@ import re
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, PolynomialRing
+from sage.all import ZZ, QQ, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
+from lmfdb.backend.utils import SearchParsingError
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -32,12 +33,6 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
-
-class SearchParsingError(ValueError):
-    """
-    Used for errors raised when parsing search boxes
-    """
-    pass
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
@@ -396,7 +391,7 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: 
+    if parse_one is None:
         parse_one = lambda x: (int(x.sign()), int(x.abs())) if x != 0 else (1,0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
@@ -453,9 +448,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
             query[qfield][kwd] = inp
         else:
             query[qfield] = {kwd: inp}
-    if mode == 'complement':
+    if mode == 'exclude':
         add_condition('$notcontains')
-    elif mode == 'subsets':
+    elif mode == 'subset':
         # sadly, jsonb GIN indexes don't support <@, so we don't want to use
         # $containedin if we can help it.
         # Even more sadly, even switching to querying on the radical doesn't help,
@@ -466,9 +461,9 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
         #else:
         add_condition('$containedin')
-    elif mode == 'append':
+    elif mode == 'include' or not mode: # include is the default
         add_condition('$contains')
-    elif mode == 'exact' or mode == '': # empty mode since exact is often default
+    elif mode == 'exactly':
         if radical is not None:
             query[radical] = product(inp)
             return
@@ -487,7 +482,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         raise ValueError("Unrecognized mode: programming error in LMFDB code")
 
 @search_parser
-def parse_subset(inp, query, qfield, parse_singleton=None, mode='append', radical=None, product=prod):
+def parse_subset(inp, query, qfield, parse_singleton=None, mode=None, radical=None, product=prod):
     # Note that you can do sanity checking using parse_singleton
     # Just raise a ValueError if it fails.
     inp = inp.split(',')
@@ -511,9 +506,9 @@ def _multiset_encode(L):
     return distinguished
 
 @search_parser(clean_info=True)
-def parse_submultiset(inp, query, qfield, mode='append'):
+def parse_submultiset(inp, query, qfield, mode=None):
     # Only multisets of strings are supported.
-    if mode == 'complement':
+    if mode == 'exclude':
         # Searches for multisets whose multiplicity is strictly less than the
         # provided set at each given element.  This notion reduces to
         # the standard complement in the multiplicity free case.
@@ -597,7 +592,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                             query[qf] = v
                     else:
                         if v != query[qf]:
-                            query[qf] = -1 
+                            query[qf] = -1
                 else:
                     query[qf] = v
         elif split:
@@ -605,7 +600,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         else:
             inp = '[%s]'%','.join([str(a) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
-            
+
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, keepbrackets=False, extractor=None):
     if (not BRACKETED_RAT_RE.match(inp) or
@@ -771,6 +766,104 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     parts[2] = str(prod(raise_power(c) for c in parts[2].split("_")))
     return ".".join(parts)
 
+# Similar to parsing a number field name, but with different output,
+# here coefficients low to high separated by .,
+# and different behavior if the entry is not in the database
+def input_to_subfield(inp):
+    def finish(result):
+        return '.'.join([str(z) for z in result])
+
+    def notq():
+        raise SearchParsingError(r"The rational numbers $\Q$ cannot be a proper intermediate field.")
+
+    # Change unicode dash with minus sign
+    inp = inp.replace(u'\u2212', '-')
+
+    # remove non-ascii characters from inp
+    # we need to encode and decode for Python 3, as 'str' object has no attribute 'decode'
+    inp = re.sub(r'[^\x00-\x7f]', r'', inp)
+    if len(inp) == 0:
+        return None
+
+    # Do we have a nf label
+    if re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',inp):
+        from lmfdb import db
+        myfield = db.nf_fields.lookup(inp)
+        if myfield:
+            return finish(myfield['coeffs'])
+        else:
+            raise SearchParsingError("It is not the label for a subfield in the database.")
+
+    F = inp.lower() # keep original if needed
+    # Is it a polynomial
+    if 'x' in F:
+        F1 = F.replace('^', '**')
+        R = PolynomialRing(ZZ, 'x')
+        pol = PolynomialRing(QQ,'x')(str(F1))
+        pol *= pol.denominator()
+        if not pol.is_irreducible():
+            raise SearchParsingError("It is not an irreducible polynomial.")
+        coeffs = R(pari(pol).polredabs()).coefficients(sparse=False)
+        if coeffs == [0,1]:
+            notq()
+        return finish(coeffs)
+    # Nicknames
+    if F == 'q':
+        notq()
+    if F in ['qi', 'q(i)']:
+        return '1.0.1'
+    if F[0] == 'q':
+        if '(' in F and ')' in F:
+            F=F.replace('(','').replace(')','')
+            inp=inp.replace('(','').replace(')','')
+        if F[1:5] in ['sqrt', 'root']:
+            try:
+                d = ZZ(str(F[5:])).squarefree_part()
+            except (TypeError, ValueError):
+                d = 0
+            if d == 0 or d == 1:
+                raise SearchParsingError("After {0}, the remainder must be a nonzero integer which is not a perfect square.  Use {0}5 or {0}-11 for example.".format(inp[:5]))
+            # Recursion has it use polredabs to get the polynomial
+            return input_to_subfield("x^2 - (%s)" % d)
+        # Look for cyclotomic
+        if F[0:5] == 'qzeta':
+            if '_' in F:
+                F = F.replace('_','')
+            match_obj = re.match(r'^qzeta(\d+)(\+|plus)?$', F)
+            if not match_obj:
+                raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+
+            d = ZZ(str(match_obj.group(1)))
+            if d % 4 == 2:
+                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
+            if d < 1:
+                raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+            if d==1: # asking for Q
+                notq()
+
+            if match_obj.group(2):  # asking for the totally real field
+                from lmfdb.number_fields.web_number_field import rcyclolookup
+                if d < 5: # again, asking for subfield Q
+                    notq()
+                if d in rcyclolookup:
+                    return input_to_subfield(rcyclolookup[d])
+                else:
+                    raise SearchParsingError("Subfield %s is not available." % F)
+                f = pari.polcyclo(d)
+                return input_to_subfield(str(f))
+                # Want polcyclo here
+                raise SearchParsingError('%s is not in the database.' % F)
+            f = pari.polcyclo(d)
+            return input_to_subfield(str(f))
+    raise SearchParsingError('It is not a valid field nickname or label, or a defining polynomial.')
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_subfield(inp, query, qfield):
+    sf = input_to_subfield(inp)
+    if sf: # Might return none
+        query[qfield] = {'$contains': sf}
+
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     query[qfield] = nf_string_to_label(inp)
@@ -820,9 +913,9 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None: process = lambda x: x
-    if inp in ["True", "yes", "1"]:
+    if inp in ["True", "yes", "1", "even"]: # artin reps use parse_bool for an is_even parity field
         query[qfield] = process(True)
-    elif inp in ["False", "no", "-1", "0"]:
+    elif inp in ["False", "no", "-1", "0", "odd"]:
         query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
@@ -962,10 +1055,10 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
                     sub_query[qfield]['$elemMatch'] = elemMatch_operand[0]
                 else:
                     sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
-            # we could add more than one $elemMatch operand, but 
-            # at the moment, the operator $all cannot handle other $ operators 
+            # we could add more than one $elemMatch operand, but
+            # at the moment, the operator $all cannot handle other $ operators
             # A workaround would be to wrap everything around with an $and
-            # but that doesn't end up speeding up things. 
+            # but that doesn't end up speeding up things.
         else:
             key = qfield + '.' + str(index_shift)
             sub_query[key] = parse_range2(part, key, parse_singleton)[1]

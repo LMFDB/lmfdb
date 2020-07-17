@@ -16,8 +16,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, TextBoxWithSelect, IncludeOnlyBox,
-    parse_element_of, search_wrap)
+    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
+    YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -154,13 +154,13 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
-        err_args['err_msg'] = "Please enter a non-empty label"
+        err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
         err_args['err_msg'] = r"%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
-    label = info.get('label', '').replace(" ", "")
+    label = info.get('jump', '').replace(" ", "")
     m = match_lmfdb_label(label)
     if m:
         try:
@@ -245,6 +245,7 @@ def url_for_label(label):
              err_title='Elliptic Curve Search Input Error',
              per_page=50,
              url_for_label=url_for_label,
+             learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
@@ -260,6 +261,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
     parse_floats(info,query,'regulator','regulator')
+    parse_bool(info,query,'semistable','semistable')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -269,26 +271,17 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
+    #parse_ints(info,query,field='cm_disc',qfield='cm')
+    if 'cm_disc' in info:
+        query['cm'] = info['cm_disc']
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
-                 qfield='nonmax_primes', mode='complement')
-    if info.get('surj_quantifier') == 'exactly':
-        mode = 'exact'
-    else:
-        mode = 'append'
+                 qfield='nonmax_primes', mode='exclude')
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                 qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
-    if info.get('bad_quantifier') == 'exactly':
-        mode = 'exact'
-    elif info.get('bad_quantifier') == 'exclude':
-        mode = 'complement'
-    elif info.get('bad_quantifier') == 'subset':
-        mode = 'subsets'
-    else:
-        mode = 'append'
+                 qfield='nonmax_primes',mode=info.get('surj_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
-                 qfield='bad_primes',mode=mode)
+                 qfield='bad_primes',mode=info.get('bad_quantifier'))
     # The button which used to be labelled Optimal only no/yes"
     # (default no) has been renamed "Curves per isogeny class all/one"
     # (default one) but the only change in behavious is that we no
@@ -636,6 +629,8 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 class ECSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
+    jump_example = "11.a2"
+    jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
     def __init__(self):
         cond = TextBox(
             name="conductor",
@@ -680,11 +675,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = IncludeOnlyBox(
+        cm = ExcludeOnlyBox(
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication")
-        tor_opts = ([("", "any"),
+        tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
                     [("[2,%s]"%n, "C2&times;C%s"%n) for n in range(2, 10, 2)])
@@ -697,30 +692,22 @@ class ECSearchArray(SearchArray):
             name="optimal",
             label="Curves per isogeny class",
             knowl="ec.isogeny_class",
-            options=[("", "all"),
+            options=[("", ""),
                      ("on", "one")])
-        surj_quant = SelectBox(
-            name="surj_quantifier",
-            options=[("", "include"),
-                     ("exactly", "exactly")],
-            width=75)
+        surj_quant = SubsetNoExcludeBox(
+            name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Non-maximal primes",
+            label="Non-max. $p$",
             short_label="Non-max. $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
-        bad_quant = SelectBox(
-            name="bad_quantifier",
-            options=[("", "include"),
-                     ("exclude", "exclude"),
-                     ("exactly", "exactly"),
-                     ("subset", "subset of")],
-            width=75)
+        bad_quant = SubsetBox(
+            name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad primes",
+            label="Bad $p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -729,23 +716,38 @@ class ECSearchArray(SearchArray):
             label="Regulator",
             knowl="ec.q.regulator",
             example="8.4-9.1")
+        semistable = YesNoBox(
+            name="semistable",
+            label="Semistable",
+            example="Yes",
+            knowl="ec.semistable")
+        cm_opts = [('', ''), ('-3', -3), ('-4', -4), ('-7', -7), ('-8', -8), ('-11', -11), ('-12', -12), ('-16', -16),
+                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163)]
+        cm_disc = SelectBox(
+            name="cm_disc",
+            label="CM discriminant",
+            example="-3",
+            knowl="ec.complex_multiplication",
+            options=cm_opts
+            )
 
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        count = CountBox()
 
         self.browse_array = [
             [cond, jinv],
-            [rank, cm],
+            [rank, regulator],
             [torsion, torsion_struct],
+            [cm_disc, cm],
             [sha, optimal],
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
-            [num_int_pts, regulator],
-            [count]]
+            [num_int_pts, semistable],
+            [count]
+            ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
             [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, optimal]]
+            [num_int_pts, regulator, cm, cm_disc, semistable],
+            [optimal]
+            ]

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
 import os, yaml
+from six import text_type
 
 from flask import url_for
 from sage.all import (
@@ -249,7 +250,8 @@ def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
 def formatfield(coef):
-    coef = string2list(coef)
+    if isinstance(coef, text_type):
+        coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
@@ -301,7 +303,7 @@ def nf_knowl_guts(label):
         out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
-    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
+    out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
     out += '</div>'
     return out
 
@@ -404,7 +406,7 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
-        if not self.haskey('galt'):
+        if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
@@ -563,8 +565,11 @@ class WebNumberField:
         return [cnt, [], []]
 
     def subfields(self):
-        if not self.haskey('subs'):
+        if not self.haskey('subfields'):
             return []
+        sf = [z.replace('.',',') for z in self._data['subfields']]
+        sfm = self._data['subfield_mults']
+        return [[sf[j],sfm[j]] for j in range(len(sf))]
         return self._data['subs']
 
     def subfields_show(self):

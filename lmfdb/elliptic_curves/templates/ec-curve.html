@@ -75,9 +75,9 @@ white-space: pre in order to keep line breaks! #}
 
     {% if data.mw.rank!=0 %}
     {% if data.mw.rank==1 %}
-    <p><h3> Infinite order Mordell-Weil generator and height</h3>
+    <p><h3> Infinite order Mordell-Weil generator and {{KNOWL('ec.q.canonical_height','height')}}</h3>
     {% else %}
-    <p><h3> Infinite order Mordell-Weil generators and heights</h3>
+    <p><h3> Infinite order Mordell-Weil generators and {{KNOWL('ec.q.canonical_height','heights')}}</h3>
     {% endif %}
       {{ place_code('gens') }}
       <div style='overflow:auto'><p>
@@ -352,6 +352,8 @@ padding : 4px;
 text-align: center;
 }
 </style>
+
+<p>This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.</p>
 
     {{ place_code('localdata') }}
 

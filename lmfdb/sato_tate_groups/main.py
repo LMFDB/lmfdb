@@ -10,7 +10,7 @@ from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
-    SearchArray, TextBox, SelectBox,
+    SearchArray, TextBox, SelectBox, CountBox,
     parse_ints, parse_rational, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.sato_tate_groups import st_page
@@ -597,6 +597,8 @@ def labels_page():
 class STSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
+    jump_example = "1.4.USp(4)"
+    jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.1.2.1a or N(U(1)), or 1.4.10.1.1a or 1.4.USp(4)"
     def __init__(self):
         weight = TextBox(
             name="weight",
@@ -636,10 +638,7 @@ class STSearchArray(SearchArray):
             short_label=r"$\mathrm{P}[a_1=0]$",
             example="1/2",
             example_span="0, 1/2, or 3/8")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        count = CountBox()
 
         self.browse_array = [
             [weight],

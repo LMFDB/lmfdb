@@ -857,7 +857,7 @@ class WebG2C(object):
 
         # Breadcrumbs
         self.bread = bread = [
-             ('Genus 2 Curves', url_for(".index")),
+             ('Genus 2 curves', url_for(".index")),
              (r'$\Q$', url_for(".index_Q")),
              ('%s' % data['slabel'][0], url_for(".by_conductor", cond=data['slabel'][0])),
              ('%s' % data['slabel'][1], url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1]))
@@ -869,7 +869,7 @@ class WebG2C(object):
                 ]
 
         # Title
-        self.title = "Genus 2 " + ("Curve " if is_curve else "Isogeny Class ") + data['label']
+        self.title = "Genus 2 " + ("curve " if is_curve else "isogeny class ") + data['label']
 
         # Code snippets (only for curves)
         if not is_curve:

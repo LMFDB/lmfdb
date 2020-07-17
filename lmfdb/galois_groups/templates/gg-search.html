@@ -12,13 +12,13 @@ table.ntdata a {
 {% include 'refine_search_form.html' %}
 
 {% if info.err is defined %}
-{% if info.label is defined %}
+{% if info.jump is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
     <td>
       Search by {{KNOWL('gg.label',title="label")}}
-      <input type="text" name="jump_to" value="{{info.label}}">
+      <input type="text" name="jump" value="{{info.jump}}">
       <button type="submit" value="Find">Find</button>
     </td>
     <td>

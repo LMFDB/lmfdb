@@ -37,8 +37,9 @@
 <h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
   {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
 <form>
-    <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
+    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
     <button type='submit' name='lookup' value='1'> Find  </button>
+    <br>
     <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
 </form>
 
@@ -48,25 +49,25 @@
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}</td>
-            <td> <input type='text' name='modulus' value="{{args.modulus}}" size = '10' placeholder="13"></td>
+            <td> <input type='text' name='modulus' value="{{args.modulus}}" style="width:160px;" placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td>
-            <td> <input type='text' name='conductor' value="{{args.conductor}}" size = '10' placeholder="5"></td>
+            <td> <input type='text' name='conductor' value="{{args.conductor}}" style="width:160px;" placeholder="5"></td>
             <td><span class="formexample"> e.g. 5 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td>
-            <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
+            <td> <input type='text' name='order' value="{{args.order}}" style="width:160px;" placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
         <tr>
             <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
             <td align=left>
-                <select name='parity', style="width: 155px">
+                <select name='parity', style="width: 170px">
                       <option value="">any</option>
                       <option value="even">even</option>
                       <option value="odd">odd</option>
@@ -76,7 +77,7 @@
         <tr>
             <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
             <td align=left>
-                <select name='primitive', style="width: 155px">
+                <select name='primitive', style="width: 170px">
                       <option value="">any</option>
                       <option value="yes">yes</option>
                       <option value="no">no</option>
@@ -94,7 +95,7 @@
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
-            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" size='10' placeholder="13" required></td>
+            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" style="width:160px;" placeholder="13" required></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
     </table>

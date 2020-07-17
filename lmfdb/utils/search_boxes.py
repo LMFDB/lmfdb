@@ -85,6 +85,7 @@ class SearchBox(TdElt):
     """
     Class abstracting the input boxes used for LMFDB searches.
     """
+    _default_width = 160
 
     def __init__(
         self,
@@ -96,7 +97,7 @@ class SearchBox(TdElt):
         example_span_colspan=1,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
-        width=160,
+        width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -121,6 +122,8 @@ class SearchBox(TdElt):
         self.short_label = short_label
         self.advanced = advanced
         self.qfield = name if qfield is None else qfield
+        if width is None:
+            width = self._default_width
         self.width = width
         self.short_width = self.width if short_width is None else short_width
 
@@ -177,6 +180,7 @@ class TextBox(SearchBox):
         example=None,
         example_span=None,
         example_span_colspan=1,
+        example_value=False,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
         width=160,
@@ -207,6 +211,7 @@ class TextBox(SearchBox):
             qfield=qfield,
         )
         self.extra = extra
+        self.example_value = example_value
 
     def _input(self, info):
         keys = self.extra + ['type="text"', 'name="%s"' % self.name]
@@ -215,7 +220,10 @@ class TextBox(SearchBox):
         if self.advanced:
             keys.append('class="advanced"')
         if self.example is not None:
-            keys.append('example="%s"' % self.example)
+            if self.example_value and info is None:
+                keys.append('value="%s"' % self.example)
+            else:
+                keys.append('placeholder="%s"' % self.example)
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -242,6 +250,7 @@ class SelectBox(SearchBox):
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
     _options = []
+    _default_width = 170
 
     def __init__(
         self,
@@ -254,7 +263,7 @@ class SelectBox(SearchBox):
         example_span_colspan=1,
         colspan=(1, 1, 1),
         rowspan=(1, 1),
-        width=170,
+        width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -391,42 +400,66 @@ class DoubleSelectBox(SearchBox):
             + "</div>"
         )
 
-class IncludeBox(SelectBox):
-    _options = [("", "include"),
-                ("exclude", "exclude")]
-
-class IncludeOnlyBox(SelectBox):
-    _options = [("", "include"),
+class ExcludeOnlyBox(SelectBox):
+    _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
 
 class YesNoBox(SelectBox):
-    _options = [('yes', 'yes'),
-                ('', ''),
-                ('no', 'no')]
+    _options = [("", ""),
+                ("yes", "yes"),
+                ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
-    _options = [("yes", "yes"),
+    _options = [("", ""),
+                ("yes", "yes"),
                 ("not_no", "yes or unknown"),
-                ("", ""),
                 ("not_yes", "no or unknown"),
                 ("no", "no"),
                 ("unknown", "unknown")]
 
 class ParityBox(SelectBox):
+    _options = [('', ''),
+                ('even', 'even'),
+                ('odd', 'odd')]
+
+class ParityMod(SelectBox):
+    _default_width = 85
+    # For modifying a text box
     _options = [('', 'any parity'),
                 ('even', 'even only'),
                 ('odd', 'odd only')]
 
+
 class SubsetBox(SelectBox):
-    _options = [('', 'equal to'),
-                ('subset', 'subset of'),
-                ('supset', 'superset of')]
+    _default_width = 60
+    _options = [('', 'include'),
+                ('exclude', 'exclude'),
+                ('exactly', 'exactly'),
+                ('subset', 'subset')]
+
+class SubsetNoExcludeBox(SelectBox):
+    _default_width = 60
+    _options = [('', 'include'),
+                ('exactly', 'exactly'),
+                ('subset', 'subset')]
+
+class CountBox(TextBox):
+    def __init__(self):
+        TextBox.__init__(
+            self,
+            name="count",
+            label="Results to display",
+            example=50,
+            example_col=True,
+            example_value=True,
+            example_span="")
 
 class SearchButton(SearchBox):
-    def __init__(self, value, description, width=170, **kwds):
+    _default_width = 170
+    def __init__(self, value, description, **kwds):
         kwds['label'] = kwds.get('label', '')
-        SearchBox.__init__(self, width=width, **kwds)
+        SearchBox.__init__(self, **kwds)
         self.value = value
         self.description = description
 
@@ -482,6 +515,7 @@ class SearchArray(UniqueRepresentation):
         for the search buttons
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
+    _ex_col_width = 170 # only used for box layout
     sort_knowl = None
     noun = "result"
     plural_noun = "results"
@@ -542,7 +576,7 @@ class SearchArray(UniqueRepresentation):
                     bot_cols.append(box.input_html(info))
                     ex = box.example_html(info)
                     if ex:
-                        top_cols.append('<td width="170"></td>')
+                        top_cols.append('<td width="%s"></td>' % self._ex_col_width)
                         bot_cols.append(ex)
                 lines.append("".join("\n      " + col for col in top_cols))
                 lines.append("".join("\n      " + col for col in bot_cols))
@@ -564,7 +598,7 @@ class SearchArray(UniqueRepresentation):
             array.append([vheader])
             for i in [1,2]:
                 cols = SelectBox(
-                    name="col%s",
+                    name="col%s" % i,
                     id="col%s_select" % i,
                     label="",
                     width=150,
@@ -648,3 +682,12 @@ class SearchArray(UniqueRepresentation):
 
     def html(self, info=None):
         return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
+
+    def jump_box(self, info):
+        jump_example = info.get("jump_example", getattr(self, "jump_example", ""))
+        jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
+        jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
+        # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
+        return """<input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'>
+<button type='submit'>Find</button>
+<br><span class='formexample'>%s</span>""" % (jump_example, jump_width, info.get("jump", ""), jump_egspan)

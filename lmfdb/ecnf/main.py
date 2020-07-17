@@ -9,6 +9,7 @@ import time
 from six.moves.urllib_parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response
+from markupsafe import Markup, escape
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
@@ -16,8 +17,9 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    SearchArray, TextBox, IncludeOnlyBox, IncludeBox, SelectBox,
-    search_wrap, parse_rational)
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
+    search_wrap, parse_rational
+    )
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -32,8 +34,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash_error("%s is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % escape(lab)))
     field_label = data[0]
     conductor_label = data[1]
     try:
@@ -41,7 +42,7 @@ def split_full_label(lab):
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
         curve_number = re.search(r"\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1",  lab)
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" %  escape(lab)))
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -52,16 +53,14 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash_error("%s is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     conductor_label = data[0]
     try:
         # field 3.1.23.1 uses upper case letters
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
         curve_number = re.search(r"\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % escape(lab)))
     return (conductor_label, isoclass_label, curve_number)
 
 
@@ -71,8 +70,7 @@ def split_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash_error("%s is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % escape(lab)))
     field_label = data[0]
     conductor_label = data[1]
     isoclass_label = data[2]
@@ -85,8 +83,7 @@ def split_short_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash_error("%s is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % escape(lab)))
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
@@ -97,17 +94,15 @@ def conductor_label_norm(lab):
     if re.match(r'\d+.\d+',s):
         return s.split('.')[0]
     else:
-        flash_error("%s is not a valid conductor label. It must be of the form N.m or [N,c,d]", lab)
-        raise ValueError
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % escape(lab)))
 
 def get_nf_info(lab):
     r""" extract number field label from string and pretty"""
     try:
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
-    except ValueError as err:
-        flash_error("%s is not a valid number field. %s", lab,err)
-        raise ValueError
+    except ValueError:
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field. %s" % escape(lab)))
     return label, pretty
 
 
@@ -455,18 +450,21 @@ def download_search(info):
                      add_etags=False)
 
 def elliptic_curve_jump(info):
-    label = info.get('label', '').replace(" ", "")
+    label = info.get('jump', '').replace(" ", "")
     if info.get('jump','') == "random":
         return random_curve()
     # This label should be a full isogeny class label or a full
     # curve label (including the field_label component)
-    try:
+    if re.search("\\d$", label):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
-    except ValueError:
+        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    elif re.search("[a-z]$", label):
+            nf, cond_label, iso_label = split_class_label(label.strip())
+            return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
+    else:
+        flash_error("%s is not a valid elliptic curve or isogeny class label.", label)
         info['err'] = ''
         return redirect(url_for("ecnf.index"))
-
-    return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
 def url_for_label(label):
     if label == 'random':
@@ -483,6 +481,7 @@ def url_for_label(label):
              cleaners={'numb':lambda e: str(e['number']),
                        'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              url_for_label=url_for_label,
+             learnmore=learnmore_list,
              bread=lambda:[('Elliptic Curves', url_for(".index")), ('Search Results', '.')],
              credit=lambda:ecnf_credit)
 def elliptic_curve_search(info, query):
@@ -515,7 +514,7 @@ def elliptic_curve_search(info, query):
             if query.get('jinv'):
                 query['jinv'] = ','.join(query['jinv'])
 
-    if 'include_isogenous' in info and info['include_isogenous'] in ['exclude', 'off']: # off for backward compat with urls
+    if info.get('one') == "yes":
         info['number'] = 1
         query['number'] = 1
 
@@ -538,14 +537,14 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-
+    parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
-    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
+    return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 
 @ecnf_page.route("/browse/")
@@ -718,6 +717,8 @@ def ecnf_code(**args):
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
+    jump_example = "2.2.5.1-31.1-a1"
+    jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
     def __init__(self):
         field = TextBox(
             name="field",
@@ -725,45 +726,47 @@ class ECNFSearchArray(SearchArray):
             knowl="nf",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
-        include_base_change = IncludeOnlyBox(
+        include_base_change = ExcludeOnlyBox(
             name="include_base_change",
             label="Base change curves",
-            knowl="ec.base_change",
-            width=50,
-            short_width=170)
-        include_Q_curves = IncludeOnlyBox(
+            knowl="ec.base_change")
+        include_Q_curves = ExcludeOnlyBox(
             name="include_Q_curves",
             label=r"\(\Q\)-curves",
-            knowl="ec.q_curve",
-            width=50,
-            short_width=170)
+            knowl="ec.q_curve")
         conductor_norm = TextBox(
             name="conductor_norm",
             label="Conductor norm",
             knowl="ec.conductor",
             example="31",
             example_span="31 or 1-100")
-        include_isogenous = IncludeBox(
-            name="include_isogenous",
-            label=r"Isogenous curves",
-            knowl="ec.isogeny",
-            width=50,
-            short_width=170)
-        include_cm = IncludeOnlyBox(
+        one = SelectBox(
+            name="one",
+            label="Curves per isogeny class",
+            knowl="ec.isogeny_class",
+            options=[("", ""),
+                     ("yes", "one")])
+        include_cm = ExcludeOnlyBox(
             name="include_cm",
-            label="CM curves",
-            knowl="ec.complex_multiplication",
-            width=50,
-            short_width=170)
+            label="CM",
+            knowl="ec.complex_multiplication")
+        cm_disc = TextBox(
+            name="cm_disc",
+            label= "CM discriminant",
+            example="-4",
+            example_span="-4 or -3,-8",
+            knowl="ec.complex_multiplication"
+            )
         jinv = TextBox(
             name="jinv",
             label="j-invariant",
-            width=300,
+            knowl="ec.j_invariant",
+            width=675,
             short_width=160,
-            colspan=(1, 2, 1),
+            colspan=(1, 4, 1),
             example_span_colspan=2,
             example="105474/49 + a*34213/49",
-            example_span="105474/49 + a*34213/49 over 2.0.7.1")
+            example_span="")
         torsion = TextBox(
             name="torsion",
             label="Torsion order",
@@ -774,34 +777,33 @@ class ECNFSearchArray(SearchArray):
                 return "[%s]" % t, "C%s" % t
             else:
                 return "[%s,%s]" % t, "C%s&times;C%s" % t
-        tor_opts = ([("", "any"),
+        tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",
             knowl="ec.torsion_subgroup",
-            options=tor_opts,
-            width=50,
-            short_width=170)
+            options=tor_opts)
         isodeg = TextBox(
             name="isodeg",
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example="50")
+        count = CountBox()
 
         self.browse_array = [
-            [field, include_base_change, include_Q_curves],
-            [conductor_norm, include_isogenous, include_cm],
             [jinv],
+            [field, include_base_change],
+            [conductor_norm, include_Q_curves],
             [torsion, torsion_structure],
-            [isodeg],
-            [count]]
+            [cm_disc, include_cm],
+            [isodeg, one],
+            [count]
+            ]
 
         self.refine_array = [
-            [field, conductor_norm, include_isogenous, include_base_change, include_Q_curves],
-            [jinv, isodeg, torsion, torsion_structure, include_cm]]
+            [field, conductor_norm, jinv, include_base_change, include_Q_curves],
+            [isodeg, torsion, torsion_structure, include_cm, cm_disc],
+            [one]
+            ]

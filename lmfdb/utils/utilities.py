@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-# this is the caching wrapper, use it like this:
-# @app.route(....)
-# @cached()
-# def func(): ...
 from six.moves import range
 from six import integer_types as six_integers
 from six import string_types
@@ -15,18 +11,14 @@ import random
 import re
 import tempfile
 import time
-from collections import defaultdict
 from copy import copy
-from functools import wraps
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
 from six import PY3
 
-from flask import request, make_response, flash, url_for, current_app
+from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
-# DeprecationWarning: 'werkzeug.contrib.cache' is deprecated as of version 0.15 and will be removed in version 1.0. It has moved to https://github.com/pallets/cachelib.
-from werkzeug.contrib.cache import SimpleCache
 from werkzeug.utils import cached_property
 from sage.all import (CC, CBF, CDF,
                       Factorization, NumberField,
@@ -174,7 +166,7 @@ def an_list(euler_factor_polynomial_fn,
             k += 1
     return result
 
-def coeff_to_poly(c, var='x'):
+def coeff_to_poly(c, var=None):
     """
     Convert a list or string representation of a polynomial to a sage polynomial.
 
@@ -184,6 +176,20 @@ def coeff_to_poly(c, var='x'):
     >>> coeff_to_poly("1 - 3*x + x**2")
     x**2 - 3*x + 1
     """
+    if isinstance(c, str):
+        # accept latex
+        c = c.replace("{", "").replace("}", "")
+        # autodetect variable name
+        if var is None:
+            varposs = set(re.findall(r"[A-Za-z_]+", c))
+            if len(varposs) == 1:
+                var = varposs.pop()
+            elif not(varposs):
+                var = 'x'
+            else:
+                raise ValueError("Polynomial must be univariate")
+    if var is None:
+        var = 'x'
     return PolynomialRing(QQ, var)(c)
 
 def coeff_to_power_series(c, var='q', prec=None):
@@ -1038,23 +1044,6 @@ def flash_error(errmsg, *args):
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
-cache = SimpleCache()
-def cached(timeout=15 * 60, key='cache::%s::%s'):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            cache_key = key % (request.path, request.args)
-            rv = cache.get(cache_key)
-            if rv is None:
-                rv = f(*args, **kwargs)
-                cache.set(cache_key, rv, timeout=timeout)
-            ret = make_response(rv)
-            # this header basically says that any cache can store this infinitely long
-            # set this down to 600, because we have pagespeed now (hsy)
-            ret.headers['Cache-Control'] = 'max-age=600, public'
-            return ret
-        return decorated_function
-    return decorator
 
 ################################################################################
 #  Ajax utilities
@@ -1214,56 +1203,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     else:
         buf = virtual_file.buf
     return "data:image/png;base64," + quote(b64encode(buf))
-
-class KeyedDefaultDict(defaultdict):
-    """
-    A defaultdict where the default value takes the key as input.
-    """
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError((key,))
-        self[key] = value = self.default_factory(key)
-        return value
-
-def make_tuple(val):
-    """
-    Converts lists and dictionaries into tuples, recursively.  The main application
-    is so that the result can be used as a dictionary key.
-    """
-    if isinstance(val, (list, tuple)):
-        return tuple(make_tuple(x) for x in val)
-    elif isinstance(val, dict):
-        return tuple((make_tuple(a), make_tuple(b)) for a,b in val.items())
-    else:
-        return val
-
-def range_formatter(x):
-    if x is None:
-        return 'Unknown'
-    elif isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            return "..{0}".format(b)
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
-
-
 
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.utcfromtimestamp(0)

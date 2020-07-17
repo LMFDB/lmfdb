@@ -66,10 +66,6 @@ function properties_collapser(evt) {
 $(function() {
  /* properties box collapsable click handlers */
  $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
- /* providing watermark examples in those forms, that have an 'example=...' attribute */
- /* Add extra spaces so that if you type in exactly the example it does not disappear */
- $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
- $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
 
@@ -159,7 +155,12 @@ function knowl_click_handler($el) {
       } else {
         var sibebar_width = sidebar.offsetWidth;
       }
-      var header_width = document.getElementById("header").offsetWidth;
+      var header = document.getElementById("header");
+      if ( header == undefined ) {
+        var header_width = row_width;
+      } else {
+        var header_width = header.offsetWidth;
+      }
       var desired_main_width =  header_width - sibebar_width;
       log("row_width: " + row_width);
       log("desired_main_width: " + desired_main_width);
@@ -179,7 +180,7 @@ function knowl_click_handler($el) {
 
       //compute max number of columns in the table
       var cols = Array.from(tr_tag.children()).reduce((acc, td) => acc + td.colSpan, 0)
-      cols = Array.from(tr_tag.siblings()).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
+      cols = Array.from(tr_tag.siblings("tr")).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
       log("cols: " + cols);
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();

@@ -14,7 +14,7 @@ from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, BasicSpacer, SearchButton,
+    SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
@@ -319,18 +319,19 @@ def hgm_family_constant_image(AB):
 
 @hypergm_page.route("/<label>")
 def by_family_label(label):
-    return hgm_search({'jump_to': label})
+    return render_hgm_family_webpage(normalize_family(label))
 
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
-    return hgm_search({'jump_to': label+'_'+t})
+    full_label = normalize_family(label) + "_" + t
+    return render_hgm_webpage(full_label)
 
 def hgm_jump(info):
-    label = clean_input(info['jump_to'])
+    label = clean_input(info['jump'])
     if HGM_LABEL_RE.match(label):
-        return render_hgm_webpage(normalize_motive(label))
+        return redirect(url_for_label(normalize_motive(label)), 301)
     if HGM_FAMILY_LABEL_RE.match(label):
-        return render_hgm_family_webpage(normalize_family(label))
+        return redirect(url_for_label(normalize_family(label)), 301)
     flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
     return redirect(url_for(".index"))
 
@@ -346,7 +347,7 @@ def url_for_label(label):
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
              per_page=50,
-             shortcuts={'jump_to': hgm_jump},
+             shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,
              bread=lambda: get_bread([("Search Results", '')]),
              credit=lambda: HGM_credit,
@@ -583,6 +584,8 @@ def labels_page():
            learnmore=learnmore_list_remove('labels'))
 
 class HGMSearchArray(SearchArray):
+    jump_example = "A2.2_B1.1_t1.2"
+    jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
     def __init__(self):
         degree = TextBox(
             name="degree",
@@ -680,10 +683,7 @@ class HGMSearchArray(SearchArray):
         #    name="irreducible",
         #    label="Irreducible",
         #    knowl="hgm.irreducible")
-        count = TextBox(
-            name="count",
-            label="Results to display",
-            example=50)
+        count = CountBox()
 
         self.family_array = [
             [degree, weight],

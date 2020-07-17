@@ -43,9 +43,7 @@ class Wrapper(object):
 
     def make_query(self, info, random=False):
         query = {}
-        template_kwds = {}
-        for key in self.kwds:
-            template_kwds[key] = info.get(key, self.kwds[key]())
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
         except ValueError as err:
@@ -63,7 +61,7 @@ class Wrapper(object):
         title = query.pop("__title__", self.title)
         title = info.get("title", title)
         template = query.pop("__template__", self.template)
-        return query, template_kwds, sort, table, title, err_title, template
+        return query, sort, table, title, err_title, template
 
     def query_cancelled_error(
         self, info, query, err, err_title, template, template_kwds
@@ -122,13 +120,24 @@ class SearchWrapper(Wrapper):
         #  if search_type starts with 'Random' returns a random label
         info["search_type"] = info.get("search_type", info.get("hst", "List"))
         random = info["search_type"].startswith("Random")
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
             if info.get(key, "").strip():
-                return func(info)
+                try:
+                    return func(info)
+                except ValueError as err:
+                    # Errors raised in jump box, for example
+                    # Using the search results is an okay default, though some
+                    # jump boxes will use their own error processing
+                    flash_error(str(err))
+                    info["err"] = str(err)
+                    return render_template(
+                        self.template, info=info, title=self.err_title, **template_kwds
+                    )
         data = self.make_query(info, random)
         if not isinstance(data, tuple):
             return data
-        query, template_kwds, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template = data
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
@@ -238,7 +247,8 @@ class CountWrapper(Wrapper):
         data = self.make_query(info)
         if not isinstance(data, tuple):
             return data  # error page
-        query, template_kwds, sort, table, title, err_title, template = data
+        query, sort, table, title, err_title, template = data
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
                 res = table.count(query, groupby=self.groupby)
