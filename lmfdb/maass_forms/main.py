@@ -2,8 +2,9 @@
 # This Blueprint is about Crystals
 # Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
+from lmfdb import db
 from flask import render_template, request, url_for, make_response, redirect
-from lmfdb.crystals import maass_page, logger
+from lmfdb.maass import maass_page, logger
 from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_count, parse_start, clean_input)
@@ -43,7 +44,6 @@ def random():
 @maass_page.route('/<label>')
 def by_label(label):
     return search_by_label(label)
-
 
 class MaassSearchArray(SearchArray):
     noun = "Maass form"
@@ -90,3 +90,9 @@ class MaassSearchArray(SearchArray):
             [count]]
 
         self.refine_array = [[level, weight, character, symmetry, eigenvalue, count]]
+
+def search(info):
+    return redirect(url_for('.index'),307)
+
+def search_by_label(label):
+    return redirect(url_for('.index'),307)

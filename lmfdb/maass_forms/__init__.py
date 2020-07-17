@@ -10,4 +10,4 @@ logger = make_logger(maass_page)
 from . import main
 assert main # silence pyflakes
 
-app.register_blueprint(maass_page, url_prefix="/ModularForm/GL2/Q/NewMaass"")
+app.register_blueprint(maass_page, url_prefix="/ModularForm/GL2/Q/NewMaass")
