@@ -4,6 +4,7 @@ from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons
 from . import utils
 
+
 @api2_page.route("/api.css")
 def api_css():
     response = make_response(render_template("api.css"))
@@ -15,19 +16,23 @@ def api_css():
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 
+
 @api2_page.route("/")
 def index():
     title = "API Description"
     return render_template("api2.html", **locals())
+
 
 @api2_page.route("/demo")
 def demo():
     title = "API Demo"
     return render_template("api_demo.html", **locals())
 
+
 @api2_page.route("/<other>")
 def other(other):
     return Response(utils.build_api_error(other), mimetype='application/json')
+
 
 @api2_page.route("/livepg/<db>")
 def live_page_pg(db):
@@ -40,10 +45,12 @@ def live_page_pg(db):
     search_tuple = utils.simple_search(search)
     return Response(utils.build_api_search(db, search_tuple, request = request), mimetype='application/json')
 
+
 @api2_page.route("/pretty/<path:path_var>")
 def prettify_live(path_var):
     bread = []
     return render_template('view.html', data_url=path_var, bread=bread)
+
 
 @api2_page.route("/singletons/<path:path_var>")
 def handle_singletons(path_var):
@@ -69,6 +76,7 @@ def handle_singletons(path_var):
         return Response(utils.build_api_search(path_var, search_tuple, request = request), mimetype='application/json')
     return Response(utils.build_api_error(path_var), mimetype='application/json')
 
+
 @api2_page.route("/description/searchers")
 def list_searchers():
     names=[]
@@ -78,7 +86,10 @@ def list_searchers():
         names.append(el)
         h_names.append(searchers[el].get_name())
         descs.append(searchers[el].get_description())
-    return Response(utils.build_api_searchers(names, h_names, descs, request=request), mimetype='application/json')
+    return Response(
+        utils.build_api_searchers(names, h_names, descs, request=request),
+        mimetype='application/json'
+    )
 
 
 @api2_page.route("/description/<searcher>")
@@ -97,7 +108,11 @@ def list_descriptions(searcher):
     else:
         return Response(utils.build_api_error(searcher), mimetype='application/json')
     if lst:
-        return Response(utils.build_api_descriptions(searcher, lst, request=request), mimetype='application/json')
+        return Response(
+            utils.build_api_descriptions(searcher, lst, request=request),
+            mimetype='application/json'
+        )
+
 
 @api2_page.route("/inventory/<searcher>")
 def list_responses(searcher):
@@ -115,7 +130,10 @@ def list_responses(searcher):
     else:
         return Response(utils.build_api_error(searcher), mimetype='application/json')
     if lst:
-        return Response(utils.build_api_inventory(searcher, lst, request=request), mimetype='application/json')
+        return Response(
+            utils.build_api_inventory(searcher, lst, request=request),
+            mimetype='application/json'
+        )
 
 
 @api2_page.route("/data/<searcher>")
@@ -129,8 +147,12 @@ def get_data(searcher):
     except KeyError:
         val = None
 
-    if not val: return Response(utils.build_api_error(searcher), mimetype='application/json')
+    if not val:
+        return Response(utils.build_api_error(searcher), mimetype='application/json')
 
     search = val.auto_search(request)
 
-    return Response(utils.build_api_search('/data/'+searcher, search, request=request), mimetype='application/json')
+    return Response(
+        utils.build_api_search('/data/'+searcher, search, request=request),
+        mimetype='application/json'
+    )
