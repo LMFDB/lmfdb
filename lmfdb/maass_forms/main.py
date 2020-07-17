@@ -4,7 +4,7 @@
 
 from lmfdb import db
 from flask import render_template, request, url_for, make_response, redirect
-from lmfdb.maass import maass_page, logger
+from lmfdb.maass_forms import maass_page, logger
 from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_count, parse_start, clean_input)
