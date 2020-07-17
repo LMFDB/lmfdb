@@ -1,0 +1,100 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+<div>
+  <p>
+    Currently the database contains all finite groups of order up to  FILL HERE
+  </p>
+</div>
+
+
+
+<h2>Browse abstract groups</h2>
+
+<p>
+  By {{KNOWL('group.order', 'order')}}: 
+  {% for rnge in info.order_list %}
+  <a href="?order={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+<p>
+  By {{KNOWL('group.nilpotent', 'nilpotency class')}}: 
+  {% for rnge in info.nilp_list %}
+  <a href="?nilpotency_class={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+
+<p>A <a href="{{url_for('.random_abstract_group')}}">random abstract group</a> from the database.</p>
+
+
+
+<!--<h2>Find specific abstract groups</h2>-->
+<h2> Find a specific group by {{ KNOWL('group.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='8.4'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 8.4 </span>
+</form>
+
+
+<h2>Search</h2>
+ <form id='search' onsubmit="cleanSubmit(this.id)">
+  <table class="">
+  <tr>
+    <td> {{KNOWL('group.order',title='order')}}
+    <td><input type="integer" name="order" value="" placeholder="3">
+    <td> <span class="formexample">e.g. 4, or a range like 3..5</span>
+
+    <td>{{ KNOWL('group.abelian', title='abelian') }}
+    <td><select name='abelian' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+    </select>
+  <tr>
+    <td> {{KNOWL('group.exponent',title='exponent')}}
+    <td><input type="integer" name="exponent" value="" placeholder="3">
+    <td> <span class="formexample">e.g. 4, or a range like 3..5</span>
+
+    <td>{{ KNOWL('group.solvable', title='solvable') }}
+    <td><select name='solvable' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+    </select>
+  <tr>
+    <td> {{KNOWL('group.nilpotent',title='nilpotency class')}}
+    <td><input type="integer" name="nilpotency_class" value="" placeholder="3">
+    <td> <span class="formexample">e.g. 4, or a range like 3..5</span>
+
+    <td>{{ KNOWL('group.nilpotent', title='nilpotent') }}
+    <td><select name='nilpotent' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+    </select>
+  <tr>
+    <td> {{KNOWL('gg.conjugacy_classes',title='$|G^\\natural|$')}}
+    <td><input type="integer" name="number_conjugacy_classes" value="" placeholder="3">
+    <td> <span class="formexample">e.g. 4, or a range like 3..5</span>
+
+    <td>{{ KNOWL('group.perfect', title='perfect') }}
+    <td><select name='perfect' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+    </select>
+
+
+      <tr>
+      <td>
+          Maximum number of groups to display:
+        <td><input id="count" type="text" name="count" value="50" size="10">
+          
+  </table>
+        <button type='submit' value='search'>Search</button>
+      </form>
+
+
+{% endblock %}
