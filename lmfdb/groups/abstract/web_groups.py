@@ -247,8 +247,6 @@ class WebAbstractGroup(WebObj):
     def name_label(self):
         return group_names_pretty(self._data['label'])
 
-<<<<<<< HEAD
-
 ### properties
 #also create properties list to go along with this
 

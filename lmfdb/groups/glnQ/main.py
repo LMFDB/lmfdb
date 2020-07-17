@@ -40,58 +40,6 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-#function to create string of group characteristics
-def create_boolean_string(gp):
-    if gp.abelian:
-        strng = display_knowl('group.abelian','Abelian')
-        if gp.cyclic:
-            strng += ", Cyclic"
-    else:
-        strng = display_knowl('group.abelian', "non-Abelian")
-
-    if gp.solvable:
-        strng += ", "+  display_knowl('group.solvable', "Solvable")
-        if gp.supersolvable:
-            strng += ", " + display_knowl('group.supersolvable', "Supersolvable")
-    else:
-        strng += ", " + display_knowl('group.solvable', "non-Solvable")
-
-    if gp.nilpotent:
-        strng += ", " + display_knowl('group.nilpotent', "Nilpotent")
-
-    if gp.metacyclic:
-        strng += ", " +  display_knowl('group.metacyclic', "Metacyclic")
-
-    if gp.metabelian:
-        strng += ", " +  display_knowl('group.metabelian', "Metabelian")
-
-    if gp.simple:
-        strng += ", " +  display_knowl('group.simple', "Simple")
-
-    if gp.almost_simple:
-        strng += ", " +  display_knowl('group.almost_simple', "Almost Simple")
-
-    if gp.quasisimple:
-        strng += ", " +  display_knowl('group.quasisimple', "Quasisimple")
-
-    if gp.perfect:
-        strng += ", " +  display_knowl('group.perfect', "Perfect")
-
-    if gp.monomial:
-        strng += ", " +  display_knowl('group.monomial', "Monomial")
-
-    if gp.rational:
-        strng += ", " +  display_knowl('group.rational_group', "Rational")
-
-    if gp.Zgroup:
-        strng += ", " +  display_knowl('group.z_group', "Zgroup")
-
-    if gp.Agroup:
-        strng += ", " +  display_knowl('group.a_group', "Agroup")
-
-    return strng
-
-
 @glnQ_page.route("/")
 def index():
     bread = get_bread()
@@ -102,7 +50,7 @@ def index():
             'nilp_list': range(1,5)
             }
 
-    return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnQ-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 

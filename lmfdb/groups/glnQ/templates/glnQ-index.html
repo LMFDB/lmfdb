@@ -11,20 +11,15 @@
 
 
 
-<h2>Browse abstract groups</h2>
+<h2>Browse finite subgroups</h2>
 
 <p>
   By {{KNOWL('group.order', 'order')}}: 
   {% for rnge in info.order_list %}
   <a href="?order={{rnge}}">{{rnge}}</a>&nbsp;
   {% endfor %}
-<p>
-  By {{KNOWL('group.nilpotent', 'nilpotency class')}}: 
-  {% for rnge in info.nilp_list %}
-  <a href="?nilpotency_class={{rnge}}">{{rnge}}</a>&nbsp;
-  {% endfor %}
 
-<p>A <a href="{{url_for('.random_abstract_group')}}">random abstract group</a> from the database.</p>
+<p>A <a href="{{url_for('.random_glnQ_group')}}">random subgroup group</a> from the database.</p>
 
 
 
