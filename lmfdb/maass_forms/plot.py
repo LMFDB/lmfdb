@@ -49,7 +49,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
         ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
-        ans += "<title>{0}</title></circle></a>\n".format(f['spectra_parameter'])
+        ans += "<title>{0}</title></circle></a>\n".format(f['spectral_parameter'])
 
     ans += "</svg>"
     return ans
