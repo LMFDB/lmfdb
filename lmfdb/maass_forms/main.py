@@ -4,10 +4,11 @@
 
 from lmfdb import db
 from flask import render_template, request, url_for, make_response, redirect
-from lmfdb.maass_forms import maass_page, logger
+from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
-    parse_ints, parse_count, parse_start, clean_input)
+    parse_ints, parse_count, clean_input, rgbtohex, signtocolour)
+from plot import paintSvgMaass
 
 ###############################################################################
 # Learnmore display functions
@@ -45,6 +46,27 @@ def random():
 def by_label(label):
     return search_by_label(label)
 
+@maass_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
+def show_graph(min_level, max_level, min_R, max_R):
+    r"""
+    Render a page with a graph with clickable dots for all
+    with min_R <= R <= max_R and levels in the similar range.
+    """
+    info = {}
+    info['contents'] = [paintSvgMaass(min_level, max_level, min_R, max_R)]
+    info['min_level'] = min_level
+    info['max_level'] = max_level
+    info['min_R'] = min_R
+    info['max_R'] = max_R
+    info['coloreven'] = rgbtohex(signtocolour(1))
+    info['colorodd'] = rgbtohex(signtocolour(-1))
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Browse graph', '')]
+    info['bread'] = bread
+    info['learnmore'] = learnmore_list()
+
+    return render_template("mwf_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
+
+
 @maass_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
@@ -71,47 +93,27 @@ class MaassSearchArray(SearchArray):
     noun = "Maass form"
     plural_noun = "Maass forms"
     def __init__(self):       
-        level = TextBox(
-            name="level",
-            label="Level",
-            knowl="mf.maass.mwf.level",
-            example="1",
-            example_span="1 or 90-100")
-        weight = TextBox(
-            name="weight",
-            label="Weight",
-            knowl="mf.maass.mwf.weight",
-            example="0",
-            example_span="0 or 0-3")
-        character = TextBox(
-            name="character",
-            label="Character",
-            knowl="mf.maass.mwf.character",
-            example="1.1",
-            example_span="1.1 or 5.2")
-        symmetry = SelectBox(
-            name="symmetry",
-            label="Symmetry",
-            knowl="mf.maass.mwf.symmetry",
-            options=[("even", "1"),
-                     ("odd", "-1")])
-        eigenvalue = TextBox(
-            name="eigenvalue",
-            label="Spectral parameter",
-            knowl="mf.maass.mwf.spectralparameter",
-            example="1.0-1.1",
-            example_span="1.0-1.1 or 90-100")
+        level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="1 or 90-100")
+        # weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 or 0-3")
+        # character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.2")
+        symmetry = SelectBox(name="symmetry", label="Symmetry",  knowl="mf.maass.mwf.symmetry", options=[("even", "1"), ("odd", "-1")])
+        spectral_parameter = TextBox(name="spectral_parameter",
+                                     label="Spectral parameter",
+                                     knowl="mf.maass.mwf.spectralparameter",
+                                     example="1.0-1.1",
+                                     example_span="1.0-1.1 or 90-100")
         count = CountBox()
 
         self.browse_array = [
             [level],
-            [weight],
-            [character],
+            #[weight],
+            #[character],
+            [spectral_parameter],
             [symmetry],
-            [eigenvalue],
             [count]]
 
-        self.refine_array = [[level, weight, character, symmetry, eigenvalue, count]]
+        #self.refine_array = [[level, weight, character, spectral_parameter, symmetry]]
+        self.refine_array = [[level, spectral_parameter, symmetry]]
 
 def search(info):
     return redirect(url_for('.index'),307)

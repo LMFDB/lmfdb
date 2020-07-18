@@ -9,7 +9,25 @@
 The database contains {{dbcount}} Maass forms of weight 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to 997.
 </div>
 
-<h2> Browse {{ KNOWL('mf.maass.mwf', title='Maass forms') }}</h2>
+<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} </h1>
+  <ul>
+    <li>
+      <a href="{{ url_for('mwf.render_maass_browse_graph',min_level = 1,max_level= 10,
+                            min_R = 0,max_R = 10) }}">Browse Maass forms of weight 0 on $\Gamma_0(N)$ with $1\leq N\leq 10$</a>
+    </li>
+    <li>
+      <a href="{{ url_for('mwf.render_maass_browse_graph',min_level = 100,max_level= 1000,
+                            min_R = 0,max_R = 1) }}">Browse Maass forms of weight 0 on $\Gamma_0(p)$ for prime $p$ with $100\leq p< 1000$</a>
+    </li>
+   {# 
+    <li>
+      <a href="javascript:set_browse_value('weight',1);">Browse Maass forms of weight 1</a>
+    </li>
+    #}
+  </ul>
+<br>
+
+<h2> Search</h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
