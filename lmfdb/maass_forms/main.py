@@ -8,7 +8,7 @@ from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_count, clean_input, rgbtohex, signtocolour)
-from plot import paintSvgMaass
+from lmfdb.maass_forms.plot import paintSvgMaass
 
 ###############################################################################
 # Learnmore display functions
