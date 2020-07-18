@@ -3,12 +3,13 @@
 # Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
 from lmfdb import db
-from flask import render_template, request, url_for, make_response, redirect
+from flask import render_template, request, url_for, redirect, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_count, clean_input, rgbtohex, signtocolour)
 from lmfdb.maass_forms.plot import paintSvgMaass
+from lmfdb.maass_forms.web_maassform import WebMaassForm
 
 ###############################################################################
 # Learnmore display functions
@@ -34,12 +35,12 @@ def index():
     if request.args:
         return search(info)
     title = 'Maass forms'
-    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', '')]
-    return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.mwf_newforms.count())
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass', '')]
+    return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
 def random():
-    label = db.mwf_newforms.random()
+    label = db.maass_newforms.random()
     return redirect(url_for('.by_label', label=label), 307)
 
 @maass_page.route('/<label>')
@@ -60,31 +61,31 @@ def show_graph(min_level, max_level, min_R, max_R):
     info['max_R'] = max_R
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
-    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Browse graph', '')]
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass', url_for('.index')), ('Browse graph', '')]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
 
-    return render_template("mwf_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
+    return render_template("maass_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
 
 
 @maass_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
-    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Completeness','')]
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass', url_for('.index')), ('Completeness','')]
     return render_template('single.html', kid='rcs.cande.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @maass_page.route('/Source')
 def source_page():
     t = 'Source of Maass form data'
-    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Source','')]
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass', url_for('.index')), ('Source','')]
     return render_template('single.html', kid='rcs.source.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @maass_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
-    bread = [('Modular forms', url_for('modular_forms')),('Maass forms', url_for('.index')), ('Reliability','')]
+    bread = [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index')), ('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
@@ -119,4 +120,16 @@ def search(info):
     return redirect(url_for('.index'),307)
 
 def search_by_label(label):
-    return redirect(url_for('.index'),307)
+    try:
+        mf =  WebMaassForm.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args)
+    return render_template("maass_form.html",
+                           properties=mf.properties,
+                           credit=credit_string,
+                           mf=mf,
+                           bread=mf.bread,
+                           learnmore=learnmore_list(),
+                           title=mf.title,
+                           friends=mf.friends,
+                           KNOWL_ID="mf.maass.mwf.%s"%mf.label)
