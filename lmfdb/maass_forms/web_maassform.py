@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from lmfdb import db
 from lmfdb.utils import display_knowl
 from flask import url_for
@@ -65,9 +67,9 @@ class WebMaassForm(object):
     def bread(self):
         return [('Modular forms', url_for('modular_forms')),
                 ('Maass', url_for(".index")),
-                ("Weight %d"%(self.weight), url_for(".by_weight",weight=self.weight)),
-                ("Level %d"%(self.level), url_for(".by_level",weight=self.weight,level=self.level)),
-                ("Character %s"%(self.character_label), url_for("by_character",weight=self.weight,level=self.level,conrey_index=self.conrey_index)),
+                ("Level %d"%(self.level), url_for(".by_level",level=self.level)),
+                ("Weight %d"%(self.weight), url_for(".by_level_weight",level=self.level,weight=self.weight)),
+                ("Character %s"%(self.character_label), url_for("by_level_weight_character",weight=self.weight,level=self.level,conrey_index=self.conrey_index)),
                 ]
 
     @property

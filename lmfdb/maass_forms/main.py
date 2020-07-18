@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Crystals
-# Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
 from lmfdb import db
 from flask import render_template, request, url_for, redirect, abort
@@ -46,6 +44,27 @@ def random():
 @maass_page.route('/<label>')
 def by_label(label):
     return search_by_label(label)
+
+@maass_page.route("/<int:level>/")
+def by_level(level):
+    info={}
+    info['level'] = level
+    return search(info)
+
+@maass_page.route("/<int:level>/<int:weight>/")
+def by_level_weight(level, weight):
+    info={}
+    info['level'] = level
+    info['weight'] = weight
+    return search(info)
+
+@maass_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
+def by_level_weight_character(level, weight, conrey_index):
+    info={}
+    info['level'] = level
+    info['weight'] = weight
+    info['conrey_index'] = conrey_index
+    return search(info)
 
 @maass_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
 def show_graph(min_level, max_level, min_R, max_R):
