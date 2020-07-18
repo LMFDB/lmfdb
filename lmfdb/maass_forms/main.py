@@ -67,7 +67,7 @@ def by_level_weight_character(level, weight, conrey_index):
     return search(info)
 
 @maass_page.route("/BrowseGraph/<min_level>/<max_level>/<min_R>/<max_R>/")
-def show_graph(min_level, max_level, min_R, max_R):
+def browse_graph(min_level, max_level, min_R, max_R):
     r"""
     Render a page with a graph with clickable dots for all
     with min_R <= R <= max_R and levels in the similar range.
