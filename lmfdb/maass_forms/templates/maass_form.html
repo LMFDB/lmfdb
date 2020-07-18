@@ -1,0 +1,40 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>Maass form invariants</h2>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.level', title='Level') }}: </td>
+    <td>\( {{ mf.level }}{{ mf.factored_level }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.weight', title='Weight') }}: </td>
+    <td>\( {{ mf.weight }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('character.dirichlet.conrey', title='Character') }}: </td>
+    <td> {{ mf.character_link | safe }} </td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.symmetry', title='Symmetry') }}: </td>
+    <td>\( {{ mf.symmetry_pretty }} \)</td>
+  </tr>
+  {% if mf.conrey_index == 1 %}
+  <tr>
+    <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
+    <td>\({{ mf.fricke_eigenvalue }}\)</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}: </td>
+    <td>\( {{ mf.spectral_parameter }} \)</td>
+  </tr>
+</table>
+
+<h2>Coefficients</h2>
+{{ self.coefficient_table() | safe }}
+
+
+{% endblock content %}
