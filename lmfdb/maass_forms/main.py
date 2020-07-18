@@ -33,7 +33,7 @@ def index():
     if request.args:
         return search(info)
     title = 'Maass forms'
-    bread = [('Modular forms', 'Maass forms', '.')]
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', '')]
     return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.mwf_newforms.count())
 
 @maass_page.route('/random')
@@ -44,6 +44,28 @@ def random():
 @maass_page.route('/<label>')
 def by_label(label):
     return search_by_label(label)
+
+@maass_page.route('/Completeness')
+def completeness_page():
+    t = 'Completeness of Maass form data'
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Completeness','')]
+    return render_template('single.html', kid='rcs.cande.maass',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@maass_page.route('/Source')
+def source_page():
+    t = 'Source of Maass form data'
+    bread = [('Modular forms', url_for('modular_forms')), ('Maass forms', url_for('.index')), ('Source','')]
+    return render_template('single.html', kid='rcs.source.maass',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@maass_page.route('/Reliability')
+def reliability_page():
+    t = 'Reliability of Maass form data'
+    bread = [('Modular forms', url_for('modular_forms')),('Maass forms', url_for('.index')), ('Reliability','')]
+    return render_template('single.html', kid='rcs.rigor.maass',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
 
 class MaassSearchArray(SearchArray):
     noun = "Maass form"
