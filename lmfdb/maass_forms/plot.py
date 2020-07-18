@@ -1,7 +1,9 @@
+
 # -*- coding: utf-8 -*-
 
 from lmfdb import db
 from lmfdb.utils import signtocolour
+from flask import url_for
 
 def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=20, L=""):
     ''' Returns the contents (as a string) of the svg-file for
@@ -39,7 +41,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['maass_id'])
+        linkurl = L + url_for(".by_label",label=f.maass_id)
         x = (f['spectral_parameter'] - xMin) * xfactor + xshift
         y = (f['level'] - yMin + 1) * yfactor
         s = f.get('symmetry',0)

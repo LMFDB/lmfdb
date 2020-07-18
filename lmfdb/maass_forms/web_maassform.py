@@ -69,7 +69,7 @@ class WebMaassForm(object):
                 ('Maass', url_for(".index")),
                 ("Level %d"%(self.level), url_for(".by_level",level=self.level)),
                 ("Weight %d"%(self.weight), url_for(".by_level_weight",level=self.level,weight=self.weight)),
-                ("Character %s"%(self.character_label), url_for("by_level_weight_character",weight=self.weight,level=self.level,conrey_index=self.conrey_index)),
+                ("Character %s"%(self.character_label), url_for(".by_level_weight_character",weight=self.weight,level=self.level,conrey_index=self.conrey_index)),
                 ]
 
     @property
