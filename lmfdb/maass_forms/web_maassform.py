@@ -113,10 +113,10 @@ class MaassFormDownloader(Downloader):
         data = db.maass_newforms.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database"%label)
-        if data.get("cofficients"):
+        if data.get("coefficients"):
             c = data["coefficients"]
             data["coefficients"]=[str(c[n]) for n in range(len(c))]
-        return self._wrap(Json.dumps(data),
+        return self._wrap(data,
                           label,
                           lang=lang,
                           title='All stored data for Maass form %s,'%(label))
@@ -128,7 +128,7 @@ class MaassFormDownloader(Downloader):
         c = data
         data = [str(c[n]) for n in range(len(c))]
         print(data)
-        return self._wrap(Json.dumps(data),
+        return self._wrap(data,
                           label + '.coefficients',
                           lang=lang,
                           title='Coefficients for Maass form %s,'%(label))
