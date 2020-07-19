@@ -65,6 +65,10 @@ class WebMaassForm(object):
         return "even" if self.symmetry == 1 else ("odd" if self.symmetry == -1 else "")
 
     @property
+    def fricke_eigenvalue_pretty(self):
+        return "%+d"%(self.fricke_eigenvalue) if (self.conrey_index == 1 and self.fricke_eigenvalue) else ""
+
+    @property
     def bread(self):
         return [('Modular forms', url_for('modular_forms')),
                 ('Maass', url_for(".index")),
@@ -92,11 +96,11 @@ class WebMaassForm(object):
         if (rows-1)*cols >= n:
             rows = (n // cols) + (1 if (n%cols) else 0)
         for i in range(rows):
-            table.append('<tr>')
+            table.append('<tr><th></th>')
             for j in range(cols):
                 if i*cols+j > n:
                     break
-                table.append(td_wrapl(r"\(a_{%d}=%+.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
+                table.append(td_wrapr(r"\(a_{%d}=%+.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
             table.append('</tr>')
         table.append('</table>')
         if rows*cols < n:

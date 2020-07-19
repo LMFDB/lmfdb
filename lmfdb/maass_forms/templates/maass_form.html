@@ -19,12 +19,12 @@
   </tr>
   <tr>
     <td> {{ KNOWL('mf.maass.mwf.symmetry', title='Symmetry') }}: </td>
-    <td>\( {{ mf.symmetry_pretty }} \)</td>
+    <td> {{ mf.symmetry_pretty }}</td>
   </tr>
   {% if mf.conrey_index == 1 %}
   <tr>
     <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
-    <td>\({{ mf.fricke_eigenvalue }}\)</td>
+    <td>\({{ mf.fricke_eigenvalue_pretty }}\)</td>
   </tr>
   {% endif %}
   <tr>
