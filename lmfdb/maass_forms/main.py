@@ -7,7 +7,7 @@ from lmfdb.utils import (
     flash_error, SearchArray, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_count, clean_input, rgbtohex, signtocolour)
 from lmfdb.maass_forms.plot import paintSvgMaass
-from lmfdb.maass_forms.web_maassform import WebMaassForm
+from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader
 
 ###############################################################################
 # Learnmore display functions
@@ -88,11 +88,11 @@ def browse_graph(min_level, max_level, min_R, max_R):
 
 @maass_page.route("/download/<label>")
 def download(label):
-    return download_maass_form(label)
+    return MaassFormDownloader().download(label)
 
 @maass_page.route("/download_coefficients/<label>")
 def download_coefficients(label):
-    return download_maass_form_coefficients(label)
+    return MaassFormDownloader().download_coefficients(label)
 
 @maass_page.route('/Completeness')
 def completeness_page():
@@ -157,4 +157,5 @@ def search_by_label(label):
                            learnmore=learnmore_list(),
                            title=mf.title,
                            friends=mf.friends,
+                           downloads=mf.downloads,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)

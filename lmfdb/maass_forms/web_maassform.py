@@ -3,7 +3,7 @@
 from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader
 from lmfdb.backend.encoding import Json
-from flask import url_for
+from flask import url_for, abort
 from sage.all import ZZ
 
 def th_wrap(kwl, title):
