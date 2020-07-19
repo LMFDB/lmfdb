@@ -113,7 +113,7 @@ class MaassFormDownloader(Downloader):
         data = db.maass_newforms.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database"%label)
-        for col in keys(db.maass_newforms.col_type):
+        for col in db.maass_newforms.col_type:
             if db.maass_newforms.col_type[col] == "numeric" and data.get(col):
                 data[col] = str(data[col])
             if db.maass_newforms.col_type[col] == "numeric[]" and data.get(col):
