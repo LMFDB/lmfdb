@@ -83,20 +83,20 @@ class WebMaassForm(object):
     def friends(self):
         return [("L-function", "/L" + url_for(".by_label",label=self.label))]
 
-    def coefficient_table(self,rows=10, cols=10):
+    def coefficient_table(self, rows=10, cols=5):
         if not self.coefficients:
             return ""
         n = len(self.coefficients)
         assert rows > 0 and cols > 0
         table = ['<table class="ntdata">']
-        if (rows-1)*cols <= n:
+        if (rows-1)*cols >= n:
             rows = (n // cols) + (1 if (n%cols) else 0)
         for i in range(rows):
             table.append('<tr>')
             for j in range(cols):
                 if i*cols+j > n:
                     break
-                table.append(td_wrapl(r"\(a_%d=%.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
+                table.append(td_wrapl(r"\(a_{%d}=%+.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
             table.append('</tr>')
         table.append('</table>')
         if rows*cols < n:
