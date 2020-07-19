@@ -116,7 +116,7 @@ class MaassFormDownloader(Downloader):
         if data.get("coefficients"):
             c = data["coefficients"]
             data["coefficients"]=[str(c[n]) for n in range(len(c))]
-        return self._wrap(data,
+        return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
                           title='All stored data for Maass form %s,'%(label))
@@ -127,8 +127,7 @@ class MaassFormDownloader(Downloader):
             return abort(404, "Coefficient data for Maass form %s not found in the database"%label)
         c = data
         data = [str(c[n]) for n in range(len(c))]
-        print(data)
-        return self._wrap(data,
+        return self._wrap(Json.dumps(data).replace('"',''),
                           label + '.coefficients',
                           lang=lang,
                           title='Coefficients for Maass form %s,'%(label))
