@@ -86,6 +86,13 @@ def browse_graph(min_level, max_level, min_R, max_R):
 
     return render_template("maass_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
 
+@maass_page.route("/download/<label>")
+def download(label):
+    return download_maass_form(label)
+
+@maass_page.route("/download_coefficients/<label>")
+def download_coefficients(label):
+    return download_maass_form_coefficients(label)
 
 @maass_page.route('/Completeness')
 def completeness_page():
@@ -107,7 +114,6 @@ def reliability_page():
     bread = [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index')), ('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
-
 
 class MaassSearchArray(SearchArray):
     noun = "Maass form"

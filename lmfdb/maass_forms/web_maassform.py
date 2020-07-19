@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb import db
-from lmfdb.utils import display_knowl
+from lmfdb.utils import display_knowl, Downloader
+from lmfdb.backend.encoding import Json
 from flask import url_for
 from sage.all import ZZ
 
@@ -75,12 +76,12 @@ class WebMaassForm(object):
     @property
     def downloads(self):
         return [("Coefficients to text", url_for (".download_coefficients", label=self.label)),
-                ("All stored data to text", url_for (".download_all_data", label=self.label)),
+                ("All stored data to text", url_for (".download", label=self.label)),
                 ]
 
     @property
     def friends(self):
-        return [("L-function", "/L" + url_for(".by_lavel"))]
+        return [("L-function", "/L" + url_for(".by_label",label=self.label))]
 
     def coefficient_table(self,rows=10, cols=10):
         if not self.coefficients:
@@ -101,3 +102,17 @@ class WebMaassForm(object):
         if rows*cols < n:
             table.append('<p>Showing %d of %d coefficients available</p>' % (rows*cols,n))
         return '\n'.join(table)
+
+
+class MaassFormDownloader(Downloader):
+
+
+    def download(self, label, lang='text'):
+        data = db.maass_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Maass form %s not found in the database"%label)
+        form = WebMaassForm(data)
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Stored data for Maass form %s,'%(label))
