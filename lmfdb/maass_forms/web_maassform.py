@@ -45,7 +45,6 @@ class WebMaassForm(object):
                 ('Weight', str(self.weight)),
                 ('Character', self.character_label),
                 ('Symmetry', self.symmetry_pretty),
-                ('Fricke eigenvalue', str(self.fricke_eigenvalue)),
                 ]
 
     @property
@@ -87,16 +86,16 @@ class WebMaassForm(object):
     def friends(self):
         return [("L-function", "/L" + url_for(".by_label",label=self.label))]
 
-    def coefficient_table(self, rows=10, cols=5):
+    def coefficient_table(self, rows=20, cols=5):
         if not self.coefficients:
             return ""
         n = len(self.coefficients)
         assert rows > 0 and cols > 0
-        table = ['<table class="ntdata">']
+        table = ['<table class="ntdata"><tr><th></th></tr>']
         if (rows-1)*cols >= n:
             rows = (n // cols) + (1 if (n%cols) else 0)
         for i in range(rows):
-            table.append('<tr><th></th>')
+            table.append('<tr>')
             for j in range(cols):
                 if i*cols+j > n:
                     break
@@ -104,19 +103,26 @@ class WebMaassForm(object):
             table.append('</tr>')
         table.append('</table>')
         if rows*cols < n:
-            table.append('<p>Showing %d of %d coefficients available</p>' % (rows*cols,n))
+            table.append('<p>Showing %d of %d available coefficients</p>' % (rows*cols,n))
         return '\n'.join(table)
 
 
 class MaassFormDownloader(Downloader):
 
-
     def download(self, label, lang='text'):
         data = db.maass_newforms.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database"%label)
-        form = WebMaassForm(data)
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for Maass form %s,'%(label))
+                          title='All stored data for Maass form %s,'%(label))
+
+    def download_coefficients(self, label, lang='text'):
+        data = db.maass_newforms.lookup(label, projection="coefficients")
+        if data is None:
+            return abort(404, "Maass form %s not found in the database"%label)
+        return self._wrap(Json.dumps(data),
+                          label + '.coefficients',
+                          lang=lang,
+                          title='Coefficients for Maass form %s,'%(label))

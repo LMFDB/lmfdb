@@ -2,28 +2,28 @@
 
 {% block content %}
 
-<h2>Maass form invariants</h2>
+<h2>{{ KNOWL('mf.maass.mwf', 'Maass form') }} invariants</h2>
 
 <table>
   <tr>
-    <td> {{ KNOWL('mf.maass.mwf.level', title='Level') }}: </td>
+    <td> {{ KNOWL('mf.maass.mwf.level', 'Level') }}: </td>
     <td>\( {{ mf.level }}{{ mf.factored_level }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.maass.mwf.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('mf.maass.mwf.weight', 'Weight') }}: </td>
     <td>\( {{ mf.weight }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('character.dirichlet.conrey', title='Character') }}: </td>
+    <td> {{ KNOWL('character.dirichlet.conrey', 'Character') }}: </td>
     <td> {{ mf.character_link | safe }} </td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.maass.mwf.symmetry', title='Symmetry') }}: </td>
+    <td> {{ KNOWL('mf.maass.mwf.symmetry', 'Symmetry') }}: </td>
     <td> {{ mf.symmetry_pretty }}</td>
   </tr>
   {% if mf.conrey_index == 1 %}
   <tr>
-    <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
+    <td> {{ KNOWL('cmf.fricke', 'Fricke sign') }}: </td>
     <td>\({{ mf.fricke_eigenvalue_pretty }}\)</td>
   </tr>
   {% endif %}
@@ -33,7 +33,7 @@
   </tr>
 </table>
 
-<h2>Coefficients</h2>
+<h2>Maass form coefficients</h2>
 {{ mf.coefficient_table() | safe }}
 
 
