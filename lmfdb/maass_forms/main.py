@@ -5,7 +5,7 @@ from flask import render_template, request, url_for, redirect, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
-    parse_ints, parse_posints, parse_floats, rgbtohex, signtocolour)
+    parse_ints, parse_ints, parse_floats, rgbtohex, signtocolour)
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty
 
@@ -173,7 +173,7 @@ def search(info, query):
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     if info.get('conrey_index'):
-        parse_posints(info, query, 'conrey_index', 'Conrey index')
+        parse_ints(info, query, 'conrey_index', 'Conrey index')
 
 def search_by_label(label):
     try:
