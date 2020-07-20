@@ -4,7 +4,7 @@ from lmfdb import db
 from lmfdb.utils import display_knowl, Downloader
 from lmfdb.backend.encoding import Json
 from flask import url_for, abort
-from sage.all import ZZ
+from sage.all import ZZ, RR
 
 def th_wrap(kwl, title):
     return '    <th>%s</th>' % display_knowl(kwl, title=title)
@@ -63,7 +63,7 @@ class WebMaassForm(object):
 
     @property
     def coeffs(self):
-        return [0] + self.coefficients
+        return [RR(C) for c in self.coefficients]
 
     @property
     def title(self):
