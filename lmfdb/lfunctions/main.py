@@ -21,7 +21,6 @@ from .Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfun
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -120,8 +119,7 @@ def l_function_cuspform_browse_page(degree):
 def l_function_maass_browse_page():
     info = {"bread": get_bread(2, [("Maass Form", url_for('.l_function_maass_browse_page'))])}
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    info["contents"] = [processMaassNavigation()]
-    info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
+    info["contents"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     info["colorminus1"] = rgbtohex(signtocolour(-1))
     info["colorplus1"] = rgbtohex(signtocolour(1))
     return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of Weight 0', **info)
@@ -1091,8 +1089,8 @@ def render_browseGraphChar(args):
 
 
 ###########################################################################
-#   Functions for displaying examples of degree 2 L-functions on the
-#   degree browsing page.
+# Functions for displaying examples of degree n L-functions on the
+# degree browsing page (used when plots are not available)
 ###########################################################################
 def processEllipticCurveNavigation(startCond, endCond):
     """
@@ -1188,52 +1186,6 @@ def processGenus2CurveNavigation(startCond, endCond):
         s += '</tr>\n'
 
     s += '</table>\n'
-    return s
-
-
-def processMaassNavigation(numrecs=35):
-    """
-    Produces a table of numrecs Maassforms with Fourier coefficients in the database
-    """
-    s = r'<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
-    s += '<table>\n'
-    i = 0
-    maxinlevel = 4
-    for level in [1, 2, 3, 4, 5, 6, 7, 9]:
-        j = 0
-        s += '<tr>\n'
-        s += '<td><bold>N={0}:</bold></td>\n'.format(level)
-        finds = maass_db.get_Maass_forms({'Level': int(level),
-                                          'char': 1,
-                                          'Newform' : None})
-        for f in finds:
-            nc = f.get('Numc', 0)
-            if nc <= 0:
-                continue
-            R = f.get('Eigenvalue', 0)
-            if R == 0:
-                continue
-            if f.get('Symmetry',0) == 1:
-                T = 'o'
-            else:
-                T = 'e'
-            _until = min(12, len(str(R)))
-            Rst = str(R)[:_until]
-            idd = f.get('maass_id', None)
-            if idd is None:
-                continue
-            idd = str(idd)
-            url = url_for('.l_function_maass_page', maass_id=idd)
-            s += '<td><a href="{0}">{1}</a>{2}'.format(url, Rst, T)
-            i += 1
-            j += 1
-            if i >= numrecs or j >= maxinlevel:
-                break
-        s += '</tr>\n'
-        if i > numrecs:
-            break
-    s += '</table>\n'
-
     return s
 
 
