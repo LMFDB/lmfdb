@@ -17,7 +17,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls)
+    integer_options, names_and_urls, web_latex_factored_iuteger)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -135,10 +135,7 @@ class WebNewform(object):
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        if self.level == 1 or ZZ(self.level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.factored_lavel = web_latex_factored_iuteger(self.level, equals=True)
         if 'field_disc_factorization' not in data: # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:

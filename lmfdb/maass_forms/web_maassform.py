@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb import db
-from lmfdb.utils import display_knowl, Downloader
+from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer
 from lmfdb.backend.encoding import Json
 from flask import url_for, abort
-from sage.all import ZZ, RR
+from sage.all import RR
 
 def th_wrap(kwl, title):
     return '    <th>%s</th>' % display_knowl(kwl, title=title)
@@ -79,7 +79,7 @@ class WebMaassForm(object):
 
     @property
     def factored_level(self):
-        return ' = ' + ZZ(self.level).factor()._latex_()
+        return web_latex_factored_integer(self.level, equals=True)
 
     @property
     def character_label(self):

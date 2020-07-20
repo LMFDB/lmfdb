@@ -25,7 +25,7 @@ from sage.all import (CC, CBF, CDF,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation
+from sage.all import floor, latex, prime_range, valuation, factor
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
@@ -542,10 +542,24 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, string_types):
         return x
-    if enclose:
-        return r"\( %s \)" % latex(x)
-    return " %s " % latex(x)
+    return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
+def web_latex_factored_integer(x, enclose=True, equals=False):
+    r"""
+    Given any x that can be converted to a ZZ, creates latex string representing x in factored form
+    Returns 0 for 0, replaces -1\cdot with -.
+
+    If equals=true returns latex string for x = factorization but omits "= factorization" if abs(x)=0,1,prime
+    """
+    x = ZZ(x)
+    if abs(x) in [0,1] or abs(x).is_prime():
+        return web_latex(x, enclose=enclose)
+    if equals:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+        s = " %s = %s " % (x, s)
+    else:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+    return r"\( %s \)" % s if enclose else s
 
 def web_latex_ideal_fact(x, enclose=True):
     r"""
