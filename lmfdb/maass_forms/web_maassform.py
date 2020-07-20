@@ -31,6 +31,10 @@ class WebMaassForm(object):
             raise KeyError("Maass newform %s not found in database."%(label))
         return WebMaassForm(data)
 
+    @staticmethod
+    def by_maass_id(maass_id):
+        return self.by_label(maass_id)
+
     @property
     def label(self):
         return self.maass_id #TODO: we should revisit this at some point
