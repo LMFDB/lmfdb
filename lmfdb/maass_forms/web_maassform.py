@@ -6,6 +6,13 @@ from lmfdb.backend.encoding import Json
 from flask import url_for, abort
 from sage.all import RR
 
+def character_link(level,conrey_index):
+    label = "%d.%d"%(level,conrey_index)
+    return display_knowl('character.dirichlet.data', title=label, kwargs={'label':label})
+
+def symmetry_pretty(symmetry):
+    return "even" if symmetry == 1 else ("odd" if symmetry == -1 else "")
+
 def th_wrap(kwl, title):
     return '    <th>%s</th>' % display_knowl(kwl, title=title)
 def td_wrapl(val):
@@ -87,11 +94,11 @@ class WebMaassForm(object):
 
     @property
     def character_link(self):
-        return display_knowl('character.dirichlet.data', title=self.character_label, kwargs={'label':self.character_label})
+        return character_link(self.level, self.conrey_index)
 
     @property
     def symmetry_pretty(self):
-        return "even" if self.symmetry == 1 else ("odd" if self.symmetry == -1 else "")
+        return symmetry_pretty (self.symmetry)
 
     @property
     def fricke_eigenvalue_pretty(self):
