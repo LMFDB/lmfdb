@@ -124,7 +124,7 @@ class MaassSearchArray(SearchArray):
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="1 or 90-100")
         # weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 or 0-3")
         # character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.2")
-        symmetry = SelectBox(name="symmetry", label="Symmetry",  knowl="mf.maass.mwf.symmetry", options=[("0", "any symmetry"), ("1", "even only"), ("-1", "odd only")])
+        symmetry = SelectBox(name="symmetry", label="Symmetry",  knowl="mf.maass.mwf.symmetry", options=[("", "any symmetry"), ("1", "even only"), ("-1", "odd only")])
         spectral_parameter = TextBox(name="spectral_parameter",
                                      label="Spectral parameter",
                                      knowl="mf.maass.mwf.spectralparameter",
@@ -161,7 +161,7 @@ class MaassSearchArray(SearchArray):
     cleaners={
         "character_link": lambda v: character_link(v['level'],v['conrey_index']),
         "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
-        "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '>' + str(v['spectral_parameter']) + '</a>',
+        "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '">' + str(v['spectral_parameter']) + '</a>',
     },
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
