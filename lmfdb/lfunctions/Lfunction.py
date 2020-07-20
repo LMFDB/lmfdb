@@ -1157,7 +1157,7 @@ class Lfunction_Maass(Lfunction):
             self.compute_kappa_lambda_Q_from_mu_nu()
             self.algebraic = False
             # Todo: If self has dimension >1, link to specific L-functions
-            self.dirichlet_coefficients = self.mf.coefficients
+            self.dirichlet_coefficients = self.mf.coeffs
             if 0 in self.dirichlet_coefficients and self.dirichlet_coefficients[0] == 0:
                 self.dirichlet_coefficients.pop(0)
             self.checkselfdual()

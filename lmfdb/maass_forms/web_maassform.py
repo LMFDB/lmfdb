@@ -51,7 +51,8 @@ class WebMaassForm(object):
         forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
         return forms[0] if forms else None
 
-    def prev_maass_form(self, level, character, weight, eigenvalue, maass_id):
+    @property
+    def prev_maass_form(self):
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$lt':self.maass_id}}
         forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
         if forms:
@@ -59,6 +60,10 @@ class WebMaassForm(object):
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': {'$lt': self.spectral_parameter}}
         forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
         return forms[0] if forms else None
+
+    @property
+    def coeffs(self):
+        return [0] + self.coefficients
 
     @property
     def title(self):
