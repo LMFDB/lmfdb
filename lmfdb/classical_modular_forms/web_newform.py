@@ -135,7 +135,7 @@ class WebNewform(object):
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        self.factored_lavel = web_latex_factored_integer(self.level, equals=True)
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data: # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
