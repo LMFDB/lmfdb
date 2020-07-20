@@ -1116,7 +1116,7 @@ class Lfunction_Maass(Lfunction):
         else:   # Generate from Maass form
 
             # Create the Maass form
-            self.mf = WebMaassForm(self.maass_id, get_dirichlet_c_only=1)
+            self.mf = WebMaassForm(self.maass_id)
             self.group = 'GL2'
 
             # Extract the L-function information from the Maass form object
