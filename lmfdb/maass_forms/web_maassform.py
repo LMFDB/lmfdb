@@ -63,7 +63,7 @@ class WebMaassForm(object):
 
     @property
     def coeffs(self):
-        return [RR(C) for c in self.coefficients]
+        return [RR(c) for c in self.coefficients]
 
     @property
     def title(self):
