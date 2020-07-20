@@ -1135,7 +1135,7 @@ class Lfunction_Maass(Lfunction):
                                    + 'the L-function. ')
             else:  # no fricke for level 1
                 self.fricke = 1
-            if self.symmetry_pretty == "odd": # avoid depending on 1=odd, 0=even (former mwf convention) vs -1=odd, 1=even (new maass form convention)
+            if self.symmetry == -1: # odd
                 self.sign = -self.fricke
                 aa = 1
             else:
