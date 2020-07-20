@@ -25,7 +25,7 @@ from lmfdb.utils import (
         names_and_urls)
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
@@ -1125,10 +1125,10 @@ class Lfunction_Maass(Lfunction):
             self.level_factored = factor(self.level)
             self.charactermodulus = self.level
             self.weight = int(self.mf.weight)
-            self.characternumber = int(self.mf.character)
+            self.characternumber = int(self.mf.conrey_index)
             if self.level > 1:
                 try:
-                    self.fricke = self.mf.fricke()
+                    self.fricke = self.mf.fricke_eigenvalue
                 except:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
@@ -1151,17 +1151,17 @@ class Lfunction_Maass(Lfunction):
             self.primitive = True
             self.degree = 2
             self.quasidegree = 2
-            self.eigenvalue = self.mf.R if self.mf.R else 0
+            self.eigenvalue = self.mf.spectral_parameter if self.mf.spectral_parameter else 0
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
             self.algebraic = False
             # Todo: If self has dimension >1, link to specific L-functions
-            self.dirichlet_coefficients = self.mf.coeffs
+            self.dirichlet_coefficients = self.mf.coefficients
             if 0 in self.dirichlet_coefficients and self.dirichlet_coefficients[0] == 0:
                 self.dirichlet_coefficients.pop(0)
             self.checkselfdual()
-            self.credit = self.mf.contributor_name if 'contributor_name' in dir(self.mf) else ''
+            self.credit = self.mf.contributor if 'contributor' in dir(self.mf) else ''
 
             title_end = " and $R= %s$" % (self.eigenvalue)
 

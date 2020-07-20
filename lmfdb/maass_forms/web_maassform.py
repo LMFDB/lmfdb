@@ -36,6 +36,27 @@ class WebMaassForm(object):
         return self.maass_id #TODO: we should revisit this at some point
 
     @property
+    def next_maass_form(self):
+        # return the "next" maass form of the save level, character, and weight with spectral parameter approximately >= our spectral _parameter
+        # forms with the same spectral parameter are sorted by maass_id
+        query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$gt':self.maass_id}}
+        forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
+        if forms:
+            return forms[0];
+        query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': {'$gt': self.spectral_parameter}}
+        forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
+        return forms[0] if forms else None
+
+    def prev_maass_form(self, level, character, weight, eigenvalue, maass_id):
+        query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$lt':self.maass_id}}
+        forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
+        if forms:
+            return forms[0];
+        query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': {'$lt': self.spectral_parameter}}
+        forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
+        return forms[0] if forms else None
+
+    @property
     def title(self):
         return r"Maass form on \(\Gamma_0(%d)\) with \(R=%s\)"%(self.level,self.spectral_parameter)
 

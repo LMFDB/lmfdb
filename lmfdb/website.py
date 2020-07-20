@@ -33,8 +33,8 @@ from . import half_integral_weight_forms
 assert half_integral_weight_forms
 from . import siegel_modular_forms
 assert siegel_modular_forms
-from . import modular_forms
-assert modular_forms
+# from . import modular_forms
+# assert modular_forms
 from . import elliptic_curves
 assert elliptic_curves
 from . import ecnf

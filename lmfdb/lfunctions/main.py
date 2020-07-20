@@ -25,7 +25,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db impo
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
-from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
+from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float
@@ -740,18 +740,18 @@ def set_navi(L):
     '''
     prev_data = None
     if L.Ltype() == 'maass' and L.group == 'GL2':
-        next_form_id = L.mf.next_maassform_id()
+        next_form_id = L.mf.next_maass_form()
         if next_form_id:
             next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
-                         url_for('mwf.render_one_maass_waveform',
-                         maass_id = next_form_id) )
+                         url_for('maass.by_label',
+                         label = next_form_id) )
         else:
             next_data = ('','','')
-        prev_form_id = L.mf.prev_maassform_id()
+        prev_form_id = L.mf.prev_maass_form()
         if prev_form_id:
             prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
-                         url_for('mwf.render_one_maass_waveform',
-                         maass_id = prev_form_id) )
+                         url_for('maass.by_lavel',
+                         label = prev_form_id) )
         else:
             prev_data = ('','','')
 
