@@ -174,6 +174,7 @@ def search(info, query):
         query['symmetry'] = int(info['symmetry'])
     if info.get('conrey_index'):
         parse_ints(info, query, 'conrey_index', 'Conrey index')
+    print(query)
 
 def search_by_label(label):
     try:
