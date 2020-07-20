@@ -15,7 +15,7 @@ def body_class():
 from . import main
 assert main # silence pyflakes
 
-app.register_blueprint(maass_page, url_prefix="/ModularForm/GL2/Q/NewMaass")
+app.register_blueprint(maass_page, url_prefix="/ModularForm/GL2/Q/Maass")
 
 register_search_function(
     "gl2_maass_forms",
