@@ -9,7 +9,7 @@ from lmfdb.utils import (
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty
 
-bread_prefix = [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
+bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
 ###############################################################################
 # Learnmore display functions
@@ -35,7 +35,7 @@ def index():
     if len(info) > 1:
         return search(info)
     title = 'Maass forms'
-    bread = bread_prefix
+    bread = bread_prefix()
     return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
@@ -82,7 +82,7 @@ def browse_graph(min_level, max_level, min_R, max_R):
     info['max_R'] = max_R
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
-    bread = bread_prefix + [('Browse graph', '')]
+    bread = bread_prefix() + [('Browse graph', '')]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
 
@@ -99,21 +99,21 @@ def download_coefficients(label):
 @maass_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
-    bread = bread_prefix + [('Completeness','')]
+    bread = bread_prefix() + [('Completeness','')]
     return render_template('single.html', kid='rcs.cande.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @maass_page.route('/Source')
 def source_page():
     t = 'Source of Maass form data'
-    bread = bread_prefix + [('Source','')]
+    bread = bread_prefix() + [('Source','')]
     return render_template('single.html', kid='rcs.source.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @maass_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
-    bread = bread_prefix + [('Reliability','')]
+    bread = bread_prefix() + [('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
@@ -163,7 +163,7 @@ class MaassSearchArray(SearchArray):
         "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
         "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '>' + str(v['spectral_parameter']) + '</a>',
     },
-    bread=lambda: bread_prefix + [('Search results', '')],
+    bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
     credit=lambda: credit_string,
 )
