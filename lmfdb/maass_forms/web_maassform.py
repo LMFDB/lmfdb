@@ -33,7 +33,7 @@ class WebMaassForm(object):
 
     @staticmethod
     def by_maass_id(maass_id):
-        return self.by_label(maass_id)
+        return WebMaassForm.by_label(maass_id)
 
     @property
     def label(self):
