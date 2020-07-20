@@ -1160,7 +1160,6 @@ class Lfunction_Maass(Lfunction):
             self.dirichlet_coefficients = self.mf.coeffs
             if 0 in self.dirichlet_coefficients and self.dirichlet_coefficients[0] == 0:
                 self.dirichlet_coefficients.pop(0)
-            print(self.dirichlet_coefficients)
             self.checkselfdual()
             self.credit = self.mf.contributor if 'contributor' in dir(self.mf) else ''
 
