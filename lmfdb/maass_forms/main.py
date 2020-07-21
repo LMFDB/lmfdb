@@ -2,11 +2,11 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for, redirect, abort
+from flask import render_template, request, url_for, redirect, abort, flash, Markup
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
-    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
+    parse_ints, parse_floats, rgbtohex, signtocolour)
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 
@@ -51,20 +51,20 @@ def by_label(label):
 
 @maass_page.route("/<int:level>/")
 def by_level(level):
-    info={}
+    info = to_dict(request.args, search_array=MaassSearchArray())
     info['level'] = level
     return search(info)
 
 @maass_page.route("/<int:level>/<int:weight>/")
 def by_level_weight(level, weight):
-    info={}
+    info = to_dict(request.args, search_array=MaassSearchArray())
     info['level'] = level
     info['weight'] = weight
     return search(info)
 
 @maass_page.route("/<int:level>/<int:weight>/<int:conrey_index>/")
 def by_level_weight_character(level, weight, conrey_index):
-    info={}
+    info = to_dict(request.args, search_array=MaassSearchArray())
     info['level'] = level
     info['weight'] = weight
     info['conrey_index'] = conrey_index
@@ -188,7 +188,7 @@ def parse_rows_cols(info):
     for v in ['rows','cols']:
         if info.get('edit_'+v):
             if not re.match(r"^[1-9][0-9]*$",info['edit_'+v]):
-                errs.append("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>, it needs to be a positive integer." % (info['edit_'+v],v))
+                errs.append("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>, it needs to be a positive integer." % (info['edit_'+v],v))
             else:
                 info[v] = int(info['edit_'+v])
         if not info.get(v):
@@ -203,7 +203,7 @@ def search_by_label(label):
     info = to_dict(request.args)
     errs = parse_rows_cols(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        flash(Markup("%s", "<br>".join(errs)))
     return render_template("maass_form.html",
                            info=info,
                            mf=mf,
