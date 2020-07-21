@@ -5,9 +5,9 @@ from flask import render_template, request, url_for, redirect, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
-    parse_ints, parse_ints, parse_floats, rgbtohex, signtocolour)
+    parse_ints, parse_floats, rgbtohex, signtocolour)
 from lmfdb.maass_forms.plot import paintSvgMaass
-from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty
+from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
@@ -161,7 +161,7 @@ class MaassSearchArray(SearchArray):
     cleaners={
         "character_link": lambda v: character_link(v['level'],v['conrey_index']),
         "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
-        "fricke_pretty": lambda v: "%+d" % symmetry_pretty(v['fricke_eigenvalue']),
+        "fricke_pretty": lambda v: fricke_pretty(v['fricke_eigenvalue']),
         "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '">' + str(v['spectral_parameter']) + '</a>',
     },
     bread=lambda: bread_prefix() + [('Search results', '')],
