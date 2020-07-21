@@ -34,7 +34,18 @@
 </table>
 
 <h2>Maass form coefficients</h2>
-{{ mf.coefficient_table() | safe }}
+{{ mf.coefficient_table(info.rows, info.cols) | safe }}
 
+<form id='coefficient_table'>
+  <table>
+    <tr>
+      <td>Rows: </td>
+      <td><input type='text' name='edit_rows' style="width: 40px" value="{{info.rows}}"></td>
+      <td>Cols: </td>
+      <td><input type='text' name='edit_cols' style="width: 40px" value="{{info.cols}}"></td>
+      <td><button id="refresh_coefficient_table">Refresh table</button></td>
+    </tr>
+  </table>
+</form>
 
 {% endblock content %}

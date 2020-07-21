@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import re
 from lmfdb import db
 from flask import render_template, request, url_for, redirect, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
-    parse_ints, parse_floats, rgbtohex, signtocolour)
+    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 
+# default rows and columns for coefficient table
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
 ###############################################################################
@@ -179,18 +181,37 @@ def search(info, query):
         parse_ints(info, query, 'conrey_index', 'Conrey index')
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
+
+def parse_rows_cols(info, mf):
+    default = { 'rows': 20, 'cols': 5 }
+    errs = []
+    for v in ['rows','cols']:
+        if info.get('edit_'+v):
+            if not re.match(r"^[1-9][0-9]*$",info['edit_'+v]):
+                errs.append("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>, it needs to be a positive integer." % (info['edit_'+v],v))
+            else:
+                info[v] = int(info['edit_'+v])
+        if not info.get(v):
+            info[v] = default[v]
+    return errs
+
 def search_by_label(label):
     try:
         mf =  WebMaassForm.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
+    info = to_dict(request.args)
+    errs = parse_rows_cols(info)
+    if errs:
+        flash_error("%s", "<br>".join(errs))
     return render_template("maass_form.html",
-                           properties=mf.properties,
-                           credit=credit_string,
+                           info=info,
                            mf=mf,
+                           properties=mf.properties,
+                           downloads=mf.downloads,
+                           credit=credit_string,
                            bread=mf.bread,
                            learnmore=learnmore_list(),
                            title=mf.title,
                            friends=mf.friends,
-                           downloads=mf.downloads,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)
