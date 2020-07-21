@@ -123,9 +123,9 @@ class MaassSearchArray(SearchArray):
     noun = "Maass form"
     plural_noun = "Maass forms"
     def __init__(self):       
-        level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="1 or 90-100")
-        # weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 or 0-3")
-        # character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.2")
+        level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="997 or 1-10")
+        weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currenlty available)")
+        character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.1 (only trivial character currently available)")
         symmetry = SelectBox(name="symmetry", label="Symmetry",  knowl="mf.maass.mwf.symmetry", options=[("", "any symmetry"), ("1", "even only"), ("-1", "odd only")])
         spectral_parameter = TextBox(name="spectral_parameter",
                                      label="Spectral parameter",
@@ -136,14 +136,42 @@ class MaassSearchArray(SearchArray):
 
         self.browse_array = [
             [level],
-            #[weight],
-            #[character],
+            [weight],
+            [character],
             [spectral_parameter],
             [symmetry],
             [count]]
 
-        #self.refine_array = [[level, weight, character, spectral_parameter, symmetry]]
-        self.refine_array = [[level, spectral_parameter, symmetry]]
+        self.refine_array = [[level, weight, character, spectral_parameter, symmetry]]
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_character(inp, query, qfield):
+    if not re.match(r"^[1-9][0-9]*\.[1-0][0-9]*",inp):
+        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")  
+    level_field ='level'
+    level, conrey_index = inp.split('.')
+    level, conrey_index = int(level), int(conrey_index)
+    if gcd(level,conrey_index):
+        raise ValueError("Character labels q.n must have q and n relativley prime.")
+    def contains_level(D):
+        if D == level:
+            return True
+        if isinstance(D, dict):
+            a = D.get('$gte')
+            b = D.get('$lte')
+            return (a is None or level >= a) and (b is None or level <= b)
+    # Check that the provided constraint on level is consistent with the one
+    # given by the character, and update level/$or
+    if '$or' in query and all(level_field in D for D in query['$or']):
+        if not any(contains_level(D) for D in query['$or']):
+            raise ValueError("Inconsistent level")
+        del query['$or']
+    elif level_field in query:
+        if not contains_level(query[level_field]):
+            raise ValueError("Inconsistent level")
+    query[level_field] = level
+    query[qfiled] = conrey_index
+
 
 @search_wrap(
     template="maass_search_results.html",
@@ -174,11 +202,11 @@ class MaassSearchArray(SearchArray):
 )
 def search(info, query):
     parse_ints(info, query, 'level', 'level')
+    parse_ints(info, query, 'weight', 'weight')
+    parse_character(info, query, 'character', 'conrey_index')
     parse_floats(info, query, 'spectral_parameter', 'spectral parameter', allow_singletons=True)
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
-    if info.get('conrey_index'):
-        parse_ints(info, query, 'conrey_index', 'Conrey index')
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 
