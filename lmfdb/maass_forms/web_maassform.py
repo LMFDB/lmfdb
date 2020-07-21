@@ -137,7 +137,7 @@ class WebMaassForm(object):
         for i in range(rows):
             table.append('<tr>')
             for j in range(cols):
-                if i*cols+j > n:
+                if i*cols+j >= n:
                     break
                 table.append(td_wrapr(r"\(a_{%d}=%+.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
             table.append('</tr>')
