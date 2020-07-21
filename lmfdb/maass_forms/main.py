@@ -10,6 +10,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
+from sage.all import gcd
 
 CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
 
@@ -172,7 +173,7 @@ def parse_character(inp, query, qfield):
         if not contains_level(query[level_field]):
             raise ValueError("Inconsistent level")
     query[level_field] = level
-    query[qfiled] = conrey_index
+    query[qfield] = conrey_index
 
 @search_wrap(
     template="maass_search_results.html",
@@ -212,7 +213,6 @@ def search(info, query):
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
-    errs = []
     for v in ['rows','cols']:
         if info.get('edit_'+v):
             if not re.match(r"^[1-9][0-9]*$",info['edit_'+v]):
