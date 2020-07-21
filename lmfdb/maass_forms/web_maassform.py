@@ -49,6 +49,9 @@ class WebMaassForm(object):
     def label(self):
         return self.maass_id #TODO: we should revisit this at some point
 
+    # next_maass_form and prev_maass_form below are provided for backward compatibility
+    # they are referenced in lfunctions but are not currently used
+
     @property
     def next_maass_form(self):
         # return the "next" maass form of the save level, character, and weight with spectral parameter approximately >= our spectral _parameter
@@ -81,11 +84,14 @@ class WebMaassForm(object):
 
     @property
     def properties(self):
-        return [('Level', str(self.level)),
-                ('Weight', str(self.weight)),
-                ('Character', self.character_label),
-                ('Symmetry', self.symmetry_pretty),
-                ]
+        props = [('Level', str(self.level)),
+                 ('Weight', str(self.weight)),
+                 ('Character', self.character_label),
+                 ('Symmetry', self.symmetry_pretty),
+                 ]
+        if self.conrey_index == 1:
+            props.append(('Fricke sign', self.fricke_pretty))
+        return props
 
     @property
     def factored_level(self):
