@@ -152,7 +152,7 @@ class WebMaassForm(object):
 class MaassFormDownloader(Downloader):
     table = db.maass_newforms
     title = 'Maass forms'
-    columns = ['maass_id', 'level', 'weight', 'conrey_index', 'spectral_parameter', 'symmetry', 'fricke_eigenvalue']
+    columns = ['level', 'weight', 'conrey_index', 'spectral_parameter', 'symmetry', 'fricke_eigenvalue']
     function_body = {'text':[]}
 
     def download(self, label, lang='text'):
