@@ -203,7 +203,7 @@ def search_by_label(label):
     info = to_dict(request.args)
     errs = parse_rows_cols(info)
     if errs:
-        flash(Markup("%s", "<br>".join(errs)))
+        flash(Markup("<br>".join(errs)))
     return render_template("maass_form.html",
                            info=info,
                            mf=mf,
