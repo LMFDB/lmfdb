@@ -154,6 +154,8 @@ def parse_character(inp, query, qfield):
     level_field, conrey_index_field ='level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
+    if conrey_index > level:
+        rase ValueError("Character labels q.n must have n < q.")
     if gcd(level,conrey_index) != 1:
         raise ValueError("Character labels q.n must have q and n relativley prime.")
     def contains_level(D):
@@ -167,11 +169,11 @@ def parse_character(inp, query, qfield):
     # given by the character, and update level/$or
     if '$or' in query and all(level_field in D for D in query['$or']):
         if not any(contains_level(D) for D in query['$or']):
-            raise ValueError("Inconsistent level")
+            raise ValueError("The modulus is not consistent with the specified level.")
         del query['$or']
     elif level_field in query:
         if not contains_level(query[level_field]):
-            raise ValueError("Inconsistent level")
+            raise ValueError("The modulus is not consistent with the specified level.")
     query[level_field] = level
     query[conrey_index_field] = conrey_index
 
@@ -210,7 +212,6 @@ def search(info, query):
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
-    print(query)
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
