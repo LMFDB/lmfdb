@@ -151,7 +151,7 @@ class MaassSearchArray(SearchArray):
 def parse_character(inp, query, qfield):
     if not CHARACTER_LABEL_RE.match(inp):
         raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")  
-    level_field ='level'
+    level_field, conrey_index_field ='level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
     if gcd(level,conrey_index) != 1:
@@ -173,7 +173,7 @@ def parse_character(inp, query, qfield):
         if not contains_level(query[level_field]):
             raise ValueError("Inconsistent level")
     query[level_field] = level
-    query[qfield] = conrey_index
+    query[conrey_index_field] = conrey_index
 
 @search_wrap(
     template="maass_search_results.html",
@@ -203,10 +203,10 @@ def parse_character(inp, query, qfield):
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def search(info, query):
-    parse_ints(info, query, 'level', 'level')
-    parse_ints(info, query, 'weight', 'weight')
-    parse_character(info, query, 'conrey_index', 'character')
-    parse_floats(info, query, 'spectral_parameter', 'spectral parameter', allow_singletons=True)
+    parse_ints(info, query, 'level', name='Level')
+    parse_ints(info, query, 'weight', name='Weight')
+    parse_character(info, query, 'character', name='Character')
+    parse_floats(info, query, 'spectral_parameter', name='Spectral parameter', allow_singletons=True)
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
