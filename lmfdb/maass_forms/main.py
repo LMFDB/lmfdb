@@ -182,7 +182,7 @@ def search(info, query):
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 
-def parse_rows_cols(info, mf):
+def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
     errs = []
     for v in ['rows','cols']:
