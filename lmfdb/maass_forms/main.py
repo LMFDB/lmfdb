@@ -205,7 +205,7 @@ def parse_character(inp, query, qfield):
 def search(info, query):
     parse_ints(info, query, 'level', 'level')
     parse_ints(info, query, 'weight', 'weight')
-    parse_character(info, query, 'character', 'conrey_index')
+    parse_character(info, query, 'conrey_index', 'character')
     parse_floats(info, query, 'spectral_parameter', 'spectral parameter', allow_singletons=True)
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
