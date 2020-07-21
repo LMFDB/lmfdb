@@ -186,6 +186,7 @@ class WebHyperGeometricFamily(object):
                     pad=0,
                     pad_inches=0,
                     bbox_inches='tight',
+                    transparent = True,
                     remove_axes=True)
 
     @lazy_attribute
