@@ -170,7 +170,7 @@ class MaassSearchArray(SearchArray):
 )
 def search(info, query):
     parse_ints(info, query, 'level', 'level')
-    parse_floats(info, query, 'spectral_paramter', 'spectral parameter', allow_singletons=True)
+    parse_floats(info, query, 'spectral_parameter', 'spectral parameter', allow_singletons=True)
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     if info.get('conrey_index'):

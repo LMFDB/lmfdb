@@ -11,7 +11,7 @@ def character_link(level, conrey_index):
     return display_knowl('character.dirichlet.data', title=label, kwargs={'label':label})
 
 def fricke_pretty(fricke_eigenvalue):
-    return "%+d"%(fricke_eigenvalue) if fricke_eigenvalue else ""
+    return "%+d" % fricke_eigenvalue if fricke_eigenvalue else ""
 
 def symmetry_pretty(symmetry):
     return "even" if symmetry == 1 else ("odd" if symmetry == -1 else "")
@@ -105,7 +105,7 @@ class WebMaassForm(object):
 
     @property
     def fricke_pretty(self):
-        return fricke_pretty(self.fircke_eigenvalue)
+        return fricke_pretty(self.fricke_eigenvalue)
 
     @property
     def bread(self):
