@@ -7,6 +7,7 @@ from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
+from lmfdb.utils.search_parsing import search_parser
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 
