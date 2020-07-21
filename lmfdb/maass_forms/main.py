@@ -158,6 +158,7 @@ class MaassSearchArray(SearchArray):
         "symmetry",
         "fricke_eigenvalue",
     ],
+    random_projection="maass_id",
     cleaners={
         "character_link": lambda v: character_link(v['level'],v['conrey_index']),
         "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
@@ -167,6 +168,7 @@ class MaassSearchArray(SearchArray):
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
     credit=lambda: credit_string,
+    url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def search(info, query):
     parse_ints(info, query, 'level', 'level')
