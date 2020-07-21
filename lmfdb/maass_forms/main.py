@@ -188,12 +188,12 @@ def parse_rows_cols(info):
     for v in ['rows','cols']:
         if info.get('edit_'+v):
             if not re.match(r"^[1-9][0-9]*$",info['edit_'+v]):
+                flash_error
                 errs.append("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>, it needs to be a positive integer." % (info['edit_'+v],v))
             else:
                 info[v] = int(info['edit_'+v])
         if not info.get(v):
             info[v] = default[v]
-    return errs
 
 def search_by_label(label):
     try:
@@ -203,7 +203,7 @@ def search_by_label(label):
     info = to_dict(request.args)
     errs = parse_rows_cols(info)
     if errs:
-        flash(Markup("<br>".join(errs)))
+        flash(Markup("<br>".join(errs)), "error")
     return render_template("maass_form.html",
                            info=info,
                            mf=mf,
