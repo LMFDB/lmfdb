@@ -2124,7 +2124,7 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             if sort:
                 updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
-                values = [sort, self.search_table]
+                values = [Json(sort), self.search_table]
             else:
                 updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
                 values = [self.search_table]
