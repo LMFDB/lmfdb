@@ -48,8 +48,7 @@ def piecewise_linear_image(A,B):
 def circle_image(A,B):
     G = Graphics()
     G += circle((0,0), 1 , color = 'black',thickness = 3)
-    backgroundColor = (227/255,242/255,253/255) #This is the RGB color (in Sage format) of the properties bar (found in style.css). Making the framing circle this color makes it invisible on the page. 
-    G += circle((0,0), 1.4, color = backgroundColor) #This adds a framing circle to the plot, which protects the aspect ratio from being skewed. 
+    G += circle((0,0), 1.4, color = 'black',alpha = 0) #This adds an invisible framing circle to the plot, which protects the aspect ratio from being skewed. 
     from collections import defaultdict
     tmp = defaultdict(int)
     for a in A:
