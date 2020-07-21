@@ -11,7 +11,8 @@ from lmfdb.utils.search_parsing import search_parser
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 
-# default rows and columns for coefficient table
+CHARACTER_LABEL_RE = re.compile(r"^[1-9][0-9]*\.[1-9][0-9]*")
+
 bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', url_for('.index'))]
 
 ###############################################################################
@@ -147,7 +148,7 @@ class MaassSearchArray(SearchArray):
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield):
-    if not re.match(r"^[1-9][0-9]*\.[1-0][0-9]*",inp):
+    if not CHARACTER_LABEL_RE.match(inp):
         raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")  
     level_field ='level'
     level, conrey_index = inp.split('.')
@@ -172,7 +173,6 @@ def parse_character(inp, query, qfield):
             raise ValueError("Inconsistent level")
     query[level_field] = level
     query[qfiled] = conrey_index
-
 
 @search_wrap(
     template="maass_search_results.html",
@@ -209,7 +209,6 @@ def search(info, query):
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
-
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
