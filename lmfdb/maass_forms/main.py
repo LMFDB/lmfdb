@@ -154,7 +154,7 @@ def parse_character(inp, query, qfield):
     level_field ='level'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
-    if gcd(level,conrey_index):
+    if gcd(level,conrey_index) != 1:
         raise ValueError("Character labels q.n must have q and n relativley prime.")
     def contains_level(D):
         if D == level:
