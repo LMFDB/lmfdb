@@ -210,6 +210,7 @@ def search(info, query):
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
+    print(query)
 
 def parse_rows_cols(info):
     default = { 'rows': 20, 'cols': 5 }
