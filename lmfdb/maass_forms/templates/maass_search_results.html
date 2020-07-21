@@ -19,12 +19,12 @@
 </thead>
 {% for mf in info.results: %}
 <tr>
-    <td> {{ mf.level }} </td>
-    <td> {{ mf.weight }} </td>
-    <td> {{ mf.character_link | safe }} </td>
+    <td align=right> {{ mf.level }} </td>
+    <td align=center> {{ mf.weight }} </td>
+    <td align=center> {{ mf.character_link | safe }} </td>
     <td> {{ mf.spectral_link | safe }} </td>
-    <td> {{ mf.symmetry_pretty }} </td>
-    <td> {{ mf.fricke_eigenvalue }} </td>
+    <td align=center> {{ mf.symmetry_pretty }} </td>
+    <td align=center> {{ mf.fricke_eigenvalue }} </td>
 </tr>
 {% endfor %}
 </table>

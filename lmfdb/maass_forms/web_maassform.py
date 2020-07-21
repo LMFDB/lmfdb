@@ -6,7 +6,7 @@ from lmfdb.backend.encoding import Json
 from flask import url_for, abort
 from sage.all import RR
 
-def character_link(level,conrey_index):
+def character_link(level, conrey_index):
     label = "%d.%d"%(level,conrey_index)
     return display_knowl('character.dirichlet.data', title=label, kwargs={'label':label})
 
@@ -101,7 +101,7 @@ class WebMaassForm(object):
         return symmetry_pretty (self.symmetry)
 
     @property
-    def fricke_eigenvalue_pretty(self):
+    def fricke_pretty(self):
         return "%+d"%(self.fricke_eigenvalue) if (self.conrey_index == 1 and self.fricke_eigenvalue) else ""
 
     @property

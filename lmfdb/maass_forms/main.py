@@ -161,6 +161,7 @@ class MaassSearchArray(SearchArray):
     cleaners={
         "character_link": lambda v: character_link(v['level'],v['conrey_index']),
         "symmetry_pretty": lambda v: symmetry_pretty(v['symmetry']),
+        "fricke_pretty": lambda v: "%+d" % symmetry_pretty(v['fricke_eigenvalue']),
         "spectral_link": lambda v: '<a href="' + url_for('.by_label', label=v['maass_id']) + '">' + str(v['spectral_parameter']) + '</a>',
     },
     bread=lambda: bread_prefix() + [('Search results', '')],
@@ -174,7 +175,7 @@ def search(info, query):
         query['symmetry'] = int(info['symmetry'])
     if info.get('conrey_index'):
         parse_ints(info, query, 'conrey_index', 'Conrey index')
-    print(query)
+    query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']
 
 def search_by_label(label):
     try:
