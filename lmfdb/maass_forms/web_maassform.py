@@ -144,6 +144,8 @@ class WebMaassForm(object):
         table.append('</table>')
         if rows*cols < n:
             table.append('<p>Showing %d of %d available coefficients</p>' % (rows*cols,n))
+        else:
+            table.append('<p>Showing all %d available coefficients</p>' % n)
         return '\n'.join(table)
 
 
