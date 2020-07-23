@@ -23,7 +23,7 @@ class MaassTest(LmfdbTest):
         assert 'In the plot below each dot is linked' in L.get_data(as_text=True)
 
     def test_browse_100_1000_0_1(self):
-        L = self.tc.get("https://blue.lmfdb.xyz/ModularForm/GL2/Q/Maass/BrowseGraph/100/100ls -l0/0/1/")
+        L = self.tc.get("https://blue.lmfdb.xyz/ModularForm/GL2/Q/Maass/BrowseGraph/100/1000/0/1/")
         assert 'In the plot below each dot is linked' in L.get_data(as_text=True)
 
     def test_search_all(self):
@@ -40,7 +40,7 @@ class MaassTest(LmfdbTest):
 
     def test_search_R_1234(self):
         L = self.tc.get("http://127.0.0.1:37778/ModularForm/GL2/Q/Maass/?hst=List&spectral_parameter=12.34&search_type=List")
-        assert "Spectral paramater" in L.get_data(as_text=True) and "12.34000" in L.get_data(as_text=True)
+        assert "12.34000" in L.get_data(as_text=True)
 
     def test_form_1234(self):
         L = self.tc.get("http://127.0.0.1:37778/ModularForm/GL2/Q/Maass/541192fdacf756021f2c6e39")
