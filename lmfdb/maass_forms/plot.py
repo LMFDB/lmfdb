@@ -37,7 +37,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
 
     # Fetch Maass forms from database
     forms = db.maass_newforms.search({'spectral_parameter':{'$gte':xMin,'$lte':xMax}, 'level':{'$gte':yMin,'$lte':yMax}},
-                                     ["maass_id", "spectral_parameter", "level", "symmetry"])
+                                     ["maass_id", "spectral_parameter", "level", "symmetry"], sort=[("level",1),("symmetry",-1),("spectral_parameter",1),("maass_id",1)])
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
