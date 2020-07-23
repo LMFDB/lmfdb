@@ -45,7 +45,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
         x = (f['spectral_parameter'] - xMin) * xfactor + xshift
         y = (f['level'] - yMin + 1) * yfactor
         s = f.get('symmetry',0)
-        y -= s    # Shifting even slightly up and odd slightly down
+        y -= 2*s    # Shifting even slightly up and odd slightly down
         color = signtocolour(s)
             
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
