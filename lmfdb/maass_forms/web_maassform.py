@@ -85,7 +85,7 @@ class WebMaassForm(object):
 
     @property
     def properties(self):
-        props = [(None, '<img src="{0}" width="200" height="200"/>'.format(self.portrait))] if self.portrait is not None else []
+        props = [(None, '<img src="{0}" width="200" height="150"/>'.format(self.portrait))] if self.portrait is not None else []
         props += [('Level', str(self.level)),
                  ('Weight', str(self.weight)),
                  ('Character', self.character_label),
