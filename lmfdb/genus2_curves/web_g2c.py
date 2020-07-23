@@ -528,7 +528,7 @@ def mw_gens_table(invs,gens,hts,pts):
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
-def local_table(D,N,tama,bad_lpolys):
+def local_table(N,D,tama,bad_lpolys):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', r'ord(\(N\))'),
@@ -548,7 +548,7 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp)])
+        loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapl(Lp)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
@@ -730,7 +730,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
-            data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
+            data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'])
 
         else:
             # invariants specific to isogeny class
