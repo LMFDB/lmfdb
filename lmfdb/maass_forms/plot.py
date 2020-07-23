@@ -37,7 +37,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
 
     # Fetch Maass forms from database
     forms = db.maass_newforms.search({'spectral_parameter':{'$gte':xMin,'$lte':xMax}, 'level':{'$gte':yMin,'$lte':yMax}},
-                                     ["maass_id", "spectral_parameter", "level", "symmetry"], sort=[("level",1),("symmetry",1),("spectral_parameter",1),("maass_id",1)])
+                                     ["maass_id", "spectral_parameter", "level", "symmetry"], sort=[("level",1),("symmetry",-1),("spectral_parameter",1),("maass_id",1)])
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
@@ -45,7 +45,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=2
         x = (f['spectral_parameter'] - xMin) * xfactor + xshift
         y = (f['level'] - yMin + 1) * yfactor
         s = f.get('symmetry',0)
-        y -= 2*s    # Shifting even slightly up and odd slightly down
+        y -= s    # Shifting even slightly up and odd slightly down
         color = signtocolour(s)
             
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
