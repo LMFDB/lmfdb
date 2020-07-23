@@ -11,14 +11,11 @@ The database contains {{dbcount}} Maass forms of weight 0 on $\Gamma_0(N)$ for $
 
 <h2>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} </h2>
   <ul>
-    <li>
-      <a href="{{ url_for('.browse_graph',min_level = 1,max_level= 10,
-                            min_R = 0,max_R = 10) }}">Browse Maass forms of weight 0 on $\Gamma_0(N)$ with $1\leq N\leq 10$</a>
-    </li>
-    <li>
-      <a href="{{ url_for('.browse_graph',min_level = 100,max_level= 1000,
-                            min_R = 0,max_R = 1) }}">Browse Maass forms of weight 0 on $\Gamma_0(p)$ for prime levels $p$ with $100\leq p< 1000$</a>
-    </li>
+    <li><a href="{{ url_for('.browse_graph',min_level = 1,max_level= 10,
+                            min_R = 0,max_R = 10) }}">Browse Maass forms of weight 0 on $\Gamma_0(N)$ with $1\leq N\leq 10$ and $0\le R \le 10$</a></li>
+    <li><a href="{{ url_for('.browse_graph',min_level = 100,max_level= 100,
+                            min_R = 0,max_R = 2) }}">Browse Maass forms of weight 0 on $\Gamma_0(N)$ with $10\leq N< 100$ and $0\le R \le 2$  </a></li>
+    <li><a href="{{ url_for('.browse_graph', min_level = 100, max_level= 1090, min_R = 0,max_R = 1) }}">Browse Maass forms of weight 0 on $\Gamma_0(p)$ for prime levels $p$ with $100\leq p \leq 1000$ and $0\leq R\leq 1$</a></li>
   </ul>
 
 <h2> Search</h2>
