@@ -136,7 +136,7 @@ def label_to_breadcrumbs(L):
             newsig += ","
         elif (L[i] == '.'):
             newsig += ';'
-        elif (L[i] == '0'):  # The case where there is no ramification gives a 0 in signature
+        elif (L[i] == '0' and L[i-1] == '.'):  # The case where there is no ramification gives a 0 in signature
             newsig += '-'
         else:
             newsig += L[i]
