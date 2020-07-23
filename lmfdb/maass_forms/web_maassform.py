@@ -32,6 +32,7 @@ class WebMaassForm(object):
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
+        self.portrait =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
     @staticmethod
     def by_label(label):
@@ -84,7 +85,8 @@ class WebMaassForm(object):
 
     @property
     def properties(self):
-        props = [('Level', str(self.level)),
+        props = [(None, '<img src="{0}" width="200" height="200"/>'.format(self.portrait))] if self.portrait is not None else []
+        props += [('Level', str(self.level)),
                  ('Weight', str(self.weight)),
                  ('Character', self.character_label),
                  ('Symmetry', self.symmetry_pretty),
