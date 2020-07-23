@@ -32,7 +32,7 @@ class WebMaassForm(object):
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
-        self.portrait =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
+        self.portrait =  db.maass_portraits.lookup(self.label, projection = "portrait")
 
     @staticmethod
     def by_label(label):
