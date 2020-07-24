@@ -1,0 +1,49 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>{{ KNOWL('mf.maass.mwf', 'Maass form') }} invariants</h2>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.level', 'Level') }}: </td>
+    <td>{{ mf.factored_level }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.weight', 'Weight') }}: </td>
+    <td>\( {{ mf.weight }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('character.dirichlet.conrey', 'Character') }}: </td>
+    <td> {{ mf.character_link | safe }} </td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.symmetry', 'Symmetry') }}: </td>
+    <td> {{ mf.symmetry_pretty }}</td>
+  </tr>
+  {% if mf.conrey_index == 1 %}
+  <tr>
+    <td> {{ KNOWL('cmf.fricke', 'Fricke sign') }}: </td>
+    <td>\({{ mf.fricke_pretty }}\)</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}: </td>
+    <td>\( {{ mf.spectral_parameter }} \)</td>
+  </tr>
+</table>
+
+<h2>Maass form {{KNOWL('mf.maass.mwf.coefficients','coefficients')}}</h2>
+{{ mf.coefficient_table(info.rows, info.cols) | safe }}
+
+<form id='coefficient_table'>
+  <table>
+    <tr>
+      <td>Rows: <input type='text' name='edit_rows' style="width: 40px" value="{{info.rows}}"></td>
+      <td>Cols: <input type='text' name='edit_cols' style="width: 40px" value="{{info.cols}}"></td>
+      <td><button id="refresh_coefficient_table">Refresh table</button></td>
+    </tr>
+  </table>
+</form>
+
+{% endblock content %}
