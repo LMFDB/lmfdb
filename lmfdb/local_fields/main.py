@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-# This Blueprint is about Local Number Fields
+# This Blueprint is about local number fields
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
@@ -24,7 +24,7 @@ import re
 LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads=[]):
-    bc = [("Local Number Fields", url_for(".index"))]
+    bc = [("Local number fields", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -148,7 +148,7 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="Local number fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -168,7 +168,7 @@ def local_field_jump(info):
 
 class LF_download(Downloader):
     table = db.lf_fields
-    title = 'Local Number Fields'
+    title = 'Local number fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
     data_description = 'defining the local field over Qp by adjoining a root of f(x).'
@@ -181,8 +181,8 @@ class LF_download(Downloader):
 
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
-             title='Local Number Field Search Results',
-             err_title='Local Field Search Input Error',
+             title='Local number field search results',
+             err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search Results", ' ')]),
@@ -213,7 +213,7 @@ def render_field_webpage(args):
             else:
                 flash_error("%s is not a valid label for a local number field.", label)
             return redirect(url_for(".index"))
-        title = 'Local Number Field ' + prettyname(data)
+        title = 'Local number field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         Qp = r'\Q_{%d}' % p
@@ -345,7 +345,7 @@ def printquad(code, p):
 
 
 def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='Local Field Search Input Error', bread=bread)
+    return render_template("lf-search.html", info=info, title='Local field search input error', bread=bread)
 
 @local_fields_page.route("/random")
 def random_field():
@@ -354,7 +354,7 @@ def random_field():
 
 @local_fields_page.route("/Completeness")
 def cande():
-    t = 'Completeness of the Local Field Data'
+    t = 'Completeness of local field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
                            credit=LF_credit, title=t, bread=bread, 
@@ -362,7 +362,7 @@ def cande():
 
 @local_fields_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Local Number Fields'
+    t = 'Labels for local number fields'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
                   learnmore=learnmore_list_remove('label'), 
@@ -370,7 +370,7 @@ def labels_page():
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of the Local Field Data'
+    t = 'Source of local field data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.source.lf',
                            credit=LF_credit, title=t, bread=bread, 
@@ -378,7 +378,7 @@ def source():
 
 @local_fields_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of the Local Field Data'
+    t = 'Reliability of local field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
                            credit=LF_credit, title=t, bread=bread, 
