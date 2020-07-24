@@ -21,7 +21,7 @@ links:
 title: Search and Browse
 image: search2
 content: <p>Search for objects with specific properties,
-    or browse categories.</p><p>Browse&#58; <a href="/L/">L-functions,</a> <a href="/ModularForm">Modular forms,</a> <a href="/EllipticCurve/Q/">Elliptic curves,</a>
+    or browse categories.</p><p>Browse&#58; <a href="/L/">L-functions,</a> <a href="/ModularForm/GL2/Q/holomorphic/">Modular forms,</a> <a href="/EllipticCurve/Q/">Elliptic curves,</a>
     <a href=" /NumberField/">Number fields</a>
 control: 0
 links:
