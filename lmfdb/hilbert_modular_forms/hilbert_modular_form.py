@@ -146,7 +146,7 @@ def hilbert_modular_form_search(info, query):
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
-    if bread is None: bread = [("Modular forms", url_for('modular_forms')), ('Hilbert', url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
+    if bread is None: bread = [("Modular forms", url_for('modular_forms')), ('Hilbert', url_for(".hilbert_modular_form_render_webpage")), ('Search results', ' ')]
     return render_template("hilbert_modular_form_search.html", info=info, title="Hilbert modular forms search error", bread=bread)
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')

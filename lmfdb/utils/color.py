@@ -234,7 +234,7 @@ class ColorScheme(object):
         'text_notes': '#555',
         'text_trad_hyperlink': c.black,
 
-        # Elliptic Curve colors
+        # Elliptic curve colors
         'ec_background': 'col_main_2',
 
         # Siegel modular forms

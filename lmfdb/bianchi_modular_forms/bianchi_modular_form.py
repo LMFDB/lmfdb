@@ -25,7 +25,7 @@ def learnmore_list():
     return [('Source of the data', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Bianchi newform labels', url_for(".labels_page"))]
+            ('Bianchi modular form labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -115,7 +115,7 @@ def bianchi_modular_form_postprocess(res, info, query):
                        "bc": lambda v: bc_info(v['bc']),
                        "cm": lambda v: cm_info(v.pop('CM', '?'))},
              bread=lambda:[('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index")),
-                           ('Search Results', '.')],
+                           ('Search results', '.')],
              url_for_label=lambda label: url_for(".render_bmf_webpage",
                                                  **dict(zip(
                                                      ['field_label', 'level_label', 'label_suffix'],

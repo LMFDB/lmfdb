@@ -67,7 +67,7 @@ def render_DirichletNavigation():
         arg = arg.split('-')
         modulus_start = int(arg[0])
         modulus_end = int(arg[1])
-        info['title'] = 'Dirichlet Characters of Modulus ' + str(modulus_start) + '-' + str(modulus_end)
+        info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
         info['credit'] = 'Sage'
         h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
         info['contents'] = c
@@ -83,7 +83,7 @@ def render_DirichletNavigation():
         conductor_end = int(arg[1])
         info['conductor_start'] = conductor_start
         info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet Characters of Conductor ' + str(conductor_start) + '-' + str(conductor_end)
+        info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         return render_template("ConductorList.html", **info)
@@ -95,7 +95,7 @@ def render_DirichletNavigation():
         order_end = int(arg[1])
         info['order_start'] = order_start
         info['order_end'] = order_end
-        info['title'] = 'Dirichlet Characters of Orders ' + str(order_start) + '-' + str(order_end)
+        info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
         info['credit'] = 'SageMath'
         info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
         return render_template("OrderList.html", **info)
@@ -126,20 +126,20 @@ def render_DirichletNavigation():
             info['err'] = str(err)
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
-        info['title'] = 'Dirichlet Character Search Results'
+        info['title'] = 'Dirichlet character search results'
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Search Results', '') ]
+                         ('Search results', '') ]
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
-       info['title'] = 'Dirichlet Characters'
+       info['title'] = 'Dirichlet characters'
        return render_template('CharacterNavigate.html', **info)
 
 @characters_page.route("/Dirichlet/Labels")
 def labels_page():
     info = {}
-    info['title'] = 'Dirichlet Character Labels'
+    info['title'] = 'Dirichlet character labels'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
     info['learnmore'] = learn('labels')
@@ -148,7 +148,7 @@ def labels_page():
 @characters_page.route("/Dirichlet/Source")
 def how_computed_page():
     info = {}
-    info['title'] = 'Source of Dirichlet Character Data'
+    info['title'] = 'Source of Dirichlet character data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
@@ -157,7 +157,7 @@ def how_computed_page():
 @characters_page.route("/Dirichlet/Reliability")
 def reliability():
     info = {}
-    info['title'] = 'Reliability of Dirichlet Character Data'
+    info['title'] = 'Reliability of Dirichlet character data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Reliability', '') ]
     info['learnmore'] = learn('reliability')
@@ -166,7 +166,7 @@ def reliability():
 @characters_page.route("/Dirichlet/Completeness")
 def extent_page():
     info = {}
-    info['title'] = 'Completeness of Dirichlet Character Data'
+    info['title'] = 'Completeness of Dirichlet character data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Extent', '') ]
     info['learnmore'] = learn('extent')
@@ -251,7 +251,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
-        info['title'] = 'Group of Dirichlet Characters of Modulus ' + str(modulus)
+        info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))]
@@ -302,9 +302,9 @@ def _dir_knowl_data(label, orbit=False):
     args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     webchar = make_webchar(args)
     if orbit and modulus <= 10000:
-        inf = "Dirichlet Character Orbit %d.%s\n" % (modulus, webchar.orbit_label)
+        inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
     else:
-        inf = r"Dirichlet Character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
+        inf = r"Dirichlet character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
     inf += "<div><table class='chardata'>\n"
     def row_wrap(header, val):
         return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
@@ -468,7 +468,7 @@ def dirichlet_group_table(**args):
     h, c = get_group_table(modulus, char_number_list)
     info['headers'] = h
     info['contents'] = c
-    info['title'] = 'Group of Dirichlet Characters'
+    info['title'] = 'Group of Dirichlet characters'
     return render_template("CharacterGroupTable.html", **info)
 
 

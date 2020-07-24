@@ -287,8 +287,8 @@ def show_ecnf1(nf):
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' Search Results'
-        info['bread'].append(('Search Results',''))
+        info['title'] += ' Search results'
+        info['bread'].append(('Search results',''))
     info['field'] = nf_label
     return elliptic_curve_search(info)
 
@@ -309,8 +309,8 @@ def show_ecnf_conductor(nf, conductor_label):
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' Search Results'
-        info['bread'].append(('Search Results',''))
+        info['title'] += ' Search results'
+        info['bread'].append(('Search results',''))
     info['field'] = nf_label
     info['conductor_label'] = conductor_label
     info['conductor_norm'] = conductor_norm
@@ -482,7 +482,7 @@ def url_for_label(label):
                        'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
-             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search Results', '.')],
+             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')],
              credit=lambda:ecnf_credit)
 def elliptic_curve_search(info, query):
     parse_nf_string(info,query,'field',name="base number field",qfield='field_label')

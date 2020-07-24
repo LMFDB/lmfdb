@@ -185,7 +185,7 @@ class LF_download(Downloader):
              err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
-             bread=lambda:get_bread([("Search Results", ' ')]),
+             bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
              credit=lambda:LF_credit)

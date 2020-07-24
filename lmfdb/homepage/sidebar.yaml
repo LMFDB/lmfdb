@@ -60,7 +60,7 @@
 3ModForm:
    type: multilevel
    heading:
-      title: Modular Forms
+      title: Modular forms
       url_for: "modular_forms"
    parts:
      - title: GL(2)

@@ -167,7 +167,7 @@ class ECNF_isoclass(object):
             else:
                 self.properties += [('Rank bounds', '%s' % self.rk_bnds)]
 
-        self.bread = [('Elliptic Curves ', url_for(".index")),
+        self.bread = [('Elliptic curves ', url_for(".index")),
                       (self.field_label, self.urls['field']),
                       (self.conductor_label, self.urls['conductor']),
                       ('isogeny class %s' % self.short_label, self.urls['class'])]

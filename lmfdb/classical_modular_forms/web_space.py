@@ -350,7 +350,7 @@ class WebNewformSpace(object):
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of Modular Forms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
+        self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
         self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
@@ -495,7 +495,7 @@ class WebGamma1Space(object):
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
         ]
-        self.title = r"Space of Modular Forms of Level %s and Weight %s"%(self.level, self.weight)
+        self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
         self.friends = []
 
     @staticmethod

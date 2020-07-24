@@ -374,17 +374,17 @@ def l_functions_history():
 
 @app.route('/ModularForm')
 def modular_forms():
-    t = 'Modular Forms'
+    t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
     # lm = [('History of modular forms', '/ModularForm/history')]
     return render_template('single.html', title=t, kid='mf.about', bread=b) #, learnmore=lm)
 
 # @app.route("/ModularForm/history")
 def modular_forms_history():
-    t = 'Modular Forms'
+    t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
     b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A Brief History of Modular Forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A Brief History of Modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
 @app.route('/Variety')
 def varieties():

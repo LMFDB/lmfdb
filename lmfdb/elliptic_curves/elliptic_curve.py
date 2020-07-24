@@ -137,8 +137,8 @@ def by_conductor(conductor):
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
-        info['title'] += ' Search Results'
-        info['bread'].append(('Search Results',''))
+        info['title'] += ' Search results'
+        info['bread'].append(('Search results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
 
@@ -250,7 +250,7 @@ def url_for_label(label):
                         'download':download_search},
              bread=lambda:[('Elliptic curves', url_for("ecnf.index")),
                            (r'$\Q$', url_for(".rational_elliptic_curves")),
-                           ('Search Results', '.')],
+                           ('Search results', '.')],
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):

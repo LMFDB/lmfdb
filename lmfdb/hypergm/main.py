@@ -266,7 +266,7 @@ def index():
         return hgm_search(info)
     return render_template(
         "hgm-index.html",
-        title=r"Hypergeometric Motives over $\Q$",
+        title=r"Hypergeometric motives over $\Q$",
         bread=get_bread(),
         credit=HGM_credit,
         info=info,
@@ -344,19 +344,19 @@ def url_for_label(label):
 
 @search_wrap(template="hgm-search.html",
              table=db.hgm_motives,  # overridden if family search
-             title=r'Hypergeometric Motive over $\Q$ Search Result',
-             err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
+             title=r'Hypergeometric motive over $\Q$ search resultS',
+             err_title=r'Hypergeometric motive over $\Q$ search input error',
              per_page=50,
              shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,
-             bread=lambda: get_bread([("Search Results", '')]),
+             bread=lambda: get_bread([("Search results", '')]),
              credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
     if search_type in ["Family", "RandomFamily"]:
-        query['__title__'] = r'Hypergeometric Family over $\Q$ Search Result'
-        query['__err_title__'] = r'Hypergeometric Family over $\Q$ Search Input Error'
+        query['__title__'] = r'Hypergeometric family over $\Q$ search result'
+        query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
         query['__table__'] = db.hgm_families
 
     queryab = {}
@@ -411,7 +411,7 @@ def render_hgm_webpage(label):
     data = db.hgm_motives.lookup(label)
     if data is None:
         abort(404, "Hypergeometric motive " + label + " was not found in the database.")
-    title = 'Hypergeometric Motive:' + label
+    title = 'Hypergeometric motive:' + label
     A = data['A']
     B = data['B']
 
@@ -561,7 +561,7 @@ def random_motive():
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of Hypergeometric Motive Data over $\Q$'
+    t = r'Completeness of hypergeometric motive data over $\Q$'
     bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
@@ -569,7 +569,7 @@ def completeness_page():
 
 @hypergm_page.route("/Source")
 def how_computed_page():
-    t = r'Source of Hypergeometric Motive Data over $\Q$'
+    t = r'Source of hypergeometric motive Data over $\Q$'
     bread = get_bread(('Source',''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread,
@@ -577,7 +577,7 @@ def how_computed_page():
 
 @hypergm_page.route("/Labels")
 def labels_page():
-    t = r'Labels for Hypergeometric Motives over $\Q$'
+    t = r'Labels for hypergeometric motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread,
