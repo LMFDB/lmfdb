@@ -553,7 +553,7 @@ def set_bread_and_friends(info, L, request):
     Populates the info dictionary with:
         - bread -- bread crumbs on top
         - origins -- objects the give rise to this L-functions, shows as "Origins"
-        - friends -- dual L-fcn and other objects that this L-fcn divides, shows as Related objects
+        - friends -- dual L-fcn and other objects that this L-fcn divides, shows as related objects
         - factors_origins -- objects that give rise to the factors of this L-fcn, shows as "Origins of factors"
         - Linstances -- displays the instances that give rise to this Lhash, only shows up through the Lhash route
         - downloads -- download links
@@ -576,16 +576,16 @@ def set_bread_and_friends(info, L, request):
 
     if L.Ltype() == 'riemann':
         info['friends'] = [(r'\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
-                           (r'Dirichlet Character \(\chi_{1}(1,\cdot)\)',url_for('characters.render_Dirichletwebpage',
+                           (r'Dirichlet character \(\chi_{1}(1,\cdot)\)',url_for('characters.render_Dirichletwebpage',
                                                                                   modulus=1, number=1)),
-                           ('Artin Representation 1.1.1t1.1c1', url_for('artin_representations.render_artin_representation_webpage',label='1.1.1t1.1c1'))]
+                           ('Artin representation 1.1.1t1.1c1', url_for('artin_representations.render_artin_representation_webpage',label='1.1.1t1.1c1'))]
         info['bread'] = get_bread(1, [('Riemann Zeta', request.path)])
 
     elif L.Ltype() == 'dirichlet':
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = WebDirichlet.char2tex(smod, snum)
-        info['friends'] = [('Dirichlet Character ' + str(charname), friendlink)]
+        info['friends'] = [('Dirichlet character ' + str(charname), friendlink)]
         if L.fromDB and not L.selfdual:
             info['friends'].append(('Dual L-function', L.dual_link))
         info['bread'] = get_bread(1, [(charname, request.path)])

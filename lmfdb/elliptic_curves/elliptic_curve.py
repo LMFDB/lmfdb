@@ -121,7 +121,7 @@ def statistics():
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
-    t = r'Elliptic curve over $\Q$: Statistics'
+    t = r'Elliptic curves over $\Q$: Statistics'
     bread = [('Elliptic curves', url_for("ecnf.index")),
              (r'$\Q$', url_for(".rational_elliptic_curves")),
              ('Statistics', ' ')]

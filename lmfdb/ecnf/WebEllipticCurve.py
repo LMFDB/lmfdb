@@ -555,7 +555,7 @@ class ECNF(object):
                 self.friends += [('Bianchi modular form is not cuspidal', '')]
             elif not 'Lfunction' in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:
                     self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
 
