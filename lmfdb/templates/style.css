@@ -549,7 +549,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 td.forminfo {
    font-size: 80%;
    font-style: italic;
-   color: {{color.grey}};
+   color: #333333;
    vertical-align: top;
 }
 

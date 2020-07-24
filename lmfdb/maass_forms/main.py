@@ -133,8 +133,8 @@ class MaassSearchArray(SearchArray):
         spectral_parameter = TextBox(name="spectral_parameter",
                                      label="Spectral parameter",
                                      knowl="mf.maass.mwf.spectralparameter",
-                                     example="1.0-1.1",
-                                     example_span="1.0-1.1 or 90-100")
+                                     example="9.5-9.6",
+                                     example_span="1.23 or 1.99-2.00 or 40-50")
         count = CountBox()
 
         self.browse_array = [
