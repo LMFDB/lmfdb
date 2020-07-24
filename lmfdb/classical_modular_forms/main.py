@@ -1239,14 +1239,14 @@ class CMF_stats(StatsDisplay):
 
 @cmf.route("/stats")
 def statistics():
-    title = 'Cuspidal Newforms: Statistics'
+    title = 'Newform statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
-    title = 'Cuspidal Newforms: Dynamic Statistics'
+    title = 'Newform dynamic statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 
