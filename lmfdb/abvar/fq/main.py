@@ -550,7 +550,7 @@ def jump(info):
     jump_box = info["jump"].strip() # only called when this present
     try:
         validate_label(jump_box)
-    except ValueError as err:
+    except ValueError:
         # Also accept polynomials
         try:
             poly = coeff_to_poly(jump_box)
