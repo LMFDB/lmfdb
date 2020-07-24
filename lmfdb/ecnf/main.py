@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Elliptic Curves over Number Fields
+# This Blueprint is about elliptic curves over number Fields
 # Authors: Harald Schilly and John Cremona
 
 import ast
@@ -361,7 +361,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
         info['err'] = 'No elliptic curve in the database has label %s.' % label
         return search_input_error(info, bread)
 
-    title = "Elliptic curve %s over Number Field %s" % (ec.short_label, ec.field.field_pretty())
+    title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
     bread.append((ec.field.field_pretty(), ec.urls['field']))
     bread.append((ec.conductor_label, ec.urls['conductor']))
@@ -595,7 +595,7 @@ def statistics_by_degree(d):
     elif d==6:
         t = 'Elliptic curves over sextic number fields'
     else:
-        t = 'Elliptic curves over Number Fields of Degree {}'.format(d)
+        t = 'Elliptic curves over number fields of degree {}'.format(d)
 
     bread = [('Elliptic curves', url_for("ecnf.index")),
               ('Degree %s' % d,' ')]
