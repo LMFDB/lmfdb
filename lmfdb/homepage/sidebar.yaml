@@ -69,7 +69,7 @@
          - title: Classical
            url_for: "cmf.index"
          - title: Maass
-           url_for: "mwf.render_maass_waveforms"
+           url_for: "maass.index"
          - title: Hilbert
            url_for: "hmf.hilbert_modular_form_render_webpage"
          - title: Bianchi
