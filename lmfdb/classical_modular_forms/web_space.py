@@ -23,7 +23,7 @@ def get_bread(**kwds):
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
              ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
-    bread = [('Modular Forms', url_for('modular_forms')),
+    bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
         return bread + [(kwds['other'], ' ')]

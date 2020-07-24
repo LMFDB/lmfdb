@@ -74,8 +74,8 @@ def index():
                          url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
 
         credit = bianchi_credit
-        t = 'Bianchi Modular Forms'
-        bread = [('Modular Forms', url_for('modular_forms')), ('Bianchi Modular Forms', url_for(".index"))]
+        t = 'Bianchi modular forms'
+        bread = [('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index"))]
         info['learnmore'] = []
         return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
     else:
@@ -104,8 +104,8 @@ def bianchi_modular_form_postprocess(res, info, query):
 
 @search_wrap(template="bmf-search_results.html",
              table=db.bmf_forms,
-             title='Bianchi Modular Form Search Results',
-             err_title='Bianchi Modular Forms Search Input Error',
+             title='Bianchi modular form search results',
+             err_title='Bianchi modular forms search input error',
              shortcuts={'jump': bianchi_modular_form_jump},
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
@@ -114,7 +114,7 @@ def bianchi_modular_form_postprocess(res, info, query):
                        "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
                        "bc": lambda v: bc_info(v['bc']),
                        "cm": lambda v: cm_info(v.pop('CM', '?'))},
-             bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
+             bread=lambda:[('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index")),
                            ('Search Results', '.')],
              url_for_label=lambda label: url_for(".render_bmf_webpage",
                                                  **dict(zip(
@@ -178,8 +178,7 @@ def bmf_field_dim_table(**args):
     count = parse_count(argsdict, 50)
 
     pretty_field_label = field_pretty(field_label)
-    bread = [('Bianchi Modular Forms', url_for(".index")), (
-        pretty_field_label, ' ')]
+    bread = [('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index")), (pretty_field_label, ' ')]
     properties = []
     query = {}
     query['field_label'] = field_label
@@ -195,7 +194,7 @@ def bmf_field_dim_table(**args):
         # Only get records where the cuspdial/new dimension is positive for some weight
         totaldim = gl_or_sl.replace('dims', level_flag) + '_totaldim'
         query[totaldim] = {'$gt': 0}
-    t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
+    t = ' '.join(['Dimensions of spaces of {} Bianchi modular forms over'.format(info['group']), pretty_field_label])
     data = list(db.bmf_dims.search(query, limit=count, offset=start, info=info))
     nres = info['number']
     if not info['exact_count']:
@@ -243,10 +242,10 @@ def bmf_field_dim_table(**args):
 @bmf_page.route('/<field_label>/<level_label>')
 def render_bmf_space_webpage(field_label, level_label):
     info = {}
-    t = "Bianchi Modular Forms of Level %s over %s" % (level_label, field_label)
+    t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
     credit = bianchi_credit
-    bread = [('Modular Forms', url_for('modular_forms')),
-             ('Bianchi Modular Forms', url_for(".index")),
+    bread = [('Modular forms', url_for('modular_forms')),
+             ('Bianchi', url_for(".index")),
              (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
              (level_label, '')]
     friends = []
@@ -259,7 +258,7 @@ def render_bmf_space_webpage(field_label, level_label):
         if not db.bmf_dims.exists({'field_label': field_label}):
             info['err'] = "no dimension information exists in the database for field %s" % pretty_field_label
         else:
-            t = "Bianchi Modular Forms of level %s over %s" % (level_label, pretty_field_label)
+            t = "Bianchi modular forms of level %s over %s" % (level_label, pretty_field_label)
             data = db.bmf_dims.lucky({'field_label': field_label, 'level_label': level_label})
             if not data:
                 info['err'] = "no dimension information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
@@ -319,12 +318,12 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     data = None
     properties = []
     friends = []
-    bread = [('Modular Forms', url_for('modular_forms')), ('Bianchi Modular Forms', url_for(".index"))]
+    bread = [('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index"))]
     try:
         data = WebBMF.by_label(label)
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
-        bread = [('Modular Forms', url_for('modular_forms')),
-                 ('Bianchi Modular Forms', url_for(".index")),
+        bread = [('Modular forms', url_for('modular_forms')),
+                 ('Bianchi', url_for(".index")),
                  (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=data.field_label)),
                  (data.level_label, url_for('.render_bmf_space_webpage', field_label=data.field_label, level_label=data.level_label)),
                  (data.short_label, '')]
@@ -356,9 +355,9 @@ def bianchi_modular_form_by_label(lab):
 
 @bmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Bianchi Modular Forms'
-    bread = [('Modular Forms', url_for('modular_forms')),
-             ('Bianchi Modular Forms', url_for(".index")),
+    t = 'Source of Bianchi modular forms data'
+    bread = [('Modular forms', url_for('modular_forms')),
+             ('Bianchi', url_for(".index")),
              ('Source', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.mf.bianchi.source',
@@ -366,9 +365,9 @@ def how_computed_page():
 
 @bmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Bianchi Modular Form data'
-    bread = [('Modular Forms', url_for('modular_forms')),
-             ('Bianchi Modular Forms', url_for(".index")),
+    t = 'Completeness of Bianchi modular form data'
+    bread = [('Modular forms', url_for('modular_forms')),
+             ('Bianchi', url_for(".index")),
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.mf.bianchi.extent',
@@ -376,9 +375,9 @@ def completeness_page():
 
 @bmf_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the Bianchi Modular Form data'
-    bread = [('Modular Forms', url_for('modular_forms')),
-             ('Bianchi Modular Forms', url_for(".index")),
+    t = 'Reliability of Bianchi modular form data'
+    bread = [('Modular forms', url_for('modular_forms')),
+             ('Bianchi', url_for(".index")),
              ('Relaibility', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.mf.bianchi.reliability',
@@ -386,9 +385,9 @@ def reliability_page():
 
 @bmf_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Bianchi Newforms'
-    bread = [('Modular Forms', url_for('modular_forms')),
-             ('Bianchi Modular Forms', url_for(".index")),
+    t = 'Labels for Bianchi newforms'
+    bread = [('Modular forms', url_for('modular_forms')),
+             ('Bianchi', url_for(".index")),
              ('Labels', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='mf.bianchi.labels',
