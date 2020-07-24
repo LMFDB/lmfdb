@@ -355,7 +355,7 @@ def bianchi_modular_form_by_label(lab):
 
 @bmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of Bianchi modular forms data'
+    t = 'Source of Bianchi modular form data'
     bread = [('Modular forms', url_for('modular_forms')),
              ('Bianchi', url_for(".index")),
              ('Source', '')]

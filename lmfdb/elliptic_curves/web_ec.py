@@ -401,11 +401,11 @@ class WebEC(object):
                            ]
 
         if self.label_type == 'Cremona':
-            self.title = "Elliptic Curve with Cremona label {} (LMFDB label {})".format(self.label, self.lmfdb_label)
+            self.title = "Elliptic curve with Cremona label {} (LMFDB label {})".format(self.label, self.lmfdb_label)
         else:
-            self.title = "Elliptic Curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
+            self.title = "Elliptic curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
 
-        self.bread = [('Elliptic Curves', url_for("ecnf.index")),
+        self.bread = [('Elliptic curves', url_for("ecnf.index")),
                            (r'$\Q$', url_for(".rational_elliptic_curves")),
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
