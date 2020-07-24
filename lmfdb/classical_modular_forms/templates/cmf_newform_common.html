@@ -11,19 +11,19 @@
   <tr>
     <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
-    <td>=</td>
-    <td>\( {{ newform.level }}{{ newform.factored_level }} \)</td>
+    <td>\(=\)</td>
+    <td>{{ newform.factored_level }}</td>
   </tr>
   <tr>
     <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td>\( {{ newform.weight }} \)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td> {{ newform.display_character() | safe }} </td>
   </tr>
 </table>
@@ -152,7 +152,7 @@
   <tr>
     <td>{{ KNOWL('cmf.character', title='Character') }}</td>
     <td>\(\chi\)</td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td>{{ newform.char_conrey_link | safe}}</td>
   </tr>
 {% if newform.embedding_label != newform.dual_label %}
