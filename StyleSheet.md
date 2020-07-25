@@ -8,7 +8,7 @@
 **Learn more about box**
 
 - This box should be present on all search/browse/object pages and include "Source of the data", "Completeness of the data", and "Reliability of the data" links to knowls of the form rcs.source.blah, rcs.cande.blah, rcs.rigor.blah (in that order).
-- Completeness page headings should have the form "Completeness of blah data" where blah is singular (e.g. "modular form" or "elliptic curve", and similarly for Source and Reliability pages.
+- Completeness page headings should have the form "Completeness of blah data" where blah is singular (e.g. "modular form" or "elliptic curve"), and similarly for Source and Reliability pages.
 - For sections where labels are relevant, there should also be "Labels of blah" links to knowls that explains the format of the labels for blah.
 - When a particular "Learn more about" page is displayed, the link to that page should not be removed from the "Learn more about" box.
 
