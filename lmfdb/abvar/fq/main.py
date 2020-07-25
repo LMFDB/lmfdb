@@ -44,7 +44,7 @@ def learnmore_list():
         ("Completeness of the data", url_for(".completeness_page")),
         ("Source of the data", url_for(".how_computed_page")),
         ("Reliability of the data", url_for(".reliability_page")),
-        ("Labels", url_for(".labels_page")),
+        ("Labeleling convention", url_for(".labels_page")),
     ]
 
 # Return the learnmore list with the matchstring entry removed
