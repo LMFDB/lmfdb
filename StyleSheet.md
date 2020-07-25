@@ -3,7 +3,8 @@
 - All titles, bread crumbs, captions, column headings should be left-aligned and use <a href="https://en.wikipedia.org/wiki/Letter_case#Sentence_case">sentence case</a> (only first word and proper nouns capitalized).
 - Bread crumbs should avoid repetition (so "Modular forms -> Hilbert", not "Modular forms -> Hilber modular forms").
 - Section headings should be `<h2>`.
-- All content under section headings should be slightly indented (use a table or `<p>` to achieve this)
+- All content under section headings should be slightly indented (use a table or `<p>` to achieve this).
+- Whenever possible pages should be layed out to avoid horizontal scrolling on displays that are 1280 pixels or wider.
 
 **Learn more about box**
 
@@ -35,7 +36,7 @@
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
 - Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
-- Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py) 
+- Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py).
 
 **Properties box**
 
