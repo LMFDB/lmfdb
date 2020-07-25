@@ -1,4 +1,4 @@
-{# template defs #}
+t{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -2188,6 +2188,10 @@ table.ntdata td.nowrap a {
 
 #complex_embeddings {
     padding-top: 10px;
+}
+
+table.coeff_ring_basis td {
+    margin-left: 14px;
 }
 
 table.coeff_ring_basis td {
