@@ -241,7 +241,7 @@ def url_for_label(label):
 
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
-             title='Elliptic curves search results',
+             title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
              per_page=50,
              url_for_label=url_for_label,
