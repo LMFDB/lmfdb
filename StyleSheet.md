@@ -3,7 +3,7 @@
 - All titles, bread crumbs, captions, column headings should be left-aligned and use <a href="https://en.wikipedia.org/wiki/Letter_case#Sentence_case">sentence case</a> (only first word and proper nouns capitalized).
 - Bread should not be repetitive (so "Modular forms -> Hilbert", not "Modular forms -> Hilber modular forms").
 - The "Learn more about" box should be present on all search/browse/statistics/object pages.
-- When a particular "Learn more about" page is being displayed, the link to that page should not be removed from the "Learn more about" box.
+- When a particular "Learn more about" page is displayed, the link to that page should not be removed from the "Learn more about" box.
 - Section headings should be `<h2>`.
 - All content under section headings should be slightly indented (use a table or `<p>` to achieve this)
 
