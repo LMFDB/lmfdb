@@ -10,7 +10,7 @@
 **Browse and search**
 
 - Colons should not follow captions on browse/search pages.
-- Jump box captions should have the form "Find a specific blah, or blah by blah" should have knowls on the blahs, the input box should be on the line below (no caption in front) and the button should say "Find".
+- Jump box captions should have the form "Find a specific blah, or blah by blah" should have knowls on the blahs, the input box should be on the line below (no caption in front), and the button should say "Find".
 - Search heading on main browse page should simply be "Search".
 - Abbreviated column headings should omit the period.
 - Input boxes should have standard widths (very long boxes, e.g. geometric invariants, may span the entire width),
