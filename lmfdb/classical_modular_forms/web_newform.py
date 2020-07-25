@@ -768,13 +768,13 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
+  <p><a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a></p>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
+  <p><a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a></p>
 </div>
 </div>"""
         forward_size = inverse_size = 0
