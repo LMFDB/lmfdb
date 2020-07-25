@@ -103,7 +103,7 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").get_data(as_text=True).replace("\n", "").replace(" ", "")
         assert '<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>2.4.ad_g</td></tr><tr>' in page
-        assert r'<tdclass="label">BaseField</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
+        assert r'<tdclass="label">Base field</td><td>$\F_{2^{2}}$</td></tr><tr><tdclass="label">Dimension</td><td>' in page
         self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
     def test_split_Frobenius_angles(self):
