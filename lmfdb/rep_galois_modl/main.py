@@ -132,14 +132,14 @@ def download_search(info):
 
 @search_wrap(template="rep_galois_modl-search.html",
              table=db.modlgal_reps,
-             title='Mod &#x2113; Galois representations Search Results',
-             err_title='Mod &#x2113; Galois representations Search Results Error',
+             title='Mod &#x2113; Galois representation search results',
+             err_title='Mod &#x2113; Galois representation search results error',
              per_page=50,
              shortcuts={'download':download_search,
                         'label':lambda info:rep_galois_modl_by_label_or_name(info.get('label'))},
              projection=['label','dim','det','level','gram'],
              cleaners={'gram':lambda v:vect_to_matrix(v['gram'])},
-             bread=lambda:[('Representations', "/Representation"),("mod &#x2113;", url_for(".index")), ('Search Results', ' ')],
+             bread=lambda:[('Representations', "/Representation"),("mod &#x2113;", url_for(".index")), ('Search results', ' ')],
              properties=lambda:[],
              learnmore=learnmore_list)
 def rep_galois_modl_search(info, query):
@@ -161,7 +161,7 @@ def render_rep_galois_modl_webpage(**args):
         lab = args.get('label')
         data = db.modlgal_reps.lookup(lab)
     if data is None:
-        t = "Mod &#x2113; Galois representations Search Error"
+        t = "Mod &#x2113; Galois representation search error"
         bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
         flash_error("%s is not a valid label for a mod &#x2113; Galois representation in the database.", lab)
         return render_template("rep_galois_modl-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -231,7 +231,7 @@ def render_rep_galois_modl_webpage(**args):
 #data quality pages
 @rep_galois_modl_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the integral rep_galois_modl data'
+    t = 'Completeness of integral rep_galois_modl data'
     bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")),
              ('Completeness', '')]
     credit = rep_galois_modl_credit
@@ -240,7 +240,7 @@ def completeness_page():
 
 @rep_galois_modl_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the integral rep_galois_modl data'
+    t = 'Source of integral rep_galois_modl data'
     bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")),
              ('Source', '')]
     credit = rep_galois_modl_credit

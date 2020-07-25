@@ -747,8 +747,8 @@ def number_field_jump(info):
                         #'algebra':number_field_algebra,
                         'download':download_search},
              url_for_label=url_for_label,
-             bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
-                           ('Search Results', '.')],
+             bread=lambda:[('Global number fields', url_for(".number_field_render_webpage")),
+                           ('Search results', '.')],
              learnmore=learnmore_list)
 def number_field_search(info, query):
     parse_ints(info,query,'degree')

@@ -90,8 +90,7 @@ def browse_graph(min_level, max_level, min_R, max_R):
     bread = bread_prefix() + [('Browse graph', '')]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
-
-    return render_template("maass_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
+    return render_template("maass_browse_graph.html", title='Browsing graph of Maass forms', **info)
 
 @maass_page.route("/download/<label>")
 def download(label):

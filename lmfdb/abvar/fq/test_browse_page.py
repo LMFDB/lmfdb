@@ -14,7 +14,7 @@ class AVHomeTest(LmfdbTest):
         assert "Some interesting isogeny classes" in homepage
 
     def test_stats_page(self):
-        self.check_args("/Variety/Abelian/Fq/stats","Abelian Varity Isogeny Classes: Statistics")
+        self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
 
     # TODO test dynamic stats
 

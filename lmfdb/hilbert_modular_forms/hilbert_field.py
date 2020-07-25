@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r""" Class for interface with the 'field' component of the Hilbert Modular Form database.
+r""" Class for interface with the 'field' component of the Hilbert modular forms database.
 
 Initial version (University of Warwick 2015) Aurel Page and John Cremona
 
@@ -92,8 +92,7 @@ def conjideals(ideals, auts): #(label,g) -> label
 class HilbertNumberField(WebNumberField):
     """
     Subclass of WebNumberField which also facilitates extraction of
-    the number field data stored in the Hilbert Modular Forms
-    database.
+    the number field data stored in the Hilbert modular forms database.
     """
     def __init__(self, label):
         self.Fdata = db.hmf_fields.lookup(label)

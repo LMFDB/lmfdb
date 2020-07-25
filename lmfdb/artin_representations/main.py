@@ -37,7 +37,7 @@ def cycle_string(lis):
     return Permutation(lis).cycle_string()
 
 def get_bread(breads=[]):
-    bc = [("Artin Representations", url_for(".index"))]
+    bc = [("Artin representations", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -127,7 +127,7 @@ def index():
     info = to_dict(request.args, search_array=ArtinSearchArray())
     bread = get_bread()
     if not request.args:
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list(), info=info)
+        return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)
     else:
         return artin_representation_search(info)
 
@@ -215,13 +215,13 @@ def parse_projective_type(inp, query, qfield):
 
 @search_wrap(template="artin-representation-search.html",
              table=db.artin_reps,
-             title='Artin Representation Search Results',
-             err_title='Artin Representation Search Error',
+             title='Artin representation search results',
+             err_title='Artin representation search error',
              per_page=50,
              learnmore=learnmore_list,
              url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
              shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
              initfunc=lambda:ArtinRepresentation)
 def artin_representation_search(info, query):
     query['Hide'] = 0
@@ -245,7 +245,7 @@ def artin_representation_search(info, query):
     parse_bool(info,query,'parity',qfield='Is_Even')
 
 def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
+    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
@@ -386,14 +386,14 @@ def random_representation():
 
 @artin_representations_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Artin Representations'
+    t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
     return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin Representation Data'
+    t = 'Source of Artin representation data'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
     return render_template("single.html", kid='rcs.source.artin',
@@ -402,7 +402,7 @@ def source():
 
 @artin_representations_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of Artin Representation Data'
+    t = 'Reliability of Artin representation data'
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
@@ -411,7 +411,7 @@ def reliability():
 
 @artin_representations_page.route("/Completeness")
 def cande():
-    t = 'Completeness of Artin Representation Data'
+    t = 'Completeness of Artin representation data'
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
