@@ -661,7 +661,7 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def friends(self):
         if self.nflabel:
-            return [ ("Number Field", '/NumberField/' + self.nflabel), ]
+            return [ ("Number field", '/NumberField/' + self.nflabel), ]
 
     @lazy_attribute
     def contents(self):
@@ -791,7 +791,7 @@ class WebChar(WebCharObject):
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
         f.append( ("Character group", cglink) )
         if self.nflabel:
-            f.append( ('Number Field', '/NumberField/' + self.nflabel) )
+            f.append( ('Number field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
@@ -802,7 +802,7 @@ class WebChar(WebCharObject):
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
-            f.append( ("Value Field", '/NumberField/' + self.vflabel) )
+            f.append( ("Value field", '/NumberField/' + self.vflabel) )
         return f
 
 #############################################################################
@@ -1165,7 +1165,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
             )
         if len(self.vflabel) > 0:
-            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+            friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
         if self.symbol_numerator():
             if self.symbol_numerator() > 0:
                 assoclabel = '2.2.%d.1' % self.symbol_numerator()

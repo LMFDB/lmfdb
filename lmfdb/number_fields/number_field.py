@@ -624,7 +624,7 @@ def format_coeffs(coeffs):
 # def number_fields():
 #    if len(request.args) != 0:
 #        return number_field_search(**request.args)
-#    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
+#    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
 #    return render_template("nf-index.html", info = info)
 
 

@@ -404,7 +404,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         m = info['modlabel']
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Hecke', url_for(".render_Heckewebpage")),
-                         ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Number field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
                          ('%s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -417,7 +417,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info = X.to_dict()
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
                          ('Hecke',  url_for(".render_Heckewebpage")),
-                         ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Number field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
                          ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=X.modlabel)),
                          ('%s'%X.number2label(X.number), '')]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
