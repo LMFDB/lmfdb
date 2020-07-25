@@ -685,6 +685,7 @@ table td.spacing {
 table.ntdata {
   width: auto;
   border: 3px;
+  margin-left: 7px;
   margin-top: 15px;
   margin-bottom: 15px;
 }
