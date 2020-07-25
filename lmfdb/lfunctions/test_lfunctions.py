@@ -535,7 +535,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.get_data(as_text=True), "Missing data in /L/lhash/dirichlet_L_6253.458/"
-        assert r"Dirichlet Character \(\chi_{%s} (%s, \cdot) \)" % (6253,458) in L.get_data(as_text=True),\
+        assert r"Dirichlet character \(\chi_{%s} (%s, \cdot) \)" % (6253,458) in L.get_data(as_text=True),\
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert '/L/Character/Dirichlet/6253/2635' in L.get_data(as_text=True)
