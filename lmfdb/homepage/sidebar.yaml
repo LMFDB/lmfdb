@@ -181,7 +181,7 @@
      - title: ""
        style: rotate
        part2:
-         - title: "Abelian Varieties:"
+         - title: "Abelian varieties:"
            part3:
               - title: $/\F_{q}$
                 url_for: "abvarfq.abelian_varieties"
