@@ -67,6 +67,10 @@ h2.link > a {
     color: {{color.col_main}};
 }
 
+#content p {
+  padding-left: 1ch;
+}
+
 #content > h2.inline,
 #content > h3.inline {
     font-weight: normal;
@@ -681,6 +685,7 @@ table td.spacing {
 table.ntdata {
   width: auto;
   border: 3px;
+  margin-left: 7px;
   margin-top: 15px;
   margin-bottom: 15px;
 }

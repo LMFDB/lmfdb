@@ -296,11 +296,11 @@ class GaloisRepresentation( Lfunction):
 
     def init_elliptic_modular_form(self, F, number):
         """
-        Initiate with an Elliptic Modular Form.
+        Initiate with an elliptic modular form.
         """
         self.number = number
         self.original_object = [[F,number]]
-        self.object_type = "Elliptic Modular newform"
+        self.object_type = "Elliptic modular newform"
         self.dim = 2
         self.weight = ZZ(F.weight)
         self.motivic_weight = ZZ(F.weight) - 1
