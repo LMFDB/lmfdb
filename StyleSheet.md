@@ -27,7 +27,7 @@
 - Refine search page headings should have the form "Blah search results", where blah is singular.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
 
-**Object page**
+**Object pages**
 
 - Object page templates should extend homepage.html and include a content block.
 - Every object page should have a properties box, and when relevant/available, a related objects box, and a downloads box.
