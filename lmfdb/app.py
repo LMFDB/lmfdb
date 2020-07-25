@@ -370,7 +370,7 @@ def l_functions_history():
     t = 'L-functions'
     b = [(t, url_for('l_functions'))]
     b.append(('History', url_for("l_functions_history")))
-    return render_template(_single_knowl, title="A Brief History of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
 
 @app.route('/ModularForm')
 def modular_forms():
@@ -384,7 +384,7 @@ def modular_forms_history():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
     b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A Brief History of Modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
 @app.route('/Variety')
 def varieties():
@@ -398,7 +398,7 @@ def varieties_history():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
     b.append(('History', url_for("varieties_history")))
-    return render_template(_single_knowl, title="A Brief History of Varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
 @app.route('/Field')
 def fields():
@@ -412,7 +412,7 @@ def fields_history():
     t = 'Fields'
     b = [(t, url_for('fields'))]
     b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A Brief History of Fields", kid='field.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
 
 @app.route('/Representation')
 def representations():
@@ -426,9 +426,9 @@ def representations_history():
     t = 'Representations'
     b = [(t, url_for('representations'))]
     b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A Brief History of Representations", kid='repn.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
 
-@app.route('/Motives')
+@app.route('/Motive')
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
@@ -440,7 +440,7 @@ def motives_history():
     t = 'Motives'
     b = [(t, url_for('motives'))]
     b.append(('History', url_for("motives_history")))
-    return render_template(_single_knowl, title="A Brief History of Motives", kid='motives.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
 
 @app.route('/Group')
 def groups():
@@ -454,7 +454,7 @@ def groups_history():
     t = 'Groups'
     b = [(t, url_for('groups'))]
     b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A Brief History of Groups", kid='group.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
 
 @app.route("/editorial-board")
 @app.route("/management-board")

@@ -644,7 +644,7 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == 'dedekindzeta':
-        info['friends'] = [('Number Field', friendlink)]
+        info['friends'] = [('Number field', friendlink)]
         if L.degree <= 4:
             info['bread'] = get_bread(L.degree, [(L.label, request.path)])
         else:

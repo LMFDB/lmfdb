@@ -187,8 +187,8 @@ def make_t_label(t):
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
-    bc = [("Motives", url_for("motive.index")),
-          ("Hypergeometric", url_for("motive.index2")),
+    bc = [("Motives", url_for("motives")),
+          ("Hypergeometric", url_for(".index")),
           (r"$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
