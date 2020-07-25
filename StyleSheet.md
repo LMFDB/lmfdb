@@ -24,7 +24,7 @@
 
 **Object page conveentions**
 
-- Section headings should use `<h2>`, subsection headings should generally be avoided, but use `>h3>` when present.
+- Content should be organized intos sections (with`<h2>` headings).  The first section should contain the infromation that defines the objeect, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table)
 - Captions in should be capitalized in sentence case, use colons in body but not in properties box
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py) 
