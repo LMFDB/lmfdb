@@ -428,7 +428,7 @@ def representations_history():
     b.append(('History', url_for("representations_history")))
     return render_template(_single_knowl, title="A Brief History of Representations", kid='repn.history', body_class=_bc, bread=b)
 
-@app.route('/Motives')
+@app.route('/Motive')
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
