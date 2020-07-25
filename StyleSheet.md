@@ -31,5 +31,5 @@
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py) 
 - Every object page should have a related object box.  If the object has an L-function, all objects with the same L-function should appear, along with a link to the objects L-function.
-- Links to the Downloads box should be labelled "Download X to Y" where X is the thing being downloaded (e.g. all data, coefficients, traces, ...) and Y is the format (e.g. text, Sage, Magma, ...).
+- Links to the Downloads box should be labelled "Download X to Y" where X is the thing being downloaded (e.g. "all data", "coefficients", "traces", ...) and Y is the format (e.g. "text", "Sage", "Magma", ...).
 
