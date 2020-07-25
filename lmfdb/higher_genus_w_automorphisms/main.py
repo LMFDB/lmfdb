@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Higher Genus Curves
+# This Blueprint is about higher genus curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Nhi Ngo, Albert Ford
 # (initial code copied from John Jones Local Fields)
 
@@ -63,7 +63,7 @@ credit = 'Jen Paulhus, using group and signature data originally computed by Tho
 
 
 def get_bread(breads=[]):
-    bc = [("Higher Genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
+    bc = [("Higher genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -226,7 +226,7 @@ def groups_per_genus(genus):
              genus +
              ' group statistics')
     bread = get_bread([('Statistics', url_for('.statistics')),
-                       ('Groups per Genus', url_for('.statistics')),
+                       ('Groups per genus', url_for('.statistics')),
                        (str(genus), ' ')])
        
     return render_template("hgcwa-stats-groups-per-genus.html",
@@ -669,7 +669,7 @@ def render_family(args):
 
         prop2 = [
             ('Genus', r'\(%d\)' % g),
-             ('Quotient Genus', r'\(%d\)' % g0),
+             ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -784,12 +784,12 @@ def render_passport(args):
         info['numgenvecs']=numgenvecs
         info['numbraidreps']=numbraidreps
 
-        title = 'One Refined Passport of Genus ' + str(g) + ' with Automorphism Group $' + pretty_group +'$'
+        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
             ('Genus', r'\(%d\)' % g),
-            ('Quotient Genus', r'\(%d\)' % g0),
+            ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
             ('Generating Vectors', r'\(%d\)' % numb)
