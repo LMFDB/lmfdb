@@ -1,0 +1,13 @@
+- All titles, bread crumbs, captions, column headings should be left-aligned, use sentence case (only first word and proper nouns capitalized).
+- Abbreviated column headings should omit the period.
+- Colons should not follow captions on search pages or in property boxes, but should be used on object pages.
+- Jump box captions should have the form "Find a specific blah, blah, by blah" should have knowls on the blahs, the input box should be on the line below (no caption in front) and the button should say "Find".
+- Search heading on main browse page should be "Search".
+- Input boxes should have standard widths (very long boxes, e.g. geometric invariants, may span the entire width)
+- Option boxes should use standard captions in lower case (e.g. include/exclude/exactly or yes/no). If an option imposes no restrictions on the search it should be blank, and except where there is a good reason to do otherwise, this should be the default.
+- All search pages should have "List of blah" and "Random blah" buttons (and possibly others).
+- Default number of results with filled in (confirm) value of 50 should be on main search page and not appear on refine search page.
+- Search results table should use alternating colors, headings should all have knowls (or pseudo-knowls).
+- Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
+- Factorizations of negative numbers should include only the sign, not -1.
+
