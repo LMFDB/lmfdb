@@ -71,6 +71,10 @@ h2.link > a {
   padding-left: 1ch;
 }
 
+#content li {
+  padding-left: 20px;
+}
+
 #content > h2.inline,
 #content > h3.inline {
     font-weight: normal;
