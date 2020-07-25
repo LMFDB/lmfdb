@@ -27,15 +27,25 @@
 - Refine search page headings should have the form "Blah search results", where blah is singular.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
 
-**Object pages**
+**Object page**
 
 - Object page templates should extend homepage.html and include a content block.
-- Every object page should have a properties box that starts with the label, then a portrait (if available), followed by standard invariants/properities that can be displayed in a compact form.
+- Every object page should have a properties box, related objects box, and a downloads box (if relevant/available)
 - Content should be organized intos sections (with`<h2>` headings).  The first section should contain the infromation that defines the objeect, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
-- Captions should be followed by colons in the body but not in the properties box.
+- Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py) 
-- Every object page should have a related object box.  If the object has an L-function, all objects with the same L-function should appear, along with a link to the objects L-function.
-- Links to the Downloads box should be labelled "Download X to Y" where X is the thing being downloaded (e.g. "all data", "coefficients", "traces", ...) and Y is the format (e.g. "text", "Sage", "Magma", ...).
+
+**Properties box**
+
+- Captions in the property box should be sentence case (like all captions) with no colon.
+- The first line of the properties box should be the label (if one exists) followed by a portrait (if available), followed by up to 8 standard invariants or properties of the object that can be displayed in a compact form (the properties box should never scroll).
+- Properties that are words (e.g yes/no, even/odd) or numbers (e.g. 42 or 1.2345), as well as labels, should be listed in standard font and not in math mode.
+
+**Related objects box**
+- If an object has an L-function, all objects with the same L-function should appear (this will eventually be automated), as well as the L-function of the object itself, which should be the last entry in the related objxcts box.
+
+**Downloads box**
+- Links in the Downloads box should have the form "Download X to Y" where X is the thing being downloaded (e.g. "all data", "coefficients", "traces", ...) and Y is the format (e.g. "text", "Sage", "Magma", ...).
 
