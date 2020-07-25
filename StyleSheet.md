@@ -22,7 +22,7 @@
 - Refine search page headings should have the form "Blah search results", where blah is singular.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
 
-**Object page conveentions**
+**Object page conventions**
 
 - Content should be organized intos sections (with`<h2>` headings).  The first section should contain the infromation that defines the objeect, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
