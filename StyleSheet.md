@@ -26,7 +26,7 @@
 
 - Content should be organized intos sections (with`<h2>` headings).  The first section should contain the infromation that defines the objeect, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
-- Every object page should have a properties box that starts with the label, then a portrait (if available), followed by standard invariants/properities that can be displayed in a compact form (the properties box of a typical object should not be more than 300 pixels wide, preferably 200-250).
+- Every object page should have a properties box that starts with the label, then a portrait (if available), followed by standard invariants/properities that can be displayed in a compact form.
 - Captions should be followed by colons in the body but not in the properties box.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py) 
