@@ -189,31 +189,48 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    group_stats = db.hgcwa_passports.count({'genus':genus}, ['group'])
+    hgcwa = db.hgcwa_passports
+    group_stats_0 = hgcwa.count({'genus':genus, 'g0': 0}, ['group'])
+    group_stats_gt0 = hgcwa.count({'genus':genus, 'g0': {'$gt': 0}}, ['group'])
     # Redirect to 404 if statistic is not found
-    if not group_stats:
+    if not group_stats_0 and not group_stats_gt0:
         return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
 
-    # Sort groups in group_stats
-    groups = [[group[0], gen_vectors] for group, gen_vectors in group_stats.items()]
+    # Make list groups_0 where each entry is a list [iso_class, group, gen_vectors, tops, braids]
+    groups_0 = []
+    for group, gen_vectors in group_stats_0.items():
+        group = group[0]
+        # isomorphism class of group
+        iso_class = sg_pretty(re.sub(hgcwa_group, r'\1.\2', group))
+        # need to count distinct topologicals, braids per label
+        labels = hgcwa.distinct('label', {'genus':genus, 'g0': 0, 'group': group})
+        tops = braids = 0
+        for label in labels:
+            tops += len(hgcwa.distinct('topological', {'label': label}))
+            braids += len(hgcwa.distinct('braid', {'label': label}))
+        groups_0.append([iso_class, group, gen_vectors, tops, braids])
+    
+    # Make list groups_gt0 where each entry is a list [iso_class, group, gen_vectors]
+    groups_gt0 = []
+    for group, gen_vectors in group_stats_gt0.items():
+        group = group[0]
+        iso_class = sg_pretty(re.sub(hgcwa_group, r'\1.\2', group))
+        groups_gt0.append([iso_class, group, gen_vectors])
+    
+    # Sort groups_0 and groups_gt0 by group
     def sort_key(entry):
-        group = entry[0]
+        group = entry[1]
         m = hgcwa_group.match(group)
         order = int(m.group(1))
         number = int(m.group(2))
         return (order, number)
-    groups.sort(key = sort_key)
-
-    # Create isomorphism classes
-    iso_classes = []
-
-    for group in groups:
-        iso_classes.append(sg_pretty(re.sub(hgcwa_group, r'\1.\2', group[0])))
+    groups_0.sort(key = sort_key)
+    groups_gt0.sort(key = sort_key)
 
     info = {
         'genus': genus,
-        'groups': groups,
-        'iso_classes': iso_classes
+        'groups_0': groups_0,
+        'groups_gt0': groups_gt0
     }
 
     title = ('Families of Higher Genus Curves with Automorphisms: Genus ' +
