@@ -8,26 +8,26 @@
   <tr>
     <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
-    <td>=</td>
-    <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
+    <td>\(=\)</td>
+    <td>{{ space.factored_level }}</td>
   </tr>
   <tr>
     <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td>\( {{ space.weight }} \)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td> {{ space.display_character() | safe }} </td>
   </tr>
   {% if space.char_orbit_index != 1 %}
   <tr>
     <td> {{ KNOWL('cmf.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
     <td> \(\operatorname{cond}(\chi)\) </td>
-    <td>=</td>
+    <td>\(=\)</td>
     <td>\( {{ space.char_conductor }} \)</td>
   </tr>
   {% endif %}
@@ -191,7 +191,7 @@ function show_qexp(qstyle) {
 </div>
 {% endif %}
 
-<h2>{{KNOWL('cmf.heckecharpolys', title='Hecke Characteristic Polynomials')}}</h2>
+<h2>{{KNOWL('cmf.heckecharpolys', title='Hecke characteristic polynomials')}}</h2>
 
 {{ space.display_hecke_char_polys() | safe }}
 

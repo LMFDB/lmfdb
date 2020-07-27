@@ -17,7 +17,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls)
+    integer_options, names_and_urls, web_latex_factored_integer)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -135,10 +135,7 @@ class WebNewform(object):
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        if self.level == 1 or ZZ(self.level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data: # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
@@ -771,13 +768,13 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
+  <p><a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a></p>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
+  <p><a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a></p>
 </div>
 </div>"""
         forward_size = inverse_size = 0
@@ -791,7 +788,7 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_basis_table(self):
-        s = '<table class="ntdata">\n  <tr>\n'
+        s = '<table class="ntdata" style="padding-left: 14px;">\n  <tr>\n'
         for i in range(self.dim):
             s += r'    <td>\(\nu^{%s}\)</td>\n'%i
         s += '    <td>Denominator</td>\n  </tr>\n'

@@ -51,7 +51,7 @@ def learnmore_list_remove(matchstring):
 
 
 def get_bread(breads=[]):
-    bc = [("Galois Groups", url_for(".index"))]
+    bc = [("Galois groups", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -89,7 +89,7 @@ def index():
     if request.args:
         return galois_group_search(info)
     info['degree_list'] = list(range(2, 48))
-    return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
+    return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
 def make_order_key(order):
@@ -98,11 +98,11 @@ def make_order_key(order):
 
 @search_wrap(template="gg-search.html",
              table=db.gps_transitive,
-             title='Galois Group Search Results',
-             err_title='Galois Group Search Input Error',
+             title='Galois group search results',
+             err_title='Galois group search input error',
              url_for_label=lambda label: url_for(".by_label", label=label),
              learnmore=learnmore_list,
-             bread=lambda: get_bread([("Search Results", ' ')]),
+             bread=lambda: get_bread([("Search results", ' ')]),
              credit=lambda: GG_credit)
 def galois_group_search(info, query):
     def includes_composite(s):
@@ -187,7 +187,7 @@ def render_group_webpage(args):
                 flash_error("%s is not a valid label for a Galois group.", label)
             return redirect(url_for(".index"))
         data['label_raw'] = label.lower()
-        title = 'Galois Group: ' + label
+        title = 'Galois group: ' + label
         wgg = WebGaloisGroup.from_nt(data['n'], data['t'])
         data['wgg'] = wgg
         n = data['n']
@@ -248,7 +248,7 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        if db.nf_fields.exists({'degree': n, 'galt': t}):
+        if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Order', r'\(%s\)' % order),
@@ -274,7 +274,7 @@ def render_group_webpage(args):
 
 
 def search_input_error(info, bread):
-    return render_template("gg-search.html", info=info, title='Galois Group Search Input Error', bread=bread, learnmore=learnmore_list())
+    return render_template("gg-search.html", info=info, title='Galois group search input error', bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/random")
 def random_group():
@@ -283,7 +283,7 @@ def random_group():
 
 @galois_groups_page.route("/Completeness")
 def cande():
-    t = 'Completeness of Galois Group Data'
+    t = 'Completeness of Galois group data'
     bread = get_bread([("Completeness", )])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.gg',
@@ -292,7 +292,7 @@ def cande():
 
 @galois_groups_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Galois Groups'
+    t = 'Labels for Galois groups'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='gg.label',
            learnmore=learnmore_list_remove('label'), 
@@ -300,7 +300,7 @@ def labels_page():
 
 @galois_groups_page.route("/Source")
 def source():
-    t = 'Source of the Galois Group Data'
+    t = 'Source of Galois group data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.source.gg',
                            credit=GG_credit, title=t, bread=bread, 
@@ -308,7 +308,7 @@ def source():
 
 @galois_groups_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of the Galois Group Data'
+    t = 'Reliability of Galois group data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.rigor.gg',
                            credit=GG_credit, title=t, bread=bread, 

@@ -223,7 +223,7 @@ class TextBox(SearchBox):
             if self.example_value and info is None:
                 keys.append('value="%s"' % self.example)
             else:
-                keys.append('example="%s"' % self.example)
+                keys.append('placeholder="%s"' % self.example)
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -598,7 +598,7 @@ class SearchArray(UniqueRepresentation):
             array.append([vheader])
             for i in [1,2]:
                 cols = SelectBox(
-                    name="col%s",
+                    name="col%s" % i,
                     id="col%s_select" % i,
                     label="",
                     width=150,
@@ -688,6 +688,6 @@ class SearchArray(UniqueRepresentation):
         jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
         jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
-        return """<input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'>
+        return """<p><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'>
 <button type='submit'>Find</button>
-<br><span class='formexample'>%s</span>""" % (jump_example, jump_width, info.get("jump", ""), jump_egspan)
+<br><span class='formexample'>%s</span></p>""" % (jump_example, jump_width, info.get("jump", ""), jump_egspan)

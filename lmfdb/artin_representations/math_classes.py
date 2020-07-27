@@ -5,8 +5,9 @@ from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
-from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.galois_groups.transitive_group import (
+    group_display_knowl, group_display_short, small_group_display_knowl)
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
 
@@ -108,7 +109,7 @@ class ArtinRepresentation(object):
                 label = "%s.%s"%(str(x[0]),num2letters(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
-            self._data = db.artin_reps_new.lucky({'Baselabel':str(base)})
+            self._data = db.artin_reps.lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label'] = label
@@ -116,12 +117,12 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_reps_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
         # What about label?
-        return cls(data=db.artin_reps_new.lucky(*args, **kwds))
+        return cls(data=db.artin_reps.lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
@@ -215,6 +216,28 @@ class ArtinRepresentation(object):
 
     def GaloisConjugates(self):
         return self._data["GaloisConjugates"]
+
+    def projective_group(self):
+        gapid = self._data['Proj_GAP']
+        smallg = None
+        if gapid[0]:
+            smallg = db.gps_small.lookup('%s.%s' % (gapid[0], gapid[1]))
+            if smallg:
+                return small_group_display_knowl(gapid[0], gapid[1])
+        ntj = self._data['Proj_nTj']
+        if ntj[1]:
+            return group_display_knowl(ntj[0], ntj[1])
+        if smallg:
+            return 'Group with GAP id [%s, %s]' % (gapid[0],gapid[1])
+        return 'data not computed'
+
+    def projective_field(self):
+        projfield = self._data['Proj_Polynomial']
+        if projfield == [0]:
+            return 'data not computed'
+        if projfield == [0,1]:
+            return formatfield(projfield)
+        return 'Galois closure of ' + formatfield(projfield)
 
     def number_field_galois_group(self):
         try:
@@ -664,18 +687,18 @@ class NumberFieldGaloisGroup(object):
             else:
                 coeffs = x[0]
             coeffs = [int(c) for c in coeffs]
-            self._data = db.artin_field_data_new.lucky({'Polynomial':coeffs})
+            self._data = db.artin_field_data.lucky({'Polynomial':coeffs})
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
                 raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        return db.artin_field_data_new.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        return db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
-        result = db.artin_field_data_new.lucky(*args, **kwds)
+        result = db.artin_field_data.lucky(*args, **kwds)
         if result is not None:
             return cls(data=result)
 

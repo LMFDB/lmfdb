@@ -1,0 +1,17 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h1>Maass forms of levels {{min_level}} to {{max_level}} with ${{min_R}} \leq R\leq {{max_R}}$</h1>
+<p>
+   The horizontal axis is the {{KNOWL('mf.maass.mwf.spectralparameter', title='spectral parameter')}} $R$ with the {{KNOWL('mf.maass.mwf.eigenvalue', title='Laplace eigenvalue')}}
+satisying $\lambda=1/4+R^2$. The vertical axis is the {{KNOWL('mf.maass.mwf.level', title='level')}} $N$. Each point
+corresponds to a Maass form of {{KNOWL('mf.maass.mwf.weight', title='weight')}} 0 and trivial character on $\Gamma_0(N)$
+with the color showing whether the {{KNOWL('mf.maass.mwf.symmetry', title='symmetry')}} is <b><font color="{{coloreven}}">even</font></b>
+or <b><font color="{{colorodd}}">odd</font></b>. For $N>100$ there are only results for prime level.
+
+<p>In the plot below each dot is linked to the homepage of the corresponding {{KNOWL('mf.maass.mwf',title='Maass forms')}}.</p>
+
+{{contents[0]|safe}}
+
+{% endblock content %}

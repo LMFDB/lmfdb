@@ -11,8 +11,13 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, SubsetNoExcludeBox, TextBoxWithSelect,
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
+    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
     display_knowl, search_wrap, to_dict)
+from lmfdb.utils.search_parsing import search_parser
+from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.galois_groups.transitive_group import complete_group_code
+
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
@@ -23,6 +28,7 @@ LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
 ORBIT_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+$')
 OLD_LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
 OLD_ORBIT_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+$')
+Dn_RE = re.compile(r'^d\d+$')
 
 
 # Utility for permutations
@@ -31,7 +37,7 @@ def cycle_string(lis):
     return Permutation(lis).cycle_string()
 
 def get_bread(breads=[]):
-    bc = [("Artin Representations", url_for(".index"))]
+    bc = [("Artin representations", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -84,7 +90,11 @@ def parse_artin_label(label, safe=False):
     raise ValueError
 
 def both_labels(label):
-    return list(db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]}).values())
+    both = db.artin_old2new_labels.lucky({'$or': [{'old':label}, {'new': label}]})
+    if both:
+        return list(both.values())
+    else:
+        return [label]
 
 # Is it a rep'n or an orbit, supporting old and new styles
 def parse_any(label):
@@ -117,7 +127,7 @@ def index():
     info = to_dict(request.args, search_array=ArtinSearchArray())
     bread = get_bread()
     if not request.args:
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list(), info=info)
+        return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)
     else:
         return artin_representation_search(info)
 
@@ -133,15 +143,85 @@ def artin_representation_jump(info):
             return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
+dihedrals =[ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
+  [ 18, 1 ], [ 20, 4 ], [ 22, 1 ], [ 24, 6 ], [ 26, 1 ], [ 28, 3 ], [ 30, 3 ],
+  [ 32, 18 ], [ 34, 1 ], [ 36, 4 ], [ 38, 1 ], [ 40, 6 ], [ 42, 5 ], [ 44, 3 ],
+  [ 46, 1 ], [ 48, 7 ], [ 50, 1 ], [ 52, 4 ], [ 54, 1 ], [ 56, 5 ], [ 58, 1 ],
+  [ 60, 12 ], [ 62, 1 ], [ 64, 52 ], [ 66, 3 ], [ 68, 4 ], [ 70, 3 ], [ 72, 6 ],
+  [ 74, 1 ], [ 76, 3 ], [ 78, 5 ], [ 80, 7 ], [ 82, 1 ], [ 84, 14 ], [ 86, 1 ],
+  [ 88, 5 ], [ 90, 3 ], [ 92, 3 ], [ 94, 1 ], [ 96, 6 ], [ 98, 1 ], [ 100, 4 ],
+  [ 102, 3 ], [ 104, 6 ], [ 106, 1 ], [ 108, 4 ], [ 110, 5 ], [ 112, 6 ],
+  [ 114, 5 ], [ 116, 4 ], [ 118, 1 ], [ 120, 28 ], [ 122, 1 ], [ 124, 3 ],
+  [ 126, 5 ], [ 128, 161 ], [ 130, 3 ], [ 132, 9 ], [ 134, 1 ], [ 136, 6 ],
+  [ 138, 3 ], [ 140, 10 ], [ 142, 1 ], [ 144, 8 ], [ 146, 1 ], [ 148, 4 ],
+  [ 150, 3 ], [ 152, 5 ], [ 154, 3 ], [ 156, 17 ], [ 158, 1 ], [ 160, 6 ],
+  [ 162, 1 ], [ 164, 4 ], [ 166, 1 ], [ 168, 36 ], [ 170, 3 ], [ 172, 3 ],
+  [ 174, 3 ], [ 176, 6 ], [ 178, 1 ], [ 180, 11 ], [ 182, 3 ], [ 184, 5 ],
+  [ 186, 5 ], [ 188, 3 ], [ 190, 3 ], [ 192, 7 ], [ 194, 1 ], [ 196, 3 ],
+  [ 198, 3 ], [ 200, 6 ] ]
+
+@search_parser(clean_info=True, error_is_safe=True)
+def parse_projective_group(inp, query, qfield):
+    inp = inp.lower()
+    inp = inp.replace('_','')
+    if inp in ['v4', 'c2^2']:
+        inp = 'd2'
+    if inp == 's3':
+        inp = 'd3'
+    if inp == 'a5':
+        query[qfield] = [60,5]
+    elif inp == 'a4':
+        query[qfield] = [12,3]
+    elif inp == 's4':
+        query[qfield] = [24,12]
+    elif Dn_RE.match(inp):
+        n = int(inp.replace('d',''))-2
+        if n>=0 and n<len(dihedrals):
+            query[qfield] = dihedrals[n]
+        elif n>=0:
+            query[qfield] = [-1,-2] # we don't have it
+    else:
+        try:
+            mycode = complete_group_code(inp.upper())[0]
+            query['Proj_nTj'] = [mycode[0],mycode[1]]
+        except:
+            raise ValueError("Allowed values are A4, S4, A5, or Dn for an integer n>1, a GAP id, such as [4,1] or [12,5], a transitive group in nTj notation, such as 5T1, or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>.")
+
+@search_parser(clean_info=True)
+def parse_projective_type(inp, query, qfield):
+    #Deal with that we may have already set this field
+    current = None
+    if qfield in query:
+        current = query[qfield]
+    inp = inp.lower()
+    if inp == 'a5':
+        query[qfield] = [60,5]
+        if current and current != query[qfield]:
+            raise ValueError('Projective image and projective image type are inconsistent')
+    elif inp == 'a4':
+        query[qfield] = [12,3]
+        if current and current != query[qfield]:
+            raise ValueError('Projective image and projective image type are inconsistent')
+    elif inp == 's4':
+        query[qfield] = [24,12]
+        if current and current != query[qfield]:
+            raise ValueError('Projective image and projective image type are inconsistent')
+    elif inp == 'dn':
+        query[qfield] = {'$in': dihedrals}
+        if current and current not in dihedrals:
+            raise ValueError('Projective image and projective image type are inconsistent')
+        else:
+            query[qfield] = current
+
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps_new,
-             title='Artin Representation Search Results',
-             err_title='Artin Representation Search Error',
+             table=db.artin_reps,
+             title='Artin representation search results',
+             err_title='Artin representation search error',
              per_page=50,
              learnmore=learnmore_list,
              url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
              shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
              initfunc=lambda:ArtinRepresentation)
 def artin_representation_search(info, query):
     query['Hide'] = 0
@@ -157,13 +237,15 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_projective_group(info, query, 'projective_image', qfield='Proj_GAP')
+    parse_projective_type(info, query, 'projective_image_type', qfield='Proj_GAP')
     # Backward support for old URLs
     if 'Is_Even' in info:
         info['parity'] = info.pop('Is_Even')
     parse_bool(info,query,'parity',qfield='Is_Even')
 
 def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
+    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
@@ -237,9 +319,15 @@ def render_artin_representation_webpage(label):
     properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )
 
     friends = []
+    wnf = None
     nf_url = the_nf.url_for()
     if nf_url:
-        friends.append(("Artin Field", nf_url))
+        friends.append(("Artin field", nf_url))
+        wnf = the_nf.wnf()
+    proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
+    if proj_nf:
+        friends.append(("Projective Artin field", 
+            str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
         if cc is not None:
@@ -285,27 +373,27 @@ def render_artin_representation_webpage(label):
     info={} # for testing
 
     if case == 'rep':
-        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties=properties, info=info, learnmore=learnmore_list())
+        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
     # else we have an orbit
-    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, properties=properties, info=info, learnmore=learnmore_list())
+    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():
     rep = db.artin_reps.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
-    label = rep['Baselabel']+"c"+str(num+1)
+    label = rep['Baselabel']+"."+num2letters(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @artin_representations_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Artin Representations'
+    t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
     return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin Representation Data'
+    t = 'Source of Artin representation data'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
     return render_template("single.html", kid='rcs.source.artin',
@@ -314,7 +402,7 @@ def source():
 
 @artin_representations_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of Artin Representation Data'
+    t = 'Reliability of Artin representation data'
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
@@ -323,7 +411,7 @@ def reliability():
 
 @artin_representations_page.route("/Completeness")
 def cande():
-    t = 'Completeness of Artin Representation Data'
+    t = 'Completeness of Artin representation data'
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
@@ -393,6 +481,22 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.frobenius_schur_indicator",
             example="1",
             example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")
+        projective_image = TextBoxNoEg(
+            name='projective_image',
+            label='Projective image',
+            knowl='artin.projective_image',
+            example_span="a GAP id, such as [4,1] or [12,5], a transitive group in nTj notation, such as 5T1, or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>.",
+            example='D5')
+        projective_image_type = SelectBoxNoEg(
+            name='projective_image_type',
+            knowl='artin.projective_image_type',
+            label='Projective image type',
+            example_span='',
+            options=[('', ''),
+                     ('Dn', 'Dn'),
+                     ('A4', 'A4'),
+                     ('S4', 'S4'),
+                     ('A5','A5')])
         count = CountBox()
 
         self.browse_array = [
@@ -405,8 +509,11 @@ class ArtinSearchArray(SearchArray):
             [unramified],
             [root_number],
             [fsind],
+            [projective_image], 
+            [projective_image_type],
             [count]]
 
         self.refine_array = [
             [dimension, conductor, group, root_number, parity],
-            [container, ramified, unramified, fsind]]
+            [container, ramified, unramified, fsind],
+            [projective_image, projective_image_type]]

@@ -30,7 +30,7 @@ logger = make_logger("abvarfq")
 
 def get_bread(*breads):
     bc = [
-        ("Abelian Varieties", url_for(".abelian_varieties")),
+        ("Abelian varieties", url_for(".abelian_varieties")),
         ("Fq", url_for(".abelian_varieties")),
     ]
     for z in breads:
@@ -44,7 +44,7 @@ def learnmore_list():
         ("Completeness of the data", url_for(".completeness_page")),
         ("Source of the data", url_for(".how_computed_page")),
         ("Reliability of the data", url_for(".reliability_page")),
-        ("Labels", url_for(".labels_page")),
+        ("Labeleling convention", url_for(".labels_page")),
     ]
 
 # Return the learnmore list with the matchstring entry removed
@@ -112,7 +112,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         "show-abvarfq.html",
         properties=cl.properties(),
         credit=abvarfq_credit,
-        title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
+        title='Abelian variety isogeny class %s over $%s$'%(label, cl.field()),
         bread=bread,
         cl=cl,
         learnmore=learnmore_list(),
@@ -550,45 +550,52 @@ def jump(info):
     jump_box = info["jump"].strip() # only called when this present
     try:
         validate_label(jump_box)
-    except ValueError as err:
+    except ValueError:
         # Also accept polynomials
         try:
             poly = coeff_to_poly(jump_box)
-        except ValueError:
-            raise err
-        cdict = poly.dict()
-        deg = poly.degree()
-        if deg % 2 == 1:
-            raise ValueError("Polynomial degree must be even")
+            cdict = poly.dict()
+            deg = poly.degree()
+            if deg % 2 == 1:
+                raise ValueError
+        except Exception:
+            raise ValueError("%s is not valid input.  Expected a label or Weil polynomial.")
         g = deg//2
-        lead = cdict.get(deg)
+        lead = cdict[deg]
         if lead == 1: # accept monic normalization
+            lead = cdict[0]
             cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
-        if cdict[0] != 1:
-            raise ValueError("Polynomial must have constant or leading coefficient 1")
-        q = cdict[deg].nth_root(g)
-        for i in range(1, g):
-            if cdict[2*g-i] != q**i * cdict[i]:
-                raise ValueError("Polynomial must be a Weil polynomial")
+        if cdict.get(0) != 1:
+            raise ValueError("%s is not valid input.  Polynomial must have constant or leading coefficient 1")
+        try:
+            q = lead.nth_root(g)
+            if not ZZ(q).is_prime_power():
+                raise ValueError
+            for i in range(1, g):
+                if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
+                    raise ValueError
+        except ValueError:
+            raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
-        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i)) for i in range(1, g+1)))
+        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 
 @search_wrap(
     template="abvarfq-search-results.html",
     table=db.av_fq_isog,
-    title="Abelian Variety Search Results",
-    err_title="Abelian Variety Search Input Error",
+    title="Abelian variety search results",
+    err_title="Abelian variety search input error",
     shortcuts={
         "jump": jump,
         "download": download_search,
     },
     postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
     url_for_label=url_for_label,
-    bread=lambda: get_bread(("Search Results", " ")),
+    learnmore=learnmore_list,
+    bread=lambda: get_bread(("Search results", " ")),
     credit=lambda: abvarfq_credit,
 )
 def abelian_variety_search(info, query):
@@ -598,10 +605,10 @@ def abelian_variety_search(info, query):
     template="abvarfq-count-results.html",
     table=db.av_fq_isog,
     groupby=["g", "q"],
-    title="Abelian Variety Count Results",
-    err_title="Abelian Variety Search Input Error",
+    title="Abelian variety count results",
+    err_title="Abelian variety search input error",
     overall=AbvarFqStats()._counts,
-    bread=lambda: get_bread(("Count Results", " ")),
+    bread=lambda: get_bread(("Count results", " ")),
     credit=lambda: abvarfq_credit,
 )
 def abelian_variety_count(info, query):
@@ -611,6 +618,7 @@ def abelian_variety_count(info, query):
 
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
+        info_copy.pop("search_array", None)
         info_copy["search_type"] = "List"
         info_copy["g"] = g
         info_copy["q"] = q
@@ -655,7 +663,7 @@ def abelian_variety_browse(info):
     ]
     return render_template(
         "abvarfq-index.html",
-        title="Isogeny Classes of Abelian Varieties over Finite Fields",
+        title="Isogeny classes of abelian varieties over finite fields",
         info=info,
         credit=abvarfq_credit,
         bread=get_bread(),
@@ -667,17 +675,18 @@ def search_input_error(info=None, bread=None):
         info = {"err": "", "query": {}}
     info["search_array"] = AbvarSearchArray()
     if bread is None:
-        bread = get_bread(("Search Results", "."))
+        bread = get_bread(("Search results", "."))
     return render_template(
         "abvarfq-search-results.html",
         info=info,
-        title="Abelian Variety Search Input Error",
+        title="Abelian variety search input error",
         bread=bread,
+        learnmore=learnmore_list()
     )
 
 @abvarfq_page.route("/stats")
 def statistics():
-    title = "Abelian Varity Isogeny Classes: Statistics"
+    title = "Abelian variety isogeny classes: Statistics"
     return render_template(
         "display_stats.html",
         info=AbvarFqStats(),
@@ -691,7 +700,7 @@ def statistics():
 def dynamic_statistics():
     info = to_dict(request.args, search_array=AbvarSearchArray())
     AbvarFqStats().dynamic_setup(info)
-    title = "Abelian Varity Isogeny Classes: Dynamic Statistics"
+    title = "Abelian variety isogeny classes: Dynamic statistics"
     return render_template(
         "dynamic_stats.html",
         info=info,
@@ -713,7 +722,7 @@ def random_class():
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
-    t = "Completeness of the Weil Polynomial Data"
+    t = "Completeness of Weil polynomial data"
     bread = get_bread(("Completeness", "."))
     return render_template(
         "single.html",
@@ -726,7 +735,7 @@ def completeness_page():
 
 @abvarfq_page.route("/Reliability")
 def reliability_page():
-    t = "Reliability of the Weil Polynomial Data"
+    t = "Reliability of Weil polynomial data"
     bread = get_bread(("Reliability", "."))
     return render_template(
         "single.html",
@@ -739,7 +748,7 @@ def reliability_page():
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
-    t = "Source of the Weil Polynomial Data"
+    t = "Source of Weil polynomial data"
     bread = get_bread(("Source", "."))
     return render_template(
         "single.html",
@@ -752,7 +761,7 @@ def how_computed_page():
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-    t = "Labels for Isogeny Classes of Abelian Varieties"
+    t = "Labels for isogeny classes of abelian varieties"
     bread = get_bread(("Labels", "."))
     return render_template(
         "single.html",

@@ -33,7 +33,7 @@ def act(request):
         reply = 'Action TBA'
     elif action == 'download_orphans':
         data = ild.collate_orphans()
-        reply = 'Downloading Data'
+        reply = 'Downloading data'
         result = True
     elif action == 'lock_edit':
         ild.set_lockout_state(True)

@@ -169,8 +169,8 @@ def index():
                      ('group_list', group_list),
                      ('group_dict', group_dict)]:
         info[key] = val
-    title = 'Sato-Tate Groups'
-    bread = [('Sato-Tate Groups', '.')]
+    title = 'Sato-Tate groups'
+    bread = [('Sato-Tate groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @st_page.route('/random')
@@ -236,11 +236,11 @@ def search(info):
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
     search_type = info.get("search_type", info.get("hst", "List"))
-    template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
+    template_kwds = {'bread':[('Sato-Tate groups', url_for('.index')),('Search results', '.')],
                      'credit':credit_string,
                      'learnmore':learnmore_list()}
-    title = 'Sato-Tate Group Search Results'
-    err_title = 'Sato-Tate Groups Search Input Error'
+    title = 'Sato-Tate group search results'
+    err_title = 'Sato-Tate group search input error'
     count = parse_count(info, 50)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
@@ -551,12 +551,12 @@ def render_st_group(info, portrait=None):
         ('Component group', r'\(%s\)'%info['component_group']),
     ]
     bread = [
-        ('Sato-Tate Groups', url_for('.index')),
+        ('Sato-Tate groups', url_for('.index')),
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = r'Sato-Tate Group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop2,
                            credit=credit_string,
@@ -568,29 +568,29 @@ def render_st_group(info, portrait=None):
 
 @st_page.route('/Completeness')
 def completeness_page():
-    t = 'Completeness of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
+    t = 'Completeness of Sato-Tate group data'
+    bread = [('Sato-Tate groups', url_for('.index')), ('Completeness','')]
     return render_template('single.html', kid='rcs.cande.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def source_page():
-    t = 'Source of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
+    t = 'Source of Sato-Tate group data'
+    bread = [('Sato-Tate groups', url_for('.index')), ('Source','')]
     return render_template('single.html', kid='rcs.source.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
-    t = 'Reliability of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
+    t = 'Reliability of Sato-Tate group data'
+    bread = [('Sato-Tate groups', url_for('.index')), ('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
 def labels_page():
-    t = 'Labels for Sato-Tate Groups'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
+    t = 'Labels for Sato-Tate groups'
+    bread = [('Sato-Tate groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 

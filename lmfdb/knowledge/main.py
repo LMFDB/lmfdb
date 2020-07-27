@@ -314,7 +314,7 @@ def test():
     logger.info("test")
     return render_template("knowl-test.html",
                            bread=get_bread([("Test", url_for(".test"))]),
-                           title="Knowledge Test",
+                           title="Knowledge test",
                            k1=Knowl("k1"))
 
 
@@ -450,7 +450,7 @@ def history(limit=25):
     h_items = knowldb.get_history(limit)
     bread = get_bread([("History", url_for('.history', limit=limit))])
     return render_template("knowl-history.html",
-                           title="Knowledge History",
+                           title="Knowledge history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -462,7 +462,7 @@ def comment_history(limit=25):
     h_items = knowldb.get_comment_history(limit)
     bread = get_bread([("Comment History", url_for('.comment_history', limit=limit))])
     return render_template("knowl-comment-history.html",
-                           title="Comment History",
+                           title="Comment history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -626,11 +626,11 @@ def save_form():
                 flash_error(str(err), "error")
             else:
                 if k.sed_safety == 1:
-                    flash(Markup("Knowl rename process started. You can change code references using".format(NEWID)))
+                    flash(Markup("Knowl rename process started. You can change code references using"))
                     flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
                     flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
                 elif k.sed_safety == -1:
-                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID)))
+                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
@@ -823,7 +823,7 @@ def index():
     if cur_cat:
         b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
-                           title="Knowledge Database",
+                           title="Knowledge database",
                            bread=get_bread(b),
                            knowls=knowls,
                            search=search,

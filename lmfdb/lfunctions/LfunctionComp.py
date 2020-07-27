@@ -1,8 +1,9 @@
-# Functions for getting info about elliptic curves and related modular forms
+# Functions for generating list of L-functions with certain origins
+# TODO: There should all be modified to use lfunc.instances rather than the origin tables
 
 from lmfdb import db
 
-# TODO These should perhaps be defined in the elliptic curves codebase
+# TODO These should all use lfunc.instances
 
 def isogeny_class_table(Nmin, Nmax):
     ''' Returns a table of all isogeny classes of elliptic curves with

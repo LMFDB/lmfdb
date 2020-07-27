@@ -43,17 +43,20 @@ class WebHyperGeometricFamily(object):
         self.beta = cyc_to_QZ(self.B)
         self.hodge = data['famhodge']
         self.bezout = matrix(self.bezout)
+        self.hinf = matrix(self.hinf)
+        self.h0 = matrix(self.h0)
+        self.h1 = matrix(self.h1)
         #FIXME
         self.rotation_number = self.imprim
 
     @staticmethod
     def by_label(label):
         if not HMF_valid_label(label):
-            raise ValueError("Hypergeometric Motive Family label %s." % label)
+            raise ValueError("Hypergeometric motive family label %s." % label)
 
         data = db.hgm_families.lookup(label)
         if data is None:
-            raise ValueError("Hypergeometric Motive Family label %s not found."
+            raise ValueError("Hypergeometric motive family label %s not found."
                              % label)
         return WebHyperGeometricFamily(data)
 
@@ -125,6 +128,18 @@ class WebHyperGeometricFamily(object):
         return self.bezout.det()
 
     @lazy_attribute
+    def hinf_latex(self):
+        return(latex(self.hinf))
+
+    @lazy_attribute
+    def h0_latex(self):
+        return(latex(self.h0))
+
+    @lazy_attribute
+    def h1_latex(self):
+        return(latex(self.h1))
+    
+    @lazy_attribute
     def bezout_latex(self):
         return latex(self.bezout)
 
@@ -171,6 +186,7 @@ class WebHyperGeometricFamily(object):
                     pad=0,
                     pad_inches=0,
                     bbox_inches='tight',
+                    transparent = True,
                     remove_axes=True)
 
     @lazy_attribute
@@ -259,7 +275,7 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def title(self):
-        return 'Hypergeometric Motive Family: {}'.format(self.label)
+        return 'Hypergeometric motive family: {}'.format(self.label)
 
     @lazy_attribute
     def bread(self):

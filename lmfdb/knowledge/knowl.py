@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
-import os
+import os, sys
 
 from lmfdb.backend.base import PostgresBase
-from lmfdb.backend import db, DelayCommit
+from lmfdb.backend import DelayCommit
+from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
@@ -22,21 +23,21 @@ top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
-    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Curve {0}'),
-    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Isogeny Class {0}'),
-    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois Group {0}T{1}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 isogeny class {0}'),
+    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois group {0}T{1}'),
     (re.compile(r'lattice\.(.*)'), 'Lattice/{0}', 'Lattice {0}'),
     (re.compile(r'cmf\.(.*)'), 'ModularForm/GL2/Q/holomorphic/{0}', 'Newform {0}'),
-    (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number Field {0}'),
-    (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic Curve {0}'),
-    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic Curve {0}-{1}-{2}{3}'),
-    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian Variety Isogeny Class {0}'),
-    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate Group {0}'),
+    (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number field {0}'),
+    (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic curve {0}'),
+    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic curve {0}-{1}-{2}{3}'),
+    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian variety isogeny class {0}'),
+    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate group {0}'),
     (re.compile(r'belyi\.(.*)'), 'Belyi/{0}', 'Belyi Map {0}'),
-    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke Algebra {0}'),
-    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke Algebra {0}'),
-    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
-    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
+    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke algebra {0}'),
+    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke algebra {0}'),
+    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois representation {0}'),
+    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l modular form {0}'),
 ]
 grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
@@ -445,7 +446,10 @@ class KnowlBackend(PostgresBase):
         matches = []
         for kid in kids:
             try:
-                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n'))
+                if sys.version_info[0] == 3:
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))],encoding='utf-8').split(u'\n--\n'))
+                else:
+                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).split(u'\n--\n'))
             except subprocess.CalledProcessError: # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
@@ -460,10 +464,14 @@ class KnowlBackend(PostgresBase):
         - -1 if the knowl is referenced but cannot be safely replaced.
         """
         try:
-            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
+            if sys.version_info[0] == 3:
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+            else:
+                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
         except subprocess.CalledProcessError: # no matches
             return 0
-        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')]).split('\n')
+
+        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')],encoding='utf-8').split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
     def start_rename(self, knowl, new_name, who):
@@ -561,7 +569,10 @@ class KnowlBackend(PostgresBase):
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
         all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
-        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
+        if sys.version_info[0] == 3:
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""],encoding='utf-8').split('\n--\n')
+        else:
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')
