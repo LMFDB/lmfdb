@@ -197,11 +197,11 @@ def render_abstract_group(args):
 
         # prepare for javascript call to make the diagram
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
-        xcoords = list(sub.diagram_x for sub in subs.values())
+        #xcoords = list(sub.diagram_x for sub in subs.values())
 
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
@@ -249,9 +249,9 @@ def shortsubinfo(label):
         h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
         prop = make_knowl(title, knowlid)
         return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.counter, h.subgroup_tex)
+            prop, h.spanclass(), h.label, h.subgroup_tex)
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
+    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
     ans += '<tr><td>%s <td> %s\n' % (
         make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
