@@ -204,7 +204,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
     {(k-> partition ->  [ d(k), e(k), c(k)] for k in wt_range]},
     where d(k), e(k), c(k) are the dimensions
     of the $p$-canonical part of $M_{k,j}(\Gamma(2))$ and its subspaces of
-    Non-cusp forms and Cusp forms.
+    Non-cusp forms and cusp forms.
     """
 
     partitions = [ u'6', u'51', u'42', u'411', u'33', u'321', u'3111', u'222', u'2211', u'21111', u'111111']

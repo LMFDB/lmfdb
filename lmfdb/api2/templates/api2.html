@@ -132,7 +132,7 @@ records:{...}
     &quot;desc&quot;:&quot;Search elliptic curves defined over the rationals&quot;}
     },
     {&quot;classical_modular_forms&quot;:{
-    &quot;human_name&quot;:&quot;Classical Modular Forms&quot;,
+    &quot;human_name&quot;:&quot;Classical modular forms&quot;,
     &quot;desc&quot;:&quot;Search classical modular forms&quot;}
     }]</code></pre>
 <p>(In a fully working implementation there would be many more than this, but a client should cope with what is available). The client decides that it wishes to search in <code>elliptic_curve_q</code>.</p>
@@ -188,7 +188,10 @@ records:{...}
 }</code></pre>
 <p>client is interested in returning the key with canonical name <code>2ADIC_INDEX</code>. It can express this as <code>_fields=&quot;2ADIC_INDEX&quot;</code> .</p>
 <h2 id="get-results">Get results</h2>
-<p>Knowing what it wants to search on and what it wants returned the client connects to <a href="/api2/data/elliptic_curve_q?label=&quot;100a3&quot;&amp;_fields=&quot;2adic_index&quot;" class="uri">/api2/data/elliptical_curve_q?label=&quot;100a3&quot;&amp;_fields=&quot;2ADIC_INDEX&quot;</a>. Result is</p>
+<p>Knowing what it wants to search on and what it wants returned the client
+connects to <a
+  href="/api2/data/elliptic_curves_q?label=&quot;100a3&quot;&amp;_fields=&quot;2adic_index&quot;"
+  class="uri">/api2/data/elliptic_curves_q?label=&quot;100a3&quot;&amp;_fields=&quot;2ADIC_INDEX&quot;</a>. Result is</p>
 <pre language="json" startFrom="1"><code>{&quot;api_version&quot;:&quot;1.0.0&quot;,
 &quot;type&quot;:&quot;API_INVENTORY&quot;,
 &quot;key&quot;: &quot;inventory/elliptic_curves_q&quot;,

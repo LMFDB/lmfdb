@@ -77,10 +77,12 @@
     <td> \(\mathbb{Z}\)</td>
   </tr>
   {% endif %}
+  {% if newform.hecke_ring_index_factored %}
   <tr>
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
+  {% endif %}
   <tr>
     <td> {{ KNOWL('cmf.twist_minimal',title='Twist minimal') }}: </td>
     <td> {{ newform.twist_minimal_display() | safe }}</td>
@@ -209,7 +211,7 @@ function show_qexp(qstyle) {
     </table>
 
     <p>
-      <div class="toggle">Display
+      <div class="toggle" style="padding-left:9px;">Display
         <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false;" href='#'>100 coefficients</a></span>
         <span class='mediumoutput nodisplay'><a onclick="return show_qexp('smalloutput');" href='#qexp-anchor'>10 coefficients</a></span>
       </div>
@@ -217,7 +219,7 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.dim > 2 and (newform.hecke_ring_cyclotomic_generator is none or newform.hecke_ring_cyclotomic_generator == 0) and not newform.hecke_ring_power_basis %}
-    <p class="short"> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
+    <p> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
 </div>
@@ -234,7 +236,7 @@ function show_qexp(qstyle) {
     <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
   </div></td></tr></table>
 
-  <p>
+  <p style="padding-left: 1ch;">
     <div class="toggle">Display
       <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
       <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>

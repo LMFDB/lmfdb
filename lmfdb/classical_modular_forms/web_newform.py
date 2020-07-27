@@ -768,13 +768,13 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
+  <p><a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a></p>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
+  <p><a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a></p>
 </div>
 </div>"""
         forward_size = inverse_size = 0
@@ -788,7 +788,7 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_basis_table(self):
-        s = '<table class="ntdata">\n  <tr>\n'
+        s = '<table class="ntdata" style="padding-left: 14px;">\n  <tr>\n'
         for i in range(self.dim):
             s += r'    <td>\(\nu^{%s}\)</td>\n'%i
         s += '    <td>Denominator</td>\n  </tr>\n'

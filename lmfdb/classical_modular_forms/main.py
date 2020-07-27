@@ -233,7 +233,7 @@ def index():
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
-                           title="Classical Modular Forms",
+                           title="Classical modular forms",
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
@@ -729,7 +729,7 @@ def newspace_parse(info, query):
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
-             title='Newform Search Results',
+             title='Newform search results',
              err_title='Newform Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download(),
@@ -802,8 +802,8 @@ def set_Trn(info, query):
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
-             title='Newform Search Results',
-             err_title='Newform Search Input Error',
+             title='Newform search results',
+             err_title='Newform search input error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_traces},
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
@@ -819,8 +819,8 @@ def trace_search(info, query):
 
 @search_wrap(template="cmf_space_trace_search_results.html",
              table=db.mf_newspaces,
-             title='Newspace Search Results',
-             err_title='Newspace Search Input Error',
+             title='Newspace search results',
+             err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_space_traces},
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
@@ -994,8 +994,8 @@ def dimension_form_postprocess(res, info, query):
 
 @search_wrap(template="cmf_dimension_search_results.html",
              table=db.mf_newforms,
-             title='Dimension Search Results',
-             err_title='Dimension Search Input Error',
+             title='Dimension search results',
+             err_title='Dimension search input error',
              per_page=None,
              projection=['level', 'weight', 'dim'],
              postprocess=dimension_form_postprocess,
@@ -1014,8 +1014,8 @@ def dimension_form_search(info, query):
 
 @search_wrap(template="cmf_dimension_space_search_results.html",
              table=db.mf_newspaces,
-             title='Dimension Search Results',
-             err_title='Dimension Search Input Error',
+             title='Dimension search results',
+             err_title='Dimension search input error',
              per_page=None,
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
@@ -1034,8 +1034,8 @@ def dimension_space_search(info, query):
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
-             title='Newspace Search Results',
-             err_title='Newspace Search Input Error',
+             title='Newspace search results',
+             err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_spaces},
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],
@@ -1049,7 +1049,7 @@ def space_search(info, query):
 
 @cmf.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Classical Modular Form Data'
+    t = 'Completeness of classical modular form data'
     return render_template("single.html", kid='rcs.cande.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
@@ -1058,7 +1058,7 @@ def completeness_page():
 
 @cmf.route("/Source")
 def how_computed_page():
-    t = 'Source of Classical Modular Form Data'
+    t = 'Source of classical modular form data'
     return render_template("single.html", kid='rcs.source.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
@@ -1066,7 +1066,7 @@ def how_computed_page():
 
 @cmf.route("/Labels")
 def labels_page():
-    t = 'Labels for Classical Modular Forms'
+    t = 'Labels for classical modular forms'
     return render_template("single.html", kid='cmf.label',
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
@@ -1074,7 +1074,7 @@ def labels_page():
 
 @cmf.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of Classical Modular Form Data'
+    t = 'Reliability of classical modular form data'
     return render_template("single.html", kid='rcs.rigor.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Reliability'),
@@ -1239,14 +1239,14 @@ class CMF_stats(StatsDisplay):
 
 @cmf.route("/stats")
 def statistics():
-    title = 'Cuspidal Newforms: Statistics'
+    title = 'Classical modular forms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
-    title = 'Cuspidal Newforms: Dynamic Statistics'
+    title = 'Classical modular forms: Dynamic statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 
