@@ -274,6 +274,38 @@ class WebAbstractGroup(WebObj):
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
         return factor(int(self._data['outer_order']))
+<<<<<<< HEAD
+    
+
+###special subgroups
+    def center(self):
+        return self._data['center']
+
+    def center_label(self):
+        return group_names_pretty(self._data['center_label'])
+
+    def central_quot(self):
+        return group_names_pretty(self._data['central_quotient'])
+    
+
+    def commutator(self):
+        return self._data['commutator']
+
+    def commutator_label(self):
+        return group_names_pretty(self._data['commutator_label'])
+
+    def abelian_quot(self):
+        return group_names_pretty(self._data['abelian_quotient'])
+
+    def frattini(self):
+        return self._data['frattini']
+
+    def frattini_label(self):
+        return group_names_pretty(self._data['frattini_label'])
+
+    def frattini_quot(self):
+        return self._data['frattini_quotient']
+=======
 
     ###special subgroups
 
@@ -294,6 +326,7 @@ class WebAbstractGroup(WebObj):
 
     def show_frattini_quotient(self):
         return group_names_pretty(self.frattini_quotient)
+>>>>>>> 6b1fddd21dd2d1e369959db714f92e966487acaf
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
@@ -302,7 +335,11 @@ class WebAbstractSubgroup(WebObj):
         self.ambient_gp = self.ambient # in case we still need it
         self.subgroup_tex = group_names_pretty(self.subgroup) # temporary
         if 'quotient' in self._data:
+<<<<<<< HEAD
+            self.quotient_tex = db.gps_small.lookup(self.quotient, 'pretty') # temporary
+=======
             self.quotient_tex = group_names_pretty(self.quotient) # temporary
+>>>>>>> 6b1fddd21dd2d1e369959db714f92e966487acaf
 
     @classmethod
     def from_label(cls, label):

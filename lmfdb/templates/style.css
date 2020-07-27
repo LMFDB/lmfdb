@@ -2331,3 +2331,14 @@ span.activesubgp {
 .advanced {
     display: none;
 }
+
+span.chargp {
+    color: {{color.col_main}};
+}
+
+span.normgp {
+    color: #BB1188;
+}
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
