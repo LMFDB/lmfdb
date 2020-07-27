@@ -51,7 +51,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroups(self):
         # Should join with gps_groups to get pretty names for subgroup and quotient
-        return {subdata['counter']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+        return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
     @lazy_attribute
     def conjugacy_classes(self):
@@ -96,7 +96,7 @@ class WebAbstractGroup(WebObj):
     def subgroup_layers(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
-        top = max(sub.counter for sub in subs.values())
+        top = max(sub.label for sub in subs.values())
         layers = [[subs[top]]]
         seen = set([top])
         added_something = True # prevent data error from causing infinite loop
