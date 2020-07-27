@@ -2298,6 +2298,16 @@ input.color_selecter {
     margin: 10px;
 }
 
+span.chargp {
+    color: {{color.col_main}};
+}
+
+span.normgp {
+    color: #BB1188;
+}
+
+span.activesubgp {
+    background: {{color.col_main_ll}};
 /* the button to show advanced search options */
 #advancedtoggle {
     margin-left: 20px;

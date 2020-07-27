@@ -10,10 +10,11 @@ fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
 #currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
-    data = db.gps_small.lookup(label)
-    if data and 'pretty' in data:
-        return data['pretty']
-    return label
+    pretty = db.gps_small.lookup(label, 'pretty')
+    if pretty:
+        return pretty
+    else:
+        return label
 
 def group_pretty_image(label):
     pretty = group_names_pretty(label)
@@ -247,62 +248,9 @@ class WebAbstractGroup(WebObj):
     def name_label(self):
         return group_names_pretty(self._data['label'])
 
-### properties
-#also create properties list to go along with this
-
-    def is_abelian(self):
-        return self._data['abelian']
-
-    def is_cyclic(self):
-        return self._data['cyclic']
-
-    def is_solvable(self):
-        return self._data['solvable']
-    
-    def is_super_solvable(self):
-        return self._data['supersolvable']
-
-    def is_nilpotent(self):
-        return self._data['nilpotent']
-
-    def is_metacyclic(self):
-        return self._data['metacyclic']
-
-    def is_metabelian(self):
-        return self._data['metabelian']
-
-    def is_simple(self):
-        return self._data['simple']
-    
-    def is_almost_simple(self):
-        return self._data['almost_simple']
-
-    def is_quasisimple(self):
-        return self._data['quasisimple']
-
-    def is_perfect(self):
-        return self._data['perfect']
-
-    def is_monomial(self):
-        return self._data['monomial']
-
-    def is_rational(self):
-        return self._data['rational']
-    
-    def is_Zgroup(self):
-        return self._data['Zgroup']
-
-    def is_Agroup(self):
-        return self._data['Agroup']
-
-   
-
-###automorphism group
-#WHAT IF NULL??
-    def aut_group(self):
-        return group_names_pretty(self._data['aut_group'])
+    ###automorphism group
+    #WHAT IF NULL??
     def show_aut_group(self):
-        return group_names_pretty(self.aut_group)
         try:
             return group_names_pretty(self.aut_group)
         except:
@@ -326,6 +274,7 @@ class WebAbstractGroup(WebObj):
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
         return factor(int(self._data['outer_order']))
+<<<<<<< HEAD
     
 
 ###special subgroups
@@ -356,6 +305,28 @@ class WebAbstractGroup(WebObj):
 
     def frattini_quot(self):
         return self._data['frattini_quotient']
+=======
+
+    ###special subgroups
+
+    def show_center_label(self):
+        return group_names_pretty(self.center_label)
+
+    def show_central_quotient(self):
+        return group_names_pretty(self.central_quotient)
+
+    def show_commutator_label(self):
+        return group_names_pretty(self.commutator_label)
+
+    def show_abelian_quotient(self):
+        return group_names_pretty(self.abelian_quotient)
+
+    def show_frattini_label(self):
+        return group_names_pretty(self.frattini_label)
+
+    def show_frattini_quotient(self):
+        return group_names_pretty(self.frattini_quotient)
+>>>>>>> 6b1fddd21dd2d1e369959db714f92e966487acaf
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
@@ -364,7 +335,11 @@ class WebAbstractSubgroup(WebObj):
         self.ambient_gp = self.ambient # in case we still need it
         self.subgroup_tex = group_names_pretty(self.subgroup) # temporary
         if 'quotient' in self._data:
+<<<<<<< HEAD
             self.quotient_tex = db.gps_small.lookup(self.quotient, 'pretty') # temporary
+=======
+            self.quotient_tex = group_names_pretty(self.quotient) # temporary
+>>>>>>> 6b1fddd21dd2d1e369959db714f92e966487acaf
 
     @classmethod
     def from_label(cls, label):
@@ -398,4 +373,4 @@ class WebAbstractSupergroup(WebObj):
         self.sub_or_quo_gp = sub_or_quo
         self.typ = typ
         WebObj.__init__(self, label, data)
-        self.ambient_tex = db.gps_small.lookup(self.ambient, 'pretty') # temporary
+        self.ambient_tex = group_names_pretty(self.ambient) # temporary
