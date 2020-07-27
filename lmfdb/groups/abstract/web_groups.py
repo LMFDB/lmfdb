@@ -274,7 +274,6 @@ class WebAbstractGroup(WebObj):
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
         return factor(int(self._data['outer_order']))
-<<<<<<< HEAD
     
 
 ###special subgroups
