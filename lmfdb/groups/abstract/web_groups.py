@@ -47,7 +47,6 @@ class WebAbstractGroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         self.tex_name = group_names_pretty(label) # remove once in database
-        self.fitting = self.fitting()
 
     @lazy_attribute
     def subgroups(self):
@@ -67,11 +66,15 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def fitting(self):
-        return special_search(self, 'F')
+        return self.special_search('F')
 
     @lazy_attribute
     def radical(self):
-        return special_search(self, 'R')
+        return self.special_search('R')
+
+    @lazy_attribute
+    def socle(self):
+        return self.special_search('S')
 
     @lazy_attribute
     def conjugacy_classes(self):
@@ -164,11 +167,12 @@ class WebAbstractGroup(WebObj):
             if sub.sylow > 0:
                 syl_dict[sub.sylow] = sub
         syl_list = []
-        for p, e in self.factored_order:
+        for p, e in factor(self.order):
             if p in syl_dict:
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
+# TODO: update this to use special_search
     def series(self):
         data = [['group.%s'%name,
                  name.replace('_',' ').capitalize(),
