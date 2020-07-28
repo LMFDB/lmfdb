@@ -47,11 +47,31 @@ class WebAbstractGroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         self.tex_name = group_names_pretty(label) # remove once in database
+        self.fitting = self.fitting()
 
     @lazy_attribute
     def subgroups(self):
         # Should join with gps_groups to get pretty names for subgroup and quotient
         return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+
+    # special subgroups
+    def special_search(self, sp):
+        search_lab = '%s.%s' % (self.label, sp)
+        subs = self.subgroups
+        for lab in subs:
+            sp_labels = (subs[lab]).special_labels
+            if search_lab in sp_labels:
+                return lab
+                #H = subs['lab']
+                #return group_names_pretty(H.subgroup)
+
+    @lazy_attribute
+    def fitting(self):
+        return special_search(self, 'F')
+
+    @lazy_attribute
+    def radical(self):
+        return special_search(self, 'R')
 
     @lazy_attribute
     def conjugacy_classes(self):
@@ -294,6 +314,7 @@ class WebAbstractGroup(WebObj):
 
     def show_frattini_quotient(self):
         return group_names_pretty(self.frattini_quotient)
+
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
