@@ -53,14 +53,38 @@ class WebAbstractGroup(WebObj):
         # Should join with gps_groups to get pretty names for subgroup and quotient
         return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
+
+    # special subgroups
+    def special_search(self, sp):
+        search_lab = '%s.%s' % (self.label, sp)
+        subs = self.subgroups
+        for lab in subs:
+            sp_labels = (subs[lab]).special_labels
+            if search_lab in sp_labels:
+                return lab
+                #H = subs['lab']
+                #return group_names_pretty(H.subgroup)
+
+    @lazy_attribute
+    def fitting(self):
+        return self.special_search('F')
+
+    @lazy_attribute
+    def radical(self):
+        return self.special_search('R')
+
+    @lazy_attribute
+    def socle(self):
+        return self.special_search('S')
+
     @lazy_attribute
     def conjugacy_classes(self):
-        return {ccdata['counter']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
+        return {ccdata['label']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
 
     @lazy_attribute
     def characters(self):
         # Should join with creps once we have images and join queries
-        return {chardata['counter']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
+        return {chardata['label']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
 
     @lazy_attribute
     def maximal_subgroup_of(self):
@@ -130,9 +154,9 @@ class WebAbstractGroup(WebObj):
         for sub in subs.values():
             layers[sub.subgroup_order].append(sub)
             for k in sub.contained_in:
-                edges.append([k, sub.counter])
+                edges.append([k, sub.label])
         llayers = [layers[k] for k in sorted(layers.keys())]
-        llayers = [[[gp.counter, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
+        llayers = [[[gp.label, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
         return [llayers, edges]
 
     def sylow_subgroups(self):
@@ -144,11 +168,12 @@ class WebAbstractGroup(WebObj):
             if sub.sylow > 0:
                 syl_dict[sub.sylow] = sub
         syl_list = []
-        for p, e in self.factored_order:
+        for p, e in factor(self.order):
             if p in syl_dict:
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
+# TODO: update this to use special_search
     def series(self):
         data = [['group.%s'%name,
                  name.replace('_',' ').capitalize(),
@@ -304,6 +329,7 @@ class WebAbstractGroup(WebObj):
 
     def frattini_quot(self):
         return self._data['frattini_quotient']
+
 
 
 class WebAbstractSubgroup(WebObj):

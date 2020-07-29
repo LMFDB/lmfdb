@@ -250,9 +250,9 @@ def shortsubinfo(label):
         h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
         prop = make_knowl(title, knowlid)
         return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.counter, h.subgroup_tex)
+            prop, h.spanclass(), h.label, h.subgroup_tex)
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
+    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
     ans += '<tr><td>%s <td> %s\n' % (
         make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
