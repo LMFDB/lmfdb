@@ -102,10 +102,9 @@ def index():
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
         return group_search(request.args)
-    info = {'count': 50,
-            'order_list': ['1-10', '20-100', '101-200'],
-            'nilp_list': range(1,5)
-            }
+    info['count']= 50
+    info['order_list']= ['1-10', '20-100', '101-200']
+    info['nilp_list']= range(1,5)
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -323,10 +322,10 @@ def how_computed_page():
 
 
 class GroupsSearchArray(SearchArray):
-    noun = "passport"
-    plural_noun = "passports"
-    jump_example = "2.12-4.0.2-2-2-3"
-    jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
+    noun = "group"
+    plural_noun = "groups"
+    jump_example = "[8,3]"
+    jump_egspan = "e.g. [8,3] or [16,1]"
     def __init__(self):
         order = TextBox(
             name="order",
@@ -382,7 +381,7 @@ class GroupsSearchArray(SearchArray):
 
         self.refine_array = [
             [order, exponent, nilpclass, group],
-            [abelian,solvable,nilpotent,perfect]]
+            [abelian, solvable, nilpotent, perfect]]
 
     sort_knowl = "group.sort_order"
     def sort_order(self, info):
