@@ -271,9 +271,9 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-    #parse_ints(info,query,field='cm_disc',qfield='cm')
-    if 'cm_disc' in info:
-        query['cm'] = info['cm_disc']
+    parse_ints(info,query,field='cm_disc',qfield='cm')
+    #if 'cm_disc' in info:
+    #    query['cm'] = info['cm_disc']
     parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
@@ -722,7 +722,8 @@ class ECSearchArray(SearchArray):
             example="Yes",
             knowl="ec.semistable")
         cm_opts = [('', ''), ('-3', -3), ('-4', -4), ('-7', -7), ('-8', -8), ('-11', -11), ('-12', -12), ('-16', -16),
-                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163)]
+                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163),
+                        ('-3,-12,-27', [-3,-12,-27]), ('-4,-16', [-4,-16]), ('-7,-28', [-7,-28])]
         cm_disc = SelectBox(
             name="cm_disc",
             label="CM discriminant",
