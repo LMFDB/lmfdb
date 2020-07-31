@@ -795,7 +795,7 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_basis_table(self):
-        s = '<table class="ntdata" style="padding-left: 14px;">\n  <tr>\n'
+        s = '<table class="ntdata">\n  <tr>\n'
         for i in range(self.dim):
             s += r'    <td>\(\nu^{%s}\)</td>\n'%i
         s += '    <td>Denominator</td>\n  </tr>\n'
