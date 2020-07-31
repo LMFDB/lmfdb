@@ -185,7 +185,7 @@ def render_group_webpage(args):
                 flash_error("Group %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a Galois group.", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         data['label_raw'] = label.lower()
         title = 'Galois group: ' + label
         wgg = WebGaloisGroup.from_nt(data['n'], data['t'])

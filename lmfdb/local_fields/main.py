@@ -212,7 +212,7 @@ def render_field_webpage(args):
                 flash_error("Field %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a local number field.", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         title = 'Local number field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']

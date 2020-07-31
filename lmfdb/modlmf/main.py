@@ -79,7 +79,7 @@ def modlmf_render_webpage():
 @modlmf_page.route("/random")
 def random_modlmf():
     label = db.modlmf_forms.random()
-    return redirect(url_for(".render_modlmf_webpage", label=label))
+    return redirect(url_for(".render_modlmf_webpage", label=label), 301)
 
 modlmf_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
@@ -93,7 +93,7 @@ def modlmf_by_label(lab):
         flash_error("The mod &#x2113; modular form %s is not recorded in the database or the label is invalid", lab)
     else:
         flash_error("No mod &#x2113; modular form in the database has label %s", lab)
-    return redirect(url_for(".modlmf_render_webpage"))
+    return redirect(url_for(".modlmf_render_webpage"), 301)
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}

@@ -11,9 +11,9 @@ def body_class():
 
 @mod.route("/")
 def default_route():
-    return redirect(url_for("zeta zeros.zetazeros"))
+    return redirect(url_for("zeta zeros.zetazeros"), 301)
 
 
 @mod.route("/zeta")
 def query(**kwargs):
-    return redirect(url_for("zeta zeros.zetazeros"))
+    return redirect(url_for("zeta zeros.zetazeros"), 301)

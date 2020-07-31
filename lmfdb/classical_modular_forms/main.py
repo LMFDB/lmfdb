@@ -420,7 +420,7 @@ def by_url_level(level):
             return redirect(url_for_label(level), code=301)
         except ValueError:
             flash_error("%s is not a valid newform or space label", level)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
     info = to_dict(request.args, search_array=CMFSearchArray())
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)

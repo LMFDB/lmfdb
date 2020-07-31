@@ -140,7 +140,7 @@ def artin_representation_jump(info):
             label = parse_artin_orbit_label(label)
         except ValueError:
             flash_error("%s is not in a valid form for an Artin representation label", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 dihedrals =[ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
@@ -274,7 +274,7 @@ def render_artin_representation_webpage(label):
             raise ValueError
         except:
             flash_error("%s is not in a valid form for the label for an Artin representation or a Galois orbit of Artin representations", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
     # Do this twice to customize error messages
     newlabel = case[1]
     case = case[0]
@@ -284,14 +284,14 @@ def render_artin_representation_webpage(label):
         except:
             newlabel = parse_artin_label(label)
             flash_error("Artin representation %s is not in database", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
     else: # it is an orbit
         try:
             the_rep = ArtinRepresentation(newlabel+'.a')
         except:
             newlabel = parse_artin_orbit_label(newlabel)
             flash_error("Galois orbit of Artin representations %s is not in database", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         # in this case we want all characters
         num_conj = the_rep.galois_conjugacy_size()
         allchars = [ ArtinRepresentation(newlabel+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]

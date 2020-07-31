@@ -387,7 +387,7 @@ def render_field_webpage(args):
             flash_error("Number field %s was not found in the database.", label)
         else:
             flash_error("%s is not a valid label for a global number field.", label)
-        return redirect(url_for(".number_field_render_webpage"))
+        return redirect(url_for(".number_field_render_webpage"), 301)
 
     info['wnf'] = nf
     data['degree'] = nf.degree()
@@ -644,7 +644,7 @@ def by_label(label):
         return render_field_webpage({'label': nflabel})
     except ValueError as err:
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
-        return redirect(url_for(".number_field_render_webpage"))
+        return redirect(url_for(".number_field_render_webpage"), 301)
 
 # input is a sage int
 
@@ -723,9 +723,9 @@ def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
         parse_nf_string(info,query,'jump',name="Label",qfield='label')
-        return redirect(url_for(".by_label", label=query['label']))
+        return redirect(url_for(".by_label", label=query['label']), 301)
     except ValueError:
-        return redirect(url_for(".number_field_render_webpage"))
+        return redirect(url_for(".number_field_render_webpage"), 301)
 
 # This doesn't seem to be used currently
 #def number_field_algebra(info):

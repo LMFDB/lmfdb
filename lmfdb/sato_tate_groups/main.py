@@ -218,13 +218,13 @@ def search_by_label(label):
         rlabel = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, "label")
         if not rlabel:
             flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         return redirect(url_for('.by_label', label=rlabel), 301)
     # check for a straight up name
     rlabel = db.gps_sato_tate.lucky({'name':label}, "label")
     if not rlabel:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     return redirect(url_for('.by_label', label=rlabel), 301)
 
 # This search function doesn't fit the model of search_wrapper very well,
@@ -482,27 +482,27 @@ def render_by_label(label):
         n = ZZ(label.split('.')[2])
         if n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
     if re.match(NU1_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
         n = ZZ(label.split('.')[3][1:])
         if 2*n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", 2*n)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         return render_st_group(nu1_mu_info(w,n), portrait=nu1_mu_portrait(n))
     if re.match(SU2_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
         n = ZZ(label.split('.')[3][1:])
         if n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
-            return redirect(url_for(".index"))
+            return redirect(url_for(".index"), 301)
         return render_st_group(su2_mu_info(w,n), portrait=su2_mu_portrait(n))
     data = db.gps_sato_tate.lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
     info['ambient'] = st_ambient(info['weight'],info['degree'])
@@ -511,14 +511,14 @@ def render_by_label(label):
     st0 = db.gps_sato_tate0.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     info['st0_name']=st0['name']
     info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
     G = db.gps_small.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     info['component_group']=G['pretty']
     info['cyclic']=boolean_name(G['cyclic'])
     info['abelian']=boolean_name(G['abelian'])

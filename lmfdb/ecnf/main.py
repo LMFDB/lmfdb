@@ -272,12 +272,12 @@ def show_ecnf1(nf):
         try:
             nf, cond_label, iso_label, number = split_full_label(nf.strip())
         except ValueError:
-            return redirect(url_for("ecnf.index"))
+            return redirect(url_for("ecnf.index"), 301)
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
@@ -464,7 +464,7 @@ def elliptic_curve_jump(info):
     else:
         flash_error("%s is not a valid elliptic curve or isogeny class label.", label)
         info['err'] = ''
-        return redirect(url_for("ecnf.index"))
+        return redirect(url_for("ecnf.index"), 301)
 
 def url_for_label(label):
     if label == 'random':
@@ -562,7 +562,7 @@ def browse():
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
     if d==1:
-        return redirect(url_for("ec.statistics"))
+        return redirect(url_for("ec.statistics"), 301)
     info = {}
 
     sigs_by_deg = ECNF_stats().sigs_by_deg
@@ -604,7 +604,7 @@ def statistics_by_degree(d):
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
 def statistics_by_signature(d,r):
     if d==1:
-        return redirect(url_for("ec.statistics"))
+        return redirect(url_for("ec.statistics"), 301)
 
     info = {}
 
