@@ -42,9 +42,9 @@ def search():
     rank = request.args.get('rank', '')
     logger.info("weight = %s" % weight)
     if not (cartan_type and rank and weight):
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index'), 301)
     crystal_string = "-".join([cartan_type, rank, weight])
-    return redirect(url_for('.show', crystal=crystal_string))
+    return redirect(url_for('.show', crystal=crystal_string), 301)
 
 
 @crystals_page.route("/search_littelmann")
@@ -54,9 +54,9 @@ def search_littelmann():
     cartan_type = str(request.args.get('cartan_type', ''))
     logger.info("weight = %s" % weight)
     if not (cartan_type and weight):
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index'), 301)
     crystal_string = "-".join([cartan_type, str(2), weight])
-    return redirect(url_for('.show_littelmann', crystal=crystal_string))
+    return redirect(url_for('.show_littelmann', crystal=crystal_string), 301)
 
 
 @crystals_page.route("/<crystal>/image")
