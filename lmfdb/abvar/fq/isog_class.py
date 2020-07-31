@@ -206,8 +206,12 @@ class AbvarFq_isoclass(object):
             ("Base field", "$%s$" % (self.field(self.q))),
             ("Dimension", "$%s$" % (self.g)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-            ("Ordinary", "Yes" if self.is_ordinary() == 1 else "No"),
+            ("Ordinary", "Yes" if self.is_ordinary() else "No"),
+            ("Supersingular", "Yes" if self.is_supersingular() else "No"),
             ("$p$-rank", "$%s$" % (self.p_rank)),
+            ("Simple", "Yes" if self.is_simple else "No"),
+            ("Geometrically simple", "Yes" if self.is_geometrically_simple else "No"),
+            ("Primitive", "Yes" if self.is_primitive else "No"),
         ]
         if self.has_principal_polarization != 0:
             props += [("Principally polarizable", "Yes" if self.has_principal_polarization == 1 else "No")]
