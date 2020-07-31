@@ -531,7 +531,7 @@ def jump_box(info):
         except ValueError:
             errmsg = "%s is not a valid newform or space label"
     flash_error(errmsg, jump)
-    return redirect(url_for(".index"))
+    return redirect(url_for(".index"), 301)
 
 
 @cmf.route("/download_qexp/<label>")
