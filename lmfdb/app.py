@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import os
+from socket import gethostname
 import time
 import six
 
@@ -19,6 +20,10 @@ LMFDB_VERSION = "LMFDB Release 1.1.1"
 ############################
 
 app = Flask(__name__)
+if gethostname().startswith('prodweb'):
+    app.config.update(dict(
+      PREFERRED_URL_SCHEME = 'https'
+    ))
 
 ############################
 # App attribute functions  #
@@ -323,7 +328,6 @@ def statshealth():
 
 @app.route("/info")
 def info():
-    from socket import gethostname
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
     output += "# PostgreSQL info\n"
