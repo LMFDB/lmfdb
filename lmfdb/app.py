@@ -24,7 +24,6 @@ class ReverseProxied(object):
         self.app = app
 
     def __call__(self, environ, start_response):
-        critical("%s" % environ)
         scheme = environ.get('HTTP_X_FORWARDED_PROTO')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
