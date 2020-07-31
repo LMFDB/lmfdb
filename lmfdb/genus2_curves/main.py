@@ -87,7 +87,7 @@ def learnmore_list_remove(matchstring):
 
 @g2c_page.route("/")
 def index():
-    return redirect(url_for(".index_Q", **request.args), 301)
+    return redirect(url_for(".index_Q", **request.args))
 
 @g2c_page.route("/Q/")
 def index_Q():
@@ -283,7 +283,7 @@ def genus2_jump(info):
         else:
             errmsg +="."
     flash_error(errmsg, jump)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 class G2C_download(Downloader):
     table = db.g2c_curves
