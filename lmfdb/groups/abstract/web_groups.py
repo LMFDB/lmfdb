@@ -60,19 +60,16 @@ class WebAbstractGroup(WebObj):
         for lab in subs:
             sp_labels = (subs[lab]).special_labels
             if search_lab in sp_labels:
-                return lab # is label what we want to return
+                return lab # is label what we want to return?
                 #H = subs['lab']
                 #return group_names_pretty(H.subgroup)
 
-    @lazy_attribute
     def fitting(self):
         return self.special_search('F')
 
-    @lazy_attribute
     def radical(self):
         return self.special_search('R')
 
-    @lazy_attribute
     def socle(self):
         return self.special_search('S')
 
@@ -98,19 +95,15 @@ class WebAbstractGroup(WebObj):
             return sort_ser(p, sp)
         return [el[0] for el in sorted(ser, key = sort_ser_sp)]
 
-    @lazy_attribute
     def chief_series(self):
         return self.series_search('C')
 
-    @lazy_attribute
     def derived_series(self):
         return self.series_search('D')
 
-    @lazy_attribute
     def lower_central_series(self):
         return self.series_search('L')
 
-    @lazy_attribute
     def upper_central_series(self):
         return self.series_search('U')
 
@@ -210,7 +203,7 @@ class WebAbstractGroup(WebObj):
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
-# TODO: update this to use special_search
+    # TODO: update this to use series_search
     def series(self):
         data = [['group.%s'%name,
                  name.replace('_',' ').capitalize(),
