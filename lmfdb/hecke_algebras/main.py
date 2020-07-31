@@ -58,7 +58,7 @@ def hecke_algebras_render_webpage():
 @hecke_algebras_page.route("/random")
 def random_hecke_algebra():
     label = db.hecke_algebras.random()
-    return redirect(url_for(".render_hecke_algebras_webpage", label=label), 301)
+    return redirect(url_for(".render_hecke_algebras_webpage", label=label))
 
 
 
@@ -78,7 +78,7 @@ def hecke_algebras_by_label(lab):
         flash_error("The Hecke algebra %s is not recorded in the database or the label is invalid", lab)
     else:
         flash_error("No Hecke algebra in the database has label %s", lab)
-    return redirect(url_for(".hecke_algebras_render_webpage"), 301)
+    return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def hecke_algebras_by_orbit_label(lab):
     if db.hecke_orbits.exists({'orbit_label': lab}):
@@ -89,7 +89,7 @@ def hecke_algebras_by_orbit_label(lab):
         flash_error("The Hecke algebra orbit %s is not recorded in the database or the label is invalid", lab)
     else:
         flash_error("No Hecke algebra orbit in the database has label %s", lab)
-    return redirect(url_for(".hecke_algebras_render_webpage"), 301)
+    return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def download_search(info):
     lang = info["submit"]
@@ -162,10 +162,10 @@ def hecke_algebras_search(info, query):
     if info.get('ell'):
         if int(info.get('ell'))>13:
             flash_error("No data for primes or integers greater than $13$ is available")
-            return redirect(url_for(".hecke_algebras_render_webpage"), 301)
+            return redirect(url_for(".hecke_algebras_render_webpage"))
         elif int(info.get('ell')) not in [2,3,5,7,11,13]:
             flash_error("No data for integers which are not primes")
-            return redirect(url_for(".hecke_algebras_render_webpage"), 301)
+            return redirect(url_for(".hecke_algebras_render_webpage"))
     if info.get('orbit_label'):
         check=[int(i) for i in info['orbit_label'].split(".")]
         if 'level' in info and info.get('level'):
@@ -182,7 +182,7 @@ def hecke_algebras_search(info, query):
         if 'weight' in info and info.get('weight'):
             if int(info.get('weight'))!=check[1]:
                 flash_error("Orbit label %s and Weight %s are not compatible inputs", info.get('orbit_label'), info.get('weight'))
-                return redirect(url_for(".hecke_algebras_render_webpage"), 301)
+                return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'ell' in info and info.get('ell'):
             return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
         else:

@@ -45,7 +45,7 @@ def get_degree(degree_string):
 @l_function_page.route("/")
 def l_function_top_page():
     # Don't duplicate the code in app.py
-    return redirect(url_for('l_functions'), 301)
+    return redirect(url_for('l_functions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():

@@ -74,7 +74,7 @@ def by_label(label):
                 bread.append(('$'+family.latex_name+'$', url_for('.by_label',label=slabel[0])))
                 return render_sample_page(family, sam[0], request.args, bread)
     flash_error("No Siegel modular form data for %s was found in the database.", label)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
@@ -85,7 +85,7 @@ def Sp4Z_j_space(k,j):
              (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
     if j%2:
         # redirect to general page for Sp4Z_j which will display an error message
-        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)), 301)
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     info = { 'args':{'k':str(k),'j':str(j)} }
     try:
         if j in [0,2]:
@@ -97,7 +97,7 @@ def Sp4Z_j_space(k,j):
         info['subspace'] = table[k]
     except NotImplementedError:
         # redirect to general page for Sp4Z_j which will display an error message
-        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)), 301)
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
@@ -113,7 +113,7 @@ def Sp4Z_space(k):
 @smf_page.route('/Sp4Z/<int:k>/<orbit>')
 def Sp4Z_form(k,orbit):
     label = 'Sp4Z.%d_%s' % (k,orbit)
-    return redirect(url_for('.by_label',label=label), 301)
+    return redirect(url_for('.by_label',label=label))
 
 @smf_page.route('/Sp4Z_2/<int:k>')
 @smf_page.route('/Sp4Z_2/<int:k>/')
@@ -206,7 +206,7 @@ def render_search_results_page(args, bread):
     if args.get("table"):
         return render_dimension_table_page(args, bread)
     if args.get("lookup"):
-        return redirect(url_for('.by_label',label=args['label']), 301)
+        return redirect(url_for('.by_label',label=args['label']))
     info = { 'args': to_dict(args) }
     query = {}
     try:

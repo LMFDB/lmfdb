@@ -333,7 +333,7 @@ def hgm_jump(info):
     if HGM_FAMILY_LABEL_RE.match(label):
         return redirect(url_for_label(normalize_family(label)), 301)
     flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 def url_for_label(label):
     if label.count("_") == 2:
@@ -551,13 +551,13 @@ def show_slopes(sl):
 @hypergm_page.route("/random_family")
 def random_family():
     label = db.hgm_families.random()
-    return redirect(url_for(".by_family_label", label=label), 307)
+    return redirect(url_for(".by_family_label", label=label))
 
 @hypergm_page.route("/random_motive")
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]), 307)
+    return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
