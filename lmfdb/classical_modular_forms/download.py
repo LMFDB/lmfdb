@@ -219,7 +219,7 @@ class CMF_download(Downloader):
         limit = 1000
         if count > limit:
             flash_error("We limit downloads of traces to %s forms", limit)
-            return redirect(url_for('.index'))
+            return redirect(url_for('.index'), 301)
         if spaces:
             res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
         else:

@@ -120,7 +120,7 @@ def change_colors(scheme):
     userid = current_user.get_id()
     userdb.change_colors(userid, scheme)
     flask.flash(Markup("Color scheme successfully changed"))
-    response = make_response(flask.redirect(url_for(".info")))
+    response = make_response(flask.redirect(url_for(".info"), 301))
     response.set_cookie('color', str(scheme))
     return response
 
@@ -147,7 +147,7 @@ def set_info():
         setattr(current_user, k, v)
     current_user.save()
     flask.flash(Markup("Thank you for updating your details!"))
-    return flask.redirect(url_for(".info"))
+    return flask.redirect(url_for(".info"), 301)
 
 
 @login_page.route("/profile/<userid>")
@@ -176,9 +176,9 @@ def login(**kwargs):
         flask.flash(Markup("Hello %s, your login was successful!" % user.name))
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
         # FIXME add color cookie, see change_colors
-        return flask.redirect(next or url_for(".info"))
+        return flask.redirect(next or url_for(".info"), 301)
     flash_error("Oops! Wrong username or password.")
-    return flask.redirect(url_for(".info"))
+    return flask.redirect(url_for(".info"), 301)
 
 
 def admin_required(fn):
@@ -255,24 +255,24 @@ def register_token(token):
             flash_error("""Oops, usename '%s' is not allowed.
                   It must consist of lower/uppercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", name)
-            return flask.redirect(url_for(".register_new"))
+            return flask.redirect(url_for(".register_new"), 301)
 
         pw1 = request.form['password1']
         pw2 = request.form['password2']
         if pw1 != pw2:
             flash_error("Oops, passwords do not match!")
-            return flask.redirect(url_for(".register_new"))
+            return flask.redirect(url_for(".register_new"), 301)
 
         if len(pw1) < 8:
             flash_error("Oops, password too short. Minimum 8 characters please!")
-            return flask.redirect(url_for(".register_new"))
+            return flask.redirect(url_for(".register_new"), 301)
 
         full_name = request.form['full_name']
         #next = request.form["next"]
 
         if userdb.user_exists(name):
             flash_error("Sorry, user ID '%s' already exists!", name)
-            return flask.redirect(url_for(".register_new"))
+            return flask.redirect(url_for(".register_new"), 301)
 
         newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
         userdb.delete_token(token)
@@ -282,7 +282,7 @@ def register_token(token):
         flask.flash(Markup("Hello %s! Congratulations, you are a new user!" % newuser.name))
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
-        return flask.redirect(url_for(".info"))
+        return flask.redirect(url_for(".info"), 301)
 
 
 @login_page.route("/change_password", methods=['POST'])
@@ -292,17 +292,17 @@ def change_password():
     pw_old = request.form['oldpwd']
     if not current_user.authenticate(pw_old):
         flash_error("Ooops, old password is wrong!")
-        return flask.redirect(url_for(".info"))
+        return flask.redirect(url_for(".info"), 301)
 
     pw1 = request.form['password1']
     pw2 = request.form['password2']
     if pw1 != pw2:
         flash_error("Oops, new passwords do not match!")
-        return flask.redirect(url_for(".info"))
+        return flask.redirect(url_for(".info"), 301)
 
     userdb.change_password(uid, pw1)
     flask.flash(Markup("Your password has been changed."))
-    return flask.redirect(url_for(".info"))
+    return flask.redirect(url_for(".info"), 301)
 
 
 @login_page.route("/logout")
@@ -311,7 +311,7 @@ def logout():
     # FIXME delete color cookie
     logout_user()
     flask.flash(Markup("You are logged out now. Have a nice day!"))
-    return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
+    return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'), 301)
 
 
 @login_page.route("/admin")

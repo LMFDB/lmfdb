@@ -83,9 +83,9 @@ def hilbert_modular_form_by_label(lab):
         lab = res['label']
     if res is None:
         flash_error("No Hilbert modular form in the database has label or name %s", lab)
-        return redirect(url_for(".hilbert_modular_form_render_webpage"))
+        return redirect(url_for(".hilbert_modular_form_render_webpage"), 301)
     else:
-        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
+        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab), 301)
 
 # Learn more box
 
@@ -107,7 +107,7 @@ def hilbert_modular_form_jump(info):
         split_full_label(lab)
         return hilbert_modular_form_by_label(lab)
     except ValueError:
-        return redirect(url_for(".hilbert_modular_form_render_webpage"))
+        return redirect(url_for(".hilbert_modular_form_render_webpage"), 301)
 
 @search_wrap(template="hilbert_modular_form_search.html",
              table=db.hmf_forms,

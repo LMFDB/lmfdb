@@ -323,7 +323,7 @@ def test():
 def edit(ID):
     from psycopg2 import DatabaseError
     if not allowed_id(ID):
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     knowl = Knowl(ID, editing=True)
     for elt in knowl.edit_history:
         # We will be printing these within a javascript ` ` string
@@ -333,7 +333,7 @@ def edit(ID):
     # Existing comments can only be edited by admins and the author
     if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
         flash_error("You can only edit your own comments")
-        return redirect(url_for(".show", ID=knowl.source))
+        return redirect(url_for(".show", ID=knowl.source), 301)
 
     lock = None
     if request.args.get("lock", "") != 'ignore':
@@ -417,7 +417,7 @@ def remove_author(ID):
         flash_error("You cannot remove yourself unless there are other authors")
     else:
         knowldb.remove_author(ID, uid)
-    return redirect(url_for(".show", ID=ID))
+    return redirect(url_for(".show", ID=ID), 301)
 
 @knowledge_page.route("/content/<ID>/<int:timestamp>")
 def content(ID, timestamp):
@@ -473,7 +473,7 @@ def delete(ID):
     k = Knowl(ID)
     k.delete()
     flash(Markup("Knowl %s has been deleted." % ID))
-    return redirect(url_for(".index"))
+    return redirect(url_for(".index"), 301)
 
 
 @knowledge_page.route("/resurrect/<ID>")
@@ -482,7 +482,7 @@ def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
     flash(Markup("Knowl %s has been resurrected." % ID))
-    return redirect(url_for(".show", ID=ID))
+    return redirect(url_for(".show", ID=ID), 301)
 
 @knowledge_page.route("/review/<ID>/<int:timestamp>")
 @knowl_reviewer_required
@@ -491,7 +491,7 @@ def review(ID, timestamp):
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
     flash(Markup("Knowl %s has been positively reviewed." % ID))
-    return redirect(url_for(".show", ID=ID))
+    return redirect(url_for(".show", ID=ID), 301)
 
 @knowledge_page.route("/demote/<ID>/<int:timestamp>")
 @knowl_reviewer_required
@@ -500,7 +500,7 @@ def demote(ID, timestamp):
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
     flash(Markup("Knowl %s has been returned to beta." % ID))
-    return redirect(url_for(".show", ID=ID))
+    return redirect(url_for(".show", ID=ID), 301)
 
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
@@ -563,13 +563,13 @@ def delete_comment(ID):
         comment.delete()
     except ValueError:
         flash_error("Only admins and the original author can delete comments")
-    return redirect(url_for(".show", ID=comment.source))
+    return redirect(url_for(".show", ID=comment.source), 301)
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
     ID = request.form['id']
-    return redirect(url_for(".edit", ID=ID))
+    return redirect(url_for(".edit", ID=ID), 301)
 
 
 @knowledge_page.route("/save", methods=["POST"])
@@ -580,7 +580,7 @@ def save_form():
         raise Exception("no id")
 
     if not allowed_id(ID):
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
 
     FINISH_RENAME = request.form.get('finish_rename', '')
     UNDO_RENAME = request.form.get('undo_rename', '')
@@ -588,12 +588,12 @@ def save_form():
         k = Knowl(ID)
         k.actually_rename()
         flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
-        return redirect(url_for(".show", ID=k.source_name))
+        return redirect(url_for(".show", ID=k.source_name), 301)
     elif UNDO_RENAME:
         k = Knowl(ID)
         k.undo_rename()
         flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
-        return redirect(url_for(".show", ID=ID))
+        return redirect(url_for(".show", ID=ID), 301)
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
@@ -633,9 +633,9 @@ def save_form():
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
     if k.type == -2:
-        return redirect(url_for(".show", ID=k.source))
+        return redirect(url_for(".show", ID=k.source), 301)
     else:
-        return redirect(url_for(".show", ID=ID))
+        return redirect(url_for(".show", ID=ID), 301)
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
