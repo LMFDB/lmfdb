@@ -106,10 +106,10 @@ def render_DirichletNavigation():
             slabel = label.split('.')
             m,n = int(slabel[0]), int(slabel[1])
             if m==n==1 or n < m and gcd(m,n) == 1:
-                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]), 301)
         if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
             slabel = label.split('.')
-            return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
+            return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]), 301)
         if re.match(r'^[1-9][0-9]*$', label):
             return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
 
@@ -236,10 +236,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
         modulus = 0
     if modulus <= 0:
         flash_error("%s is not a valid modulus for a Dirichlet character. It should be a positive integer.", args['modulus'])
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_Dirichletwebpage"), 301)
     if modulus > 10**20:
         flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_Dirichletwebpage"), 301)
 
 
 
@@ -269,7 +269,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
             "coprime to and no greater than the modulus %s, or a letter that "
             "corresponds to a valid orbit index.", args['number'], args['modulus']
         )
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_Dirichletwebpage"), 301)
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
@@ -343,7 +343,7 @@ def random_Dirichletwebpage():
     number = randint(1,modulus-1)
     while gcd(modulus,number) > 1:
         number = randint(1,modulus-1)
-    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)), 301)
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
@@ -446,7 +446,7 @@ def hc_calc(calc, number_field, modulus, number):
 def dirichlet_table():
     args = to_dict(request.args)
     mod = args.get('modulus',1)
-    return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod))
+    return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod), 301)
 
 # FIXME: these group table pages are used by number fields pages.
 # should refactor this into WebDirichlet.py

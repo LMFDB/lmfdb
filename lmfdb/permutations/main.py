@@ -28,7 +28,7 @@ def parse_and_redirect():
     assert request.method == "POST", "request.method is assumed to be POST"
     data = str(request.form.get('data', ''))
     data = data.replace(',', '.')
-    return redirect(url_for(".show", data=data))
+    return redirect(url_for(".show", data=data), 301)
 
 
 @permutations_page.route("/show", methods = ["GET"])
@@ -46,7 +46,7 @@ def show():
     except (TypeError, ValueError):
         logger.info("Impossible to create a permutation from input.")
         flash_error("Ooops, impossible to create a permutation from given input!")
-        return redirect(url_for(".index"))
+        return redirect(url_for(".index"), 301)
     return render_template("permutations.html", permutation=p,
             rankbread=get_bread())
 
