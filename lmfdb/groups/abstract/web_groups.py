@@ -89,8 +89,8 @@ class WebAbstractGroup(WebObj):
             H = subs[lab]
             for spec_lab in H.special_labels:
                 if ser_re.match(spec_lab):
-                    ser.append((H.subgroup, spec_lab)) # returning right thing?
-                    #ser.append(H.label)
+                    #ser.append((H.subgroup, spec_lab)) # returning right thing?
+                    ser.append((H.label, spec_lab)) # returning right thing?
         # sort
         def sort_ser(p, ch):
             return int(((p[1]).split(ch))[1])
