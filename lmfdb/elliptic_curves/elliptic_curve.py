@@ -90,7 +90,7 @@ def rational_elliptic_curves(err_args=None):
     if err_args.get("err_msg"):
         # this comes from elliptic_curve_jump_error
         flash_error(err_args.pop("err_msg"), err_args.pop("label"))
-        return redirect(url_for(".rational_elliptic_curves"), 301)
+        return redirect(url_for(".rational_elliptic_curves"))
     return render_template("ec-index.html",
                            info=info,
                            credit=ec_credit(),
@@ -104,7 +104,7 @@ def rational_elliptic_curves(err_args=None):
 def random_curve():
     label = db.ec_curves.random(projection=1)['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
-    return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num), 301)
+    return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
 @ec_page.route("/curve_of_the_day")
 def todays_curve():
@@ -170,7 +170,7 @@ def elliptic_curve_jump(info):
     m = match_cremona_label(label)
     if m:
         try:
-            return redirect(url_for(".by_ec_label", label=label), 301)
+            return redirect(url_for(".by_ec_label", label=label))
             #return by_ec_label(label)
         except ValueError:
             return elliptic_curve_jump_error(label, info, wellformed_label=True)
@@ -329,9 +329,9 @@ def by_ec_label(label):
     try:
         N, iso, number = split_lmfdb_label(label)
         if number:
-            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number), 301)
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
         else:
-            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso), 301)
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
     except AttributeError:
         ec_logger.debug("%s not a valid lmfdb label, trying cremona")

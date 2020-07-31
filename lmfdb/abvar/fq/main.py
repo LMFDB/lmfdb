@@ -125,7 +125,7 @@ def url_for_label(label):
         validate_label(label)
     except ValueError as err:
         flash_error("%s is not a valid label: %s.", label, str(err))
-        return redirect(url_for(".abelian_varieties"), 301)
+        return redirect(url_for(".abelian_varieties"))
     g, q, iso = split_label(label)
     return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
 
@@ -712,13 +712,13 @@ def dynamic_statistics():
 
 @abvarfq_page.route("/<label>")
 def by_label(label):
-    return redirect(url_for_label(label), 301)
+    return redirect(url_for_label(label))
 
 @abvarfq_page.route("/random")
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso), 307)
+    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():

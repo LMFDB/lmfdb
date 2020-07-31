@@ -78,7 +78,7 @@ def rep_galois_modl_render_webpage():
 @rep_galois_modl_page.route("/random")
 def random_rep_galois_modl():
     label = db.modlgal_reps.random()
-    return redirect(url_for(".render_rep_galois_modl_webpage", label=label), 301)
+    return redirect(url_for(".render_rep_galois_modl_webpage", label=label))
 
 
 rep_galois_modl_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
@@ -93,7 +93,7 @@ def rep_galois_modl_by_label_or_name(lab):
         flash_error("The integral rep_galois_modl %s is not recorded in the database or the label is invalid", lab)
     else:
         flash_error("No integral rep_galois_modl in the database has label or name %s", lab)
-    return redirect(url_for(".rep_galois_modl_render_webpage"), 301)
+    return redirect(url_for(".rep_galois_modl_render_webpage"))
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}

@@ -323,7 +323,7 @@ def belyi_jump(info):
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
             flash_error("%s is not a valid Belyi map or passport label", jump)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 def curve_string_parser(rec):
     if rec['g'] == 0:

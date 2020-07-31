@@ -108,12 +108,12 @@ def lattice_by_label_or_name(lab):
                      {'name': {'$contains': [l]}}]},
                     'label')
         if label is not None:
-            return redirect(url_for(".render_lattice_webpage", label=label), 301)
+            return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
         flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
     else:
         flash_error("No integral lattice in the database has label or name %s", lab)
-    return redirect(url_for(".lattice_render_webpage"), 301)
+    return redirect(url_for(".lattice_render_webpage"))
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
