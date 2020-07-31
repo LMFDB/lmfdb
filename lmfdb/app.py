@@ -20,7 +20,7 @@ LMFDB_VERSION = "LMFDB Release 1.1.1"
 ############################
 
 app = Flask(__name__)
-if gethostname.startswith('prodweb'):
+if gethostname().startswith('prodweb'):
     app.config.update(dict(
       PREFERRED_URL_SCHEME = 'https'
     ))
