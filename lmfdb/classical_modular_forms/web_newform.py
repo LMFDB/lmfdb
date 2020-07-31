@@ -545,6 +545,13 @@ class WebNewform(object):
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
+    def field_poly_display(self):
+        """
+        This function is used to display the polynomial defining the coefficient field.
+        """
+        return web_latex_poly(self.field_poly)
+
+    @property
     def artin_field_display(self):
         """
         For weight 1 forms, displays the Artin field.
