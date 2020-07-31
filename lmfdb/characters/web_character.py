@@ -340,8 +340,12 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def codegauss(self):
-        return { 'sage': 'chi.sage_character().gauss_sum(a)',
-                 'pari': 'znchargauss(g,chi,a)' }
+        return {
+            'sage': [
+                'conreychi.sage_character().gauss_sum(a)',
+                'chi.gauss_sum(a)'
+            ],
+            'pari': 'znchargauss(g,chi,a)' }
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
@@ -363,7 +367,11 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def codejacobi(self):
-        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
+        return { 'sage': [
+            'conreychi.sage_character().jacobi_sum(n)'
+            'chi.jacobi_sum(n)'
+            ]
+        }
 
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
@@ -387,7 +395,11 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def codekloosterman(self):
-        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
+        return { 'sage': [
+            'conreychi.sage_character().kloosterman_sum(a,b)' ,
+            'chi.kloosterman_sum(a,b)' 
+            ]
+        }
 
     def value(self, val):
         val = int(val)
@@ -939,6 +951,7 @@ class WebDBDirichlet(WebDirichlet):
         else:
             gens = [int(g) for g, v in valuepairs]
             vals = [int(v) for g, v in valuepairs]
+            self._genvalues_for_code = vals
             self.generators = self.textuple([str(g) for g in gens])
             self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
@@ -1204,11 +1217,25 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @lazy_attribute
     def codeinit(self):
         return {
-          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
-                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
-                 'chi = H[%i]'%(self.number) ],
-          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
-          }
+            'sage': [
+                '# Generated using nonstandard Sage package available',
+                '# at https://github.com/jwbober/conrey-dirichlet-characters',
+                'from dirichlet_conrey import DirichletGroup_conrey',
+                'H = DirichletGroup_conrey({})'.format(self.modulus),
+                'conreychi = H[{}]'.format(self.number),
+                '',
+                '# The same character without this package is',
+                'from sage.modular.dirichlet import DirichletCharacter',
+                'H = DirichletGroup({})'.format(self.modulus),
+                'M = H._module',
+                'chi = DirichletCharacter(H, M([{}]))'.format(
+                    ','.join(str(val) for val in self._genvalues_for_code)
+                ),
+                '# The code below works with both `chi` and `conreychi`, except',
+                '# where commands are given for each separately.'
+            ],
+            'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number, self.modulus),
+        }
 
     @lazy_attribute
     def codeisprimitive(self):
@@ -1236,10 +1263,16 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def codegaloisorbit(self):
-        return { 'sage': 'chi.sage_character().galois_orbit()',
-                 'pari': [ 'order = charorder(g,chi)',
-                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
-                 }
+        return {
+            'sage': [
+                'conreychi.sage_character().galois_orbit()',
+                'chi.galois_orbit()',
+            ],
+            'pari': [
+                'order = charorder(g,chi)',
+                '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
+            ]
+        }
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
@@ -1386,7 +1419,8 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @lazy_attribute
     def codegaloisorbit(self):
-        return { 'sage': 'chi.sage_character().galois_orbit()',
+        return { 'sage': ['conreychi.sage_character().galois_orbit()'
+                          'chi.galois_orbit()' ],
                  'pari': [ 'order = charorder(g,chi)',
                            '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
