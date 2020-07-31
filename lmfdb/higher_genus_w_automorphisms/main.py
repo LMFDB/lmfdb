@@ -187,7 +187,7 @@ def index():
 @higher_genus_w_automorphisms_page.route("/random")
 def random_passport():
     label = db.hgcwa_passports.random(projection='passport_label')
-    return redirect(url_for(".by_passport_label", passport_label=label), 301)
+    return redirect(url_for(".by_passport_label", passport_label=label))
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
@@ -248,7 +248,7 @@ def by_label(label):
     elif label_is_one_family(label):
         return render_family({'label': label})
     flash_error("No family with label %s was found in the database.", label)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 
 @higher_genus_w_automorphisms_page.route("/<passport_label>")
@@ -394,7 +394,7 @@ def higher_genus_w_automorphisms_jump(info):
     elif label_is_one_family(labs):
         return render_family({'label': labs})
     flash_error("The label %s is not a legitimate label for this data.", labs)
-    return redirect(url_for(".index"), 301)
+    return redirect(url_for(".index"))
 
 
 def hgcwa_code_download_search(info):
@@ -649,7 +649,7 @@ def render_family(args):
         dataz = list(db.hgcwa_passports.search({'label':label}))
         if not dataz:
             flash_error("No family with label %s was found in the database.", label)
-            return redirect(url_for(".index"), 301)
+            return redirect(url_for(".index"))
         data = dataz[0]
         g = data['genus']
         g0 = data['g0']
@@ -756,7 +756,7 @@ def render_passport(args):
         if not dataz:
             bread = get_bread([("Search Error", url_for('.index'))])
             flash_error("No refined passport with label %s was found in the database.", label)
-            return redirect(url_for(".index"), 301)
+            return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
         g0=data['g0']

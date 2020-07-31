@@ -27,7 +27,7 @@ def index():
 @motive_page.route("/Hypergeometric")
 @motive_page.route("/Hypergeometric/")
 def index2():
-    return redirect(url_for("hypergm.index", **request.args), 301)
+    return redirect(url_for("hypergm.index", **request.args))
 
     # For later when we have other hypergeometric motives
     #bread = get_bread([('Hypergeometric', url_for('.index2'))])
