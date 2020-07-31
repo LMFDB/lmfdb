@@ -60,7 +60,7 @@ class WebAbstractGroup(WebObj):
         for lab in subs:
             sp_labels = (subs[lab]).special_labels
             if search_lab in sp_labels:
-                return lab
+                return lab # is label what we want to return
                 #H = subs['lab']
                 #return group_names_pretty(H.subgroup)
 
@@ -75,6 +75,44 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def socle(self):
         return self.special_search('S')
+
+    # series
+    def sort_ser(p, sp):
+        return int(((p[1]).split(sp))[1])
+
+    # TODO: fix this
+    # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
+    def series_search(self, sp):
+        ser_str = r"\^%s.%s\d+" % (self.label, sp)
+        ser_re = re.compile(ser_str)
+        subs = self.subgroups
+        ser = []
+        for lab in subs:
+            H = subs[lab]
+            for spec_lab in H.special_labels:
+                if ser_re.match(spec_lab):
+                    ser.append((H.subgroup, spc_lab)) # not returning right thing...
+                    #ser.append(H.label)
+        # sort
+        def sort_ser_sp(p):
+            return sort_ser(p, sp)
+        return [el[0] for el in sorted(ser, key = sort_ser_sp)]
+
+    @lazy_attribute
+    def chief_series(self):
+        return self.series_search('C')
+
+    @lazy_attribute
+    def derived_series(self):
+        return self.series_search('D')
+
+    @lazy_attribute
+    def lower_central_series(self):
+        return self.series_search('L')
+
+    @lazy_attribute
+    def upper_central_series(self):
+        return self.series_search('U')
 
     @lazy_attribute
     def conjugacy_classes(self):
