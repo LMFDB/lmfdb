@@ -64,23 +64,24 @@ class WebAbstractGroup(WebObj):
                 #H = subs['lab']
                 #return group_names_pretty(H.subgroup)
 
+    @lazy_attribute
     def fitting(self):
         return self.special_search('F')
 
+    @lazy_attribute
     def radical(self):
         return self.special_search('R')
 
+    @lazy_attribute
     def socle(self):
         return self.special_search('S')
 
     # series
-    def sort_ser(p, sp):
-        return int(((p[1]).split(sp))[1])
 
     # TODO: fix this
     # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
     def series_search(self, sp):
-        ser_str = r"\^%s.%s\d+" % (self.label, sp)
+        ser_str = r"^%s.%s\d+" % (self.label, sp)
         ser_re = re.compile(ser_str)
         subs = self.subgroups
         ser = []
@@ -88,22 +89,28 @@ class WebAbstractGroup(WebObj):
             H = subs[lab]
             for spec_lab in H.special_labels:
                 if ser_re.match(spec_lab):
-                    ser.append((H.subgroup, spc_lab)) # not returning right thing...
+                    ser.append((H.subgroup, spec_lab)) # returning right thing?
                     #ser.append(H.label)
         # sort
+        def sort_ser(p, ch):
+            return int(((p[1]).split(ch))[1])
         def sort_ser_sp(p):
             return sort_ser(p, sp)
         return [el[0] for el in sorted(ser, key = sort_ser_sp)]
 
+    @lazy_attribute
     def chief_series(self):
         return self.series_search('C')
 
+    @lazy_attribute
     def derived_series(self):
         return self.series_search('D')
 
+    @lazy_attribute
     def lower_central_series(self):
         return self.series_search('L')
 
+    @lazy_attribute
     def upper_central_series(self):
         return self.series_search('U')
 
@@ -205,12 +212,12 @@ class WebAbstractGroup(WebObj):
 
     # TODO: update this to use series_search
     def series(self):
-        data = [['group.%s'%name,
-                 name.replace('_',' ').capitalize(),
-                 [self.subgroups[i] for i in getattr(self, name)],
-                 "-".join(map(str, getattr(self, name))),
+        data = [['group.%s'%ser,
+                 ser.replace('_',' ').capitalize(),
+                 [self.subgroups[i] for i in getattr(self, ser)],
+                 "-".join(map(str, getattr(self, ser))),
                  r'\rhd']
-                for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
+                for ser in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
         data[3][4] = r'\lhd'
         data[3][2].reverse()
         return data
