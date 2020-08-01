@@ -281,6 +281,8 @@ class WebAbstractGroup(WebObj):
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
+    # TODO: fix this. something weird happening to relators---something going wrong with the replace below
+    # see page for 32.30 for example
     def presentation(self):
         if self.elt_rep_type == 0:
             relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
