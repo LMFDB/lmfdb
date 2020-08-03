@@ -193,8 +193,6 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def generators(self):
-        #import pdb; pdb.set_trace()
-        #assert self.H.gens() is not None
         return self.textuple([str(k) for k in self.H.gens()])
 
     """ for Dirichlet over Z, everything is described using integers """
@@ -341,10 +339,7 @@ class WebDirichlet(WebCharObject):
     @lazy_attribute
     def codegauss(self):
         return {
-            'sage': [
-                'conreychi.sage_character().gauss_sum(a)',
-                'chi.gauss_sum(a)'
-            ],
+            'sage': ['chi.gauss_sum(a)'],
             'pari': 'znchargauss(g,chi,a)' }
 
     def jacobi_sum(self, val):
@@ -367,10 +362,7 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def codejacobi(self):
-        return { 'sage': [
-            'conreychi.sage_character().jacobi_sum(n)'
-            'chi.jacobi_sum(n)'
-            ]
+        return { 'sage': ['chi.jacobi_sum(n)']
         }
 
     def kloosterman_sum(self, arg):
@@ -395,15 +387,11 @@ class WebDirichlet(WebCharObject):
 
     @lazy_attribute
     def codekloosterman(self):
-        return { 'sage': [
-            'conreychi.sage_character().kloosterman_sum(a,b)' ,
-            'chi.kloosterman_sum(a,b)' 
-            ]
-        }
+        return { 'sage': ['chi.kloosterman_sum(a,b)']}
 
     def value(self, val):
         val = int(val)
-        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
+        chartex = self.char2tex(self.modulus, self.number, val=val, tag=False)
         # FIXME: bug in dirichlet_conrey logvalue
         if gcd(val, self.modulus) == 1:
             val = self.texlogvalue(self.chi.logvalue(val))
@@ -1218,21 +1206,11 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def codeinit(self):
         return {
             'sage': [
-                '# Generated using nonstandard Sage package available',
-                '# at https://github.com/jwbober/conrey-dirichlet-characters',
-                'from dirichlet_conrey import DirichletGroup_conrey',
-                'H = DirichletGroup_conrey({})'.format(self.modulus),
-                'conreychi = H[{}]'.format(self.number),
-                '',
-                '# The same character without this package is',
-                'from sage.modular.dirichlet import DirichletCharacter',
                 'H = DirichletGroup({})'.format(self.modulus),
                 'M = H._module',
                 'chi = DirichletCharacter(H, M([{}]))'.format(
                     ','.join(str(val) for val in self._genvalues_for_code)
                 ),
-                '# The code below works with both `chi` and `conreychi`, except',
-                '# where commands are given for each separately.'
             ],
             'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number, self.modulus),
         }
@@ -1264,10 +1242,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @lazy_attribute
     def codegaloisorbit(self):
         return {
-            'sage': [
-                'conreychi.sage_character().galois_orbit()',
-                'chi.galois_orbit()',
-            ],
+            'sage': ['chi.galois_orbit()'],
             'pari': [
                 'order = charorder(g,chi)',
                 '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
@@ -1419,8 +1394,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @lazy_attribute
     def codegaloisorbit(self):
-        return { 'sage': ['conreychi.sage_character().galois_orbit()'
-                          'chi.galois_orbit()' ],
+        return { 'sage': ['chi.galois_orbit()'],
                  'pari': [ 'order = charorder(g,chi)',
                            '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
