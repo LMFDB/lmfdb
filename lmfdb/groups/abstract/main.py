@@ -101,7 +101,7 @@ def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        return group_search(request.args)
+        return group_search(info)
     info['count']= 50
     info['order_list']= ['1-10', '20-100', '101-200']
     info['nilp_list']= range(1,5)
