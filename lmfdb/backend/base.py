@@ -17,12 +17,9 @@ from psycopg2 import (
 )
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from sage.cpython.string import bytes_to_str
 
 from .encoding import Json
-from lmfdb.utils import reraise
-from lmfdb.logger import make_logger
-from .utils import DelayCommit, QueryLogFilter
+from .utils import reraise, DelayCommit, QueryLogFilter
 
 
 # This list is used when creating new tables
@@ -216,16 +213,21 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
-        from lmfdb.utils.config import Configuration
 
-        logging_options = Configuration().get_logging()
+        logging_options = db.config.options["logging"]
         self.slow_cutoff = logging_options["slowcutoff"]
-        handler = logging.FileHandler(logging_options["slowlogfile"])
+        self.logger = l = logging.getLogger(loggername)
+        l.propogate = False
+        l.setLevel(logging.INFO)
+        fhandler = logging.FileHandler(logging_options["slowlogfile"])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
-        handler.setFormatter(formatter)
-        handler.addFilter(filt)
-        self.logger = make_logger(loggername, hl=False, extraHandlers=[handler])
+        fhandler.setFormatter(formatter)
+        fhandler.addFilter(filt)
+        l.addHandler(fhandler)
+        shandler = logging.StreamHandler()
+        shandler.setFormatter(formatter)
+        l.addHandler(shandler)
 
     def _execute(
             self,
@@ -325,7 +327,7 @@ class PostgresBase(object):
                     else:
                         query = query.as_string(self.conn)
                     if isinstance(query, bytes): # PY3 compatibility
-                        query = bytes_to_str(query)
+                        query = query.decode("utf-8")
                     self.logger.info(query + " ran in \033[91m {0!s}s \033[0m".format(t))
                     if slow_note is not None:
                         self.logger.info(
@@ -1004,7 +1006,7 @@ class PostgresBase(object):
             except ValueError:
                 logging.warning(
                     "{} of {} with name {}".format(kind, tablename, name)
-                    + " uses a restricted suffix. ".format(source)
+                    + " uses a restricted suffix. "
                     + "The name will be extended with a _ in the swap"
                 )
                 target_name = original_name + "_" + target

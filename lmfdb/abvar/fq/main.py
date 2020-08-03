@@ -561,20 +561,26 @@ def jump(info):
         if deg % 2 == 1:
             raise ValueError("Polynomial degree must be even")
         g = deg//2
-        lead = cdict.get(deg)
+        lead = cdict[deg]
         if lead == 1: # accept monic normalization
+            lead = cdict[0]
             cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
-        if cdict[0] != 1:
+        if cdict.get(0) != 1:
             raise ValueError("Polynomial must have constant or leading coefficient 1")
-        q = cdict[deg].nth_root(g)
-        for i in range(1, g):
-            if cdict[2*g-i] != q**i * cdict[i]:
-                raise ValueError("Polynomial must be a Weil polynomial")
+        try:
+            q = lead.nth_root(g)
+            if not ZZ(q).is_prime_power():
+                raise ValueError
+            for i in range(1, g):
+                if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
+                    raise ValueError
+        except ValueError:
+            raise ValueError("Polynomial must be a Weil polynomial")
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
-        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i)) for i in range(1, g+1)))
+        jump_box = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
     return by_label(jump_box)
 
 @search_wrap(
@@ -588,6 +594,7 @@ def jump(info):
     },
     postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
     url_for_label=url_for_label,
+    learnmore=learnmore_list,
     bread=lambda: get_bread(("Search Results", " ")),
     credit=lambda: abvarfq_credit,
 )
@@ -611,6 +618,7 @@ def abelian_variety_count(info, query):
 
     def url_generator(g, q):
         info_copy = dict(urlgen_info)
+        info_copy.pop("search_array", None)
         info_copy["search_type"] = "List"
         info_copy["g"] = g
         info_copy["q"] = q
@@ -673,6 +681,7 @@ def search_input_error(info=None, bread=None):
         info=info,
         title="Abelian Variety Search Input Error",
         bread=bread,
+        learnmore=learnmore_list()
     )
 
 @abvarfq_page.route("/stats")

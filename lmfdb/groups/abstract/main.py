@@ -17,7 +17,7 @@ from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
     group_pretty_image)
 
-credit_string = "Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, and Andrew Sutherland"
+credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
@@ -197,7 +197,7 @@ def render_abstract_group(args):
 
         # prepare for javascript call to make the diagram
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
@@ -208,6 +208,8 @@ def render_abstract_group(args):
         info['dojs'] += ',' + str(xcoords)
         info['dojs'] += ');'
         #print info['dojs']
+        totsubs = len(gp.subgroups)
+        info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
 
 
         factored_order = web_latex(gp.order_factor(),False)
@@ -247,9 +249,9 @@ def shortsubinfo(label):
         h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
         prop = make_knowl(title, knowlid)
         return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.counter, h.subgroup_tex)
+            prop, h.spanclass(), h.label, h.subgroup_tex)
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
+    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
     ans += '<tr><td>%s <td> %s\n' % (
         make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)

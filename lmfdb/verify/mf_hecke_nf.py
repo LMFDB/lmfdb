@@ -1,7 +1,7 @@
 from __future__ import print_function
 from sage.all import prime_pi, mod, euler_phi, prime_range
 
-from lmfdb.backend import db, SQL
+from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker
 from .verification import overall, slow, integer_types
 

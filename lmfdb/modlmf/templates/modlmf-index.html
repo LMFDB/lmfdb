@@ -108,7 +108,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 <table id="a_n">
 <tr>
-<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of <i>q<sup>n</sup></i> for <i>n=</i><input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finite_fields.structure', title='element of <i><span style="text-decoration: overline"> &#120125;</span><sub>&#x2113;</sub></i>')}} 
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of <i>q<sup>n</sup></i> for <i>n=</i><input type='text' name='index_coeff' size=5 placeholder=5> is <input type='text' name='req_coeff' size='3' placeholder=3 ></td><td> as an {{KNOWL('finite_fields.structure', title='element of <i><span style="text-decoration: overline"> &#120125;</span><sub>&#x2113;</sub></i>')}} 
 </td><td>
   <button type='button' id='more_modp_button'>more</button>
 </td>
@@ -139,7 +139,7 @@ var table = tbody.length ? tbody : $('#a_n');
 
 $('#more_modp_button').click(function(){
     //Add row
-    table.append("<tr><td align='right'><i>n=</i><input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size=3 example=3></td><td><button type='button' value='Delete Row' onclick='deleteRow(this)'>less</button></td></tr>");
+    table.append("<tr><td align='right'><i>n=</i><input type='text' name='index_coeff' size=5 placeholder=5> is <input type='text' name='req_coeff' size=3 placeholder=3></td><td><button type='button' value='Delete Row' onclick='deleteRow(this)'>less</button></td></tr>");
     return false;
 })
 

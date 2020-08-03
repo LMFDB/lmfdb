@@ -56,7 +56,6 @@ Graph = class {
 			this.nodeSet[key] = node;
 			this.nodes.push(node);
 			options['raw'] = value[2];
-			//options['display'] = this.typeset(value[2], 'math'+value[1]);
             node.label = value[0];
             node.ccsize = value[3];
             node.level = orders.indexOf(value[4]);
@@ -249,8 +248,7 @@ class Renderer {
 		var target = edge.target.center;
 
 		var tan = (target[1] - source[1]) / (target[0] - source[0]);
-        var extra = Math.abs(tan)< 0.7 ? 8 : 0;
-        extra = -4;
+        var extra = Math.abs(tan)< 0.7 ? 4 : -4;
 		var theta = Math.atan(tan);
 		if(source[0] <= target[0]) {theta = Math.PI+theta}
         var img = edge.source.image
@@ -758,11 +756,13 @@ function clearsubinfo() {
 
 /* Make ourg a global variable */
 var ourg;
+var ambientlabel;
 
 function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
   g = new Graph(ambient);
   g.addNodes(nodes, orders,xcoords);
   ourg = g;
+  ambientlabel=ambient;
 
   for(var j=0, edge; edge=edges[j]; j++) {
     g.addEdge(edge[0],edge[1]);
@@ -786,9 +786,14 @@ function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
 }
 
 function getpositions() {
-  var mylist="[";
+  var mylist="[\""+ambientlabel+"\",[";
   for (var i = 0; i < ourg.nodes.length; i++) {
-    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"],"
+    mylist +=  i>0 ? ',' : '';
+    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"]";
   }
+  mylist += "]]";
+  var mydiv = document.getElementById("positions");
+  mydiv.innerHTML = mylist;
+  
   return mylist;
 }

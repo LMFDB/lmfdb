@@ -51,16 +51,77 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroups(self):
         # Should join with gps_groups to get pretty names for subgroup and quotient
-        return {subdata['counter']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+        return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+
+    # special subgroups
+    def special_search(self, sp):
+        search_lab = '%s.%s' % (self.label, sp)
+        subs = self.subgroups
+        for lab in subs:
+            sp_labels = (subs[lab]).special_labels
+            if search_lab in sp_labels:
+                return lab # is label what we want to return?
+                #H = subs['lab']
+                #return group_names_pretty(H.subgroup)
+
+    @lazy_attribute
+    def fitting(self):
+        return self.special_search('F')
+
+    @lazy_attribute
+    def radical(self):
+        return self.special_search('R')
+
+    @lazy_attribute
+    def socle(self):
+        return self.special_search('S')
+
+    # series
+
+    # TODO: fix this
+    # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
+    def series_search(self, sp):
+        ser_str = r"^%s.%s\d+" % (self.label, sp)
+        ser_re = re.compile(ser_str)
+        subs = self.subgroups
+        ser = []
+        for lab in subs:
+            H = subs[lab]
+            for spec_lab in H.special_labels:
+                if ser_re.match(spec_lab):
+                    #ser.append((H.subgroup, spec_lab)) # returning right thing?
+                    ser.append((H.label, spec_lab)) # returning right thing?
+        # sort
+        def sort_ser(p, ch):
+            return int(((p[1]).split(ch))[1])
+        def sort_ser_sp(p):
+            return sort_ser(p, sp)
+        return [el[0] for el in sorted(ser, key = sort_ser_sp)]
+
+    @lazy_attribute
+    def chief_series(self):
+        return self.series_search('C')
+
+    @lazy_attribute
+    def derived_series(self):
+        return self.series_search('D')
+
+    @lazy_attribute
+    def lower_central_series(self):
+        return self.series_search('L')
+
+    @lazy_attribute
+    def upper_central_series(self):
+        return self.series_search('U')
 
     @lazy_attribute
     def conjugacy_classes(self):
-        return {ccdata['counter']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
+        return {ccdata['label']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
 
     @lazy_attribute
     def characters(self):
         # Should join with creps once we have images and join queries
-        return {chardata['counter']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
+        return {chardata['label']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
 
     @lazy_attribute
     def maximal_subgroup_of(self):
@@ -96,7 +157,7 @@ class WebAbstractGroup(WebObj):
     def subgroup_layers(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
-        top = max(sub.counter for sub in subs.values())
+        top = max(sub.label for sub in subs.values())
         layers = [[subs[top]]]
         seen = set([top])
         added_something = True # prevent data error from causing infinite loop
@@ -130,9 +191,9 @@ class WebAbstractGroup(WebObj):
         for sub in subs.values():
             layers[sub.subgroup_order].append(sub)
             for k in sub.contained_in:
-                edges.append([k, sub.counter])
+                edges.append([k, sub.label])
         llayers = [layers[k] for k in sorted(layers.keys())]
-        llayers = [[[gp.counter, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
+        llayers = [[[gp.label, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
         return [llayers, edges]
 
     def sylow_subgroups(self):
@@ -144,18 +205,19 @@ class WebAbstractGroup(WebObj):
             if sub.sylow > 0:
                 syl_dict[sub.sylow] = sub
         syl_list = []
-        for p, e in self.factored_order:
+        for p, e in factor(self.order):
             if p in syl_dict:
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
+    # TODO: update this to use series_search
     def series(self):
-        data = [['group.%s'%name,
-                 name.replace('_',' ').capitalize(),
-                 [self.subgroups[i] for i in getattr(self, name)],
-                 "-".join(map(str, getattr(self, name))),
+        data = [['group.%s'%ser,
+                 ser.replace('_',' ').capitalize(),
+                 [self.subgroups[i] for i in getattr(self, ser)],
+                 "-".join(map(str, getattr(self, ser))),
                  r'\rhd']
-                for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
+                for ser in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
         data[3][4] = r'\lhd'
         data[3][2].reverse()
         return data
@@ -219,6 +281,8 @@ class WebAbstractGroup(WebObj):
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
+    # TODO: fix this. something weird happening to relators---something going wrong with the replace below
+    # see page for 32.30 for example
     def presentation(self):
         if self.elt_rep_type == 0:
             relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
@@ -294,6 +358,7 @@ class WebAbstractGroup(WebObj):
 
     def show_frattini_quotient(self):
         return group_names_pretty(self.frattini_quotient)
+
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
