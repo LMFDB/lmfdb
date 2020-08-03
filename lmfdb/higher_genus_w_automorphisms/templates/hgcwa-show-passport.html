@@ -8,7 +8,7 @@
 
   <table>
     <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
-     <tr><td>  {{KNOWL('ag.curve.genus',title='Quotient Genus')}}:  </td><td> {{ info.g0 }} </td></tr>
+     <tr><td>  {{KNOWL('ag.curve.genus',title='Quotient genus')}}:  </td><td> {{ info.g0 }} </td></tr>
    {% if info.specialname %}
    <tr><td>{{KNOWL('group.small_group_label',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
@@ -64,7 +64,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 
-<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
+<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating vector(s)')}}</h2>
 
 
 {% if info.numb == 1 %}
@@ -112,9 +112,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
   {% else %} <!-- info.braid_numb != 0 -->
     <div class="tab">
-      <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen"> Vectors up to Braid Equivalence</button>    
+      <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen"> Vectors up to braid equivalence</button>    
       <button type="submit" class="tablinks" onclick="openData(event, 'all')">
-        All Vectors</button> 
+        All vectors</button> 
     </div>
 
     <div id="all" class="tabcontent">

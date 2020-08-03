@@ -70,9 +70,9 @@ function updateStatus(newStatus, info){
 
 {% block title_block %}
   {% if db_name is none: %}
-    Available Databases
+    Available databases
   {% else: %}
-    Available  Collections in <span name='nicename'>{{nice_name}}</span> [{{db_name}}]
+    Available collections in <span name='nicename'>{{nice_name}}</span> [{{db_name}}]
   {% endif %}
 {% endblock title_block %}
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This Blueprint is about Higher Genus Curves
+# This Blueprint is about higher genus curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Nhi Ngo, Albert Ford
 # (initial code copied from John Jones Local Fields)
 
@@ -63,7 +63,7 @@ credit = 'Jen Paulhus, using group and signature data originally computed by Tho
 
 
 def get_bread(breads=[]):
-    bc = [("Higher Genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
+    bc = [("Higher genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -136,7 +136,7 @@ def label_to_breadcrumbs(L):
             newsig += ","
         elif (L[i] == '.'):
             newsig += ';'
-        elif (L[i] == '0'):  # The case where there is no ramification gives a 0 in signature
+        elif (L[i] == '0' and L[i-1] == '.'):  # The case where there is no ramification gives a 0 in signature
             newsig += '-'
         else:
             newsig += L[i]
@@ -177,7 +177,7 @@ def index():
     info['stats'] = HGCWAstats().stats()
 
     return render_template("hgcwa-index.html",
-                           title="Families of Higher Genus Curves with Automorphisms",
+                           title="Families of higher genus curves with automorphisms",
                            bread=bread,
                            credit=credit,
                            info=info,
@@ -194,7 +194,7 @@ def statistics():
     info = {
         'stats': HGCWAstats().stats(),
     }
-    title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
+    title = 'Families of higher genus curves with automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
    
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
@@ -222,11 +222,11 @@ def groups_per_genus(genus):
         'iso_classes': iso_classes
     }
 
-    title = ('Families of Higher Genus Curves with Automorphisms: Genus ' +
+    title = ('Families of higher genus curves with automorphisms: Genus ' +
              genus +
-             ' Group Statistics')
+             ' group statistics')
     bread = get_bread([('Statistics', url_for('.statistics')),
-                       ('Groups per Genus', url_for('.statistics')),
+                       ('Groups per genus', url_for('.statistics')),
                        (str(genus), ' ')])
        
     return render_template("hgcwa-stats-groups-per-genus.html",
@@ -574,15 +574,15 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
 
 @search_wrap(template="hgcwa-search.html",
         table=db.hgcwa_passports,
-        title='Families of Higher Genus Curves with Automorphisms Search Results',
-        err_title='Families of Higher Genus Curve Search Input Error',
+        title='Family of higher genus curves with automorphisms search results',
+        err_title='Family of higher genus curves with automorphisms search input error',
         per_page=50,
         url_for_label=url_for_label,
         random_projection="passport_label",
         shortcuts={'jump': higher_genus_w_automorphisms_jump,
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
-        bread=lambda: get_bread([("Search Results",'')]),
+        bread=lambda: get_bread([("Search results",'')]),
         learnmore=learnmore_list,     
         credit=lambda: credit)
 def higher_genus_w_automorphisms_search(info, query):
@@ -664,12 +664,12 @@ def render_family(args):
             spname = False
         else:
             spname = True
-        title = 'Family of Genus ' + str(g) + ' Curves with Automorphism Group $' + pretty_group +'$'
+        title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) + "]"
 
         prop2 = [
             ('Genus', r'\(%d\)' % g),
-             ('Quotient Genus', r'\(%d\)' % g0),
+             ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -784,12 +784,12 @@ def render_passport(args):
         info['numgenvecs']=numgenvecs
         info['numbraidreps']=numbraidreps
 
-        title = 'One Refined Passport of Genus ' + str(g) + ' with Automorphism Group $' + pretty_group +'$'
+        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
             ('Genus', r'\(%d\)' % g),
-            ('Quotient Genus', r'\(%d\)' % g0),
+            ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
             ('Generating Vectors', r'\(%d\)' % numb)
@@ -1005,13 +1005,13 @@ def topological_action(fam, cc):
 
 
 def search_input_error(info, bread):
-    return render_template("hgcwa-search.html", info=info, title='Families of Higher Genus Curve Search Input Error', learnmore=learnmore_list(),bread=bread, credit=credit)
+    return render_template("hgcwa-search.html", info=info, title='Family of higher genus curves with automorphisms search input error', learnmore=learnmore_list(),bread=bread, credit=credit)
 
 
 
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Automorphisms of Curves Data'
+    t = 'Completeness of higher genus curve with automorphisms data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
                            title=t,
@@ -1022,7 +1022,7 @@ def completeness_page():
 
 @higher_genus_w_automorphisms_page.route("/Labels")
 def labels_page():
-    t = 'Label Scheme for the Data'
+    t = 'Labels for higher genus curves with automorphisms'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
                            learnmore=learnmore_list_remove('Label'),
@@ -1033,7 +1033,7 @@ def labels_page():
 
 @higher_genus_w_automorphisms_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the Automorphisms of Curve Data'
+    t = 'Reliability of higher genus curve with automorphisms data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.reliability',
@@ -1045,7 +1045,7 @@ def reliability_page():
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Automorphisms of Curve Data'
+    t = 'Source of higher genus curve with automorphisms data'
     bread = get_bread([("Source", '')])
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.source',

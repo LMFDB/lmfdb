@@ -275,7 +275,7 @@ def modules2string(n, t, modlist):
 @cached_function
 def nf_display_knowl(label, name=None):
     if not name:
-        name = "Global Number Field %s" % label
+        name = "Global number field %s" % label
     return '<a title = "%s [nf.field.data]" knowl="nf.field.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
 def nf_knowl_guts(label):

@@ -60,7 +60,7 @@
 3ModForm:
    type: multilevel
    heading:
-      title: Modular Forms
+      title: Modular forms
       url_for: "modular_forms"
    parts:
      - title: GL(2)
@@ -69,7 +69,7 @@
          - title: Classical
            url_for: "cmf.index"
          - title: Maass
-           url_for: "mwf.render_maass_waveforms"
+           url_for: "maass.index"
          - title: Hilbert
            url_for: "hmf.hilbert_modular_form_render_webpage"
          - title: Bianchi
@@ -181,7 +181,7 @@
      - title: ""
        style: rotate
        part2:
-         - title: "Abelian Varieties:"
+         - title: "Abelian varieties:"
            part3:
               - title: $/\F_{q}$
                 url_for: "abvarfq.abelian_varieties"
@@ -213,7 +213,7 @@
     - title: "Characters:"
       status: beta
       part2:
-         - title: Dirichlet Characters
+         - title: Dirichlet characters
            url_for:  "characters.render_Dirichletwebpage"
            status: notonbeta
          - title: Dirichlet

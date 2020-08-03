@@ -3,10 +3,9 @@
 # See templates/space.html for how functions are called
 
 from lmfdb import db
-from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder, make_bigint
+from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder, make_bigint, web_latex_factored_integer
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -24,7 +23,7 @@ def get_bread(**kwds):
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
              ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
-    bread = [('Modular Forms', url_for('modular_forms')),
+    bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
         return bread + [(kwds['other'], ' ')]
@@ -294,10 +293,7 @@ class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
-        if self.level == 1 or ZZ(self.level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
         self.num_forms = data.get('num_forms')
@@ -343,7 +339,7 @@ class WebNewformSpace(object):
 
         if self.conrey_indexes[0] == 1:
             self.trivial_character = True
-            character_str = "Trivial Character"
+            character_str = "Trivial character"
             if self.dim == 0:
                 self.dim_str = r"\(%s\)"%(self.dim)
             else:
@@ -354,7 +350,7 @@ class WebNewformSpace(object):
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of Modular Forms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
+        self.title = r"Space of modular forms of level %s, weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
         self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
@@ -449,10 +445,7 @@ class WebGamma1Space(object):
             raise ValueError("Space not in database")
         self.__dict__.update(data)
         self.weight_parity = -1 if (self.weight % 2) == 1 else 1
-        if level == 1 or ZZ(level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(level).factor()._latex_()
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
         self.num_forms = data.get('num_forms')
@@ -502,7 +495,7 @@ class WebGamma1Space(object):
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
             ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
         ]
-        self.title = r"Space of Modular Forms of Level %s and Weight %s"%(self.level, self.weight)
+        self.title = r"Space of modular forms of level %s and weight %s"%(self.level, self.weight)
         self.friends = []
 
     @staticmethod
