@@ -7,11 +7,12 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl,
+    flash_error, to_dict, 
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
-
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
@@ -48,12 +49,12 @@ def create_boolean_string(gp):
     if gp.abelian:
         strng = display_knowl('group.abelian','Abelian')
         if gp.cyclic:
-            strng += ", Cyclic"
+            strng += "," + display_knowl('group.cyclic', "Cyclic")
     else:
         strng = display_knowl('group.abelian', "non-Abelian")
 
     if gp.solvable:
-        strng += ", "+  display_knowl('group.solvable', "Solvable")
+        strng += ", " +  display_knowl('group.solvable', "Solvable")
         if gp.supersolvable:
             strng += ", " + display_knowl('group.supersolvable', "Supersolvable")
     else:
@@ -98,12 +99,12 @@ def create_boolean_string(gp):
 @abstract_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        return group_search(request.args)
-    info = {'count': 50,
-            'order_list': ['1-10', '20-100', '101-200'],
-            'nilp_list': range(1,5)
-            }
+        return group_search(info)
+    info['count']= 50
+    info['order_list']= ['1-10', '20-100', '101-200']
+    info['nilp_list']= range(1,5)
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -317,5 +318,74 @@ def how_computed_page():
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
+
+
+
+class GroupsSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    jump_example = "[8,3]"
+    jump_egspan = "e.g. [8,3] or [16,1]"
+    def __init__(self):
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order",
+            example="3",
+            example_span="4, or a range like 3..5")
+        exponent = TextBox(
+            name="exponent",
+            label="Exponent",
+            knowl="group.exponent",
+            example="2, 4, 6",
+            example_span="list of integers?")
+        nilpclass = TextBox(
+            name="nilpotency_class",
+            label="Nilpotency Class",
+            knowl="group.nilpotent",
+            example="3",
+            example_span="4, or a range like 3..5")
+        group = TextBox(
+            name="group",
+            label="Group identifier",
+            knowl="group.small_group_label",
+            example="[4,2]")
+        abelian = ExcludeOnlyBox(
+            name="abelian",
+            label="Abelian",
+            knowl="group.abelian")
+        solvable = ExcludeOnlyBox(
+            name="solvable",
+            label="Solvable",
+            knowl="group.solvable")
+        nilpotent = ExcludeOnlyBox(
+            name="nilpotent",
+            label="Nilpotent",
+            knowl="group.nilpotent")
+        perfect = ExcludeOnlyBox(
+            name="perfect",
+            label="Perfect",
+            knowl="group.perfect")
+        count = CountBox()
+
+        self.browse_array = [
+            [order],
+            [exponent],
+            [nilpclass],
+            [group],
+            [abelian],
+            [solvable],
+            [nilpotent],
+            [perfect],
+            [count]]
+
+        self.refine_array = [
+            [order, exponent, nilpclass, group],
+            [abelian, solvable, nilpotent, perfect]]
+
+    sort_knowl = "group.sort_order"
+    def sort_order(self, info):
+        return [("", "order"),
+                ("descorder", "order descending")]
 
 

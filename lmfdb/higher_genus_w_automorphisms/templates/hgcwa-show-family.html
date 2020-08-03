@@ -30,12 +30,12 @@
     </table>
 
 
-<p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
+<p> <h2> Conjugacy class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined passports')}} </h2>
 {% if info.passport_num == 1%} <!-- one passport -->
   <table>
     <tr>
-      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-      <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined passport label')}} </th>
+      <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of conjugacy classes")}}</th>
     </tr>
     
     {% for itm in info.passport %}
@@ -49,8 +49,8 @@
   {% if info.topological_num < 1 %}  
     <table>
       <tr>
-        <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-        <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+        <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined passport label')}} </th>
+        <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of conjugacy classes")}}</th>
       </tr>
     
       {% for itm in info.passport %}
@@ -68,15 +68,15 @@
         Topologically Inequivalent Representatives</button>
       <button type="submit" class="tablinks" 
         onclick="openData(event, 'passports')">
-        By Conjugacy Class</button>
+        By conjugacy class</button>
     </div>
 
     <div id="passports" class="tabcontent">
       <p>
         <table>
           <tr>
-            <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-            <th>Conjugacy Classes</th>
+            <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined passport label')}} </th>
+            <th>Conjugacy classes</th>
           </tr>
 
           {% for itm in info.passport %}

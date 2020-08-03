@@ -1,11 +1,13 @@
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
-     import maass_db
-from lmfdb.utils import signtocolour
 
-def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
-                  width=1000, heightfactor=20, L=""):
+# -*- coding: utf-8 -*-
+
+from lmfdb import db
+from lmfdb.utils import signtocolour
+from flask import url_for
+
+def paintSvgMaass(min_level, max_level, min_R, max_R, width=1000, heightfactor=20, L=""):
     ''' Returns the contents (as a string) of the svg-file for
-        all Maass forms in the database.
+        all Maass forms in the database of the specified weight.
         Takes all levels from min_level to max_level
         Spectral parameter in [min_R, max_R] 
         Set L="/L" to make link go to the L-function
@@ -17,7 +19,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
     extraSpace = 40
     length_R = xMax - xMin
     length_level = yMax - yMin + 1
-    if length_level < 15:
+    if length_level < 30:
         heightfactor = heightfactor * 2
     height = length_level * heightfactor + extraSpace
     xfactor = (width - extraSpace)/length_R
@@ -34,39 +36,28 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    search = {'level1': yMin, 'level2': yMax, 'char': char,
-              'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
-    projection = ['maass_id', 'Eigenvalue', 'Level', 'Symmetry']
-    forms = maass_db.get_Maass_forms(search, projection, sort=[], limit=10000)
+    forms = db.maass_newforms.search({'spectral_parameter':{'$gte':xMin,'$lte':xMax}, 'level':{'$gte':yMin,'$lte':yMax}},
+                                     ["maass_id", "spectral_parameter", "level", "symmetry"], sort=[("level",1),("symmetry",-1),("spectral_parameter",1),("maass_id",1)])
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['maass_id'])
-        x = (f['Eigenvalue'] - xMin) * xfactor + xshift
-        y = (f['Level'] - yMin + 1) * yfactor
-        try:  # Shifting even slightly up and odd slightly down
-            if f['Symmetry'] == 0 or f['Symmetry'] == 'even':
-                y -=  1
-                color = signtocolour(1)
-            elif f['Symmetry'] == 1 or f['Symmetry'] == 'odd':
-                y += 1
-                color = signtocolour(-1)
-            else:
-                color = signtocolour(0)
-        except Exception:
-            color = signtocolour(0)
+        linkurl = L + url_for("maass.by_label",label=f['maass_id'])
+        x = (f['spectral_parameter'] - xMin) * xfactor + xshift
+        y = (f['level'] - yMin + 1) * yfactor
+        s = f.get('symmetry',0)
+        y -= s    # Shifting even slightly up and odd slightly down
+        color = signtocolour(s)
             
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))
         ans += "r='{0}'  style='fill:{1}'>".format(str(radius),color)
-        ans += "<title>{0}</title></circle></a>\n".format(f['Eigenvalue'])
+        ans += "<title>{0}</title></circle></a>\n".format(f['spectral_parameter'])
 
     ans += "</svg>"
     return ans
 
 
-def paintCSMaass(width, height, xMin, xMax, yMin, yMax, 
-                 xfactor, yfactor, ticlength, xshift):
+def paintCSMaass(width, height, xMin, xMax, yMin, yMax, xfactor, yfactor, ticlength, xshift):
     """  Returns the svg-code for a simple coordinate system.
          width = width of the system
          height = height of the system

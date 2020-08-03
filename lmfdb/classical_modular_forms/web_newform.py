@@ -17,7 +17,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls)
+    integer_options, names_and_urls, web_latex_factored_integer)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -135,10 +135,7 @@ class WebNewform(object):
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        if self.level == 1 or ZZ(self.level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data: # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
@@ -548,6 +545,13 @@ class WebNewform(object):
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
+    def field_poly_display(self):
+        """
+        This function is used to display the polynomial defining the coefficient field.
+        """
+        return web_latex_poly(self.field_poly)
+
+    @property
     def artin_field_display(self):
         """
         For weight 1 forms, displays the Artin field.
@@ -771,13 +775,13 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
+  <p><a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a></p>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
+  <p><a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a></p>
 </div>
 </div>"""
         forward_size = inverse_size = 0

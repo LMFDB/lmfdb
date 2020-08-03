@@ -81,7 +81,7 @@ def index():
     ]
     info["degree_list"] = ("1-6", "7-8", "9-10", "10-100")
     info["title"] = title = "Belyi maps"
-    info["bread"] = bread = [("Belyi Maps", url_for(".index"))]
+    info["bread"] = bread = [("Belyi maps", url_for(".index"))]
 
     # search options
     info["geometry_types_list"] = geometry_types_list
@@ -123,7 +123,7 @@ def by_url_belyi_search_group_triple(group, abc):
     info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s and orders %s" % (group, abc)
     info["bread"] = [
-        ("Belyi Maps", url_for(".index")),
+        ("Belyi maps", url_for(".index")),
         ("%s" % group, url_for(".by_url_belyi_search_group", group=group)),
         (
             "%s" % abc,
@@ -184,7 +184,7 @@ def by_url_belyi_search_group(group):
     info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s" % group
     info["bread"] = [
-        ("Belyi Maps", url_for(".index")),
+        ("Belyi maps", url_for(".index")),
         ("%s" % group, url_for(".by_url_belyi_search_group", group=group)),
     ]
     if request.args:
@@ -558,11 +558,11 @@ def belyi_galmap_text_download(label):
     template="belyi_search_results.html",
     table=db.belyi_galmaps,
     title="Belyi map search results",
-    err_title="Belyi Maps Search Input Error",
+    err_title="Belyi map search input error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
     projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "moduli_field", "moduli_field_label"],
     url_for_label=lambda label: url_for(".by_url_belyi_search_url", smthorlabel=label),
-    bread=lambda: [("Belyi Maps", url_for(".index")), ("Search Results", ".")],
+    bread=lambda: [("Belyi maps", url_for(".index")), ("Search results", ".")],
     credit=lambda: credit_string,
     learnmore=learnmore_list,
 )
@@ -653,7 +653,7 @@ class Belyi_stats(StatsDisplay):
 @belyi_page.route("/stats")
 def statistics():
     title = "Belyi maps: statistics"
-    bread = (("Belyi Maps", url_for(".index")), ("Statistics", " "))
+    bread = (("Belyi maps", url_for(".index")), ("Statistics", " "))
     return render_template(
         "display_stats.html",
         info=Belyi_stats(),
@@ -667,7 +667,7 @@ def statistics():
 @belyi_page.route("/Completeness")
 def completeness_page():
     t = "Completeness of Belyi map data"
-    bread = (("Belyi Maps", url_for(".index")), ("Completeness", ""))
+    bread = (("Belyi maps", url_for(".index")), ("Completeness", ""))
     return render_template(
         "single.html",
         kid="dq.belyi.extent",
@@ -681,7 +681,7 @@ def completeness_page():
 @belyi_page.route("/Source")
 def how_computed_page():
     t = "Source of Belyi map data"
-    bread = (("Belyi Maps", url_for(".index")), ("Source", ""))
+    bread = (("Belyi maps", url_for(".index")), ("Source", ""))
     return render_template(
         "single.html",
         kid="dq.belyi.source",
@@ -695,7 +695,7 @@ def how_computed_page():
 @belyi_page.route("/Labels")
 def labels_page():
     t = "Labels for Belyi maps"
-    bread = (("Belyi Maps", url_for(".index")), ("Labels", ""))
+    bread = (("Belyi maps", url_for(".index")), ("Labels", ""))
     return render_template(
         "single.html",
         kid="belyi.label",
