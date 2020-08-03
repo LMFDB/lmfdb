@@ -61,7 +61,7 @@ class WebAbstractGroup(WebObj):
         for lab in subs:
             sp_labels = (subs[lab]).special_labels
             if search_lab in sp_labels:
-                return lab
+                return lab # is label what we want to return?
                 #H = subs['lab']
                 #return group_names_pretty(H.subgroup)
 
@@ -76,6 +76,44 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def socle(self):
         return self.special_search('S')
+
+    # series
+
+    # TODO: fix this
+    # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
+    def series_search(self, sp):
+        ser_str = r"^%s.%s\d+" % (self.label, sp)
+        ser_re = re.compile(ser_str)
+        subs = self.subgroups
+        ser = []
+        for lab in subs:
+            H = subs[lab]
+            for spec_lab in H.special_labels:
+                if ser_re.match(spec_lab):
+                    #ser.append((H.subgroup, spec_lab)) # returning right thing?
+                    ser.append((H.label, spec_lab)) # returning right thing?
+        # sort
+        def sort_ser(p, ch):
+            return int(((p[1]).split(ch))[1])
+        def sort_ser_sp(p):
+            return sort_ser(p, sp)
+        return [el[0] for el in sorted(ser, key = sort_ser_sp)]
+
+    @lazy_attribute
+    def chief_series(self):
+        return self.series_search('C')
+
+    @lazy_attribute
+    def derived_series(self):
+        return self.series_search('D')
+
+    @lazy_attribute
+    def lower_central_series(self):
+        return self.series_search('L')
+
+    @lazy_attribute
+    def upper_central_series(self):
+        return self.series_search('U')
 
     @lazy_attribute
     def conjugacy_classes(self):
@@ -173,14 +211,14 @@ class WebAbstractGroup(WebObj):
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
-# TODO: update this to use special_search
+    # TODO: update this to use series_search
     def series(self):
-        data = [['group.%s'%name,
-                 name.replace('_',' ').capitalize(),
-                 [self.subgroups[i] for i in getattr(self, name)],
-                 "-".join(map(str, getattr(self, name))),
+        data = [['group.%s'%ser,
+                 ser.replace('_',' ').capitalize(),
+                 [self.subgroups[i] for i in getattr(self, ser)],
+                 "-".join(map(str, getattr(self, ser))),
                  r'\rhd']
-                for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
+                for ser in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
         data[3][4] = r'\lhd'
         data[3][2].reverse()
         return data
@@ -244,6 +282,8 @@ class WebAbstractGroup(WebObj):
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
+    # TODO: fix this. something weird happening to relators---something going wrong with the replace below
+    # see page for 32.30 for example
     def presentation(self):
         if self.elt_rep_type == 0:
             relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
