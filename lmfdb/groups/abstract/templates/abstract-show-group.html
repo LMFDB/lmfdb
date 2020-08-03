@@ -183,8 +183,9 @@ Click on a subgroup in the diagram to see information about it.
 
 <h2> Supergroups </h2>
 
+
 {% if gp.maximal_subgroup_of %}
-<p> Maximal subgroup of {% for sup in gp.maximal_subgroup_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+<p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of {% for sup in gp.maximal_subgroup_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
 {% endif %}
 {% if gp.maximal_quotient_of %}
 <p> Maximal quotient of {% for sup in gp.maximal_quotient_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
