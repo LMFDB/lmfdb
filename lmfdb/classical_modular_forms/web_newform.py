@@ -545,6 +545,13 @@ class WebNewform(object):
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
+    def field_poly_display(self):
+        """
+        This function is used to display the polynomial defining the coefficient field.
+        """
+        return web_latex_poly(self.field_poly)
+
+    @property
     def artin_field_display(self):
         """
         For weight 1 forms, displays the Artin field.
@@ -788,7 +795,7 @@ function switch_basis(btype) {
             return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_basis_table(self):
-        s = '<table class="ntdata" style="padding-left: 14px;">\n  <tr>\n'
+        s = '<table class="ntdata">\n  <tr>\n'
         for i in range(self.dim):
             s += r'    <td>\(\nu^{%s}\)</td>\n'%i
         s += '    <td>Denominator</td>\n  </tr>\n'

@@ -93,14 +93,14 @@ from .groups import abstract
 assert groups.abstract
 from . import inventory_app
 assert inventory_app
-from . import maass_forms
-assert maass_forms
 from . import groups
 assert groups
 from .groups import abstract
 assert groups.abstract
 from .groups import glnQ
 assert groups.glnQ
+from . import maass_forms
+assert maass_forms
 
 
 from .lmfdb_database import db
