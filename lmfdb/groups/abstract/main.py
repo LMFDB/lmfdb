@@ -237,7 +237,7 @@ def render_abstract_group(args):
 
         return render_template("abstract-show-group.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2,
+                               properties=prop2,
                                #friends=friends,
                                learnmore=learnmore_list(),
                                #downloads=downloads, 
