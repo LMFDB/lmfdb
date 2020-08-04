@@ -110,6 +110,18 @@
 </table>
 
 
+{#		
+ <table>		
+   {% for layer in gp.subgroup_layers[0] %}		
+   <tr>		
+     {% for subgp in layer %}		
+     <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>		
+     {% endfor %}		
+   </tr>		
+   {% endfor %}		
+ </table>		
+#}
+
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Diagram')}}</h3>
 <p>
