@@ -69,21 +69,21 @@
 <p>There are {{gp.number_subgroups}} subgroups{% if gp.number_normal_subgroups < gp.number_subgroups %} in {{gp.number_subgroup_classes}} conjugacy classes, {{ gp.number_normal_subgroups }} normal{% else %}, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}{{ gp.number_characteristic_subgroups }}{% else %}all{% endif %} characteristic).
 </p>
 
-<table>
+{# <table>
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
-    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.center}}">${{gp.show_center_label()}}$</span></td>
-    <td>$G/Z = {{gp.show_central_quotient()}}$</td>
+    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.center}}">${{gp.center_label()}}$</span></td>
+    <td>$G/Z = {{gp.central_quot()}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
-    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.commutator}}">${{gp.show_commutator_label()}}$</span></td>
-    <td> $G/G' = {{gp.show_abelian_quotient()}}$ </td>
+    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.commutator}}">${{gp.commutator_label()}}$</span></td>
+    <td> $G/G' = {{gp.abelian_quot()}}$ </td>
   </tr>
   <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
     <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.frattini}}">${{gp.show_frattini_label()}}$</span></td>
-    <td>$G/\Phi = {{gp.show_frattini_quotient()}}$ </td>
+    <td>$G/\Phi = {{gp.frattini_quot()}}$ </td>
   </tr>
   <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
@@ -107,6 +107,8 @@
   </tr>
   {% endfor %}
 </table>
+#}
+
 
 {#
 <table>

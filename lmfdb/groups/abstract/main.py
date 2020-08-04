@@ -7,8 +7,8 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, to_dict, 
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
+    flash_error, to_dict, display_knowl,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
@@ -96,6 +96,12 @@ def create_boolean_string(gp):
     return strng
 
 
+
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_abstract_group")
+    return url_for(".by_label", label=label)
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
@@ -114,6 +120,7 @@ def index():
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
     return redirect(url_for(".by_label", label=label))
+
 
 
 @abstract_page.route("/<label>")
@@ -162,7 +169,8 @@ def group_download(info):
              #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
-             credit=lambda:credit_string)
+             credit=lambda:credit_string,
+             url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
@@ -350,19 +358,19 @@ class GroupsSearchArray(SearchArray):
             label="Group identifier",
             knowl="group.small_group_label",
             example="[4,2]")
-        abelian = ExcludeOnlyBox(
+        abelian = YesNoBox(
             name="abelian",
             label="Abelian",
             knowl="group.abelian")
-        solvable = ExcludeOnlyBox(
+        solvable =YesNoBox(
             name="solvable",
             label="Solvable",
             knowl="group.solvable")
-        nilpotent = ExcludeOnlyBox(
+        nilpotent = YesNoBox(
             name="nilpotent",
             label="Nilpotent",
             knowl="group.nilpotent")
-        perfect = ExcludeOnlyBox(
+        perfect = YesNoBox(
             name="perfect",
             label="Perfect",
             knowl="group.perfect")

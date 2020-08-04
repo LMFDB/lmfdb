@@ -346,7 +346,7 @@ class WebAbstractGroup(WebObj):
         return self._data['center']
 
     def center_label(self):
-        return group_names_pretty(self._data['center_label'])
+        return self._data['center_label']
 
     def central_quot(self):
         return group_names_pretty(self._data['central_quotient'])
@@ -370,6 +370,10 @@ class WebAbstractGroup(WebObj):
     def frattini_quot(self):
         return self._data['frattini_quotient']
 
+
+    def fitting_label(self):
+        return group_names_pretty(self._data['fitting'])
+    
 
 
 class WebAbstractSubgroup(WebObj):
