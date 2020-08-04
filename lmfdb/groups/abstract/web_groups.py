@@ -342,37 +342,33 @@ class WebAbstractGroup(WebObj):
 
 
     ###special subgroups
-    def center(self):
+    def cent(self):
         return self._data['center']
 
-    def center_label(self):
-        return self._data['center_label']
+    def cent_label(self):
+        return group_names_pretty(self._data['center_label'])
 
     def central_quot(self):
         return group_names_pretty(self._data['central_quotient'])
     
 
-    def commutator(self):
+    def comm(self):
         return self._data['commutator']
 
-    def commutator_label(self):
+    def comm_label(self):
         return group_names_pretty(self._data['commutator_label'])
 
     def abelian_quot(self):
         return group_names_pretty(self._data['abelian_quotient'])
 
-    def frattini(self):
+    def fratt(self):
         return self._data['frattini']
 
-    def frattini_label(self):
+    def fratt_label(self):
         return group_names_pretty(self._data['frattini_label'])
 
     def frattini_quot(self):
-        return self._data['frattini_quotient']
-
-
-    def fitting_label(self):
-        return group_names_pretty(self._data['fitting'])
+        return group_names_pretty(self._data['frattini_quotient'])
     
 
 
