@@ -49,7 +49,7 @@ def create_boolean_string(gp):
     if gp.abelian:
         strng = display_knowl('group.abelian','Abelian')
         if gp.cyclic:
-            strng += "," + display_knowl('group.cyclic', "Cyclic")
+            strng += ", " + display_knowl('group.cyclic', "Cyclic")
     else:
         strng = display_knowl('group.abelian', "non-Abelian")
 

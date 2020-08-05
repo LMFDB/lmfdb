@@ -79,8 +79,6 @@ class WebAbstractGroup(WebObj):
 
     # series
 
-    # TODO: fix this
-    # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
     def series_search(self, sp):
         ser_str = r"^%s.%s\d+" % (self.label, sp)
         ser_re = re.compile(ser_str)
@@ -91,7 +89,7 @@ class WebAbstractGroup(WebObj):
             for spec_lab in H.special_labels:
                 if ser_re.match(spec_lab):
                     #ser.append((H.subgroup, spec_lab)) # returning right thing?
-                    ser.append((H.label, spec_lab)) # returning right thing?
+                    ser.append((H.label, spec_lab))
         # sort
         def sort_ser(p, ch):
             return int(((p[1]).split(ch))[1])
@@ -211,7 +209,6 @@ class WebAbstractGroup(WebObj):
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
-    # TODO: update this to use series_search
     def series(self):
         data = [['group.%s'%ser,
                  ser.replace('_',' ').capitalize(),
@@ -282,14 +279,16 @@ class WebAbstractGroup(WebObj):
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
-    # TODO: fix this. something weird happening to relators---something going wrong with the replace below
-    # see page for 32.30 for example
+    # TODO: is this the presentation we want?
     def presentation(self):
         if self.elt_rep_type == 0:
             relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
-            gens = ', '.join(chr(97+i) for i in range(self.ngens))
+            ngens_gap = len(self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().GeneratorsOfGroup()) # band-aid
+            #gens = ', '.join(chr(97+i) for i in range(self.ngens))
+            gens = ', '.join(chr(97+i) for i in range(ngens_gap))
             relators = ', '.join(map(str, relators))
-            for i in range(self.ngens):
+            #for i in range(self.ngens):
+            for i in range(ngens_gap):
                 relators = relators.replace("f%s"%(i+1), chr(97+i))
             relators = fix_exponent_re.sub(r"^{\1}", relators)
             relators = relators.replace("*","")
