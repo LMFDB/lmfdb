@@ -7,7 +7,7 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, to_dict, 
+    flash_error, to_dict, display_knowl,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
