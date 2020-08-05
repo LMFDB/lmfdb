@@ -250,6 +250,10 @@ class PostgresSearchTable(PostgresTable):
                 # jsonb_path_ops modifiers for the GIN index doesn't support this query
                 cmd = SQL("{0} <@ %s")
             elif key == "$overlaps":
+                if col_type == "jsonb":
+                    # jsonb doesn't support &&
+                    # We could convert it to a giant conjunction, but that leads to very bad performance
+                    raise ValueError("Jsonb columns do not support $overlaps")
                 cmd = SQL("{0} && %s")
             elif key == "$startswith":
                 cmd = SQL("{0} LIKE %s")
