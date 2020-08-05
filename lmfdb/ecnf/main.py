@@ -498,7 +498,7 @@ def elliptic_curve_search(info, query):
         for n in query['torsion_structure']:
             t_o *= int(n)
         query['torsion_order'] = t_o
-    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
+    parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=ECNF_stats().isogeny_degrees)
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':

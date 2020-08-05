@@ -146,6 +146,7 @@ class PostgresSearchTable(PostgresTable):
             - ``$contains`` -- for json columns, the given value should be a subset of the column.
             - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
             - ``$containedin`` -- for json columns, the column should be a subset of the given list
+            - ``$overlaps`` -- the column should overlap the given array
             - ``$exists`` -- if True, require not null; if False, require null.
             - ``$startswith`` -- for text columns, matches strings that start with the given string.
             - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
@@ -248,6 +249,8 @@ class PostgresSearchTable(PostgresTable):
             elif key == "$containedin":
                 # jsonb_path_ops modifiers for the GIN index doesn't support this query
                 cmd = SQL("{0} <@ %s")
+            elif key == "$overlaps":
+                cmd = SQL("{0} && %s")
             elif key == "$startswith":
                 cmd = SQL("{0} LIKE %s")
                 value = value.replace("_", r"\_").replace("%", r"\%") + "%"
