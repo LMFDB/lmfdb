@@ -252,7 +252,7 @@ class WebAbstractGroup(WebObj):
     def decode_as_perm(self, code):
         # code should be an integer with 0 <= m < factorial(n)
         n = -self.elt_rep_type
-        return SymmetricGroup(n)(Permutations(n).unrank(code))
+        return str(SymmetricGroup(n)(Permutations(n).unrank(code)))
 
     #@lazy_attribute
     #def fp_isom(self):
@@ -274,10 +274,10 @@ class WebAbstractGroup(WebObj):
     #            # g^r is not another generator
 
     def write_element(self, elt):
-        # Given an uncoded element, return a latex form for printing on the webpage.
+        # Given a decoded element or free group lift, return a latex form for printing on the webpage.
         if self.elt_rep_type == 0:
             s = str(elt)
-            for i in range(self.ngens):
+            for i in reversed(range(self.ngens)): # reversed so that we don't replace f1 in f10.
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
@@ -286,9 +286,42 @@ class WebAbstractGroup(WebObj):
     def presentation(self):
         if self.elt_rep_type == 0:
             relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
+            pure_powers = {}
+            rel_powers = {}
+            conj = {}
+            for rel in relators:
+                m = rel.NumberSyllables()
+                if m == 1:
+                    # pure power relation
+                    g = chr(96+ZZ(rel.GeneratorSyllable(1)))
+                    e = ZZ(rel.ExponentSyllable(1))
+                    pure_powers[g] = "%s^%s" % (g, e)
+                elif (m >= 4 and
+                      rel.ExponentSyllable(1) == rel.ExponentSyllable(2) == -1 and
+                      rel.ExponentSyllable(3) == rel.ExponentSyllable(4) == 1):
+                    if m != 4:
+                        # We omit pure commutator relations and explain below the presentation
+                        rhs = rel^-1 * rel.SubSyllables(1,4) * rel.SubSyllables(1,1)^-1
+                        # started with a^-1 b^-1 a b X = 1, transformed to a^b = aX^-1 =: rhs
+                        a = chr(96+ZZ(rel.GeneratorSyllable(3)))
+                        b = chr(96+ZZ(rel.GeneratorSyllable(4)))
+                        conj[a,b] = str(rhs)
+                else:
+                    # relative power relation
+                    g = chr(96+ZZ(rel.GeneratorSyllable(1)))
+                    e = ZZ(rel.ExponentSyllable(1))
+                    rhs = rel^-1 * rel.SubSyllables(1,1)
+                    rel_powers[g] = "%s^%s=%s" % (g, e, rhs)
             gens = ', '.join(chr(97+i) for i in range(self.ngens))
-            relators = ', '.join(map(str, relators))
-            for i in range(self.ngens):
+            relators = []
+            if pure_powers:
+                relators.append("=".join(pure_powers[g] for g in sorted(pure_powers)) + "=1")
+            for g in sorted(rel_powers):
+                relators.append(rel_powers[g])
+            for a,b in sorted(conj):
+                relators.append("%s^%s=%s" % (a, b, conj[a,b]))
+            relators = ', '.join(relators)
+            for i in reversed(range(self.ngens)):
                 relators = relators.replace("f%s"%(i+1), chr(97+i))
             relators = fix_exponent_re.sub(r"^{\1}", relators)
             relators = relators.replace("*","")
