@@ -72,20 +72,21 @@
 <table>
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
-    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.center}}">${{gp.show_center_label()}}$</span></td>
-    <td>$G/Z = {{gp.show_central_quotient()}}$</td>
+    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.cent}}">${{gp.cent_label()}}$</span></td>
+    <td>$G/Z = {{gp.central_quot()}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
-    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.commutator}}">${{gp.show_commutator_label()}}$</span></td>
-    <td> $G/G' = {{gp.show_abelian_quotient()}}$ </td>
+    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.comm}}">${{gp.comm_label()}}$</span>
+ </td>
+    <td> $G/G' = {{gp.abelian_quot()}}$ </td>
   </tr>
-  <tr>
+    <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
-    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.frattini}}">${{gp.show_frattini_label()}}$</span></td>
-    <td>$G/\Phi = {{gp.show_frattini_quotient()}}$ </td>
+    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.fratt}}">${{gp.fratt_label()}}$</span></td>
+    <td>$G/\Phi = {{gp.frattini_quot()}}$ </td>
   </tr>
-  <tr>
+ <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
     <td>$\operatorname{Fit} =$ <span class="subgp chargp" data-sgid="{{gp.fitting}}">${{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
     <td>$G/\operatorname{Fit} = {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
@@ -108,17 +109,19 @@
   {% endfor %}
 </table>
 
-{#
-<table>
-  {% for layer in gp.subgroup_layers[0] %}
-  <tr>
-    {% for subgp in layer %}
-    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
-    {% endfor %}
-  </tr>
-  {% endfor %}
-</table>
+
+{#		
+ <table>		
+   {% for layer in gp.subgroup_layers[0] %}		
+   <tr>		
+     {% for subgp in layer %}		
+     <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>		
+     {% endfor %}		
+   </tr>		
+   {% endfor %}		
+ </table>		
 #}
+
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Diagram')}}</h3>
 <p>
