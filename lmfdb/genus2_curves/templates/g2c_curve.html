@@ -1,10 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <style>
-p {padding-left: 1ch;}
-</style>
-
-<style>
 .toggle {margin-top:5px; margin-left:20px;}
 div.properties-body table tr td.label { vertical-align: top; }
 #content > h2.subhead { color:{{color.black}};}
@@ -56,10 +52,10 @@ function show_eqns(invstyle) {
 
 <h2> {{ KNOWL('g2c.invariants', 'Invariants') }} </h2>
 <table>
-<tr><td>{{KNOWL("ag.conductor", "Conductor")}}:</td><td> \( N \) </td><td>&nbsp;=&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
+<tr><td>{{KNOWL("ag.conductor", "Conductor")}}:</td><td> \( N \) </td><td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
     <td>{{place_code('cond')}}</td>
 </tr>
-<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;=&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
+<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
     <td>{{place_code('disc')}}</td>
 </tr>
 </table>
@@ -70,49 +66,49 @@ function show_eqns(invstyle) {
 
 <table>
     <tr class='igusa_clebsch'>
-        <td> \( I_2 \) </td> <td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[0] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_2 \) </td> <td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_4 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[1] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_6 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[2] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_{10} \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[3]}}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[3]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_2 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[0] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_4 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[1] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_6 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[2] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_8 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[3] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_8 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[3] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_{10} \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[4]}}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[4]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[4] }}</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_1 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[0] }}\)</td>
+        <td> \( g_1 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[0] }}\)</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_2 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[1] }}\)</td>
+        <td> \( g_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[1] }}\)</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_3 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
+        <td> \( g_3 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
     </tr>
 </table>
 <p></p>

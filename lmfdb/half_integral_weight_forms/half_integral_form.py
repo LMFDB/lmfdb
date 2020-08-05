@@ -16,8 +16,8 @@ def half_integral_weight_form_render_webpage():
     if len(args) == 0:
         info = {}
         credit = 'Samuele Anni, Soma Purkait'
-        t = 'Half Integral Weight Cusp Forms'
-        bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage"))]
+        t = 'Half integral weight cusp forms'
+        bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage"))]
         info['learnmore'] = []
         return render_template("half_integral_weight_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
@@ -25,15 +25,15 @@ def half_integral_weight_form_render_webpage():
 
 @search_wrap(template="half_integral_weight_form_search.html",
              table=db.halfmf_forms,
-             title='Half Integral Weight Cusp Forms Search Results',
-             err_title='Half Integral Weight Cusp Forms Search Input Error',
+             title='Half integral weight cusp forms search results',
+             err_title='Half integral weight cusp forms search input error',
              per_page=50,
              shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
              projection=['level','label','weight','character','dim'],
              cleaners={'char': lambda v: r"\chi_{" + v['character'].split(".")[0] + "}(" + v['character'].split(".")[1] + r",\cdot)",
                        'ch_lab': lambda v: v.pop('character').replace('.','/'),
                        'dimension': lambda v: v.pop('dim')},
-             bread=lambda:[('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")),('Search Results', ' ')],
+             bread=lambda:[('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")),('Search results', ' ')],
              properties=lambda: [])
 def half_integral_weight_form_search(info, query):
     parse_ints(info, query, 'weight')
@@ -78,8 +78,8 @@ def render_hiwf_webpage(**args):
 
     info['friends'] = []
 
-    bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")), ('%s' % data['label'], ' ')]
-    t = "Half Integral Weight Cusp Forms %s" % info['label']
+    bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")), ('%s' % data['label'], ' ')]
+    t = "Half integral weight cusp forms %s" % info['label']
     credit = 'Samuele Anni and Soma Purkait'
 
     dim = data['dim']

@@ -588,7 +588,7 @@ class WebCharFamily(WebCharObject):
 
 class WebCharGroup(WebCharObject):
     """
-    Class for presenting Character Groups on a web page
+    Class for presenting character groups on a web page
     self.H is the character group
     self.G is the underlying group
     """
@@ -661,7 +661,7 @@ class WebCharGroup(WebCharObject):
     @lazy_attribute
     def friends(self):
         if self.nflabel:
-            return [ ("Number Field", '/NumberField/' + self.nflabel), ]
+            return [ ("Number field", '/NumberField/' + self.nflabel), ]
 
     @lazy_attribute
     def contents(self):
@@ -675,7 +675,7 @@ class WebCharGroup(WebCharObject):
 
 class WebChar(WebCharObject):
     """
-    Class for presenting a Character on a web page
+    Class for presenting a character on a web page
     """
     _keys = [ 'title', 'credit', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
@@ -791,7 +791,7 @@ class WebChar(WebCharObject):
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
         f.append( ("Character group", cglink) )
         if self.nflabel:
-            f.append( ('Number Field', '/NumberField/' + self.nflabel) )
+            f.append( ('Number field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
@@ -802,7 +802,7 @@ class WebChar(WebCharObject):
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
-            f.append( ("Value Field", '/NumberField/' + self.vflabel) )
+            f.append( ("Value field", '/NumberField/' + self.vflabel) )
         return f
 
 #############################################################################
@@ -854,7 +854,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @lazy_attribute
     def title(self):
-      return r"Group of Dirichlet Characters of modulus %s" % (self.modulus)
+      return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
 
     @lazy_attribute
     def codegen(self):
@@ -1136,7 +1136,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def title(self):
-        return r"Dirichlet Character {}".format(self.texname)
+        return r"Dirichlet character {}".format(self.texname)
 
     @lazy_attribute
     def symbol(self):
@@ -1165,7 +1165,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
             )
         if len(self.vflabel) > 0:
-            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+            friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
         if self.symbol_numerator():
             if self.symbol_numerator() > 0:
                 assoclabel = '2.2.%d.1' % self.symbol_numerator()
@@ -1311,7 +1311,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @lazy_attribute
     def title(self):
-        return r"Dirichlet Character %s" % (self.texname)
+        return r"Dirichlet character %s" % (self.texname)
 
     @lazy_attribute
     def texname(self):
@@ -1591,7 +1591,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
 
     @lazy_attribute
     def title(self):
-      return r"Hecke Character: %s modulo %s" % (self.texname, self.modulus)
+      return r"Hecke character: %s modulo %s" % (self.texname, self.modulus)
 
     @lazy_attribute
     def codecond(self):
