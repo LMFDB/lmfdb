@@ -1206,6 +1206,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def codeinit(self):
         return {
             'sage': [
+                'from sage.modular.dirichlet import DirichletCharacter',
                 'H = DirichletGroup({})'.format(self.modulus),
                 'M = H._module',
                 'chi = DirichletCharacter(H, M([{}]))'.format(
