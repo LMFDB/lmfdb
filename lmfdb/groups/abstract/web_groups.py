@@ -53,6 +53,7 @@ class WebAbstractGroup(WebObj):
         # Should join with gps_groups to get pretty names for subgroup and quotient
         return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
+
     # special subgroups
     def special_search(self, sp):
         search_lab = '%s.%s' % (self.label, sp)
@@ -78,8 +79,6 @@ class WebAbstractGroup(WebObj):
 
     # series
 
-    # TODO: fix this
-    # in abstract-show-group.html, series data has form {% for kwl, name, subs, spandata, symb in gp.series() %}
     def series_search(self, sp):
         ser_str = r"^%s.%s\d+" % (self.label, sp)
         ser_re = re.compile(ser_str)
@@ -90,7 +89,7 @@ class WebAbstractGroup(WebObj):
             for spec_lab in H.special_labels:
                 if ser_re.match(spec_lab):
                     #ser.append((H.subgroup, spec_lab)) # returning right thing?
-                    ser.append((H.label, spec_lab)) # returning right thing?
+                    ser.append((H.label, spec_lab))
         # sort
         def sort_ser(p, ch):
             return int(((p[1]).split(ch))[1])
@@ -210,7 +209,6 @@ class WebAbstractGroup(WebObj):
                 syl_list.append((p, syl_dict[p]))
         return syl_list
 
-    # TODO: update this to use series_search
     def series(self):
         data = [['group.%s'%ser,
                  ser.replace('_',' ').capitalize(),
@@ -281,8 +279,7 @@ class WebAbstractGroup(WebObj):
                 s = s.replace("f%s"%(i+1), chr(97+i))
             return s
 
-    # TODO: fix this. something weird happening to relators---something going wrong with the replace below
-    # see page for 32.30 for example
+    # TODO: is this the presentation we want?
     def presentation(self):
         # chr(97) = "a"
         if self.elt_rep_type == 0:
@@ -413,25 +410,36 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return factor(int(self._data['outer_order']))
 
+
     ###special subgroups
+    def cent(self):
+        return self._data['center']
 
-    def show_center_label(self):
-        return group_names_pretty(self.center_label)
+    def cent_label(self):
+        return group_names_pretty(self._data['center_label'])
 
-    def show_central_quotient(self):
-        return group_names_pretty(self.central_quotient)
+    def central_quot(self):
+        return group_names_pretty(self._data['central_quotient'])
+    
 
-    def show_commutator_label(self):
-        return group_names_pretty(self.commutator_label)
+    def comm(self):
+        return self._data['commutator']
 
-    def show_abelian_quotient(self):
-        return group_names_pretty(self.abelian_quotient)
+    def comm_label(self):
+        return group_names_pretty(self._data['commutator_label'])
 
-    def show_frattini_label(self):
-        return group_names_pretty(self.frattini_label)
+    def abelian_quot(self):
+        return group_names_pretty(self._data['abelian_quotient'])
 
-    def show_frattini_quotient(self):
-        return group_names_pretty(self.frattini_quotient)
+    def fratt(self):
+        return self._data['frattini']
+
+    def fratt_label(self):
+        return group_names_pretty(self._data['frattini_label'])
+
+    def frattini_quot(self):
+        return group_names_pretty(self._data['frattini_quotient'])
+    
 
 
 class WebAbstractSubgroup(WebObj):

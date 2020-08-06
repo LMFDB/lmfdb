@@ -7,11 +7,12 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl,
+    flash_error, to_dict, display_knowl,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
-
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
@@ -48,7 +49,7 @@ def create_boolean_string(gp):
     if gp.abelian:
         strng = display_knowl('group.abelian','Abelian')
         if gp.cyclic:
-            strng += "," + display_knowl('group.cyclic', "Cyclic")
+            strng += ", " + display_knowl('group.cyclic', "Cyclic")
     else:
         strng = display_knowl('group.abelian', "non-Abelian")
 
@@ -95,15 +96,21 @@ def create_boolean_string(gp):
     return strng
 
 
+
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_abstract_group")
+    return url_for(".by_label", label=label)
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
+    info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        return group_search(request.args)
-    info = {'count': 50,
-            'order_list': ['1-10', '20-100', '101-200'],
-            'nilp_list': range(1,5)
-            }
+        return group_search(info)
+    info['count']= 50
+    info['order_list']= ['1-10', '20-100', '101-200']
+    info['nilp_list']= range(1,5)
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -113,6 +120,7 @@ def index():
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
     return redirect(url_for(".by_label", label=label))
+
 
 
 @abstract_page.route("/<label>")
@@ -161,7 +169,8 @@ def group_download(info):
              #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
-             credit=lambda:credit_string)
+             credit=lambda:credit_string,
+             url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
@@ -228,7 +237,7 @@ def render_abstract_group(args):
 
         return render_template("abstract-show-group.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2,
+                               properties=prop2,
                                #friends=friends,
                                learnmore=learnmore_list(),
                                #downloads=downloads, 
@@ -317,5 +326,74 @@ def how_computed_page():
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
+
+
+
+class GroupsSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    jump_example = "[8,3]"
+    jump_egspan = "e.g. [8,3] or [16,1]"
+    def __init__(self):
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order",
+            example="3",
+            example_span="4, or a range like 3..5")
+        exponent = TextBox(
+            name="exponent",
+            label="Exponent",
+            knowl="group.exponent",
+            example="2, 4, 6",
+            example_span="list of integers?")
+        nilpclass = TextBox(
+            name="nilpotency_class",
+            label="Nilpotency Class",
+            knowl="group.nilpotent",
+            example="3",
+            example_span="4, or a range like 3..5")
+        group = TextBox(
+            name="group",
+            label="Group identifier",
+            knowl="group.small_group_label",
+            example="[4,2]")
+        abelian = YesNoBox(
+            name="abelian",
+            label="Abelian",
+            knowl="group.abelian")
+        solvable =YesNoBox(
+            name="solvable",
+            label="Solvable",
+            knowl="group.solvable")
+        nilpotent = YesNoBox(
+            name="nilpotent",
+            label="Nilpotent",
+            knowl="group.nilpotent")
+        perfect = YesNoBox(
+            name="perfect",
+            label="Perfect",
+            knowl="group.perfect")
+        count = CountBox()
+
+        self.browse_array = [
+            [order],
+            [exponent],
+            [nilpclass],
+            [group],
+            [abelian],
+            [solvable],
+            [nilpotent],
+            [perfect],
+            [count]]
+
+        self.refine_array = [
+            [order, exponent, nilpclass, group],
+            [abelian, solvable, nilpotent, perfect]]
+
+    sort_knowl = "group.sort_order"
+    def sort_order(self, info):
+        return [("", "order"),
+                ("descorder", "order descending")]
 
 
