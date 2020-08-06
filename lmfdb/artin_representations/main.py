@@ -9,7 +9,7 @@ from sage.all import ZZ
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_primes, parse_restricted, parse_element_of, parse_galgrp,
+    parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
@@ -230,7 +230,7 @@ def artin_representation_search(info, query):
                  qfield="BadPrimes",mode="exclude")
     parse_primes(info,query,"ramified",name="Ramified primes",
                  qfield="BadPrimes",mode=info.get("ram_quantifier"))
-    parse_element_of(info,query,"root_number",qfield="GalConjSigns")
+    parse_restricted(info,query,"root_number",qfield="GalConjSigns",allowed=[-1,1],process=lambda x:{"$contains":[int(x)]})
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
