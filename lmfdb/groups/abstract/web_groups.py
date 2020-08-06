@@ -284,42 +284,83 @@ class WebAbstractGroup(WebObj):
     # TODO: fix this. something weird happening to relators---something going wrong with the replace below
     # see page for 32.30 for example
     def presentation(self):
+        # chr(97) = "a"
         if self.elt_rep_type == 0:
-            relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
+            FP = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image()
+            F = FP.FreeGroupOfFpGroup()
+            Fgens = FP.FreeGeneratorsOfFpGroup()
+            used = self.gens_used
+            relator_lifts = FP.RelatorsOfFpGroup()
             pure_powers = {}
             rel_powers = {}
+            power_exp = {}
+            power_rhs = {}
             conj = {}
-            for rel in relators:
+            for rel in relator_lifts:
                 m = rel.NumberSyllables()
+                a = ZZ(rel.GeneratorSyllable(1))
+                e = ZZ(rel.ExponentSyllable(1))
                 if m == 1:
                     # pure power relation
-                    g = chr(96+ZZ(rel.GeneratorSyllable(1)))
-                    e = ZZ(rel.ExponentSyllable(1))
-                    pure_powers[g] = "%s^%s" % (g, e)
+                    if g in power_exp:
+                        raise ValueError("Invalid internal pc presentation: two values for f%s^p" % g)
+                    power_exp[g] = e
+                    power_rhs[g] = F.One()
                 elif (m >= 4 and
-                      rel.ExponentSyllable(1) == rel.ExponentSyllable(2) == -1 and
-                      rel.ExponentSyllable(3) == rel.ExponentSyllable(4) == 1):
-                    if m != 4:
+                      e == rel.ExponentSyllable(2) == -1 and
+                      rel.ExponentSyllable(3) == 1 and
+                      rel.GeneratorSyllable(3) == a):
+                    b = ZZ(rel.GeneratorSyllable(2))
+                    if not (m == 4 and rel.GeneratorSymbol(4) == b and rel.ExponentSymbol(4) == 1):
                         # We omit pure commutator relations and explain below the presentation
-                        rhs = rel^-1 * rel.SubSyllables(1,4) * rel.SubSyllables(1,1)^-1
-                        # started with a^-1 b^-1 a b X = 1, transformed to a^b = aX^-1 =: rhs
-                        a = chr(96+ZZ(rel.GeneratorSyllable(3)))
-                        b = chr(96+ZZ(rel.GeneratorSyllable(4)))
-                        conj[a,b] = str(rhs)
+                        rhs = rel.SubSyllables(4, m)
+                        # started with a^-1 b^-1 a b X = 1, transformed to b^a = b X =: rhs
+                        if (b,a) in conj:
+                            raise ValueError("Invalid internal pc presentation: two values for f%s^f%s" % (b, a))
+                        conj[b,a] = rhs
                 else:
                     # relative power relation
-                    g = chr(96+ZZ(rel.GeneratorSyllable(1)))
-                    e = ZZ(rel.ExponentSyllable(1))
-                    rhs = rel^-1 * rel.SubSyllables(1,1)
-                    rel_powers[g] = "%s^%s=%s" % (g, e, rhs)
+                    if g in power_exp:
+                        raise ValueError("Invalid internal pc presentation: two values for f%s^p" % g)
+                    power_exp[g] = e
+                    power_rhs[g] = rel.SubSyllables(2,m)**-1
+                    if g+1 not in used and power_rhs[g] != Fgens[g]:
+                        raise ValueError("Invalid internal pc presentation: f%s^%s != f%s" % (g, e, g+1))
+                    #rel_powers[g] = "%s^%s=%s" % (g, e, rhs)
             gens = ', '.join(chr(97+i) for i in range(self.ngens))
+            rewrite = []
+            curpow = 1
+            curgen = 1
+            genenum = 0
+            genpow_rhs = []
+            genpow_exp = []
+            for i in range(1, m+1):
+                if i not in power_exp:
+                    raise ValueError("Invalid internal pc presentation: no value given for %s^p" % chr(96+i))
+                rewrite.append(Fgens[genenum]**curpow)
+                curpow *= power_exp[i]
+                if i == m or i+1 in used:
+                    genpow_rhs.append(power_rhs[i])
+                    genpow_exp.append(curpow)
+                    curgen = i+1
+                    genenum += 1
+                    curpow = 1
+            if len(genpow_exp) != self.ngens:
+                raise ValueError("Invalid internal pc presentation: number of generators %s vs %s" % (len(genpow_exp), self.ngens))
+            hom = F.GroupHomomorphismByImagesNC(F, rewrite)
+            for i, (rhs, e) in enumerate(zip(genpow_rhs, genpow_exp)):
+                if rhs == F.One():
+                    pure_powers[i] = "%s^%s" % (chr(97+i), e)
+                else:
+                    rel_powers[i] = "%s^%s=%s" % (chr(97+i), e, hom.Image(rhs))
             relators = []
             if pure_powers:
                 relators.append("=".join(pure_powers[g] for g in sorted(pure_powers)) + "=1")
             for g in sorted(rel_powers):
                 relators.append(rel_powers[g])
             for a,b in sorted(conj):
-                relators.append("%s^%s=%s" % (a, b, conj[a,b]))
+                if a in used and b in used:
+                    relators.append("%s^%s=%s" % (chr(97+used.index(a)), chr(97+used.index(b)), hom.Image(conj[a,b])))
             relators = ', '.join(relators)
             for i in reversed(range(self.ngens)):
                 relators = relators.replace("f%s"%(i+1), chr(97+i))
