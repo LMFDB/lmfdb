@@ -156,7 +156,8 @@ class WebAbstractGroup(WebObj):
     def subgroup_layers(self):
         # Need to update to account for possibility of not having all inclusions
         subs = self.subgroups
-        top = max(sub.label for sub in subs.values())
+        topord = max(sub.subgroup_order for sub in subs.values())
+        top = [z.label for z in subs.values() if z.subgroup_order == topord][0]
         layers = [[subs[top]]]
         seen = set([top])
         added_something = True # prevent data error from causing infinite loop
@@ -176,7 +177,7 @@ class WebAbstractGroup(WebObj):
         for g in subs:
             for h in subs[g].contains:
                 edges.append([h, g])
-        #print [[gp.subgroup for gp in layer] for layer in layers]
+        print ([[gp.subgroup for gp in layer] for layer in layers])
         return [layers, edges]
 
     # May not use anymore

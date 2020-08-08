@@ -16,7 +16,7 @@ from lmfdb.groups.glnQ import glnQ_page
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
-abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
+glnq_label_regex = re.compile(r'^(\d+)\.(\d+).*$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
 def learnmore_list():
@@ -32,7 +32,7 @@ def sub_label_is_valid(lab):
     return abstract_subgroup_label_regex.match(lab)
 
 def label_is_valid(lab):
-    return abstract_group_label_regex.match(lab)
+    return glnq_label_regex.match(lab)
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")),("GLnQ", url_for(".index"))]
@@ -50,13 +50,13 @@ def index():
             'nilp_list': range(1,5)
             }
 
-    return render_template("glnQ-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnQ-index.html", title="Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
 @glnQ_page.route("/random")
 def random_glnQ_group():
-    label = db.gps_groups.random(projection='label')
+    label = db.gps_qrep.random(projection='label')
     return redirect(url_for(".by_label", label=label))
 
 
@@ -79,6 +79,15 @@ def show_type(label):
         return 'Solvable - '+str(wag.derived_length)
     return 'General - ?'
 
+# Take a list of list of integers and make a latex matrix
+def dispmat(mat):
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([str(z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
+
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
@@ -94,8 +103,8 @@ def group_download(info):
 
 @search_wrap(template="glnQ-search.html",
              table=db.gps_groups,
-             title='Abstract group search results',
-             err_title='Abstract groups search input error',
+             title='$\GL(n,\Q)$ subgroup search results',
+             err_title='$\GL(n,\Q)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','abelian','exponent','solvable',
@@ -129,42 +138,14 @@ def render_glnQ_group(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        gp = WebAbstractGroup(label)
-        if gp.is_null():
-            flash_error( "No group with label %s was found in the database.", label)
-            return redirect(url_for(".index"))
-        #check if it fails to be a potential label even]
+        info = db.gps_qrep.lucky({'label': label})
+        info['dispmat'] = dispmat
 
+        title = '$\GL('+str(info['dim'])+',\Q)$ subgroup '  + label
 
-        info['boolean_characteristics_string']=create_boolean_string(gp)
-
-        info['gpc'] = gp
-
-        # prepare for javascript call to make the diagram
-        layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
-        subs = gp.subgroups
-        orders = list(set(sub.subgroup_order for sub in subs.values()))
-        orders.sort()
-        xcoords = list(sub.diagram_x for sub in subs.values())
-
-        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ',' + str(xcoords)
-        info['dojs'] += ');'
-        #print info['dojs']
-        totsubs = len(gp.subgroups)
-        info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
-
-
-        factored_order = web_latex(gp.order_factor(),False)
-        aut_order = web_latex(gp.aut_order_factor(),False)
-
-        title = 'Abstract group '  + '$' + gp.tex_name + '$'
-
-        prop2 = [
-            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
-        ]
+        prop = [('Label', '%s' %  label), 
+                ('Order', '\(%s\)' % info['order']),
+                ('Dimension', '%s' % info['dim']) ]
 
         bread = get_bread([(label, )])
 
@@ -173,7 +154,7 @@ def render_glnQ_group(args):
 
         return render_template("glnQ-show-group.html",
                                title=title, bread=bread, info=info,
-                               properties2=prop2,
+                               properties=prop,
                                #friends=friends,
                                learnmore=learnmore_list(),
                                #downloads=downloads, 
@@ -227,7 +208,7 @@ def shortsubinfo(label):
 
 @glnQ_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the abstract groups data'
+    t = 'Completeness of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.extent',
                             title=t, bread=bread,
@@ -237,7 +218,7 @@ def completeness_page():
 
 @glnQ_page.route("/Labels")
 def labels_page():
-    t = 'Labels for abstract groups'
+    t = 'Labels for finite subgroups of $\GL(n,\Q)$'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.label',
                            learnmore=learnmore_list_remove('label'), 
@@ -246,7 +227,7 @@ def labels_page():
 
 @glnQ_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the abstract groups data'
+    t = 'Reliability of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.reliability',
                            title=t, bread=bread, 
@@ -256,7 +237,7 @@ def reliability_page():
 
 @glnQ_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the abstract group data'
+    t = 'Source of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.source',
                            title=t, bread=bread, 

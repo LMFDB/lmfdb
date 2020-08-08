@@ -197,8 +197,7 @@ def render_abstract_group(args):
         if gp.is_null():
             flash_error( "No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        #check if it fails to be a potential label even]
-
+        #check if it fails to be a potential label even
 
         info['boolean_characteristics_string']=create_boolean_string(gp)
 
@@ -206,15 +205,15 @@ def render_abstract_group(args):
 
         # prepare for javascript call to make the diagram
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
         xcoords = list(sub.diagram_x for sub in subs.values())
+        lay1 = layers[1]
 
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ',' + str(xcoords)
+        info['dojs'] += str(ll) + ',' + str(lay1) + ',' + str(orders)
         info['dojs'] += ');'
         #print info['dojs']
         totsubs = len(gp.subgroups)
