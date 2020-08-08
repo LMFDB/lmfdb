@@ -209,7 +209,6 @@ def render_abstract_group(args):
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
-        xcoords = list(sub.diagram_x for sub in subs.values())
         lay1 = layers[1]
 
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
