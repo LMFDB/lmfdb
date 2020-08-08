@@ -177,7 +177,6 @@ class WebAbstractGroup(WebObj):
         for g in subs:
             for h in subs[g].contains:
                 edges.append([h, g])
-        print ([[gp.subgroup for gp in layer] for layer in layers])
         return [layers, edges]
 
     # May not use anymore
