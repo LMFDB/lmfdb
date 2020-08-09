@@ -1,0 +1,38 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+<thead>
+  <tr>
+    <th>{{ KNOWL('group.label', title='Label') }}</th>
+    <th>{{ KNOWL('group.name', title='Name') }}</th>
+    <th>{{ KNOWL('group.order', title='Order') }}</th>
+    <th>{{ KNOWL('group.dimension', title='Dimension') }}</th>
+  </tr>
+</thead>
+<tbody>
+{% for group in info.results: %}
+<tr>
+    <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a>
+    <td align=center> {{info.getname(group.group)}}
+    <td align=center> {{group.order}}
+    <td align=center> {{group.dim}}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% include 'forward_back.html' %}
+{#
+   {% include 'download_search_results.html' %}
+#}
+{% endif %}
+{% include 'debug_info.html' %}
+
+
+{% endblock %}
+

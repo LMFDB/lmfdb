@@ -291,7 +291,8 @@
            status: beta
            url_for: glnQ.index
          - title: $\GL(n,\C)$
-           status:  future
+           status: beta
+           url_for: glnC.index
       status: future
       colspan: onecolumn
 
