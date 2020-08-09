@@ -179,22 +179,6 @@ class WebAbstractGroup(WebObj):
                 edges.append([h, g])
         return [layers, edges]
 
-    # May not use anymore
-    @lazy_attribute
-    def subgroup_layer_by_order(self):
-        # Need to update to account for possibility of not having all inclusions
-        subs = self.subgroups
-        orders = list(set(sub.subgroup_order for sub in subs.values()))
-        layers = {j:[] for j in orders}
-        edges = []
-        for sub in subs.values():
-            layers[sub.subgroup_order].append(sub)
-            for k in sub.contained_in:
-                edges.append([k, sub.label])
-        llayers = [layers[k] for k in sorted(layers.keys())]
-        llayers = [[[gp.label, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
-        return [llayers, edges]
-
     def sylow_subgroups(self):
         """
         Returns a list of pairs (p, P) where P is a WebAbstractSubgroup representing a p-Sylow subgroup.

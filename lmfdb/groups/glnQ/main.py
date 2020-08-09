@@ -7,10 +7,11 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl,
-    parse_ints, parse_bool, clean_input, 
+    flash_error, display_knowl, SearchArray, TextBox, CountBox,
+    parse_ints, parse_bool, clean_input, to_dict,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
 from lmfdb.groups.glnQ import glnQ_page
 
@@ -42,13 +43,11 @@ def get_bread(breads=[]):
 
 @glnQ_page.route("/")
 def index():
+    info = to_dict(request.args, search_array=GLnQSearchArray())
     bread = get_bread()
     if request.args:
-        return group_search(request.args)
-    info = {'count': 50,
-            'order_list': ['1-10', '20-100', '101-200'],
-            'nilp_list': range(1,5)
-            }
+        return group_search(info)
+    info['order_list']= ['1-10', '20-100', '101-200']
 
     return render_template("glnQ-index.html", title="Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -68,16 +67,6 @@ def by_label(label):
         flash_error( "No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
-
-def show_type(label):
-    wag = WebAbstractGroup(label)
-    if wag.abelian:
-        return 'Abelian - '+str(len(wag.smith_abelian_invariants))
-    if wag.nilpotent:
-        return 'Nilpotent - '+str(wag.nilpotency_class)
-    if wag.solvable:
-        return 'Solvable - '+str(wag.derived_length)
-    return 'General - ?'
 
 # Take a list of list of integers and make a latex matrix
 def dispmat(mat):
@@ -100,35 +89,30 @@ def group_download(info):
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
+def url_for_label(label):
+    if label == "random":
+        return url_for(".random_abstract_group")
+    return url_for(".by_label", label=label)
 
 @search_wrap(template="glnQ-search.html",
-             table=db.gps_groups,
+             table=db.gps_qrep,
              title='$\GL(n,\Q)$ subgroup search results',
              err_title='$\GL(n,\Q)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
-             projection=['label','order','abelian','exponent','solvable',
-                        'nilpotent','center_label','outer_order',
-                        'nilpotency_class','number_conjugacy_classes'],
+             projection=['label','order','dim','group'],
              #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
              #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
              #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
-             credit=lambda:credit_string)
+             credit=lambda:credit_string,
+             url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
-    info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
     info['getname'] = lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
-    info['show_type'] = show_type 
     parse_ints(info, query, 'order', 'order')
-    parse_ints(info, query, 'exponent', 'exponent')
-    parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
-    parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
-    parse_bool(info, query, 'abelian', 'is abelian')
-    parse_bool(info, query, 'solvable', 'is solvable')
-    parse_bool(info, query, 'nilpotent', 'is nilpotent')
-    parse_bool(info, query, 'perfect', 'is perfect')
+    parse_ints(info, query, 'dim', 'dim')
 
 def get_url(label):
     return url_for(".by_label", label=label)
@@ -244,4 +228,29 @@ def how_computed_page():
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
+
+class GLnQSearchArray(SearchArray):
+    noun = "group"
+    plural_noun = "groups"
+    jump_example = "??"
+    jump_egspan = "e.g. ??"
+    def __init__(self):
+        order = TextBox(
+            name="order",
+            label="Order",
+            knowl="group.order",
+            example="3",
+            example_span="4, or a range like 3..5")
+        dim = TextBox(
+            name="dim",
+            label="Dimension",
+            example="2",
+            example_span="4, or a range like 3..5")
+        count = CountBox()
+
+        self.browse_array = [
+             [order],
+             [dim]]
+        self.refine_array = [
+             [order, dim]]
 
