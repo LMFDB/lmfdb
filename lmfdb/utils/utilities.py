@@ -1269,3 +1269,37 @@ def add_space_if_positive(texified_pol):
         return texified_pol
     return r"\phantom{-}" + texified_pol
 
+def sparse_cyclotomic_to_latex(n, dat):
+    r"""
+    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
+    and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
+    (converting to sage will rewrite the element in terms of a basis)
+    """
+
+    dat.sort(key=lambda p: p[1])
+    ans=''
+    z = r'\zeta_{%d}' % n
+    for p in dat:
+        if p[0] == 0:
+            continue
+        if p[1]==0:
+            if p[0] == 1 or p[0] == -1:
+                zpart = '1'
+            else:
+                zpart = ''
+        elif p[1]==1:
+            zpart = z
+        else:
+            zpart = z+r'^{'+str(p[1])+'}'
+        # Now the coefficient
+
+        if p[0] == 1:
+            ans += '+'  + zpart
+        elif p[0] == -1:
+            ans += '-'  + zpart
+        else:
+            ans += '{:+d}'.format(p[0])  + zpart
+    ans= re.compile(r'^\+').sub('', ans)
+    if ans == '':
+        return '0'
+    return ans

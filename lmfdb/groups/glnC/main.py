@@ -8,7 +8,7 @@ from sage.all import ZZ, latex #, Permutation
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, display_knowl, SearchArray, TextBox, CountBox,
-    parse_ints, parse_bool, clean_input, to_dict,
+    parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
@@ -69,10 +69,10 @@ def by_label(label):
 #Should this be "Bad label instead?"
 
 # Take a list of list of integers and make a latex matrix
-def dispmat(mat):
+def dispmat(n,mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([str(z) for z in row])
+      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
       s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -123,7 +123,8 @@ def render_glnC_group(args):
     if 'label' in args:
         label = clean_input(args['label'])
         info = db.gps_crep.lucky({'label': label})
-        info['dispmat'] = dispmat
+        N=info['cyc_order_mat']
+        info['dispmat'] = lambda z: dispmat(N,z)
 
         title = '$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
 
