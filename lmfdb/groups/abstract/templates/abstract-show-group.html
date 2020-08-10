@@ -219,7 +219,7 @@ Complex character table:
 
 {% set dispv = info.sparse_cyclotomic_to_latex %}
 {% for chtr in chars %}
-<tr> <td> {{ chtr.label }}
+<tr> <td> {{ chtr.label }}<td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
    <td>${{ dispv(cond, val) }}$ 
