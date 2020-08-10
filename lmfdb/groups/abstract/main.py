@@ -21,7 +21,7 @@ from lmfdb.groups.abstract.web_groups import(
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
+abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -216,7 +216,7 @@ def render_abstract_group(args):
         info['dojs'] += ');'
         #print info['dojs']
         totsubs = len(gp.subgroups)
-        info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
+        info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
 
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
@@ -256,19 +256,19 @@ def make_knowl(title, knowlid):
 
 @abstract_page.route("/subinfo/<label>")
 def shortsubinfo(label):
-    #if not sub_label_is_valid(label):
+    if not sub_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
-    #    return ''
+        return ''
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
     # helper function
-    def subinfo_getsub(title, knowlid, count):
-        h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
+    def subinfo_getsub(title, knowlid, lab):
+        h = WebAbstractSubgroup(lab)
         prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
+        return '<tr><td>%s<td><span class="%s" data-sgid="%s">$%s$</span>\n' % (
             prop, h.spanclass(), h.label, h.subgroup_tex)
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+    ans = 'Information on subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
     ans += '<tr><td>%s <td> %s\n' % (
         make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
@@ -280,7 +280,7 @@ def shortsubinfo(label):
         ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
 
-    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
+    h = WebAbstractSubgroup(str(wsg.normalizer))
     ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
     ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
