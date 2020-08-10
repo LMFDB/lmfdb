@@ -42,7 +42,7 @@
   <tr>
     <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
     {% for sub in gp.direct_products %}
-    <td>$({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~\times~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -50,7 +50,7 @@
   <tr>
     <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
     {% for sub in gp.semidirect_products %}
-    <td>$({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~\rtimes~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -58,7 +58,7 @@
   <tr>
     <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
     {% for sub in gp.nonsplit_products %}
-    <td>$({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~.~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
