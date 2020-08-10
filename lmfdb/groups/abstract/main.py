@@ -339,8 +339,8 @@ def how_computed_page():
 class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
-    jump_example = "[8,3]"
-    jump_egspan = "e.g. [8,3] or [16,1]"
+    jump_example = "8.3"
+    jump_egspan = "e.g. 8.3 or 16.1"
     def __init__(self):
         order = TextBox(
             name="order",
@@ -360,11 +360,6 @@ class GroupsSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="3",
             example_span="4, or a range like 3..5")
-        group = TextBox(
-            name="group",
-            label="Group identifier",
-            knowl="group.small_group_label",
-            example="[4,2]")
         abelian = YesNoBox(
             name="abelian",
             label="Abelian",
@@ -391,7 +386,6 @@ class GroupsSearchArray(SearchArray):
             [order],
             [exponent],
             [nilpclass],
-            [group],
             [abelian],
             [cyclic],
             [solvable],
@@ -400,7 +394,7 @@ class GroupsSearchArray(SearchArray):
             [count]]
 
         self.refine_array = [
-            [order, exponent, nilpclass, group],
+            [order, exponent, nilpclass],
             [abelian,cyclic,solvable, nilpotent, perfect]]
 
     sort_knowl = "group.sort_order"
