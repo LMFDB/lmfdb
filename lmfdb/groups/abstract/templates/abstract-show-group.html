@@ -217,8 +217,13 @@ Complex character table:
 
 {% endfor %}
 
-{% for chr in chars %}
-<tr> <td> {{ chr.label }}
+{% set dispv = info.sparse_cyclotomic_to_latex %}
+{% for chtr in chars %}
+<tr> <td> {{ chtr.label }}
+  {% set cond = chtr.cyclotomic_n %}
+  {% for val in chtr['values'] %}
+   <td>${{ dispv(cond, val) }}$ 
+  {% endfor %}
 {% endfor %}
 </table>
 
@@ -237,10 +242,10 @@ Rational character table:
   {% endfor %}
 {% endfor %}
 
-{% for chr in qchars %}
-  <tr> <td> {{ chr.label }}<td>
-  {% for val in chr['qvalues'] %}
-    <td>{{ val }}
+{% for chtr in qchars %}
+  <tr> <td> {{ chtr.label }}<td>
+  {% for val in chtr['qvalues'] %}
+    <td>${{ val }}$
   {% endfor %}
 {% endfor %}
 </table>

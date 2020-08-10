@@ -744,7 +744,7 @@ function isleftclick(e) {
 
 function showsubinfo(node, ambient) {
   var mydiv = document.getElementById("selectedsub");
-  $.get(`/Groups/Abstract/subinfo/${ambient}.${node.value}`, 
+  $.get(`/Groups/Abstract/subinfo/${node.value}`, 
     function(data){
       mydiv.innerHTML = data; 
       renderMathInElement(mydiv, katexOpts);

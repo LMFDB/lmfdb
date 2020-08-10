@@ -7,7 +7,7 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, to_dict, display_knowl,
+    flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
@@ -227,6 +227,7 @@ def render_abstract_group(args):
         ccdata.sort(key=lambda x: x['counter'])
         chardata.sort(key=lambda x: x['counter'])
         qchardata.sort(key=lambda x: x['counter'])
+        info['sparse_cyclotomic_to_latex']=sparse_cyclotomic_to_latex
         info['ccdata'] = ccdata
         info['chardata'] = chardata
         info['qchardata'] = qchardata
@@ -255,9 +256,9 @@ def make_knowl(title, knowlid):
 
 @abstract_page.route("/subinfo/<label>")
 def shortsubinfo(label):
-    if not sub_label_is_valid(label):
+    #if not sub_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
-        return ''
+    #    return ''
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
     # helper function
