@@ -208,6 +208,14 @@ Complex character table:
 {% for c in ccs %}
 <td>{{ c.label }}
 {% endfor %}
+{% for p in gp.factors_of_order %}
+{% set ploop = loop %}
+<tr><td><td>{{p}}P
+{% for c in ccs %}
+<td>{{ ccs[c['powers'][ploop.index-1]-1].label }}
+{% endfor %}
+
+{% endfor %}
 {% for chr in chars %}
 <tr> <td> {{ chr.label }}
 {% endfor %}
