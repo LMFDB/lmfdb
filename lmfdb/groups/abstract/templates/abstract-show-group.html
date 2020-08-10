@@ -104,7 +104,7 @@
   {% for p, subgp in gp.sylow_subgroups() %}
   <tr>
     <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
-    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
+    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">${{subgp.subgroup_tex}}$</span></td>
   </tr>
   {% endfor %}
 </table>
@@ -178,7 +178,7 @@ Click on a subgroup in the diagram to see information about it.
       {% if not loop.first %}
         ${{symb}}$</td><td>
       {% endif %}
-      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.counter}}">${{sub.subgroup_tex}}$</span></td>
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.label}}">${{sub.subgroup_tex}}$</span></td>
     {% endfor %}
   </tr>
   {% endfor %}
