@@ -226,6 +226,9 @@ def render_abstract_group(args):
         ccdata.sort(key=lambda x: x['counter'])
         chardata.sort(key=lambda x: x['counter'])
         qchardata.sort(key=lambda x: x['counter'])
+        info['ccdata'] = ccdata
+        info['chardata'] = chardata
+        info['qchardata'] = qchardata
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 

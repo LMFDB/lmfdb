@@ -197,6 +197,34 @@ Click on a subgroup in the diagram to see information about it.
 <h2> Character Theory </h2>
 <p>
 
+{% set ccs = info.ccdata %}
+{% set chars = info.chardata %}
+{% set qchars = info.qchardata %}
+
+Complex character table:
+<p>
+<table>
+<tr><td><td>
+{% for c in ccs %}
+<td>{{ c.label }}
+{% endfor %}
+{% for chr in chars %}
+<tr> <td> {{ chr.label }}
+{% endfor %}
+</table>
+
+Rational character table:
+<p>
+<table>
+<tr><td><td>
+{% for c in ccs %}
+<td>{{ c.label }}
+{% endfor %}
+{% for chr in qchars %}
+<tr> <td> {{ chr.label }}
+{% endfor %}
+</table>
+
 </p>
 
 
