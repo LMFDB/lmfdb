@@ -181,6 +181,7 @@ def group_search(info, query):
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
     parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
     parse_bool(info, query, 'abelian', 'is abelian')
+    parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'solvable', 'is solvable')
     parse_bool(info, query, 'nilpotent', 'is nilpotent')
     parse_bool(info, query, 'perfect', 'is perfect')
@@ -368,6 +369,10 @@ class GroupsSearchArray(SearchArray):
             name="abelian",
             label="Abelian",
             knowl="group.abelian")
+        cyclic = YesNoBox(
+            name="cyclic",
+            label="Cyclic",
+            knowl="group.cyclic")
         solvable =YesNoBox(
             name="solvable",
             label="Solvable",
@@ -388,6 +393,7 @@ class GroupsSearchArray(SearchArray):
             [nilpclass],
             [group],
             [abelian],
+            [cyclic],
             [solvable],
             [nilpotent],
             [perfect],
@@ -395,7 +401,7 @@ class GroupsSearchArray(SearchArray):
 
         self.refine_array = [
             [order, exponent, nilpclass, group],
-            [abelian, solvable, nilpotent, perfect]]
+            [abelian,cyclic,solvable, nilpotent, perfect]]
 
     sort_knowl = "group.sort_order"
     def sort_order(self, info):
