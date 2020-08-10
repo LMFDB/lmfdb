@@ -209,18 +209,23 @@ def render_abstract_group(args):
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
-        lay1 = layers[1]
 
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(lay1) + ',' + str(orders)
+        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
         #print info['dojs']
         totsubs = len(gp.subgroups)
         info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
 
-
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
+
+        ccdata = [z for z in db.gps_groups_cc.search({'group': label})]
+        chardata = [z for z in db.gps_char.search({'group': label})]
+        qchardata = [z for z in db.gps_qchar.search({'group': label})]
+        ccdata.sort(key=lambda x: x['counter'])
+        chardata.sort(key=lambda x: x['counter'])
+        qchardata.sort(key=lambda x: x['counter'])
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
