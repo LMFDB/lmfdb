@@ -402,7 +402,7 @@ class WebAbstractGroup(WebObj):
 
     ###special subgroups
     def cent(self):
-        return self._data['center']
+        return self.special_search('Z')
 
     def cent_label(self):
         return group_names_pretty(self._data['center_label'])
@@ -412,7 +412,7 @@ class WebAbstractGroup(WebObj):
     
 
     def comm(self):
-        return self._data['commutator']
+        return self.special_search('D')
 
     def comm_label(self):
         return group_names_pretty(self._data['commutator_label'])
@@ -421,7 +421,7 @@ class WebAbstractGroup(WebObj):
         return group_names_pretty(self._data['abelian_quotient'])
 
     def fratt(self):
-        return self._data['frattini']
+        return self.special_search('Phi')
 
     def fratt_label(self):
         return group_names_pretty(self._data['frattini_label'])
