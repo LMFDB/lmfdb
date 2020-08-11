@@ -2,10 +2,11 @@
 
 import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect #, send_file, abort
+from flask import render_template, request, url_for, redirect, Markup #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
+from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
@@ -15,13 +16,21 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
-    WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
-    group_pretty_image)
+    WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
+    group_names_pretty, group_pretty_image)
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
+
+# For dynamic knowls
+@app.context_processor
+def ctx_abstract_groups():
+    return {'cc_data': cc_data,
+            'rcc_data': rcc_data,
+            'rchar_data': rchar_data,
+            'cchar_data': cchar_data}
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -231,6 +240,7 @@ def render_abstract_group(args):
         info['ccdata'] = ccdata
         info['chardata'] = chardata
         info['qchardata'] = qchardata
+        info['ccdisplayknowl'] = cc_display_knowl
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
@@ -403,4 +413,30 @@ class GroupsSearchArray(SearchArray):
         return [("", "order"),
                 ("descorder", "order descending")]
 
+def cc_display_knowl(gp, label, name=None):
+    if not name:
+        name = 'Conjugacy class {}'.format(label)
+    return '<a title = "%s [group.conjugacy_class.data]" knowl="group.conjugacy_class.data" kwargs="group=%s&label=%s">%s</a>' % (name, gp, label, name)
+
+def cc_data(gp,label):
+  print ("************************")
+  print (label)
+  print ("************************")
+  wacc = WebAbstractConjClass(gp,label)
+  if not wacc:
+    return 'Data for conjugacy class {} not found.'.format(label)
+  ans = '<h3>Conjugacy class {}</h3>'.format(label)
+  ans += '<br>Size of class: {}'.format(wacc.size)
+  ans += '<br>Order of elements: {}'.format(wacc.order)
+  ans += '<br>Centralizer: {}'.format(wacc.centralizer)
+  return Markup(ans)
+
+def rcc_data(label):
+  return 'Info on a conjugacy class division'
+
+def rchar_data(label):
+  return 'Info on a rational character'
+
+def cchar_data(label):
+  return 'Info on a complex character'
 

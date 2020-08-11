@@ -206,7 +206,7 @@ Complex character table:
 <table>
 <tr><td><td>
 {% for c in ccs %}
-<td>{{ c.label }}
+<td>{{ info.ccdisplayknowl(gp.name_label(), c.label, c.label)|safe }}
 {% endfor %}
 {% for p in gp.factors_of_order %}
 {% set ploop = loop %}
