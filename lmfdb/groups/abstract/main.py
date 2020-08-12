@@ -29,6 +29,7 @@ abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
 def ctx_abstract_groups():
     return {'cc_data': cc_data,
             'rcc_data': rcc_data,
+            'sub_data': sub_data,
             'rchar_data': rchar_data,
             'cchar_data': cchar_data}
 
@@ -418,17 +419,21 @@ def cc_display_knowl(gp, label, name=None):
         name = 'Conjugacy class {}'.format(label)
     return '<a title = "%s [group.conjugacy_class.data]" knowl="group.conjugacy_class.data" kwargs="group=%s&label=%s">%s</a>' % (name, gp, label, name)
 
+def sub_display_knowl(label, name=None):
+    if not name:
+        name = 'Subgroup {}'.format(label)
+    return '<a title = "%s [group.subgroup.data]" knowl="group.subgroup.data" kwargs="label=%s">%s</a>' % (name, label, name)
+
 def cc_data(gp,label):
-  print ("************************")
-  print (label)
-  print ("************************")
   wacc = WebAbstractConjClass(gp,label)
   if not wacc:
     return 'Data for conjugacy class {} not found.'.format(label)
   ans = '<h3>Conjugacy class {}</h3>'.format(label)
   ans += '<br>Size of class: {}'.format(wacc.size)
   ans += '<br>Order of elements: {}'.format(wacc.order)
-  ans += '<br>Centralizer: {}'.format(wacc.centralizer)
+  centralizer = wacc.centralizer
+  wcent = WebAbstractSubgroup(centralizer)
+  ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
   return Markup(ans)
 
 def rcc_data(label):
@@ -440,3 +445,5 @@ def rchar_data(label):
 def cchar_data(label):
   return 'Info on a complex character'
 
+def sub_data(label):
+  return Markup(shortsubinfo(label))
