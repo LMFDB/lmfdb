@@ -454,6 +454,10 @@ class WebAbstractSubgroup(WebObj):
             s += " normgp"
         return s
 
+    def make_span(self):
+        return '<span class="{}" data-sgid="{}">${}$</span>'.format( 
+            self.spanclass(), self.label, self.subgroup_tex)
+
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
     def __init__(self, ambient_gp, label, data=None):
@@ -462,8 +466,7 @@ class WebAbstractConjClass(WebObj):
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char
-    def __init__(self, ambient_gp, label, data=None):
-        self.ambient_gp = ambient_gp
+    def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
 
 class WebAbstractSupergroup(WebObj):

@@ -17,7 +17,8 @@ from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
-    group_names_pretty, group_pretty_image)
+    WebAbstractCharacter, group_names_pretty, group_pretty_image)
+from lmfdb.number_fields.web_number_field import formatfield
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
@@ -242,11 +243,12 @@ def render_abstract_group(args):
         info['chardata'] = chardata
         info['qchardata'] = qchardata
         info['ccdisplayknowl'] = cc_display_knowl
+        info['chtrdisplayknowl'] = char_display_knowl
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
-            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
+            ('Label', '$%s$' %  label), ('Order', '$%s$' % factored_order), ('#Aut(G)', '$%s$' % aut_order)
         ]
 
         bread = get_bread([(label, )])
@@ -276,6 +278,8 @@ def shortsubinfo(label):
     def subinfo_getsub(title, knowlid, lab):
         h = WebAbstractSubgroup(lab)
         prop = make_knowl(title, knowlid)
+        return '<tr><td>%s<td><span class="%s" data-sgid="%s">$%s$</span>\n' % (
+            prop, h.make_span())
         return '<tr><td>%s<td><span class="%s" data-sgid="%s">$%s$</span>\n' % (
             prop, h.spanclass(), h.label, h.subgroup_tex)
 
@@ -424,6 +428,11 @@ def sub_display_knowl(label, name=None):
         name = 'Subgroup {}'.format(label)
     return '<a title = "%s [group.subgroup.data]" knowl="group.subgroup.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
+def char_display_knowl(label, name=None):
+    if not name:
+        name = 'Character {}'.format(label)
+    return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s">%s</a>' % (name, label, name)
+
 def cc_data(gp,label):
   wacc = WebAbstractConjClass(gp,label)
   if not wacc:
@@ -443,7 +452,18 @@ def rchar_data(label):
   return 'Info on a rational character'
 
 def cchar_data(label):
-  return 'Info on a complex character'
+  mychar = WebAbstractCharacter(label)
+  ans = '<h3>Complex character {}</h3>'.format(label)
+  ans += '<br>Dimension: {}'.format(mychar.dim)
+  if mychar.faithful:
+    ans += '<br>Faithful character'
+  else:
+    ker = WebAbstractSubgroup(mychar.kernel)
+    ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker,"$"+ker.subgroup_tex+'$'))
+  nt = mychar.nt
+  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+  ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
+  return Markup(ans)
 
 def sub_data(label):
   return Markup(shortsubinfo(label))

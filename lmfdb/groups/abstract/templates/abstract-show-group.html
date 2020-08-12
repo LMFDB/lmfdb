@@ -201,7 +201,7 @@ Click on a subgroup in the diagram to see information about it.
 {% set chars = info.chardata %}
 {% set qchars = info.qchardata %}
 
-Complex character table:
+<h3>Complex character table</h3>
 <p>
 <table>
 <tr><td><td>
@@ -219,7 +219,7 @@ Complex character table:
 
 {% set dispv = info.sparse_cyclotomic_to_latex %}
 {% for chtr in chars %}
-<tr> <td> {{ chtr.label }}<td>
+<tr> <td> {{ info.chtrdisplayknowl(chtr.label, chtr.label)|safe }}<td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
    <td>${{ dispv(cond, val) }}$ 
@@ -227,7 +227,7 @@ Complex character table:
 {% endfor %}
 </table>
 
-Rational character table:
+<h3>Rational character table</h3>
 <p>
 <table>
 <tr><td><td>
