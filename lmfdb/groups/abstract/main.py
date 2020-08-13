@@ -443,23 +443,37 @@ def q_char_display_knowl(label, name=None):
         name = 'Character {}'.format(label)
     return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
-def cc_data(gp,label):
-  wacc = WebAbstractConjClass(gp,label)
-  if not wacc:
-    return 'Data for conjugacy class {} not found.'.format(label)
-  ans = '<h3>Conjugacy class {}</h3>'.format(label)
-  ans += '<br>Size of class: {}'.format(wacc.size)
-  ans += '<br>Order of elements: {}'.format(wacc.order)
-  centralizer = wacc.centralizer
-  wcent = WebAbstractSubgroup(centralizer)
-  ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
-  return Markup(ans)
+def cc_data(gp,label,typ='complex'):
+    if typ=='rational':
+        wag = WebAbstractGroup(gp)
+        rcc = wag.conjugacy_class_divisions
+        if not rcc:
+            return 'Data for conjugacy class {} not found.'.format(label)
+        classes = rcc[label]
+        wacc = classes[0]
+        mult = len(classes)
+        ans = '<h3>Rational conjugacy class {}</h3>'.format(label)
+        if mult > 1:
+            ans +='<br>Rational class is a union of {} conjugacy classes'.format(mult)
+            ans += '<br>Total size of class: {}'.format(wacc.size*mult)
+        else:
+            ans += '<br>Rational class is a single conjugacy class'
+            ans += '<br>Size of class: {}'.format(wacc.size)
+    else:
+        wacc = WebAbstractConjClass(gp,label)
+        if not wacc:
+            return 'Data for conjugacy class {} not found.'.format(label)
+        ans = '<h3>Conjugacy class {}</h3>'.format(label)
+        ans += '<br>Size of class: {}'.format(wacc.size)
+    ans += '<br>Order of elements: {}'.format(wacc.order)
+    centralizer = wacc.centralizer
+    wcent = WebAbstractSubgroup(centralizer)
+    ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
+    return Markup(ans)
 
 def rcc_data(gp,label):
   wag = WebAbstractGroup(gp)
   rcc = wag.conjugacy_class_divisions
-  print("**************")
-  print (rcc)
   classes = rcc[label]
   ans = "Got %s with %s classes"%(label, len(classes))
   return Markup(ans)
