@@ -115,13 +115,13 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def conjugacy_classes(self):
-        cl = [WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
         return sorted(cl, key=lambda x:x.counter)
 
     #These are the power-conjugacy classes
     @lazy_attribute
     def conjugacy_class_divisions(self):
-        cl = [WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
         divs = {}
         for c in cl:
             divkey = re.sub(r'([^\d])-?\d+?',r'\1', c.label)
@@ -129,8 +129,6 @@ class WebAbstractGroup(WebObj):
                 divs[divkey].append(c)
             else:
                 divs[divkey]=[c]
-        divs = [{'label': k, 'classes': divs[k]} for k in divs.keys()]
-        divs.sort(key=lambda x: x['classes'][0].counter)
         return divs
 
     @lazy_attribute
@@ -481,10 +479,12 @@ class WebAbstractSubgroup(WebObj):
         return '<span class="{}" data-sgid="{}">${}$</span>'.format( 
             self.spanclass(), self.label, self.subgroup_tex)
 
+# Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
     def __init__(self, ambient_gp, label, data=None):
         self.ambient_gp = ambient_gp
+        data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label':label})
         WebObj.__init__(self, label, data)
 
 class WebAbstractCharacter(WebObj):

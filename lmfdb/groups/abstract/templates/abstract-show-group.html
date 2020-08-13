@@ -207,7 +207,7 @@ Click on a subgroup in the diagram to see information about it.
 <table>
 <tr><td><td>
 {% for c in ccs %}
-<td>{{ info.ccdisplayknowl(gp.name_label(), c.label, c.label)|safe }}
+<td>{{ info.ccdisplayknowl(gp.label, c.label, "plain", c.label)|safe }}
 {% endfor %}
 {% for p in gp.factors_of_order %}
 {% set ploop = loop %}
@@ -232,8 +232,8 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 <table>
 <tr><td><td>
-{% for c in rccs %}
-  <td>{{ c.label }}
+{% for c in info.ccdivisions %}
+  <td>{{ info.ccdisplayknowl(gp.label, c.label, "rational", c.label)|safe }}
 {% endfor %}
 {% for p in gp.factors_of_order %}
   {% set ploop = loop %}

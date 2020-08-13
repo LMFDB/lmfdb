@@ -238,6 +238,8 @@ def render_abstract_group(args):
         info['chardata'] = gp.characters
         info['qchardata'] = gp.rational_characters
         ccdivs = gp.conjugacy_class_divisions
+        ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
+        ccdivs.sort(key=lambda x: x['classes'][0].counter)
         info['ccdivisions'] = ccdivs
         info['ccdisplayknowl'] = cc_display_knowl
         info['chtrdisplayknowl'] = char_display_knowl
@@ -421,10 +423,10 @@ class GroupsSearchArray(SearchArray):
         return [("", "order"),
                 ("descorder", "order descending")]
 
-def cc_display_knowl(gp, label, name=None):
+def cc_display_knowl(gp, label, typ, name=None):
     if not name:
         name = 'Conjugacy class {}'.format(label)
-    return '<a title = "%s [group.conjugacy_class.data]" knowl="group.conjugacy_class.data" kwargs="group=%s&label=%s">%s</a>' % (name, gp, label, name)
+    return '<a title = "%s [group.conjugacy_class.data]" knowl="group.conjugacy_class.data" kwargs="group=%s&label=%s&typ=%s">%s</a>' % (name, gp, label, typ, name)
 
 def sub_display_knowl(label, name=None):
     if not name:
@@ -453,8 +455,14 @@ def cc_data(gp,label):
   ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
   return Markup(ans)
 
-def rcc_data(label):
-  return 'Info on a conjugacy class division'
+def rcc_data(gp,label):
+  wag = WebAbstractGroup(gp)
+  rcc = wag.conjugacy_class_divisions
+  print("**************")
+  print (rcc)
+  classes = rcc[label]
+  ans = "Got %s with %s classes"%(label, len(classes))
+  return Markup(ans)
 
 def rchar_data(label):
   mychar = WebAbstractRationalCharacter(label)
