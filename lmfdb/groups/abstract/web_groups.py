@@ -115,12 +115,35 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def conjugacy_classes(self):
-        return {ccdata['label']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
+        cl = [WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        return sorted(cl, key=lambda x:x.counter)
+
+    #These are the power-conjugacy classes
+    @lazy_attribute
+    def conjugacy_class_divisions(self):
+        cl = [WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        divs = {}
+        for c in cl:
+            divkey = re.sub(r'([^\d])-?\d+?',r'\1', c.label)
+            if divkey in divs:
+                divs[divkey].append(c)
+            else:
+                divs[divkey]=[c]
+        divs = [{'label': k, 'classes': divs[k]} for k in divs.keys()]
+        divs.sort(key=lambda x: x['classes'][0].counter)
+        return divs
 
     @lazy_attribute
     def characters(self):
         # Should join with creps once we have images and join queries
-        return {chardata['label']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
+        chrs = [WebAbstractCharacter(chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})]
+        return sorted(chrs, key=lambda x:x.counter)
+
+    @lazy_attribute
+    def rational_characters(self):
+        # Should join with creps once we have images and join queries
+        chrs = [WebAbstractRationalCharacter(chardata['label'], chardata) for chardata in db.gps_qchar.search({'group': self.label})]
+        return sorted(chrs, key=lambda x:x.counter)
 
     @lazy_attribute
     def maximal_subgroup_of(self):
@@ -466,6 +489,11 @@ class WebAbstractConjClass(WebObj):
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char
+    def __init__(self, label, data=None):
+        WebObj.__init__(self, label, data)
+
+class WebAbstractRationalCharacter(WebObj):
+    table = db.gps_qchar
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
 

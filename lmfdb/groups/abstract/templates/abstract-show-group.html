@@ -198,6 +198,7 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 
 {% set ccs = info.ccdata %}
+{% set rccs = info.ccdivisions %}
 {% set chars = info.chardata %}
 {% set qchars = info.qchardata %}
 
@@ -219,7 +220,7 @@ Click on a subgroup in the diagram to see information about it.
 
 {% set dispv = info.sparse_cyclotomic_to_latex %}
 {% for chtr in chars %}
-<tr> <td> {{ info.chtrdisplayknowl(chtr.label, chtr.label)|safe }}<td>
+<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}<td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
    <td>${{ dispv(cond, val) }}$ 
@@ -231,21 +232,22 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 <table>
 <tr><td><td>
-{% for c in ccs %}
+{% for c in rccs %}
   <td>{{ c.label }}
 {% endfor %}
 {% for p in gp.factors_of_order %}
   {% set ploop = loop %}
   <tr><td><td>{{p}}P
-  {% for c in ccs %}
-    <td>{{ ccs[c['powers'][ploop.index-1]-1].label }}
+  {% for c in rccs %}
+    <td>{{ info.ctor[ccs[c['classes'][0]['powers'][ploop.index-1]-1].label] }}
   {% endfor %}
 {% endfor %}
 
 {% for chtr in qchars %}
-  <tr> <td> {{ chtr.label }}<td>
-  {% for val in chtr['qvalues'] %}
-    <td>${{ val }}$
+  <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}<td>
+  {# for val in chtr['qvalues'] #}
+  {% for c in rccs %}
+    <td>${{ chtr.qvalues[c.classes.0.counter -1] }}$
   {% endfor %}
 {% endfor %}
 </table>

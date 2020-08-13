@@ -17,7 +17,8 @@ from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
-    WebAbstractCharacter, group_names_pretty, group_pretty_image)
+    WebAbstractRationalCharacter, WebAbstractCharacter, 
+    group_names_pretty, group_pretty_image)
 from lmfdb.number_fields.web_number_field import formatfield
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
@@ -232,18 +233,20 @@ def render_abstract_group(args):
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
 
-        ccdata = [z for z in db.gps_groups_cc.search({'group': label})]
-        chardata = [z for z in db.gps_char.search({'group': label})]
-        qchardata = [z for z in db.gps_qchar.search({'group': label})]
-        ccdata.sort(key=lambda x: x['counter'])
-        chardata.sort(key=lambda x: x['counter'])
-        qchardata.sort(key=lambda x: x['counter'])
         info['sparse_cyclotomic_to_latex']=sparse_cyclotomic_to_latex
-        info['ccdata'] = ccdata
-        info['chardata'] = chardata
-        info['qchardata'] = qchardata
+        info['ccdata'] = gp.conjugacy_classes
+        info['chardata'] = gp.characters
+        info['qchardata'] = gp.rational_characters
+        ccdivs = gp.conjugacy_class_divisions
+        info['ccdivisions'] = ccdivs
         info['ccdisplayknowl'] = cc_display_knowl
         info['chtrdisplayknowl'] = char_display_knowl
+        # Need to map cc's to their divisions
+        ctor = {}
+        for k in ccdivs:
+            for v in k['classes']:
+                ctor[v.label] = k['label']
+        info['ctor'] = ctor
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
@@ -428,7 +431,12 @@ def sub_display_knowl(label, name=None):
         name = 'Subgroup {}'.format(label)
     return '<a title = "%s [group.subgroup.data]" knowl="group.subgroup.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
-def char_display_knowl(label, name=None):
+def char_display_knowl(label, field, name=None):
+    if not name:
+        name = 'Character {}'.format(label)
+    return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s&field=%s">%s</a>' % (name, label, field, name)
+
+def q_char_display_knowl(label, name=None):
     if not name:
         name = 'Character {}'.format(label)
     return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s">%s</a>' % (name, label, name)
@@ -449,12 +457,24 @@ def rcc_data(label):
   return 'Info on a conjugacy class division'
 
 def rchar_data(label):
-  return 'Info on a rational character'
+  mychar = WebAbstractRationalCharacter(label)
+  ans = '<h3>Rational character {}</h3>'.format(label)
+  ans += '<br>Degree: {}'.format(mychar.qdim)
+  if mychar.faithful:
+    ans += '<br>Faithful character'
+  else:
+    ans += '<br>Not faithful'
+  ans += '<br>Multiplicity: {}'.format(mychar.multiplicity)
+  ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
+  ans += '<br>Schur index: {}'.format(mychar.schur_index)
+  nt = mychar.nt
+  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+  return Markup(ans)
 
 def cchar_data(label):
   mychar = WebAbstractCharacter(label)
   ans = '<h3>Complex character {}</h3>'.format(label)
-  ans += '<br>Dimension: {}'.format(mychar.dim)
+  ans += '<br>Degree: {}'.format(mychar.dim)
   if mychar.faithful:
     ans += '<br>Faithful character'
   else:
