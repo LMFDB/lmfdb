@@ -482,11 +482,6 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
-@app.route("/citation/citing")
-def citing():
-    t = "How to Cite LMFDB"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
-    return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
 @app.route("/contact")
 def contact():

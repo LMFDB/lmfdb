@@ -1,16 +1,67 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<div>
 <p>
-We encourage authors of books, papers and other articles which mention
-the LMFDB to cite it, following <a href="{{url_for('citing')}}">these
-instructions</a>.
+  We encourage authors of books, papers and other articles which mention the LMFDB to cite it.
+  For a list of publications citing the LMFDB see our <a href="https://scholar.google.com/citations?user=XHF22vEAAAAJ&hl=en&oi=ao">Google Scholar profile</a>.
 </p>
-<p>
-Citation information for the LMFDB is
-available through its <a href="https://scholar.google.com/citations?user=XHF22vEAAAAJ&hl=en&oi=ao">Google Scholar profile</a>.
-</p>
+
+<p>If you would like to acknowledge the LMFDB, please use a citation in the following form, alphabetized under <em>LMFDB</em>.</p>
+<p>[42] The LMFDB Collaboration, <em>The L-functions and Modular Forms Database,</em>
+<a href="http://www.lmfdb.org"><code>http://www.lmfdb.org</code></a>, <span class="year-today">2020</span>, [Online; accessed <span class="date-today">14 August 2020</span>].</p>
+<p>Of course you should change the year and date accessed to match your usage (the same comment applies to all the examples below).
+The BibTeX entry is:</p>
+<p></p>
+<pre style="padding-left: 1ch;">
+<code>@misc{lmfdb,
+  shorthand    = {LMFDB},
+  author       = {The {LMFDB Collaboration}},
+  title        = {The {L}-functions and Modular Forms Database},
+  howpublished = {\url{http://www.lmfdb.org}},
+  year         = {<span class="year-today">2020</span>},
+  note         = {[Online; accessed <span class="date-today">14 August 2020</span>]},
+}</code></pre><p></p>
+<p>Then you can cite a certain object much like quoting a specific theorem from a paper. For example, you may refer to the elliptic curve with LMFDB label 11a.2 by</p>
+<p><code>\cite[\href{http://www.lmfdb.org/EllipticCurve/Q/11.a2}{Elliptic Curve 11.a2}]{lmfdb}</code></p>
+<p>In order to make the <code>\url</code> and <code>\href</code> commands to work, one should use the <a href="http://ctan.org/pkg/hyperref">hyperref</a> package.</p>
+<hr>
+<p>To cite a specific page in the LMFDB, such as the home page of the L-function of the first
+rank 4 elliptic curve/$Q$ shown in the example below, you can cite it as</p>
+<p>[42] The LMFDB Collaboration, <em>The L-functions and Modular Forms Database,
+home page of the L-function $L(s,E)$ for Elliptic Curve Isogeny Class $\texttt{234446.a}$,
+<a href="http://www.lmfdb.org/L/EllipticCurve/Q/234446.a/">http://www.lmfdb.org/L/EllipticCurve/Q/234446.a/</a>, <span class="year-today">2020</span> , [Online; accessed <span class="date-today">14 August 2020</span>].</p>
+<p>The BibTeX entry is:</p>
+<p></p>
+<pre style="padding-left: 1ch;">
+<code>@misc{lmfdb:234446.a,
+  shorthand    = {LMFDB E234446.a},
+  author       = {The {LMFDB Collaboration}},
+  title        = {The {L}-functions and Modular Forms Database,
+     Home page of the L-function $L(s,E)$ for Elliptic Curve Isogeny Class \texttt{234446.a}},
+  howpublished = {\mbox{\url{http://www.lmfdb.org/L/EllipticCurve/Q/234446.a/}}},
+  year         = {<span class="year-today">2020</span>},
+  note         = {[Online; accessed <span class="date-today">14 August 2020</span>]},
+}</code></pre><p></p>
+<script>
+function update_date_tags() {
+  var date = new Date();
+  var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var date_str = date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear();
+  var year_str = date.getFullYear();
+
+  var date_tags = document.getElementsByClassName("date-today");
+  for (var i = 0; i < date_tags.length; i++) {
+    date_tags[i].innerHTML = date_str;
+  }
+  var year_tags = document.getElementsByClassName("year-today");
+  for (var i = 0; i < year_tags.length; i++) {
+    year_tags[i].innerHTML = year_str;
+  }
+}
+update_date_tags()
+</script>
+
+
 </div>
 
 
