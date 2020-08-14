@@ -531,7 +531,7 @@ def mw_gens_table(invs,gens,hts,pts):
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
-def local_table(D,N,tama,bad_lpolys,cluster_pics):
+def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', r'ord(\(N\))'),
