@@ -11,6 +11,7 @@ from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl, small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
@@ -553,7 +554,8 @@ def local_table(D,N,tama,bad_lpolys,cluster_pics):
             Lp = '?'
         Cluslist = [r for r in cluster_pics if r[0] == p]
         if Cluslist:
-            Clus = '<a href="' + Cluslist[0][1] + '"><img src="' + Cluslist[0][2] + '" height=19 style="position: relative; top: 50%; transform: translateY(10%);" /></a>'
+            ClusThmb = '<img src="' + Cluslist[0][2] + '" height=19 style="position: relative; top: 50%; transform: translateY(10%);" />'
+            Clus = cp_display_knowl(Cluslist[0][1], img=ClusThmb)
         else:
             Clus = ''
         loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
@@ -649,9 +651,9 @@ class WebG2C(object):
         for x in tama:
             if x['p'] != 2:
                 clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
-                clusimg = clusentry['image']
+                #clusimg = clusentry['image']
                 clusthmb = clusentry['thumbnail']
-                clus.append([x['p'], clusimg, clusthmb])
+                clus.append([x['p'], x['cluster_label'], clusthmb])
         return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
