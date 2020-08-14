@@ -558,7 +558,7 @@ def local_table(D,N,tama,bad_lpolys,cluster_pics):
             Clus = cp_display_knowl(Cluslist[0][1], img=ClusThmb)
         else:
             Clus = ''
-        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
+        loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
