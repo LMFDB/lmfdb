@@ -10,7 +10,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     search_wrap)
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
@@ -116,7 +117,8 @@ def hilbert_modular_form_jump(info):
              per_page=50,
              shortcuts={'jump':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
-             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
+             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal']),
+                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              bread=lambda:[("Modular forms", url_for('modular_forms')),
                            ('Hilbert', url_for(".hilbert_modular_form_render_webpage")),
                            ('Search results', '.')],
