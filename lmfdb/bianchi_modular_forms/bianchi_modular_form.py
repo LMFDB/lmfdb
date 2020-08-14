@@ -11,7 +11,8 @@ from lmfdb.utils import (
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
     teXify_pol, search_wrap)
-from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
@@ -113,7 +114,8 @@ def bianchi_modular_form_postprocess(res, info, query):
                        "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
                        "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
                        "bc": lambda v: bc_info(v['bc']),
-                       "cm": lambda v: cm_info(v.pop('CM', '?'))},
+                       "cm": lambda v: cm_info(v.pop('CM', '?')),
+                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
              bread=lambda:[('Modular forms', url_for('modular_forms')), ('Bianchi', url_for(".index")),
                            ('Search results', '.')],
              url_for_label=lambda label: url_for(".render_bmf_webpage",
