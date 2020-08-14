@@ -548,16 +548,16 @@ class ECNF(object):
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
         if totally_real and not 'Lfunction' in self.urls:
-            self.friends += [('Hilbert modular Form ' + self.hmf_label, self.urls['hmf'])]
+            self.friends += [('Hilbert modular form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
-                self.friends += [('Bianchi modular Form is not cuspidal', '')]
+                self.friends += [('Bianchi modular form is not cuspidal', '')]
             elif not 'Lfunction' in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('(Bianchi modular Form %s)' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
 
 
         self.properties = [

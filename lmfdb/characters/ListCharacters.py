@@ -248,7 +248,7 @@ class CharacterSearch:
         info['start'] = self.start
         info['count'] = len(L)
         info['chars'] = L
-        info['title'] = 'Dirichlet Characters'
+        info['title'] = 'Dirichlet characters'
         return info
 
     def list_valid(self):

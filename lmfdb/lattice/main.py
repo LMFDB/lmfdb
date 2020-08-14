@@ -77,7 +77,7 @@ def lattice_render_webpage():
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
         credit = lattice_credit
-        t = 'Integral Lattices'
+        t = 'Integral lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['summary'] = lattice_summary()
         info['max_cn']=maxs[0]
@@ -131,7 +131,7 @@ def download_search(info):
 
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
+    s += c + ' Integral lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
     # The list entries are matrices of different sizes.  Sage and gp
     # do not mind this but Magma requires a different sort of list.
     list_start = '[*' if lang=='magma' else '['
@@ -179,14 +179,14 @@ def lattice_search_isometric(res, info, query):
 
 @search_wrap(template="lattice-search.html",
              table=db.lat_lattices,
-             title='Integral Lattices Search Results',
-             err_title='Integral Lattices Search Error',
+             title='Integral lattices search results',
+             err_title='Integral lattices search error',
              shortcuts={'download':download_search,
                         'label':lambda info:lattice_by_label_or_name(info.get('label'))},
              projection=lattice_search_projection,
              postprocess=lattice_search_isometric,
              url_for_label=lambda label: url_for(".render_lattice_webpage", label=label),
-             bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')],
+             bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search results', ' ')],
              learnmore=learnmore_list,
              properties=lambda: [])
 def lattice_search(info, query):
@@ -210,7 +210,7 @@ def render_lattice_webpage(**args):
             return redirect(url_for('.render_lattice_webpage', label=lab), 301)
         f = db.lat_lattices.lucky({'$or':[{'label': lab }, {'name': {'$contains': [lab]}}]})
     if f is None:
-        t = "Integral Lattices Search Error"
+        t = "Integral lattice search error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
         flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -284,9 +284,9 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if 'Leech' in info['comments']: # no need to duplicate as it is in the name
         info['comments'] = ''
     if info['name'] == "":
-        t = "Integral Lattice %s" % info['label']
+        t = "Integral lattice %s" % info['label']
     else:
-        t = "Integral Lattice "+info['label']+" ("+info['name']+")"
+        t = "Integral lattice "+info['label']+" ("+info['name']+")"
 #This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
@@ -337,7 +337,7 @@ def theta_display(label, number):
 #data quality pages
 @lattice_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Integral Lattice Data'
+    t = 'Completeness of integral lattice data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
@@ -346,7 +346,7 @@ def completeness_page():
 
 @lattice_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Integral Lattice Data'
+    t = 'Source of integral lattice data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit
@@ -355,7 +355,7 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'Label of an Integral Lattice'
+    t = 'Integral lattice labels'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
@@ -364,7 +364,7 @@ def labels_page():
 
 @lattice_page.route("/History")
 def history_page():
-    t = 'A Brief History of Lattices'
+    t = 'A brief history of lattices'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('History', '')]
     credit = lattice_credit
