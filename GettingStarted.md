@@ -29,7 +29,7 @@ Installation
    Sage installation directory, so should be no problem on a personal
    machine, but if you are using a system-wide Sage install on a shared
    machine, you will need ask a system administrator to do this step.
-   
+
    ```
    sage -i gap_packages
    sage -i database_gap # only needed if sage version < 8.6
@@ -38,39 +38,39 @@ Installation
    # in the 'lmfdb/' directory:
    sage -pip install -r requirements.txt
    ```
-   
+
    ### Troubleshooting with packages.
-   
+
    - If you have not run the site for a while you might get an error
      with packages like
-     
+
      ```
      ImportError: cannot import name monitoring
      ```
-     
+
      In this case or if you need to upgrade for any reason run
-     
+
      ```
      sage -pip install -r requirements.txt --upgrade
      ```
-     
+
    - In case the last step fails by is Mac OSX with the error
-     
+
      ```
      Error: pg_config executable not found.
      ```
-     
+
      we recommend to installing PostgreSQL by doing
-     
+
      ```
      brew install postgresql
      ```
-     
+
      and performing the last step again.
-   
+
    - In case the last step fails due to some missing SSL library,
      (this may be the case on osX) follow these steps
-     
+
      ```
      sage -i openssl
      sage -f python2 # takes some time
@@ -78,7 +78,7 @@ Installation
      sage -pip install --upgrade pip
      sage -pip install -r requirements.txt
      ```
-  
+
    - [optional] Memcache.  *This step is not at all necessary and can
      safely be ignored!* Memcache speeds up recompilation of python
      modules during development.  Using it requires both installing the
@@ -86,9 +86,9 @@ Installation
      additional python module.  The first line below needs to be run in
      a Sage shell, and the for second you need to be a super-user to
      install memcached if your machine does not have it.
-     
+
      * `easy_install -U python-memcached`
-     
+
      or even better and only possible if you have the dev headers:
 
      * `easy_install -U pylibmc`
@@ -113,7 +113,7 @@ Running
    Without `--debug` what you see will be more like www.lmfdb.org.
 
  * Once the server is running, visit http://localhost:37777/
-   
+
    You should now have a fully functional LMFDB site through this server.
 
  * When running with `--debug`, whenever a python (*.py) file changes
@@ -147,9 +147,9 @@ CoCalc
 
  * You can run the LMFDB inside a [CoCalc](https://www.cocalc.com) project by doing
    following the above installation instructions on a terminal in your project (you may want to
-   install the requirements using the `--user` flag). 
+   install the requirements using the `--user` flag).
    Explicitly,
-   
+
    ```
    cd ~
    git clone https://github.com/LMFDB/lmfdb.git lmfdb
@@ -157,13 +157,13 @@ CoCalc
    sage -pip install --user -r requirements.txt
    sage -python start-lmfdb.py --debug
    ```
-   
+
    On the last step, when you start the server running,
    LMFDB will detect that it is running inside CoCalc and provide a URL through which the
    site can be accessed.
 
  * If you've changed static files, you will have to run LMFDB on a different port in order for the files to update. For instance, to run LMFDB on port 37778:
-   
+
    ```
    sage -python start-lmfdb.py --debug --port=37778
    ```
@@ -259,8 +259,8 @@ Code development and sharing your work
    git pull --rebase upstream master
    ```
 
- * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb) 
-   that you have some new code!  
+ * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb)
+   that you have some new code!
    You should also issue a pull request at github
    (from your feature branch `new_feature`) at the same time.  Make
    sure that your pull request is to the lmfdb `master` branch,
