@@ -811,7 +811,7 @@ class ECNFSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [field, conductor_norm, jinv, include_base_change, include_Q_curves],
-            [isodeg, torsion, torsion_structure, include_cm, cm_disc],
-            [one, bf_deg]
+            [field, bf_deg, conductor_norm, jinv, include_base_change],
+            [include_Q_curves, isodeg, torsion, torsion_structure, include_cm],
+            [cm_disc, one]
             ]
