@@ -5,7 +5,7 @@ from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, randint, euler_phi
-from lmfdb.utils import to_dict, flash_error
+from lmfdb.utils import to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox, TextBox, CountBox
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
         WebDirichletGroup,
@@ -53,10 +53,67 @@ def render_characterNavigation():
     """
     return redirect(url_for(".render_Dirichletwebpage"), 301)
 
+class DirichSearchArray(SearchArray):
+    jump_example = "13.2"
+    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    def __init__(self):
+        modulus = TextBox(
+            "modulus",
+            knowl="character.dirichlet.modulus",
+            label="Modulus",
+            example="13",
+            example_span="13",
+        )
+        conductor = TextBox(
+            "conductor",
+            knowl = "character.dirichlet.conductor",
+            label = "Conductor",
+            example = "5",
+            example_span = "5 or 10,20",
+        )
+        order = TextBox(
+            "order",
+            label="Order",
+            knowl="character.dirichlet.order",
+            example="2",
+            example_span="2 or 3-5"
+        )
+        parity = ParityBox(
+            "parity",
+            knowl="character.dirichlet.parity",
+            label="Parity",
+            example="odd"
+        )
+        primitive = YesNoBox(
+            "primitive",
+            label="Primitive",
+            knowl="character.dirichlet.primitive",
+            example="yes"
+        )
+        count = CountBox()
+
+        self.refine_array = [
+            [modulus, conductor, order, parity, primitive, count],
+        ]
+        self.browse_array = [
+            [modulus],
+            [conductor],
+            [order],
+            [parity],
+            [primitive],
+            [count],
+        ]
+
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('List', 'List of Dirichlet characters'),
+            ('Counts', 'Counts table'),
+            ('Random', 'Random Dirichlet character')])
+
+
 def render_DirichletNavigation():
     args = to_dict(request.args)
-
-    info = {'args':args}
+    info = {'args': request.args}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
@@ -133,8 +190,9 @@ def render_DirichletNavigation():
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
-       info['title'] = 'Dirichlet characters'
-       return render_template('CharacterNavigate.html', **info)
+        info = to_dict(request.args, search_array=DirichSearchArray())
+        info['title'] = 'Dirichlet characters'
+        return render_template('CharacterNavigate.html', info=info,**info)
 
 @characters_page.route("/Dirichlet/Labels")
 def labels_page():
