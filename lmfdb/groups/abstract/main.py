@@ -30,10 +30,10 @@ abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
 @app.context_processor
 def ctx_abstract_groups():
     return {'cc_data': cc_data,
-            'rcc_data': rcc_data,
             'sub_data': sub_data,
             'rchar_data': rchar_data,
-            'cchar_data': cchar_data}
+            'cchar_data': cchar_data,
+            'dyn_gen': dyn_gen}
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -283,10 +283,8 @@ def shortsubinfo(label):
     def subinfo_getsub(title, knowlid, lab):
         h = WebAbstractSubgroup(lab)
         prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td><span class="%s" data-sgid="%s">$%s$</span>\n' % (
+        return '<tr><td>%s<td>%s\n' % (
             prop, h.make_span())
-        return '<tr><td>%s<td><span class="%s" data-sgid="%s">$%s$</span>\n' % (
-            prop, h.spanclass(), h.label, h.subgroup_tex)
 
     ans = 'Information on subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
@@ -426,22 +424,31 @@ class GroupsSearchArray(SearchArray):
 def cc_display_knowl(gp, label, typ, name=None):
     if not name:
         name = 'Conjugacy class {}'.format(label)
-    return '<a title = "%s [group.conjugacy_class.data]" knowl="group.conjugacy_class.data" kwargs="group=%s&label=%s&typ=%s">%s</a>' % (name, gp, label, typ, name)
+    return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7C{}">{}</a>'.format(name, gp, label, typ, name)
 
 def sub_display_knowl(label, name=None):
     if not name:
         name = 'Subgroup {}'.format(label)
-    return '<a title = "%s [group.subgroup.data]" knowl="group.subgroup.data" kwargs="label=%s">%s</a>' % (name, label, name)
+    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
 
 def char_display_knowl(label, field, name=None):
+    if field=='C':
+        fname='cchar_data'
+    else:
+        fname='rchar_data'
     if not name:
         name = 'Character {}'.format(label)
-    return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s&field=%s">%s</a>' % (name, label, field, name)
+    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=%s&args=%s">%s</a>' % (name, fname, label, name)
 
-def q_char_display_knowl(label, name=None):
-    if not name:
-        name = 'Character {}'.format(label)
-    return '<a title = "%s [group.character.data]" knowl="group.character.data" kwargs="label=%s">%s</a>' % (name, label, name)
+#def crep_display_knowl(label, name=None):
+#    if not name:
+#        name = 'Subgoup {}'.format(label)
+#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (name, label, name)
+#
+#def qrep_display_knowl(label, name=None):
+#    if not name:
+#        name = 'Subgoup {}'.format(label)
+#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (name, label, name)
 
 def cc_data(gp,label,typ='complex'):
     if typ=='rational':
@@ -471,13 +478,6 @@ def cc_data(gp,label,typ='complex'):
     ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
     return Markup(ans)
 
-def rcc_data(gp,label):
-  wag = WebAbstractGroup(gp)
-  rcc = wag.conjugacy_class_divisions
-  classes = rcc[label]
-  ans = "Got %s with %s classes"%(label, len(classes))
-  return Markup(ans)
-
 def rchar_data(label):
   mychar = WebAbstractRationalCharacter(label)
   ans = '<h3>Rational character {}</h3>'.format(label)
@@ -491,6 +491,7 @@ def rchar_data(label):
   ans += '<br>Schur index: {}'.format(mychar.schur_index)
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
   return Markup(ans)
 
 def cchar_data(label):
@@ -501,11 +502,31 @@ def cchar_data(label):
     ans += '<br>Faithful character'
   else:
     ker = WebAbstractSubgroup(mychar.kernel)
-    ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker,"$"+ker.subgroup_tex+'$'))
+    ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker.label,"$"+ker.subgroup_tex+'$'))
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
   ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
+  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
   return Markup(ans)
 
 def sub_data(label):
   return Markup(shortsubinfo(label))
+
+def dyn_gen(f,args):
+    r"""
+    Called from the generic dynamic knowl.
+    f is the name of a function to call, which has to be in flist, which
+      is at the bottom of this file
+    args is a string with the arguments, which are concatenated together
+      with %7C, which is the encoding of the pipe symbol
+    """
+    func = flist[f]
+    arglist = args.split('|')
+    return func(*arglist)
+
+#list if legal dynamic knowl functions
+flist= {'cc_data': cc_data,
+        'sub_data': sub_data,
+        'rchar_data': rchar_data,
+        'cchar_data': cchar_data}
+
