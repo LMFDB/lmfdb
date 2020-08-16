@@ -77,6 +77,13 @@ def dispmat(n,mat):
     s += r'\end{pmatrix}'
     return s
 
+def getname(label):
+    try:
+        wag=WebAbstractGroup(label)
+        return '$'+WebAbstractGroup(label).tex_name+'$'
+    except:
+        return label
+
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
@@ -110,7 +117,7 @@ def url_for_label(label):
              url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
-    info['getname'] = lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
+    info['getname'] = getname
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
 
