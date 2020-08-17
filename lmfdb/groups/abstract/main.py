@@ -232,7 +232,7 @@ def render_abstract_group(args):
 
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
-
+        
         info['sparse_cyclotomic_to_latex']=sparse_cyclotomic_to_latex
         info['ccdata'] = gp.conjugacy_classes
         info['chardata'] = gp.characters
@@ -250,6 +250,15 @@ def render_abstract_group(args):
                 ctor[v.label] = k['label']
         info['ctor'] = ctor
 
+        s = ",\ "
+        max_subs = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_subgroup_of])))
+        max_quot = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_quotient_of])))
+        info['max_subs'] = max_subs
+        info['max_quot'] = max_quot
+
+
+
+        
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
