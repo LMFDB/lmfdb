@@ -166,7 +166,18 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def semidirect_products(self):
         # Need to pick an ordering
-        return [sub for sub in self.subgroups.values() if sub.normal and sub.split and not sub.direct]
+        #return [sub for sub in self.subgroups.values() if sub.normal and sub.split and not sub.direct]
+        subs = self.subgroups.values()
+        semis = []
+        for sub in subs:
+            if sub.normal and sub.split and not sub.direct:
+                new = True
+                for el in semis:
+                    if sub.subgroup == el.subgroup:
+                        new = False
+                if new:
+                    semis.append(sub)
+        return semis
 
     @lazy_attribute
     def nonsplit_products(self):
