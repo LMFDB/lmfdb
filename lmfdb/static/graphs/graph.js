@@ -667,7 +667,7 @@ class EventHandler {
             this.renderer.highlight(overnode.value);
             // Turn on the lights
             var subid = overnode.value;
-            $(`span[data-sgid=${subid}]`).addClass("activesubgp");
+            $(`span[data-sgid="${subid}"]`).addClass("activesubgp");
         }
     } else
         if(this.renderer.graph.highlit) 
@@ -675,7 +675,7 @@ class EventHandler {
             this.renderer.unhighlight(val);
             // Turn off the lights
             var subid = val;
-            $(`span[data-sgid=${subid}]`).removeClass("activesubgp");
+            $(`span[data-sgid="${subid}"]`).removeClass("activesubgp");
   }
 
   initDrag(event) {
@@ -744,7 +744,7 @@ function isleftclick(e) {
 
 function showsubinfo(node, ambient) {
   var mydiv = document.getElementById("selectedsub");
-  $.get(`/Groups/Abstract/subinfo/${ambient}.${node.value}`, 
+  $.get(`/Groups/Abstract/subinfo/${node.value}`, 
     function(data){
       mydiv.innerHTML = data; 
       renderMathInElement(mydiv, katexOpts);

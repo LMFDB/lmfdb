@@ -115,12 +115,33 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def conjugacy_classes(self):
-        return {ccdata['label']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})}
+        cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        return sorted(cl, key=lambda x:x.counter)
+
+    #These are the power-conjugacy classes
+    @lazy_attribute
+    def conjugacy_class_divisions(self):
+        cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        divs = {}
+        for c in cl:
+            divkey = re.sub(r'([^\d])-?\d+?',r'\1', c.label)
+            if divkey in divs:
+                divs[divkey].append(c)
+            else:
+                divs[divkey]=[c]
+        return divs
 
     @lazy_attribute
     def characters(self):
         # Should join with creps once we have images and join queries
-        return {chardata['label']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})}
+        chrs = [WebAbstractCharacter(chardata['label'], chardata) for chardata in db.gps_char.search({'group': self.label})]
+        return sorted(chrs, key=lambda x:x.counter)
+
+    @lazy_attribute
+    def rational_characters(self):
+        # Should join with creps once we have images and join queries
+        chrs = [WebAbstractRationalCharacter(chardata['label'], chardata) for chardata in db.gps_qchar.search({'group': self.label})]
+        return sorted(chrs, key=lambda x:x.counter)
 
     @lazy_attribute
     def maximal_subgroup_of(self):
@@ -402,7 +423,7 @@ class WebAbstractGroup(WebObj):
 
     ###special subgroups
     def cent(self):
-        return self._data['center']
+        return self.special_search('Z')
 
     def cent_label(self):
         return group_names_pretty(self._data['center_label'])
@@ -412,7 +433,7 @@ class WebAbstractGroup(WebObj):
     
 
     def comm(self):
-        return self._data['commutator']
+        return self.special_search('D')
 
     def comm_label(self):
         return group_names_pretty(self._data['commutator_label'])
@@ -421,7 +442,7 @@ class WebAbstractGroup(WebObj):
         return group_names_pretty(self._data['abelian_quotient'])
 
     def fratt(self):
-        return self._data['frattini']
+        return self.special_search('Phi')
 
     def fratt_label(self):
         return group_names_pretty(self._data['frattini_label'])
@@ -454,16 +475,26 @@ class WebAbstractSubgroup(WebObj):
             s += " normgp"
         return s
 
+    def make_span(self):
+        return '<span class="{}" data-sgid="{}">${}$</span>'.format( 
+            self.spanclass(), self.label, self.subgroup_tex)
+
+# Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
     def __init__(self, ambient_gp, label, data=None):
         self.ambient_gp = ambient_gp
+        data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label':label})
         WebObj.__init__(self, label, data)
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char
-    def __init__(self, ambient_gp, label, data=None):
-        self.ambient_gp = ambient_gp
+    def __init__(self, label, data=None):
+        WebObj.__init__(self, label, data)
+
+class WebAbstractRationalCharacter(WebObj):
+    table = db.gps_qchar
+    def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
 
 class WebAbstractSupergroup(WebObj):
