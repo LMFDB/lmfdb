@@ -124,7 +124,7 @@ class WebAbstractGroup(WebObj):
         cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
         divs = {}
         for c in cl:
-            divkey = re.sub(r'([^\d])-?\d+?',r'\1', c.label)
+            divkey = re.sub(r'([^\d])-?\d+?$',r'\1', c.label)
             if divkey in divs:
                 divs[divkey].append(c)
             else:
