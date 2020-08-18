@@ -163,7 +163,7 @@ def render_glnQ_group(args):
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
-            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
+            ('Label', r'\(%s\)' %  label), ('Order', r'\(%s\)' % factored_order), ('#Aut(G)', r'\(%s\)' % aut_order)
         ]
 
         bread = get_bread([(label, )])
