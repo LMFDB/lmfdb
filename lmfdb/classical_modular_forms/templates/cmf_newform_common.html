@@ -218,7 +218,7 @@ function show_qexp(qstyle) {
     </p>
   </form>
 
-  {% if newform.dim > 2 and (newform.hecke_ring_cyclotomic_generator is none or newform.hecke_ring_cyclotomic_generator == 0) and not newform.hecke_ring_power_basis %}
+  {% if newform.show_hecke_ring_basis %}
     <p> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
