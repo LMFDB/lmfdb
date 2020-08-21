@@ -322,7 +322,8 @@ Note that you need editor priviledges to add, delete or modify data.
 
    You can also export your data using `copy_to`, add rows to the
    resulting file, then use `reload` to load the result back into
-   postgres.
+   postgres.  Use `copy_to_example` if you want an example of the
+   file format for your table.
 
 1. How do I update data?
 
