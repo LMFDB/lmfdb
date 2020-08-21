@@ -364,8 +364,9 @@ function get_count_of_results(download_limit) {
 
 function get_count_callback(res, download_limit) {
     $('#result-count').html(res['nres']);
+    $('#result-count2').html(res['nres']);
     if (parseInt(res['nres'], 10) > download_limit) {
-        $("#download-msg").html("There are too many search results for downloading.");
+        $("#download-msg").html("There are too many search results ("+res['nres']+") for downloading.");
     } else {
         $("#download-msg").html("");
         $("#download-form").show();

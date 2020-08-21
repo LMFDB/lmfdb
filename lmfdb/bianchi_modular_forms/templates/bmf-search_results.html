@@ -22,7 +22,7 @@
     <tbody>
 {% for form in info.results: %}
 <tr>
-<td>{{form.field_label}}</td>
+<td>{{form.field_knowl|safe}}</td>
 <td><a href={{url_for("bmf.render_bmf_space_webpage",field_label=form.field_label,
        level_label=form.level_label)}}>{{form.level_label}}</a> {#$={{form.level_ideal}}$#}</td>
 <td align='left'><a href="{{form.url}}">

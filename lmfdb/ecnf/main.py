@@ -498,7 +498,7 @@ def elliptic_curve_search(info, query):
         for n in query['torsion_structure']:
             t_o *= int(n)
         query['torsion_order'] = t_o
-    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
+    parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=ECNF_stats().isogeny_degrees)
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':
@@ -540,6 +540,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
+    parse_ints(info,query,'bf_deg',name='Base field degree',qfield='degree')
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
@@ -772,6 +773,13 @@ class ECNFSearchArray(SearchArray):
             label="Torsion order",
             knowl="ec.torsion_order",
             example="2")
+        bf_deg = SelectBox(
+            name="bf_deg",
+            label="Base field degree",
+            knowl="nf.degree",
+            options=[("",""),("2", "2"),("3", "3"),("4", "4"),("5", "5"),("6", "6")]
+            )
+
         def disp_tor(t):
             if len(t) == 1:
                 return "[%s]" % t, "C%s" % t
@@ -794,16 +802,16 @@ class ECNFSearchArray(SearchArray):
 
         self.browse_array = [
             [jinv],
-            [field, include_base_change],
-            [conductor_norm, include_Q_curves],
-            [torsion, torsion_structure],
-            [cm_disc, include_cm],
-            [isodeg, one],
-            [count]
+            [field, bf_deg],
+            [conductor_norm, include_base_change],
+            [torsion, include_Q_curves],
+            [cm_disc, torsion_structure],
+            [isodeg, include_cm],
+            [count, one]
             ]
 
         self.refine_array = [
-            [field, conductor_norm, jinv, include_base_change, include_Q_curves],
-            [isodeg, torsion, torsion_structure, include_cm, cm_disc],
-            [one]
+            [field, bf_deg, conductor_norm, jinv, include_base_change],
+            [include_Q_curves, isodeg, torsion, torsion_structure, include_cm],
+            [cm_disc, one]
             ]

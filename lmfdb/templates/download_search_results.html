@@ -13,18 +13,22 @@
 <div id="download-area">
 {% if info.number > download_limit %}
   <span id="download-msg">
-    There are too many search results for downloading.
+    There are too many search results 
+      (<span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>)
+    for downloading.
   </span>
 {% else %}
   {% if info.exact_count %}
     <form id="download-form">
   {% else %}
     <span id="download-msg">
-      In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{download_limit}}); return false;">determine the number of results</a>.
+      In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">determine the number of results</a>.
     </span>
     <form id="download-form" style="display:none;">
   {% endif %}
-  Download all search results for&nbsp;
+  Download all 
+    <span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>
+  search results for&nbsp;
   {% for lang in languages %}
     <button type="submit" name="Submit" value="{{lang}}">{{lang_text[lang]}}</button>&nbsp;
   {% endfor %}
