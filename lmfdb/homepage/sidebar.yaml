@@ -214,10 +214,10 @@
       status: beta
       part2:
          - title: Dirichlet characters
-           url_for:  "characters.render_Dirichletwebpage"
+           url_for:  "characters.render_DirichletNavigation"
            status: notonbeta
          - title: Dirichlet
-           url_for:  "characters.render_Dirichletwebpage"
+           url_for:  "characters.render_DirichletNavigation"
            status: beta
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
