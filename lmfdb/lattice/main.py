@@ -97,7 +97,7 @@ def random_lattice():
 def statistics():
     title = 'Lattices: Statistics'
     bread = [('Lattice', url_for(".lattice_render_webpage")), ('Statistics', url_for(".statistics"))]
-    return render_template("display_stats.html", info=Lattice_stats(), credit=credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=Lattice_stats(), credit=lattice_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
