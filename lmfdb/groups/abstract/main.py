@@ -318,6 +318,7 @@ def shortsubinfo(label):
     p = wsg.sylow
     nt = 'Yes for $p$ = %d' % p if p>1 else 'No'
     ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
+    ans += '<tr><td><td style="text-align: right"><a href="%s">$%s$ home page</a>' % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
     #print ""
     #print ans
     ans += '</table>'
