@@ -59,16 +59,16 @@ class Lattice_stats(StatsDisplay):
     top_titles = {'minimum': 'minimal vector length',
                   'aut': 'automorphism group order'}
     stat_list = [
-        {"cols": ["dim", "det"],
+        {"cols": ["det", "dim"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["dim", "minimum"],
+        {"cols": ["minimum", "dim"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["dim", "class_number"],
+        {"cols": ["class_number", "dim"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["dim", "aut"],
+        {"cols": ["aut", "dim"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
     ]
