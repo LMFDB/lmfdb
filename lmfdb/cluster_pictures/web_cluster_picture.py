@@ -1,16 +1,7 @@
 # -*- coding: utf-8 -*-
-from collections import Counter
-import os, yaml
-
-from sage.all import (
-    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
-    QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
-
-from flask import url_for
+from sage.all import cached_function
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
-        display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 wcplog = make_logger("WCP")
 
