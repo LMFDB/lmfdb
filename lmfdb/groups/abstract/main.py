@@ -316,7 +316,7 @@ def shortsubinfo(label):
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
     #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
     p = wsg.sylow
-    nt = 'Yes for $p$ = %d' % p if p>0 else 'No'
+    nt = 'Yes for $p$ = %d' % p if p>1 else 'No'
     ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
     #print ""
     #print ans
