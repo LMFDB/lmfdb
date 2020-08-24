@@ -744,7 +744,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
-            data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'])
+            data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)
 
         else:
             # invariants specific to isogeny class
