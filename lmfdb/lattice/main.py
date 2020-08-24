@@ -14,7 +14,7 @@ from lmfdb.utils import (
     search_wrap)
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
-from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
+from lmfdb.lattice.lattice_stats import Lattice_stats
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -68,7 +68,7 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     info = to_dict(request.args, search_array=LatSearchArray())
     if not request.args:
-        maxs=lattice_summary_data()
+        stats = Lattice_stats()
         dim_list = list(range(1, 11, 1))
         max_class_number = 20
         class_number_list = list(range(1, max_class_number + 1, 1))
@@ -79,10 +79,10 @@ def lattice_render_webpage():
         credit = lattice_credit
         t = 'Integral lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
-        info['summary'] = lattice_summary()
-        info['max_cn']=maxs[0]
-        info['max_dim']=maxs[1]
-        info['max_det']=maxs[2]
+        info['stats'] = stats
+        info['max_cn'] = stats.max_cn
+        info['max_dim'] = stats.max_dim
+        info['max_det'] = stats.max_det
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(info)
@@ -92,6 +92,12 @@ def lattice_render_webpage():
 def random_lattice():
     return redirect(url_for(".render_lattice_webpage", label=db.lat_lattices.random()), 307)
 
+
+@lattice_page.route("/stats")
+def statistics():
+    title = 'Lattices: Statistics'
+    bread = [('Lattice', url_for(".lattice_render_webpage")), ('Statistics', url_for(".statistics"))]
+    return render_template("display_stats.html", info=Lattice_stats(), credit=credit, title=title, bread=bread, learnmore=learnmore_list())
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
