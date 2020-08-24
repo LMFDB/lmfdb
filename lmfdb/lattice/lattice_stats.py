@@ -8,17 +8,18 @@ from lmfdb.logger import make_logger
 logger = make_logger("lattice")
 
 class Lattice_stats(StatsDisplay):
-    self.nlats = comma(db.lat_lattices.count())
-    self.max_cn = db.lat_lattices.max("class_number")
-    self.max_dim = db.lat_lattices.max("dim")
-    self.max_det = db.lat_lattices.max("det")
-    self.kposdef = display_knowl('lattice.postive_definite', 'positive definite')
-    self.kintegral = display_knowl('lattice.definition', 'integral lattices')
-    self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
-    self.kcn = display_knowl('lattice.class_number', 'class_number')
-    self.kdim = display_knowl('lattice.dimension', 'dimension')
-    self.kdet = display_knowl('lattice.determinant', 'dimension')
-    self.kpri = display_knowl('lattice.primitive', 'primitive')
+    def __init__(self):
+        self.nlats = comma(db.lat_lattices.count())
+        self.max_cn = db.lat_lattices.max("class_number")
+        self.max_dim = db.lat_lattices.max("dim")
+        self.max_det = db.lat_lattices.max("det")
+        self.kposdef = display_knowl('lattice.postive_definite', 'positive definite')
+        self.kintegral = display_knowl('lattice.definition', 'integral lattices')
+        self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
+        self.kcn = display_knowl('lattice.class_number', 'class_number')
+        self.kdim = display_knowl('lattice.dimension', 'dimension')
+        self.kdet = display_knowl('lattice.determinant', 'dimension')
+        self.kpri = display_knowl('lattice.primitive', 'primitive')
 
     @property
     def short_summary(self):
