@@ -36,7 +36,9 @@ class Lattice_stats(StatsDisplay):
             comma(self.max_det),
             self.kpri,
             self.kintegral,
-            self.kcn)
+            self.kcn,
+            url_for(".statistics"),
+        )
 
     table = db.lat_lattices
     baseurl_func = ".lattice_render_webpage"
