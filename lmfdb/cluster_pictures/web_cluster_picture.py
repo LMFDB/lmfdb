@@ -31,7 +31,7 @@ def cp_knowl_guts(label):
     out += '<br>Potential good reduction Jacobian: '
     out += str(wcp.potential_good_jacobian_reduction())
     out += '</div>'
-    #out += '<div align="right">'
+    #out += '<div align="right">' # Place holder in case we make a separate page later.
     #out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
     #out += '</div>'
     return out
