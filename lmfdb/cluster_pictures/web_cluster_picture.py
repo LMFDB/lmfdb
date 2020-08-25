@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-from sage.all import cached_function
-
 from lmfdb import db
 from lmfdb.logger import make_logger
 wcplog = make_logger("WCP")
 
-@cached_function
 def cp_display_knowl(label, name=None, img=None):
     if not name:
         name = "Cluster Picture %s" % label
