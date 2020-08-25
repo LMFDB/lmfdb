@@ -647,10 +647,14 @@ class WebG2C(object):
         clus = []
         for x in tama:
             if x['p'] != 2:
-                clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
-                #clusimg = clusentry['image']
-                clusthmb = clusentry['thumbnail']
-                clus.append([x['p'], x['cluster_label'], clusthmb])
+                try:
+                    clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
+                    #clusimg = clusentry['image']
+                    clusthmb = clusentry['thumbnail']
+                    clus.append([x['p'], x['cluster_label'], clusthmb])
+                except:
+                    g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
+                    raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
         return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
