@@ -20,15 +20,15 @@ def cp_knowl_guts(label):
     out += '<img src="'
     out += wcp.image()
     out += '" alt="cluster_picture_image"/>'
-    out += '<br>Depth: '
+    out += '<br><a title="depth" knowl="ag.cluster_picture">Depth</a>: '
     out += str(wcp.depth())
-    out += '<br>Size: '
+    out += '<br><a title="size" knowl="ag.cluster_picture">Size</a>: '
     out += str(wcp.size())
-    out += '<br>Potential toric rank: '
+    out += '<br><a title="potential toric rank" knowl="av.potential_toric_rank">Potential toric rank</a> of reduction of curve: '
     out += str(wcp.potential_toric_rank())
-    out += '<br>Potential good reduction curve: '
+    out += '<br><a title="potential good reduction" knowl="ag.potential_good_reduction">Potential good reduction</a> of curve: '
     out += str(wcp.potential_good_reduction())
-    out += '<br>Potential good reduction Jacobian: '
+    out += '<br><a title="potential good reduction" knowl="ag.potential_good_reduction">Potential good reduction</a> of <a title="jacobian" knowl="ag.jacobian">Jacobian</a>: '
     out += str(wcp.potential_good_jacobian_reduction())
     out += '</div>'
     #out += '<div align="right">' # Place holder in case we make a separate page later.
