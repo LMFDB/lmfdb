@@ -656,10 +656,6 @@ table a[knowl] {
   padding: 0;
 }
 
-table.ntdata a {
-  display: block;
-}
-
 table.chardata a {
   display: inline;
 }
