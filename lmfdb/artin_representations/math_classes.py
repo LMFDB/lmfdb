@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
-from lmfdb.utils.utilities import web_latex, coeff_to_poly
+from lmfdb.utils.utilities import web_latex, coeff_to_poly, letters2num, num2letters
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_short, small_group_display_knowl)
@@ -73,20 +73,6 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
-
-# Conversion from numbers to letters and back
-def letters2num(s):
-    letters = [ord(z)-96 for z in list(s)]
-    ssum = 0
-    for j in range(len(letters)):
-        ssum = ssum*26+letters[j]
-    return ssum
-
-def num2letters(n):
-    if n <= 26:
-        return chr(96+n)
-    else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
