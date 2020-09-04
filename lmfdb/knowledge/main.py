@@ -788,6 +788,9 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    if search:
+        types = list(knowl_type_code)
     try:
         knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
     except DataError as e:
