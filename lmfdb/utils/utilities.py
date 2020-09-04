@@ -291,6 +291,25 @@ def str_to_CBF(s):
             res  +=  sign * CBF(b)* CBF.gens()[0]
         return res
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    r"""
+    Convert a string into a number
+    """
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    r"""
+    Convert a number into a string of letters
+    """
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
 def to_dict(args, exclude = [], **kwds):
