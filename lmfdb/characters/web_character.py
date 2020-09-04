@@ -768,10 +768,13 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        f = [("Conductor", [self.conductor]),
-                ("Order", [self.order]),
-                ("Real", [self.isreal]),
-                ("Primitive", [self.isprimitive])]
+        f = [
+            ("Modulus", [self.modulus]),
+            ("Conductor", [self.conductor]),
+            ("Order", [self.order]),
+            ("Real", [self.isreal]),
+            ("Primitive", [self.isprimitive])
+        ]
         if self.isminimal:
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
