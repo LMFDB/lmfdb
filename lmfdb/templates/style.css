@@ -656,6 +656,10 @@ table a[knowl] {
   padding: 0;
 }
 
+table.ntdata>tr>td>a {
+  display: block;
+}
+
 table.chardata a {
   display: inline;
 }
