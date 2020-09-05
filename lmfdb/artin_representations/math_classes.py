@@ -4,7 +4,7 @@ from six import string_types
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly, letters2num, num2letters
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_short, small_group_display_knowl)
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
@@ -793,7 +793,7 @@ class NumberFieldGaloisGroup(object):
               Take an integer n, prime p, and precision prec, and return a 
               prec-tuple of the p-adic coefficients of j
             """
-            n = int(n)
+            n = ZZ(n)
             res = [0 for j in range(prec)]
             while n<0:
                 n += p**prec
