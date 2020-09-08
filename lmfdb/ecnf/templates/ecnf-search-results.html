@@ -16,7 +16,7 @@
 Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
 </div>
 {% else %}
-{% if info.number %}
+{% if info.number is defined %}
 {% include 'matches.html' %}
 <style type="text/css">
 table td.center {
