@@ -329,8 +329,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     cl = ECNF_isoclass.by_label(label)
     bread = [("Elliptic curves", url_for(".index"))]
     if not isinstance(cl, ECNF_isoclass):
-        info = {'query':{}, 'err':'No elliptic curve isogeny class in the database has label %s.' % label}
-        return search_input_error(info, bread)
+        flash_error('No elliptic curve isogeny class in the database has label %s.', label)
+        return search_input_error(bread=bread)
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
@@ -357,9 +357,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     ec = ECNF.by_label(label)
     bread = [("Elliptic curves", url_for(".index"))]
     if not ec:
-        info = {'query':{}}
-        info['err'] = 'No elliptic curve in the database has label %s.' % label
-        return search_input_error(info, bread)
+        flash_error('No elliptic curve in the database has label %s.', label)
+        return search_input_error(bread=bread)
 
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
@@ -463,7 +462,6 @@ def elliptic_curve_jump(info):
             return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     else:
         flash_error("%s is not a valid elliptic curve or isogeny class label.", label)
-        info['err'] = ''
         return redirect(url_for("ecnf.index"))
 
 def url_for_label(label):
@@ -543,9 +541,16 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'bf_deg',name='Base field degree',qfield='degree')
 
 def search_input_error(info=None, bread=None):
-    if info is None: info = {'err':'','query':{}}
-    if bread is None: bread = [('Elliptic curves', url_for(".index")), ('Search results', '.')]
-    return render_template("ecnf-search-results.html", info=info, title='Elliptic curve search input error', bread=bread, learnmore=learnmore_list())
+    if info is None:
+        info = {'err':''}
+    info['search_array'] = ECNFSearchArray()
+    if bread is None:
+        bread = [('Elliptic curves', url_for(".index")) ('Search results', '.')]
+    return render_template("ecnf-search-results.html",
+                           info=info,
+                           title='Elliptic curve search input error',
+                           bread=bread,
+                           learnmore=learnmore_list())
 
 
 @ecnf_page.route("/browse/")
