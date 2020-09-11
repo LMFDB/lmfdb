@@ -3,6 +3,7 @@
 import os
 import yaml
 from flask import url_for
+from app import is_beta
 
 def linked_name(item, level=""):
     """ take the dictionary describing a TOC entry and return the
@@ -49,7 +50,7 @@ class SideBar(object):
     """
     def __init__(self):
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.toc_dic = yaml.load(open(os.path.join(_curdir, "sidebar.yaml")), Loader=yaml.FullLoader)
+        self.toc_dic = yaml.load(open(os.path.join(_curdir, "betasidebar.yaml" if is_beta() else "sidebar.yaml")), Loader=yaml.FullLoader)
         self.main_headings = list(self.toc_dic)
         self.main_headings.sort()
         heading = lambda k: linked_name(self.toc_dic[k]['heading'],'heading')
