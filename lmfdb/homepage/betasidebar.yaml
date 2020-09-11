@@ -40,22 +40,22 @@
           degree: 'degree4'
       - title: "5+"
         status: future
-   secondpart:
-     type: multilevel
-     parts:
-       - title: First zeros
-         url_for: "first L-function zeros.firstzeros"
-         status: beta
-       - title: $\zeta$&nbsp;zeros
-         url_for: "zeta zeros.zetazeros"
-       - title: Operations
-         url_for: "tensor_products.index"
-         status: future
-       - title: dummy
-         status: future
-       - title: Local L-functions
-         status: future
-         colspan: onecolumn
+  secondpart:
+    type: multilevel
+    parts:
+      - title: First zeros
+        url_for: "first L-function zeros.firstzeros"
+        status: beta
+      - title: $\zeta$&nbsp;zeros
+        url_for: "zeta zeros.zetazeros"
+      - title: Operations
+        url_for: "tensor_products.index"
+        status: future
+      - title: dummy
+        status: future
+      - title: Local L-functions
+        status: future
+        colspan: onecolumn
 
 3ModForm:
   type: simple
