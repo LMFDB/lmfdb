@@ -63,50 +63,33 @@
       title: Modular forms
       url_for: "modular_forms"
    parts:
-     - title: GL(2)
-       style: rotate
-       part2:
-         - title: Classical
-           url_for: "cmf.index"
-         - title: Maass
-           url_for: "maass.index"
-         - title: Hilbert
-           url_for: "hmf.hilbert_modular_form_render_webpage"
-         - title: Bianchi
-           url_for: "bmf.index"
-         - title: Half-integral
-           status: future
-           colspan: onecolumn
-         - title: Noncongruence
-           status: future
-           colspan: onecolumn
-         - title: mod &#8467; 
-           url_for: "modlmf.modlmf_render_webpage"
-           status: future
-           colspan: onecolumn
-         - title: Hecke algebra 
-           url_for: "hecke_algebras.hecke_algebras_render_webpage"
-           status: future
-           colspan: onecolumn
-     - title: GL(3)
-       style: rotate
-       status: future_rotated
-       part2:
-         - title: Maass
-           status: future
-           colspan: onecolumn
-         - title: Cohomological
-           status: future
-           colspan: onecolumn
-     - title: Other
-       style: rotate
+     - title: Classical
+       url_for: "cmf.index"
+     - title: Maass
+       url_for: "maass.index"
+     - title: Hilbert
+       url_for: "hmf.hilbert_modular_form_render_webpage"
+     - title: Bianchi
+       url_for: "bmf.index"
+     - title: Half-integral
+       status: future
+     - title: Noncongruence
+       status: future
+     - title: mod &#8467; 
+       url_for: "modlmf.modlmf_render_webpage"
+       status: future
+     - title: Hecke algebra 
+       url_for: "hecke_algebras.hecke_algebras_render_webpage"
+       status: future
+     - title: GL(3) Maass
+       status: future
+     - title: Cohomological
+       status: future
+     - title: Siegel
        status: beta
-       part2:
-         - title: Siegel
-           status: beta
-           url_for: "smf.index"
-         - title: U(2,1)
-           status: future
+       url_for: "smf.index"
+     - title: U(2,1)
+       status: future
 
 4Var:
    type: multilevel
