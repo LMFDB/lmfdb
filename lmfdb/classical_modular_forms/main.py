@@ -224,7 +224,8 @@ def index():
             return trace_search(info)
         elif search_type == 'SpaceTraces':
             return space_trace_search(info)
-        assert False
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = CMF_stats()
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
     info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
