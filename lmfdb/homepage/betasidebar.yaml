@@ -168,11 +168,11 @@
       colspan: onecolumn
 
 6Repn:
-   type: simple
-   heading:
-      title: Representations
-      url_for: "representations"
-   parts:
+  type: simple
+  heading:
+    title: Representations
+    url_for: "representations"
+  parts:
     - title: Dirichlet characters
       url_for:  "characters.render_Dirichletwebpage"
       colspan: onecolumn
@@ -194,12 +194,12 @@
       colspan: onecolumn
 
 7Mot:
-   type: simple
-   status: beta
-   heading:
-      title: Motives
-      url_for: "motives"
-   parts:
+  type: simple
+  status: beta
+  heading:
+    title: Motives
+    url_for: "motives"
+  parts:
     - title: Hypergeometric over $/\Q$
       status: beta
       url_for:  "hypergm.index"
@@ -215,47 +215,48 @@
       colspan: onecolumn
 
 8Groups:
-   type: simple
-   heading:
-      title: Groups
-      url_for: "groups"
-   parts:
-    - title: Galois groups
-      url_for: "galois_groups.index"
-      colspan: onecolumn
-    - title: Sato-Tate groups
-      url_for: "st.index"
-      colspan: onecolumn
-    - title: Lattices
-      url_for: "lattice.lattice_render_webpage"
-      status: beta
-      colspan: onecolumn
-    - title: Small groups
+  type: simple
+  heading:
+    title: Groups
+    url_for: "groups"
+  parts:
+  - title: Galois groups
+    url_for: "galois_groups.index"
+    colspan: onecolumn
+  - title: Sato-Tate groups
+    url_for: "st.index"
+    colspan: onecolumn
+  - title: Lattices
+    url_for: "lattice.lattice_render_webpage"
+    status: beta
+    colspan: onecolumn
+  - title: Small groups
+    status: future
+    colspan: onecolumn
+  - title: Finite subgroups of
+    part2:
       status: future
-      colspan: onecolumn
-    - title: Finite subgroups of
-      part2:
-         - title: $\GL(n,\F_q)$
-           status:  future
-         - title: $\GL(n,\Z)$
-           status: future
-         - title: $\GL(n,\C)$
-           status:  future
-      status: future
-      colspan: onecolumn
+      - title: $\GL(n,\F_q)$
+        status:  future
+      - title: $\GL(n,\Z)$
+        status: future
+      - title: $\GL(n,\C)$
+        status:  future
+    status: future
+    colspan: onecolumn
 
 9Know:
-   type: single
-   heading:
-       title: Knowledge
-       url_for: "knowledge.index"
-       type: knowl
+  type: single
+  heading:
+    title: Knowledge
+    url_for: "knowledge.index"
+    type: knowl
 
 9Inv:
-   type: single
-   heading:
-       title: Inventory
-       url_for: "inventory_app.show_edit_root"
-       type: knowl
+  type: single
+  heading:
+    title: Inventory
+    url_for: "inventory_app.show_edit_root"
+    type: knowl
 
 ...
