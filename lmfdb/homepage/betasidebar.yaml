@@ -10,7 +10,7 @@
       url_for: "introduction_features"
     - title: Universe
       url_for: "universe"
-    - title: News!
+    - title: News
       url_for: "news"
 
 2L-functions:
