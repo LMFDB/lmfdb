@@ -64,6 +64,10 @@
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
   <tr>
+  	<td> {{ KNOWL('cmf.defining_polynomial',title='Defining polynomial') }}: </td>
+  	<td>{{ newform.field_poly_display | safe }}</td>
+  </tr>
+  <tr>
     <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> {{ newform.ring_display() | safe }}</td>
   </tr>
@@ -143,12 +147,12 @@
     <td></td>
     <td> {{newform.embedding_label}}</td>
   </tr>
-  {% if newform.embedding_root %}
+  {% if newform.embedding_root and newform.dim > 1 %}
   <tr>
-    <td>{{ KNOWL('nf.embedding', title='Root') }}</td>
+    <td>{{ KNOWL('cmf.root', title='Root') }}</td>
     <td></td>
     <td></td>
-    <td>\({{newform.embedding_root}}\) of {{ newform.field_poly_display | safe }}</td>
+    <td>\({{newform.embedding_root}}\) of defining polynomial</td>
   </tr>
   {% endif %}
   <tr>

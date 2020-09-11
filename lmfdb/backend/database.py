@@ -51,9 +51,9 @@ def setup_connection(conn):
         pass
     else:
         register_adapter(Integer, AsIs)
-        from .encoding import RealEncoder
+        from .encoding import RealEncoder, LmfdbRealLiteral
         register_adapter(RealNumber, RealEncoder)
-
+        register_adapter(LmfdbRealLiteral, RealEncoder)
 
 class PostgresDatabase(PostgresBase):
     """
