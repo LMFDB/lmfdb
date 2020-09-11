@@ -93,7 +93,7 @@
 
 4Var:
   type: simple
-  Heading: Varieties
+  heading: Varieties
   parts:
     - title: Elliptic curves over $/\Q$
       url_for: "ec.rational_elliptic_curves"
