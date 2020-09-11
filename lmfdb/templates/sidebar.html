@@ -8,7 +8,7 @@
   <div class="L">
   <span class="heading">{{value.firstpart.heading}}</span>
   {% for item in value.firstpart.entries %}
-    {% if not item.status or BETA %}
+    {% if not item.status or (BETA and item.status == 'beta') %}
       <span class="L">{{item.url | safe}}</span>
     {% endif %}
   {% endfor %}
@@ -16,7 +16,7 @@
   <table class="short">
   <tr>
   {% for item in value.secondpart.parts %}
-     {% if not item.status or BETA %}
+     {% if not item.status or (BETA and item.status == 'beta') %}
   {% if item.colspan == "onecolumn" %}<td colspan=2>{% else %}<td>{% endif %}
       {{item.url | safe}}</td>
     {%- if loop.index is even -%}</tr><tr>{%- endif -%}
@@ -29,7 +29,7 @@
 <table class="short">
 {% for entry in value.parts %}
   {%- if entry.status -%}
-    {%- if BETA and entry.status != 'future' -%}
+    {%- if BETA and entry.status == 'beta' -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
         <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
       {%- else -%}
@@ -122,7 +122,7 @@
             <table class="short2">
             <tr>
             {%- for pt3 in pt2.part3 -%}
-              {%- if BETA or not pt3.status -%}
+              {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
                 {%- if pt3.colspan == "onecolumn" -%}
                   {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
                   <td colspan="3">
@@ -165,7 +165,7 @@
       </tr><tr>
     {%- endif -%}{# if loop.index is even #}
   {%- endif -%}{# if entry.colspan == "onecolumn" #}
-  {%- if BETA or not entry.status -%}
+  {%- if (BETA and entry.status == 'beta') or not entry.status -%}
   {%- if entry.colspan == "onecolumn" -%}
     <td colspan=2>
       {%- else -%}
@@ -176,16 +176,15 @@
   {%- if entry.part2 -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
-      {%- if BETA and pt2.status == "notonbeta" -%}
-      {%- elif not BETA and pt2.status == "notonbeta" -%}
+      {%- if not BETA and pt2.status == "notonbeta" -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
-      {%- elif BETA or not pt2.status -%}
+      {%- elif (BETA and pt2.status == 'beta') or not pt2.status -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
       {%- endif -%}
       {%- if pt2.part3 -%}
         <div class="parts">
           {%- for pt3 in pt2.part3 -%}
-            {%- if BETA or not pt3.status -%}
+            {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
             {%- if pt3.status == "beta" -%}
             <span class="beta", class="subitem">
             {%- else -%}
