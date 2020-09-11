@@ -99,10 +99,8 @@
   parts:
     - title: Elliptic curves over $/\Q$
       url_for: "ec.rational_elliptic_curves"
-      colspan: onecolumn
     - title: Elliptic curves over $K$
       url_for: "ecnf.index"
-      colspan: onecolumn
     - title: Elliptic curves over $/\F_{q}(t)$
       status: future
       colspan: onecolumn
@@ -110,16 +108,16 @@
       url_for: "g2c.index_Q"
       colspan: onecolumn
     - title: Genus 2 curves over $K$
-      url_for: "g2c.index_Q"
+      status: future
       colspan: onecolumn
     - title: Genus 2 curves over $/\F_{q}(t)$
       status: future
       colspan: onecolumn
     - title: Genus 3 curves over $/\Q$
-      url_for: "g2c.index_Q"
+      status: future
       colspan: onecolumn
     - title: Genus 3 curves over $K$
-      url_for: "g2c.index_Q"
+      status: future
       colspan: onecolumn
     - title: Genus 3 curves over $/\F_{q}(t)$
       status: future
@@ -149,19 +147,21 @@
       colspan: onecolumn
  
 5Fields:
-   type: simple
-   heading:
-      title: Fields
-      url_for: "fields"
-   parts:
-    - title: "Number fields:"
-      part2:
-         - title: Global
-           url_for:  "number_fields.number_field_render_webpage"
-         - title: Local
-           url_for:  "local_fields.index"
+  type: simple
+  heading:
+    title: Fields
+    url_for: "fields"
+  parts:
+    - title: Global number fields
+      url_for:  "number_fields.number_field_render_webpage"
       colspan: onecolumn
-    - title: Function fields
+    - title: Local number fields
+      url_for:  "local_fields.index"
+      colspan: onecolumn
+    - title: Global function fields
+      status: future
+      colspan: onecolumn
+    - title: Local function fields
       status: future
       colspan: onecolumn
 
