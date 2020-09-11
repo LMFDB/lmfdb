@@ -62,59 +62,63 @@ def render_DirichletNavigation():
 
     info['learnmore'] = learn()
 
-    if 'modbrowse' in args:
-        arg = args['modbrowse']
-        arg = arg.split('-')
-        modulus_start = int(arg[0])
-        modulus_end = int(arg[1])
-        info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
-        info['credit'] = 'Sage'
-        h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
-        info['contents'] = c
-        info['headers'] = h
-        info['rows'] = rows
-        info['cols'] = cols
-        return render_template("ModulusList.html", **info)
+    try:
+        if 'modbrowse' in args:
+            arg = args['modbrowse']
+            arg = arg.split('-')
+            modulus_start = int(arg[0])
+            modulus_end = int(arg[1])
+            info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
+            info['credit'] = 'Sage'
+            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
+            info['contents'] = c
+            info['headers'] = h
+            info['rows'] = rows
+            info['cols'] = cols
+            return render_template("ModulusList.html", **info)
 
-    elif 'condbrowse' in args:
-        arg = args['condbrowse']
-        arg = arg.split('-')
-        conductor_start = int(arg[0])
-        conductor_end = int(arg[1])
-        info['conductor_start'] = conductor_start
-        info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
-        info['credit'] = "Sage"
-        info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
-        return render_template("ConductorList.html", **info)
+        elif 'condbrowse' in args:
+            arg = args['condbrowse']
+            arg = arg.split('-')
+            conductor_start = int(arg[0])
+            conductor_end = int(arg[1])
+            info['conductor_start'] = conductor_start
+            info['conductor_end'] = conductor_end
+            info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
+            info['credit'] = "Sage"
+            info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
+            return render_template("ConductorList.html", **info)
 
-    elif 'ordbrowse' in args:
-        arg = args['ordbrowse']
-        arg = arg.split('-')
-        order_start = int(arg[0])
-        order_end = int(arg[1])
-        info['order_start'] = order_start
-        info['order_end'] = order_end
-        info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
-        info['credit'] = 'SageMath'
-        info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
-        return render_template("OrderList.html", **info)
+        elif 'ordbrowse' in args:
+            arg = args['ordbrowse']
+            arg = arg.split('-')
+            order_start = int(arg[0])
+            order_end = int(arg[1])
+            info['order_start'] = order_start
+            info['order_end'] = order_end
+            info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
+            info['credit'] = 'SageMath'
+            info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+            return render_template("OrderList.html", **info)
 
-    elif 'label' in args:
-        label = args['label'].replace(' ','')
-        if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
-            slabel = label.split('.')
-            m,n = int(slabel[0]), int(slabel[1])
-            if m==n==1 or n < m and gcd(m,n) == 1:
-                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
-        if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
-            slabel = label.split('.')
-            return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
-        if re.match(r'^[1-9][0-9]*$', label):
-            return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
+        elif 'label' in args:
+            label = args['label'].replace(' ','')
+            if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
+                slabel = label.split('.')
+                m,n = int(slabel[0]), int(slabel[1])
+                if m==n==1 or n < m and gcd(m,n) == 1:
+                    return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+            if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
+                slabel = label.split('.')
+                return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
+            if re.match(r'^[1-9][0-9]*$', label):
+                return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
 
-        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
-        return render_template('CharacterNavigate.html', **info)
+            flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
+            return render_template('CharacterNavigate.html', **info)
+    except ValueError as err:
+        flash_error("Error raised in parsing: %s", err)
+        return render_template('CharacterNavigate.html', title='Dirichlet characters')
 
     if args:
         # if user clicked refine search, reset start to 0
