@@ -18,6 +18,7 @@ from lmfdb.utils import (
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
     YesNoBox, parse_element_of, parse_bool, search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -99,6 +100,10 @@ def rational_elliptic_curves(err_args=None):
                            learnmore=learnmore_list(),
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
+
+@ec_page.route("/interesting")
+def interesting():
+    return interesting_knowls("ec.q", db.ec_curves, "Interesting elliptic curves", url_for_label, "lmfdb_label")
 
 @ec_page.route("/random")
 def random_curve():
