@@ -65,9 +65,9 @@ def abelian_varieties():
             return abelian_variety_count(info)
         elif search_type in ['List', 'Random']:
             return abelian_variety_search(info)
-        assert False
-    else:
-        return abelian_variety_browse(info)
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
+    return abelian_variety_browse(info)
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
