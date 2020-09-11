@@ -58,7 +58,7 @@
           colspan: onecolumn
 
 3ModForm:
-   type: multilevel
+   type: simple
    heading:
       title: Modular forms
       url_for: "modular_forms"
