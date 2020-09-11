@@ -205,7 +205,7 @@ body.knowl #header {
 #header .right {
     margin-top: 0px;
     display: inline-block;
-    padding-left: 54px;
+    padding-left: 50px;
     vertical-align: top;
     width: calc(100% - 210px);
 }
@@ -297,7 +297,7 @@ body.knowl #header {
 }
 
 #main {
-  margin:  0px 0px 0px 170px;
+  margin:  0px 0px 0px 164px;
   padding: 0px 0px 0px 10px;
   min-height: 700px;
 }
