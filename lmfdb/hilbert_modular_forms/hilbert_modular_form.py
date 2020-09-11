@@ -10,13 +10,21 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     search_wrap)
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
+from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
+def get_bread(tail=[]):
+    base = [("Modular forms", url_for('modular_forms')),
+            ('Hilbert', url_for(".hilbert_modular_form_render_webpage"))]
+    if isinstance(tail, list):
+        return base + tail
+    else:
+        return base + [(tail, " ")]
 
 def get_hmf(label):
     """Return a complete HMF, give its label.  Note that the
@@ -50,12 +58,10 @@ def random_hmf():    # Random Hilbert modular form
 def hilbert_modular_form_render_webpage():
     info = to_dict(request.args, search_array=HMFSearchArray())
     if not request.args:
-        t = 'Hilbert Modular Forms'
-        bread = [("Modular Forms", url_for('modular_forms')),
-                 ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
-        info['learnmore'] = []
-        info['counts'] = get_counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
+        t = 'Hilbert modular forms'
+        info['stats'] = HMFstats()
+        info['counts'] = HMFstats().counts()
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=get_bread(), learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(info)
 
@@ -111,15 +117,14 @@ def hilbert_modular_form_jump(info):
 
 @search_wrap(template="hilbert_modular_form_search.html",
              table=db.hmf_forms,
-             title='Hilbert Modular Form Search Results',
-             err_title='Hilbert Modular Form Search Error',
+             title='Hilbert modular form search results',
+             err_title='Hilbert modular form search error',
              per_page=50,
              shortcuts={'jump':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
-             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
-             bread=lambda:[("Modular Forms", url_for('modular_forms')),
-                           ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-                           ('Search Results', '.')],
+             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal']),
+                       "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
+             bread=lambda:get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=lambda label: url_for('.render_hmf_webpage',
                                                  field_label=split_full_label(label)[0],
@@ -144,10 +149,15 @@ def hilbert_modular_form_search(info, query):
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
 
-def search_input_error(info = None, bread = None):
+def search_input_error(info=None, bread=None):
     if info is None: info = {'err':''}
-    if bread is None: bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
-    return render_template("hilbert_modular_form_search.html", info=info, title="Hilbert Modular Form Search Error", bread=bread)
+    info['search_array'] = HMFSearchArray()
+    if bread is None:
+        bread = get_bread("Search results")
+    return render_template("hilbert_modular_form_search.html",
+                           info=info,
+                           title="Hilbert modular forms search error",
+                           bread=bread)
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):
@@ -397,10 +407,8 @@ def render_hmf_webpage(**args):
 
 
 
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-        ('%s' % data['label'], ' ')]
-
-    t = "Hilbert Cusp Form %s" % info['label']
+    bread = get_bread(str(data["label"]))
+    t = "Hilbert cusp form %s" % info['label']
 
     forms_dims = db.hmf_forms.search({'field_label': data['field_label'], 'level_ideal': data['level_ideal']}, projection='dimension')
 
@@ -489,54 +497,50 @@ def render_hmf_webpage(**args):
 #data quality pages
 @hmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-             ('Completeness', '')]
+    t = 'Completeness of Hilbert modular form data'
+    bread = get_bread("Completeness")
     return render_template("single.html", kid='dq.mf.hilbert.extent',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @hmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-             ('Source', '')]
+    t = 'Source of Hilbert modular form data'
+    bread = get_bread("Source")
     return render_template("single.html", kid='dq.mf.hilbert.source',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @hmf_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-             ('Reliability', '')]
+    t = 'Reliability of Hilbert modular form data'
+    bread = get_bread("Reliability")
     return render_template("single.html", kid='dq.mf.hilbert.reliability',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @hmf_page.route("/Labels")
 def labels_page():
-    t = 'Label of an Hilbert Modular Form'
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
-             ('Labels', '')]
+    t = 'Labels for Hilbert fodular forms'
+    bread = get_bread("Labels")
     return render_template("single.html", kid='mf.hilbert.label',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @hmf_page.route("/browse/")
 def browse():
-    info = {
-        'counts': get_counts(),
-        'stats': get_stats()
-    }
     credit = 'John Voight'
-    t = 'Hilbert Modular Forms'
+    t = 'Hilbert modular forms'
+    bread = get_bread("Browse")
+    return render_template("hmf_stats.html", info=HMFstats(), credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
-             ('Browse', ' ')]
-    return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+@hmf_page.route("/stats")
+def statistics():
+    title = r'Hilbert modular forms: Statistics'
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @hmf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    counts = get_counts()
+    counts = HMFstats().counts()
     info = {}
-    if not str(d) in counts['degrees']:
+    if d not in counts['degrees']:
         if d==1:
             info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
@@ -544,29 +548,28 @@ def statistics_by_degree(d):
         d = 'bad'
     else:
         info['counts'] = counts
-        info['degree_stats'] = hmf_degree_summary(d)
+        info['degree_stats'] = HMFstats().degree_summary(d)
         info['degree'] = d
-        info['stats'] = get_stats(d)
+        info['stats'] = HMFstats().statistics(d)
 
     credit = 'John Cremona'
     if d==2:
-        t = 'Hilbert Modular Forms over Real Quadratic Number Fields'
+        t = 'Hilbert modular forms over real quadratic number fields'
     elif d==3:
-        t = 'Hilbert Modular Forms over Totally Real Cubic Number Fields'
+        t = 'Hilbert modular forms over totally real cubic number fields'
     elif d==4:
-        t = 'Hilbert Modular Forms over Totally Real Quartic Number Fields'
+        t = 'Hilbert modular forms over totally real quartic number fields'
     elif d==5:
-        t = 'Hilbert Modular Forms over Totally Real Quintic Number Fields'
+        t = 'Hilbert modular forms over totally real quintic number fields'
     elif d==6:
-        t = 'Hilbert Modular Forms over Totally Real Sextic Number Fields'
+        t = 'Hilbert modular forms over totally real sextic number fields'
     else:
-        t = 'Hilbert Modular Forms over Totally Real Fields of Degree %s' % d
+        t = 'Hilbert modular forms over totally real fields of degree %s' % d
 
-    bread = [('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
-              ('Degree %s' % d,' ')]
+    bread = get_bread("Degree %s" % d)
 
     if d=='bad':
-        t = 'Hilbert Modular Forms'
+        t = 'Hilbert modular forms'
         bread = bread[:-1]
 
     return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))

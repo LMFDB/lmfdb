@@ -11,7 +11,6 @@ import random
 import re
 import tempfile
 import time
-from collections import defaultdict
 from copy import copy
 from itertools import islice
 from types import GeneratorType
@@ -26,7 +25,7 @@ from sage.all import (CC, CBF, CDF,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation
+from sage.all import floor, latex, prime_range, valuation, factor
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
@@ -292,6 +291,25 @@ def str_to_CBF(s):
             res  +=  sign * CBF(b)* CBF.gens()[0]
         return res
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    r"""
+    Convert a string into a number
+    """
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    r"""
+    Convert a number into a string of letters
+    """
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
 def to_dict(args, exclude = [], **kwds):
@@ -543,10 +561,24 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, string_types):
         return x
-    if enclose:
-        return r"\( %s \)" % latex(x)
-    return " %s " % latex(x)
+    return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
+def web_latex_factored_integer(x, enclose=True, equals=False):
+    r"""
+    Given any x that can be converted to a ZZ, creates latex string representing x in factored form
+    Returns 0 for 0, replaces -1\cdot with -.
+
+    If equals=true returns latex string for x = factorization but omits "= factorization" if abs(x)=0,1,prime
+    """
+    x = ZZ(x)
+    if abs(x) in [0,1] or abs(x).is_prime():
+        return web_latex(x, enclose=enclose)
+    if equals:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+        s = " %s = %s " % (x, s)
+    else:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+    return r"\( %s \)" % s if enclose else s
 
 def web_latex_ideal_fact(x, enclose=True):
     r"""
@@ -1204,56 +1236,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     else:
         buf = virtual_file.buf
     return "data:image/png;base64," + quote(b64encode(buf))
-
-class KeyedDefaultDict(defaultdict):
-    """
-    A defaultdict where the default value takes the key as input.
-    """
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError((key,))
-        self[key] = value = self.default_factory(key)
-        return value
-
-def make_tuple(val):
-    """
-    Converts lists and dictionaries into tuples, recursively.  The main application
-    is so that the result can be used as a dictionary key.
-    """
-    if isinstance(val, (list, tuple)):
-        return tuple(make_tuple(x) for x in val)
-    elif isinstance(val, dict):
-        return tuple((make_tuple(a), make_tuple(b)) for a,b in val.items())
-    else:
-        return val
-
-def range_formatter(x):
-    if x is None:
-        return 'Unknown'
-    elif isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            return "..{0}".format(b)
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
-
-
 
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.utcfromtimestamp(0)

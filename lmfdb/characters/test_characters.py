@@ -115,7 +115,7 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_valuefield(self):
         W = self.tc.get('/Character/Dirichlet/13/2')
-        assert  'Value Field' in W.get_data(as_text=True)
+        assert  'Value field' in W.get_data(as_text=True)
 
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):

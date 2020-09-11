@@ -10,8 +10,14 @@
 
 {% include 'refine_search_form.html' %}
 
+{% if info.err is defined %}
+<h2>Error</h2>
+<div>
+Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+{% else %}
+{% if info.number is defined %}
 {% include 'matches.html' %}
-{% if info.number %}
 <style type="text/css">
 table td.center {
   text-align: center;
@@ -46,6 +52,7 @@ table td.params {
   </tr>
   {% endfor %}
 </table>
+{% endif %}
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

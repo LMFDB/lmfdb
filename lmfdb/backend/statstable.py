@@ -8,11 +8,9 @@ from collections import defaultdict
 from psycopg2 import DatabaseError
 from psycopg2.sql import SQL, Identifier, Literal
 
-from lmfdb.utils import KeyedDefaultDict, make_tuple
-
 from .base import PostgresBase
 from .encoding import Json, numeric_converter
-from .utils import DelayCommit
+from .utils import DelayCommit, KeyedDefaultDict, make_tuple
 
 
 # The following is used in bucketing for statistics
@@ -205,6 +203,9 @@ class PostgresStatsTable(PostgresBase):
     - ``total`` -- an integer, the number of rows in the search table.  If not provided,
         it will be looked up or computed.
     """
+    # By default we don't save counts.  You can inherit from this class and change
+    # the following value to True, then set _stats_table_class_ to your new stats class on your table class
+    saving = False
 
     def __init__(self, table, total=None):
         PostgresBase.__init__(self, table.search_table, table._db)
@@ -303,7 +304,7 @@ class PostgresStatsTable(PostgresBase):
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
-        if record:
+        if record and self.saving:
             self._record_count(query, nres, split_list, suffix, extra)
         return nres
 
@@ -587,7 +588,8 @@ class PostgresStatsTable(PostgresBase):
         m = self._quick_max(col, ccols, cvals)
         if m is None:
             m = self._slow_max(col, constraint)
-            self._record_max(col, ccols, cvals, m)
+            if record and self.saving:
+                self._record_max(col, ccols, cvals, m)
         return m
 
     def _bucket_iterator(self, buckets, constraint):
@@ -709,7 +711,7 @@ class PostgresStatsTable(PostgresBase):
         if grouping is None and cols:
             msg += "for " + ", ".join(cols)
         if constraint:
-            from lmfdb.utils import range_formatter
+            from .utils import range_formatter
 
             msg += ": " + ", ".join(
                 "{col} = {disp}".format(col=col, disp=range_formatter(val))

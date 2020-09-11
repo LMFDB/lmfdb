@@ -1,4 +1,4 @@
-{# template defs #}
+t{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -65,6 +65,14 @@ h2.link > a {
 
 #content > h2 a[knowl], #content > h3 a[knowl] {
     color: {{color.col_main}};
+}
+
+#content p {
+  padding-left: 1ch;
+}
+
+#content ul {
+  padding-left: 24px;
 }
 
 #content > h2.inline,
@@ -549,7 +557,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 td.forminfo {
    font-size: 80%;
    font-style: italic;
-   color: {{color.grey}};
+   color: #333333;
    vertical-align: top;
 }
 
@@ -603,6 +611,11 @@ button.inactive:hover {
     border: 2px solid {{color.button_border_inactive}};
 }
 
+/* HGCWA */
+.tab button.active {
+    background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
+}
+
 body.knowl form button:hover,
 body.knowl form select:hover {
     background:    {{color.knowl_hover}};
@@ -643,7 +656,7 @@ table a[knowl] {
   padding: 0;
 }
 
-table.ntdata a {
+table.ntdata td>a {
   display: block;
 }
 
@@ -676,6 +689,7 @@ table td.spacing {
 table.ntdata {
   width: auto;
   border: 3px;
+  margin-left: 7px;
   margin-top: 15px;
   margin-bottom: 15px;
 }
@@ -1315,7 +1329,8 @@ a.navlink {
   outline: 1px solid {{color.a_nav_background}};
   text-decoration: none;
   margin-left: 1px;
-  margin-top: 10px
+  margin-top: 10px;
+  vertical-align: top;
 }
 
 hr {
@@ -2173,6 +2188,10 @@ table.ntdata td.nowrap a {
 
 #complex_embeddings {
     padding-top: 10px;
+}
+
+table.coeff_ring_basis {
+    margin-left: 14px;
 }
 
 table.coeff_ring_basis td {

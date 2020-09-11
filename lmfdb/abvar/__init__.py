@@ -19,8 +19,8 @@ app.register_blueprint(abvar_page, url_prefix="/Variety/Abelian")
 
 register_search_function(
     "abvar",
-    "Abelian Varieties",
-    "Search over Abelian varities",
+    "Abelian varieties",
+    "Search over abelian varieties",
     auto_search="av_fqisog",
     inv=["av", "av_fqisog"],
 )
