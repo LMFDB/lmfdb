@@ -29,7 +29,7 @@
 <table class="short">
 {% for entry in value.parts %}
   {%- if entry.status -%}
-    {%- if BETA and entry.status != 'future -%}
+    {%- if BETA and entry.status != 'future' -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
         <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
       {%- else -%}
