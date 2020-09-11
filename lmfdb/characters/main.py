@@ -117,7 +117,7 @@ def render_DirichletNavigation():
             flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
             return render_template('CharacterNavigate.html', **info)
     except ValueError as err:
-        flash_error("Error raised in parsing: %s" % err)
+        flash_error("Error raised in parsing: %s". err)
         return render_template('CharacterNavigate.html', title='Dirichlet characters')
 
     if args:
