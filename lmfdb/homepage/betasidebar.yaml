@@ -100,7 +100,7 @@
            colspan: onecolumn
      - title: Other
        style: rotate
-       status: future_rotated
+       status: beta
        part2:
          - title: Siegel
            status: beta
@@ -210,26 +210,15 @@
       title: Representations
       url_for: "representations"
    parts:
-    - title: "Characters:"
-      status: beta
-      part2:
-         - title: Dirichlet characters
-           url_for:  "characters.render_Dirichletwebpage"
-           status: notonbeta
-         - title: Dirichlet
-           url_for:  "characters.render_Dirichletwebpage"
-           status: beta
-         - title: Hecke
-           url_for:  "characters.render_Heckewebpage"
-           status: future
-      colspan: onecolumn
-    - title: "Galois:"
+    - title: Dirichlet characters
+      url_for:  "characters.render_Dirichletwebpage"
+    - title: Hecke characters
+      url_for:  "characters.render_Heckewebpage"
       status: future
-      part2:
-         - title: Artin
-           url_for: "artin_representations.index"
-         - title: mod &#8467;
-           status: future
+    - title: Artin representations
+      url_for: "artin_representations.index"
+    - title: mod &#8467;
+      status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
