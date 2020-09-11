@@ -7,7 +7,6 @@ from lmfdb import db
 logger = make_logger("hecke_algebras")
 
 def hecke_algebras_summary():
-    heckestats = db.hecke_algebras.stats
     hecke_knowl = '<a knowl="hecke_algebra.definition">Hecke algebras</a>'
     level_knowl = '<a knowl="cmf.level">level</a>'
     weight_knowl = '<a knowl="cmf.weight">weight</a>'

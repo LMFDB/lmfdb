@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
-from lmfdb.app import app
 from lmfdb.utils import comma
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger
