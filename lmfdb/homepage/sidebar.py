@@ -3,7 +3,6 @@
 import os
 import yaml
 from flask import url_for
-from lmfdb.app import is_beta
 
 def linked_name(item, level=""):
     """ take the dictionary describing a TOC entry and return the
@@ -49,6 +48,8 @@ class SideBar(object):
     Class for holding the sidebar content.
     """
     def __init__(self):
+        from lmfdb.app import is_beta
+
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.toc_dic = yaml.load(open(os.path.join(_curdir, "betasidebar.yaml" if is_beta() else "sidebar.yaml")), Loader=yaml.FullLoader)
         self.main_headings = list(self.toc_dic)
