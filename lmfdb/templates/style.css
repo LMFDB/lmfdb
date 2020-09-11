@@ -197,10 +197,10 @@ body.knowl #header {
     display: inline-block;
     margin: 0px;
     padding-top: 8px;
-    padding-left: 20px;
+    padding-left: 30px;
 }
 #header #logo img {
-    max-height: 50px;
+    max-height: 60px;
 }
 #header .right {
     margin-top: 0px;
