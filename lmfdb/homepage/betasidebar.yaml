@@ -99,8 +99,10 @@
   parts:
     - title: Elliptic curves over $/\Q$
       url_for: "ec.rational_elliptic_curves"
+      colspan: onecolumn
     - title: Elliptic curves over $K$
       url_for: "ecnf.index"
+      colspan: onecolumn
     - title: Elliptic curves over $/\F_{q}(t)$
       status: future
       colspan: onecolumn
@@ -173,11 +175,14 @@
    parts:
     - title: Dirichlet characters
       url_for:  "characters.render_Dirichletwebpage"
+      colspan: onecolumn
     - title: Hecke characters
       url_for:  "characters.render_Heckewebpage"
       status: future
+      colspan: onecolumn
     - title: Artin representations
       url_for: "artin_representations.index"
+      colspan: onecolumn
     - title: mod &#8467;
       status: future
       colspan: onecolumn
@@ -195,21 +200,19 @@
       title: Motives
       url_for: "motives"
    parts:
-    - title: "Hypergeometric:"
+    - title: Hypergeometric over $/\Q$
       status: beta
-      part2:
-         - title: $/\Q$
-           status:  beta
-           url_for:  "hypergm.index"
-         - title: dummy
-           status: future
-         - title: $/\Q(\sqrt{d})$
-           status: future
+      url_for:  "hypergm.index"
+      colspan: onecolumn
+    - title: Hypergeometric over $/\Q(\sqrt{d})$
+      status: future
       colspan: onecolumn
     - title: Jacobi
       status: future
+      colspan: onecolumn
     - title: $G_2$
       status: future
+      colspan: onecolumn
 
 8Groups:
    type: simple
