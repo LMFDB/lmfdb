@@ -1,5 +1,5 @@
 {%- for key, heading, value in sidebar.data -%}
-{%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}
+{%- if (BETA and value.status == 'beta') or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
 {% if user_is_authenticated or BETA or key != '9Inv' %}
 {{heading | safe}}
@@ -127,7 +127,7 @@
                 {%- else -%}
                   <td>
                 {%- endif -%}
-                {%- if pt3.status == "beta" and BETA -%}
+                {%- if BETA and pt3.status == "beta" -%}
                   <span class="beta",class="subtitle">{{pt3.url|safe}}</span></td>
                 {%- else -%}
                   <span class="subtitle">{{ pt3.url | safe }}</span></td>
@@ -164,13 +164,13 @@
     {%- endif -%}{# if loop.index is even #}
   {%- endif -%}{# if entry.colspan == "onecolumn" #}
   {%- if (BETA and entry.status == 'beta') or not entry.status -%}
-  {%- if entry.colspan == "onecolumn" -%}
-    <td colspan=2>
-      {%- else -%}
-    <td scope="col" width="20%">
-      {%- endif -%}
-      {{entry.url | safe}}
-  {%- endif -%}    {# if BETA or not entry.status #}
+    {%- if entry.colspan == "onecolumn" -%}
+      <td colspan=2>
+    {%- else -%}
+      <td scope="col" width="20%">
+    {%- endif -%}
+        {{entry.url | safe}}
+    {%- endif -%}
   {%- if entry.part2 -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
@@ -212,6 +212,6 @@
 
 {% endif %} {# if value.type == ... #}
 {%- endif -%} {# user_is_authenticated or not Knowledge #}
-{%- endif -%} {# if BETA or not value.status #}
+{%- endif -%} {# if (BETA and value.status == 'beta') or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 
