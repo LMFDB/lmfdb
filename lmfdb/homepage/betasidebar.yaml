@@ -142,7 +142,6 @@
     - title: $3^+$-d
       style: rotate
       status: future_rotated
-      part2:
     - title: Calabi-Yau varieties
       status: future
     - title: Shimura varieties
