@@ -200,11 +200,11 @@
     title: Motives
     url_for: "motives"
   parts:
-    - title: Hypergeometric over $/\Q$
+    - title: Hypergeometric over $\Q$
       status: beta
       url_for:  "hypergm.index"
       colspan: onecolumn
-    - title: Hypergeometric over $/\Q(\sqrt{d})$
+    - title: Hypergeometric over $\Q(\sqrt{d})$
       status: future
       colspan: onecolumn
     - title: Jacobi
