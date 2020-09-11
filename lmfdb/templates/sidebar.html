@@ -16,7 +16,7 @@
   <table class="short">
   <tr>
   {% for item in value.secondpart.parts %}
-     {% if not item.status or (BETA and item.status == 'beta') %}
+     {% if (BETA and item.status == 'beta') or not item.status %}
   {% if item.colspan == "onecolumn" %}<td colspan=2>{% else %}<td>{% endif %}
       {{item.url | safe}}</td>
     {%- if loop.index is even -%}</tr><tr>{%- endif -%}
@@ -45,30 +45,32 @@
         <table class="short2">
         <tr class="bor">
         {%- for pt2 in entry.part2 -%}
-          {%- if pt2.colspan == "onecolumn%" -%}
+          {% if (BETA and pt2.status =='beta') or not pt2.status %}
+            {%- if pt2.colspan == "onecolumn%" -%}
+              {%- if loop.index is even -%}</tr><tr>{%- endif -%}
+              <td colspan="2">
+            {%- else -%}
+              <td>
+            {%- endif -%}
+            <span class="subtitle">{{ pt2.url | safe }}</span>
+            {%- if pt2.part3 -%}
+              <table class="short2"><tr>
+              {%- for pt3 in pt2.part3 -%}
+                {%- if pt3.colspan == "onecolumn"%}
+                  {%- if loop.index is even -%} </tr><tr> {%- endif -%}
+                  <td colspan="2">
+                {%- else -%}
+                  <td>
+                {%- endif -%}
+                {{ pt3.url | safe}}</td>
+                {%- if loop.index is even%}</tr><tr>{%- endif -%}
+              {%- endfor -%}
+              </tr></table>
+            {%- endif -%} {# if part3 in pt2 #}
+            {%- if pt2.colspan == "onecolumn"%} </td></tr><tr> {%- else -%} </td> {%- endif -%}
+            </td>
             {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-            <td colspan="2">
-          {%- else -%}
-            <td>
-          {%- endif -%}
-          <span class="subtitle">{{ pt2.url | safe }}</span>
-          {%- if pt2.part3 -%}
-            <table class="short2"><tr>
-            {%- for pt3 in pt2.part3 -%}
-              {%- if pt3.colspan == "onecolumn"%}
-                {%- if loop.index is even -%} </tr><tr> {%- endif -%}
-                <td colspan="2">
-              {%- else -%}
-                <td>
-              {%- endif -%}
-              {{ pt3.url | safe}}</td>
-              {%- if loop.index is even%}</tr><tr>{%- endif -%}
-            {%- endfor -%}
-            </tr></table>
-          {%- endif -%} {# if part3 in pt2 #}
-          {%- if pt2.colspan == "onecolumn"%} </td></tr><tr> {%- else -%} </td> {%- endif -%}
-          </td>
-          {%- if loop.index is even -%}</tr><tr>{%- endif -%}
+          {% endif %}
         {%- endfor -%} {# for pt2 #}
         </tr>
         </table>
@@ -93,7 +95,7 @@
       <tr class="bor">
       {%- for pt2 in entry.part2 -%}
         {%- if pt2.colspan == "onecolumn"%} </tr><tr><td colspan="2"> {%- else -%}<td>{%- endif -%}
-        {%- if BETA and pt2.status == 'beta' -%}
+        {%- if (BETA and pt2.status == 'beta') or not pt2.status -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
           {%- if pt2.part3 -%}
             <table class="short2" border="0">
