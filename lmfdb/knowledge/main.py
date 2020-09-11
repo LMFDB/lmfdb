@@ -756,7 +756,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             return data
         resp = make_response(data)
         # cache if it is a usual GET
-        if request.method == 'GET':
+        if request.method != 'POST':
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
