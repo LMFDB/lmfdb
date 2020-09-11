@@ -432,7 +432,7 @@ body > .debug {
 
 #sidebar {
   float: left;
-  width: 160px;
+  width: 162px;
   margin: 10px 0px 0px 0px;
   font-family: sans-serif;
   font-size: 85%;
@@ -1881,7 +1881,6 @@ div.maassformplot img {
 
 #sidebar .heading {
     padding-right: 1px;
-    padding-left: 2px;
     margin-bottom: 1px;
 }
 
