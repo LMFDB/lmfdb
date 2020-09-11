@@ -64,7 +64,6 @@
       url_for: "modular_forms"
    parts:
      - title: GL(2)
-       style: rotate
        part2:
          - title: Classical
            url_for: "cmf.index"
@@ -89,7 +88,6 @@
            status: future
            colspan: onecolumn
      - title: GL(3)
-       style: rotate
        status: future_rotated
        part2:
          - title: Maass
@@ -99,7 +97,6 @@
            status: future
            colspan: onecolumn
      - title: Other
-       style: rotate
        status: beta
        part2:
          - title: Siegel
