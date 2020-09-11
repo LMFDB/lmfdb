@@ -93,28 +93,26 @@
       <tr class="bor">
       {%- for pt2 in entry.part2 -%}
         {%- if pt2.colspan == "onecolumn"%} </tr><tr><td colspan="2"> {%- else -%}<td>{%- endif -%}
-        {%- if pt2.status -%}
-          {% if BETA -%}
-            <span class="subtitle">{{ pt2.url | safe }}</span>
-            {%- if pt2.part3 -%}
-              <table class="short2" border="0">
-              <tr>
-              {%- for pt3 in pt2.part3 -%}
-                {%- if pt3.colspan == "onecolumn" -%}
-                  {%- if loop.index is even -%} </tr><tr> {%- endif -%}
-                  <td colspan="2">
-                {%- else -%}
-                  <td>
-                {%- endif -%}
-                <span class="subtitle">{{ pt3.url | safe }}</span></td>
-                {%- if pt3.colspan == "onecolumn" -%}
-                  {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
-                {%- endif -%}
-                {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-              {%- endfor -%}
-              </tr>
-              </table>
-            {%- endif -%}
+        {%- if BETA and pt2.status == 'beta' -%}
+          <span class="subtitle">{{ pt2.url | safe }}</span>
+          {%- if pt2.part3 -%}
+            <table class="short2" border="0">
+            <tr>
+            {%- for pt3 in pt2.part3 -%}
+              {%- if pt3.colspan == "onecolumn" -%}
+                {%- if loop.index is even -%} </tr><tr> {%- endif -%}
+                <td colspan="2">
+              {%- else -%}
+                <td>
+              {%- endif -%}
+              <span class="subtitle">{{ pt3.url | safe }}</span></td>
+              {%- if pt3.colspan == "onecolumn" -%}
+                {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
+              {%- endif -%}
+              {%- if loop.index is even -%}</tr><tr>{%- endif -%}
+            {%- endfor -%}
+            </tr>
+            </table>
           {%- endif -%}
         {%- else -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
