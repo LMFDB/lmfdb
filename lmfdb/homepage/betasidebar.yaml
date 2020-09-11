@@ -147,7 +147,10 @@
     - title: Shimura varieties
       status: future
       colspan: onecolumn
- 
+    - title: "Abelian varieties over $\F_{q}$"
+      url_for: "abvarfq.abelian_varieties"
+      colspan: onecolumn
+
 5Fields:
   type: simple
   heading:
