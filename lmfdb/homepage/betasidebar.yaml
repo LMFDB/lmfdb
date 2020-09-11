@@ -131,7 +131,7 @@
       status: beta
       url_for: "belyi.index"
       colspan: onecolumn
-    - title: "Higher genus families"
+    - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
       colspan: onecolumn
     - title: Abelian surfaces
