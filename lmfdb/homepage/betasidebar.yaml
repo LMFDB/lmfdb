@@ -235,7 +235,6 @@
     colspan: onecolumn
   - title: Finite subgroups of
     part2:
-      status: future
       - title: $\GL(n,\F_q)$
         status:  future
       - title: $\GL(n,\Z)$
