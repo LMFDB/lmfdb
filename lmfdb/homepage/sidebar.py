@@ -3,7 +3,7 @@
 import os
 import yaml
 from flask import url_for
-from app import is_beta
+from lmfdb.app import is_beta
 
 def linked_name(item, level=""):
     """ take the dictionary describing a TOC entry and return the
