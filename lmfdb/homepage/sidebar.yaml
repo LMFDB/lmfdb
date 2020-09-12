@@ -49,7 +49,6 @@
       status: future
     - title: Local L-functions
       status: future
-      colspan: onecolumn
 
 3ModForm:
   type: simple
