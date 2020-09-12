@@ -21,7 +21,6 @@
   firstpart:
     type: head_row
     heading: "Degree:"
-    url_for: "knowledge.show"
     entries:
       - title: "1"
         url_for: "l_functions.l_function_degree_page"
