@@ -19,21 +19,21 @@
     title: L-functions
     url_for: "l_functions"
   firstpart:
-    type: head_row
-    entries:
+    type: multilevel
+    parts:
       - title: "Degree 1"
         url_for: "l_functions.l_function_degree_page"
         url_args:
           degree: 'degree1'
-      - title: "2"
+      - title: "Degree 2"
         url_for: "l_functions.l_function_degree_page"
         url_args:
           degree: 'degree2'
-      - title: "3"
+      - title: "Degree 3"
         url_for: "l_functions.l_function_degree_page"
         url_args:
           degree: 'degree3'
-      - title: "4"
+      - title: "Degree 4"
         url_for: "l_functions.l_function_degree_page"
         url_args:
           degree: 'degree4'
