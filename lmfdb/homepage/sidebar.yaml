@@ -157,10 +157,10 @@
     title: Fields
     url_for: "fields"
   parts:
-    - title: Global number fields
+    - title: Number fields
       url_for:  "number_fields.number_field_render_webpage"
       colspan: onecolumn
-    - title: Local number fields
+    - title: $p$-adic fields
       url_for:  "local_fields.index"
       colspan: onecolumn
     - title: Global function fields
