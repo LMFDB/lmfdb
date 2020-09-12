@@ -1,10 +1,10 @@
 1intro:
   type: simple
   heading:
-     title: Introduction and more
+     title: Introduction
      url_for: "introduction"
   parts:
-    - title: Introduction
+    - title: Overview
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
@@ -246,13 +246,6 @@
         status:  future
     status: future
     colspan: onecolumn
-
-9Know:
-  type: single
-  heading:
-    title: Knowledge
-    url_for: "knowledge.index"
-    type: knowl
 
 9Inv:
   type: single
