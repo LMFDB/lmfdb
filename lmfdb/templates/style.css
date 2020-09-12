@@ -297,7 +297,7 @@ body.knowl #header {
 }
 
 #main {
-  margin:  0px 0px 0px 164px;
+  margin:  0px 0px 0px 180px;
   padding: 0px 0px 0px 10px;
   min-height: 700px;
 }
@@ -432,7 +432,7 @@ body > .debug {
 
 #sidebar {
   float: left;
-  width: 164px;
+  width: 180px;
   margin: 10px 0px 0px 0px;
   font-family: sans-serif;
   font-size: 85%;
