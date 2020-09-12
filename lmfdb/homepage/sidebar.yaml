@@ -23,9 +23,6 @@
     heading:
       title: Degree
       url_for: "knowledge.show"
-      url_args:
-        ID: "degree"
-      type: knowl
     entries:
       - title: "1"
         url_for: "l_functions.l_function_degree_page"
