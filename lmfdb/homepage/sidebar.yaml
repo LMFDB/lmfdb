@@ -14,47 +14,42 @@
       url_for: "knowledge.index"
 
 2L-functions:
-  type: L
+  type: simple
   heading:
     title: L-functions
     url_for: "l_functions"
-  firstpart:
-    type: multilevel
-    parts:
-      - title: "Degree 1"
-        url_for: "l_functions.l_function_degree_page"
-        url_args:
-          degree: 'degree1'
-      - title: "Degree 2"
-        url_for: "l_functions.l_function_degree_page"
-        url_args:
-          degree: 'degree2'
-      - title: "Degree 3"
-        url_for: "l_functions.l_function_degree_page"
-        url_args:
-          degree: 'degree3'
-      - title: "Degree 4"
-        url_for: "l_functions.l_function_degree_page"
-        url_args:
-          degree: 'degree4'
-      - title: "5+"
-        status: future
-  secondpart:
-    type: multilevel
-    parts:
-      - title: First zeros
-        url_for: "first L-function zeros.firstzeros"
-        status: beta
-      - title: $\zeta$&nbsp;zeros
-        url_for: "zeta zeros.zetazeros"
-      - title: Operations
-        url_for: "tensor_products.index"
-        status: future
-      - title: dummy
-        status: future
-      - title: Local L-functions
-        status: future
-        colspan: onecolumn
+  parts:
+    - title: "Degree 1"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree1'
+    - title: "Degree 2"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree2'
+    - title: "Degree 3"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree3'
+    - title: "Degree 4"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree4'
+    - title: "5+"
+      status: future
+    - title: First zeros
+      url_for: "first L-function zeros.firstzeros"
+      status: beta
+    - title: $\zeta$&nbsp;zeros
+      url_for: "zeta zeros.zetazeros"
+    - title: Operations
+      url_for: "tensor_products.index"
+      status: future
+    - title: dummy
+      status: future
+    - title: Local L-functions
+      status: future
+      colspan: onecolumn
 
 3ModForm:
   type: simple
