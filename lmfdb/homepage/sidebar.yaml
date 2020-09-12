@@ -100,7 +100,7 @@
     - title: Elliptic curves over $\Q$
       url_for: "ec.rational_elliptic_curves"
       colspan: onecolumn
-    - title: Elliptic curves over $K$
+    - title: Elliptic curves over $K/\Q$
       url_for: "ecnf.index"
       colspan: onecolumn
     - title: Elliptic curves over $\F_{q}(t)$
@@ -109,7 +109,7 @@
     - title: Genus 2 curves over $\Q$
       url_for: "g2c.index_Q"
       colspan: onecolumn
-    - title: Genus 2 curves over $K$
+    - title: Genus 2 curves over $K/Q$
       status: future
       colspan: onecolumn
     - title: Genus 2 curves over $\F_{q}(t)$
@@ -118,7 +118,7 @@
     - title: Genus 3 curves over $\Q$
       status: future
       colspan: onecolumn
-    - title: Genus 3 curves over $K$
+    - title: Genus 3 curves over $K/\Q$
       status: future
       colspan: onecolumn
     - title: Genus 3 curves over $\F_{q}(t)$
