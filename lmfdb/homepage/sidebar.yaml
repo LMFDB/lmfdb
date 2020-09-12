@@ -35,8 +35,6 @@
       url_for: "l_functions.l_function_degree_page"
       url_args:
         degree: 'degree4'
-    - title: "5+"
-      status: future
     - title: $\zeta$&nbsp;zeros
       url_for: "zeta zeros.zetazeros"
     - title: First zeros
