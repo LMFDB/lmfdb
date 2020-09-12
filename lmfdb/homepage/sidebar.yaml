@@ -247,7 +247,7 @@
     status: future
     colspan: onecolumn
 
-9Inv:
+8Inv:
   type: single
   heading:
     title: Inventory
