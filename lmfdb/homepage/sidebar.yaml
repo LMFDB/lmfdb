@@ -20,7 +20,6 @@
     url_for: "l_functions"
   firstpart:
     type: head_row
-    heading: ""
     entries:
       - title: "Degree 1"
         url_for: "l_functions.l_function_degree_page"
