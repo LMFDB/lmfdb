@@ -20,9 +20,9 @@
     url_for: "l_functions"
   firstpart:
     type: head_row
-    heading: "Degree:"
+    heading: ""
     entries:
-      - title: "1"
+      - title: "Degree 1"
         url_for: "l_functions.l_function_degree_page"
         url_args:
           degree: 'degree1'
