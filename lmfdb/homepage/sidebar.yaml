@@ -11,7 +11,7 @@
     - title: Universe
       url_for: "universe"
     - title: Knowledge
-      url_for: "knowledge"
+      url_for: "knowledge.index"
 
 2L-functions:
   type: L
@@ -246,6 +246,13 @@
         status:  future
     status: future
     colspan: onecolumn
+
+9Know:
+  type: single
+  heading:
+    title: Knowledge
+    url_for: "knowledge.index"
+    type: knowl
 
 9Inv:
   type: single
