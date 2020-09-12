@@ -242,5 +242,6 @@
     title: Inventory
     url_for: "inventory_app.show_edit_root"
     type: knowl
+    status: beta
 
 ...
