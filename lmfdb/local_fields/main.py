@@ -12,6 +12,7 @@ from lmfdb.utils import (
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict,
     search_wrap, Downloader)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
@@ -308,7 +309,17 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template(
+            "lf-show-field.html",
+            credit=LF_credit,
+            title=title,
+            bread=bread,
+            info=info,
+            properties=prop2,
+            friends=friends,
+            learnmore=learnmore_list(),
+            KNOWL_ID="lf.%s" % label,
+        )
 
 
 def show_slopes(sl):
@@ -351,6 +362,18 @@ def search_input_error(info, bread):
 def random_field():
     label = db.lf_fields.random()
     return redirect(url_for(".by_label", label=label), 307)
+
+@local_fields_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "lf",
+        db.lf_fields,
+        url_for_label,
+        title=r"Some interesting local fields",
+        bread=get_bread(("Interesting", " ")),
+        credit=LF_credit,
+        learnmore=learnmore_list()
+    )
 
 @local_fields_page.route("/Completeness")
 def cande():

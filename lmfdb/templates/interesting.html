@@ -2,7 +2,11 @@
 
 {% block content %}
 
-<table>
+<table class='ntdata'>
+  <thead>
+    <th>Label</th>
+    <th>Description</th>
+  </thead>
   {% for knowl in knowls %}
     <tr>
       <td><a href="{{knowl.link}}">{{ knowl.label }}</a></td>

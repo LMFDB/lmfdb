@@ -19,14 +19,15 @@ from lmfdb.utils import (
     StatsDisplay, proportioners, totaler)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
-    WebNewform, convert_newformlabel_from_conrey,
+    WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
     quad_field_knowl, cyc_display, field_display_gen)
 from lmfdb.classical_modular_forms.web_space import (
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
@@ -175,33 +176,6 @@ def set_info_funcs(info):
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
     info['bigint_knowl'] = bigint_knowl
 
-
-favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
-                            ('11.2.a.a','First weight 2 form'),
-                            ('39.1.d.a','First D2 form'),
-                            ('7.3.b.a','First CM-form with weight at least 2'),
-                            ('23.2.a.a','First trivial-character non-rational form'),
-                            ('1.12.a.a','Delta'),
-                            ('124.1.i.a','First non-dihedral weight 1 form'),
-                            ('148.1.f.a','First S4 form'),
-                            ],
-                            [
-                            ('633.1.m.b','First A5 form'),
-                            ('163.3.b.a','Best q-expansion'),
-                            ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
-                            ('8.21.d.b','Large coefficient ring index'),
-                            ('3600.1.e.a','Many zeros in q-expansion'),
-                            ('983.2.c.a','Large dimension'),
-                            ('3997.1.cz.a','Largest projective image'),
-                            ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists'),
-                            ('random','Random form')]]
-favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
-                          ('23.10', 'Mile high 11s'),
-                          ('3311.1.h', 'Most weight 1 forms'),
-                          ('1200.2.a', 'All forms rational'),
-                          ('9450.2.a','Most newforms'),
-                          ('4000.1.bf', 'Two large A5 forms')]]
-
 @cmf.route("/")
 def index():
     info = to_dict(request.args, search_array=CMFSearchArray())
@@ -226,8 +200,6 @@ def index():
             return space_trace_search(info)
         assert False
     info["stats"] = CMF_stats()
-    info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
-    info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
@@ -241,6 +213,37 @@ def index():
 def random_form():
     label = db.mf_newforms.random()
     return redirect(url_for_label(label), 307)
+
+@cmf.route("/random_space/")
+def random_space():
+    label = db.mf_newspaces.random()
+    return redirect(url_for_label(label), 307)
+
+@cmf.route("/interesting_newforms")
+def interesting_newforms():
+    return interesting_knowls(
+        "cmf",
+        db.mf_newforms,
+        url_for_label,
+        regex=LABEL_RE,
+        title="Some interesting newforms",
+        credit=credit(),
+        bread=get_bread(other="Interesting newforms"),
+        learnmore=learnmore_list()
+    )
+
+@cmf.route("/interesting_spaces")
+def interesting_spaces():
+    return interesting_knowls(
+        "cmf",
+        db.mf_newspaces,
+        url_for_label,
+        regex=NEWSPACE_RE,
+        title="Some interesting newspaces",
+        credit=credit(),
+        bread=get_bread(other="Interesting newspaces"),
+        learnmore=learnmore_list()
+    )
 
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
@@ -342,7 +345,7 @@ def render_newform_webpage(label):
                            learnmore=learnmore_list(),
                            title=newform.title,
                            friends=newform.friends,
-                           KNOWL_ID="mf.%s" % label)
+                           KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
@@ -375,7 +378,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
-                           KNOWL_ID="mf.%s" % label)
+                           KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
     try:
@@ -393,7 +396,8 @@ def render_space_webpage(label):
                            bread=space.bread,
                            learnmore=learnmore_list(),
                            title=space.title,
-                           friends=space.friends)
+                           friends=space.friends,
+                           KNOWL_ID="cmf.%s" % label)
 
 def render_full_gamma1_space_webpage(label):
     try:

@@ -18,6 +18,7 @@ from lmfdb.utils import (
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data,
@@ -646,8 +647,18 @@ def by_label(label):
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
         return redirect(url_for(".number_field_render_webpage"))
 
-# input is a sage int
 
+@nf_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "nf",
+        db.nf_fields,
+        url_for_label,
+        title=r"Some interesting number fields",
+        bread=bread_prefix() + [("Interesting fields", " ")],
+        credit=NF_credit,
+        learnmore=learnmore_list(),
+    )
 
 def download_search(info):
     dltype = info.get('Submit')

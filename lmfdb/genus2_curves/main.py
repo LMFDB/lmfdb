@@ -16,6 +16,7 @@ from lmfdb.utils import (
     Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect, CountBox, SubsetBox,
     StatsDisplay, formatters)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
@@ -84,6 +85,11 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+def get_bread(tail=[]):
+    base = [('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 @g2c_page.route("/")
 def index():
@@ -96,20 +102,36 @@ def index_Q():
         return genus2_curve_search(info)
     info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
-    info["curve_url"] = lambda label: url_for_curve_label(label)
-    curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
-    info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
     info["equation_search"] = has_magma()
     title = r'Genus 2 curves over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', ' '))
-    return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template(
+        "g2c_browse.html",
+        info=info,
+        credit=credit_string,
+        title=title,
+        learnmore=learnmore_list(),
+        bread=get_bread()
+    )
 
 @g2c_page.route("/Q/random/")
 def random_curve():
     label = db.g2c_curves.random()
     return redirect(url_for_curve_label(label), 307)
+
+@g2c_page.route("/Q/interesting")
+def interesting():
+    return interesting_knowls(
+        "g2c",
+        db.g2c_curves,
+        url_for_curve_label,
+        regex=re.compile(r"\d+\.[a-z]+\.\d+\.\d+"),
+        title="Some interesting genus 2 curves",
+        credit=credit_string,
+        bread=get_bread("Interesting curves"),
+        learnmore=learnmore_list()
+    )
 
 ###############################################################################
 # Curve and isogeny class pages
@@ -128,11 +150,10 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     if not db.g2c_curves.exists({'class':clabel}):
         return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
     data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
-    data['bread'] = [('Genus 2 curves', url_for(".index")),
-        (r'$\Q$', url_for(".index_Q")),
+    data['bread'] = get_bread([
         ('%s' % cond, url_for(".by_conductor", cond=cond)),
         ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha)),
-        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))]
+        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))])
     if len(request.args) > 0:
         # if conductor or discriminant changed, fall back to a general search
         if ('cond' in request.args and request.args['cond'] != str(cond)) or \
@@ -153,7 +174,7 @@ def by_url_isogeny_class_label(cond, alpha):
 def by_conductor(cond):
     data = to_dict(request.args, search_array=G2CSearchArray())
     data['title'] = 'Genus 2 curves of conductor %s' % cond
-    data['bread'] = [('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
+    data['bread'] = get_bread([('%s' % cond, url_for(".by_conductor", cond=cond))])
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
@@ -317,11 +338,7 @@ class G2C_download(Downloader):
         "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
         "st_group_link": lambda v: st_link_by_name(1, 4, v.pop("st_group")),
     },
-    bread=lambda: [
-        ("Genus 2 curves", url_for(".index")),
-        (r"$\Q$", url_for(".index_Q")),
-        ("Search results", "."),
-    ],
+    bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
     credit=lambda: credit_string,
     url_for_label=lambda label: url_for(".by_label", label=label),
@@ -462,7 +479,7 @@ class G2C_stats(StatsDisplay):
 @g2c_page.route("/Q/stats")
 def statistics():
     title = r'Genus 2 curves over $\Q$: Statistics'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('Statistics', ' '))
+    bread = get_bread("Statistics")
     return render_template("display_stats.html", info=G2C_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 
@@ -470,28 +487,28 @@ def statistics():
 @g2c_page.route("/Q/Completeness")
 def completeness_page():
     t = r'Completeness of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Completeness',''))
+    bread = get_bread("Completeness")
     return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Q/Source")
 def source_page():
     t = r'Source of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Source',''))
+    bread = get_bread("Source")
     return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Reliability")
 def reliability_page():
     t = r'Reliability of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Reliability',''))
+    bread = get_bread("Reliability")
     return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Q/Labels")
 def labels_page():
     t = r'Labels for genus 2 curves over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), ('$\\Q$', url_for(".index")),('Labels',''))
+    bread = get_bread("Labels")
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 

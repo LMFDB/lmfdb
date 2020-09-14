@@ -7,6 +7,7 @@ from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
@@ -47,6 +48,18 @@ def index():
 def random():
     label = db.maass_newforms.random()
     return redirect(url_for('.by_label', label=label), 307)
+
+@maass_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "hmf",
+        db.hmf_forms,
+        url_for_label=lambda label: url_for(".by_label", label=label),
+        title="Some interesting Maass forms",
+        credit=credit_string,
+        bread=bread_prefix() + [("Interesting forms", " ")],
+        learnmore=learnmore_list()
+    )
 
 @maass_page.route('/<label>')
 def by_label(label):

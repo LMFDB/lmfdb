@@ -20,6 +20,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
     search_wrap, parse_rational
     )
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
@@ -27,6 +28,9 @@ from lmfdb.ecnf.ecnf_stats import ECNF_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
+# The conductor label seems to only have three parts for the trivial ideal (1.0.1)
+# field 3.1.23.1 uses upper case letters for isogeny class
+LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -191,70 +195,43 @@ def index():
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
     niqfs = len(fields_by_sig[0,1])
     nrqfs = len(fields_by_sig[2,0])
-    info['fields'].append(['{} real quadratic fields, including'.format(nrqfs),
+    info['fields'].append(['{} real <a href="{}">quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_degree', d=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
     iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
-    info['fields'].append(['{} imaginary quadratic fields, including'.format(niqfs),
+    info['fields'].append(['{} imaginary <a href="{}">quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_degree', d=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
 
     # Cubics (sample)
     cubics = ['3.1.23.1'] + ['3.3.{}.1'.format(d) for d in [49,148,1957]]
     ncubics = len(fields_by_deg[3])
-    info['fields'].append(['{} cubic fields, including'.format(ncubics),
+    info['fields'].append(['{} <a href="{}">cubic fields</a>, including'.format(ncubics, url_for('.statistics_by_degree', d=3)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in cubics)])
 
     # Quartics (sample)
     quartics = ['4.4.{}.1'.format(d) for d in [725,2777,9909,19821]]
     nquartics = len(fields_by_deg[4])
-    info['fields'].append(['{} totally real quartic fields, including'.format(nquartics),
+    info['fields'].append(['{} totally real <a href="{}">quartic fields</a>, including'.format(nquartics, url_for('.statistics_by_degree', d=4)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quartics)])
 
     # Quintics (sample)
     quintics = ['5.5.{}.1'.format(d) for d in [14641, 24217, 36497, 38569, 65657]]
     nquintics = len(fields_by_deg[5])
-    info['fields'].append(['{} totally real quintic fields, including'.format(nquintics),
+    info['fields'].append(['{} totally real <a href="{}">quintic fields</a>, including'.format(nquintics, url_for('.statistics_by_degree', d=5)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quintics)])
 
     # Sextics (sample)
     sextics = ['6.6.{}.1'.format(d) for d in [300125, 371293, 434581, 453789, 485125]]
     nsextics = len(fields_by_deg[6])
-    info['fields'].append(['{} totally real sextic fields, including'.format(nsextics),
+    info['fields'].append(['{} totally real <a href="{}">sextic fields</a>, including'.format(nsextics, url_for('.statistics_by_degree', d=6)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in sextics)])
-
-    info['degrees'] = sorted([int(d) for d in fields_by_deg.keys() if d!='_id'])
-
-# info['highlights'] holds data (URL and descriptive text) for a
-# sample of elliptic curves with interesting features:
-
-    info['highlights'] = []
-    info['highlights'].append(
-        ['A curve with $C_3\\times C_3$ torsion',
-         url_for('.show_ecnf', nf='2.0.3.1', class_label='a', conductor_label='2268.36.18', number=int(1))]
-    )
-    info['highlights'].append(
-        ['A curve with $C_4\\times C_4$ torsion',
-         url_for('.show_ecnf', nf='2.0.4.1', class_label='b', conductor_label='5525.870.5', number=int(9))]
-    )
-    info['highlights'].append(
-        ['A curve with CM by $\\sqrt{-267}$',
-         url_for('.show_ecnf', nf='2.2.89.1', class_label='a', conductor_label='81.1', number=int(1))]
-    )
-    info['highlights'].append(
-        ['An isogeny class with isogenies of degree $3$ and $89$ (and $267$)',
-         url_for('.show_ecnf_isoclass', nf='2.2.89.1', class_label='a', conductor_label='81.1')]
-    )
-    info['highlights'].append(
-        ['A curve with everywhere good reduction, but no global minimal model',
-         url_for('.show_ecnf', nf='2.2.229.1', class_label='a', conductor_label='1.1', number=int(1))]
-    )
 
     return render_template("ecnf-index.html",
                            title="Elliptic curves over number fields",
@@ -265,6 +242,20 @@ def index():
 def random_curve():
     E = db.ec_nfcurves.random(projection=['field_label', 'conductor_label', 'iso_label', 'number'])
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
+
+
+@ecnf_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "ec",
+        db.ec_nfcurves,
+        url_for_label=url_for_label,
+        regex=LABEL_RE, # include so that we don't catch elliptic curves over Q also
+        title="Some interesting elliptic curves over number fields",
+        credit=ecnf_credit,
+        bread=get_bread("Interesting curves"),
+        learnmore=learnmore_list()
+    )
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):

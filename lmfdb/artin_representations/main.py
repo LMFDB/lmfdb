@@ -14,6 +14,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
     display_knowl, search_wrap, to_dict)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import complete_group_code
@@ -213,13 +214,16 @@ def parse_projective_type(inp, query, qfield):
         else:
             query[qfield] = current
 
+def url_for_label(label):
+    return url_for(".render_artin_representation_webpage", label=label)
+
 @search_wrap(template="artin-representation-search.html",
              table=db.artin_reps,
              title='Artin representation search results',
              err_title='Artin representation search error',
              per_page=50,
              learnmore=learnmore_list,
-             url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
+             url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
              bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
              initfunc=lambda:ArtinRepresentation)
@@ -373,9 +377,38 @@ def render_artin_representation_webpage(label):
     info={} # for testing
 
     if case == 'rep':
-        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+        return render_template(
+            "artin-representation-show.html",
+            credit=tim_credit,
+            support=support_credit,
+            title=title,
+            bread=bread,
+            friends=friends,
+            object=the_rep,
+            cycle_string=cycle_string,
+            wnf=wnf,
+            properties=properties,
+            info=info,
+            learnmore=learnmore_list(),
+            KNOWL_ID="artin.%s" % label,
+        )
     # else we have an orbit
-    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+    return render_template(
+        "artin-representation-galois-orbit.html",
+        credit=tim_credit,
+        support=support_credit,
+        title=title,
+        bread=bread,
+        allchars=allchars,
+        friends=friends,
+        object=the_rep,
+        cycle_string=cycle_string,
+        wnf=wnf,
+        properties=properties,
+        info=info,
+        learnmore=learnmore_list(),
+        KNOWL_ID="artin.%s" % label,
+    )
 
 @artin_representations_page.route("/random")
 def random_representation():
@@ -383,6 +416,19 @@ def random_representation():
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"."+num2letters(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
+
+@artin_representations_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "artin",
+        db.artin_reps,
+        url_for_label,
+        label_col="Baselabel",
+        title=r"Some interesting Artin representations",
+        bread=get_bread([("Interesting", " ")]),
+        credit=tim_credit,
+        learnmore=learnmore_list(),
+    )
 
 @artin_representations_page.route("/Labels")
 def labels_page():
