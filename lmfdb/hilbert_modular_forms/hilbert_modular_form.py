@@ -14,11 +14,18 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
+from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
+def get_bread(tail=[]):
+    base = [("Modular forms", url_for('modular_forms')),
+            ('Hilbert', url_for(".hilbert_modular_form_render_webpage"))]
+    if isinstance(tail, list):
+        return base + tail
+    else:
+        return base + [(tail, " ")]
 
 def get_hmf(label):
     """Return a complete HMF, give its label.  Note that the
@@ -65,13 +72,11 @@ def hilbert_modular_form_render_webpage():
     info = to_dict(request.args, search_array=HMFSearchArray())
     if not request.args:
         t = 'Hilbert modular forms'
-        info['learnmore'] = []
-        info['counts'] = get_counts()
+        info['stats'] = HMFstats()
+        info['counts'] = HMFstats().counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=get_bread(), learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(info)
-
-
 
 def split_full_label(lab):
     r""" Split a full hilbert modular form label into 3 components
@@ -419,10 +424,7 @@ def render_hmf_webpage(**args):
             else:
                 info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
-
-
     bread = get_bread(data["label"])
-
     t = "Hilbert cusp form %s" % info['label']
 
     forms_dims = db.hmf_forms.search({'field_label': data['field_label'], 'level_ideal': data['level_ideal']}, projection='dimension')
@@ -551,21 +553,22 @@ def labels_page():
 
 @hmf_page.route("/browse/")
 def browse():
-    info = {
-        'counts': get_counts(),
-        'stats': get_stats()
-    }
     credit = 'John Voight'
     t = 'Hilbert modular forms'
-
     bread = get_bread("Browse")
-    return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("hmf_stats.html", info=HMFstats(), credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@hmf_page.route("/stats")
+def statistics():
+    title = r'Hilbert modular forms: Statistics'
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @hmf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    counts = get_counts()
+    counts = HMFstats().counts()
     info = {}
-    if not str(d) in counts['degrees']:
+    if d not in counts['degrees']:
         if d==1:
             info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
@@ -573,9 +576,9 @@ def statistics_by_degree(d):
         d = 'bad'
     else:
         info['counts'] = counts
-        info['degree_stats'] = hmf_degree_summary(d)
+        info['degree_stats'] = HMFstats().degree_summary(d)
         info['degree'] = d
-        info['stats'] = get_stats(d)
+        info['stats'] = HMFstats().statistics(d)
 
     credit = 'John Cremona'
     if d==2:

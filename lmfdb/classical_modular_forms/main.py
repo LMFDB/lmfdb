@@ -198,7 +198,8 @@ def index():
             return trace_search(info)
         elif search_type == 'SpaceTraces':
             return space_trace_search(info)
-        assert False
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = CMF_stats()
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )

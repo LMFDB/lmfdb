@@ -656,7 +656,7 @@ table a[knowl] {
   padding: 0;
 }
 
-table.ntdata a {
+table.ntdata td>a {
   display: block;
 }
 
