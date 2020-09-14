@@ -6,7 +6,7 @@ def interesting_knowls(category, table, url_for_label, label_col="label", regex=
     main_cat = category.split(".")[0]
     if category[-1] != ".":
         category += "."
-    knowls = knowldb.search(category=main_cat, types=["top", "bottom"], projection=["id", "title", "type"])
+    knowls = knowldb.search(category=main_cat, types=["top", "bottom"], filters=["beta", "reviewed"], projection=["id", "title", "type"])
     # Filter to only those with category correct
     knowls = [k for k in knowls if k["id"].startswith(category)]
     # Get the labels and links

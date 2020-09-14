@@ -67,25 +67,12 @@ def index():
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
-        bc_examples = []
-        bc_examples.append(('base-change of a newform with rational coefficients',
-                         '2.0.4.1-100.2-a',
-                         url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='100.2', label_suffix='a'),' (with an associated elliptic curve which is a base-change)'))
-        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
-                         '2.0.4.1-16384.1-d',
-                         url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='16384.1', label_suffix='d'),' (with an associated elliptic curve which is not a base-change)'))
-        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
-                         '2.0.3.1-6561.1-b',
-                         url_for('.render_bmf_webpage',field_label='2.0.3.1', level_label='6561.1', label_suffix='b'),' (with no associated elliptic curve)'))
-        bc_examples.append((r'base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
-                         '2.0.7.1-10000.1-b',
-                         url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
 
         credit = bianchi_credit
         t = 'Bianchi modular forms'
         bread = get_bread()
         info['learnmore'] = []
-        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
+        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return bianchi_modular_form_search(info)
 

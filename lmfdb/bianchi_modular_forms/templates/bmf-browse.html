@@ -42,16 +42,6 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
   {{ info.search_array.jump_box(info) | safe }}
 </form>
 
-<h4>Examples of  {{ KNOWL('mf.bianchi.base_change', title='base change')}} forms</h4>
-<ul>
-  {% for ex in bc_examples %}
-  <li>{{ex[0]}}: <a href={{ex[2]}}>{{ex[1]}}</a> {{ex[3]}}</li>
-  {% endfor %}
-</ul>
-
-<p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
-
-
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">

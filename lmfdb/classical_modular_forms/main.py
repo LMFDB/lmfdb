@@ -1150,7 +1150,7 @@ class CMF_stats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.' % (self.nforms, self.newform_knowl, self.ndim)
+        return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
 
     @property
     def summary(self):
