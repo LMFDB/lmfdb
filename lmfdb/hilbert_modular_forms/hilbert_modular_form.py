@@ -108,13 +108,6 @@ def hilbert_modular_form_by_label(lab):
     else:
         return redirect(url_for_label(lab))
 
-def get_bread(tail=[]):
-    base = [("Modular forms", url_for('modular_forms')),
-            ('Hilbert', url_for(".hilbert_modular_form_render_webpage"))]
-    if not isinstance(tail, list):
-        tail = [(tail, " ")]
-    return base + tail
-
 # Learn more box
 
 def learnmore_list():

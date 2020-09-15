@@ -32,7 +32,7 @@ class HMFstats(StatsDisplay):
     knowls = {'level_norm': 'mf.hilbert.level_norm',
               'dimension': 'mf.hilbert.dimension',
               'deg': 'nf.degree'}
-    top_titles = {'deg': 'degree'}
+    short_display = {'deg': 'degree'}
 
     @property
     def short_summary(self):
