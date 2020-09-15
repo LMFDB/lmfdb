@@ -201,48 +201,45 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    hgcwa = db.hgcwa_passports
-    group_stats_0 = hgcwa.count({'genus':genus, 'g0': 0}, ['group'])
-    group_stats_gt0 = hgcwa.count({'genus':genus, 'g0': {'$gt': 0}}, ['group'])
+    un_grps = db.hgcwa_unique_groups
     # Redirect to 404 if statistic is not found
-    if not group_stats_0 and not group_stats_gt0:
+    if not un_grps.count({'genus':genus}):
         return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
 
-    # Make list groups_0 where each entry is a list [iso_class, group, gen_vectors, tops, braids]
-    groups_0 = []
-    for group, gen_vectors in group_stats_0.items():
-        group = group[0]
-        # isomorphism class of group
-        iso_class = sg_pretty(re.sub(hgcwa_group, r'\1.\2', group))
-        # need to count distinct topologicals, braids per label
-        labels = hgcwa.distinct('label', {'genus':genus, 'g0': 0, 'group': group})
-        tops = braids = 0
-        for label in labels:
-            tops += len(hgcwa.distinct('topological', {'label': label}))
-            braids += len(hgcwa.distinct('braid', {'label': label}))
-        groups_0.append([iso_class, group, gen_vectors, tops, braids])
+    info = {}
+    gp_data = un_grps.search({'genus':genus},projection=['group','g0_is_gt0','g0_gt0_list','gen_vectors','topological','braid'],info=info)
+
     
+    # Make list groups_0 where each entry is a list [iso_class, group, gen_vectors, tops, braids
+    groups_0 = []       
     # Make list groups_gt0 where each entry is a list [iso_class, group, gen_vectors]
     groups_gt0 = []
-    for group, gen_vectors in group_stats_gt0.items():
-        group = group[0]
-        iso_class = sg_pretty(re.sub(hgcwa_group, r'\1.\2', group))
-        groups_gt0.append([iso_class, group, gen_vectors])
+
+    complete_info=db.hgcwa_complete.lucky({'genus':genus})
+    show_top_braid = complete_info['top_braid_compute']
+    show_g0_gt0 = complete_info['g0_gt0_compute']
     
-    # Sort groups_0 and groups_gt0 by group
-    def sort_key(entry):
-        group = entry[1]
-        m = hgcwa_group.match(group)
-        order = int(m.group(1))
-        number = int(m.group(2))
-        return (order, number)
-    groups_0.sort(key = sort_key)
-    groups_gt0.sort(key = sort_key)
+    for dataz in gp_data:
+        group = str(dataz['group'])
+      #  iso_class = group_display(group)
+        if dataz['g0_is_gt0']:
+        #    groups_gt0.append([iso_class, group, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
+            groups_gt0.append([group, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
+        elif not show_top_braid:
+          #  groups_0.append([iso_class, group, dataz['gen_vectors']]) 
+            groups_0.append([ group, dataz['gen_vectors']]) 
+            
+        else:    
+          #  groups_0.append([iso_class, group, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
+            groups_0.append([group, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
 
     info = {
         'genus': genus,
         'groups_0': groups_0,
-        'groups_gt0': groups_gt0
+        'groups_gt0': groups_gt0,
+        'show_top_braid' : show_top_braid,
+        'show_g0_gt0' : show_g0_gt0,
+        'group_display' : group_display
     }
 
     title = ('Families of higher genus curves with automorphisms: Genus ' +

@@ -1,7 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% set show_top_braid = info.genus | int <= 7 %}
 
 <h2> Distribution of groups in curves of genus {{info.genus}} with quotient genus 0 </h2>
 <div>
@@ -11,23 +10,23 @@
         <th>Isomorphism class</th>
         <th>{{KNOWL('group.small_group_label',title='GAP/Magma Group')}}</th>
         <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
-        {% if show_top_braid %}
-        <th>Topologically inequivalent actions</th>
-        <th>Braid inequivalent actions</th>
+        {% if info.show_top_braid %}
+        <th>{{KNOWL('curve.highergenus.aut.topological_equivalence',title='Topologically inequivalent')}} actions</th>
+        <th>{{KNOWL('curve.highergenus.aut.braid_equivalence',title='Braid inequivalent')}} actions</th>
         {% endif %}
       </tr>
     </thead>
     <tbody>
       {% for i in range(0, info.groups_0 | length) %}
       <tr>
-        <td>${{info.groups_0[i][0]}}$</td>
-        <td><a href={{url_for('.index', genus=info.genus, group=info.groups_0[i][1])}}>{{info.groups_0[i][1]}}</a></td>
+        <td>${{info.group_display(info.groups_0[i][0])}}$</td>
+        <td><a href={{url_for('.index', genus=info.genus, group=info.groups_0[i][0])}}>{{info.groups_0[i][0]}}</a></td>
         <td align="center">
-          {{info.groups_0[i][2]}}
+          {{info.groups_0[i][1]}}
         </td>
-        {% if show_top_braid %}
-        <td>{{info.groups_0[i][3]}}</td>
-        <td>{{info.groups_0[i][4]}}</td>
+        {% if info.show_top_braid %}
+        <td align="center">{{info.groups_0[i][2]}}</td>
+        <td align="center">{{info.groups_0[i][3]}}</td>
         {% endif %}
       </tr>
       {% endfor %}
@@ -35,11 +34,8 @@
   </table>
 </div>
 
-
+{% if info.show_g0_gt0 %}
 <h2> Distribution of groups in curves of genus {{info.genus}} with quotient genus greater than 0 </h2>
-{% if info.groups_gt0 | length == 0 %}
--
-{% else %}
 <div>
   <table  class="ntdata">
     <thead>
@@ -47,6 +43,7 @@
         <th>Isomorphism class</th>
         <th>{{KNOWL('group.small_group_label',title='GAP/Magma Group')}}</th>
         <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+	<th>Quotient Genera </th>
       </tr>
     </thead>
     <tbody>
@@ -57,6 +54,8 @@
         <td align="center">
           {{info.groups_gt0[i][2]}}
         </td>
+	<td> {{info.groups_gt0[i][3]}}
+	  </td>
       </tr>
       {% endfor %}
     </tbody>
