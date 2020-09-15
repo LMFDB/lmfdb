@@ -1,4 +1,4 @@
-from flask import render_template, url_for
+from flask import render_template
 from lmfdb.knowledge.knowl import knowldb
 
 def interesting_knowls(category, table, url_for_label, label_col="label", regex=None, **kwds):
