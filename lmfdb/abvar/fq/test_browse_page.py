@@ -11,7 +11,7 @@ class AVHomeTest(LmfdbTest):
         Check that the Variety/Abelian/Fq index page works
         """
         homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
-        assert "Some interesting isogeny classes" in homepage
+        assert "by dimension and base field" in homepage
 
     def test_stats_page(self):
         self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
