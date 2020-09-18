@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-# This Blueprint is about local number fields
+# This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
@@ -24,7 +24,7 @@ import re
 LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads=[]):
-    bc = [("Local number fields", url_for(".index"))]
+    bc = [("$p$-adic fields", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -82,7 +82,7 @@ def local_field_data(label):
     nicename = ''
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
-    ans = 'Local number field %s%s<br><br>'% (label, nicename)
+    ans = '$p$-adic field %s%s<br><br>'% (label, nicename)
     ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
@@ -148,7 +148,7 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="Local number fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="$p$-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -168,7 +168,7 @@ def local_field_jump(info):
 
 class LF_download(Downloader):
     table = db.lf_fields
-    title = 'Local number fields'
+    title = '$p$-adic fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
     data_description = 'defining the local field over Qp by adjoining a root of f(x).'
@@ -181,7 +181,7 @@ class LF_download(Downloader):
 
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
-             title='Local number field search results',
+             title='$p$-adic field search results',
              err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
@@ -211,9 +211,9 @@ def render_field_webpage(args):
             if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
                 flash_error("Field %s was not found in the database.", label)
             else:
-                flash_error("%s is not a valid label for a local number field.", label)
+                flash_error("%s is not a valid label for a $p$-adic field.", label)
             return redirect(url_for(".index"))
-        title = 'Local number field ' + prettyname(data)
+        title = '$p$-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         Qp = r'\Q_{%d}' % p
@@ -362,7 +362,7 @@ def cande():
 
 @local_fields_page.route("/Labels")
 def labels_page():
-    t = 'Labels for local number fields'
+    t = 'Labels for $p$-adic fields'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
                   learnmore=learnmore_list_remove('label'), 
