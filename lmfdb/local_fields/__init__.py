@@ -19,8 +19,8 @@ assert main
 app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")
 
 register_search_function(
-    "local_fields",
-    "Local number fields",
-    "Search over local number fields",
+    "$p$-adic_fields",
+    "$p$-adic fields",
+    "Search over $p$-adic fields",
     auto_search = 'lf_fields'
 )
