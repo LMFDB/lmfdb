@@ -148,7 +148,7 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="$p$-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -182,6 +182,7 @@ class LF_download(Downloader):
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
              title='$p$-adic field search results',
+             titletag='p-adic field search results',
              err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
@@ -214,6 +215,7 @@ def render_field_webpage(args):
                 flash_error("%s is not a valid label for a $p$-adic field.", label)
             return redirect(url_for(".index"))
         title = '$p$-adic field ' + prettyname(data)
+        titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         Qp = r'\Q_{%d}' % p
@@ -308,7 +310,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, titletag=titletag, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -345,7 +347,7 @@ def printquad(code, p):
 
 
 def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='Local field search input error', bread=bread)
+    return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
 
 @local_fields_page.route("/random")
 def random_field():
@@ -354,34 +356,38 @@ def random_field():
 
 @local_fields_page.route("/Completeness")
 def cande():
-    t = 'Completeness of local field data'
+    t = 'Completeness of $p$-adic field data'
+    tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
 def labels_page():
     t = 'Labels for $p$-adic fields'
+    tt = 'Labels for p-adic fields'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
                   learnmore=learnmore_list_remove('label'), 
-                  credit=LF_credit, title=t, bread=bread)
+                  credit=LF_credit, title=t, titletag=tt, bread=bread)
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of local field data'
+    t = 'Source of $p$-adic field data'
+    ttag = 'Source of p-adic field data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
                            learnmore=learnmore_list_remove('Source'))
 
 @local_fields_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of local field data'
+    t = 'Reliability of $p$-adic field data'
+    ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):
