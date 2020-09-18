@@ -182,7 +182,7 @@ class LF_download(Downloader):
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
              title='$p$-adic field search results',
-             titletag='p-adic field search results',
+             titletag=lambda:'p-adic field search results',
              err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
