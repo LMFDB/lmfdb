@@ -48,7 +48,6 @@ class SideBar(object):
     Class for holding the sidebar content.
     """
     def __init__(self):
-        from lmfdb.app import is_beta
 
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.toc_dic = yaml.load(open(os.path.join(_curdir, "sidebar.yaml")), Loader=yaml.FullLoader)
