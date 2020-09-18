@@ -360,7 +360,7 @@ def cande():
     tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
+                           credit=LF_credit, title=t, titletag=tt, bread=bread, 
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
