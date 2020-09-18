@@ -54,6 +54,7 @@ def interesting():
     return interesting_knowls(
         "mf.maass.mwf",
         db.maass_newforms,
+        label_col="maass_id",
         url_for_label=lambda label: url_for(".by_label", label=label),
         title="Some interesting Maass forms",
         credit=credit_string,
