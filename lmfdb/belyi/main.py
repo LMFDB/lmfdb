@@ -102,8 +102,8 @@ def interesting():
         "belyi",
         db.belyi_galmaps,
         url_for_label,
-        title=r"Some interesting Belyi maps",
-        bread=get_bread("Interesting maps"),
+        title=r"Some interesting Belyi maps and passports",
+        bread=get_bread("Interesting"),
         credit=credit_string,
         learnmore=learnmore_list()
     )

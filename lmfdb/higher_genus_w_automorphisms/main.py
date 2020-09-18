@@ -200,7 +200,7 @@ def interesting():
         url_for_label,
         label_col="total_label",
         title=r"Some interesting higher genus curves",
-        bread=get_bread("Interesting curves"),
+        bread=get_bread("Interesting"),
         credit=credit,
         learnmore=learnmore_list()
     )

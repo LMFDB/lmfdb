@@ -114,7 +114,7 @@ def interesting():
         url_for_label,
         label_col="lmfdb_label",
         title=r"Some interesting elliptic curves over $\Q$",
-        bread=get_bread("Interesting curves"),
+        bread=get_bread("Interesting"),
         credit=ec_credit(),
         learnmore=learnmore_list()
     )

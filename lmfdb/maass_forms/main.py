@@ -58,7 +58,7 @@ def interesting():
         url_for_label=lambda label: url_for(".by_label", label=label),
         title="Some interesting Maass forms",
         credit=credit_string,
-        bread=bread_prefix() + [("Interesting forms", " ")],
+        bread=bread_prefix() + [("Interesting", " ")],
         learnmore=learnmore_list()
     )
 

@@ -253,7 +253,7 @@ def interesting():
         regex=LABEL_RE, # include so that we don't catch elliptic curves over Q also
         title="Some interesting elliptic curves over number fields",
         credit=ecnf_credit,
-        bread=get_bread("Interesting curves"),
+        bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
 

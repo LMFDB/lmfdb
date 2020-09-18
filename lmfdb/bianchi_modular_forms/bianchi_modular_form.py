@@ -89,7 +89,7 @@ def interesting():
         url_for_label=url_for_label,
         title="Some interesting Bianchi modular forms",
         credit=bianchi_credit,
-        bread=get_bread("Interesting forms"),
+        bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
 

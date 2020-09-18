@@ -129,7 +129,7 @@ def interesting():
         regex=re.compile(r"\d+\.[a-z]+\.\d+\.\d+"),
         title="Some interesting genus 2 curves",
         credit=credit_string,
-        bread=get_bread("Interesting curves"),
+        bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
 

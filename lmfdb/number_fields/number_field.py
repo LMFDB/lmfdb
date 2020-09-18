@@ -655,7 +655,7 @@ def interesting():
         db.nf_fields,
         url_for_label,
         title=r"Some interesting number fields",
-        bread=bread_prefix() + [("Interesting fields", " ")],
+        bread=bread_prefix() + [("Interesting", " ")],
         credit=NF_credit,
         learnmore=learnmore_list(),
     )

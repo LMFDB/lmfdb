@@ -63,7 +63,7 @@ def interesting():
         url_for_label,
         title="Some interesting Hilbert modular forms",
         credit=hmf_credit,
-        bread=get_bread("Interesting forms"),
+        bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
 
