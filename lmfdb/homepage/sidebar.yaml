@@ -116,10 +116,6 @@
     - title: Shimura curves
       status: future
       colspan: onecolumn
-    - title: Belyi maps
-      status: beta
-      url_for: "belyi.index"
-      colspan: onecolumn
     - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
       colspan: onecolumn
@@ -138,6 +134,10 @@
       colspan: onecolumn
     - title: Abelian varieties over $\F_{q}$
       url_for: "abvarfq.abelian_varieties"
+      colspan: onecolumn
+    - title: Belyi maps
+      status: beta
+      url_for: "belyi.index"
       colspan: onecolumn
 
 5Fields:
