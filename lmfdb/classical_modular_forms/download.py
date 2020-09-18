@@ -332,7 +332,9 @@ class CMF_download(Downloader):
         for attr in ['level', 'weight', 'label', 'oldspaces']:
             data[attr] = getattr(space, attr)
         data['newspaces'] = [spc['label'] for spc, forms in space.decomp]
-        data['newforms'] = sum([[form['label'] for form in forms] for spc, forms in space.decomp], [])
+        data['newforms'] = sum([[form['label'] for form in forms] if forms else [None] for spc, forms in space.decomp], [])
+        if None in data['newforms']:
+            data.pop('newforms')
         data['dimgrid'] = space.dim_grid._grid
         return self._wrap(Json.dumps(data),
                           label,
