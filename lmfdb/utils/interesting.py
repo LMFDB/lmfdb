@@ -25,6 +25,4 @@ def interesting_knowls(category, table, url_for_label, label_col="label", regex=
     # Use the table for sorting
     sorted_labels = table.search({label_col: {"$in": labels}}, label_col)
     knowls = [unsorted[label] for label in sorted_labels]
-    # Now sort so that top knowls appear first
-    knowls.sort(key=lambda x: -x["type"])
     return render_template("interesting.html", knowls=knowls, **kwds)
