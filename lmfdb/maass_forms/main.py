@@ -52,8 +52,8 @@ def random():
 @maass_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "hmf",
-        db.hmf_forms,
+        "mf.maass.mwf",
+        db.maass_newforms,
         url_for_label=lambda label: url_for(".by_label", label=label),
         title="Some interesting Maass forms",
         credit=credit_string,
