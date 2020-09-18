@@ -694,7 +694,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     if request.method == "POST":
         con = request.form['content']
         foot = footer or request.form['footer']
-    elif request.method == "GET":
+    else:
         con = request.args.get("content", k.content)
         foot = footer or request.args.get("footer", "1")
 
@@ -756,7 +756,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             return data
         resp = make_response(data)
         # cache if it is a usual GET
-        if request.method == 'GET':
+        if request.method != 'POST':
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
@@ -773,7 +773,7 @@ def index():
     if request.method == 'POST':
         qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
         types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
-    elif request.method == 'GET':
+    else:
         qualities = request.args.getlist('qualities')
         types = request.args.getlist('types')
 

@@ -275,15 +275,15 @@ def modules2string(n, t, modlist):
 @cached_function
 def nf_display_knowl(label, name=None):
     if not name:
-        name = "Global number field %s" % label
+        name = "Number field %s" % label
     return '<a title = "%s [nf.field.data]" knowl="nf.field.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
 def nf_knowl_guts(label):
     out = ''
     wnf = WebNumberField(label)
     if wnf.is_null():
-        return 'Cannot find global number field %s' % label
-    out += "Global number field %s" % label
+        return 'Cannot find number field %s' % label
+    out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
     out += r"\(%s\)" % latex(wnf.poly())

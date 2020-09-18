@@ -8,7 +8,7 @@
 </div>
 
 
-      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+      <h2>Browse {{KNOWL('lf', title="$p$-adic fields")}}</h2>
 
 <p>
 The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
@@ -84,11 +84,11 @@ of $\Q_p$ up to isomorphism.
 <p>
 
 <p>
-A <a href={{url_for('.random_field')}}>random local number field</a> from the database.
+A <a href={{url_for('.random_field')}}>random $p$-adic field</a> from the database.
 </p>
 
 
-<h2>Find a specific local number field by {{KNOWL('lf.field.label',title="label")}}</h2>
+<h2>Find a specific $p$-adic field by {{KNOWL('lf.field.label',title="label")}}</h2>
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}

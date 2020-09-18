@@ -247,9 +247,9 @@ def register_token(token):
     if not userdb.token_exists(token):
         flask.abort(401)
     bread = base_bread() + [('Register', url_for(".register_new"))]
-    if request.method == "GET":
+    if request.method != 'POST':
         return render_template("register.html", title="Register", bread=bread, next=request.referrer or "/", token=token)
-    elif request.method == 'POST':
+    else: # must be post
         name = request.form['name']
         if not allowed_usernames.match(name):
             flash_error("""Oops, usename '%s' is not allowed.
