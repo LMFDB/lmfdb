@@ -969,7 +969,7 @@ def generateLfunctionFromUrl(*args, **kwds):
             return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
-        instance = db.lfunc_instances.lucky({'url': hmf_url(args[6], args[6], args[7])})
+        instance = db.lfunc_instances.lucky({'url': hmf_url(args[5], args[6], args[7])})
         return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
