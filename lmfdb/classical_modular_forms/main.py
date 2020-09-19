@@ -478,6 +478,9 @@ def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, 
 def url_for_label(label):
     if label == "random":
         return url_for("cmf.random_form")
+    if not label:
+        return abort(404, "Invalid label")
+
     slabel = label.split(".")
     if len(slabel) == 6:
         func = "cmf.by_url_embedded_newform_label"
@@ -490,7 +493,7 @@ def url_for_label(label):
     elif len(slabel) == 1:
         func = "cmf.by_url_level"
     else:
-        raise ValueError("Invalid label")
+        return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
     for i in range (len(slabel)):
