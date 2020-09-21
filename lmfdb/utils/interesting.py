@@ -26,6 +26,9 @@ def interesting_knowls(category, table, url_for_label, label_col="label", regex=
     sorted_labels = {label: i for (i, label) in enumerate(table.search({label_col: {"$in": labels}}, label_col))}
     # Some labels might not appear (e.g. if an isogeny class knowl was included)
     # and others might appear multiple times (higher genus families, where the "label" is for a family and isn't unique)
-    M = max(sorted_labels.values()) + 1
+    if sorted_labels:
+        M = max(sorted_labels.values()) + 1
+    else:
+        M = 1
     knowls = [unsorted[label] for label in sorted(unsorted.keys(), key=lambda x: sorted_labels.get(x, M))]
     return render_template("interesting.html", knowls=knowls, **kwds)
