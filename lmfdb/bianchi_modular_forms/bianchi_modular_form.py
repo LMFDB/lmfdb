@@ -84,7 +84,7 @@ def random_bmf():    # Random Bianchi modular form
 @bmf_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "mf.bianchi",
+        "bmf",
         db.bmf_forms,
         url_for_label=url_for_label,
         title="Some interesting Bianchi modular forms",
