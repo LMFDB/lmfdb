@@ -349,7 +349,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         friends=friends,
         info=info,
         learnmore=learnmore_list(),
-        KNOWL_ID="mf.bianchi.%s"%label,
+        KNOWL_ID="bmf.%s"%label,
     )
 
 def bianchi_modular_form_by_label(lab):
