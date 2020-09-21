@@ -27,5 +27,5 @@ def interesting_knowls(category, table, url_for_label, label_col="label", regex=
     # Some labels might not appear (e.g. if an isogeny class knowl was included)
     # and others might appear multiple times (higher genus families, where the "label" is for a family and isn't unique)
     M = max(sorted_labels.values()) + 1
-    knowls = sorted(unsorted.keys(), key=lambda x: sorted_labels.get(x, M))
+    knowls = [unsorted[label] for label in sorted(unsorted.keys(), key=lambda x: sorted_labels.get(x, M))]
     return render_template("interesting.html", knowls=knowls, **kwds)
