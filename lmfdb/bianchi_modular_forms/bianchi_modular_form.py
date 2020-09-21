@@ -17,7 +17,6 @@ from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 
-
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
@@ -331,10 +330,20 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
                  (data.short_label, '')]
         properties = data.properties
         friends = data.friends
+        KNOWL_ID = "bmf.{}".format(label)
     except ValueError:
         raise
         info['err'] = "No Bianchi modular form in the database has label {}".format(label)
-    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties=properties, friends=friends, info=info, learnmore=learnmore_list())
+    return render_template("bmf-newform.html",
+                           title=title,
+                           credit=credit,
+                           bread=bread,
+                           data=data,
+                           properties=properties,
+                           friends=friends,
+                           info=info,
+                           KNOWL_ID = KNOWL_ID,
+                           learnmore=learnmore_list())
 
 def bianchi_modular_form_by_label(lab):
     if lab == '':
