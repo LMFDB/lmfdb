@@ -198,8 +198,8 @@ def interesting():
         "curve.highergenus.aut",
         db.hgcwa_passports,
         url_for_label,
-        label_col="total_label",
-        title=r"Some interesting higher genus curves",
+        label_col="label",
+        title=r"Some interesting higher genus families",
         bread=get_bread("Interesting"),
         credit=credit,
         learnmore=learnmore_list()
