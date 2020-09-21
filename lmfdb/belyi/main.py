@@ -181,6 +181,10 @@ def by_url_belyi_search_url(smthorlabel):
             ),
             301,
         )
+    else:
+        # It could be an old label
+        flash_error("%s is not a valid label for a Belyi map", smthorlabel)
+        return redirect(url_for(".index"))
 
 
 @belyi_page.route("/<group>")
