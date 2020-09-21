@@ -6,6 +6,7 @@ import re
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, randint, euler_phi
 from lmfdb.utils import to_dict, flash_error
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
         WebDirichletGroup,
@@ -41,6 +42,13 @@ def learn(current = None):
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     return r
 
+def get_bread(tail=[]):
+    base = [('Characters',url_for(".render_characterNavigation")),
+            ('Dirichlet', url_for(".render_Dirichletwebpage"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
+
 ###############################################################################
 #   Route functions
 #   Do not use url_for on these, use url_character defined in lmfdb.utils
@@ -57,9 +65,7 @@ def render_DirichletNavigation():
     args = to_dict(request.args)
 
     info = {'args':args}
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-                      ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
-
+    info['bread'] = get_bread()
     info['learnmore'] = learn()
 
     try:
@@ -131,9 +137,7 @@ def render_DirichletNavigation():
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
         info['title'] = 'Dirichlet character search results'
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Search results', '') ]
+        info['bread'] = get_bread('Search results')
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
@@ -144,8 +148,7 @@ def render_DirichletNavigation():
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet character labels'
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
+    info['bread'] = get_bread('Labels')
     info['learnmore'] = learn('labels')
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
@@ -153,8 +156,7 @@ def labels_page():
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet character data'
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
+    info['bread'] = get_bread('Source')
     info['learnmore'] = learn('source')
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
@@ -162,8 +164,7 @@ def how_computed_page():
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet character data'
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Reliability', '') ]
+    info['bread'] = get_bread('Reliability')
     info['learnmore'] = learn('reliability')
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
@@ -171,8 +172,7 @@ def reliability():
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet character data'
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Extent', '') ]
+    info['bread'] = get_bread('Extent')
     info['learnmore'] = learn('extent')
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
@@ -216,6 +216,19 @@ def label_to_number(modulus, number, all=False):
             return 0
     return number
 
+def url_for_label(label):
+    """
+    INPUT:
+
+    - label -- a string such as "1052.279" giving a specific Dirichlet character (not an orbit)
+
+    OUTPUT:
+
+    the URL for that Dirichlet character's homepage
+    """
+    modulus, number = label.split(".")
+    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
+
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
@@ -256,9 +269,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))]
+        info['bread'] = get_bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -277,13 +288,13 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
-    info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                     ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                     ('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ]
+    info['bread'] = get_bread(
+        [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+         ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ])
     info['learnmore'] = learn()
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+    info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
@@ -348,6 +359,17 @@ def random_Dirichletwebpage():
     while gcd(modulus,number) > 1:
         number = randint(1,modulus-1)
     return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+
+@characters_page.route('/Dirichlet/interesting')
+def interesting():
+    return interesting_knowls(
+        "character.dirichlet",
+        db.char_dir_values,
+        url_for_label=url_for_label,
+        title="Some interesting Dirichlet characters",
+        bread=get_bread("Interesting"),
+        credit="SageMath",
+        learnmore=learn())
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
