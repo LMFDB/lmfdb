@@ -764,7 +764,7 @@ def render_family(args):
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
-                               KNOWL_ID="curve.highergenus.aut",
+                               KNOWL_ID="curve.highergenus.aut.%s" % label,
                                learnmore=learnmore_list(), downloads=downloads, credit=credit)
 
 
@@ -963,7 +963,7 @@ def render_passport(args):
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                learnmore=learnmore_list(), downloads=downloads,
-                               KNOWL_ID="curve.highergenus.aut",
+                               KNOWL_ID="curve.highergenus.aut.%s" % label,
                                credit=credit)
 
 
