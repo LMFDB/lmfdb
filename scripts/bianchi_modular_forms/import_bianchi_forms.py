@@ -48,21 +48,11 @@ from sage.all import polygen, QQ, ZZ, NumberField, PolynomialRing
 import re
 import os
 
-from lmfdb.base import getDBConnection
-print("getting connection")
-C= getDBConnection()
-print("authenticating on the elliptic_curves database")
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['bmfs'].authenticate(username, password)
-print("setting bmfs")
-bmfs = C.bmfs
+from lmfdb import db
 print("setting dims")
-dims = bmfs.dimensions
+dims = db.bmf_dims
 print("setting forms")
-forms = bmfs.forms
+forms = db.bmf_forms
 
 whitespace = re.compile(r'\s+')
 
@@ -144,6 +134,8 @@ def newforms(line):
     """
     # skip comment lines
     if line[0] == '#':  return '', {}
+    if 'Primes' in line:  return '', {}
+    if '...' in line:  return '', {}
     data = split(line)
     # base field
     field_label = data[0]
@@ -206,7 +198,9 @@ def newforms(line):
         'hecke_eigs': hecke_eigs,
     }
 
-def upload_to_db(base_path, filename_suffix, insert=True):
+DATA_DIR="/scratch/home/jcremona/bianchi-data/newforms"
+
+def upload_to_db(filename_suffix, base_path=DATA_DIR, insert=True, test=True):
     forms_filename = ".".join(["newforms",filename_suffix])
     file_list = [forms_filename]
 
@@ -243,6 +237,10 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         print("finished reading %s lines from file" % count)
 
     vals = data_to_insert.values()
+    if test:
+        print("Test mode: not inserting any data ({} items)".format(len(vals)))
+        return vals
+    
     if insert:
         print("inserting all data")
         forms.insert_many(vals)
@@ -256,33 +254,9 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             if count % 100 == 0:
                 print("inserted %s" % (val['label']))
 
-def make_indices():
-    from pymongo import ASCENDING
-    forms.create_index('label')
-    forms.create_index('field_label')
-    forms.create_index([('field_label',ASCENDING),
-                        ('dimension',ASCENDING),
-                        ('level_norm',ASCENDING)])
-    forms.create_index([('field_label',ASCENDING),
-                        ('level_norm',ASCENDING)])
-    forms.create_index([('field_label',ASCENDING),
-                        ('level_label',ASCENDING)])
-    forms.create_index([('field_label',ASCENDING),
-                        ('level_label',ASCENDING),
-                        ('CM',ASCENDING)])
-    forms.create_index([('field_label',ASCENDING),
-                        ('level_label',ASCENDING),
-                        ('bc',ASCENDING)])
-    forms.create_index([('field_label',ASCENDING),
-                        ('level_label',ASCENDING),
-                        ('CM',ASCENDING),
-                        ('bc',ASCENDING)])
-    forms.create_index([('CM',ASCENDING),
-                        ('bc',ASCENDING)])
-
 # function to compare newforms and curves:
 def curve_check(fld, min_norm=1, max_norm=None):
-    nfcurves = C['elliptic_curves']['nfcurves']
+    nfcurves = db.ec_nfcurves
     # first check numbers
     norm_range = {}
     norm_range['$gte'] = min_norm
@@ -292,7 +266,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
     form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}
     curve_query = {'field_label':fld, 'number':1, 'conductor_norm':norm_range}
     nforms = forms.count(form_query)
-    ncurves = len([c for c in nfcurves.find(curve_query) if not 'CM' in c['label']])
+    ncurves = len([c for c in nfcurves.search(curve_query) if not 'CM' in c['label']])
     if nforms==ncurves:
         print("# curves = # forms = {}".format(ncurves))
     else:
@@ -301,7 +275,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
         print("{} curves missing".format(nforms-ncurves))
     print("Checking whether there is a curve for each newform...")
     n = 0
-    for f in forms.find(form_query):
+    for f in forms.search(form_query):
         lab = f['label']
         nc = nfcurves.count({'class_label':lab})
         if nc==0:
@@ -313,7 +287,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
         print("{} missing curves listed".format(n))
     print("Checking whether there is a newform for each non-CM curve...")
     n = 0
-    for f in nfcurves.find(curve_query):
+    for f in nfcurves.search(curve_query):
         lab = f['class_label']
         if 'CM' in lab:
             continue
@@ -325,3 +299,40 @@ def curve_check(fld, min_norm=1, max_norm=None):
         print("no missing newforms")
     else:
         print("{} missing newforms listed".format(n))
+
+
+def update_ap(field, base_path=DATA_DIR, table=None, check=False):
+    # field = 1, 2, 3, 7 or 11 The next line is a lazy way to use old
+    # code, though we do not need all the data, this is one way to
+    # read it in.
+    vals = upload_to_db("{}.all".format(field))
+    D = dict([(v['label'], v['hecke_eigs']) for v in vals])
+    print("Finished reading data for field {}: {} entries".format(field, len(D)))
+
+    if check:
+        # Some db entries have more ap already and we do not want to
+        # overwrite these.  At the same time we check for consistency
+        # between old and new:
+        print("Checking old and new eigs for consistency")
+        for label, eigs in D.items():
+            old_eigs = forms.lucky({'label':label})['hecke_eigs']
+            consistent = all([ap==bp for ap,bp in zip(old_eigs,eigs)])
+            if not consistent:
+                print("Old and new eigs do not agree for form {}".format(label))
+            n_old = len(old_eigs)
+            n_new = len(eigs)
+            if n_old > n_new:
+                print("Old eig list for {} has {} entries, new has {}".format(label, n_old, n_new), end=": ")
+                print("Keeping old eigs")
+                D[label] = old_eigs
+
+    filename=DATA_DIR+'/temp_{}'.format(field)
+    with open(filename, 'w') as F:
+        F.write("label|hecke_eigs\ntext|jsonb\n\n")
+        for label, eigs in D.items():
+            F.write("%s|%s\n" % (label, eigs))
+    print("Finished writing data for field {} to {}".format(field, filename))
+    if table:
+        table.update_from_file(filename)        
+    else:
+        print("test run: database unchanged")
