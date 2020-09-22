@@ -1823,7 +1823,7 @@ class PostgresTable(PostgresBase):
             ),
             [self.search_table],
         ).fetchone()
-        table = PostgresTable(self._db, *tabledata)
+        table = self._db._search_table_class_(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
