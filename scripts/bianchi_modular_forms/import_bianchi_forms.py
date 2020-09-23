@@ -52,7 +52,6 @@ NB 1. Both AL_eigs and hecke_eigs are indexed by the primes in standard order
 from __future__ import print_function
 from sage.all import polygen, QQ, ZZ, NumberField, PolynomialRing
 import re
-import os
 
 from lmfdb import db
 print("setting dims")
@@ -261,7 +260,7 @@ def bmf_to_string(id, F):
     cols = [str(id)] + [str(F[k]) for k in COL_NAMES]    
     return "|".join(cols)
 
-def write_form_data(alldata, filename_suffix, base_path=DATA_DIR, headers=True):
+def write_form_data(alldata, filename_suffix, base_path=NEWFORM_DIR, headers=True):
     filename = base_path + "/bmf_forms." + filename_suffix
     with open(filename, 'w') as outfile:
         if headers:
@@ -275,7 +274,7 @@ def write_form_data(alldata, filename_suffix, base_path=DATA_DIR, headers=True):
     print("output {}{} data lines to {}".format(s, id-1, filename))
 
 
-def upload_to_db(filename_suffix, base_path=DATA_DIR, update=True, test=True):
+def upload_to_db(filename_suffix, base_path=NEWFORM_DIR, update=True, test=True):
     """Read data from a newforms file and insert it into the database.  If
     update==True (default) this is done using forms.update() so that
     old rows will be updated with the input data.  Otherwise
@@ -301,7 +300,7 @@ def upload_to_db(filename_suffix, base_path=DATA_DIR, update=True, test=True):
             print("Inserting {} rows from input data".format(len(alldata)))
             forms.insert_many(alldata.values())
         
-def upload_to_db_old(filename_suffix, base_path=DATA_DIR, insert=True, test=True):
+def upload_to_db_old(filename_suffix, base_path=NEWFORM_DIR, insert=True, test=True):
     """The old way to upload data.  Better now is to use read_forms() to
     read the newforms file into a dict D and then
     write_form_data(D,...) to output to a file and then
@@ -374,7 +373,7 @@ def curve_check(fld, min_norm=1, max_norm=None):
         print("{} missing newforms listed".format(n))
 
 
-def update_ap(field, base_path=DATA_DIR, table=None, check=False):
+def update_ap(field, base_path=NEWFORM_DIR, table=None, check=False):
     # field = 1, 2, 3, 7 or 11 The next line is a lazy way to use old
     # code, though we do not need all the data, this is one way to
     # read it in.
@@ -399,7 +398,7 @@ def update_ap(field, base_path=DATA_DIR, table=None, check=False):
                 print("Keeping old eigs")
                 D[label] = old_eigs
 
-    filename=DATA_DIR+'/temp_{}'.format(field)
+    filename=NEWFORM_DIR+'/temp_{}'.format(field)
     with open(filename, 'w') as F:
         F.write("label|hecke_eigs\ntext|jsonb\n\n")
         for label, eigs in D.items():
