@@ -287,7 +287,7 @@ def upload_to_db(filename_suffix, base_path=DATA_DIR, update=True, test=True):
 
     # write it to a temporary file in current directory
     tempfilename = filename_suffix+".temp"
-    write_form_data(alldata, tempfilename, base+path=".")
+    write_form_data(alldata, tempfilename, base_path=".")
 
     # update the database
     if test:
