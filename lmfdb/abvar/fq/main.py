@@ -572,7 +572,7 @@ def jump(info):
             if not ZZ(q).is_prime_power():
                 raise ValueError
             for i in range(1, g):
-                if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
+                if cdict.get(2*g-i, 0) != q**(g-i) * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
             raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
