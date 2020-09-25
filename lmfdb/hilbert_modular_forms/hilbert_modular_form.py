@@ -16,6 +16,7 @@ from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
 from lmfdb.utils import names_and_urls
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
 def get_bread(tail=[]):
@@ -54,6 +55,18 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 def random_hmf():    # Random Hilbert modular form
     return hilbert_modular_form_by_label(db.hmf_forms.random())
 
+@hmf_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "mf.hilbert",
+        db.hmf_forms,
+        url_for_label,
+        title="Some interesting Hilbert modular forms",
+        credit=hmf_credit,
+        bread=get_bread("Interesting"),
+        learnmore=learnmore_list()
+    )
+
 @hmf_page.route("/")
 def hilbert_modular_form_render_webpage():
     info = to_dict(request.args, search_array=HMFSearchArray())
@@ -64,8 +77,6 @@ def hilbert_modular_form_render_webpage():
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=get_bread(), learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(info)
-
-
 
 def split_full_label(lab):
     r""" Split a full hilbert modular form label into 3 components
@@ -80,6 +91,10 @@ def split_full_label(lab):
     label_suffix = data[2]
     return (field_label, level_label, label_suffix)
 
+def url_for_label(label):
+    return url_for('.render_hmf_webpage',
+                   field_label=split_full_label(label)[0],
+                   label=label)
 
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, string_types):
@@ -91,7 +106,7 @@ def hilbert_modular_form_by_label(lab):
         flash_error("No Hilbert modular form in the database has label or name %s", lab)
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
     else:
-        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
+        return redirect(url_for_label(lab))
 
 # Learn more box
 
@@ -104,7 +119,6 @@ def learnmore_list():
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
-
 
 def hilbert_modular_form_jump(info):
     lab = info['jump'].strip()
@@ -124,11 +138,9 @@ def hilbert_modular_form_jump(info):
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal']),
                        "field_knowl": lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
-             bread=lambda:get_bread("Search results"),
+             bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
-             url_for_label=lambda label: url_for('.render_hmf_webpage',
-                                                 field_label=split_full_label(label)[0],
-                                                 label=label),
+             url_for_label=url_for_label,
              credit=lambda: hmf_credit,
              properties=lambda: [])
 def hilbert_modular_form_search(info, query):
@@ -405,9 +417,7 @@ def render_hmf_webpage(**args):
             else:
                 info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
-
-
-    bread = get_bread(str(data["label"]))
+    bread = get_bread(data["label"])
     t = "Hilbert cusp form %s" % info['label']
 
     forms_dims = db.hmf_forms.search({'field_label': data['field_label'], 'level_ideal': data['level_ideal']}, projection='dimension')
@@ -492,7 +502,18 @@ def render_hmf_webpage(**args):
                    ('Base change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties=properties, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+    return render_template(
+        "hilbert_modular_form.html",
+        downloads=info["downloads"],
+        info=info,
+        properties=properties,
+        credit=hmf_credit,
+        title=t,
+        bread=bread,
+        friends=info['friends'],
+        learnmore=learnmore_list(),
+        KNOWL_ID="mf.hilbert.%s"%label,
+    )
 
 #data quality pages
 @hmf_page.route("/Completeness")

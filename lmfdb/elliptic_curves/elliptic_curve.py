@@ -18,6 +18,7 @@ from lmfdb.utils import (
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
     YesNoBox, parse_element_of, parse_bool, search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -42,6 +43,12 @@ def sorting_label(lab1):
     """
     a, b, c = parse_cremona_label(lab1)
     return (int(a), class_to_int(b), int(c))
+
+def get_bread(tail=[]):
+    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 #########################
 #    Top level
@@ -86,7 +93,6 @@ def rational_elliptic_curves(err_args=None):
     info['counts'] = counts
     info['stats_url'] = url_for(".statistics")
     t = r'Elliptic curves over $\Q$'
-    bread = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
     if err_args.get("err_msg"):
         # this comes from elliptic_curve_jump_error
         flash_error(err_args.pop("err_msg"), err_args.pop("label"))
@@ -95,10 +101,23 @@ def rational_elliptic_curves(err_args=None):
                            info=info,
                            credit=ec_credit(),
                            title=t,
-                           bread=bread,
+                           bread=get_bread(),
                            learnmore=learnmore_list(),
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
+
+@ec_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "ec.q",
+        db.ec_curves,
+        url_for_label,
+        label_col="lmfdb_label",
+        title=r"Some interesting elliptic curves over $\Q$",
+        bread=get_bread("Interesting"),
+        credit=ec_credit(),
+        learnmore=learnmore_list()
+    )
 
 @ec_page.route("/random")
 def random_curve():
@@ -122,16 +141,14 @@ def statistics():
         'stats': get_stats().stats(),
     }
     t = r'Elliptic curves over $\Q$: Statistics'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for(".rational_elliptic_curves")),
-             ('Statistics', ' ')]
+    bread = get_bread('Statistics')
     return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
     info = to_dict(request.args, search_array=ECSearchArray())
-    info['bread'] = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
+    info['bread'] = get_bread([('%s' % conductor, url_for(".by_conductor", conductor=conductor))])
     info['title'] = r'Elliptic curves over $\Q$ of Conductor %s' % conductor
     if request.args:
         # if conductor changed, fall back to a general search
@@ -248,9 +265,7 @@ def url_for_label(label):
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
-             bread=lambda:[('Elliptic curves', url_for("ecnf.index")),
-                           (r'$\Q$', url_for(".rational_elliptic_curves")),
-                           ('Search results', '.')],
+             bread=lambda:get_bread('Search results'),
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):
@@ -529,36 +544,28 @@ def download_EC_all(label):
 @ec_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of Elliptic curve data over $\Q$'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Completeness', '')]
+    bread = get_bread('Completeness')
     return render_template("single.html", kid='dq.ec.extent',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
     t = r'Source of Elliptic curve data over $\Q$'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Source', '')]
+    bread = get_bread('Source')
     return render_template("single.html", kid='dq.ec.source',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Reliability")
 def reliability_page():
     t = r'Reliability of Elliptic curve data over $\Q$'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Reliability', '')]
+    bread = get_bread('Reliability')
     return render_template("single.html", kid='dq.ec.reliability',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
     t = r'Labels for Elliptic curves over $\Q$'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Labels', '')]
+    bread = get_bread('Labels')
     return render_template("single.html", kid='ec.q.lmfdb_label',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 

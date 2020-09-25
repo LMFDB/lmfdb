@@ -13,13 +13,7 @@ By {{ KNOWL('belyi.degree', title='degree')}}:
 {% endfor %}
 </p>
 <p>
-Some of our favorite Belyi maps:
-{% for galmap in info.belyi_galmap_list: %}
-<a href = "{{galmap.url}}"> {{galmap.label}} </a>&nbsp;
-{% endfor %}
-</p>
-<p>
-A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the database.
+Some <a href="{{url_for('.interesting')}}">interesting Belyi maps</a> or a <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a>
 </p>
 <h2> Find a specific Belyi map or passport by {{ KNOWL('belyi.label', title='label')}} </h2>
 

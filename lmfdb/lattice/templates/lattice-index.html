@@ -37,19 +37,12 @@ By {{ KNOWL('lattice.determinant', title='Determinant') }}:
 {% endfor %}... <a href="?det=1000000-{{info.stats.max_det}}">1000000-{{info.stats.max_det}}</a>
 </p>
 <p>
-By {{ KNOWL('lattice.class_number', title='Class number') }}: 
+By {{ KNOWL('lattice.class_number', title='Class number') }}:
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>
 {% endfor %}... <a href="?class_number={{info.stats.max_cn}}">{{info.stats.max_cn}}</a>
 </p>
-<p>
-Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') }}:
-{% for rnge in info.name_list %}
-<a href="?label={{rnge}}"> {{rnge}} </a>
-{% endfor %}
-</p>
-<p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
-<br>
+<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a>
 </p>
 
 

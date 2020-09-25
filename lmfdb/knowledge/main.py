@@ -51,6 +51,10 @@ def allowed_id(ID):
             extras = "[],T"
         elif ID.startswith('hgm'):
             extras = "AB"
+        elif ID.startswith('ec'):
+            extras = "CM"
+        elif ID.startswith('gg'):
+            extras = "T"
         else:
             extras = ""
         for c in extras:

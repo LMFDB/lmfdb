@@ -17,6 +17,7 @@ from lmfdb.utils import (
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox,
 )
+from lmfdb.utils.interesting import interesting_knowls
 from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
@@ -572,7 +573,7 @@ def jump(info):
             if not ZZ(q).is_prime_power():
                 raise ValueError
             for i in range(1, g):
-                if cdict.get(2*g-i, 0) != q**i * cdict.get(i, 0):
+                if cdict.get(2*g-i, 0) != q**(g-i) * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
             raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
@@ -643,24 +644,9 @@ def abelian_variety_count(info, query):
     info["col_label"] = r"Cardinality of base field \(q\)"
     info["url_func"] = url_generator
 
-favorite_isocls_labels = [[
-    ("2.64.a_abp", "Most isomorphism classes"),
-    ("2.167.a_hi", "Most Jacobians"),
-    ("4.2.ad_c_a_b", "Jacobian of function field with claa number 1"),
-    ("6.2.ak_cb_ahg_sy_abme_ciq", "Largest twist class"),
-    ("6.2.ag_r_abd_bg_ay_u", "Large endomorphism degree"),
-]]
-
 def abelian_variety_browse(info):
     info["stats"] = AbvarFqStats()
     info["q_ranges"] = ["2", "3", "4", "5", "7-16", "17-25", "27-211", "223-1024"]
-    info["iso_list"] = [
-        [
-            {"label": label, "url": url_for_label(label), "reason": reason}
-            for label, reason in sublist
-        ]
-        for sublist in favorite_isocls_labels
-    ]
     return render_template(
         "abvarfq-index.html",
         title="Isogeny classes of abelian varieties over finite fields",
@@ -675,7 +661,7 @@ def search_input_error(info=None, bread=None):
         info = {"err": "", "query": {}}
     info["search_array"] = AbvarSearchArray()
     if bread is None:
-        bread = get_bread(("Search results", "."))
+        bread = get_bread(("Search results", " "))
     return render_template(
         "abvarfq-search-results.html",
         info=info,
@@ -692,7 +678,7 @@ def statistics():
         info=AbvarFqStats(),
         credit=abvarfq_credit,
         title=title,
-        bread=get_bread(("Statistics", ".")),
+        bread=get_bread(("Statistics", " ")),
         learnmore=learnmore_list(),
     )
 
@@ -706,7 +692,7 @@ def dynamic_statistics():
         info=info,
         credit=abvarfq_credit,
         title=title,
-        bread=get_bread(("Dynamic Statistics", ".")),
+        bread=get_bread(("Dynamic Statistics", " ")),
         learnmore=learnmore_list(),
     )
 
@@ -720,10 +706,22 @@ def random_class():
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
 
+@abvarfq_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "av.fq",
+        db.av_fq_isog,
+        url_for_label,
+        title=r"Some interesting isogeny classes of abelian varieties over $\Fq$",
+        bread=get_bread(("Interesting", " ")),
+        credit=abvarfq_credit,
+        learnmore=learnmore_list()
+    )
+
 @abvarfq_page.route("/Completeness")
 def completeness_page():
     t = "Completeness of Weil polynomial data"
-    bread = get_bread(("Completeness", "."))
+    bread = get_bread(("Completeness", " "))
     return render_template(
         "single.html",
         kid="rcs.cande.av.fq",
@@ -736,7 +734,7 @@ def completeness_page():
 @abvarfq_page.route("/Reliability")
 def reliability_page():
     t = "Reliability of Weil polynomial data"
-    bread = get_bread(("Reliability", "."))
+    bread = get_bread(("Reliability", " "))
     return render_template(
         "single.html",
         kid="rcs.rigor.av.fq",
@@ -749,7 +747,7 @@ def reliability_page():
 @abvarfq_page.route("/Source")
 def how_computed_page():
     t = "Source of Weil polynomial data"
-    bread = get_bread(("Source", "."))
+    bread = get_bread(("Source", " "))
     return render_template(
         "single.html",
         kid="rcs.source.av.fq",
@@ -762,7 +760,7 @@ def how_computed_page():
 @abvarfq_page.route("/Labels")
 def labels_page():
     t = "Labels for isogeny classes of abelian varieties"
-    bread = get_bread(("Labels", "."))
+    bread = get_bread(("Labels", " "))
     return render_template(
         "single.html",
         kid="av.fq.lmfdb_label",
