@@ -64,10 +64,7 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2> Find a specific curve or {{
-  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients,
-  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }}, or 
-  {{ KNOWL('ec.q.cremona_label',title="Cremona label") }} </h2>
+<h2> Find a specific curve or {{KNOWL('ec.isogeny_class',title="isogeny class") }}</h2>
 {% if err_msg %}
 <form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}

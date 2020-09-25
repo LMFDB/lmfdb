@@ -716,6 +716,8 @@ class ECNFSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
+    jump_prompt = "Label"
+    jump_knowl = "ec.search_input"
     def __init__(self):
         field = TextBox(
             name="field",
