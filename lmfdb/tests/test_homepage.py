@@ -64,5 +64,5 @@ class HomePageTest(LmfdbTest):
 
     # test global random
     def test_random(self):
-        L = self.tc.get("/random")
+        L = self.tc.get("/random", follow_redirects=True)
         assert "Properties" in L.get_data(as_text=True)
