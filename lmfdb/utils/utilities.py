@@ -1288,4 +1288,3 @@ def add_space_if_positive(texified_pol):
     if texified_pol[0] == '-':
         return texified_pol
     return r"\phantom{-}" + texified_pol
-

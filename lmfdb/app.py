@@ -4,6 +4,7 @@ import os
 from socket import gethostname
 import time
 import six
+from urllib.parse import urlparse, urlunparse
 
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
@@ -117,6 +118,12 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+
+    def modify_url(**replace):
+        urlparts = urlparse(request.url)
+        urlparts = urlparts._replace(**replace)
+        return urlunparse(urlparts)
+    vars['modify_url'] = modify_url
 
     return vars
 

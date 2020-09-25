@@ -37,7 +37,6 @@ class BMFTest(LmfdbTest):
         assert t in homepage
         self.check_args(base_url+t,'show both the dimension $d$ of the space of cusp forms of weight')
         t = '2.0.4.1/100.2/a/'
-        assert t in homepage
         self.check_args(base_url+t,'Base change')
 
     #

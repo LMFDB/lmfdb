@@ -17,7 +17,7 @@ class CmfTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
         assert '?search_type=Dimensions&dim=1' in data
         assert '?search_type=SpaceDimensions&char_order=1' in data
-        assert "./stats" in data
+        assert "/stats" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions",follow_redirects=True).get_data(as_text=True)
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/23/12/">229</a>' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions&char_order=1", follow_redirects=True).get_data(as_text=True)
@@ -87,22 +87,45 @@ class CmfTest(LmfdbTest):
                         assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     def test_favorite(self):
-        main_page = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
-        from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
+        favorite_newform_labels = [
+            [('23.1.b.a','Smallest analytic conductor'),
+             ('11.2.a.a','First weight 2 form'),
+             ('39.1.d.a','First D2 form'),
+             ('7.3.b.a','First CM-form with weight at least 2'),
+             ('23.2.a.a','First trivial-character non-rational form'),
+             ('1.12.a.a','Delta'),
+             ('124.1.i.a','First non-dihedral weight 1 form'),
+             ('148.1.f.a','First S4 form'),
+            ],
+            [
+                ('633.1.m.b','First A5 form'),
+                ('163.3.b.a','Best q-expansion'),
+                ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
+                ('8.21.d.b','Large coefficient ring index'),
+                ('3600.1.e.a','Many zeros in q-expansion'),
+                ('983.2.c.a','Large dimension'),
+                ('3997.1.cz.a','Largest projective image'),
+                ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists'),
+            ]
+        ]
+        favorite_space_labels = [
+            [('1161.1.i', 'Has A5, S4, D3 forms'),
+             ('23.10', 'Mile high 11s'),
+             ('3311.1.h', 'Most weight 1 forms'),
+             ('1200.2.a', 'All forms rational'),
+             ('9450.2.a','Most newforms'),
+             ('4000.1.bf', 'Two large A5 forms'),
+            ]
+        ]
         for l in favorite_newform_labels:
             for elt, desc in l:
-                if elt != 'random':
-                    elt in main_page
-                    desc in main_page
-                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
-                    # redirect to the same page
-                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+                # redirect to the same page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
         for l in favorite_space_labels:
             for elt, desc in l:
-                elt in main_page
-                desc in main_page
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert elt in page.get_data(as_text=True)
                 # redirect to the same page

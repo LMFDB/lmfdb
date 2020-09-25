@@ -566,7 +566,7 @@ input, textarea {
 }
 /* TODO: above? */
 
-button, select {
+button, select, a.like-button {
   padding: 3px 6px;
   border-radius: 4px;
   cursor: pointer;
@@ -574,8 +574,14 @@ button, select {
   min-width: 75px;
 }
 
-button {
-   background: {{color.button_background}};
+button, a.like-button {
+  background: {{color.button_background}};
+}
+
+a.like-button {
+  color: {{color.black}};
+  font-size: 11px;
+  padding: 6px 16px 3px 16px;
 }
 
 button.like-link {
