@@ -35,6 +35,10 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 Some <a href="{{url_for('.interesting')}}">interesting number fields</a> or a <a href={{url_for('.by_label', label='random')}}>random number field</a>
 </p>
 
+<h2> Search for fields </h2>
+<form id="search" onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
 
 <h2>Find a specific field by {{KNOWL('nf.label',title='label')}}, 
   {{KNOWL('nf.nickname',title='nickname')}}, or 
@@ -43,13 +47,5 @@ Some <a href="{{url_for('.interesting')}}">interesting number fields</a> or a <a
 <form>
   {{ info.search_array.jump_box(info) | safe }}
 </form>
-
-
-<h2> Search for fields </h2>
-<form id="search" onsubmit="cleanSubmit(this.id)">
-  {{ info.search_array.html() | safe }}
-</form>
-
-
 
 {% endblock %}

@@ -35,18 +35,16 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 
 <p>Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></p>
 
-
-<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

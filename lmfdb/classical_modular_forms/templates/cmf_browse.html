@@ -56,12 +56,6 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
  a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}
 </p>
 
-<h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
 {# SEARCHING #}
 
 <h2> Search </h2>
@@ -69,5 +63,10 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

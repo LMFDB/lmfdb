@@ -34,15 +34,6 @@
 &nbsp;&nbsp;Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
 </p>
 
-<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
-<form>
-    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
-    <button type='submit' name='lookup' value='1'> Find  </button>
-    <br>
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
-</form>
-
 <h2> Search for characters </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
@@ -87,6 +78,15 @@
         </tr>
         <tr><td><button type='submit' > Search </button></td></tr>
     </table>
+</form>
+
+<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
+  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
+<form>
+    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
+    <button type='submit' name='lookup' value='1'> Find  </button>
+    <br>
+    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
 </form>
 
 {#

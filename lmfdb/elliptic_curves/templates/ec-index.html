@@ -58,6 +58,11 @@ By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:
 Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href="{{url_for('.random_curve')}}"}>random elliptic curve</a>
 </p>
 
+<h2> Search </h2>
+<p></p>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
 
 <h2> Find a specific curve or {{
   KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients,
@@ -71,13 +76,6 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   {{ info.search_array.jump_box(info) | safe }}
 </form>
 
-<h2> Search </h2>
-<p></p>
-<form id='search' onsubmit="cleanSubmit(this.id)">
-  {{ info.search_array.html() | safe }}
-</form>
-
 {% endif %}
-
 
 {% endblock %}
