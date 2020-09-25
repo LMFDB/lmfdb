@@ -63,9 +63,10 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2 style="display:inline"> Find a newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
+
 <form>
-  {{ info.search_array.jump_box(info) | safe }}
+<h2 style="display:inline"> Find a newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
+{{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {% endblock %}
