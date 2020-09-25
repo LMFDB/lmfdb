@@ -14,26 +14,27 @@
 {% if info.number == 0 %}
 <h2> No matches </h2>
 {% else %}
-<h2> Results ({% if info.number==1 -%}
-    unique match)
+<h2> Results {% if info.number==1 -%}
+    (unique match)
   {% elif info.number==2 -%}
-    displaying both matches)
+    (displaying both matches)
   {% elif info.number=='infinity' -%}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }})
+    (matches {{ info.start + 1 }}-{{ upper_count }})
   {% elif info.number <= info.count and info.start == 0 -%}
-    displaying all {{ info.number }} matches)
+    ({{ info.number }} matches)
   {% elif info.exact_count -%}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }})
+    ({{ info.start + 1 }}-{{ upper_count }} of {{ info.number }} matches)
   {% else -%}
     {% if 'download_limit' in info %}
       {% set download_limit = info.download_limit %}
     {% else %}
       {% set download_limit = 100000 %}
     {% endif %}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }} of
+    ({{ info.start + 1 }}-{{ upper_count }} of
     <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">at least {{ info.number }}</a></span>)
   {% endif %}
 {% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 </h2>
 {% endif %}
 {% endif %}
