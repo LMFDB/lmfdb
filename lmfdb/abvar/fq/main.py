@@ -180,6 +180,8 @@ def download_search(info):
 class AbvarSearchArray(SearchArray):
     jump_example = "2.16.am_cn"
     jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
+    jump_knowl = "av.fq.search_input"
+    jump_prompt = "Label or polynomial"
     def __init__(self):
         qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
