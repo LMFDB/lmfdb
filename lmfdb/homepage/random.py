@@ -1,6 +1,8 @@
-from ..app import is_beta
+from lmfdb.app import is_beta, app
+from flask import redirect
+from sage.all import randint
 
-def get_random():
+def random_url():
     if is_beta():
         routes = ["ModularForm/GL2/Q/holomorphic/",
                     "ModularForm/GL2/Q/Maass/",
@@ -41,4 +43,9 @@ def get_random():
                     "SatoTateGroup/"
                 ]
     route = routes[randint(0,len(routes)-1)]
-    return redirect(route+"random", 404)
+    return route+"random"
+
+@app.route("/random")
+def go_random():
+    url = random_url()
+    return redirect(url)

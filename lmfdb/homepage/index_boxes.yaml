@@ -22,7 +22,7 @@ title: Search and browse
 image: search2
 content: <p>Search for objects with specific properties,
     or browse categories.</p><p>Browse&#58; <a href="/L/">L-functions,</a> <a href="/ModularForm/GL2/Q/holomorphic/">Modular forms,</a> <a href="/EllipticCurve/Q/">Elliptic curves,</a>
-    <a href=" /NumberField/">Number fields</a>
+    <a href=" /NumberField/">Number fields</a><p><a href="/random">See a random object from the database</a></p>
 control: 0
 links:
   - [ 0,0 ]
