@@ -8,7 +8,7 @@ read("generate.gp");
 longt = 10;
 */
 shortt = 40;
-longt = 10;
+longt = 40;
 
 savetime=0; /* in milliseconds */
 
@@ -17,6 +17,33 @@ assoc(entry, lis, bnd=-1) =my(b);b=#lis;if(bnd>-1,b=bnd);for(j=1,b,if(lis[j]==en
 /* Needs to be adjusted for higher degree polynomials */
 galt(pol) = return(polgalois(pol)[3]);
 galt(pol) = if(poldegree(pol)<8, return(polgalois(pol)[3]), return(galtord(pol)[1]));
+
+res_degs(nf, p)= return(apply(z->z[4], idealprimedec(nf,p)));
+
+tors(nf)=
+{
+  my(rootsof1,gen);
+  rootsof1=nfrootsof1(nf);
+  gen = rootsof1[2];
+  gen = Str(lift(nfbasistoalg(nf,gen)));
+  return([rootsof1[1], gen]);
+}
+
+frobs(nf)=
+{
+  my(D,ans=vector(17),j,dec,vals);
+  D = nf.disc;
+  j=0;
+  forprime(p=2,59,
+    j++;
+    if( (D % p) != 0,
+      dec = res_degs(nf,p);
+      vals = vecsort(mult(dec),[1],4);
+      ans[j] = [p,vals],
+      ans[j] = [p,[0]]);
+  );
+  return(ans);
+}
 
 mult(lis) =
 {
@@ -30,14 +57,15 @@ mult(lis) =
 
 coeffs(pol) = return(vector(poldegree(pol)+1, h, polcoeff(pol, h-1)));
 
-getsubs(pol)=
+getsubs(pol, ramli=[])=
 {
   my(sbs);
+  if(#ramli==0, ramli=factor(abs(nfdisc(f)))[,1]~);
   sbs=nfsubfields(pol);
   sbs = apply(z->[z[1], poldegree(z[1])], sbs);
   sbs = vecsort(sbs, [2]);
   sbs = vector(#sbs-2,h,sbs[h+1]); /* skip Q and the field itself */
-  sbs = apply(z->polredabs(z[1]),sbs);
+  sbs = apply(z->polredabsx([z[1],ramli]),sbs);
   sbs = apply(coeffs,sbs);
   return(mult(sbs));
 }
@@ -81,6 +109,7 @@ doit(pol)=
     my(localg,rmps);
     nf=nfinit(pol);
     zk=nfbasis(pol);
+    subs = getsubs(nf);
     a='a;
     zk=subst(zk,x,a);
     zk=apply(z->Str(z), zk);
@@ -101,7 +130,6 @@ doit(pol)=
         );
     );
     localg = apply(z->onealg(pol,z), rmps);
-    subs = getsubs(nf);
     return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps,localg,iscm(pol,subs)]);
     /* reg and units if slow */
     /* grh if certify is too slow */
@@ -109,7 +137,7 @@ doit(pol)=
 
 doit1(ll)=
 {
-    my(pol=ll[1],rmps=Set(ll[2]),nf,bnf=0,elapsed=0,nogrh=0,h=-1,clgp=[],reg=0,fu="",extras=0,subs,zk,ramli);
+    my(pol=ll[1],rmps=Set(ll[2]),nf,bnf=0,elapsed=0,nogrh=0,h=-1,clgp=[],reg=0,fu="",extras=0,subs,zk,ramli,thisgalt,tordata,ginf);
     ramli=getramli(ll);
     pol=polredabsx(ll);
     my(pd=poldisc(pol), nps);
@@ -118,6 +146,7 @@ doit1(ll)=
     if(#nfcertify(nf)>0, error("Did not certify number field"));
     zk=nfbasis([pol,ramli]);
     rmps = vecsort(select(z->valuation(nf.disc,z)>0,ramli));
+    subs = getsubs(nf, ramli);
     zk=subst(zk,x,a);
     zk=apply(z->Str(z), zk);
     gettime();
@@ -136,10 +165,14 @@ doit1(ll)=
         );
     );
     localg = apply(z->onealg(pol,z), rmps);
-    subs = getsubs(nf);
-    return([Vecrev(pol), galt(pol), nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps, localg,iscm(pol,subs)]);
+    thisgalt=galt(pol);
+    tordata= tors(nf);
+    false=0; true=1;
+    ginf= ginfo(poldegree(pol), thisgalt);
+    return([Vecrev(pol), thisgalt, nf.disc, nf.r1,h,clgp,extras,reg,fu,nogrh,subs,1,zk,rmps, localg,iscm(pol,subs),frobs(nf),tordata[1],tordata[2],ginf]);
     /* reg and units if slow */
     /* grh if certify is too slow */
+    /* tordata[1] is the order, [2] is the generator */
 }
 
 doall(li)=
