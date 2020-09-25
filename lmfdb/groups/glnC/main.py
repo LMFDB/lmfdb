@@ -8,12 +8,12 @@ from sage.all import ZZ, latex #, Permutation
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, display_knowl, SearchArray, TextBox, CountBox,
-    parse_ints, parse_bool, clean_input, to_dict,
+    parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
-from lmfdb.groups.glnQ import glnQ_page
+from lmfdb.groups.glnC import glnC_page
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
@@ -36,43 +36,43 @@ def label_is_valid(lab):
     return glnq_label_regex.match(lab)
 
 def get_bread(breads=[]):
-    bc = [("Groups", url_for(".index")),("GLnQ", url_for(".index"))]
+    bc = [("Groups", url_for(".index")),("GLnC", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
 
-@glnQ_page.route("/")
+@glnC_page.route("/")
 def index():
-    info = to_dict(request.args, search_array=GLnQSearchArray())
+    info = to_dict(request.args, search_array=GLnCSearchArray())
     bread = get_bread()
     if request.args:
         return group_search(info)
     info['order_list']= ['1-10', '20-100', '101-200']
 
-    return render_template("glnQ-index.html", title="Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnC-index.html", title="Finite subgroups of $\GL(n,\C)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
-@glnQ_page.route("/random")
-def random_glnQ_group():
-    label = db.gps_qrep.random(projection='label')
+@glnC_page.route("/random")
+def random_glnC_group():
+    label = db.gps_crep.random(projection='label')
     return redirect(url_for(".by_label", label=label))
 
 
-@glnQ_page.route("/<label>")
+@glnC_page.route("/<label>")
 def by_label(label):
     if label_is_valid(label):
-        return render_glnQ_group({'label': label})
+        return render_glnC_group({'label': label})
     else:
         flash_error( "No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
 # Take a list of list of integers and make a latex matrix
-def dispmat(mat):
+def dispmat(n,mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([str(z) for z in row])
+      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
       s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -91,7 +91,7 @@ def group_jump(info):
 def group_download(info):
     t = 'Stub'
     bread = get_bread([("Jump", '')])
-    return render_template("single.html", kid='rcs.groups.glnQ.source',
+    return render_template("single.html", kid='rcs.groups.glnC.source',
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
@@ -101,10 +101,10 @@ def url_for_label(label):
         return url_for(".random_abstract_group")
     return url_for(".by_label", label=label)
 
-@search_wrap(template="glnQ-search.html",
-             table=db.gps_qrep,
-             title='$\GL(n,\Q)$ subgroup search results',
-             err_title='$\GL(n,\Q)$ subgroup search input error',
+@search_wrap(template="glnC-search.html",
+             table=db.gps_crep,
+             title='$\GL(n,\C)$ subgroup search results',
+             err_title='$\GL(n,\C)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','dim','group'],
@@ -125,16 +125,17 @@ def get_url(label):
     return url_for(".by_label", label=label)
 
 #Writes individual pages
-def render_glnQ_group(args):
+def render_glnC_group(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        info = db.gps_qrep.lucky({'label': label})
-        info['dispmat'] = dispmat
+        info = db.gps_crep.lucky({'label': label})
+        N=info['cyc_order_mat']
+        info['dispmat'] = lambda z: dispmat(N,z)
 
-        title = '$\GL('+str(info['dim'])+',\Q)$ subgroup '  + label
+        title = '$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' %  label), 
                 ('Order', '\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
@@ -143,18 +144,18 @@ def render_glnQ_group(args):
 #        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
 #                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
-        return render_template("glnQ-show-group.html",
+        return render_template("glnC-show-group.html",
                                title=title, bread=bread, info=info,
                                properties=prop,
                                #friends=friends,
                                learnmore=learnmore_list(),
-                               #downloads=downloads,
+                               #downloads=downloads, 
                                credit=credit_string)
 
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
 
-@glnQ_page.route("/subinfo/<label>")
+@glnC_page.route("/subinfo/<label>")
 def shortsubinfo(label):
     if not sub_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
@@ -197,46 +198,46 @@ def shortsubinfo(label):
     return ans
 
 
-@glnQ_page.route("/Completeness")
+@glnC_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the $\GL(n,\Q)$ subgroup data'
+    t = 'Completeness of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Completeness", '')])
-    return render_template("single.html", kid='rcs.groups.glnQ.extent',
+    return render_template("single.html", kid='rcs.groups.glnC.extent',
                             title=t, bread=bread,
                             learnmore=learnmore_list_remove('Complete'), 
                             credit=credit_string)
 
 
-@glnQ_page.route("/Labels")
+@glnC_page.route("/Labels")
 def labels_page():
-    t = 'Labels for finite subgroups of $\GL(n,\Q)$'
+    t = 'Labels for finite subgroups of $\GL(n,\C)$'
     bread = get_bread([("Labels", '')])
-    return render_template("single.html", kid='rcs.groups.glnQ.label',
+    return render_template("single.html", kid='rcs.groups.glnC.label',
                            learnmore=learnmore_list_remove('label'), 
                            title=t, bread=bread, credit=credit_string)
 
 
-@glnQ_page.route("/Reliability")
+@glnC_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the $\GL(n,\Q)$ subgroup data'
+    t = 'Reliability of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Reliability", '')])
-    return render_template("single.html", kid='rcs.groups.glnQ.reliability',
+    return render_template("single.html", kid='rcs.groups.glnC.reliability',
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'), 
                            credit=credit_string)
 
 
-@glnQ_page.route("/Source")
+@glnC_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the $\GL(n,\Q)$ subgroup data'
+    t = 'Source of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Source", '')])
-    return render_template("single.html", kid='rcs.groups.glnQ.source',
+    return render_template("single.html", kid='rcs.groups.glnC.source',
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
 
-class GLnQSearchArray(SearchArray):
+class GLnCSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
     jump_example = "??"

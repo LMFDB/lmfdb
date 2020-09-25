@@ -99,6 +99,8 @@ from .groups import abstract
 assert groups.abstract
 from .groups import glnQ
 assert groups.glnQ
+from .groups import glnC
+assert groups.glnC
 from . import maass_forms
 assert maass_forms
 

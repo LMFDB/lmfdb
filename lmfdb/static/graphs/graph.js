@@ -17,6 +17,7 @@
 
 /* For debugging, it can hold a value to be inspected in the console */
 var dbug = '';
+var dbug2 = '';
 
 // Highlight colors: these were for testing
 var selected_color = 'deepskyblue';
@@ -51,6 +52,7 @@ Graph = class {
 		var key = value[1].toString();
 		var node = this.nodeSet[key];
         //dbug = [value, posn, orders, this.nodes, node];
+        //dbug = [key, this.nodeSet, node, this.nodeSet[key]];
 		if(node == undefined) {
 			node = new Node(key);
 			this.nodeSet[key] = node;
@@ -71,10 +73,11 @@ Graph = class {
 		return node;
 	}
 
-	addNodes(values, orders, xcoords) {
+	addNodes(values, orders) {
 		for(var j=0, item; item = values[j]; j++) {
 			for(var k=0, item2; item2 = item[k]; k++) {
-                var myx = Math.max(k, xcoords[item2[1]-1]);
+                dbug2=item2;
+                var myx = Math.max(k, item2[6]);
 				this.addNode(item2, myx, orders, {});
 			}
 		}
@@ -664,7 +667,7 @@ class EventHandler {
             this.renderer.highlight(overnode.value);
             // Turn on the lights
             var subid = overnode.value;
-            $(`span[data-sgid=${subid}]`).addClass("activesubgp");
+            $(`span[data-sgid="${subid}"]`).addClass("activesubgp");
         }
     } else
         if(this.renderer.graph.highlit) 
@@ -672,7 +675,7 @@ class EventHandler {
             this.renderer.unhighlight(val);
             // Turn off the lights
             var subid = val;
-            $(`span[data-sgid=${subid}]`).removeClass("activesubgp");
+            $(`span[data-sgid="${subid}"]`).removeClass("activesubgp");
   }
 
   initDrag(event) {
@@ -741,7 +744,7 @@ function isleftclick(e) {
 
 function showsubinfo(node, ambient) {
   var mydiv = document.getElementById("selectedsub");
-  $.get(`/Groups/Abstract/subinfo/${ambient}.${node.value}`, 
+  $.get(`/Groups/Abstract/subinfo/${node.value}`, 
     function(data){
       mydiv.innerHTML = data; 
       renderMathInElement(mydiv, katexOpts);
@@ -758,9 +761,9 @@ function clearsubinfo() {
 var ourg;
 var ambientlabel;
 
-function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
+function make_sdiagram(canv,ambient, nodes, edges, orders) {
   g = new Graph(ambient);
-  g.addNodes(nodes, orders,xcoords);
+  g.addNodes(nodes, orders);
   ourg = g;
   ambientlabel=ambient;
 
@@ -769,8 +772,7 @@ function make_sdiagram(canv,ambient, nodes, edges, orders,xcoords) {
   }
 
   var layout = new Layout(g);
-  var doiterations= (xcoords[0]==0);
-  layout.setiter(doiterations);
+  layout.setiter(nodes[0][0][6]==0);
   layout.layout();
 
   var renderer = new Renderer(document.getElementById(canv),g);

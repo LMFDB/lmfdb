@@ -42,7 +42,7 @@
   <tr>
     <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
     {% for sub in gp.direct_products %}
-    <td>$({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~\times~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -50,7 +50,7 @@
   <tr>
     <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
     {% for sub in gp.semidirect_products %}
-    <td>$({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~\rtimes~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -58,7 +58,7 @@
   <tr>
     <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
     {% for sub in gp.nonsplit_products %}
-    <td>$({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$</td>
+    <td>$({{sub.subgroup_tex}})~.~({{sub.quotient_tex}})$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -72,18 +72,18 @@
 <table>
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
-    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.cent}}">${{gp.cent_label()}}$</span></td>
+    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.cent()}}">${{gp.cent_label()}}$</span></td>
     <td>$G/Z = {{gp.central_quot()}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
-    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.comm}}">${{gp.comm_label()}}$</span>
+    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.comm()}}">${{gp.comm_label()}}$</span>
  </td>
     <td> $G/G' = {{gp.abelian_quot()}}$ </td>
   </tr>
     <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
-    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.fratt}}">${{gp.fratt_label()}}$</span></td>
+    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.fratt()}}">${{gp.fratt_label()}}$</span></td>
     <td>$G/\Phi = {{gp.frattini_quot()}}$ </td>
   </tr>
  <tr>
@@ -104,7 +104,7 @@
   {% for p, subgp in gp.sylow_subgroups() %}
   <tr>
     <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
-    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
+    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">${{subgp.subgroup_tex}}$</span></td>
   </tr>
   {% endfor %}
 </table>
@@ -178,7 +178,7 @@ Click on a subgroup in the diagram to see information about it.
       {% if not loop.first %}
         ${{symb}}$</td><td>
       {% endif %}
-      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.counter}}">${{sub.subgroup_tex}}$</span></td>
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.label}}">${{sub.subgroup_tex}}$</span></td>
     {% endfor %}
   </tr>
   {% endfor %}
@@ -188,14 +188,69 @@ Click on a subgroup in the diagram to see information about it.
 
 
 {% if gp.maximal_subgroup_of %}
-<p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of {% for sup in gp.maximal_subgroup_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+<p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of ${{info.max_subs}}$</p>
 {% endif %}
 {% if gp.maximal_quotient_of %}
-<p> Maximal quotient of {% for sup in gp.maximal_quotient_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+<p> Maximal quotient of ${{info.max_quot}}$</p>
 {% endif %}
 
 <h2> Character Theory </h2>
 <p>
+
+{% set ccs = info.ccdata %}
+{% set rccs = info.ccdivisions %}
+{% set chars = info.chardata %}
+{% set qchars = info.qchardata %}
+
+<h3>Complex character table</h3>
+<p>
+<table>
+<tr><td><td>
+{% for c in ccs %}
+<td>{{ info.ccdisplayknowl(gp.label, c.label, "complex", c.label)|safe }}
+{% endfor %}
+{% for p in gp.factors_of_order %}
+{% set ploop = loop %}
+<tr><td><td>{{p}}P
+{% for c in ccs %}
+<td>{{ ccs[c['powers'][ploop.index-1]-1].label }}
+{% endfor %}
+
+{% endfor %}
+
+{% set dispv = info.sparse_cyclotomic_to_latex %}
+{% for chtr in chars %}
+<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}<td>
+  {% set cond = chtr.cyclotomic_n %}
+  {% for val in chtr['values'] %}
+   <td>${{ dispv(cond, val) }}$ 
+  {% endfor %}
+{% endfor %}
+</table>
+
+<h3>Rational character table</h3>
+<p>
+<table>
+<tr><td><td>
+{% for c in info.ccdivisions %}
+  <td>{{ info.ccdisplayknowl(gp.label, c.label, "rational", c.label)|safe }}
+{% endfor %}
+{% for p in gp.factors_of_order %}
+  {% set ploop = loop %}
+  <tr><td><td>{{p}}P
+  {% for c in rccs %}
+    <td>{{ info.ctor[ccs[c['classes'][0]['powers'][ploop.index-1]-1].label] }}
+  {% endfor %}
+{% endfor %}
+
+{% for chtr in qchars %}
+  <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}<td>
+  {# for val in chtr['qvalues'] #}
+  {% for c in rccs %}
+    <td>${{ chtr.qvalues[c.classes.0.counter -1] }}$
+  {% endfor %}
+{% endfor %}
+</table>
 
 </p>
 

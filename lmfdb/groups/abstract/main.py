@@ -2,12 +2,13 @@
 
 import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect #, send_file, abort
+from flask import render_template, request, url_for, redirect, Markup #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
+from lmfdb.app import app
 from lmfdb.utils import (
-    flash_error, to_dict, display_knowl,
+    flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
@@ -15,13 +16,24 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
-    WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
-    group_pretty_image)
+    WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
+    WebAbstractRationalCharacter, WebAbstractCharacter, 
+    group_names_pretty, group_pretty_image)
+from lmfdb.number_fields.web_number_field import formatfield
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
+abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
+
+# For dynamic knowls
+@app.context_processor
+def ctx_abstract_groups():
+    return {'cc_data': cc_data,
+            'sub_data': sub_data,
+            'rchar_data': rchar_data,
+            'cchar_data': cchar_data,
+            'dyn_gen': dyn_gen}
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -181,6 +193,7 @@ def group_search(info, query):
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
     parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
     parse_bool(info, query, 'abelian', 'is abelian')
+    parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'solvable', 'is solvable')
     parse_bool(info, query, 'nilpotent', 'is nilpotent')
     parse_bool(info, query, 'perfect', 'is perfect')
@@ -197,8 +210,7 @@ def render_abstract_group(args):
         if gp.is_null():
             flash_error( "No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        #check if it fails to be a potential label even]
-
+        #check if it fails to be a potential label even
 
         info['boolean_characteristics_string']=create_boolean_string(gp)
 
@@ -206,28 +218,51 @@ def render_abstract_group(args):
 
         # prepare for javascript call to make the diagram
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
-        xcoords = list(sub.diagram_x for sub in subs.values())
 
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ',' + str(xcoords)
         info['dojs'] += ');'
         #print info['dojs']
         totsubs = len(gp.subgroups)
-        info['wide'] = totsubs > (len(layers[0])-2)*4; # boolean
-
+        info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
 
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
+        
+        info['sparse_cyclotomic_to_latex']=sparse_cyclotomic_to_latex
+        info['ccdata'] = gp.conjugacy_classes
+        info['chardata'] = gp.characters
+        info['qchardata'] = gp.rational_characters
+        ccdivs = gp.conjugacy_class_divisions
+        ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
+        ccdivs.sort(key=lambda x: x['classes'][0].counter)
+        info['ccdivisions'] = ccdivs
+        info['ccdisplayknowl'] = cc_display_knowl
+        info['chtrdisplayknowl'] = char_display_knowl
+        # Need to map cc's to their divisions
+        ctor = {}
+        for k in ccdivs:
+            for v in k['classes']:
+                ctor[v.label] = k['label']
+        info['ctor'] = ctor
 
+        s = ",\ "
+        max_subs = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_subgroup_of])))
+        max_quot = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_quotient_of])))
+        info['max_subs'] = max_subs
+        info['max_quot'] = max_quot
+
+
+
+        
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
-            ('Label', r'\(%s\)' %  label), ('Order', r'\(%s\)' % factored_order), ('#Aut(G)', r'\(%s\)' % aut_order)
+            ('Label', '$%s$' %  label), ('Order', '$%s$' % factored_order), ('#Aut(G)', '$%s$' % aut_order)
         ]
 
         bread = get_bread([(label, )])
@@ -254,13 +289,13 @@ def shortsubinfo(label):
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
     # helper function
-    def subinfo_getsub(title, knowlid, count):
-        h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
+    def subinfo_getsub(title, knowlid, lab):
+        h = WebAbstractSubgroup(lab)
         prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.label, h.subgroup_tex)
+        return '<tr><td>%s<td>%s\n' % (
+            prop, h.make_span())
 
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
+    ans = 'Information on subgroup <span class="%s" data-sgid="%s">$%s$</span><br>\n' % (wsg.spanclass(), wsg.label, wsg.subgroup_tex)
     ans += '<table>'
     ans += '<tr><td>%s <td> %s\n' % (
         make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
@@ -272,7 +307,7 @@ def shortsubinfo(label):
         ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
 
-    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
+    h = WebAbstractSubgroup(str(wsg.normalizer))
     ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
     ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
@@ -281,8 +316,9 @@ def shortsubinfo(label):
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
     #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
     p = wsg.sylow
-    nt = 'Yes for $p$ = %d' % p if p>0 else 'No'
+    nt = 'Yes for $p$ = %d' % p if p>1 else 'No'
     ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
+    ans += '<tr><td><td style="text-align: right"><a href="%s">$%s$ home page</a>' % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
     #print ""
     #print ans
     ans += '</table>'
@@ -332,8 +368,8 @@ def how_computed_page():
 class GroupsSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
-    jump_example = "[8,3]"
-    jump_egspan = "e.g. [8,3] or [16,1]"
+    jump_example = "8.3"
+    jump_egspan = "e.g. 8.3 or 16.1"
     def __init__(self):
         order = TextBox(
             name="order",
@@ -353,15 +389,14 @@ class GroupsSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="3",
             example_span="4, or a range like 3..5")
-        group = TextBox(
-            name="group",
-            label="Group identifier",
-            knowl="group.small_group_label",
-            example="[4,2]")
         abelian = YesNoBox(
             name="abelian",
             label="Abelian",
             knowl="group.abelian")
+        cyclic = YesNoBox(
+            name="cyclic",
+            label="Cyclic",
+            knowl="group.cyclic")
         solvable =YesNoBox(
             name="solvable",
             label="Solvable",
@@ -380,20 +415,128 @@ class GroupsSearchArray(SearchArray):
             [order],
             [exponent],
             [nilpclass],
-            [group],
             [abelian],
+            [cyclic],
             [solvable],
             [nilpotent],
             [perfect],
             [count]]
 
         self.refine_array = [
-            [order, exponent, nilpclass, group],
-            [abelian, solvable, nilpotent, perfect]]
+            [order, exponent, nilpclass],
+            [abelian,cyclic,solvable, nilpotent, perfect]]
 
     sort_knowl = "group.sort_order"
     def sort_order(self, info):
         return [("", "order"),
                 ("descorder", "order descending")]
 
+def cc_display_knowl(gp, label, typ, name=None):
+    if not name:
+        name = 'Conjugacy class {}'.format(label)
+    return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7C{}">{}</a>'.format(name, gp, label, typ, name)
+
+def sub_display_knowl(label, name=None):
+    if not name:
+        name = 'Subgroup {}'.format(label)
+    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
+
+def char_display_knowl(label, field, name=None):
+    if field=='C':
+        fname='cchar_data'
+    else:
+        fname='rchar_data'
+    if not name:
+        name = 'Character {}'.format(label)
+    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=%s&args=%s">%s</a>' % (name, fname, label, name)
+
+#def crep_display_knowl(label, name=None):
+#    if not name:
+#        name = 'Subgoup {}'.format(label)
+#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (name, label, name)
+#
+#def qrep_display_knowl(label, name=None):
+#    if not name:
+#        name = 'Subgoup {}'.format(label)
+#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (name, label, name)
+
+def cc_data(gp,label,typ='complex'):
+    if typ=='rational':
+        wag = WebAbstractGroup(gp)
+        rcc = wag.conjugacy_class_divisions
+        if not rcc:
+            return 'Data for conjugacy class {} not found.'.format(label)
+        classes = rcc[label]
+        wacc = classes[0]
+        mult = len(classes)
+        ans = '<h3>Rational conjugacy class {}</h3>'.format(label)
+        if mult > 1:
+            ans +='<br>Rational class is a union of {} conjugacy classes'.format(mult)
+            ans += '<br>Total size of class: {}'.format(wacc.size*mult)
+        else:
+            ans += '<br>Rational class is a single conjugacy class'
+            ans += '<br>Size of class: {}'.format(wacc.size)
+    else:
+        wacc = WebAbstractConjClass(gp,label)
+        if not wacc:
+            return 'Data for conjugacy class {} not found.'.format(label)
+        ans = '<h3>Conjugacy class {}</h3>'.format(label)
+        ans += '<br>Size of class: {}'.format(wacc.size)
+    ans += '<br>Order of elements: {}'.format(wacc.order)
+    centralizer = wacc.centralizer
+    wcent = WebAbstractSubgroup(centralizer)
+    ans += '<br>Centralizer: {}'.format(sub_display_knowl(centralizer,'$'+wcent.subgroup_tex+'$'))
+    return Markup(ans)
+
+def rchar_data(label):
+  mychar = WebAbstractRationalCharacter(label)
+  ans = '<h3>Rational character {}</h3>'.format(label)
+  ans += '<br>Degree: {}'.format(mychar.qdim)
+  if mychar.faithful:
+    ans += '<br>Faithful character'
+  else:
+    ans += '<br>Not faithful'
+  ans += '<br>Multiplicity: {}'.format(mychar.multiplicity)
+  ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
+  ans += '<br>Schur index: {}'.format(mychar.schur_index)
+  nt = mychar.nt
+  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
+  return Markup(ans)
+
+def cchar_data(label):
+  mychar = WebAbstractCharacter(label)
+  ans = '<h3>Complex character {}</h3>'.format(label)
+  ans += '<br>Degree: {}'.format(mychar.dim)
+  if mychar.faithful:
+    ans += '<br>Faithful character'
+  else:
+    ker = WebAbstractSubgroup(mychar.kernel)
+    ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker.label,"$"+ker.subgroup_tex+'$'))
+  nt = mychar.nt
+  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+  ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
+  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+  return Markup(ans)
+
+def sub_data(label):
+  return Markup(shortsubinfo(label))
+
+def dyn_gen(f,args):
+    r"""
+    Called from the generic dynamic knowl.
+    f is the name of a function to call, which has to be in flist, which
+      is at the bottom of this file
+    args is a string with the arguments, which are concatenated together
+      with %7C, which is the encoding of the pipe symbol
+    """
+    func = flist[f]
+    arglist = args.split('|')
+    return func(*arglist)
+
+#list if legal dynamic knowl functions
+flist= {'cc_data': cc_data,
+        'sub_data': sub_data,
+        'rchar_data': rchar_data,
+        'cchar_data': cchar_data}
 
