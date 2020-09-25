@@ -1,9 +1,12 @@
 {% extends "homepage.html" %}
 {% block content -%}
 <style type="text/css">
-a.curcat {
+.curcat {
   font-weight: bold;
   background: {{color.knowl_background}};
+}
+.clearcat {
+  font-weight: bold;
 }
 </style>
 <script type="text/javascript">
@@ -16,92 +19,99 @@ $(function() {
 </script>
 
 <table>
-<tr>
- <td>Search</td>
- <td>
-   <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
-    <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
-    {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
-    <button type="submit">Go</button>
-    <label for="regex">Regex: </label>
-    <input type="checkbox" name="regex" value="on" {% if use_regex %}checked="checked"{% endif %} />
+  <form id="knowl-search" onsubmit="cleanSubmit(this.id)">
+    <input id="catinp" name="category" type="hidden" value="{{cur_cat}}">
+    <tr>
+      <td>Search</td>
+      <td>
+        <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
+        <label for="regex">Regex: </label>
+        <input type="checkbox" name="regex" value="on" {% if use_regex %}checked="checked"{% endif %} />
+      </td>
+    </tr>
+
+    <tr>
+      <td>Filter</td>
+      <td>Category:
+        {% for cat, cat_cnt in (categories.items()|sort) -%}
+          <a href="#" onclick="$('#catinp').val('{{cat}}'); $('#knowl-search').submit(); return false;" {% if cat==cur_cat %}class="curcat"{% endif %}>
+            {{cat}}({{cat_cnt}})
+          </a>
+        {%- endfor %}
+        {% if cur_cat -%}
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <a href="#" onclick="$('#catinp').val(''); $('#knowl-search').submit(); return false;" class="curcat">
+          clear category filter
+        </button>
+        {%- endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td></td>
+      <td>
+        <table>
+          <tr>
+            <td>
+              Quality:
+            </td>
+            {% for kq in knowl_qualities -%}
+              <td>
+                <label for="{{ kq }}">{{ kq|capitalize }}</label>:
+                <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
+              </td>
+            {%- endfor %}
+          </tr>
+          <tr>
+            <td>
+              Type:
+            </td>
+            {% for kt in knowl_types -%}
+              <td>
+                <label for="{{ kt }}">{{ kt|capitalize }}</label>:
+                <input type="checkbox" name="{{ kt }}" value="on" {% if kt in types -%}checked="checked"{%- endif %} />
+              </td>
+            {%- endfor %}
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <td></td>
+      <td><button type="submit">Search</button></td>
+    </tr>
+
+    <tr>
+      <td>More</td>
+      <td>
+        <a href="{{ url_for('.history') }}">Recently modified Knowls</a>
+        {%- if user_is_authenticated -%},
+          <a href="{{ url_for('.comment_history') }}">Recent comments</a>,
+          <a href="{{ url_for('.broken_links') }}">Broken links</a>,
+          <a href="{{ url_for('.orphans') }}">Orphaned knowls</a>
+        {%- endif -%}
+        {%- if user_can_review_knowls -%},
+          <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>
+        {% endif %}
+      </td>
+    </tr>
   </form>
- </td>
-</tr>
-
-<tr>
- <td>Filter</td>
- <td>Category:
-    {% for cat, cat_cnt in (categories.items()|sort) -%}
-     <a
-      {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}({{cat_cnt}})</a>
-       {# {% if not loop.last -%} &middot; {%- endif %} #}
-    {%- endfor %}
-    {% if categorymode -%}
-    </td></tr>
-    <tr><td/><td>
-     <strong><a href="{{ url_for('.index', qualities=qualities, filtered = filtermode) }}">clear category filter</a></strong>
-    {%- endif %}
- </td>
-</tr>
-
-{% if not searchmode %}
-<tr>
- <td></td>
- <td>
- {% if categorymode %}
-   <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
- {% else %}
-   <form method="POST" action="{{ url_for('.index', filtered='True') }}">
-     {% endif %}
-     <table>
-       <tr>
-         <td>
-           Quality:
-         </td>
-         {% for kq in knowl_qualities -%}
-         <td>
-           <label for="{{ kq }}">{{ kq|capitalize }}</label>:
-           <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
-         </td>
-         {%- endfor %}
-         <td rowspan=2 style="vertical-align:center">
-           <button type="submit">Filter</button>
-         </td>
-       </tr>
-       <tr>
-         <td>
-           Type:
-         </td>
-         {% for kt in knowl_types -%}
-         <td>
-           <label for="{{ kt }}">{{ kt|capitalize }}</label>:
-           <input type="checkbox" name="{{ kt }}" value="on" {% if kt in types -%}checked="checked"{%- endif %} />
-         </td>
-         {%- endfor %}
-       </tr>
-     </table>
-   </form>
-  </td>
-</tr>
-{% endif %}
-
-<tr>
- <td>More</td>
- <td>
-   <a href="{{ url_for('.history') }}">Recently modified Knowls</a>
-   {%- if user_is_authenticated -%}
-   , <a href="{{ url_for('.comment_history') }}">Recent comments</a>, <a href="{{ url_for('.broken_links') }}">Broken links</a>
-   {%- endif -%}
-   {%- if user_can_review_knowls -%}
-   , <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>
-   {% endif %}
- </td>
-</tr>
+  {% if user_is_authenticated -%}
+    <form action="{{ url_for('.edit_form') }}" method="POST">
+      <tr>
+        <td>Create</td>
+        <td><input id="knowl-edit-id" name="id"></input><button id="knowl-edit-btn" style="margin-left:20px;">Create</button></td>
+      </tr>
+    </form>
+  {%- endif %}
 </table>
 
-<table id="knowl-index" class="ntdata" style="margin-top: 50px;">
+<table id="knowl-index" class="ntdata" style="margin-top: 30px;">
   {% for c, ks in knowls -%}
    <tr>
     <td>{{ c }}</td>
@@ -117,13 +127,5 @@ $(function() {
   {%- endfor %}
 </table>
 
-{% if user_is_authenticated -%}
-  <hr/>
-  <h2>Create Knowl</h2>
-  <form action="{{ url_for('.edit_form') }}" method="POST">
-    Knowl ID: <input id="knowl-edit-id" name="id"></input>
-    <button id="knowl-edit-btn">Create</button>
-  </form>
-{%- endif %}
 
 {%- endblock %}
