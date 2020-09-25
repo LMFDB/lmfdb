@@ -8,7 +8,6 @@
   {% set download_limit = 100000 %}
 {% endif %}
 
-
 &nbsp;
 {% if info.number > download_limit %}
   <span id="download-msg">
@@ -25,9 +24,7 @@
     </span>
     <span id="download-form" style="display:none;">
   {% endif %}
-  Download all
-    <span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>
-  results for&nbsp;
+  Download to &nbsp;
     {% for lang in languages %}
     {% if info.search_type %}
     <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}">{{lang_text[lang]}}</a>&nbsp;
