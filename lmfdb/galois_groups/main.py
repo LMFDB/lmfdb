@@ -14,6 +14,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
@@ -186,7 +187,6 @@ def render_group_webpage(args):
             else:
                 flash_error("%s is not a valid label for a Galois group.", label)
             return redirect(url_for(".index"))
-        data['label_raw'] = label.lower()
         title = 'Galois group: ' + label
         wgg = WebGaloisGroup.from_nt(data['n'], data['t'])
         data['wgg'] = wgg
@@ -270,7 +270,7 @@ def render_group_webpage(args):
             data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
 
 
 def search_input_error(info, bread):
@@ -280,6 +280,18 @@ def search_input_error(info, bread):
 def random_group():
     label = db.gps_transitive.random()
     return redirect(url_for(".by_label", label=label), 307)
+
+@galois_groups_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "gg",
+        db.gps_transitive,
+        url_for_label=lambda label: url_for(".by_label", label=label),
+        title=r"Some interesting Galois groups",
+        bread=get_bread(("Interesting", " ")),
+        credit=GG_credit,
+        learnmore=learnmore_list()
+    )
 
 @galois_groups_page.route("/Completeness")
 def cande():
