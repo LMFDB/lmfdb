@@ -421,8 +421,8 @@ class KnowlBackend(PostgresBase):
                     for kid in extract_links(line):
                         if kid in kids:
                             kids.remove(kid)
-        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s AND type = %s ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter, [0, 0])
+        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [0])
         categories = {}
         titles = {}
         for rec in cur:
