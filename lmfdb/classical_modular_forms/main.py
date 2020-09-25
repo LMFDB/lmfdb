@@ -1265,6 +1265,7 @@ class CMFSearchArray(SearchArray):
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl="cmf.search_input"
     jump_prompt="Label"
+    
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',

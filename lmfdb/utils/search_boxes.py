@@ -691,5 +691,5 @@ class SearchArray(UniqueRepresentation):
         jump_knowl = info.get("jump_knowl", getattr(self, "jump_knowl", ""))
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
-<button type='submit'>Find</button></td><td></tr><td><span class='formexample'>%s</span></td><td></td></tr></table>
+<button type='submit'>Find</button></td><td></tr><tr><td></td><td><span class='formexample'>%s</span></td><td></td></tr></table>
 """ % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
