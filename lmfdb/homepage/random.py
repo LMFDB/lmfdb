@@ -29,7 +29,6 @@ def random_url():
                     "ModularForm/GL2/Q/Maass/",
                     "ModularForm/GL2/TotallyReal/",
                     "ModularForm/GL2/ImaginaryQuadratic/",
-                    "ModularForm/GSp/Q/",
                     "EllipticCurve/Q/",
                     "EllipticCurve/",
                     "Genus2Curve/Q/",
