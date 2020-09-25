@@ -43,7 +43,21 @@ def random_url():
                     "SatoTateGroup/"
                 ]
     route = routes[randint(0,len(routes)-1)]
-    return route+"random"
+    if route == "ModularForm/GL2/Q/holomorphic/":
+        ind = randint(0,1)
+        if ind == 0:
+            route += "random"
+        else:
+            route += "random_space"
+    elif route == "Motive/Hypergeometric/Q/":
+        ind = randint(0,1)
+        if ind == 0:
+            route += "random_motive"
+        else:
+            route += "random_family"
+    else:
+        route += "random"
+    return route
 
 @app.route("/random")
 def go_random():
