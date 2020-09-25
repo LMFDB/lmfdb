@@ -7,7 +7,7 @@ p {padding-left: 1ch;}
 
 {{ info.stats.short_summary | safe }}
 
-<h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
+<h2> Browse </h2>
 <p>
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
@@ -30,11 +30,7 @@ Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <
 <p>&nbsp;&nbsp;*Items marked with an asterisk are only known conditionally (click captions for details).  Searches will match conditional values.</p>
 </form>
 
-{% if info['equation_search'] %}
-<h2>  Find a specific curve by equation or {{ KNOWL('g2c.label', title='label')}} </h2>
-{% else  %}
-<h2> Find a specific curve or isogeny class by {{ KNOWL('g2c.label', title='label')}} </h2>
-{% endif %}
+<h2> Find </h2>
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}

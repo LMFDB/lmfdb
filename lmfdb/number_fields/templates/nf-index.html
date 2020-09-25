@@ -6,7 +6,7 @@
 {{ KNOWL_INC('nf.extent') }}
 </div>
 
-<h2> Browse {{KNOWL('nf', title='number fields')}} </h2>
+<h2> Browse </h2>
 
 <ul>
 <li>
@@ -35,14 +35,12 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 Some <a href="{{url_for('.interesting')}}">interesting number fields</a> or a <a href={{url_for('.by_label', label='random')}}>random number field</a>
 </p>
 
-<h2> Search for fields </h2>
+<h2> Search </h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2>Find a specific field by {{KNOWL('nf.label',title='label')}}, 
-  {{KNOWL('nf.nickname',title='nickname')}}, or 
-  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h2>
+<h2> Find </h2>
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}

@@ -43,13 +43,13 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 Some <a href="{{url_for('.interesting')}}">interesting Artin representations</a> or a <a href="{{url_for('.random_representation')}}">random Artin representation</a>
 </p>
 
-<h2> Search for an Artin representation </h2>
+<h2> Search </h2>
 
 <form id="search" onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2>Find a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
+<h2>Find</h2>
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}

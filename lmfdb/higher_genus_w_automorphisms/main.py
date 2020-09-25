@@ -1225,6 +1225,8 @@ class HGCWASearchArray(SearchArray):
     plural_noun = "passports"
     jump_example = "2.12-4.0.2-2-2-3"
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
+    jump_knowl = "curve.highergenus.aut.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         genus = TextBox(
             name="genus",

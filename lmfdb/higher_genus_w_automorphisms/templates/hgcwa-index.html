@@ -21,7 +21,7 @@ text-align:right;
 </div>
 
 
-      <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
+<h2>Browse</h2>
 
 <p>
 By  {{KNOWL('ag.curve.genus',title='genus')}}:
@@ -42,7 +42,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2>Find specific automorphisms of higher genus curves by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}</h2>
+<h2>Find</h2>
 
 <form name="search" method = "get" action="{{url_for('.index')}}">
   {{ info.search_array.jump_box(info) | safe }}

@@ -14,7 +14,7 @@
 <div>
   {{ info.stats.short_summary | safe }}
 </div>
-<h2> Browse {{ KNOWL('av.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
+<h2> Browse </h2>
 <p>
   By {{ KNOWL('ag.dimension', 'dimension') }}:
   {% for g in info.stats.gs %}
@@ -41,7 +41,7 @@
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2> Find a specific {{KNOWL('av.isogeny_class',title="isogeny class") }} by {{ KNOWL('av.fq.lmfdb_label',title="label") }} or {{ KNOWL('av.fq.weil_polynomial',"Weil polynomial") }}</h2>
+<h2> Find }}</h2>
 <form>
   {{ info.search_array.jump_box(info) | safe }}
 </form>

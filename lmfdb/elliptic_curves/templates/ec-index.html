@@ -30,7 +30,7 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
+<h2> Browse </h2>
 
 <p>
 By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
@@ -64,7 +64,7 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2> Find a specific curve or {{KNOWL('ec.isogeny_class',title="isogeny class") }}</h2>
+<h2> Find </h2>
 {% if err_msg %}
 <form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}
