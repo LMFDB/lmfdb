@@ -18,6 +18,7 @@ from lmfdb.utils import (
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
     group_phrase, galois_group_data,
@@ -29,6 +30,8 @@ from lmfdb.number_fields.web_number_field import (
     factor_base_factorization_latex)
 
 assert nf_logger
+
+bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
@@ -89,14 +92,14 @@ def ctx_number_fields():
 
 def global_numberfield_summary():
     init_nf_count()
-    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
+    return r'This database contains %s <a title="number fields" knowl="nf">number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
 
 
 def learnmore_list():
     return [(Completename, url_for(".render_discriminants_page")),
             ('Source of the data', url_for(".source")),
             ('Reliability of the data', url_for(".reliability")),
-            ('Global number field labels', url_for(".render_labels_page")),
+            ('Number field labels', url_for(".render_labels_page")),
             ('Galois group labels', url_for(".render_groups_page")),
             ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
 
@@ -118,7 +121,7 @@ def poly_to_field_label(pol):
 def source():
     learnmore = learnmore_list_remove('Source')
     t = 'Source of number field data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
+    bread = bread_prefix() + [('Source', ' ')]
     return render_template("single.html", kid='rcs.source.nf',
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
@@ -127,7 +130,7 @@ def source():
 def reliability():
     learnmore = learnmore_list_remove('Reliability')
     t = 'Reliability of number field data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Reliability', ' ')]
+    bread = bread_prefix() + [('Reliability', ' ')]
     return render_template("single.html", kid='rcs.rigor.nf',
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
@@ -137,7 +140,7 @@ def render_groups_page():
     info = {}
     learnmore = learnmore_list_remove('Galois group')
     t = 'Galois group labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
+    bread = bread_prefix() + [('Galois group labels', ' ')]
     return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 
@@ -145,16 +148,16 @@ def render_groups_page():
 def render_labels_page():
     info = {}
     learnmore = learnmore_list_remove('number field labels')
-    t = 'Labels for global number fields'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
+    t = 'Labels for number fields'
+    bread = bread_prefix() + [('Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/Completeness")
 def render_discriminants_page():
     learnmore = learnmore_list_remove('Completeness')
-    t = 'Completeness of global number field data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
+    t = 'Completeness of number field data'
+    bread = [('Number fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='rcs.cande.nf',
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
@@ -168,7 +171,7 @@ def render_class_group_data():
     #nf_logger.info('******************* ')
     learnmore = learnmore_list_remove('Quadratic imaginary')
     t = 'Class groups of quadratic imaginary fields'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (t, ' ')]
+    bread = bread_prefix() + [(t, ' ')]
     info['message'] = ''
     info['filename'] = 'none'
     if 'Fetch' in info:
@@ -220,9 +223,8 @@ def galstatdict(li, tots, t):
 def statistics():
     fields = db.nf_fields
     nfstatdb = fields.stats
-    title = 'Global number field statistics'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
-             ('Number Field Statistics', '')]
+    title = 'Number field statistics'
+    bread = bread_prefix() + [('Statistics', '')]
     init_nf_count()
     ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954,
               10, 983, 8, 1117, 164, 59, 7, 25000, 211, 96, 2392, 1854, 8, 5712]
@@ -343,8 +345,8 @@ def number_field_render_webpage():
         info['nfields'] = comma(nfields)
         info['maxdeg'] = max_deg
         info['discriminant_list'] = discriminant_list
-        t = 'Global number fields'
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
+        t = 'Number fields'
+        bread = bread_prefix()
         return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(info)
@@ -375,7 +377,7 @@ def string2list(s):
 def render_field_webpage(args):
     data = None
     info = {}
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
+    bread = bread_prefix()
 
     # This function should not be called unless label is set.
     label = clean_input(args['label'])
@@ -385,7 +387,7 @@ def render_field_webpage(args):
         if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
             flash_error("Number field %s was not found in the database.", label)
         else:
-            flash_error("%s is not a valid label for a global number field.", label)
+            flash_error("%s is not a valid label for a number field.", label)
         return redirect(url_for(".number_field_render_webpage"))
 
     info['wnf'] = nf
@@ -564,7 +566,7 @@ def render_field_webpage(args):
 
     info['resinfo'] = resinfo
     learnmore = learnmore_list()
-    title = "Global number field %s" % info['label']
+    title = "Number field %s" % info['label']
 
     if npr == 1:
         primes = 'prime'
@@ -623,7 +625,7 @@ def format_coeffs(coeffs):
 # def number_fields():
 #    if len(request.args) != 0:
 #        return number_field_search(**request.args)
-#    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
+#    info['learnmore'] = [('Number field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
 #    return render_template("nf-index.html", info = info)
 
 
@@ -645,8 +647,18 @@ def by_label(label):
         flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
         return redirect(url_for(".number_field_render_webpage"))
 
-# input is a sage int
 
+@nf_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "nf",
+        db.nf_fields,
+        url_for_label,
+        title=r"Some interesting number fields",
+        bread=bread_prefix() + [("Interesting", " ")],
+        credit=NF_credit,
+        learnmore=learnmore_list(),
+    )
 
 def download_search(info):
     dltype = info.get('Submit')
@@ -672,7 +684,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'fields.m'
     s = com1 + "\n"
-    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Number fields downloaded from the LMFDB downloaded %s\n'% mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [label, polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
@@ -733,22 +745,22 @@ def number_field_jump(info):
 #    for j in range(len(fields)):
 #        if fields2[j] is None:
 #            fields2[j] = WebNumberField.fakenf(fields[j])
-#    t = 'Number Field Algebra'
+#    t = 'Number field algebra'
 #    info = {'results': fields2}
 #    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
 
 
 @search_wrap(template="nf-search.html",
              table=db.nf_fields,
-             title='Global number field search results',
-             err_title='Global number field search error',
+             title='Number field search results',
+             err_title='Number field search error',
              per_page=50,
              shortcuts={'jump':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
              url_for_label=url_for_label,
-             bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
-                           ('Search Results', '.')],
+             bread=lambda:[('Number fields', url_for(".number_field_render_webpage")),
+                           ('Search results', '.')],
              learnmore=learnmore_list)
 def number_field_search(info, query):
     parse_ints(info,query,'degree')

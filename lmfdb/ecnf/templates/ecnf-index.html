@@ -14,7 +14,7 @@
 <ul>
 {% for types in info.fields %}
 <li>
-{{types[0]}}:
+{{types[0] | safe}}:
 {% for label,f in types[1] %}
 {% if loop.index0 %},{% endif %}
  <a href="{{f[0]}}">{{f[1]}}</a>
@@ -25,26 +25,11 @@
 </ul>
 </p>
 <p>
-A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database
-</p>
-<h3> Browse {{ KNOWL('ec',title='elliptic curves')}} by degree of base
-  {{KNOWL('nf',title = "number field")}}:
-{% for d in info.degrees-%}
-{%-if loop.index0-%}, {% endif %}
-<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>{{d}}</a>
-{%-endfor-%}
-</h3>
-
-<p>
-<h3>Curves with interesting properties:</h3>
-<ul>
-{% for item in info.highlights %}
-<li><a href="{{item[1]}}">{{item[0]}}</a></li>
-{% endfor %}
-</ul>
+Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a>
 </p>
 
-<h2> Find a specific curve by {{ KNOWL('ec.curve_label',title='label')}}</h2>
+<h2> Find a specific curve or {{ KNOWL('ec.isogeny_class',title="isogeny class") }} by {{ KNOWL('ec.curve_label',title='label')}}</h2>
+
 <form>
   {{ info.search_array.jump_box(info) | safe }}
   {% if err_msg %}

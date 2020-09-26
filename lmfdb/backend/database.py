@@ -3,17 +3,12 @@ from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
 import csv
-import datetime
 import logging
 import os
-import signal
-import subprocess
 import time
 import traceback
 from collections import defaultdict, Counter
 from glob import glob
-
-from sage.all import Integer, RealNumber
 
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder
@@ -28,7 +23,7 @@ from psycopg2.extensions import (
 )
 from psycopg2.extras import register_json
 
-from .encoding import Json, RealEncoder, numeric_converter
+from .encoding import Json, numeric_converter
 from .base import PostgresBase, _meta_tables_cols
 from .searchtable import PostgresSearchTable
 from .utils import DelayCommit
@@ -48,11 +43,17 @@ def setup_connection(conn):
     NUMERICL = new_array_type((oid,), "NUMERIC[]", NUMERIC)
     register_type(NUMERIC, conn)
     register_type(NUMERICL, conn)
-    register_adapter(Integer, AsIs)
-    register_adapter(RealNumber, RealEncoder)
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
-
+    try:
+        from sage.all import Integer, RealNumber
+    except ImportError:
+        pass
+    else:
+        register_adapter(Integer, AsIs)
+        from .encoding import RealEncoder, LmfdbRealLiteral
+        register_adapter(RealNumber, RealEncoder)
+        register_adapter(LmfdbRealLiteral, RealEncoder)
 
 class PostgresDatabase(PostgresBase):
     """
@@ -72,7 +73,6 @@ class PostgresDatabase(PostgresBase):
     - ``server_side_counter`` -- an integer tracking how many buffered connections have been created
     - ``conn`` -- the psycopg2 connection object
     - ``tablenames`` -- a list of tablenames in the database, as strings
-    - ``is_verifying`` -- whether this database has been configured with verifications (import from lmfdb.verify if you want this to be True)
 
     Also, each tablename will be stored as an attribute, so that db.ec_curves works for example.
 
@@ -88,18 +88,17 @@ class PostgresDatabase(PostgresBase):
         sage: db.av_fqisog
         Interface to Postgres table av_fqisog
     """
+    # Override the following to use a different class for search tables
+    _search_table_class_ = PostgresSearchTable
 
     def _new_connection(self, **kwargs):
         """
         Create a new connection to the postgres database.
         """
-        from lmfdb.utils.config import Configuration
-
-        options = Configuration().get_postgresql()
+        options = dict(self.config.options["postgresql"])
         # overrides the options passed as keyword arguments
         for key, value in kwargs.items():
             options[key] = value
-        self.fetch_userpassword(options)
         self._user = options["user"]
         logging.info(
             "Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..."
@@ -132,7 +131,11 @@ class PostgresDatabase(PostgresBase):
         obj.conn = self.conn
         self._objects.append(obj)
 
-    def __init__(self, **kwargs):
+    def __init__(self, config=None, secretsfile=None, **kwargs):
+        if config is None:
+            from .config import Configuration
+            config = Configuration()
+        self.config = config
         self.server_side_counter = 0
         self._nocommit_stack = 0
         self._silenced = False
@@ -189,10 +192,6 @@ class PostgresDatabase(PostgresBase):
         logging.info("Super user: %s", self._super_user)
         logging.info("Read/write to userdb: %s", self._read_and_write_userdb)
         logging.info("Read/write to knowls: %s", self._read_and_write_knowls)
-        # Stores the name of the person making changes to the database
-        from lmfdb.utils.config import Configuration
-
-        self.__editor = Configuration().get_logging().get("editor")
 
         cur = self._execute(SQL(
             "SELECT table_name, column_name, udt_name::regtype "
@@ -212,11 +211,10 @@ class PostgresDatabase(PostgresBase):
         for tabledata in cur:
             tablename = tabledata[0]
             tabledata += (data_types,)
-            table = PostgresSearchTable(self, *tabledata)
+            table = self._search_table_class_(self, *tabledata)
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
-        self.is_verifying = False  # set to true when importing lmfdb.verify
 
     def __repr__(self):
         return "Interface to Postgres database"
@@ -234,78 +232,12 @@ class PostgresDatabase(PostgresBase):
         else:
             return self.conn.cursor()
 
-    def login(self):
-        """
-        Identify an editor by their lmfdb username.
-
-        The goal is to associate changes with people and keep a record of changes made.
-        There is no real security against malicious use.
-
-        Note that you can permanently log in by setting the editor
-        field in the logging section of your config.ini file.
-        """
-        if self.__editor is None:
-            print("Please provide your knowl username,")
-            print("so that we can associate database changes with individuals.")
-            print(
-                "Note that you can also do this by setting the editor field "
-                "in the logging section of your config.ini file."
-            )
-            uid = input("Username: ")
-            selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
-            cur = self._execute(selecter, [uid])
-            if cur.rowcount == 0:
-                raise ValueError("That username not present in database!")
-            self.__editor = uid
-        return self.__editor
-
     def log_db_change(self, operation, tablename=None, **data):
         """
-        Log a change to the database.
-
-        INPUT:
-
-        - ``operation`` -- a string, explaining what operation was performed
-        - ``tablename`` -- the name of the table that the change is affecting
-        - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
+        By default we don't log changes (from updates, etc), but you can
+        override this method if you want to do some logging.
         """
-        uid = self.login()
-        inserter = SQL(
-            "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
-            "VALUES (%s, %s, %s, %s, %s)"
-        )
-        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
-
-    def fetch_userpassword(self, options):
-        """
-        Gets a password stored in a password file
-
-        INPUT:
-
-        - ``options`` -- a dictionary; 'user' and 'password' will be inserted.
-        """
-        if "user" not in options:
-            options["user"] = "lmfdb"
-
-        if options["user"] == "webserver":
-            logging.info("Fetching webserver password...")
-            # tries to read the file "password" on root of the project
-            pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "../password")
-            try:
-                options["password"] = open(pw_filename, "r").readlines()[0].strip()
-                logging.info("Done!")
-            except Exception:
-                # file not found or any other problem
-                # this is read-only everywhere
-                logging.warning(
-                    "PostgresSQL authentication: no webserver password "
-                    + "on {0}".format(pw_filename)
-                    + "-- fallback to read-only access"
-                )
-                options["user"], options["password"] = "lmfdb", "lmfdb"
-
-        elif "password" not in options:
-            options["user"], options["password"] = "lmfdb", "lmfdb"
+        pass
 
     def _grant(self, action, table_name, users):
         """
@@ -801,7 +733,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     label_col,
                 ],
             )
-        self.__dict__[name] = PostgresSearchTable(
+        self.__dict__[name] = self._search_table_class_(
             self,
             name,
             label_col,
@@ -975,7 +907,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 ),
                 [new_name],
             ).fetchone()
-            table = PostgresSearchTable(self, *tabledata)
+            table = self._search_table_class_(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)
             self.tablenames.remove(old_name)
@@ -1035,9 +967,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``**kwds`` -- other arguments are passed on to the ``copy_to`` method of each table.
         """
         if remote_opts is None:
-            from lmfdb.utils.config import Configuration
-
-            remote_opts = Configuration().get_postgresql_default()
+            remote_opts = self.config.get_postgresql_default()
 
         source = PostgresDatabase(**remote_opts)
 
@@ -1264,77 +1194,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for tablename in self.tablenames:
                 table = self[tablename]
                 table.cleanup_from_reload()
-
-    def verify(
-        self,
-        speedtype="all",
-        logdir=None,
-        parallel=8,
-        follow=["errors", "log", "progress"],
-        poll_interval=0.1,
-        debug=False,
-    ):
-        """
-        Run verification tests on all tables (if defined in the lmfdb/verify folder).
-        For more granular control, see the ``verify`` function on a particular table.
-
-        sage should be in your path or aliased appropriately.
-
-        INPUT:
-
-        - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
-        - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
-        - ``parallel`` -- A cap on the number of threads to use in parallel
-        - ``follow`` -- The polling interval to follow the output.
-            If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
-        - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
-        """
-        if not self.is_verifying:
-            raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
-        if parallel <= 0:
-            raise ValueError("Non-parallel runs not supported for whole database")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
-        if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-        types = None
-        tabletypes = []
-        for tablename in self.tablenames:
-            table = self[tablename]
-            verifier = table._verifier
-            if verifier is not None:
-                if types is None:
-                    if speedtype == "all":
-                        types = verifier.all_types()
-                    else:
-                        types = [verifier.speedtype(speedtype)]
-                for typ in types:
-                    if verifier.get_checks_count(typ) != 0:
-                        tabletypes.append("%s.%s" % (tablename, typ.shortname))
-        if len(tabletypes) == 0:
-            # Shouldn't occur....
-            raise ValueError("No verification tests defined!")
-        parallel = min(parallel, len(tabletypes))
-        cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "verify", "verify_tables.py"))
-        cmd = ["sage", "-python", cmd, "-j%s" % int(parallel), logdir, "all", speedtype]
-        if debug:
-            pipe = subprocess.Popen(cmd)
-        else:
-            DEVNULL = open(os.devnull, "wb")
-            pipe = subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
-        if follow:
-            from lmfdb.verify.follower import Follower
-
-            try:
-                Follower(logdir, tabletypes, follow, poll_interval).follow()
-            finally:
-                # kill the subprocess
-                # From the man page, the following will terminate child processes
-                pipe.send_signal(signal.SIGTERM)
-                pipe.send_signal(signal.SIGTERM)
-        else:
-            return pipe
 
     def show_locks(self):
         """

@@ -9,7 +9,6 @@
 
 <h2>Error</h2>
 <div>
-<!--  {{ info.err|safe }}-->
 Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
 </div>
 
@@ -33,7 +32,7 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 <tr>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
   {{form.short_label}} </a></td>
-<td>{{form.field_label}}</td>
+<td>{{form.field_knowl|safe}}</td>
 <td>${{form.level_ideal}}$</td>
 <td>{{form.dimension}}</td>
 </tr>
@@ -45,11 +44,6 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 {% include 'forward_back.html' %}
 <br>
 {% endif %}
-<!--
-   <p class="tex2jax_ignore">
-   Results for database query {{ info.query }}
-   </p>
--->
 
 {% include 'debug_info.html' %}
 {% endblock %}

@@ -25,7 +25,7 @@ from lmfdb.utils import (
         names_and_urls)
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
@@ -846,7 +846,7 @@ class Lfunction_CMF(Lfunction_from_db):
 
     @lazy_attribute
     def bread(self):
-        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+        return get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
     @property
     def friends(self):
@@ -905,7 +905,7 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
 
     @lazy_attribute
     def bread(self):
-        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
+        return get_bread(self.degree, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
 
 
 
@@ -977,7 +977,7 @@ class Lfunction_EC(Lfunction_from_db):
         if self.base_field == '1.1.1.1': #i.e. QQ
             lbread = get_bread(2,
                     [
-                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
+                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
                     ])
         else:
             lbread = get_bread(self.degree, [])
@@ -1116,7 +1116,7 @@ class Lfunction_Maass(Lfunction):
         else:   # Generate from Maass form
 
             # Create the Maass form
-            self.mf = WebMaassForm(self.maass_id, get_dirichlet_c_only=1)
+            self.mf = WebMaassForm.by_maass_id(self.maass_id)
             self.group = 'GL2'
 
             # Extract the L-function information from the Maass form object
@@ -1125,17 +1125,17 @@ class Lfunction_Maass(Lfunction):
             self.level_factored = factor(self.level)
             self.charactermodulus = self.level
             self.weight = int(self.mf.weight)
-            self.characternumber = int(self.mf.character)
+            self.characternumber = int(self.mf.conrey_index)
             if self.level > 1:
                 try:
-                    self.fricke = self.mf.fricke()
+                    self.fricke = self.mf.fricke_eigenvalue
                 except:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
                                    + 'the L-function. ')
             else:  # no fricke for level 1
                 self.fricke = 1
-            if self.symmetry == "odd" or self.symmetry == 1:
+            if self.symmetry == -1: # odd
                 self.sign = -self.fricke
                 aa = 1
             else:
@@ -1151,7 +1151,7 @@ class Lfunction_Maass(Lfunction):
             self.primitive = True
             self.degree = 2
             self.quasidegree = 2
-            self.eigenvalue = self.mf.R if self.mf.R else 0
+            self.eigenvalue = self.mf.spectral_parameter if self.mf.spectral_parameter else 0
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1161,7 +1161,7 @@ class Lfunction_Maass(Lfunction):
             if 0 in self.dirichlet_coefficients and self.dirichlet_coefficients[0] == 0:
                 self.dirichlet_coefficients.pop(0)
             self.checkselfdual()
-            self.credit = self.mf.contributor_name if 'contributor_name' in dir(self.mf) else ''
+            self.credit = self.mf.contributor if 'contributor' in dir(self.mf) else ''
 
             title_end = " and $R= %s$" % (self.eigenvalue)
 
@@ -1499,7 +1499,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.siegel"
         self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
-                      "Modular Form of Weight " + str(self.weight) + ".")
+                      "Modular form of weight " + str(self.weight) + ".")
 
     def original_object(self):
         return self.S
@@ -1651,7 +1651,7 @@ class ArtinLfunctionDB(Lfunction_from_db):
 
     @lazy_attribute
     def bread(self):
-        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+        return get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
 
 class ArtinLfunction(Lfunction):
@@ -1845,7 +1845,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.label = str(self.conductor) + '.' + self.isogeny
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented " +
-                            "only for Elliptic Curves over Q.")
+                            "only for elliptic curves over Q.")
 
         # Create the elliptic curve
         Edata = getEllipticCurveData(self.label + '1')
@@ -1916,7 +1916,7 @@ class SymmetricPowerLfunction(Lfunction):
                 return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
                         " Power")
 
-        self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
+        self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of elliptic curve isogeny class %s"
                       % (ordinal(self.m), self.m, self.label))
 
 

@@ -6,7 +6,7 @@ class HomePageTest(LmfdbTest):
     # Hecke algebra browse page
     def test_hecke_algebra(self):
         homepage = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/").get_data(as_text=True)
-        assert 'Hecke Algebras' in homepage
+        assert 'Hecke algebras' in homepage
         assert '139.2.1' in homepage or "not yet available" in homepage
 
     # Hecke algebra single page

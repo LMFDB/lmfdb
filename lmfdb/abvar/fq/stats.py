@@ -3,7 +3,8 @@ from __future__ import print_function
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, range_formatter
+from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
+from lmfdb.backend.utils import range_formatter
 from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 
@@ -193,11 +194,13 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r"The database currently contains %s %s of %s of dimension up to %s over finite fields." % (
+        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (
             self.counts["nclasses_c"],
             self.isogeny_knowl,
             self.abvar_knowl,
             max(self.gs),
+            url_for(".statistics"),
+            url_for(".dynamic_statistics"),
         )
 
     @lazy_attribute

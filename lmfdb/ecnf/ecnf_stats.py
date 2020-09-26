@@ -4,6 +4,7 @@ from lmfdb.utils import comma, StatsDisplay
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb import db
+from psycopg2.sql import SQL
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 from collections import defaultdict
@@ -184,6 +185,11 @@ class ECNF_stats(StatsDisplay):
                         r', with ',
                         self.cond_knowls,
                         r' of norm up to {}.'.format(max_norm)])
+
+    @cached_method
+    def isogeny_degrees(self):
+        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_nfcurves, UNNEST(isodeg) as elements"))
+        return cur.fetchone()[0]
 
 @app.context_processor
 def ctx_ecnf_summary():

@@ -13,6 +13,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, CountBox,
     parse_ints, parse_rational, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.sato_tate_groups import st_page
 
 ###############################################################################
@@ -148,6 +149,11 @@ def learnmore_list_remove(matchstring):
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+def get_bread(tail=[]):
+    base = [('Sato-Tate groups', url_for('.index'))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 ###############################################################################
 # Pages
@@ -160,23 +166,31 @@ def index():
         return search(info)
     weight_list= [0, 1]
     degree_list = list(range(1, 5, 1))
-    group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
-    group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
+
     for key, val in [('weight_list', weight_list),
                      ('degree_list', degree_list),
                      ('st0_list', st0_list),
-                     ('st0_dict', st0_dict),
-                     ('group_list', group_list),
-                     ('group_dict', group_dict)]:
+                     ('st0_dict', st0_dict)]:
         info[key] = val
-    title = 'Sato-Tate Groups'
-    bread = [('Sato-Tate Groups', '.')]
-    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
+    title = 'Sato-Tate groups'
+    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=get_bread())
 
 @st_page.route('/random')
 def random():
     label = db.gps_sato_tate.random()
     return redirect(url_for('.by_label', label=label), 307)
+
+@st_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "st_group",
+        db.gps_sato_tate,
+        url_for_label=lambda label: url_for('.by_label', label=label),
+        title=r"Some interesting Sato-Tate groups",
+        bread=get_bread("Interesting"),
+        credit=credit_string,
+        learnmore=learnmore_list()
+    )
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -236,11 +250,11 @@ def search(info):
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
     search_type = info.get("search_type", info.get("hst", "List"))
-    template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
+    template_kwds = {'bread':get_bread("Search results"),
                      'credit':credit_string,
                      'learnmore':learnmore_list()}
-    title = 'Sato-Tate Group Search Results'
-    err_title = 'Sato-Tate Groups Search Input Error'
+    title = 'Sato-Tate group search results'
+    err_title = 'Sato-Tate group search input error'
     count = parse_count(info, 50)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
@@ -550,13 +564,12 @@ def render_st_group(info, portrait=None):
         ('Identity Component', r'\(%s\)'%info['identity_component']),
         ('Component group', r'\(%s\)'%info['component_group']),
     ]
-    bread = [
-        ('Sato-Tate Groups', url_for('.index')),
+    bread = get_bread([
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
-    ]
-    title = r'Sato-Tate Group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    ])
+    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop2,
                            credit=credit_string,
@@ -568,29 +581,29 @@ def render_st_group(info, portrait=None):
 
 @st_page.route('/Completeness')
 def completeness_page():
-    t = 'Completeness of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
+    t = 'Completeness of Sato-Tate group data'
+    bread = get_bread("Completeness")
     return render_template('single.html', kid='rcs.cande.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def source_page():
-    t = 'Source of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
+    t = 'Source of Sato-Tate group data'
+    bread = get_bread("Source")
     return render_template('single.html', kid='rcs.source.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
-    t = 'Reliability of Sato-Tate Group Data'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
+    t = 'Reliability of Sato-Tate group data'
+    bread = get_bread("Reliability")
     return render_template('single.html', kid='rcs.rigor.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
 def labels_page():
-    t = 'Labels for Sato-Tate Groups'
-    bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
+    t = 'Labels for Sato-Tate groups'
+    bread = get_bread("Labels")
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 

@@ -9,11 +9,12 @@ from sage.all import ZZ
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_primes, parse_restricted, parse_element_of, parse_galgrp,
+    parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
     display_knowl, search_wrap, to_dict)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import complete_group_code
@@ -37,7 +38,7 @@ def cycle_string(lis):
     return Permutation(lis).cycle_string()
 
 def get_bread(breads=[]):
-    bc = [("Artin Representations", url_for(".index"))]
+    bc = [("Artin representations", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -127,7 +128,7 @@ def index():
     info = to_dict(request.args, search_array=ArtinSearchArray())
     bread = get_bread()
     if not request.args:
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list(), info=info)
+        return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)
     else:
         return artin_representation_search(info)
 
@@ -213,15 +214,18 @@ def parse_projective_type(inp, query, qfield):
         else:
             query[qfield] = current
 
+def url_for_label(label):
+    return url_for(".render_artin_representation_webpage", label=label)
+
 @search_wrap(template="artin-representation-search.html",
              table=db.artin_reps,
-             title='Artin Representation Search Results',
-             err_title='Artin Representation Search Error',
+             title='Artin representation search results',
+             err_title='Artin representation search error',
              per_page=50,
              learnmore=learnmore_list,
-             url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
+             url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
              initfunc=lambda:ArtinRepresentation)
 def artin_representation_search(info, query):
     query['Hide'] = 0
@@ -230,7 +234,7 @@ def artin_representation_search(info, query):
                  qfield="BadPrimes",mode="exclude")
     parse_primes(info,query,"ramified",name="Ramified primes",
                  qfield="BadPrimes",mode=info.get("ram_quantifier"))
-    parse_element_of(info,query,"root_number",qfield="GalConjSigns")
+    parse_restricted(info,query,"root_number",qfield="GalConjSigns",allowed=[-1,1],process=lambda x:{"$contains":[int(x)]})
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
@@ -245,7 +249,7 @@ def artin_representation_search(info, query):
     parse_bool(info,query,'parity',qfield='Is_Even')
 
 def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
+    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
@@ -322,11 +326,11 @@ def render_artin_representation_webpage(label):
     wnf = None
     nf_url = the_nf.url_for()
     if nf_url:
-        friends.append(("Artin Field", nf_url))
+        friends.append(("Artin field", nf_url))
         wnf = the_nf.wnf()
     proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
     if proj_nf:
-        friends.append(("Projective Artin Field", 
+        friends.append(("Projective Artin field", 
             str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
@@ -373,9 +377,38 @@ def render_artin_representation_webpage(label):
     info={} # for testing
 
     if case == 'rep':
-        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+        return render_template(
+            "artin-representation-show.html",
+            credit=tim_credit,
+            support=support_credit,
+            title=title,
+            bread=bread,
+            friends=friends,
+            object=the_rep,
+            cycle_string=cycle_string,
+            wnf=wnf,
+            properties=properties,
+            info=info,
+            learnmore=learnmore_list(),
+            KNOWL_ID="artin.%s" % label,
+        )
     # else we have an orbit
-    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+    return render_template(
+        "artin-representation-galois-orbit.html",
+        credit=tim_credit,
+        support=support_credit,
+        title=title,
+        bread=bread,
+        allchars=allchars,
+        friends=friends,
+        object=the_rep,
+        cycle_string=cycle_string,
+        wnf=wnf,
+        properties=properties,
+        info=info,
+        learnmore=learnmore_list(),
+        KNOWL_ID="artin.%s" % label,
+    )
 
 @artin_representations_page.route("/random")
 def random_representation():
@@ -384,16 +417,29 @@ def random_representation():
     label = rep['Baselabel']+"."+num2letters(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
+@artin_representations_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "artin",
+        db.artin_reps,
+        url_for_label,
+        label_col="Baselabel",
+        title=r"Some interesting Artin representations",
+        bread=get_bread([("Interesting", " ")]),
+        credit=tim_credit,
+        learnmore=learnmore_list(),
+    )
+
 @artin_representations_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Artin Representations'
+    t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
     return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin Representation Data'
+    t = 'Source of Artin representation data'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
     return render_template("single.html", kid='rcs.source.artin',
@@ -402,7 +448,7 @@ def source():
 
 @artin_representations_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of Artin Representation Data'
+    t = 'Reliability of Artin representation data'
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
@@ -411,7 +457,7 @@ def reliability():
 
 @artin_representations_page.route("/Completeness")
 def cande():
-    t = 'Completeness of Artin Representation Data'
+    t = 'Completeness of Artin representation data'
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',

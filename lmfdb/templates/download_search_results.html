@@ -13,26 +13,29 @@
 <div id="download-area">
 {% if info.number > download_limit %}
   <span id="download-msg">
-    There are too many search results for downloading.
+    There are too many search results 
+      (<span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>)
+    for downloading.
   </span>
 {% else %}
   {% if info.exact_count %}
     <form id="download-form">
   {% else %}
     <span id="download-msg">
-      In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{download_limit}}); return false;">determine the number of results</a>.
+      In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">determine the number of results</a>.
     </span>
     <form id="download-form" style="display:none;">
   {% endif %}
-  Download all search results for&nbsp;
-  {% for lang in languages %}
-    <button type="submit" name="Submit" value="{{lang}}">{{lang_text[lang]}}</button>&nbsp;
+  Download all
+    <span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>
+  search results for&nbsp;
+    {% for lang in languages %}
+    {% if info.search_type %}
+    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string))}}">{{lang_text[lang]}}</a>&nbsp;
+    {% else %}
+    <a class="like-button" href="{{modify_url(query='Submit='+lang+'&download=1&query='+(info.query|string)+'&search_type='+info.search_type)}}">{{lang_text[lang]}}</a>&nbsp;
+    {% endif %}
   {% endfor %}
-  <input type="hidden" name="download" value="1"/>
-  <input type="hidden" name="query" value="{{info.query}}"/>
-  {% if info.search_type %}
-    <input type="hidden" name="search_type" value="{{info.search_type}}"/>
-  {% endif %}
-  </form>
+  </p>
 {% endif %}
 </div>

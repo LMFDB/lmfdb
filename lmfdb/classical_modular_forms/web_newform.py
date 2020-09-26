@@ -17,7 +17,7 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls)
+    integer_options, names_and_urls, web_latex_factored_integer)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -135,10 +135,7 @@ class WebNewform(object):
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
-        if self.level == 1 or ZZ(self.level).is_prime():
-            self.factored_level = ''
-        else:
-            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.factored_level = web_latex_factored_integer(self.level, equals=True)
         if 'field_disc_factorization' not in data: # Until we have search results include nulls
             self.field_disc_factorization = None
         elif self.field_disc_factorization:
@@ -155,6 +152,8 @@ class WebNewform(object):
         self.character_label = r"\(" + str(self.level) + r"\)." + self.char_orbit_label
 
         self.hecke_ring_character_values = None
+        self.hecke_ring_power_basis = None
+        self.qexp_converted = False # set to True if the q-expansion is rewritten in terms of a root of unity
         self.single_generator = None
         self.has_exact_qexp = False
         if self.embedding_label is None:
@@ -166,6 +165,7 @@ class WebNewform(object):
                     setattr(self, attr, eigenvals.get(attr))
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
+                    m = 0
                     zero = [0] * self.dim
                 else:
                     zero = []
@@ -178,6 +178,9 @@ class WebNewform(object):
                 # This is the only thing I could make work:
                 if (m != 0) and (self.hecke_ring_numerators is not None):
                     self.convert_qexp_to_cyclotomic(m)
+                    self.show_hecke_ring_basis = False
+                else:
+                    self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
             hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
@@ -191,7 +194,8 @@ class WebNewform(object):
             if char_values is None:
                 raise ValueError("Invalid Conrey label")
             self.hecke_ring_character_values = char_values['values_gens'] # [[i,[[1, m]]] for i, m in char_values['values_gens']]
-            self.hecke_ring_cyclotomic_generator = char_values['order']
+            self.hecke_ring_cyclotomic_generator = m = char_values['order']
+            self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         # sort by the generators
         if self.hecke_ring_character_values:
             self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
@@ -280,10 +284,10 @@ class WebNewform(object):
             elt = sum([coeffs[i] * betas[i] for i in range(l)])
             ret.append(write_in_powers(elt))
         self.single_generator = True
-        self.hecke_ring_power_basis = True
         self.qexp = ret
+        self.qexp_converted = True
         return ret
-    
+
     @lazy_attribute
     def embedding_labels(self):
         base_label = self.label.split('.')
@@ -548,6 +552,13 @@ class WebNewform(object):
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
+    def field_poly_display(self):
+        """
+        This function is used to display the polynomial defining the coefficient field.
+        """
+        return web_latex_poly(self.field_poly)
+
+    @property
     def artin_field_display(self):
         """
         For weight 1 forms, displays the Artin field.
@@ -771,13 +782,13 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
+  <p><a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a></p>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
+  <p><a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a></p>
 </div>
 </div>"""
         forward_size = inverse_size = 0
@@ -807,7 +818,7 @@ function switch_basis(btype) {
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
             return r'\(i = \sqrt{-1}\)'
-        elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
+        elif (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -865,7 +876,7 @@ function switch_basis(btype) {
         if m is not None and m != 0:
             return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
         elif self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
+            if (self.hecke_ring_power_basis or self.qexp_converted) and self.field_poly_is_cyclotomic:
                 return PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
             else:
                 return PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')

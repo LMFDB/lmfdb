@@ -82,7 +82,7 @@ class HomePageTest(LmfdbTest):
 
     def test_downloadstring_search(self):
         L = self.tc.get("/Lattice/?class_number=8").get_data(as_text=True)
-        assert 'Download all search results for' in L
+        assert 'Download all' in L
 
     def test_download_shortest(self):
         L = self.tc.get("/Lattice/13.14.28.8.1/download/magma/shortest_vectors").get_data(as_text=True)

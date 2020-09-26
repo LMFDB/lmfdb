@@ -11,10 +11,10 @@ class AVHomeTest(LmfdbTest):
         Check that the Variety/Abelian/Fq index page works
         """
         homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
-        assert "Some interesting isogeny classes" in homepage
+        assert "by dimension and base field" in homepage
 
     def test_stats_page(self):
-        self.check_args("/Variety/Abelian/Fq/stats","Abelian Varity Isogeny Classes: Statistics")
+        self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
 
     # TODO test dynamic stats
 
@@ -39,6 +39,12 @@ class AVHomeTest(LmfdbTest):
         page = self.tc.get("/Variety/Abelian/Fq/Labels").get_data(as_text=True)
         assert "label format" in page
 
+    def test_lookup(self):
+        r"""
+        Check that Variety/Abelian/Fq/?jump works
+        """
+        self.check_args("/Variety/Abelian/Fq/?jump=x^6-3*x^5%2B3*x^4-2*x^3%2B6*x^2-12*x%2B8", "3.2.ad_d_ac")
+
     # Various searches
     # Many things are checked twice: Once from main index/browse page, and once from the refining search page
 
@@ -57,6 +63,8 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=32-100&g=2-4", "6409")
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=4..7&g=2..4", "2953")
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=1%2C3%2C5", "30543")
+        # check that the links are functional
+        self.check_args("/Variety/Abelian/Fq/?search_type=Counts", "/Variety/Abelian/Fq/?search_type=List&amp;g=5&amp;q=3")
         # and that it deals with invalid input
         self.check_args("/Variety/Abelian/Fq/?search_type=Counts&q=2-27&g=x", "not a valid input")
 

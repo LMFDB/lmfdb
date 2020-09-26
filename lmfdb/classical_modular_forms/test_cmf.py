@@ -17,7 +17,7 @@ class CmfTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
         assert '?search_type=Dimensions&dim=1' in data
         assert '?search_type=SpaceDimensions&char_order=1' in data
-        assert "./stats" in data
+        assert "/stats" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions",follow_redirects=True).get_data(as_text=True)
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/23/12/">229</a>' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions&char_order=1", follow_redirects=True).get_data(as_text=True)
@@ -25,7 +25,7 @@ class CmfTest(LmfdbTest):
 
     def test_stats(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/stats")
-        assert "Cuspidal Newforms: Statistics" in page.get_data(as_text=True)
+        assert "Classical modular forms: Statistics" in page.get_data(as_text=True)
         assert "Distribution" in page.get_data(as_text=True)
         assert "proportion" in page.get_data(as_text=True)
         assert "count" in page.get_data(as_text=True)
@@ -35,15 +35,21 @@ class CmfTest(LmfdbTest):
         assert "projective image" in page.get_data(as_text=True)
         assert "character order" in page.get_data(as_text=True)
 
+    def test_dynamic_stats(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
+        data = page.get_data(as_text=True)
+        for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
+            assert x in data
+
     def test_sidebar(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").get_data(as_text=True)
-        assert 'Labels for Classical Modular Forms' in data
+        assert 'Labels for classical modular forms' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Completeness").get_data(as_text=True)
-        assert "Completeness of Classical Modular Form Data" in data
+        assert "Completeness of classical modular form data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").get_data(as_text=True)
-        assert "Reliability of Classical Modular Form Data" in data
+        assert "Reliability of classical modular form data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Source").get_data(as_text=True)
-        assert "Source of Classical Modular Form Data" in data
+        assert "Source of classical modular form data" in data
 
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=100&search_type=List").get_data(as_text=True)
@@ -81,29 +87,52 @@ class CmfTest(LmfdbTest):
                         assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     def test_favorite(self):
-        main_page = self.tc.get("/ModularForm/GL2/Q/holomorphic/").get_data(as_text=True)
-        from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
+        favorite_newform_labels = [
+            [('23.1.b.a','Smallest analytic conductor'),
+             ('11.2.a.a','First weight 2 form'),
+             ('39.1.d.a','First D2 form'),
+             ('7.3.b.a','First CM-form with weight at least 2'),
+             ('23.2.a.a','First trivial-character non-rational form'),
+             ('1.12.a.a','Delta'),
+             ('124.1.i.a','First non-dihedral weight 1 form'),
+             ('148.1.f.a','First S4 form'),
+            ],
+            [
+                ('633.1.m.b','First A5 form'),
+                ('163.3.b.a','Best q-expansion'),
+                ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
+                ('8.21.d.b','Large coefficient ring index'),
+                ('3600.1.e.a','Many zeros in q-expansion'),
+                ('983.2.c.a','Large dimension'),
+                ('3997.1.cz.a','Largest projective image'),
+                ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists'),
+            ]
+        ]
+        favorite_space_labels = [
+            [('1161.1.i', 'Has A5, S4, D3 forms'),
+             ('23.10', 'Mile high 11s'),
+             ('3311.1.h', 'Most weight 1 forms'),
+             ('1200.2.a', 'All forms rational'),
+             ('9450.2.a','Most newforms'),
+             ('4000.1.bf', 'Two large A5 forms'),
+            ]
+        ]
         for l in favorite_newform_labels:
             for elt, desc in l:
-                if elt != 'random':
-                    elt in main_page
-                    desc in main_page
-                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
-                    # redirect to the same page
-                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                    assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+                # redirect to the same page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
         for l in favorite_space_labels:
             for elt, desc in l:
-                elt in main_page
-                desc in main_page
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert elt in page.get_data(as_text=True)
                 # redirect to the same page
-                assert "Space of Modular Forms of " in page.get_data(as_text=True)
+                assert "Space of modular forms of " in page.get_data(as_text=True)
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
                 assert elt in page.get_data(as_text=True)
-                assert "Space of Modular Forms of " in page.get_data(as_text=True)
+                assert "Space of modular forms of " in page.get_data(as_text=True)
 
     def test_tracehash(self):
         for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a'],[0,'not found']]:
@@ -244,15 +273,15 @@ class CmfTest(LmfdbTest):
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
         assert '1-12' in page.get_data(as_text=True)
         assert '1-24' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
@@ -261,24 +290,24 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
         assert '253' in page.get_data(as_text=True) # Level 23, Weight 13
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=2-&search_type=Dimensions", follow_redirects=True)
         assert '426' in page.get_data(as_text=True) # Level 3999, Weight 1
         assert '128' in page.get_data(as_text=True) # Level 4000, Weight 1
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
         assert '0' in page.get_data(as_text=True)
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
         assert 'n/a' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions')
         for elt in map(str,[0,1,2,5,4,9,6,13,8,17,10]):
             assert elt in page.get_data(as_text=True)
-        assert 'Dimension Search Results' in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
         assert 'Error: Table too large: must have at most 10000 entries'

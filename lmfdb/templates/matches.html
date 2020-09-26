@@ -25,8 +25,13 @@
   {% elif info.exact_count -%}
     displaying matches {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }})
   {% else -%}
+    {% if 'download_limit' in info %}
+      {% set download_limit = info.download_limit %}
+    {% else %}
+      {% set download_limit = 100000 %}
+    {% endif %}
     displaying matches {{ info.start + 1 }}-{{ upper_count }} of
-    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>)
+    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">at least {{ info.number }}</a></span>)
   {% endif %}
 {% include 'forward_back.html' %}
 </h2>

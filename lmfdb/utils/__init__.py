@@ -9,9 +9,9 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'round_CBF_to_half_int', 'str_to_CBF', 'to_dict', 'display_float',
            'display_complex', 'round_to_half_int', 'splitcoeff', 'comma',
            'format_percentage', 'signtocolour', 'rgbtohex', 'pol_to_html',
-           'web_latex', 'web_latex_ideal_fact', 'web_latex_split_on',
-           'web_latex_split_on_pm', 'web_latex_split_on_re', 'display_knowl',
-           'teXify_pol', 'add_space_if_positive',
+           'web_latex', 'web_latex_factored_integer', 'web_latex_ideal_fact',
+           'web_latex_split_on', 'web_latex_split_on_pm', 'web_latex_split_on_re',
+           'display_knowl', 'teXify_pol', 'add_space_if_positive',
            'bigint_knowl', 'too_big', 'make_bigint', 'bigpoly_knowl',
            'factor_base_factor', 'factor_base_factorization_latex',
            'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix',
@@ -20,7 +20,6 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'debug', 'flash_error',
            'ajax_url',
            'image_callback', 'encode_plot',
-           'KeyedDefaultDict', 'make_tuple', 'range_formatter',
            'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_rational',
            'parse_rats', 'parse_bracketed_posints', 'parse_bracketed_rats', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of',
@@ -30,7 +29,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt',
            'parse_container', 'parse_hmf_weight', 'parse_count',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
-           'nf_string_to_label', 'SearchParsingError', 'clean_input', 'prep_ranges',
+           'nf_string_to_label', 'clean_input', 'prep_ranges',
            'search_wrap', 'count_wrap',
            'SearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
            'SkipBox', 'CheckBox', 'CheckboxSpacer', 'DoubleSelectBox', 'HiddenBox',
@@ -42,7 +41,6 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'Configuration',
            'names_and_urls', 'name_and_object_from_url',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
-           'reraise',
            'TraceHash', 'TraceHashClass']
 
 from flask import (request, make_response, flash, url_for,
@@ -55,16 +53,15 @@ from .utilities import (
     display_multiset, pair2complex, round_CBF_to_half_int, str_to_CBF,
     to_dict, display_float, display_complex, round_to_half_int,
     splitcoeff, comma, format_percentage, signtocolour, rgbtohex, pol_to_html,
-    web_latex, web_latex_ideal_fact, web_latex_split_on, web_latex_split_on_pm,
-    web_latex_split_on_re, display_knowl, bigint_knowl, too_big, make_bigint,
-    teXify_pol, add_space_if_positive,
+    web_latex, web_latex_factored_integer, web_latex_ideal_fact, web_latex_split_on,
+    web_latex_split_on_pm, web_latex_split_on_re, display_knowl, bigint_knowl, too_big,
+    make_bigint, teXify_pol, add_space_if_positive,
     bigpoly_knowl, factor_base_factor, factor_base_factorization_latex,
     polyquo_knowl, web_latex_poly, list_to_latex_matrix, code_snippet_knowl,
     Pagination,
     debug, flash_error, 
     ajax_url,  # try to eliminate?
     image_callback, encode_plot,
-    KeyedDefaultDict, make_tuple, range_formatter,
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
@@ -75,7 +72,7 @@ from .search_parsing import (
     parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string,
     parse_nf_elt, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label, 
-    parse_subfield, SearchParsingError,
+    parse_subfield,
     clean_input, prep_ranges)
 
 from .search_wrapper import search_wrap, count_wrap
@@ -89,5 +86,4 @@ from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
-from .reraise import reraise
 from .trace_hash import TraceHash, TraceHashClass

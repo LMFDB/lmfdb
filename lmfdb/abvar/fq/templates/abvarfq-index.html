@@ -14,7 +14,6 @@
 <div>
   {{ info.stats.short_summary | safe }}
 </div>
-<h2> Browse <a href="./stats">statistics</a> or <a href="./dynamic_stats">create your own</a> </h2>
 <h2> Browse {{ KNOWL('av.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
 <p>
   By {{ KNOWL('ag.dimension', 'dimension') }}:
@@ -28,19 +27,12 @@
   <a href="?q={{q}}">{{q}}</a>&nbsp;
   {% endfor %}
 </p>
-{% for sublist in info.iso_list %}
 <p>
-  {% if loop.index == 1 %}
-  Some interesting isogeny classes:
-  {% endif %}
-  {% for isocls in sublist %}
-  <a href="{{ isocls.url }}" title = "{{isocls.reason}}"> {{ isocls.label }} </a>&nbsp;
-  {% endfor %}
+  Some <a href="{{url_for('.interesting')}}">interesting isogeny classes</a> or a <a href="{{url_for('.random_class')}}">random isogeny class</a>
 </p>
 <p>
   A <a href="?search_type=Counts">table</a> by dimension and base field
 </p>
-{% endfor %}
 
 <h2> Find a specific {{KNOWL('av.isogeny_class',title="isogeny class") }} by {{ KNOWL('av.fq.lmfdb_label',title="label") }} or {{ KNOWL('av.fq.weil_polynomial',"Weil polynomial") }}</h2>
 <form>

@@ -30,7 +30,7 @@ CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
 
 COLLABORATION SUGGESTIONS:
-* Forms that have no zeros except at the cusps
+* newforms that have no zeros except at the cusps
 
 GOOD:
 * Create links to dynamics stats from each entry in the curated stats

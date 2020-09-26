@@ -51,6 +51,10 @@ def allowed_id(ID):
             extras = "[],T"
         elif ID.startswith('hgm'):
             extras = "AB"
+        elif ID.startswith('ec'):
+            extras = "CM"
+        elif ID.startswith('gg'):
+            extras = "T"
         else:
             extras = ""
         for c in extras:
@@ -314,7 +318,7 @@ def test():
     logger.info("test")
     return render_template("knowl-test.html",
                            bread=get_bread([("Test", url_for(".test"))]),
-                           title="Knowledge Test",
+                           title="Knowledge test",
                            k1=Knowl("k1"))
 
 
@@ -450,7 +454,7 @@ def history(limit=25):
     h_items = knowldb.get_history(limit)
     bread = get_bread([("History", url_for('.history', limit=limit))])
     return render_template("knowl-history.html",
-                           title="Knowledge History",
+                           title="Knowledge history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -462,7 +466,7 @@ def comment_history(limit=25):
     h_items = knowldb.get_comment_history(limit)
     bread = get_bread([("Comment History", url_for('.comment_history', limit=limit))])
     return render_template("knowl-comment-history.html",
-                           title="Comment History",
+                           title="Comment history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -694,7 +698,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     if request.method == "POST":
         con = request.form['content']
         foot = footer or request.form['footer']
-    elif request.method == "GET":
+    else:
         con = request.args.get("content", k.content)
         foot = footer or request.args.get("footer", "1")
 
@@ -756,7 +760,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             return data
         resp = make_response(data)
         # cache if it is a usual GET
-        if request.method == 'GET':
+        if request.method != 'POST':
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
@@ -773,7 +777,7 @@ def index():
     if request.method == 'POST':
         qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
         types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
-    elif request.method == 'GET':
+    else:
         qualities = request.args.getlist('qualities')
         types = request.args.getlist('types')
 
@@ -788,6 +792,9 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    if search:
+        types = list(knowl_type_code)
     try:
         knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
     except DataError as e:
@@ -823,7 +830,7 @@ def index():
     if cur_cat:
         b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
-                           title="Knowledge Database",
+                           title="Knowledge database",
                            bread=get_bread(b),
                            knowls=knowls,
                            search=search,

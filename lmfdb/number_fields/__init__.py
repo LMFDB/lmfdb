@@ -19,7 +19,7 @@ app.register_blueprint(nf_page, url_prefix="/NumberField")
 
 register_search_function(
     "number_fields",
-    "Global number fields",
-    "Search over global number fields",
+    "Number fields",
+    "Search over number fields",
     auto_search = 'nf_fields'
 )

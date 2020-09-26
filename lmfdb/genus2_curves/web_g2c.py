@@ -4,17 +4,18 @@ from ast import literal_eval
 from lmfdb import db
 from lmfdb.utils import (key_for_numerically_sort, encode_plot,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
-                         display_knowl, web_latex)
+                         display_knowl, web_latex_factored_integer)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
 from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl, small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
+from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -114,9 +115,6 @@ def factorsRR_raw_to_pretty(factorsRR):
         return r'\mathrm{M}_2 (\R)'
     elif factorsRR == ['M_2(CC)']:
         return r'\mathrm{M}_2 (\C)'
-
-def zfactor(n):
-    return factor(n) if n != 0 else 0
 
 def ring_pretty(L, f):
     # Only usable for at most quadratic fields
@@ -492,6 +490,8 @@ def td_wrapr(val):
     return r' <td align="right">\(%s\)</td>' % val
 def td_wrapc(val):
     return r' <td align="center">\(%s\)</td>' % val
+def td_wrapcn(val):
+    return r' <td align="center">%s</td>' % val
 
 def point_string(P):
     return '(' + ' : '.join(map(str, P)) + ')'
@@ -528,13 +528,14 @@ def mw_gens_table(invs,gens,hts,pts):
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
 
-def local_table(D,N,tama,bad_lpolys):
+def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', r'ord(\(N\))'),
               th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
               th_wrap('g2c.bad_lfactors', 'L-factor'),
+              th_wrap('ag.cluster_picture', 'Cluster picture'),
               '</tr>', '</thead>', '<tbody>']
     for p in D.prime_divisors():
         loctab.append('  <tr>')
@@ -548,7 +549,13 @@ def local_table(D,N,tama,bad_lpolys):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
-        loctab.extend([td_wrapr(p),td_wrapc(D.ord(p)),td_wrapc(N.ord(p)),td_wrapc(cp),td_wrapl(Lp)])
+        Cluslist = [r for r in cluster_pics if r[0] == p]
+        if Cluslist:
+            ClusThmb = '<img src="' + Cluslist[0][2] + '" height=19 style="position: relative; top: 50%; transform: translateY(10%);" />'
+            Clus = cp_display_knowl(Cluslist[0][1], img=ClusThmb)
+        else:
+            Clus = ''
+        loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
@@ -598,8 +605,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, is_curve=True):
-        self.make_object(curve, endo, tama, ratpts, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, clus, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -637,9 +644,20 @@ class WebG2C(object):
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
             ratpts = {}
-        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
+        clus = []
+        for x in tama:
+            if x['p'] != 2:
+                try:
+                    clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
+                    #clusimg = clusentry['image']
+                    clusthmb = clusentry['thumbnail']
+                    clus.append([x['p'], x['cluster_label'], clusthmb])
+                except Exception:
+                    g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
+                    raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
+        return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, ratpts, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -652,7 +670,7 @@ class WebG2C(object):
         # set attributes common to curves and isogeny classes here
         data['Lhash'] = str(curve['Lhash'])
         data['cond'] = ZZ(curve['cond'])
-        data['cond_factor_latex'] = web_latex(factor(int(data['cond']))).replace(r"-1 \cdot","-")
+        data['cond_factor_latex'] = web_latex_factored_integer(data['cond'])
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
         data['mw_rank'] = ZZ(0) if curve.get('mw_rank') is None else ZZ(curve['mw_rank']) # 0 will be marked as a lower bound
         data['mw_rank_proved'] = curve['mw_rank_proved']
@@ -673,12 +691,12 @@ class WebG2C(object):
             data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
             data['min_eqn_display'] = min_eqns_pretty(data['min_eqn'])
-            data['disc_factor_latex'] = web_latex(factor(data['disc'])).replace(r"-1 \cdot","-")
+            data['disc_factor_latex'] = web_latex_factored_integer(data['disc'])
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
-            data['igusa_clebsch_factor_latex'] = [web_latex(zfactor(i)).replace(r"-1 \cdot","-") for i in data['igusa_clebsch']]
-            data['igusa_factor_latex'] = [ web_latex(zfactor(j)).replace(r"-1 \cdot","-") for j in data['igusa'] ]
+            data['igusa_clebsch_factor_latex'] = [web_latex_factored_integer(i) for i in data['igusa_clebsch']]
+            data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
             data['aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['aut_grp_id'])))
             data['geom_aut_grp'] = small_group_label_display_knowl('%d.%d' % tuple(literal_eval(curve['geom_aut_grp_id'])))
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
@@ -730,7 +748,7 @@ class WebG2C(object):
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
 
             tamalist = [[item['p'],item['tamagawa_number']] for item in tama]
-            data['local_table'] = local_table (data['abs_disc'],data['cond'],tamalist,data['bad_lfactors_pretty'])
+            data['local_table'] = local_table (data['cond'],data['abs_disc'],tamalist,data['bad_lfactors_pretty'],clus)
 
         else:
             # invariants specific to isogeny class
