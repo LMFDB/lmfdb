@@ -3,43 +3,30 @@ from flask import redirect
 from sage.all import randint
 
 def random_url():
+    routes = [
+            "L/",
+            "ModularForm/GL2/Q/holomorphic/",
+            "ModularForm/GL2/Q/Maass/",
+            "ModularForm/GL2/TotallyReal/",
+            "ModularForm/GL2/ImaginaryQuadratic/",
+            "EllipticCurve/Q/",
+            "EllipticCurve/",
+            "Genus2Curve/Q/",
+            "HigherGenus/C/Aut/",
+            "Variety/Abelian/Fq/",
+            "NumberField/",
+            "LocalNumberField/",
+            "Character/Dirichlet/",
+            "ArtinRepresentation/",
+            "GaloisGroup/",
+            "SatoTateGroup/"
+            ]
     if is_beta():
-        routes = ["ModularForm/GL2/Q/holomorphic/",
-                    "ModularForm/GL2/Q/Maass/",
-                    "ModularForm/GL2/TotallyReal/",
-                    "ModularForm/GL2/ImaginaryQuadratic/",
-                    "ModularForm/GSp/Q/",
-                    "EllipticCurve/Q/",
-                    "EllipticCurve/",
-                    "Genus2Curve/Q/",
-                    "HigherGenus/C/Aut/",
-                    "Variety/Abelian/Fq/",
-                    "Belyi/",
-                    "NumberField/",
-                    "LocalNumberField/",
-                    "Character/Dirichlet/",
-                    "ArtinRepresentation/",
-                    "Motive/Hypergeometric/Q/",
-                    "GaloisGroup/",
-                    "SatoTateGroup/",
-                    "Lattice/"
-                ]
-    else:
-        routes = ["ModularForm/GL2/Q/holomorphic/",
-                    "ModularForm/GL2/Q/Maass/",
-                    "ModularForm/GL2/TotallyReal/",
-                    "ModularForm/GL2/ImaginaryQuadratic/",
-                    "EllipticCurve/Q/",
-                    "EllipticCurve/",
-                    "Genus2Curve/Q/",
-                    "HigherGenus/C/Aut/",
-                    "Variety/Abelian/Fq/",
-                    "NumberField/",
-                    "LocalNumberField/",
-                    "Character/Dirichlet/",
-                    "ArtinRepresentation/",
-                    "GaloisGroup/",
-                    "SatoTateGroup/"
+        routes += [
+                "ModularForm/GSp/Q/",
+                "Belyi/",
+                "Motive/Hypergeometric/Q/",
+                "Lattice/"
                 ]
     route = routes[randint(0,len(routes)-1)]
     if route == "ModularForm/GL2/Q/holomorphic/":
