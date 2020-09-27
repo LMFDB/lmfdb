@@ -9,10 +9,7 @@ from lmfdb import db
 from sage.all import UniqueRepresentation, cached_method
 from lmfdb.logger import make_logger
 
-from lmfdb.utils import comma, display_knowl
-from math import ceil
-
-logger = make_logger("hgcwa")
+from lmfdb.utils import comma, display_knowl, StatsDisplay
 
 
 the_HGCWAstats = None
@@ -23,165 +20,85 @@ def get_stats():
         the_HGCWAstats = HGCWAstats()
     return the_HGCWAstats
 
-def max_group_order(group_list):
-    orders = []
-    for group in group_list:
-        order = int(re.search(r'\[(\d+)', group).group(1))
-        orders.append(order)
-    return max(orders)
 
-def hgcwa_summary():
-    bounds = get_stats().bounds()
-    stats = get_stats().stats()
-    refined_passports_knowl = display_knowl(
-        'curve.highergenus.aut.refinedpassport', 
-        title='refined passports')
-    generating_vectors_knowl = display_knowl(
-        'curve.highergenus.aut.generatingvector',
-        title='generating vectors')
-    stats_url = url_for('.statistics')
-    return (
-        r'Currently the database contains all groups $G$ acting as '
-        r'automorphisms of curves $X/\C$ of genus %s to %s such that $X/G$ '
-        r'has genus 0, as well as genus 2 through 4 with quotient genus '
-        r'greater than 0. There are %s distinct %s in the database. The '
-        r'number of distinct %s is %s. Here are some '
-        r'<a href="%s">further statistics</a>.' % 
-        (bounds['genus_min'], bounds['genus_max'], stats['distinct_refined_passports_c'],
-         refined_passports_knowl, generating_vectors_knowl, 
-         stats['distinct_generating_vectors_c'], stats_url)
-    )
-
-def hgcwa_stats_summary():
-    bounds = get_stats().bounds()
-    stats = get_stats().stats()
-    refined_passports_knowl = display_knowl(
-        'curve.highergenus.aut.refinedpassport', 
-        title='refined passports')
-    generating_vectors_knowl = display_knowl(
-        'curve.highergenus.aut.generatingvector',
-        title='generating vectors')
-    return (
-        r'Currently the database contains all groups $G$ acting as '
-        r'automorphisms of curves $X$ from genus %s up to genus %s so that '
-        r'the quotient space $X/G$ is the Riemann sphere ($X/G$ has genus 0). '
-        r'There are %s distinct %s in the database. The number of distinct '
-        r'%s is %s. ' %
-        (bounds['genus_min'], bounds['genus_max'], stats['distinct_refined_passports_c'], 
-            refined_passports_knowl, generating_vectors_knowl,
-            stats['distinct_generating_vectors_c'])
-    )
-
-@app.context_processor
-def ctx_hgcwa_summaries():
-    return {'hgcwa_summary': hgcwa_summary, 'hgcwa_stats_summary': hgcwa_stats_summary}
-
-
-class HGCWAstats(UniqueRepresentation):
+class HGCWAstats(StatsDisplay):
     """
     Class for creating and displaying statistics for higher genus curves with automorphisms
     """
     #TODO provide getter for subset of stats (e.g. for top matter)
 
     def __init__(self):
-        logger.debug("Constructing an instance of HGCWAstats")
-        self._bounds = {}
-        self._stats = {}
+        self.genus_max = db.hgcwa_passports.max('genus')
+        self.dim_max = db.hgcwa_passports.max('dim')
+        self.g0_max = db.hgcwa_passports.max('g0')
+        self.refined_passports_knowl = display_knowl(
+            'curve.highergenus.aut.refinedpassport', 
+            title='refined passports')
+        self.generating_vectors_knowl = display_knowl(
+            'curve.highergenus.aut.generatingvector',
+            title='generating vectors')
+        self.distinct_generating_vectors = comma(db.hgcwa_passports.count())
+        #self.distinct_refined_passports = comma(compute_total_refined_pp())
+        self.distinct_refined_passports = comma(len(db.hgcwa_passports.distinct('passport_label')))
 
-    def bounds(self):
-        self.init_hgcwa_bounds()
-        return self._bounds
+        self.by_genus_data = init_by_genus_data()
 
-    def stats(self):
-        self.init_hgcwa_bounds()
-        self.init_hgcwa_stats()
-        return self._stats
+    @property
+    def short_summary(self):
+        stats_url = url_for('.statistics')
+        return (
+            r'Currently the database contains all groups $G$ acting as '
+            r'automorphisms of curves $X/\C$ of genus %s to %s such that $X/G$ '
+            r'has genus 0, as well as genus 2 through 4 with quotient genus '
+            r'greater than 0. There are %s distinct %s in the database. The '
+            r'number of distinct %s is %s. Here are some '
+            r'<a href="%s">further statistics</a>.' % 
+            (2, self.genus_max, self.distinct_refined_passports,
+            self.refined_passports_knowl, self.generating_vectors_knowl, 
+            self.distinct_generating_vectors, stats_url)
+        )
 
-    def init_hgcwa_bounds(self):
-        if self._bounds:
-            return
-        logger.debug("Computing HGCWA bounds...")
-        hgcwa = db.hgcwa_passports
-        bounds = {}
+    @property
+    def summary(self):
+        return (
+            r'Currently the database contains all groups $G$ acting as '
+            r'automorphisms of curves $X$ from genus %s up to genus %s so that '
+            r'the quotient space $X/G$ is the Riemann sphere ($X/G$ has genus 0). '
+            r'There are %s distinct %s in the database. The number of distinct '
+            r'%s is %s. ' %
+            (2, self.genus_max, self.distinct_refined_passports,
+            self.refined_passports_knowl, self.generating_vectors_knowl, 
+            self.distinct_generating_vectors)
+        )
 
-        genus_min = 2 
-        genus_max = hgcwa.max('genus')
-        dim_min = 0
-        dim_max = hgcwa.max('dim')
-        g0_min = 0
-        g0_max = hgcwa.max('g0')
+    baseurl_func = '.index'
+    table = db.hgcwa_passports
+    top_titles = {'dim': 'dimension'}
+    short_display = {'dim': 'dimension'}
+    stat_list = [{'cols': 'dim'}]
 
-        bounds['genus_min'] = genus_min
-        bounds['genus_max'] = genus_max
-        bounds['dim_min'] = dim_min
-        bounds['dim_max'] = dim_max
-        bounds['g0_min'] = g0_min
-        bounds['g0_max'] = g0_max
 
-        self._bounds  = bounds
-        logger.debug("... finished computing HGCWA bounds.")
+def init_by_genus_data():
+    hgcwa = db.hgcwa_passports
+    ##################################
+    # Collect genus joint statistics #
+    ##################################
+    genus_detail = []
+    for genus in range(2, hgcwa.max('genus') + 1):
+        genus_data = db.hgcwa_complete.lookup(genus)
+        genus_detail.append(
+            {'genus_num': genus, 
+             'num_families': genus_data['num_families'],
+             'num_refined_pp': genus_data['num_refined_pp'], 
+             'num_gen_vectors': genus_data['num_gen_vectors'], 
+             'num_unique_groups': genus_data['num_unique_groups'], 
+             'max_grp_order': hgcwa.max('group_order', {'genus':genus})})
+    return genus_detail
 
-    def init_hgcwa_stats(self):
-        if self._stats:
-            return
-        logger.debug("Computing HGCWA stats...")
-        hgcwa = db.hgcwa_passports
-        bounds = self._bounds
-        stats = {}
-
-        distinct_generating_vectors = hgcwa.count()
-        distinct_refined_passports = len(hgcwa.distinct('passport_label'))
-        stats['distinct_generating_vectors_c'] = comma(distinct_generating_vectors)
-        stats['distinct_refined_passports_c'] = comma(distinct_refined_passports)
-        
-        ##################################
-        # Collect genus joint statistics #
-        ##################################
-
-        genus_detail = []
-        for genus in range(bounds['genus_min'], bounds['genus_max'] + 1):
-            families = len(hgcwa.distinct('label', {'genus':genus}))
-            refined_passports = len(hgcwa.distinct('passport_label', {'genus':genus}))
-            gen_vectors = hgcwa.count({'genus':genus})
-            group_list = hgcwa.distinct('group', {'genus':genus})
-            group_count = len(group_list)
-            max_grp_order = max_group_order(group_list)
-
-            families_by_g0 = []
-            passports_by_g0 = []
-            gen_vectors_by_g0 = []
-            groups_by_g0 = []
-            topologicals_by_g0 = []
-            braids_by_g0 = []
-            for g0 in range(bounds['g0_min'], bounds['g0_max'] + 1):
-                if g0 <= int(ceil(genus / 2)):
-                    # the g0 lists are in sorted order
-                    families_by_g0.append(len(hgcwa.distinct('label', {'genus': genus, 'g0': g0})))
-                    passports_by_g0.append(len(hgcwa.distinct('passport_label', {'genus': genus, 'g0': g0})))
-                    gen_vectors_by_g0.append(hgcwa.count({'genus': genus, 'g0': g0}))
-                    groups_by_g0.append(len(hgcwa.distinct('group', {'genus': genus, 'g0': g0})))
-                    topologicals_by_g0.append(len(hgcwa.distinct('topological', {'genus': genus, 'g0': g0})))
-                    braids_by_g0.append(len(hgcwa.distinct('braid', {'genus': genus, 'g0': g0})))
-            g0_counts = { 'families': families_by_g0, 'refined_passports': passports_by_g0, 
-                          'gen_vectors': gen_vectors_by_g0, 'groups': groups_by_g0,
-                          'topologicals': topologicals_by_g0, 'braids': braids_by_g0 }
-            # genus_detail is in sorted order
-            genus_detail.append({'genus_num': genus, 'families': families,
-                'refined_passports': refined_passports, 'gen_vectors': gen_vectors, 
-                'groups': [group_count, max_grp_order], 'g0_counts': g0_counts })
-        stats['genus_detail'] = genus_detail
-
-        ######################################
-        # Collect dimension joint statistics #
-        ######################################
-
-        dim_detail = []
-        for dim in range(bounds['dim_min'], bounds['dim_max'] + 1):
-            gen_vectors = hgcwa.count({'dim':dim})
-            # dim_detail is in sorted order
-            dim_detail.append({'dim_num': dim, 'gen_vectors': gen_vectors })
-        stats['dim_detail'] = dim_detail
-
-        self._stats = stats
-        logger.debug("... finished computing HGCWA stats.")        
-
+'''
+def compute_total_refined_pp():
+    total = 0
+    for genus in range(2, db.hgcwa_passports.max('genus')+1):
+        total += db.hgcwa_complete.lookup(genus)['num_refined_pp'][0]
+    return total
+'''

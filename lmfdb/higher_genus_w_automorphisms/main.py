@@ -162,6 +162,7 @@ def index():
     genus_list = list(range(2, genus_max + 1))
     info['count'] = 50
     info['genus_list'] = genus_list
+    info['short_summary'] = get_stats().short_summary
 
     return render_template("hgcwa-index.html",
                            title="Families of Higher Genus Curves with Automorphisms",
@@ -178,14 +179,10 @@ def random_passport():
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
-    info = {
-        'stats': get_stats().stats(),
-        'bounds': get_stats().bounds()
-    }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
    
-    return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template("hgcwa-stats.html", info=get_stats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):

@@ -15,9 +15,14 @@ def create_file():
     f.write('\n')
     data = compute_values()
     for datum in data:
-        line = '|'.join([str(val) for val in datum])
+        line = '|'.join([wrangle(val) for val in datum])
         f.write(line + '\n')
     f.close()
+
+def wrangle(val):
+    if isinstance(val, list):
+        return '{' + ', '.join([str(x) for x in val]) + '}'
+    return str(val)
 
 def compute_values():
 
@@ -51,7 +56,7 @@ def compute_values():
         num_refined_pp.append(len(hgcwa.distinct('passport_label', {'genus': genus, 'g0': 0})))
         num_gen_vectors.append(hgcwa.count({'genus': genus, 'g0': 0}))
 
-        if table_entry['g0_gt0_compute']:
+        if table_entry is not None and table_entry['g0_gt0_compute']:
             for g0 in range(1, hgcwa.max('g0')+1):
                 if g0 <= int(math.ceil(genus / 2)):
                     # append counts for increasing quotient genus
