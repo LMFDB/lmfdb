@@ -5,6 +5,8 @@ from sage.all import randint
 def random_url():
     routes = [
             "L/",
+            "L/",
+            "L/",
             "ModularForm/GL2/Q/holomorphic/",
             "ModularForm/GL2/Q/Maass/",
             "ModularForm/GL2/TotallyReal/",
