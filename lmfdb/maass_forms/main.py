@@ -9,6 +9,7 @@ from lmfdb.utils import (
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -61,6 +62,12 @@ def interesting():
         bread=bread_prefix() + [("Interesting", " ")],
         learnmore=learnmore_list()
     )
+
+@maass_page.route("/stats")
+def statistics():
+    title = "Maass forms: statistics"
+    bread = bread_prefix() + [("Statistics", " ")]
+    return render_template("display_stats.html", info=MaassStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 @maass_page.route('/<label>')
 def by_label(label):
@@ -255,3 +262,13 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)
+
+class MaassStats(StatsDisplay):
+    table = db.maass_newforms
+    baseurl_func = ".by_label"
+
+    stat_list = [
+        {'cols': ['level', 'spectral_parameter'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_col_total}
+    ]
