@@ -584,6 +584,26 @@ a.like-button {
   padding: 6px 16px 3px 16px;
 }
 
+button.like-link {
+  background: none!important;
+  border: none!important;
+  padding: 0!important;
+  cursor: pointer;
+
+  color: {{color.col_link}};
+  text-decoration: none;
+  font-family: sans-serif;
+  min-width: 0px;
+  font-size: 15px;
+}
+button.like-link:visited {
+  color: {{color.a_text_visited}};
+}
+button.like-link:hover {
+  color: {{color.a_text_hover}};
+  background: {{color.a_background_hover}};
+}
+
 select {
    background: {{color.select_background}};
 }
