@@ -407,20 +407,19 @@ class KnowlBackend(PostgresBase):
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
         kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]))
+        def filter_from_matches(pattern):
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
+            for match in matches:
+                lines = match.split('\n')
+                for line in lines:
+                    m = grep_extractor.match(line)
+                    if m and m.group(2) == ':': # active match rather than context
+                        for kid in extract_links(line):
+                            if kid in kids:
+                                kids.remove(kid)
 
         # Find references in the codebase
-        if sys.version_info[0] == 3:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
-        else:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern]).split('\n--\n')
-        for match in matches:
-            lines = match.split('\n')
-            for line in lines:
-                m = grep_extractor.match(line)
-                if m and m.group(2) == ':': # active match rather than context
-                    for kid in extract_links(line):
-                        if kid in kids:
-                            kids.remove(kid)
+        filter_from_matches(link_finder_re.pattern)
         selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
         cur = self._execute(selecter, [0])
         categories = {}
@@ -431,6 +430,9 @@ class KnowlBackend(PostgresBase):
             for link in rec[1]:
                 if link in kids:
                     kids.remove(link)
+        # Some of these might be spurious since they may occur in the code in strange ways, so we do a grep for all of the ids.
+        pattern = "|".join(kid.replace(".", r"\.") for kid in kids)
+        filter_from_matches(pattern)
         # Now group by category
         by_category = defaultdict(list)
         for kid in kids:
