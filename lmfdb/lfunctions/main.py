@@ -56,6 +56,14 @@ def l_function_history():
           (t, url_for('.l_function_history'))]
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=[('Completeness of the data', url_for('.completeness'))])
 
+@l_function_page.route("/random")
+def random_l_function():
+    url = db.lfunc_instances.random(projection="url")
+    if url:
+        return redirect("/L/"+url, 302)
+    else:
+        return random_l_function()
+
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
 def l_function_dirichlet_browse_page():
