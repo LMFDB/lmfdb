@@ -1,5 +1,5 @@
 {# requires info to contain number (number of results), count (max number of results possible), start (where to start in the list of results) and exact_count (boolean, indicating whether the count is exact) #}
-
+    
 {% if info.err is defined %}
 <h2>Error</h2>
 <div>
@@ -37,8 +37,10 @@
     <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">at least {{ info.number }}</a></span>)
     {% endif %}
   </h2>
-{% include 'forward_back.html' %}
+  {% include 'forward_back.html' %}
+  {% if 'Newform' in title or 'Newspace' in title or 'lattice' == body_class or 'local_fields' == body_class or 'belyi' == body_class or 'maass' == body_class or 'higher_genus_w_automorphisms' == body_class or 'nf' == body_class or 'abvarfq' == body_class or 'g2c' == body_class or 'ec' == body_class or 'ecnf'==body_class or 'hecke_algebras'==body_class or 'rep_galois_modl' == body_class or 'modlmf' == body_class %}
 {% include 'download_search_results.html' %}
+{% endif %}
 </div>  
 {% endif %}
 {% endif %}

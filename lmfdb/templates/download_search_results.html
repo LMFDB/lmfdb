@@ -11,9 +11,9 @@
 &nbsp;
 {% if info.number > download_limit %}
   <span id="download-msg">
-    There are too many search results 
+    There are too many results 
       (<span id="result-count2">{% if info.exact_count %}{{ info.number }}{% endif %}</span>)
-    for downloading.
+    to download.
   </span>
 {% else %}
   {% if info.exact_count %}
