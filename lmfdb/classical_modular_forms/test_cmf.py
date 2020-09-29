@@ -67,7 +67,7 @@ class CmfTest(LmfdbTest):
         assert '1124.1.ba.a' in page.get_data(as_text=True)
         assert r'\Q(\zeta_{35})' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?weight=10&level=10', follow_redirects=True)
-        assert 'Results (displaying all 4 matches)'
+        assert 'Results (4 matches)'
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
@@ -813,11 +813,11 @@ class CmfTest(LmfdbTest):
         assert "Results (32 matches)"
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=List')
-        assert 'Results (displaying all 7 matches)' in page.get_data(as_text=True)
+        assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{2}, \sqrt{-3})' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&cm=no&rm=no&search_type=List')
-        assert "Results (displaying all 17 matches)" in page.get_data(as_text=True)
+        assert "Results (17 matches)" in page.get_data(as_text=True)
         assert r"Q(\zeta_{20})" in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&dim=116&search_type=List')
@@ -825,7 +825,7 @@ class CmfTest(LmfdbTest):
         assert r"Q(\zeta_{177})" in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets')
-        assert 'Results (displaying all 7 matches)' in page.get_data(as_text=True)
+        assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{2}, \sqrt{-3})' in page.get_data(as_text=True)
 
     def test_inner_twist(self):
