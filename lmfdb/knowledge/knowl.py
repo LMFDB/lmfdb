@@ -41,7 +41,7 @@ url_from_knowl = [
 ]
 grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
-link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=)\s*['"]([^'"]+)['"]|""")
+link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=th_wrap\s*=)\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
 defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
