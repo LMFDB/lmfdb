@@ -406,7 +406,7 @@ class KnowlBackend(PostgresBase):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
-        kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]))
+        kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."]))
         def filter_from_matches(pattern):
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
             for match in matches:
