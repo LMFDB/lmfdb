@@ -228,7 +228,7 @@ def render_field_webpage(args):
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}$.'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),

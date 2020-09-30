@@ -61,3 +61,8 @@ class HomePageTest(LmfdbTest):
         self.check(homepage, "/universe", 'universe')
         # removed in PR #1167
         #self.check(homepage, "/knowledge/", 'Recently modified Knowls')
+
+    # test global random
+    def test_random(self):
+        L = self.tc.get("/random", follow_redirects=True)
+        assert "Properties" in L.get_data(as_text=True)

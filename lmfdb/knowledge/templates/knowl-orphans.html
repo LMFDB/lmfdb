@@ -1,0 +1,13 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<p>The following knowls are not referenced by any code or other knowl.</p>
+{% for cat, kids in (orphans.items()|sort) %}
+<h3>{{cat}}</h3>
+<ul>
+  {% for kid in kids %}
+    <li>{{ KNOWL(kid) }}</li>
+  {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}
