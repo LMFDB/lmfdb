@@ -11,7 +11,7 @@ class AVHomeTest(LmfdbTest):
         Check that the Variety/Abelian/Fq index page works
         """
         homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
-        assert "Some interesting isogeny classes" in homepage
+        assert "by dimension and base field" in homepage
 
     def test_stats_page(self):
         self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
@@ -38,6 +38,12 @@ class AVHomeTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/Labels").get_data(as_text=True)
         assert "label format" in page
+
+    def test_lookup(self):
+        r"""
+        Check that Variety/Abelian/Fq/?jump works
+        """
+        self.check_args("/Variety/Abelian/Fq/?jump=x^6-3*x^5%2B3*x^4-2*x^3%2B6*x^2-12*x%2B8", "3.2.ad_d_ac")
 
     # Various searches
     # Many things are checked twice: Once from main index/browse page, and once from the refining search page

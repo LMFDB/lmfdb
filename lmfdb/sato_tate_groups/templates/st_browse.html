@@ -24,13 +24,7 @@ By {{ KNOWL('st_group.identity_component', title='identity component') }}
     &nbsp;<a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>
 {% endfor %}
 </p>
-<p>
-Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') }}
-{% for r in info.group_list %}
-    &nbsp;<a href="?label={{r}}"> ${{info.group_dict[r]}}$ </a>
-{% endfor %}
-</p>
-<p>A <a href={{url_for('.random')}}>random Sato-Tate group</a> from the database.
+<p>Some <a href="{{url_for('.interesting')}}">interesting Sage-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a>
 <br>
 </p>
 

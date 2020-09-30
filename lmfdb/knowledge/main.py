@@ -16,6 +16,7 @@ import string
 import re
 import json
 import time
+from collections import Counter
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
@@ -51,6 +52,10 @@ def allowed_id(ID):
             extras = "[],T"
         elif ID.startswith('hgm'):
             extras = "AB"
+        elif ID.startswith('ec'):
+            extras = "CM"
+        elif ID.startswith('gg'):
+            extras = "T"
         else:
             extras = ""
         for c in extras:
@@ -545,6 +550,15 @@ def broken_links():
                            bad_code=bad_code,
                            bread=b)
 
+@knowledge_page.route("/orphans")
+def orphans():
+    orphans = knowldb.orphans()
+    b = get_bread([("Orphaned knowls", " ")])
+    return render_template("knowl-orphans.html",
+                           title="Orphaned knowls",
+                           orphans=orphans,
+                           bread=b)
+
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
     time = datetime_to_timestamp_in_ms(datetime.utcnow())
@@ -768,21 +782,17 @@ def index():
     from psycopg2 import DataError
     cur_cat = request.args.get("category", "")
 
-    filtermode = request.args.get("filtered")
     from .knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
-        qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
-        types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
+        data = request.form
     else:
-        qualities = request.args.getlist('qualities')
-        types = request.args.getlist('types')
+        data = request.args
+    qualities = [quality for quality in knowl_status_code if data.get(quality, "") == "on"]
+    if not qualities:
+        qualities = ["reviewed", "beta"]
 
-    if filtermode:
-        filters = [ q for q in qualities if q in knowl_status_code ]
-        types = [ typ for typ in types if typ in knowl_type_code ]
-        # If "in progress" requested, should add author = current_user.get_id()
-    else:
-        filters = []
+    types = [typ for typ in knowl_type_code if data.get(typ, "") == "on"]
+    if not types:
         types = ["normal"]
 
     search = request.args.get("search", "")
@@ -792,13 +802,25 @@ def index():
     if search:
         types = list(knowl_type_code)
     try:
-        knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+        # We omit the category so that we can compute the number of results in each category.
+        # Eventually it would be good to do the category filtering client-side
+        all_knowls = knowldb.search(filters=qualities, types=types, keywords=keywords, regex=regex)
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occured during knowl search", str(e))
+    categories = Counter()
+    if cur_cat:
+        # Always include the current category
+        categories[cur_cat] = 0
+    knowls = []
+    for k in all_knowls:
+        cat = k["id"].split(".")[0]
+        categories[cat] += 1
+        if cur_cat in ["", cat]:
+            knowls.append(k)
 
     def first_char(k):
         t = k['title']
@@ -830,14 +852,10 @@ def index():
                            bread=get_bread(b),
                            knowls=knowls,
                            search=search,
-                           searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
-                           qualities = qualities,
-                           searchmode=bool(search),
+                           qualities=qualities,
                            use_regex=regex,
-                           categories = knowldb.get_categories(),
-                           cur_cat = cur_cat,
-                           categorymode = bool(cur_cat),
-                           filtermode = filtermode,
+                           categories=categories,
+                           cur_cat=cur_cat,
                            knowl_types=list(knowl_type_code),
                            types=types)

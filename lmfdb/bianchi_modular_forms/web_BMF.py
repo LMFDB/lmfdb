@@ -100,15 +100,17 @@ class WebBMF(object):
                     return F(str(ap))
             self.hecke_eigs = [conv(str(ap)) for ap in self.hecke_eigs]
 
-        self.nap = len(self.hecke_eigs)
-        self.nap0 = min(50, self.nap)
-        self.hecke_table = [[web_latex(p.norm()),
-                             ideal_label(p),
-                             web_latex(p.gens_reduced()[0]),
-                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
         level = ideal_from_label(K,self.level_label)
         self.level_ideal2 = web_latex(level)
         badp = level.prime_factors()
+
+        self.nap = len(self.hecke_eigs)
+        self.nap0 = min(50, self.nap)
+        self.neigs = self.nap0 + len(badp)
+        self.hecke_table = [[web_latex(p.norm()),
+                             ideal_label(p),
+                             web_latex(p.gens_reduced()[0]),
+                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if not p in badp]
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),

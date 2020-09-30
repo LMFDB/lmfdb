@@ -40,7 +40,6 @@ class HomePageTest(LmfdbTest):
         self.check(homepage, "/L/", 'Dirichlet')
         self.check(homepage, "/L/", 'Symmetric square')
         self.check(homepage, "/L/", 'Genus 2 curve')
-        self.check(homepage, "/ModularForm/GL2/Q/holomorphic/", '633.1.m.b')
         self.check(homepage, "/EllipticCurve/Q/", 'by coefficients')
         self.check(homepage, "/NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')
 
@@ -62,3 +61,8 @@ class HomePageTest(LmfdbTest):
         self.check(homepage, "/universe", 'universe')
         # removed in PR #1167
         #self.check(homepage, "/knowledge/", 'Recently modified Knowls')
+
+    # test global random
+    def test_random(self):
+        L = self.tc.get("/random", follow_redirects=True)
+        assert "Properties" in L.get_data(as_text=True)
