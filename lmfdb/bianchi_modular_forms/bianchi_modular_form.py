@@ -7,13 +7,14 @@ from sage.all import latex
 
 from lmfdb import db
 from lmfdb.utils import (
-    to_dict, web_latex_ideal_fact, flash_error,
+    to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
     teXify_pol, search_wrap)
+from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl
+from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
@@ -58,7 +59,7 @@ def index():
     submitting a jump or search button from that page) we hand over to
     the function bianchi_modular_form_search().
     """
-    info = to_dict(request.args, search_array=BMFSearchArray())
+    info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
         gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
@@ -92,6 +93,12 @@ def interesting():
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
+
+@bmf_page.route("/stats")
+def statistics():
+    title = "Bianchi modular forms: statistics"
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=BianchiStats(), credit=bianchi_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 def bianchi_modular_form_jump(info):
     label = info['jump'].strip()
@@ -459,3 +466,77 @@ class BMFSearchArray(SearchArray):
             [field, level, dimension],
             [sign, base_change, CM]
         ]
+
+label_finder = re.compile(r"label=([0-9.]+)")
+def field_formatter(label):
+    # Need to accept the output of nf_display_knowl
+    if label[0] == '<':
+        print(label)
+        label = label_finder.findall(label)[0]
+        print(label)
+    return nf_display_knowl(label, field_pretty(label))
+def field_sortkey(label):
+    D = int(label.split(".")[2])
+    return D
+
+class BianchiStats(StatsDisplay):
+    table = db.bmf_forms
+    baseurl_func = ".index"
+
+    stat_list = [
+        {'cols': ['field_label', 'level_norm'],
+         'top_title': '%s by %s and %s' % (
+             display_knowl("mf.bianchi.bianchimodularforms",
+                           "Bianchi modular forms"),
+             display_knowl('nf', 'base field'),
+             display_knowl('mf.bianchi.level', 'level norm')),
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total},
+        {'cols': ['field_label', 'level_norm'],
+         'top_title': '%s by %s and %s' % (
+             display_knowl("mf.bianchi.spaces",
+                           "cusp spaces"),
+             display_knowl('nf', 'base field'),
+             display_knowl('mf.bianchi.level', 'level norm')),
+         'table': db.bmf_dims,
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total},
+        {'cols': ['dimension', 'level_norm'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_col_total},
+        {'cols': ['dimension', 'field_label'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_col_total},
+    ]
+
+    buckets = {'level_norm': ['1-100', '101-1000', '1001-10000', '10001-50000', '50001-100000', '100001-150000']}
+
+    knowls = {'level_norm': 'mf.bianchi.level',
+              'dimension': 'mf.bianchi.spaces',
+              'field_label': 'nf'}
+    formatters = {'field_label': field_formatter}
+    sort_keys = {'field_label': field_sortkey}
+    top_titles = {'dimension': 'newform dimensions'}
+    short_display = {'field_label': 'base field'}
+
+    def __init__(self):
+        self.nforms = db.bmf_forms.count()
+        self.ndims = db.bmf_dims.count()
+        self.nformfields = len(db.bmf_forms.distinct('field_label'))
+        self.ndimfields = len(db.bmf_dims.distinct('field_label'))
+
+    @property
+    def summary(self):
+        return r"The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  It also contains %s %s over %s imaginary quadratic fields (including all with class number one)." % (
+            comma(self.nforms),
+            display_knowl("mf.bianchi.bianchimodularforms",
+                          "Bianchi modular forms"),
+            self.nformfields,
+            comma(self.ndims),
+            display_knowl("mf.bianchi.spaces",
+                          "spaces of cusp forms"),
+            self.ndimfields)
+
+    @property
+    def short_summary(self):
+        return r'The database currently contains %s %s of weight 2 over several imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), url_for(".statistics"))
