@@ -13,7 +13,6 @@ from lmfdb.utils import (
     teXify_pol, search_wrap)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.bianchi_modular_forms import bmf_page
