@@ -470,9 +470,7 @@ label_finder = re.compile(r"label=([0-9.]+)")
 def field_formatter(label):
     # Need to accept the output of nf_display_knowl
     if label[0] == '<':
-        print(label)
         label = label_finder.findall(label)[0]
-        print(label)
     return nf_display_knowl(label, field_pretty(label))
 def field_sortkey(label):
     D = int(label.split(".")[2])
