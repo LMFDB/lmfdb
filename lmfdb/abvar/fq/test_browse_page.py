@@ -171,7 +171,7 @@ class AVHomeTest(LmfdbTest):
         # [3.5.ah_y_ach,*]
         self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_qb")
         self.check_args("/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1", "6.2.ag_p_aw_bh_acu_ey")
-        self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "all 5 matches")
+        self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "5 matches")
 
     def test_search_numberfield(self):
         r"""
