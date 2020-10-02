@@ -39,9 +39,15 @@ def latex_tor(t):
         return "$C_{%s}$" % t
     else:
         return r"$C_{%s} \times C_{%s}$" % t
-def tor_sort_key(t):
+
+def tor_invs(t):
     if isinstance(t, str):
-        t = [int(x) for x in re.findall(r"\d+", t)]
+        return [int(x) for x in re.findall(r"\d+", t)]
+    else:
+        return t
+
+def tor_sort_key(t):
+    t = tor_invs(t)
     return (prod(t), len(t))
 
 class ECNF_stats(StatsDisplay):
@@ -63,7 +69,10 @@ class ECNF_stats(StatsDisplay):
 
     buckets = {'conductor_norm': ['1-100', '101-1000', '1001-10000', '10001-50000', '50001-100000', '100001-150000']}
     formatters = {'torsion_structure': latex_tor}
-    query_formatters = {'degree': (lambda x: 'bf_deg=%s' % x)}
+    query_formatters = {
+        'degree': (lambda x: 'bf_deg=%s' % x),
+        'torsion_structure': (lambda x: 'torsion_structure=%s' % (str(tor_invs(x)).replace(" ","")))
+    }
     sort_keys = {'torsion_structure': tor_sort_key}
 
     knowls = {'degree': 'nf.degree',
