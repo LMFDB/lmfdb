@@ -317,6 +317,16 @@ def render_bmf_space_webpage(field_label, level_label):
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
+@bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
+def render_bmf_webpage_download(**args):
+    if args['download_type'] == 'sage':
+        pass # TODO
+
+def download_bmf_sage(**args):
+    label = "-".join([args['field_label'],args['level_label'],args['label_suffix']])
+    F = WebNumberField(args['field_label'])
+    data = WebBMF.by_label(label)
+
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
     label = "-".join([field_label, level_label, label_suffix])
