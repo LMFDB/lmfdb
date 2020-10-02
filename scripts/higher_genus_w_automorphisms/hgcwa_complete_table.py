@@ -1,11 +1,6 @@
 from lmfdb import db
 import math
 
-# sage -python
-# from lmfdb import db
-# from scripts.higher_genus_w_automorphisms.hgcwa_complete_table import create_file
-# create_file()
-
 def create_file():
     f = open('scripts/higher_genus_w_automorphisms/hgcwa_complete.txt', 'x')
     col_names = 'genus|g0_gt0_compute|top_braid_compute|top_braid_g0_gt0|num_families|num_refined_pp|num_gen_vectors|num_unique_groups\n'

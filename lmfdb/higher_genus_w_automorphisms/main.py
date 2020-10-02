@@ -207,14 +207,8 @@ def interesting():
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
-    #info = {
-       # 'stats': get_stats().stats(),
-        #'bounds': get_stats().bounds()
-    #}
     title = 'Families of higher genus curves with automorphisms: Statistics'
     bread = get_bread('Statistics')
-
-#    return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
    
     return render_template("hgcwa-stats.html", info=get_stats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
