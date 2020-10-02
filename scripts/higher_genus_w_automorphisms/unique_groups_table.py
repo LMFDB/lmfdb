@@ -58,7 +58,7 @@ def compute_ug_data():
                 labels = hgcwa.distinct('label', {'genus':genus, 'g0':{'$gt':0}, 'group': grp})
                 g0_list = print_list(hgcwa.distinct('g0', {'genus':genus, 'g0':{'$gt':0}, 'group': grp}))
                 if comp_info['top_braid_g0_gt0']:
-                    topological = braids = 0
+                    topological = braid = 0
                     for label in labels:
                         topological += len(hgcwa.distinct('topological', {'label': label}))
                         braid += len(hgcwa.distinct('braid', {'label': label}))

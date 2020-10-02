@@ -1,13 +1,8 @@
 # based on /lmfdb/elliptic_curves/ec_stats.py
-# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus
+# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus, Kevin Wang
 
-
-import re
 from flask import url_for
-from lmfdb.app import app
 from lmfdb import db
-from sage.all import UniqueRepresentation, cached_method
-from lmfdb.logger import make_logger
 
 from lmfdb.utils import comma, display_knowl, StatsDisplay
 
