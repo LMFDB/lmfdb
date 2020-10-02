@@ -230,9 +230,9 @@ def groups_per_genus(genus):
     gp_data = un_grps.search({'genus':genus},projection=['group','g0_is_gt0','g0_gt0_list','gen_vectors','topological','braid'],info=info)
 
     
-    # Make list groups_0 where each entry is a list [iso_class, group, gen_vectors, tops, braids
+    # Make list groups_0 where each entry is a list [ group, gen_vectors, tops, braids
     groups_0 = []       
-    # Make list groups_gt0 where each entry is a list [iso_class, group, gen_vectors]
+    # Make list groups_gt0 where each entry is a list [group, gen_vectors]
     groups_gt0 = []
 
     complete_info=db.hgcwa_complete.lucky({'genus':genus})
@@ -240,18 +240,15 @@ def groups_per_genus(genus):
     show_g0_gt0 = complete_info['g0_gt0_compute']
     
     for dataz in gp_data:
-        group = str(dataz['group'])
-      #  iso_class = group_display(group)
+        group =dataz['group']
+        group_str = str(dataz['group'])
+        iso_class = sg_pretty(str(group[0])+"."+str(group[1]))
         if dataz['g0_is_gt0']:
-        #    groups_gt0.append([iso_class, group, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
-            groups_gt0.append([group, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
+            groups_gt0.append([iso_class,group_str, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
         elif not show_top_braid:
-          #  groups_0.append([iso_class, group, dataz['gen_vectors']]) 
-            groups_0.append([ group, dataz['gen_vectors']]) 
-            
+            groups_0.append([ iso_class,group_str, dataz['gen_vectors']])             
         else:    
-          #  groups_0.append([iso_class, group, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
-            groups_0.append([group, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
+            groups_0.append([iso_class,group_str, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
 
     info = {
         'genus': genus,

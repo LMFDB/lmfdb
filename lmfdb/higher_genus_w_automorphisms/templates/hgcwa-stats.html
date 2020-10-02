@@ -71,7 +71,7 @@ table.ntdata td {
         <th>maximum group order</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.groups[1])}}>{{genus.groups[1]}}</a>
+	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.max_grp_order)}}>{{genus.max_grp_order}}</a>
         </td>
         {% endfor %}
       </tr>
@@ -311,31 +311,6 @@ table.ntdata td {
 {% endfor %}
 
 
-{#
-<h2> Distribution by dimension </h2>
-{% for i in range(0, dim_detail | length, max_cols) %}
-<div>
-  <table border=0 cellpadding=3 class="ntdata">
-    <thead>
-      <tr>
-        <th>Dimension</th>
-        {% for dim in dim_detail[i:i+max_cols] %}
-        <th class="center">{{dim.dim_num}}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>distinct generating vectors</th>
-        {% for dim in dim_detail[i:i+max_cols] %}
-        <td>{{dim.gen_vectors}}</td>
-        {% endfor %}
-      </tr>
-    </tbody>
-  </table>
-</div>
-{% endfor %}
-#}
 
 
 {% endblock %}
