@@ -2,9 +2,11 @@
 {% block content %}
 
 {% set max_cols = 10 %}
-{% set genus_detail = info.stats.genus_detail %}
+{% set genus_detail = info.by_genus_data %}
+
+{#
 {% set dim_detail = info.stats.dim_detail %}
-{% set bounds = info.bounds %}
+#}
 
 <style>
 table.ntdata th.center {
@@ -18,7 +20,7 @@ table.ntdata td {
 
 <div>
   <p>
-    {{hgcwa_stats_summary() | safe}}
+    {{info.summary | safe}}
   </p>
 </div>
 
@@ -40,20 +42,20 @@ table.ntdata td {
       <tr>
         <th>distinct families</th>
         {% for genus in genus_detail[i:i+max_cols] %}
-        <td>{{genus.families}}</td>
+        <td>{{genus.num_families[0]}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>distinct refined passports</th>
         {% for genus in genus_detail[i:i+max_cols] %}
-        <td>{{genus.refined_passports}}</td>
+        <td>{{genus.num_refined_pp[0]}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>distinct generating vectors</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-          {{genus.gen_vectors}}
+          {{genus.num_gen_vectors[0]}}
         </td>
         {% endfor %}
       </tr>
@@ -61,7 +63,7 @@ table.ntdata td {
         <th>unique groups</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
+          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.num_unique_groups}}</a>
         </td>
         {% endfor %}
       </tr>
@@ -89,21 +91,24 @@ table.ntdata td {
     <tr class="space">
       <th class="spaceleft">Genus</th>
       {% for i in range(0, genus_detail | length) %}
-      <th class="level">{{bounds.genus_min + i}}</th>
+      <th class="level">{{2 + i}}</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    {% for g0 in range(0, info.g0_max + 1) %}
     <tr>
       <th class="left">{{g0}}</th>
       {% for j in range(0, genus_detail | length) %}
-      {% set genus = bounds.genus_min + j %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
       <td class="center">
-        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
         -
         {% else %}
-        {{genus_detail[j].g0_counts.families[g0]}}
+        {{genus_detail[j].num_families[index]}}
         {% endif %}
       </td>
       {% endfor %}
@@ -122,21 +127,24 @@ table.ntdata td {
     <tr class="space">
       <th class="spaceleft">Genus</th>
       {% for i in range(0, genus_detail | length) %}
-      <th class="level">{{bounds.genus_min + i}}</th>
+      <th class="level">{{2 + i}}</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    {% for g0 in range(0, info.g0_max + 1) %}
     <tr>
       <th class="left">{{g0}}</th>
       {% for j in range(0, genus_detail | length) %}
-      {% set genus = bounds.genus_min + j %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
       <td class="center">
-        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
         -
         {% else %}
-        {{genus_detail[j].g0_counts.refined_passports[g0]}}
+        {{genus_detail[j].num_refined_pp[index]}}
         {% endif %}
       </td>
       {% endfor %}
@@ -155,21 +163,24 @@ table.ntdata td {
     <tr class="space">
       <th class="spaceleft">Genus</th>
       {% for i in range(0, genus_detail | length) %}
-      <th class="level">{{bounds.genus_min + i}}</th>
+      <th class="level">{{2 + i}}</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for g0 in range(bounds.g0_min, bounds.g0_max + 1) %}
+    {% for g0 in range(0, info.g0_max + 1) %}
     <tr>
       <th class="left">{{g0}}</th>
       {% for j in range(0, genus_detail | length) %}
-      {% set genus = bounds.genus_min + j %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
       <td class="center">
-        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) or (genus >=5 and g0 >= 1) %}
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
         -
         {% else %}
-        {{genus_detail[j].g0_counts.gen_vectors[g0]}}
+        {{genus_detail[j].num_gen_vectors[index]}}
         {% endif %}
       </td>
       {% endfor %}
@@ -280,6 +291,27 @@ table.ntdata td {
 #}
 
 
+{# Taken from display_stats.html #}
+{% for d in info.distributions %}
+
+{% if d.attribute.top_title %}
+<h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{ d.attribute.top_title | safe }}</h2>
+{% endif %}
+{% for paragraph in d.attribute.intro %}
+<p>{{paragraph}}</p>
+{% endfor %}
+
+
+{% if (d.attribute.cols | length) == 1 %}
+{% include 'stat_1d.html' %}
+{% else %}
+{% include 'stat_2d.html' %}
+{% endif %}
+
+{% endfor %}
+
+
+{#
 <h2> Distribution by dimension </h2>
 {% for i in range(0, dim_detail | length, max_cols) %}
 <div>
@@ -303,5 +335,7 @@ table.ntdata td {
   </table>
 </div>
 {% endfor %}
+#}
+
 
 {% endblock %}
