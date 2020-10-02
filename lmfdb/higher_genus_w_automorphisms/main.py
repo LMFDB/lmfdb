@@ -19,6 +19,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
@@ -62,11 +63,13 @@ def split_vector_label(lab):
 credit = 'Jen Paulhus, using group and signature data originally computed by Thomas Breuer'
 
 
-def get_bread(breads=[]):
-    bc = [("Higher genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
-    return bc
+def get_bread(tail=[]):
+    base = [("Higher genus", url_for(".index")),
+            ("C", url_for(".index")),
+            ("Aut", url_for(".index"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -89,7 +92,7 @@ def tfTOyn(bool):
 def group_display(strg):
     return sg_pretty(re.sub(hgcwa_group, r'\1.\2', strg))
 
-    
+
 def sign_display(L):
     sizeL = len(L)
     if sizeL == 1:
@@ -188,6 +191,19 @@ def random_passport():
     label = db.hgcwa_passports.random(projection='passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
+@higher_genus_w_automorphisms_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "curve.highergenus.aut",
+        db.hgcwa_passports,
+        url_for_label,
+        label_col="label",
+        title=r"Some interesting higher genus families",
+        bread=get_bread("Interesting"),
+        credit=credit,
+        learnmore=learnmore_list()
+    )
+
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
@@ -195,8 +211,8 @@ def statistics():
         'bounds': get_stats().bounds()
     }
     title = 'Families of higher genus curves with automorphisms: Statistics'
-    bread = get_bread([('Statistics', ' ')])
-   
+    bread = get_bread('Statistics')
+
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
@@ -602,8 +618,8 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
         shortcuts={'jump': higher_genus_w_automorphisms_jump,
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
-        bread=lambda: get_bread([("Search results",'')]),
-        learnmore=learnmore_list,     
+        bread=lambda: get_bread("Search results"),
+        learnmore=learnmore_list,
         credit=lambda: credit)
 def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
@@ -749,7 +765,10 @@ def render_family(args):
         bread_sign = label_to_breadcrumbs(br_sign)
         bread_gp = label_to_breadcrumbs(br_gp)
 
-        bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
+        bread = get_bread([(br_g, './?genus='+br_g),
+                           ('$'+pretty_group+'$',
+                            './?genus='+br_g + '&group='+bread_gp),
+                           (bread_sign,' ')])
 
         if len(Ltopo_rep) == 0 or len(dataz) == 1:
             downloads = [('Code to Magma', url_for(".hgcwa_code_download", label=label, download_type='magma')),
@@ -765,6 +784,7 @@ def render_family(args):
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
+                               KNOWL_ID="curve.highergenus.aut.%s" % label,
                                learnmore=learnmore_list(), downloads=downloads, credit=credit)
 
 
@@ -963,6 +983,7 @@ def render_passport(args):
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                learnmore=learnmore_list(), downloads=downloads,
+                               KNOWL_ID="curve.highergenus.aut.%s" % label,
                                credit=credit)
 
 
@@ -1032,7 +1053,7 @@ def search_input_error(info, bread):
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of higher genus curve with automorphisms data'
-    bread = get_bread([("Completeness", )])
+    bread = get_bread("Completeness")
     return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
                            title=t,
                            bread=bread,
@@ -1043,7 +1064,7 @@ def completeness_page():
 @higher_genus_w_automorphisms_page.route("/Labels")
 def labels_page():
     t = 'Labels for higher genus curves with automorphisms'
-    bread = get_bread([("Labels", '')])
+    bread = get_bread("Labels")
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
                            learnmore=learnmore_list_remove('Label'),
                            title=t,
@@ -1054,7 +1075,7 @@ def labels_page():
 @higher_genus_w_automorphisms_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of higher genus curve with automorphisms data'
-    bread = get_bread([("Reliability", '')])
+    bread = get_bread("Reliability")
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.reliability',
                            title=t,
@@ -1066,7 +1087,7 @@ def reliability_page():
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
     t = 'Source of higher genus curve with automorphisms data'
-    bread = get_bread([("Source", '')])
+    bread = get_bread("Source")
     return render_template("single.html",
                            kid='dq.curve.highergenus.aut.source',
                            title=t,

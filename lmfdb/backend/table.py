@@ -991,26 +991,27 @@ class PostgresTable(PostgresBase):
         start = time.time()
         count = 0
         tot = self.count(query)
+        sep = kwds.get("sep", u"|")
         try:
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u"|".join(search_cols) + u"\n")
+                    searchfile.write(sep.join(search_cols) + u"\n")
                     searchfile.write(
-                        u"|".join(self.col_type.get(col) for col in search_cols)
+                        sep.join(self.col_type.get(col) for col in search_cols)
                         + u"\n\n"
                     )
                     if self.extra_table is not None:
-                        extrafile.write(u"|".join(extra_cols) + u"\n")
+                        extrafile.write(sep.join(extra_cols) + u"\n")
                         extrafile.write(
-                            u"|".join(self.col_type.get(col) for col in extra_cols)
+                            sep.join(self.col_type.get(col) for col in extra_cols)
                             + u"\n\n"
                         )
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
                         searchfile.write(
-                            u"|".join(
+                            sep.join(
                                 tostr_func(processed.get(col), self.col_type[col])
                                 for col in search_cols
                             )
@@ -1018,7 +1019,7 @@ class PostgresTable(PostgresBase):
                         )
                         if self.extra_table is not None:
                             extrafile.write(
-                                u"|".join(
+                                sep.join(
                                     tostr_func(processed.get(col), self.col_type[col])
                                     for col in extra_cols
                                 )
@@ -1823,7 +1824,7 @@ class PostgresTable(PostgresBase):
             ),
             [self.search_table],
         ).fetchone()
-        table = PostgresTable(self._db, *tabledata)
+        table = self._db._search_table_class_(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
