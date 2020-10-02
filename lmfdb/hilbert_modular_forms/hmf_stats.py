@@ -36,11 +36,11 @@ class HMFstats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return "The database currently contains %s Hilbert modular forms over fields up to degree %s.  Here are some <a href='%s'>further statistics</a>." % (comma(self.nforms), self.counts()["maxdeg"], url_for(".statistics"))
+        return self.summary + "  Here are some <a href='%s'>further statistics</a>." % (url_for(".statistics"),)
 
     @property
     def summary(self):
-        return self.short_summary
+        return "The database currently contains %s Hilbert modular forms over fields up to degree %s." % (comma(self.nforms), self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
