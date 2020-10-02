@@ -467,10 +467,13 @@ class BMFSearchArray(SearchArray):
         ]
 
 label_finder = re.compile(r"label=([0-9.]+)")
-def field_formatter(label):
-    # Need to accept the output of nf_display_knowl
+def field_unformatter(label):
     if label[0] == '<':
         label = label_finder.findall(label)[0]
+    return label
+def field_formatter(label):
+    # Need to accept the output of nf_display_knowl
+    label = field_unformatter(label)
     return nf_display_knowl(label, field_pretty(label))
 def field_sortkey(label):
     D = int(label.split(".")[2])
@@ -512,6 +515,7 @@ class BianchiStats(StatsDisplay):
               'dimension': 'mf.bianchi.spaces',
               'field_label': 'nf'}
     formatters = {'field_label': field_formatter}
+    query_formatters = {'field_label': (lambda x: 'field_label=%s' % (field_unformatter(x)))}
     sort_keys = {'field_label': field_sortkey}
     top_titles = {'dimension': 'newform dimensions'}
     short_display = {'field_label': 'base field'}
