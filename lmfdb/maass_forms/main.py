@@ -288,6 +288,7 @@ class MaassStats(StatsDisplay):
               'spectral_parameter': 'mf.maass.mwf.spectralparameter',
               'symmetry': 'mf.maass.mwf.symmetry'}
     formatters = {'symmetry': (lambda t: 'odd' if t in [-1, '-1'] else 'even')}
+    query_formatters = {'symmetry': (lambda t: 'symmetry=%s' % (1 if t in [1, '1', 'even'] else -1))}
 
     def __init__(self):
         self.nforms = db.maass_newforms.count()
