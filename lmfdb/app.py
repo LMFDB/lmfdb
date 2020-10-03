@@ -721,6 +721,7 @@ WhiteListedRoutes = [
     'management',
     'news',
     'not_yet_implemented',
+    'random',
     'robots.txt',
     'search',
     'sitemap',
