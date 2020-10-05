@@ -41,7 +41,7 @@ class HMFstats(StatsDisplay):
 
     @property
     def summary(self):
-        return "The database currently contains %s Hilbert modular forms over fields up to degree %s." % (comma(self.nforms), self.counts()["maxdeg"])
+        return "The database currently contains %s %s over fields up to degree %s." % (comma(self.nforms), display_knowl('mf.hilbert', 'Hilbert modular forms'), self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
