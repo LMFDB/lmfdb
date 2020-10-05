@@ -2,6 +2,7 @@
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
+from lmfdb.utils.utilities import display_knowl
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl

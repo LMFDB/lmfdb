@@ -331,6 +331,8 @@ class GalSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
+    jump_knowl = "gg.search_input"
+    jump_prompt = "Label, name, or identifier"
     def __init__(self):
         parity = ParityBox(
             name="parity",

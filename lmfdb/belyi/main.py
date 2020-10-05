@@ -720,6 +720,8 @@ class BelyiSearchArray(SearchArray):
     plural_noun = "maps"
     jump_example = "4T5-4_4_3.1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"
+    jump_knowl = "belyi.search_input"
+    jump_label = "Label"
     def __init__(self):
         deg = TextBox(
             name="deg",

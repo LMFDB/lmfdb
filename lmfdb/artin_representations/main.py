@@ -469,6 +469,8 @@ class ArtinSearchArray(SearchArray):
     plural_noun = "representations"
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"
+    jump_knowl = "artin.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         dimension = TextBox(
             name="dimension",
