@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-  {{ ecnf_summary()|safe}}
+  {{ info.stats.short_summary | safe}}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
@@ -44,6 +44,7 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
 <p></p>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
+  <p>&nbsp;&nbsp;*The rank is not known for many curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
 </form>
 
 
