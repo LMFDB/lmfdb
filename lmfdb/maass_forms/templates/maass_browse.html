@@ -2,7 +2,7 @@
 {% block content %}
 
 <div>
-The database contains {{dbcount}} {{KNOWL('mf.maass.mwf.weight0','Maass forms')}} of weight 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to 997.
+  {{ info.stats.short_summary | safe }}
 </div>
 
 <h2>Browse Maass forms of weight 0 on </h2>

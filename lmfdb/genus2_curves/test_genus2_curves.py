@@ -218,10 +218,10 @@ class Genus2Test(LmfdbTest):
 
     # tests for searching by geometric invariants
     def test_igusa_clebsch_search(self):
-        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_clebsch_inv&geometric_invariants=[1824%2C179520%2C140795904%2C207474688]')
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants_type=igusa_clebsch_inv&geometric_invariants=[456%2C11220%2C2199936%2C202612]')
         assert '1369.a.50653.1' in L.get_data(as_text=True)
         assert '169.a.169.1' not in L.get_data(as_text=True)
-        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants=[1824%2C179520%2C140795904%2C207474688]')
+        L = self.tc.get('/Genus2Curve/Q/?geometric_invariants=[456%2C11220%2C2199936%2C202612]')
         assert '1369.a.50653.1' in L.get_data(as_text=True)
         assert '169.a.169.1' not in L.get_data(as_text=True)
 

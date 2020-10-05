@@ -48,7 +48,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_quo_genus_search(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=3&g0=1..3')
-        assert 'displaying all 10 matches' in L.get_data(as_text=True)
+        assert '10 matches' in L.get_data(as_text=True)
 
     def idG_showing(self):
         L = self.tc.get('/HigherGenus/C/Aut/2.2-1.1.2-2.1')

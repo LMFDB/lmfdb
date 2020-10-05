@@ -553,7 +553,7 @@ def browse():
 
 @hmf_page.route("/stats")
 def statistics():
-    title = r'Hilbert modular forms: Statistics'
+    title = r'Hilbert modular forms: statistics'
     bread = get_bread("Statistics")
     return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
 

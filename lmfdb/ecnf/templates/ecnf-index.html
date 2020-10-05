@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-  {{ ecnf_summary()|safe}}
+  {{ info.stats.short_summary | safe}}
 </div>
 
 <h2> Browse </h2>
@@ -42,6 +42,8 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   <span class="errmsg">{{err_msg}}</span>
   {% endif %}
 </form>
+
+<p>&nbsp;&nbsp;*The rank is not known for many curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
 
 {% if DEBUG %}
 <hr>
