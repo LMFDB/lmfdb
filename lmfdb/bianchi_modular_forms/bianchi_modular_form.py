@@ -325,7 +325,11 @@ def render_bmf_webpage_download(**args):
 def download_bmf_sage(**args):
     label = "-".join([args['field_label'],args['level_label'],args['label_suffix']])
     F = WebNumberField(args['field_label'])
-    data = WebBMF.by_label(label)
+    try:
+        data = WebBMF.by_label(label)
+    except ValueError:
+        flash_error("No Bianchi modular form in the database has label %s", label)
+        return "// No Bianchi modular form in the database has label %s"
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
