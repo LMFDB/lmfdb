@@ -22,7 +22,7 @@
 </p>
 {% endif %}
 
-<h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
+<h2> Browse </h2>
 
 <p>
 By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
@@ -45,22 +45,19 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 <p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a>
 </p>
 
-
-
-<h2> Find a specific {{ KNOWL('lattice.definition', title='integral lattice') }} by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
-
-<form>
-<input type='text' name='label' placeholder='3.4.8.1.2'>
-<button type='submit'>Label</button>
-<br><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span>
-</form>
-
 <h2> Search </h2>
-
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+<table><tr><td>{{KNOWL('lattice.search_input','Label or name')}}</td><td>
+<input type='text' name='label' placeholder='3.4.8.1.2'></td><td>
+<button type='submit'>Label</button></td></tr>
+<tr><td colspan="2"><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span></td></tr></table>
+</form>
 
 {% endblock %}

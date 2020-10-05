@@ -7,7 +7,7 @@
 {{KNOWL_INC("artin.extent", title = "")}}
 </div>
 
-<h2>Browse {{KNOWL('artin', title="Artin representations")}}</h2>
+<h2>Browse</h2>
 
 <p>
 By {{ KNOWL('artin.dimension',title="dimension") }}:
@@ -43,36 +43,16 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 Some <a href="{{url_for('.interesting')}}">interesting Artin representations</a> or a <a href="{{url_for('.random_representation')}}">random Artin representation</a>
 </p>
 
-<h2>Find a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
-<h2> Search for an Artin representation </h2>
+<h2> Search </h2>
 
 <form id="search" onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
-{# 
-    <br>
-    This index/search page is not done. The main reason is that it is not fully clear to me yet how people might want to search on Artin representations.
-    
-Meanwhile, here are some examples. You can browse more of them by directly changing the url, or by accessing them from the number field pages (bottom).
-However, the database only include a very thin slice of the data that will be available in the end, so it s likely you will follow broken links. 
 
-<table>
-    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=1,index=1)}}>Artin representation of dimension 1, conductor 1 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_data', dim=1,conductor=17,index=1)}}>Artin representation of dimension 1, conductor 17 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=17)}}>Artin representations of dimension 1 and conductor 17 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_data', dim = 3, conductor = 113337, index = 1 )}}>Artin representation of dimension 3, conductor 1133337 and index 1</a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=1,conductor=1)}}>Artin representations of dimension 1 and conductor 1 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=2,conductor=22356)}}>Artin representations of dimension 2 and conductor 22356 </a></td></tr>
-    <tr><td><a href = {{url_for('.by_partial_data', dim=4,conductor=136480336)}}>Artin representations of dimension 4 and conductor 136480336 </a></td></tr>
-    
-</table>
+<h2>Find</h2>
 
-#}
-
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

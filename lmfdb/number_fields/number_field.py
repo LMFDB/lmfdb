@@ -971,6 +971,8 @@ class NFSearchArray(SearchArray):
     plural_noun = "fields"
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
+    jump_knowl = "nf.search_input"
+    jump_prompt = "Label, name, or polynomial"
     def __init__(self):
         degree = TextBox(
             name="degree",
