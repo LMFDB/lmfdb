@@ -2,6 +2,7 @@
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
+from lmfdb.utils.utilities import display_knowl
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -40,7 +41,7 @@ class HMFstats(StatsDisplay):
 
     @property
     def summary(self):
-        return "The database currently contains %s Hilbert modular forms over fields up to degree %s." % (comma(self.nforms), self.counts()["maxdeg"])
+        return "The database currently contains %s %s over fields up to degree %s." % (comma(self.nforms), display_knowl('mf.hilbert', 'Hilbert modular forms'), self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)

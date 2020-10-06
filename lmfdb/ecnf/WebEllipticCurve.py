@@ -390,7 +390,13 @@ class ECNF(object):
         self.cm_bool = "no"
         self.End = r"\(\Z\)"
         if self.cm:
-            self.rational_cm = K(self.cm).is_square()
+            # When we switch to storing rational cm by having |D| in
+            # the column, change the following lines:
+            if self.cm>0:
+                self.rational_cm = True
+                self.cm = -self.cm
+            else:
+                self.rational_cm = K(self.cm).is_square()
             self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -512,11 +518,11 @@ class ECNF(object):
         # Isogeny information
 
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        isodegs = [str(d) for d in self.isodeg if d>1]
         if len(isodegs)<3:
-            self.isogeny_degrees = " and ".join(isodegs)
+            self.isodeg = " and ".join(isodegs)
         else:
-            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+            self.isodeg = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
 
 
         sig = self.signature
