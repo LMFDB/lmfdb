@@ -390,10 +390,10 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 <div>
   <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
-{% if ec.isogeny_degrees %}
+{% if ec.isodeg %}
 This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
 (excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
-{{ ec.isogeny_degrees}}.
+{{ ec.isodeg}}.
 <br>
 Its {{KNOWL('ec.isogeny_class','isogeny class')}}
 <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
