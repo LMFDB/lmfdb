@@ -5,8 +5,7 @@
   {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
-  modular forms') }} </h2>
+<h2> Browse </h2>
 
 <p>
 Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
@@ -34,18 +33,16 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 
 <p>Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></p>
 
-
-<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}
