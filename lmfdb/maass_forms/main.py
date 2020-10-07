@@ -5,10 +5,12 @@ from lmfdb import db
 from flask import render_template, request, url_for, redirect, abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
-    SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict,
+    SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
+from lmfdb.utils.utilities import display_knowl
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import WebMaassForm, MaassFormDownloader, character_link, symmetry_pretty, fricke_pretty
 from sage.all import gcd
@@ -37,8 +39,8 @@ credit_string = "David Farmer, Stefan Lemurell, Fredrik Stromberg, and Holger Th
 
 @maass_page.route('/')
 def index():
-    info = to_dict(request.args, search_array=MaassSearchArray())
-    if len(info) > 1:
+    info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
+    if request.args:
         return search(info)
     title = 'Maass forms'
     bread = bread_prefix()
@@ -61,6 +63,12 @@ def interesting():
         bread=bread_prefix() + [("Interesting", " ")],
         learnmore=learnmore_list()
     )
+
+@maass_page.route("/stats")
+def statistics():
+    title = "Maass forms: statistics"
+    bread = bread_prefix() + [("Statistics", " ")]
+    return render_template("display_stats.html", info=MaassStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 @maass_page.route('/<label>')
 def by_label(label):
@@ -255,3 +263,42 @@ def search_by_label(label):
                            title=mf.title,
                            friends=mf.friends,
                            KNOWL_ID="mf.maass.mwf.%s"%mf.label)
+
+class MaassStats(StatsDisplay):
+    table = db.maass_newforms
+    baseurl_func = ".index"
+
+    stat_list = [
+        {'cols': ['level', 'spectral_parameter'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total},
+        {'cols': ['symmetry', 'level'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_col_total},
+        {'cols': ['symmetry', 'spectral_parameter'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_col_total},
+    ]
+
+    top_titles = {'symmetry': 'symmetries'}
+
+    buckets = {'level': ['1', '2-13', '14-20', '21-30', '31-100', '101-997'],
+               'spectral_parameter': ['0-1', '1-2', '2-3', '3-4', '4-6', '6-10', '10-20', '20-32', '32-50']}
+
+    knowls = {'level': 'mf.maass.mwf.level',
+              'spectral_parameter': 'mf.maass.mwf.spectralparameter',
+              'symmetry': 'mf.maass.mwf.symmetry'}
+    formatters = {'symmetry': (lambda t: 'odd' if t in [-1, '-1'] else 'even')}
+    query_formatters = {'symmetry': (lambda t: 'symmetry=%s' % (1 if t in [1, '1', 'even'] else -1))}
+
+    def __init__(self):
+        self.nforms = db.maass_newforms.count()
+        self.max_level = db.maass_newforms.max('level')
+
+    @property
+    def short_summary(self):
+        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
+
+    @property
+    def summary(self):
+        return r"The database currently contains %s %s of %s 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to %s." % (comma(self.nforms), display_knowl('mf.maass.mwf', 'Maass forms'), display_knowl('mf.maass.mwf.weight', 'weight'), self.max_level)

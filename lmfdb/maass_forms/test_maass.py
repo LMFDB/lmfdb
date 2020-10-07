@@ -8,7 +8,7 @@ from lmfdb.tests import LmfdbTest
 class MaassTest(LmfdbTest):
     def test_index(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/")
-        assert 'database contains' in L.get_data(as_text=True)
+        assert 'database currently contains' in L.get_data(as_text=True)
 
     def test_browse_1_10_0_10(self):
         L = self.tc.get("https://blue.lmfdb.xyz/ModularForm/GL2/Q/Maass/BrowseGraph/1/10/0/10/")

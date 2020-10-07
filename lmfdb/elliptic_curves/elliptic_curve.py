@@ -636,6 +636,8 @@ class ECSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
+    jump_prompt = "Label or coefficients"
+    jump_knowl = "ec.q.search_input"
     def __init__(self):
         cond = TextBox(
             name="conductor",

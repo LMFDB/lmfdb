@@ -173,7 +173,7 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    info = to_dict(request.args, search_array=ECNFSearchArray())
+    info = to_dict(request.args, search_array=ECNFSearchArray(), stats=ECNF_stats())
     if request.args:
         return elliptic_curve_search(info)
     bread = get_bread()
@@ -256,6 +256,12 @@ def interesting():
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
+
+@ecnf_page.route("/stats")
+def statistics():
+    title = "Elliptic curves: statistics"
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=ECNF_stats(), credit=ecnf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
@@ -480,6 +486,7 @@ def elliptic_curve_search(info, query):
 
     parse_ints(info,query,'conductor_norm')
     parse_noop(info,query,'conductor_label')
+    parse_ints(info,query,'rank')
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
@@ -711,11 +718,19 @@ def ecnf_code(**args):
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
 
+def disp_tor(t):
+    if len(t) == 1:
+        return "[%s]" % t, "C%s" % t
+    else:
+        return "[%s,%s]" % t, "C%s&times;C%s" % t
+
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
+    jump_knowl = "ec.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         field = TextBox(
             name="field",
@@ -764,6 +779,11 @@ class ECNFSearchArray(SearchArray):
             example_span_colspan=2,
             example="105474/49 + a*34213/49",
             example_span="")
+        rank = TextBox(
+            name="rank",
+            label="Rank*",
+            knowl="ec.rank",
+            example="2")
         torsion = TextBox(
             name="torsion",
             label="Torsion order",
@@ -776,11 +796,6 @@ class ECNFSearchArray(SearchArray):
             options=[("",""),("2", "2"),("3", "3"),("4", "4"),("5", "5"),("6", "6")]
             )
 
-        def disp_tor(t):
-            if len(t) == 1:
-                return "[%s]" % t, "C%s" % t
-            else:
-                return "[%s,%s]" % t, "C%s&times;C%s" % t
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
@@ -800,14 +815,15 @@ class ECNFSearchArray(SearchArray):
             [jinv],
             [field, bf_deg],
             [conductor_norm, include_base_change],
-            [torsion, include_Q_curves],
-            [cm_disc, torsion_structure],
-            [isodeg, include_cm],
-            [count, one]
+            [rank, include_Q_curves],
+            [torsion, torsion_structure],
+            [cm_disc, include_cm],
+            [isodeg, one],
+            [count]
             ]
 
         self.refine_array = [
             [field, bf_deg, conductor_norm, jinv, include_base_change],
-            [include_Q_curves, isodeg, torsion, torsion_structure, include_cm],
-            [cm_disc, one]
+            [include_Q_curves, isodeg, rank, torsion, torsion_structure],
+            [include_cm, cm_disc, one]
             ]
