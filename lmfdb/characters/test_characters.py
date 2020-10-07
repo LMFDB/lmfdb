@@ -85,7 +85,7 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletfamily(self):
         W = self.tc.get('/Character/Dirichlet/')
-        assert 'Find a specific' in W.get_data(as_text=True)
+        assert 'Find' in W.get_data(as_text=True)
         assert r'Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\)' in W.get_data(as_text=True)
 
     def test_dirichletgroup(self):
