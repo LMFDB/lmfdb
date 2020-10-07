@@ -166,6 +166,21 @@ def bianchi_modular_form_search(info, query):
 def bmf_search_field(field_label):
     return bianchi_modular_form_search({'field_label':field_label, 'search_array':BMFSearchArray()})
 
+# For statistics, it's useful to be able to pass the field label via a request argument
+@bmf_page.route('/gl2dims/')
+def gl2dims():
+    if "field_label" not in request.args:
+        flash_error("You must specify a field label to access dimension tables")
+        return redirect(url_for(".index"))
+    return redirect(url_for(".render_bmf_field_dim_table_gl2", **request.args))
+
+@bmf_page.route('/sl2dims/')
+def sl2dims():
+    if "field_label" not in request.args:
+        flash_error("You must specify a field label to access dimension tables")
+        return redirect(url_for(".index"))
+    return redirect(url_for(".render_bmf_field_dim_table_sl2", **request.args))
+
 @bmf_page.route('/gl2dims/<field_label>')
 def render_bmf_field_dim_table_gl2(**args):
     return bmf_field_dim_table(gl_or_sl='gl2_dims', **args)
@@ -197,6 +212,9 @@ def bmf_field_dim_table(**args):
     bread = get_bread(pretty_field_label)
     properties = []
     query = {}
+    if "level_norm" in argsdict:
+        parse_ints(argsdict, query, 'level_norm')
+        info["level_norm"] = argsdict["level_norm"]
     query['field_label'] = field_label
     if gl_or_sl=='gl2_dims':
         info['group'] = 'GL(2)'
@@ -495,11 +513,25 @@ class BianchiStats(StatsDisplay):
         {'cols': ['field_label', 'level_norm'],
          'top_title': '%s by %s and %s' % (
              display_knowl("mf.bianchi.spaces",
-                           "cusp spaces"),
+                           r"cusp spaces for $\operatorname{GL}_2$ levels"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
+         'constraint': {"gl2_cusp_totaldim": {"$gt": 0}},
+         'baseurl_func': ".gl2dims",
          'table': db.bmf_dims,
-         'totaler': totaler(),
+         'totaler': totaler(col_counts=False),
+         'proportioner': proportioners.per_row_total},
+        {'cols': ['field_label', 'level_norm'],
+         'top_title': '%s by %s and %s' % (
+             display_knowl("mf.bianchi.spaces",
+                           r"cusp spaces for $\operatorname{SL}_2$ levels"),
+             display_knowl('nf', 'base field'),
+             display_knowl('mf.bianchi.level', 'level norm')),
+         'constraint': {"sl2_cusp_totaldim": {"$gt": 0}},
+         'baseurl_func': ".sl2dims",
+         'buckets': {'level_norm': ['1-100', '101-200', '201-400', '401-800', '801-1600', '1601-3200', '3201-6400']},
+         'table': db.bmf_dims,
+         'totaler': totaler(col_counts=False),
          'proportioner': proportioners.per_row_total},
         {'cols': ['dimension', 'level_norm'],
          'totaler': totaler(),
