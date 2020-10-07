@@ -7,14 +7,9 @@ from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay
 
 
-the_HGCWAstats = None
-
 def get_stats():
-    global the_HGCWAstats
-    if the_HGCWAstats is None:
-        the_HGCWAstats = HGCWAstats()
-    return the_HGCWAstats
-
+    # StatsDisplay inherits from UniqueRepresentation
+    return HGCWAstats()
 
 class HGCWAstats(StatsDisplay):
     """
