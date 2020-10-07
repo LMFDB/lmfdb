@@ -5,9 +5,9 @@
 
 {{ KNOWL_INC('dq.character.dirichlet.extent') }}
 
-<h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
+<h2> Browse </h2>
 <p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
+By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
 &nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
@@ -15,7 +15,7 @@
 </p>
 
 <p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
+By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
 &nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
@@ -23,7 +23,7 @@
 </p>
 
 <p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
+By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
 &nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
@@ -31,19 +31,10 @@
 </p>
 
 <p>
-&nbsp;&nbsp;Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
+Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
 </p>
 
-<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
-<form>
-    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
-    <button type='submit' name='lookup' value='1'> Find  </button>
-    <br>
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
-</form>
-
-<h2> Search for characters </h2>
+<h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
@@ -87,6 +78,21 @@
         </tr>
         <tr><td><button type='submit' > Search </button></td></tr>
     </table>
+</form>
+
+<h2> Find </h2>
+<form>
+<table>
+    <tr><td>
+    {{KNOWL('character.dirichlet.search_input','Label')}}
+    </td><td>
+    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
+    </td><td>
+    <button type='submit' name='lookup' value='1'> Find  </button>
+    </td></tr>
+    <tr><td></td><td colspan="2">
+    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13.f for its Galois orbit.</span>
+</td></tr></table>
 </form>
 
 {#

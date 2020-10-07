@@ -5,7 +5,7 @@
   {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse {{ KNOWL('mf.hilbert', title='Hilbert cusp forms') }} </h2>
+<h2> Browse </h2>
 
 <p>
 By {{ KNOWL('nf', title='base field') }}:
@@ -43,20 +43,16 @@ including <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,
 
 <p>Some <a href="{{url_for('.interesting')}}">interesting Hilbert modular forms</a> or a <a href={{url_for('.random_hmf')}}>random Hilbert modular form</a></p>
 
-
-<h2> Find a specific form by {{ KNOWL('mf.hilbert.label', 'label') }} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
-
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
 
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

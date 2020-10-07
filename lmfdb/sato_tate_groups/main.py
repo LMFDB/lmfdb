@@ -612,6 +612,8 @@ class STSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "1.4.USp(4)"
     jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.1.2.1a or N(U(1)), or 1.4.10.1.1a or 1.4.USp(4)"
+    jump_knowl = "st_group.search_input"
+    jump_prompt = "Label or name"
     def __init__(self):
         weight = TextBox(
             name="weight",

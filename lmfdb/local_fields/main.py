@@ -426,6 +426,8 @@ class LFSearchArray(SearchArray):
     plural_noun = "fields"
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
+    jump_knowl = "lf.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         degree = TextBox(
             name='n',
