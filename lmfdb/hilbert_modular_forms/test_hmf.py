@@ -5,7 +5,6 @@ class HMFTest(LmfdbTest):
     def test_home(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/')
         assert 'Hilbert' in L.get_data(as_text=True)
-        assert 'cusp forms' in L.get_data(as_text=True)
         assert 'modular' in L.get_data(as_text=True)
         assert 'Browse' in L.get_data(as_text=True)
         assert 'Search' in L.get_data(as_text=True)

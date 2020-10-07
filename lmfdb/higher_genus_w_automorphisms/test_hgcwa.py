@@ -32,7 +32,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_index_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/')
-        assert 'Find specific automorphisms of higher genus curves' in L.get_data(as_text=True)
+        assert 'Cyclic trigonal' in L.get_data(as_text=True)
 
     def test_stats_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats')

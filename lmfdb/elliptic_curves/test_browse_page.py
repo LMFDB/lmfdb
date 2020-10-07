@@ -9,7 +9,7 @@ class HomePageTest(LmfdbTest):
         Check that the elliptic curve/Q search & browse page works.
         """
         homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
-        assert 'Find a specific curve' in homepage
+        assert 'Label or coefficients' in homepage
 
     #
     # Link to stats page
