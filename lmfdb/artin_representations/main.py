@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict)
+    display_knowl, search_wrap, to_dict, comma)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
@@ -129,7 +129,7 @@ def add_lfunction_friends(friends, label):
 
 @artin_representations_page.route("/")
 def index():
-    info = to_dict(request.args, search_array=ArtinSearchArray())
+    info = to_dict(request.args, search_array=ArtinSearchArray(), stats=ArtinStats())
     bread = get_bread()
     if not request.args:
         return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)
@@ -687,6 +687,7 @@ class ArtinStats(StatsDisplay):
                      "Is_Even": "parity",
                      "Proj_nTj": "projective image",
                      "Container": "container",
+                     "NumBadPrimes": "number of ramified primes",
                      "Indicator": "indicator"}
     sort_keys = {"GaloisLabel": galdata,
                  "Proj_nTj": galdata,
@@ -716,4 +717,31 @@ class ArtinStats(StatsDisplay):
         self.nreps = db.artin_reps.count(hide)
         self.nfields = db.artin_reps.count_distinct("NFGal", hide)
         self.ngroups = db.artin_reps.count_distinct("GaloisLabel", hide)
-        self.nconts = db.artin_reps.count_distinct("Container", hide)
+        self.maxdim = db.artin_reps.max("Dim")
+        maxcond = ZZ(db.artin_reps.max("Conductor"))
+        self.maxcond = maxcond.factor()._latex_()
+        self.amaxcond = maxcond.n(digits=2)._latex_()
+
+    @property
+    def summary(self):
+        return r"The database currently contains {nreps} Galois conjugacy classes of {repknowl}, for a total of {nfields} {nfknowl} with {ngroups} {gpknowl}.  The largest {dimknowl} is ${mdim}$ and the largest {condknowl} is ${mcond} \approx {amcond}$.".format(
+            nreps=comma(self.nreps),
+            repknowl=display_knowl("artin", "Artin representations"),
+            nfields=comma(self.nfields),
+            nfknowl=display_knowl("artin.number_field", "number fields"),
+            ngroups=self.ngroups,
+            gpknowl=display_knowl("artin.gg_quotient", "Galois groups"),
+            dimknowl=display_knowl("artin.dimension", "dimension"),
+            mdim=self.maxdim,
+            condknowl=display_knowl("artin.conductor", "conductor"),
+            mcond=self.maxcond,
+            amcond=self.amaxcond)
+
+    @property
+    def short_summary(self):
+        return r'The database currently contains {nreps} Galois conjugacy classes of {repknowl}, for a total of {nfields} {nfknowl}.  Here are some <a href="{url}">further statistics</a>.'.format(
+            nreps=comma(self.nreps),
+            repknowl=display_knowl("artin", "Artin representations"),
+            nfields=comma(self.nfields),
+            nfknowl=display_knowl("artin.number_field", "number fields"),
+            url=url_for(".statistics"))
