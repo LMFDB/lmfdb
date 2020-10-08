@@ -623,6 +623,8 @@ def labels_page():
 class HGMSearchArray(SearchArray):
     jump_example = "A2.2_B1.1_t1.2"
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
+    jump_knowl = 'hgm.search_input'
+    jump_prompt = 'Label'
     def __init__(self):
         degree = TextBox(
             name="degree",
