@@ -81,7 +81,7 @@ class proportioners(object):
         """
         def inner(grid, row_headers, col_headers, stats):
             for row, header in zip(grid, row_headers):
-                total = stats.count(query(header))
+                total = stats._tmp_table.count(query(header))
                 for D in row:
                     D['proportion'] = _format_percentage(D['count'], total)
         return inner
@@ -132,7 +132,7 @@ class proportioners(object):
         def inner(grid, row_headers, col_headers, stats):
             for row, row_head in zip(grid, row_headers):
                 for D, col_head in zip(row, col_headers):
-                    total = stats.count(query(row_head, col_head))
+                    total = stats._tmp_table.count(query(row_head, col_head))
                     D['proportion'] = _format_percentage(D['count'], total)
         return inner
 
@@ -514,7 +514,7 @@ class StatsDisplay(UniqueRepresentation):
         if url_extras:
             base_url += url_extras
         if constraint:
-            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items())
+            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items() if col not in cols)
         if table is None:
             table = self.table
         self._tmp_table = table = table.stats
