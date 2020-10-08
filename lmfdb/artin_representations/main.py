@@ -11,9 +11,10 @@ from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
     display_knowl, search_wrap, to_dict)
+from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -430,6 +431,12 @@ def interesting():
         learnmore=learnmore_list(),
     )
 
+@artin_representations_page.route("/stats")
+def statistics():
+    title = "Artin representations: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=ArtinStats(), credit=tim_credit, title=title, bread=bread, learnmore=learnmore_list())
+
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin representations'
@@ -557,7 +564,7 @@ class ArtinSearchArray(SearchArray):
             [unramified],
             [root_number],
             [fsind],
-            [projective_image], 
+            [projective_image],
             [projective_image_type],
             [count]]
 
@@ -565,3 +572,66 @@ class ArtinSearchArray(SearchArray):
             [dimension, conductor, group, root_number, parity],
             [container, ramified, unramified, fsind],
             [projective_image, projective_image_type]]
+
+def scinot(rng, minlen=None):
+    if "^" in rng or not rng:
+        return rng
+    if "-" in rng:
+        pieces = rng.split("-")
+        minlen = min(len(piece) for piece in pieces if piece)
+        return "-".join(scinot(piece, minlen) for piece in pieces)
+    if minlen is None:
+        minlen = len(rng)
+    if minlen > 3 and rng[0] == "1" and rng[-1] in ["0", "1"] and all(ch == "0" for ch in rng[1:-1]):
+        return "$10^{%s}$" % (len(rng)-1)
+    return rng
+
+tpow = re.compile(r"10\^\{(\d+)\}")
+def unsci(rng, first=False):
+    print("UNSCI", rng)
+    if "^" not in rng:
+        return rng
+    if "-" in rng:
+        pieces = "-".split(rng)
+        fz = [True] + [False]*(len(pieces)-1)
+        return "-".join(unsci(piece, z) for (piece, z) in zip(pieces, fz))
+    e = tpow.findall(rng)
+    if not e:
+        return rng
+    if first:
+        return str(1 + 10**int(e[0]))
+    else:
+        return str(10**int(e[0]))
+
+def trange(a, b):
+    if b is None:
+        return str(10**a) + "-"
+    elif a == 0:
+        return "1-" + str(10**b)
+    return str(10**a+1) + "-" + str(10**b)
+def intervals(start, end, step):
+    return list(zip(range(start, end, step), range(start+step, end+step, step)))
+
+class ArtinStats(StatsDisplay):
+    table = db.artin_reps
+    baseurl_func = ".index"
+
+    stat_list = [
+        {"cols": ["Dim", "Conductor"],
+         "constraint": {"Hide": 0},
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+    ]
+    knowls = {"Dim": "artin.dimension",
+              "Conductor": "artin.conductor"}
+    short_display = {"Dim": "dimension",
+                     "Conductor": "conductor"}
+    formatters = {"Conductor": lambda N: scinot(range_formatter(N))}
+    query_formatters = {
+        "Dim": (lambda d: "dimension=%s"%d),
+        "Conductor": (lambda N: "conductor=%s"%(unsci(range_formatter(N))))
+    }
+    buckets = {
+        "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
+        "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
+    }
