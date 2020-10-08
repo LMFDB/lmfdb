@@ -1128,6 +1128,7 @@ class PostgresStatsTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             cur = self._compute_stats(cols, where, values, constraint, threshold, split_list, suffix)
             for countvec in cur:
+                print("COUNTVEC", countvec)
                 seen_one = True
                 colvals, count = countvec[:-1], countvec[-1]
                 if constraint is None:
@@ -1596,6 +1597,10 @@ ORDER BY v.ord LIMIT %s"""
             data[values] = D
         # Ensure that we have all the statistics necessary
         ok = True
+        print("COLS", cols)
+        print("CONSTRAINT", constraint)
+        print("DATA", sorted(data))
+        print("BUCKETS", buckets)
         if buckets == {}:
             # Just check that the results are nonempty
             if not data:
@@ -1605,7 +1610,9 @@ ORDER BY v.ord LIMIT %s"""
             # Make sure that every bucket is hit in data
             bcols = [col for col in cols if col in buckets]
             ucols = [col for col in cols if col not in buckets]
+            print("BUCKETS!")
             for bucketed_constraint in self._bucket_iterator(buckets, constraint):
+                print("C", bucketed_constraint)
                 cseen = tuple(formatter[col](bucketed_constraint[col]) for col in bcols)
                 if cseen not in buckets_seen:
                     logging.info(

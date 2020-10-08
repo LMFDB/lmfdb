@@ -5,7 +5,7 @@
 import re, random
 
 from flask import render_template, request, url_for, redirect
-from sage.all import ZZ
+from sage.all import ZZ, cached_function
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -18,7 +18,10 @@ from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, rang
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.galois_groups.transitive_group import complete_group_code
+from lmfdb.galois_groups.transitive_group import (
+    complete_group_code, knowl_cache, galdata, galunformatter,
+    small_group_display_knowl, smallgroup_cache,
+    group_pretty_and_nTj)
 
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
@@ -242,6 +245,7 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_ints(info,query,'num_ram',qfield='NumBadPrimes')
     parse_projective_group(info, query, 'projective_image', qfield='Proj_GAP')
     parse_projective_type(info, query, 'projective_image_type', qfield='Proj_GAP')
     # Backward support for old URLs
@@ -524,6 +528,11 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.unramified_primes",
             example="5,7",
             example_span="5, 7, 13 (no range allowed)")
+        num_ram = TextBox(
+            name="num_ram",
+            label="Num. ramified primes",
+            knowl="artin.ramified_primes",
+            example="1")
         root_number = TextBoxNoEg(
             name="root_number",
             label="Root number",
@@ -562,6 +571,7 @@ class ArtinSearchArray(SearchArray):
             [container],
             [ramified],
             [unramified],
+            [num_ram],
             [root_number],
             [fsind],
             [projective_image],
@@ -570,7 +580,7 @@ class ArtinSearchArray(SearchArray):
 
         self.refine_array = [
             [dimension, conductor, group, root_number, parity],
-            [container, ramified, unramified, fsind],
+            [container, ramified, unramified, num_ram, fsind],
             [projective_image, projective_image_type]]
 
 def scinot(rng, minlen=None):
@@ -588,7 +598,6 @@ def scinot(rng, minlen=None):
 
 tpow = re.compile(r"10\^\{(\d+)\}")
 def unsci(rng, first=False):
-    print("UNSCI", rng)
     if "^" not in rng:
         return rng
     if "-" in rng:
@@ -612,6 +621,31 @@ def trange(a, b):
 def intervals(start, end, step):
     return list(zip(range(start, end, step), range(start+step, end+step, step)))
 
+@cached_function
+def galcache():
+    return knowl_cache(db.artin_reps.distinct("GaloisLabel"))
+def galformatter(gal):
+    n, t = galdata(gal)
+    return group_pretty_and_nTj(n, t, True, cache=galcache())
+
+@cached_function
+def projcache():
+    return knowl_cache(["%sT%s" % tuple(label) for label in db.artin_reps.distinct("Proj_nTj")])
+def projformatter(proj):
+    if isinstance(proj, list):
+        proj = "%sT%s" % tuple(proj)
+    n, t = galdata(proj)
+    return group_pretty_and_nTj(n, t, True, cache=projcache(), skip_nTj=True)
+
+@cached_function
+def contcache():
+    return knowl_cache([label for label in db.artin_reps.distinct("Container") if "T" in label])
+def contformatter(cont):
+    n, t = galdata(cont)
+    if t == 0: # no T number
+        return cont
+    return group_pretty_and_nTj(n, t, True, cache=contcache())
+
 class ArtinStats(StatsDisplay):
     table = db.artin_reps
     baseurl_func = ".index"
@@ -621,17 +655,65 @@ class ArtinStats(StatsDisplay):
          "constraint": {"Hide": 0},
          "totaler": totaler(),
          "proportioner": proportioners.per_row_total},
+        {"cols": ["Dim", "NumBadPrimes"],
+         "constraint": {"Hide": 0},
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+        {"cols": ["Indicator", "Dim"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Is_Even", "Dim"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["GaloisLabel"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Proj_nTj"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Container"],
+         "constraint": {"Hide": 0}}
     ]
     knowls = {"Dim": "artin.dimension",
-              "Conductor": "artin.conductor"}
+              "Conductor": "artin.conductor",
+              "GaloisLabel": "artin.gg_quotient",
+              "Is_Even": "artin.parity",
+              "Proj_nTj": "artin.projective_image",
+              "NumBadPrimes": "artin.ramified_primes",
+              "Container": "artin.permutation_container",
+              "Indicator": "artin.frobenius_schur_indicator"}
+    top_titles = {"Indicator": "Frobenius-Schur indicators",
+                  "Container": "smallest permutation containers",
+                  "Is_Even": "parities"}
     short_display = {"Dim": "dimension",
-                     "Conductor": "conductor"}
-    formatters = {"Conductor": lambda N: scinot(range_formatter(N))}
+                     "Conductor": "conductor",
+                     "GaloisLabel": "Galois group",
+                     "Is_Even": "parity",
+                     "Proj_nTj": "projective image",
+                     "Container": "container",
+                     "Indicator": "indicator"}
+    sort_keys = {"GaloisLabel": galdata,
+                 "Proj_nTj": galdata,
+                 "Container": galdata}
+    formatters = {"Conductor": lambda N: scinot(range_formatter(N)),
+                  "Is_Even": lambda x: "even" if x in ["even", True] else "odd",
+                  "GaloisLabel": galformatter,
+                  "Container": contformatter,
+                  "Proj_nTj": projformatter}
     query_formatters = {
-        "Dim": (lambda d: "dimension=%s"%d),
-        "Conductor": (lambda N: "conductor=%s"%(unsci(range_formatter(N))))
+        "Dim": (lambda d: "dimension=%s" % range_formatter(d)),
+        "Conductor": (lambda N: "conductor=%s" % (unsci(range_formatter(N)))),
+        "NumBadPrimes": (lambda N: "num_ram=%s" % range_formatter(N)),
+        "GaloisLabel": (lambda gal: r"group=%s" % (galunformatter(gal))),
+        "Proj_nTj": (lambda proj: r"projective_image=%s" % (galunformatter(proj))),
+        "Container": (lambda cont: r"container=%s" % (galunformatter(cont))),
+        "Is_Even": (lambda x: r"parity=%s" % ("even" if x in ["even", True] else "odd")),
+        "Indicator": (lambda ind: r"frobenius_schur_indicator=%s" % ind),
     }
     buckets = {
         "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
         "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
     }
+
+    def __init__(self):
+        hide = {"Hide": 0}
+        self.nreps = db.artin_reps.count(hide)
+        self.nfields = db.artin_reps.count_distinct("NFGal", hide)
+        self.ngroups = db.artin_reps.count_distinct("GaloisLabel", hide)
+        self.nconts = db.artin_reps.count_distinct("Container", hide)
