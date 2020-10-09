@@ -4,16 +4,17 @@
 
 
 <div>
-{{ KNOWL_INC('lf.extent') }}
+  {{ info.stats.short_summary | safe }}
 </div>
 
-
-      <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
+<h2>Browse</h2>
 
 <p>
 The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
 fields
 of $\Q_p$ up to isomorphism.
+</p>
+
 <p>
 <table class='number_table'>
   <thead>
@@ -81,24 +82,21 @@ of $\Q_p$ up to isomorphism.
 </tr>
 </tbody>
 </table>
-<p>
-
-<p>
-A <a href={{url_for('.random_field')}}>random local number field</a> from the database.
 </p>
 
-
-<h2>Find a specific local number field by {{KNOWL('lf.field.label',title="label")}}</h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
-
+<p>
+Some <a href="{{url_for('.interesting')}}">interesting $p$-adic fields</a> or a <a href={{url_for('.random_field')}}>random $p$-adic field</a>
+</p>
 
 <h2>Search</h2>
 <form id="search"  onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
+</form>
+
+<h2>Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {% endblock %}

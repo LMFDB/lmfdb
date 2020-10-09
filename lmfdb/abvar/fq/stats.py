@@ -194,11 +194,13 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r"The database currently contains %s %s of %s of dimension up to %s over finite fields." % (
+        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (
             self.counts["nclasses_c"],
             self.isogeny_knowl,
             self.abvar_knowl,
             max(self.gs),
+            url_for(".statistics"),
+            url_for(".dynamic_statistics"),
         )
 
     @lazy_attribute

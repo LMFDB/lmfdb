@@ -102,7 +102,7 @@ class EllCurveTest(LmfdbTest):
         """
         L = self.tc.get('/EllipticCurve/?start=0&isodeg=2')
         assert '27.2-a4' in L.get_data(as_text=True)
-        L = self.tc.get('EllipticCurve/?start=0&torsion=1&isodeg=2')
+        L = self.tc.get('/EllipticCurve/?start=0&torsion=1&isodeg=2')
         assert 'No matches' in L.get_data(as_text=True)
 
     def test_cm_disc_search(self):

@@ -13,7 +13,6 @@ Info was: {{info}}
 {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse <a href="./stats">statistics</a> or <a href="./dynamic_stats">create your own</a> </h2>
 <h2> Browse {{ KNOWL('cmf.newform','newforms')}}</h2>
 
 <p>
@@ -29,16 +28,7 @@ Info was: {{info}}
   {% endfor %}
 </p>
 
-{% for sublist in info.newform_list %}
-<p>
-  {% if loop.index == 1 %}
-  Some interesting newforms:
-  {% endif %}
-  {% for newform in sublist %}
-  <a href="{{ newform.url }}" title="{{ newform.reason }}"> {{ newform.label}} </a>&nbsp;
-  {% endfor %}
-</p>
-{% endfor %}
+<p>Some <a href="{{url_for('.interesting_newforms')}}">interesting newforms</a> or a <a href="{{url_for('.random_form')}}">random newform</a></p>
 
 <p>
   A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('cmf.q-expansion', title='\(q\)-expansion') }}
@@ -59,28 +49,12 @@ Info was: {{info}}
   {% endfor %}
 </p>
 
+<p>Some <a href="{{url_for('.interesting_spaces')}}">interesting newspaces</a> or a <a href="{{url_for('.random_space')}}">random newspace</a></p>
+
 <p>
 Create a <a href = "?search_type=Spaces">search</a> for newspaces,
  a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}
 </p>
-
-{% for sublist in info.space_list %}
-<p>
-  {% if loop.index == 1 %}
-  Some interesting newspaces:
-  {% endif %}
-  {% for space in sublist %}
-  <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
-  {% endfor %}
-</p>
-{% endfor %}
-
-
-<h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
 
 {# SEARCHING #}
 
@@ -89,5 +63,10 @@ Create a <a href = "?search_type=Spaces">search</a> for newspaces,
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

@@ -16,6 +16,7 @@ from lmfdb.utils import (
     parse_restricted, integer_options, search_wrap,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
@@ -490,7 +491,17 @@ def render_hgm_webpage(label):
     t_data = str(QQ(data['t']))
 
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
-    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template(
+        "hgm-show-motive.html",
+        credit=HGM_credit,
+        title=title,
+        bread=bread,
+        info=info,
+        properties=prop2,
+        friends=friends,
+        learnmore=learnmore_list(),
+        KNOWL_ID="hgm.%s" % label,
+    )
 
 
 
@@ -559,6 +570,32 @@ def random_motive():
     s = label.split('_t')
     return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
 
+@hypergm_page.route("/interesting_families")
+def interesting_families():
+    return interesting_knowls(
+        "hgm",
+        db.hgm_families,
+        url_for_label,
+        regex=HGM_FAMILY_LABEL_RE,
+        title=r"Some interesting families of hypergeometric motives",
+        bread=get_bread(("Interesting", " ")),
+        credit=HGM_credit,
+        learnmore=learnmore_list()
+    )
+
+@hypergm_page.route("/interesting_motives")
+def interesting_motives():
+    return interesting_knowls(
+        "hgm",
+        db.hgm_motives,
+        url_for_label,
+        regex=HGM_LABEL_RE,
+        title=r"Some interesting hypergeometric motives",
+        bread=get_bread(("Interesting motives", " ")),
+        credit=HGM_credit,
+        learnmore=learnmore_list()
+    )
+
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
@@ -586,6 +623,8 @@ def labels_page():
 class HGMSearchArray(SearchArray):
     jump_example = "A2.2_B1.1_t1.2"
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
+    jump_knowl = 'hgm.search_input'
+    jump_prompt = 'Label'
     def __init__(self):
         degree = TextBox(
             name="degree",

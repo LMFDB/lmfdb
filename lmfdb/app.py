@@ -4,6 +4,7 @@ import os
 from socket import gethostname
 import time
 import six
+from urllib.parse import urlparse, urlunparse
 
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
@@ -117,6 +118,12 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+
+    def modify_url(**replace):
+        urlparts = urlparse(request.url)
+        urlparts = urlparts._replace(**replace)
+        return urlunparse(urlparts)
+    vars['modify_url'] = modify_url
 
     return vars
 
@@ -241,7 +248,7 @@ def netloc_redirect():
         not white_listed(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
-        return redirect(urlunparse(replaced), code=301)
+        return redirect(urlunparse(replaced), code=302)
 
 
 
@@ -482,11 +489,6 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
-@app.route("/citation/citing")
-def citing():
-    t = "How to Cite LMFDB"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
-    return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
 @app.route("/contact")
 def contact():
@@ -719,6 +721,7 @@ WhiteListedRoutes = [
     'management',
     'news',
     'not_yet_implemented',
+    'random',
     'robots.txt',
     'search',
     'sitemap',

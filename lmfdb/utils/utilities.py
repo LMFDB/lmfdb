@@ -291,6 +291,25 @@ def str_to_CBF(s):
             res  +=  sign * CBF(b)* CBF.gens()[0]
         return res
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    r"""
+    Convert a string into a number
+    """
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    r"""
+    Convert a number into a string of letters
+    """
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
 def to_dict(args, exclude = [], **kwds):
@@ -476,6 +495,11 @@ def comma(x):
     """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
+def latex_comma(x):
+    """
+    For latex we need to use braces around the commas to get the spacing right.
+    """
+    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
@@ -1269,4 +1293,3 @@ def add_space_if_positive(texified_pol):
     if texified_pol[0] == '-':
         return texified_pol
     return r"\phantom{-}" + texified_pol
-

@@ -39,39 +39,6 @@
 </table>
 </p>
 
-<h2> {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke eigenvalues') }} </h2>
-
-  {#
-<p>
-  The database contains {{data.nap}} eigenvalues{% if data.nap0 <
-  data.nap %} of which we only show {{data.nap0}}{%endif%}.
-</p>
-#}
-
-{% if data.dimension > 1 %}
-<p>
-The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining
-polynomial: {{data.hecke_poly}}.
-</p>
-{% else %}
-<p>The Hecke eigenvalue field is $\Q$</a>.</p>
-{% endif %}
-
-<table class="ntdata" cellpadding=5>
-<tr>
-<th>Norm</th>
-<th>Prime</th>
-<th>Eigenvalue</th>
-</tr>
-{% for entry in data.hecke_table: %}
-<tr>
-<td>{{entry[0]}}</td>
-<td>{{entry[1]}} = ({{entry[2]}})</td>
-<td align=right>{{entry[3]}}</td>
-</tr>
-{% endfor %}
-</table>
-
 <h2>  Atkin-Lehner eigenvalues  </h2>
 
 {% if data.have_AL %} 
@@ -94,6 +61,40 @@ polynomial: {{data.hecke_poly}}.
 {% else %}
 <p>Not known</P>
 {% endif %}
+
+<h2> {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke eigenvalues') }} </h2>
+
+
+{% if data.dimension > 1 %}
+<p>
+The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining
+polynomial: {{data.hecke_poly}}.
+{% else %}
+<p>The Hecke eigenvalue field is $\Q$</a>.
+{% endif %}
+The eigenvalue of the {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke operator') }} $T_{\mathfrak{p}}$ is $a_{\mathfrak{p}}$.
+{% if data.nap0 < data.nap %}
+The database contains {{data.nap}} eigenvalues of which we only show {{data.nap0}}.
+{%else%}
+The database contains {{data.nap}} eigenvalues.
+{%endif%}
+We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which do not divide the level.		  
+</p>
+
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>$N(\mathfrak{p})$</th>
+<th>$\mathfrak{p}$</th>
+<th align=right>$a_{\mathfrak{p}}$</th>
+</tr>
+{% for entry in data.hecke_table: %}
+<tr>
+<td>{{entry[0]}}</td>
+<td>{{entry[1]}} = ({{entry[2]}})</td>
+<td align=right>{{entry[3]}}</td>
+</tr>
+{% endfor %}
+</table>
 
 
 

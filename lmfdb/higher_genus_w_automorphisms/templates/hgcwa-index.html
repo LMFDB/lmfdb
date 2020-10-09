@@ -11,17 +11,12 @@ text-align:right;
 
 <div>
   <p>
-    Currently the database contains all groups $G$ acting as automorphisms of
-    curves $X/\C$ of genus {{info.stats.genus.min}} to
-    {{info.stats.genus.max}} such that $X/G$ has genus 0, as well as genus 2 through 4  with quotient genus greater than 0. There are {{info.stats.refined_passports.distinct}}
-    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
-    Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
+    {{info.short_summary | safe}}
   </p>
 </div>
 
 
-      <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
+<h2>Browse</h2>
 
 <p>
 By  {{KNOWL('ag.curve.genus',title='genus')}}:
@@ -35,20 +30,17 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 {% endfor %}
 </p>
 
-
-<p>A <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
-
-
-<h2>Find specific automorphisms of higher genus curves by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}</h2>
-
-<form name="search" method = "get" action="{{url_for('.index')}}">
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
+<p>Some <a href="{{url_for('.interesting')}}">interesting families</a> or a <a href="{{url_for('.random_passport')}}">random refined passport</a></p>
 
 <h2>Search</h2>
 <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2>Find</h2>
+
+<form name="search" method = "get" action="{{url_for('.index')}}">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

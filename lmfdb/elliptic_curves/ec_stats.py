@@ -4,6 +4,8 @@ from lmfdb.utils import comma, format_percentage
 from lmfdb.logger import make_logger
 from lmfdb import db
 from sage.all import Integer
+from psycopg2.sql import SQL
+from sage.misc.cachefunc import cached_method
 
 logger = make_logger("ec")
 
@@ -128,3 +130,7 @@ class ECstats(object):
         self._stats = stats
         logger.debug("... finished computing elliptic curve stats.")
 
+    @cached_method
+    def isogeny_degrees(self):
+        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curves, UNNEST(isodeg) as elements"))
+        return cur.fetchone()[0]

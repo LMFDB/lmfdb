@@ -8,6 +8,7 @@ from six import BytesIO
 from flask import render_template, url_for, request, redirect, abort, send_file
 from sage.all import gcd, randint, euler_phi
 from lmfdb.utils import to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox, TextBox, CountBox, parse_bool, parse_ints, search_wrap
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
         WebDirichletGroup,
@@ -25,16 +26,6 @@ from lmfdb import db
 from . import ListCharacters
 from .ListCharacters import info_from_db_orbit
 
-#TODO fix bread on base
-#TODO use this more
-def get_dirich_bread(*breads):
-    bc = [
-        ("Characters", url_for(".render_characterNavigation")),
-        ("Dirichlet", url_for(".render_DirichletNavigation")),
-    ]
-    for z in breads:
-        bc.append(z)
-    return bc
 
 #### make url_character available from templates
 @app.context_processor
@@ -56,6 +47,12 @@ def learn(current = None):
     return r
 
 dirich_credit = "" # TODO should anyone be credited?
+def get_bread(tail=[]):
+    base = [('Characters',url_for(".render_characterNavigation")),
+            ('Dirichlet', url_for(".render_Dirichletwebpage"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 ###############################################################################
 #   Route functions
@@ -279,6 +276,7 @@ def make_webchar(args):
     else:
         return WebSmallDirichletCharacter(**args)
 
+<<<<<<< HEAD
 def label_to_number(modulus, number, all=False):
     """
     Takes the second part of a character label and converts it to the second
@@ -324,61 +322,69 @@ def render_DirichletNavigation():
     args = to_dict(request.args)
     info = {'args': request.args}
     info['bread'] = get_dirich_bread()
+=======
+    info = {'args':args}
+    info['bread'] = get_bread()
+>>>>>>> 05f565bd7632b97784cd5a5825bbd59fdb410c68
     info['learnmore'] = learn()
 
-    if 'modbrowse' in args:
-        arg = args['modbrowse']
-        arg = arg.split('-')
-        modulus_start = int(arg[0])
-        modulus_end = int(arg[1])
-        info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
-        info['credit'] = 'Sage'
-        h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
-        info['contents'] = c
-        info['headers'] = h
-        info['rows'] = rows
-        info['cols'] = cols
-        return render_template("ModulusList.html", **info)
+    try:
+        if 'modbrowse' in args:
+            arg = args['modbrowse']
+            arg = arg.split('-')
+            modulus_start = int(arg[0])
+            modulus_end = int(arg[1])
+            info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
+            info['credit'] = 'Sage'
+            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
+            info['contents'] = c
+            info['headers'] = h
+            info['rows'] = rows
+            info['cols'] = cols
+            return render_template("ModulusList.html", **info)
 
-    elif 'condbrowse' in args:
-        arg = args['condbrowse']
-        arg = arg.split('-')
-        conductor_start = int(arg[0])
-        conductor_end = int(arg[1])
-        info['conductor_start'] = conductor_start
-        info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
-        info['credit'] = "Sage"
-        info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
-        return render_template("ConductorList.html", **info)
+        elif 'condbrowse' in args:
+            arg = args['condbrowse']
+            arg = arg.split('-')
+            conductor_start = int(arg[0])
+            conductor_end = int(arg[1])
+            info['conductor_start'] = conductor_start
+            info['conductor_end'] = conductor_end
+            info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
+            info['credit'] = "Sage"
+            info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
+            return render_template("ConductorList.html", **info)
 
-    elif 'ordbrowse' in args:
-        arg = args['ordbrowse']
-        arg = arg.split('-')
-        order_start = int(arg[0])
-        order_end = int(arg[1])
-        info['order_start'] = order_start
-        info['order_end'] = order_end
-        info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
-        info['credit'] = 'SageMath'
-        info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
-        return render_template("OrderList.html", **info)
+        elif 'ordbrowse' in args:
+            arg = args['ordbrowse']
+            arg = arg.split('-')
+            order_start = int(arg[0])
+            order_end = int(arg[1])
+            info['order_start'] = order_start
+            info['order_end'] = order_end
+            info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
+            info['credit'] = 'SageMath'
+            info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+            return render_template("OrderList.html", **info)
 
-    elif 'label' in args:
-        label = args['label'].replace(' ','')
-        if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
-            slabel = label.split('.')
-            m,n = int(slabel[0]), int(slabel[1])
-            if m==n==1 or n < m and gcd(m,n) == 1:
-                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
-        if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
-            slabel = label.split('.')
-            return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
-        if re.match(r'^[1-9][0-9]*$', label):
-            return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
+        elif 'label' in args:
+            label = args['label'].replace(' ','')
+            if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
+                slabel = label.split('.')
+                m,n = int(slabel[0]), int(slabel[1])
+                if m==n==1 or n < m and gcd(m,n) == 1:
+                    return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+            if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
+                slabel = label.split('.')
+                return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
+            if re.match(r'^[1-9][0-9]*$', label):
+                return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
 
-        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
-        return render_template('CharacterNavigate.html', **info)
+            flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
+            return render_template('CharacterNavigate.html', **info)
+    except ValueError as err:
+        flash_error("Error raised in parsing: %s", err)
+        return render_template('CharacterNavigate.html', title='Dirichlet characters')
 
     if args:
         # if user clicked refine search, reset start to 0
@@ -391,6 +397,7 @@ def render_DirichletNavigation():
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
         info['title'] = 'Dirichlet character search results'
+<<<<<<< HEAD
         info['bread'] = get_dirich_bread(('Search results', ''))
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
@@ -400,6 +407,102 @@ def render_DirichletNavigation():
         return render_template('CharacterNavigate.html', info=info,**info)
 
 
+=======
+        info['bread'] = get_bread('Search results')
+        info['credit'] = 'SageMath'
+        return render_template("character_search_results.html", **info)
+    else:
+       info['title'] = 'Dirichlet characters'
+       return render_template('CharacterNavigate.html', **info)
+
+@characters_page.route("/Dirichlet/Labels")
+def labels_page():
+    info = {}
+    info['title'] = 'Dirichlet character labels'
+    info['bread'] = get_bread('Labels')
+    info['learnmore'] = learn('labels')
+    return render_template("single.html", kid='character.dirichlet.conrey', **info)
+
+@characters_page.route("/Dirichlet/Source")
+def how_computed_page():
+    info = {}
+    info['title'] = 'Source of Dirichlet character data'
+    info['bread'] = get_bread('Source')
+    info['learnmore'] = learn('source')
+    return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
+
+@characters_page.route("/Dirichlet/Reliability")
+def reliability():
+    info = {}
+    info['title'] = 'Reliability of Dirichlet character data'
+    info['bread'] = get_bread('Reliability')
+    info['learnmore'] = learn('reliability')
+    return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
+
+@characters_page.route("/Dirichlet/Completeness")
+def extent_page():
+    info = {}
+    info['title'] = 'Completeness of Dirichlet character data'
+    info['bread'] = get_bread('Extent')
+    info['learnmore'] = learn('extent')
+    return render_template("single.html", kid='dq.character.dirichlet.extent',
+                           **info)
+
+def make_webchar(args):
+    modulus = int(args['modulus'])
+    if modulus < 10000:
+        return WebDBDirichletCharacter(**args)
+    elif modulus < 100000:
+        return WebDirichletCharacter(**args)
+    else:
+        return WebSmallDirichletCharacter(**args)
+
+def label_to_number(modulus, number, all=False):
+    """
+    Takes the second part of a character label and converts it to the second
+    part of a Conrey label.  This could be trivial (just casting to an int)
+    or could require converting from an orbit label to a number.
+
+    If the label is invalid, returns 0.
+    """
+    try:
+        number = int(number)
+    except ValueError:
+        # encoding Galois orbit
+        if modulus < 10000:
+            try:
+                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
+            except ValueError:
+                return 0
+            else:
+                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
+                if number is None:
+                    return 0
+                if not all:
+                    number = number[0]
+        else:
+            return 0
+    else:
+        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
+            return 0
+    return number
+
+def url_for_label(label):
+    """
+    INPUT:
+
+    - label -- a string such as "1052.279" giving a specific Dirichlet character (not an orbit)
+
+    OUTPUT:
+
+    the URL for that Dirichlet character's homepage
+    """
+    modulus, number = label.split(".")
+    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
+
+@characters_page.route("/Dirichlet")
+@characters_page.route("/Dirichlet/")
+>>>>>>> 05f565bd7632b97784cd5a5825bbd59fdb410c68
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -436,8 +539,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-        info['bread'] = get_dirich_bread(
-                         ('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)))
+        info['bread'] = get_bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -456,11 +558,12 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
-    info['bread'] = get_dirich_bread(('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)))
+        [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+         ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ])
     info['learnmore'] = learn()
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+    info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
@@ -525,6 +628,17 @@ def random_Dirichletwebpage():
     while gcd(modulus,number) > 1:
         number = randint(1,modulus-1)
     return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+
+@characters_page.route('/Dirichlet/interesting')
+def interesting():
+    return interesting_knowls(
+        "character.dirichlet",
+        db.char_dir_values,
+        url_for_label=url_for_label,
+        title="Some interesting Dirichlet characters",
+        bread=get_bread("Interesting"),
+        credit="SageMath",
+        learnmore=learn())
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):

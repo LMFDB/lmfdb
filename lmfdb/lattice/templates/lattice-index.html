@@ -1,7 +1,7 @@
 {% extends "homepage.html" %}
 {% block content %}
 <div>
-{{ KNOWL_INC('dq.lattice.extent') }}
+  {{ info.stats.short_summary | safe }}
 </div>
 
 <style type="text/css">
@@ -22,52 +22,42 @@
 </p>
 {% endif %}
 
-<h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
+<h2> Browse </h2>
 
 <p>
 By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?dim={{info.max_dim}}">{{info.max_dim}}</a>
+{% endfor %}... <a href="?dim={{info.stats.max_dim}}">{{info.stats.max_dim}}</a>
 </p>
 <p>
 By {{ KNOWL('lattice.determinant', title='Determinant') }}:
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?det=1000000-{{info.max_det}}">1000000-{{info.max_det}}</a>
+{% endfor %}... <a href="?det=1000000-{{info.stats.max_det}}">1000000-{{info.stats.max_det}}</a>
 </p>
 <p>
-By {{ KNOWL('lattice.class_number', title='Class number') }}: 
+By {{ KNOWL('lattice.class_number', title='Class number') }}:
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?class_number={{info.max_cn}}">{{info.max_cn}}</a>
+{% endfor %}... <a href="?class_number={{info.stats.max_cn}}">{{info.stats.max_cn}}</a>
 </p>
-<p>
-Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') }}:
-{% for rnge in info.name_list %}
-<a href="?label={{rnge}}"> {{rnge}} </a>
-{% endfor %}
+<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a>
 </p>
-<p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
-<br>
-</p>
-
-
-
-<h2> Find a specific {{ KNOWL('lattice.definition', title='integral lattice') }} by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
-
-<form>
-<input type='text' name='label' placeholder='3.4.8.1.2'>
-<button type='submit'>Label</button>
-<br><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span>
-</form>
 
 <h2> Search </h2>
-
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+<table><tr><td>{{KNOWL('lattice.search_input','Label or name')}}</td><td>
+<input type='text' name='label' placeholder='3.4.8.1.2'></td><td>
+<button type='submit'>Label</button></td></tr>
+<tr><td colspan="2"><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span></td></tr></table>
+</form>
 
 {% endblock %}

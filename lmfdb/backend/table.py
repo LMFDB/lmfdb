@@ -991,26 +991,27 @@ class PostgresTable(PostgresBase):
         start = time.time()
         count = 0
         tot = self.count(query)
+        sep = kwds.get("sep", u"|")
         try:
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u"|".join(search_cols) + u"\n")
+                    searchfile.write(sep.join(search_cols) + u"\n")
                     searchfile.write(
-                        u"|".join(self.col_type.get(col) for col in search_cols)
+                        sep.join(self.col_type.get(col) for col in search_cols)
                         + u"\n\n"
                     )
                     if self.extra_table is not None:
-                        extrafile.write(u"|".join(extra_cols) + u"\n")
+                        extrafile.write(sep.join(extra_cols) + u"\n")
                         extrafile.write(
-                            u"|".join(self.col_type.get(col) for col in extra_cols)
+                            sep.join(self.col_type.get(col) for col in extra_cols)
                             + u"\n\n"
                         )
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
                         searchfile.write(
-                            u"|".join(
+                            sep.join(
                                 tostr_func(processed.get(col), self.col_type[col])
                                 for col in search_cols
                             )
@@ -1018,7 +1019,7 @@ class PostgresTable(PostgresBase):
                         )
                         if self.extra_table is not None:
                             extrafile.write(
-                                u"|".join(
+                                sep.join(
                                     tostr_func(processed.get(col), self.col_type[col])
                                     for col in extra_cols
                                 )
@@ -1399,9 +1400,7 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``data`` -- a list of dictionaries, whose keys are columns and values the values to be set.
-          All dictionaries should have the same set of keys;
-          if this assumption is broken, some values may be set to their default values
-          instead of the desired value, or an error may be raised.
+          All dictionaries must have the same set of keys.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
@@ -1419,15 +1418,17 @@ class PostgresTable(PostgresBase):
             extra_cols = [col for col in self.extra_cols if col in data[0]]
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
+            search_cols = set(search_cols)
+            extra_cols = set(extra_cols)
         else:
             # we don't want to alter the input
             search_data = data[:]
+            search_cols = set(data[0])
         with DelayCommit(self, commit):
-            if reindex:
-                self.drop_pkeys()
-                self.drop_indexes()
             jsonb_cols = [col for col, typ in self.col_type.items() if typ == "jsonb"]
             for i, SD in enumerate(search_data):
+                if set(SD) != search_cols:
+                    raise ValueError("All dictionaries must have the same set of keys")
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
                     if col in SD:
@@ -1435,12 +1436,17 @@ class PostgresTable(PostgresBase):
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
+                    if set(ED) != extra_cols:
+                        raise ValueError("All dictionaries must have the same set of keys")
                     ED["id"] = self.max_id() + i + 1
                     for col in jsonb_cols:
                         if col in ED:
                             ED[col] = Json(ED[col])
                 cases.append((self.extra_table, extra_data))
             now = time.time()
+            if reindex:
+                self.drop_pkeys()
+                self.drop_indexes()
             for table, L in cases:
                 template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0])))
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
@@ -1818,7 +1824,7 @@ class PostgresTable(PostgresBase):
             ),
             [self.search_table],
         ).fetchone()
-        table = PostgresTable(self._db, *tabledata)
+        table = self._db._search_table_class_(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):

@@ -2,12 +2,10 @@
 {% block content %}
 
 <div>
-  The database contains information about {{ KNOWL('mf.bianchi.bianchimodularforms', 'Bianchi modular forms') }} over several imaginary quadratic fields including all nine fields of class number $1$,  for a range of levels.
-
+  {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
-  modular forms') }} </h2>
+<h2> Browse </h2>
 
 <p>
 Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
@@ -33,24 +31,7 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
 </ul>
 </p>
 
-
-
-
-<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
-<h4>Examples of  {{ KNOWL('mf.bianchi.base_change', title='base change')}} forms</h4>
-<ul>
-  {% for ex in bc_examples %}
-  <li>{{ex[0]}}: <a href={{ex[2]}}>{{ex[1]}}</a> {{ex[3]}}</li>
-  {% endfor %}
-</ul>
-
-<p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
-
+<p>Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></p>
 
 <h2> Search </h2>
 
@@ -58,5 +39,10 @@ Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf'
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

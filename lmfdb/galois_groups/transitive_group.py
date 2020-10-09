@@ -7,13 +7,17 @@ from sage.all import ZZ, gap, cached_function
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 
-@cached_function
-def small_group_display_knowl(n, k, name=None):
+@cached_function(key=lambda n,k,name,cache: (n,k,name))
+def small_group_display_knowl(n, k, name=None, cache=None):
+    label = '%s.%s' % (n, k)
     if not name:
         myname = '$[%d, %d]$'%(n,k)
     else:
         myname = name
-    group = db.gps_small.lookup('%s.%s' % (n, k))
+    if cache:
+        group = cache.get(label)
+    else:
+        group = db.gps_small.lookup(label)
     if group is None:
         return myname
     if not name:
@@ -125,7 +129,7 @@ class WebGaloisGroup:
         return(self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
-        if self._data.get('pretty',None) is not None:
+        if self._data.get('pretty') is not None:
             return self._data['pretty']
         gapid = "%d.%d"%(self.order(),self.gapid())
         gapgroup = db.gps_small.lookup(gapid)
@@ -212,11 +216,14 @@ def trylink(n, t):
 def group_display_short(n, t, emptyifnotpretty=False):
     return WebGaloisGroup.from_nt(n,t).display_short(emptyifnotpretty)
 
-@cached_function
-def group_pretty_and_nTj(n, t, useknowls=False):
+@cached_function(key=lambda n,t,useknowls,cache: (n,t,useknowls))
+def group_pretty_and_nTj(n, t, useknowls=False, cache=None):
     label = base_label(n, t)
     string = label
-    group = db.gps_transitive.lookup(label)
+    if cache:
+        group = cache.get(label)
+    else:
+        group = db.gps_transitive.lookup(label)
     group_obj = WebGaloisGroup.from_data(group)
     if useknowls and group is not None:
         ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
@@ -227,9 +234,12 @@ def group_pretty_and_nTj(n, t, useknowls=False):
         # modify if we use knowls and have the gap id
         if useknowls:
             gapid = "%d.%d"%(group['order'],group['gapid'])
-            gapgroup = db.gps_small.lookup(gapid)
+            if cache:
+                gapgroup = cache.get(gapid)
+            else:
+                gapgroup = db.gps_small.lookup(gapid)
             if gapgroup is not None:
-                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$')
+                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$', cache=cache)
         string = pretty + ' (as ' + ntj + ')'
     else:
         string = ntj

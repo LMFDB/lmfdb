@@ -154,10 +154,12 @@ cellpadding="5";
         <td>
          \(j\)</td>
         <td>=</td>
-        <td>{{ ec.j }}</td>
         {% if ec.fact_j %}
+        <td>{{ ec.j }}</td>
         <td>=</td>
         <td>{{ ec.fact_j }}</td>
+        {% else %}
+        <td colspan=3>{{ ec.j }}</td>
         {% endif %}
         </tr>
         <tr><td colspan=5>     {{ place_code('jinv') }}</td></tr>
@@ -186,70 +188,172 @@ cellpadding="5";
 
 <div>
 <h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
-{% if ec.rk == "?" %}
-{% if ec.rk_bnds != "not available" %}
-<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
-{% if ec.rank_bounds[1] != "Infinity" %}
- \(\le {{ec.rank_bounds[1]}}\)
-{% endif %}
-{% else %}
-Rank not available.
-{% endif %}
-{% else %}
-<b>Rank:</b> \( {{ ec.rank }} \)
-{% endif %}
-<p>{{ place_code('rank') }}</p>
-
-{% if ec.rank_bounds[0] %}
-{% if ec.gens == 'not available' %}
-<p>No generators available.</p>
-{% else %}
-<p><b>
-{% if ec.rank_bounds[0] == 1 %}
-Generator:
-{% else %}
-Generators:
-{% endif %}</b>
-{{ ec.gens }}
-{{ place_code('gens') }}
-</p>
-<p><b>
-{% if ec.rank_bounds[0] == 1 %}
-{{ KNOWL('ec.canonical_height', title="Height") }}:
-{% else %}
-{{ KNOWL('ec.canonical_height', title="Heights") }}:
-{% endif %}</b>
-{% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
-{{ place_code('heights') }}
-</p>
-{% endif %}
-{% endif %}
-
 <p>
-<b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
-{{ ec.reg }}
-{% if not ec.rank_bounds[0] %} {{ place_code('gens') }} {% endif %}
- {{ place_code('reg') }}
-</p>
-</div>
-
-<div>
-<h2> {{ KNOWL('ec.torsion_subgroup', title="Torsion subgroup") }} </h2>
 <table>
 <tr>
-<th>Structure:</th>
+  <th align = 'left'>{{ KNOWL('ec.rank', title="Rank")}}</th>
+{% if ec.rk == "not available" %}
+{% if ec.rank_bounds != "not available" %}
+  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
+{% else %}
+  <td>not available</td>
+{% endif %}
+{% else %}
+  <td>\({{ ec.rank }}\)</td>
+{% endif %}
+</tr>
+
+{% if ec.ngens %}
+<tr>
+  <th align = 'left'>
+    {% if ec.ngens==1 %}
+    Generator
+    {% else %}
+    Generators
+    {% endif %}
+  </th>
+  {% if ec.gens == 'not available' %}
+  <td>not available</td>
+  {% else %}
+  {% for gen in ec.gens %}
+  <td>{{ gen }}</td>
+  {% endfor %}
+{% endif %}
+</tr>
+{% endif %}
+
+{% if ec.heights %}
+<tr>
+  <th align = 'left'>
+    {% if ec.ngens==1 %}
+    {{ KNOWL('ec.canonical_height', title="Height") }}
+    {% else %}
+    {{ KNOWL('ec.canonical_height', title="Heights") }}
+    {% endif %}
+  </th>
+  {% for h in ec.heights %}
+  <td>\({{ h }}\)</td>
+  {% endfor %}
+</tr>
+{% endif %}
+
+<tr>
+<th align='left'>Torsion structure:</th>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
 <!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
-<th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
-<td>{{ ec.torsion_gens }}</td>
+<th align='left'>{% if ec.tr==1 %}Torsion generator{% else %}Torsion generators{% endif %}:</th>
+{% for gen in ec.torsion_gens %}
+<td>{{ gen }}</td>
+{% endfor %}
 </tr>
 <tr><td colspan=2> {{ place_code('torgens') }}</td></tr>
     {% endif %}
 </table>
+</p>
+</div>
+
+<div>
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD invariants') }}</h2>
+<p>
+        <table>
+
+        <tr>
+        <th align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</th>
+        <td>
+	  {{ ec.ar }}
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('rank') }}
+        </td>
+        </tr>
+
+	<tr>
+	  <th align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</th>
+	  {% if ec.rk == "not available" %}
+	  {% if ec.rank_bounds != "not available" %}
+	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
+	  {% else %}
+	  <td>not available</td>
+	  {% endif %}
+	  {% else %}
+	  <td>\({{ ec.rank }}\)</td>
+	  {% endif %}
+	</tr>
+        <tr>
+	  <th align='left'>
+	    {% if ec.bsd_status == "conditional" %}
+            {{ KNOWL('ec.regulator', title='Regulator*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.regulator', title='Regulator') }}:
+	    {% endif %}
+	  </th>
+          <td>
+	  {% if ec.reg=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.reg }}
+	  {% endif %}
+	</td>
+        </tr>
+
+        <tr>
+        <th align='left'>{{ KNOWL('ec.period', title='Period') }}:</th>
+        <td> {{ ec.omega }}</td>
+        </tr>
+
+        <tr>
+        <th align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</th>
+        <td> {{ ec.tamagawa_product }}
+          {% if ec.tamagawa_factors %}
+          &nbsp;=&nbsp; \({{ ec.tamagawa_factors }}\)
+          {% endif %}
+        </td>
+        </tr>
+
+        <tr>
+        <th align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</th>
+        <td>\({{ ec.torsion_order }}\)</td>
+        </tr>
+
+        <tr>
+        <th align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</th>
+        <td> {{ ec.Lvalue }}</td>
+        </tr>
+
+        <tr>
+	  <th align='left'>
+	    {% if ec.bsd_status ==  "conditional" %}
+            {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:
+	    {% endif %}
+	  </th>
+        <td> {{ ec.sha }} </td>
+        </tr>
+        </table>
+    </p>
+{% if ec.bsd_status == "conditional" %}
+<p>
+  * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
+</p>
+{% if ec.sha != "not available" and ec.sha!="1" %}
+<p>
+  Note: We expect that the nontriviality of &#1064; explains the
+  discrepancy between the upper bound on the rank and the analytic
+  rank.  The application of further descents should suffice to
+  establish the weak BSD conjecture for this curve.
+</p>
+{% endif %}
+{% endif %}
+
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 </div>
 
 <div>
@@ -390,10 +494,10 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 <div>
   <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
-{% if ec.isogeny_degrees %}
+{% if ec.isodeg %}
 This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
 (excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
-{{ ec.isogeny_degrees}}.
+{{ ec.isodeg}}.
 <br>
 Its {{KNOWL('ec.isogeny_class','isogeny class')}}
 <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>

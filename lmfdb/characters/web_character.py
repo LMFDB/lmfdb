@@ -66,6 +66,7 @@ from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.utils import web_latex
+from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -767,11 +768,13 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        f = [   ("Modulus", [self.modulus]),
-                ("Conductor", [self.conductor]),
-                ("Order", [self.order]),
-                ("Real", [self.isreal]),
-                ("Primitive", [self.isprimitive])]
+        f = [
+            ("Modulus", [self.modulus]),
+            ("Conductor", [self.conductor]),
+            ("Order", [self.order]),
+            ("Real", [self.isreal]),
+            ("Primitive", [self.isprimitive])
+        ]
         if self.isminimal:
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
@@ -1179,7 +1182,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
         if not myrep is None:
             j=myrep['Dets'].index(label)
-            artlabel = myrep['Baselabel']+'c'+str(j+1)
+            artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,
                 url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
 
