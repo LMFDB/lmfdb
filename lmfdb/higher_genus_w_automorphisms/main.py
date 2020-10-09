@@ -234,7 +234,7 @@ def groups_per_genus(genus):
     for dataz in gp_data:
         group = dataz['group']
         group_str = str(dataz['group'])
-        iso_class = sg_pretty("%s.%s" % group)
+        iso_class = sg_pretty("%s.%s" % tuple(group))
         if dataz['g0_is_gt0']:
             groups_gt0.append((iso_class, group_str, dataz['gen_vectors'], cc_display(dataz['g0_gt0_list'])))
         elif not show_top_braid:
