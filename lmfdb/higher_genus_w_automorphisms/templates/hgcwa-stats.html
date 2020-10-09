@@ -15,7 +15,7 @@ table.ntdata td {
 }
 </style>
 
-<h2> Distribution by genus </h2>
+<h2> Distribution by {{KNOWL('ag.curve.genus',title='genus')}}</h2>
 {% for i in range(0, genus_detail | length, max_cols) %}
 <div>
   <table border=0 cellpadding=3 class="ntdata">
@@ -24,7 +24,7 @@ table.ntdata td {
         <th>Genus</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <th class="center">
-          <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.genus_num}}</a>
+           {{genus.genus_num}}
         </th>
         {% endfor %}
       </tr>
@@ -37,13 +37,13 @@ table.ntdata td {
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct refined passports</th>
+        <th>distinct  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} </th>
         {% for genus in genus_detail[i:i+max_cols] %}
-        <td>{{genus.num_refined_pp[0]}}</td>
+        <td> <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.num_refined_pp[0]}}</a></td>
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct generating vectors</th>
+        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}  </th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           {{genus.num_gen_vectors[0]}}
@@ -51,7 +51,7 @@ table.ntdata td {
         {% endfor %}
       </tr>
       <tr>
-        <th>unique groups</th>
+        <th>unique  {{KNOWL('group',title='groups')}} </th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.num_unique_groups}}</a>
@@ -59,7 +59,7 @@ table.ntdata td {
         {% endfor %}
       </tr>
       <tr>
-        <th>maximum group order</th>
+        <th>maximum {{KNOWL('group.order',title='group order')}}</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
 	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.max_grp_order)}}>{{genus.max_grp_order}}</a>
@@ -72,7 +72,7 @@ table.ntdata td {
 {% endfor %}
 
 
-<h2>Distinct families by genus and quotient genus</h2>
+<h2>Distinct families by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
 <table class="ntdata">
   <thead>
     <tr class="space">
@@ -108,7 +108,7 @@ table.ntdata td {
   </tbody>
 </table>
 
-<h2>Distinct refined passports by genus and quotient genus</h2>
+<h2>Distinct  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
 <table class="ntdata">
   <thead>
     <tr class="space">
@@ -135,7 +135,7 @@ table.ntdata td {
         {% elif (index >= genus_detail[j].num_families | length) %}
         -
         {% else %}
-        {{genus_detail[j].num_refined_pp[index]}}
+         <a href={{ url_for('.index', genus=genus, g0=g0)}}>{{genus_detail[j].num_refined_pp[index]}}</a>
         {% endif %}
       </td>
       {% endfor %}
@@ -144,7 +144,7 @@ table.ntdata td {
   </tbody>
 </table>
 
-<h2>Distinct generating vectors by genus and quotient genus</h2>
+<h2>Distinct  {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
 <table class="ntdata">
   <thead>
     <tr class="space">
