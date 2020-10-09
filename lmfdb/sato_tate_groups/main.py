@@ -11,6 +11,7 @@ from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
     SearchArray, TextBox, SelectBox, CountBox,
+    StatsDisplay, totaler, proportioners, comma,
     parse_ints, parse_rational, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.utils.interesting import interesting_knowls
@@ -161,7 +162,7 @@ def get_bread(tail=[]):
 
 @st_page.route('/')
 def index():
-    info = to_dict(request.args, search_array=STSearchArray())
+    info = to_dict(request.args, search_array=STSearchArray(), stats=STStats())
     if request.args:
         return search(info)
     weight_list= [0, 1]
@@ -191,6 +192,12 @@ def interesting():
         credit=credit_string,
         learnmore=learnmore_list()
     )
+
+@st_page.route("/stats")
+def statistics():
+    title = "Sato-Tate groups: statistics"
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=STStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -665,3 +672,13 @@ class STSearchArray(SearchArray):
             [count]]
 
         self.refine_array = [[weight, degree, include_irrational, identity_component, components, trace_zero_density]]
+
+class STStats(StatsDisplay):
+    table = db.gps_sato_tate
+    baseurl_func = ".index"
+
+    stat_list = [
+        {"cols": ["weight", "degree"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total}
+    ]
