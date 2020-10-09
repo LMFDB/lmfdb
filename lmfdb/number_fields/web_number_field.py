@@ -249,13 +249,26 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
-def formatfield(coef):
+def formatfield(coef, show_poly=False):
+    r"""
+      Take a list of coefficients (which can be a string like '1,3,1'
+      and either produce a number field knowl if the polynomial matches
+      a number field in the database, otherwise produce a knowl which
+      says say "Deg 15", which can be opened to show the degree 15
+      polynomial.  
+      
+      If show_poly is set to true and the polynomial is not in the
+      database, just display the polynomial (no knowl).
+    """
     if isinstance(coef, text_type):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
         mypol = latex(coeff_to_poly(coef))
+        if show_poly:
+            return '$'+mypol+'$'
+
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
         return mypol
