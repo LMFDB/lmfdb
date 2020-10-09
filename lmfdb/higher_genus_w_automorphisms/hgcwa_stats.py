@@ -27,6 +27,7 @@ class HGCWAstats(StatsDisplay):
         self.generating_vectors_knowl = display_knowl(
             'curve.highergenus.aut.generatingvector',
             title='generating vectors')
+        self.dimension_knowl = display_knowl('curve.highergenus.aut.dimension', title = 'dimension'),
         self.distinct_generating_vectors = comma(db.hgcwa_passports.count())
         self.distinct_refined_passports = comma(compute_total_refined_pp())
 

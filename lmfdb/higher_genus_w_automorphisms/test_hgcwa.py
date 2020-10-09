@@ -36,7 +36,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_stats_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats')
-        assert 'unique groups' in L.get_data(as_text=True)
+        assert 'distinct families' in L.get_data(as_text=True)
 
     def test_unique_groups_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats/groups_per_genus/5')
