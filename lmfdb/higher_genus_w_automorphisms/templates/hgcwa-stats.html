@@ -1,5 +1,5 @@
-{% extends 'homepage.html' %}
-{% block content %}
+{% extends 'display_stats.html' %}
+{% block custom_stats %}
 
 {% set max_cols = 10 %}
 {% set genus_detail = info.by_genus_data %}
@@ -14,12 +14,6 @@ table.ntdata td {
   text-align: center;
 }
 </style>
-
-<div>
-  <p>
-    {{info.summary | safe}}
-  </p>
-</div>
 
 <h2> Distribution by genus </h2>
 {% for i in range(0, genus_detail | length, max_cols) %}
@@ -185,28 +179,6 @@ table.ntdata td {
     {% endfor %}
   </tbody>
 </table>
-
-
-{# Taken from display_stats.html #}
-{% for d in info.distributions %}
-
-{% if d.attribute.top_title %}
-<h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{ d.attribute.top_title | safe }}</h2>
-{% endif %}
-{% for paragraph in d.attribute.intro %}
-<p>{{paragraph}}</p>
-{% endfor %}
-
-
-{% if (d.attribute.cols | length) == 1 %}
-{% include 'stat_1d.html' %}
-{% else %}
-{% include 'stat_2d.html' %}
-{% endif %}
-
-{% endfor %}
-
-
 
 
 {% endblock %}
