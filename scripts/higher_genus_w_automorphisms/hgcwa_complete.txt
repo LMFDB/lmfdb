@@ -1,0 +1,17 @@
+genus|g0_gt0_compute|top_braid_compute|top_braid_g0_gt0|num_families|num_refined_pp|num_gen_vectors|num_unique_groups
+smallint|boolean|boolean|boolean|integer[]|integer[]|integer[]|integer
+
+2|True|True|False|{20, 19, 1}|{38, 37, 1}|{39, 38, 1}|18
+3|True|True|False|{48, 40, 7, 1}|{186, 176, 9, 1}|{255, 191, 63, 1}|36
+4|True|True|False|{63, 54, 7, 2}|{225, 215, 8, 2}|{352, 289, 61, 2}|43
+5|False|True|False|{70, 70}|{627, 627}|{792, 792}|61
+6|False|True|False|{74, 74}|{409, 409}|{901, 901}|58
+7|False|True|False|{103, 103}|{969, 969}|{2219, 2219}|80
+8|False|False|False|{88, 88}|{436, 436}|{2080, 2080}|62
+9|False|False|False|{194, 194}|{3461, 3461}|{6186, 6186}|148
+10|False|False|False|{174, 174}|{2039, 2039}|{14422, 14422}|116
+11|False|False|False|{163, 163}|{2079, 2079}|{14611, 14611}|110
+12|False|False|False|{160, 160}|{1506, 1506}|{17507, 17507}|95
+13|False|False|False|{302, 302}|{11728, 11728}|{58047, 58047}|196
+14|False|False|False|{176, 176}|{1421, 1421}|{43480, 43480}|95
+15|False|False|False|{280, 280}|{6665, 6665}|{174121, 174121}|167

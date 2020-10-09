@@ -211,10 +211,12 @@ def parse_projective_type(inp, query, qfield):
         if current and current != query[qfield]:
             raise ValueError('Projective image and projective image type are inconsistent')
     elif inp == 'dn':
-        query[qfield] = {'$in': dihedrals}
+        dih_list = [{qfield: z} for z in dihedrals]
+        query[qfield] = {'$or': dih_list}
+        #query[qfield] = {'$in': dihedrals}
         if current and current not in dihedrals:
             raise ValueError('Projective image and projective image type are inconsistent')
-        else:
+        elif current:
             query[qfield] = current
 
 def url_for_label(label):
