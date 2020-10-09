@@ -59,7 +59,7 @@ class WebBMF(object):
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific Hilbert newform in the forms
+        Searches for a specific Bianchi newform in the forms
         collection by its label.
         """
         data = db.bmf_forms.lookup(label)
@@ -118,7 +118,7 @@ class WebBMF(object):
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        
+
         try:
             if self.sfe == 1:
                 self.sign = "+1"

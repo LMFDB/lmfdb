@@ -2,7 +2,7 @@
 from six import string_types
 import re
 
-from flask import render_template, url_for, request, redirect
+from flask import render_template, url_for, request, redirect, make_response
 from sage.all import latex
 
 from lmfdb import db
@@ -39,6 +39,22 @@ def get_bread(tail=[]):
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
+
+def get_bmf(label):
+    """Return a complete BMF, give its label.  Note that the
+    hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
+    separate collection.  Use of this function hides this
+    implementation detail from the user.
+    """
+    f = db.bmf_forms.lookup(label)
+    if f is None:
+        return None
+    if not 'hecke_polynomial' in f:
+        # Hecke data now stored in separate hecke collection:
+        h = db.hmf_hecke.lookup(label)
+        if h:
+            f.update(h)
+    return f
 
 def bc_info(bc):
     return 'yes' if bc > 0 else 'yes (twist)' if bc < 0 else 'no'
@@ -341,6 +357,76 @@ def render_bmf_space_webpage(field_label, level_label):
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
+
+@bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
+def render_bmf_webpage_download(**args):
+    if args['download_type'] == 'magma':
+        response = make_response(download_bmf_magma(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['download_type'] == 'sage':
+        response = make_response(download_bmf_sage(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+
+def download_bmf_magma(**args):
+
+    outstr = 'Magma code Under construction'
+
+    return outstr
+
+
+def download_bmf_sage(**args):
+
+    # label = str(args['label'])
+    # f = get_bmf(label)
+    # if f is None:
+    #     return "No such form"
+
+    # hecke_pol  = f['hecke_polynomial']
+    # hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
+    # AL_eigs    = f['AL_eigenvalues']
+
+    # F = WebNumberField(f['field_label'])
+    # F_hmf = get_hmf_field(f['field_label'])
+
+    # outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    # outstr += '  It will load the data associated to the HMF, including\n'
+    # outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    # outstr += '*/\n\n'
+
+    # outstr += 'P.<x> = PolynomialRing(QQ)\n'
+    # outstr += 'g = P(' + str(F.coeffs()) + ')\n'
+    # outstr += 'F.<w> = NumberField(g)\n'
+    # outstr += 'ZF = F.ring_of_integers()\n\n'
+
+    # outstr += 'NN = ZF.ideal(' + f["level_ideal"] + ')\n\n'
+
+    # outstr += 'primes_array = [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[',
+    #                                                                                   '],\\\n[') + ']\n'
+    # outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
+
+    # if hecke_pol != 'x':
+    #     outstr += 'heckePol = ' + hecke_pol + '\n'
+    #     outstr += 'K.<e> = NumberField(heckePol)\n'
+    # else:
+    #     outstr += 'heckePol = x\nK = QQ\ne = 1\n'
+
+    # outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
+    # outstr += '\nhecke_eigenvalues = {}\n'
+    # outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
+
+    # outstr += 'AL_eigenvalues = {}\n'
+    # for s in AL_eigs:
+    #     outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+
+    # outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
+
+    outstr = "Sage code under construction"
+    return outstr
+
+
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
     label = "-".join([field_label, level_label, label_suffix])
@@ -360,11 +446,16 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
             (data.short_label, '')])
         properties = data.properties
         friends = data.friends
+        info['downloads'] = [
+        ('Modular form to Magma', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='magma')),
+        ('Eigenvalues to Sage', url_for(".render_bmf_webpage_download", field_label=field_label, label_suffix=label_suffix, level_label=level_label, download_type='sage'))
+        ]
     except ValueError:
         flash_error("No Bianchi modular form in the database has label %s", label)
         return redirect(url_for(".index"))
     return render_template(
         "bmf-newform.html",
+        downloads=info["downloads"],
         title=title,
         credit=credit,
         bread=bread,

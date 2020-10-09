@@ -64,10 +64,10 @@
       status: future
     - title: Noncongruence
       status: future
-    - title: mod &#8467; 
+    - title: mod &#8467;
       url_for: "modlmf.modlmf_render_webpage"
       status: future
-    - title: Hecke algebra 
+    - title: Hecke algebra
       url_for: "hecke_algebras.hecke_algebras_render_webpage"
       status: future
     - title: GL(3) Maass
