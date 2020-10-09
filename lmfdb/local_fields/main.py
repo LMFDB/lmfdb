@@ -3,7 +3,6 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from collections import defaultdict
 from sage.all import PolynomialRing, QQ, RR, latex, cached_function
 
 from lmfdb import db
@@ -17,6 +16,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
+    knowl_cache, galdata, galunformatter,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
@@ -506,34 +506,10 @@ def galdisp(p, n):
 # We want to look up gap ids and names only once, rather than once for each Galois group
 @cached_function
 def galcache():
-    galgps = db.lf_fields.distinct("galois_label")
-    cache = {}
-    reverse = defaultdict(list)
-    gaps = []
-    for rec in db.gps_transitive.search({"label": {"$in": galgps}}, ["label", "order", "gapid", "pretty"]):
-        label = rec["label"]
-        cache[label] = rec
-        gapid = "%d.%d" % (rec["order"], rec["gapid"])
-        gaps.append(gapid)
-        reverse[gapid].append(label)
-    for rec in db.gps_small.search({"label": {"$in": gaps}}, ["label", "pretty"]):
-        label = rec["label"]
-        cache[label] = rec
-        pretty = rec.get("pretty")
-        for nTj in reverse[label]:
-            if "pretty" in cache[nTj]:
-                continue
-            cache[nTj]["pretty"] = ("$%s$" % pretty) if pretty else ""
-    return cache
-Tfinder = re.compile(r"(\d+)T(\d+)")
-def galdata(gal):
-    return [int(x) for x in Tfinder.findall(gal)[0]]
+    return knowl_cache(db.lf_fields.distinct("galois_label"))
 def galformatter(gal):
     n, t = galdata(gal)
     return group_pretty_and_nTj(n, t, True, cache=galcache())
-def galunformatter(gal):
-    n, t = galdata(gal)
-    return "%dT%d" % (n, t)
 class LFStats(StatsDisplay):
     table = db.lf_fields
     baseurl_func = ".index"
