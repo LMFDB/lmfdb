@@ -20,7 +20,6 @@ from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (
     complete_group_code, knowl_cache, galdata, galunformatter,
-    small_group_display_knowl, smallgroup_cache,
     group_pretty_and_nTj)
 
 from lmfdb.artin_representations import artin_representations_page
