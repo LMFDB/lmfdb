@@ -594,7 +594,7 @@ def scinot(rng, minlen=None):
         minlen = len(rng)
     if minlen > 3 and rng[0] == "1" and rng[-1] in ["0", "1"] and all(ch == "0" for ch in rng[1:-1]):
         return "$10^{%s}$" % (len(rng)-1)
-    return rng
+    return "$%s$" % rng
 
 tpow = re.compile(r"10\^\{(\d+)\}")
 def unsci(rng, first=False):
