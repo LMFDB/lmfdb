@@ -248,7 +248,7 @@ def netloc_redirect():
         not white_listed(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
-        return redirect(urlunparse(replaced), code=301)
+        return redirect(urlunparse(replaced), code=302)
 
 
 

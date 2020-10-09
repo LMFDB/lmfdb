@@ -495,6 +495,11 @@ def comma(x):
     """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
+def latex_comma(x):
+    """
+    For latex we need to use braces around the commas to get the spacing right.
+    """
+    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:

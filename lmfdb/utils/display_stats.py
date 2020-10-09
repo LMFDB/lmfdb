@@ -81,7 +81,7 @@ class proportioners(object):
         """
         def inner(grid, row_headers, col_headers, stats):
             for row, header in zip(grid, row_headers):
-                total = stats.count(query(header))
+                total = stats._tmp_table.count(query(header))
                 for D in row:
                     D['proportion'] = _format_percentage(D['count'], total)
         return inner
@@ -132,7 +132,7 @@ class proportioners(object):
         def inner(grid, row_headers, col_headers, stats):
             for row, row_head in zip(grid, row_headers):
                 for D, col_head in zip(row, col_headers):
-                    total = stats.count(query(row_head, col_head))
+                    total = stats._tmp_table.count(query(row_head, col_head))
                     D['proportion'] = _format_percentage(D['count'], total)
         return inner
 
@@ -454,7 +454,7 @@ class StatsDisplay(UniqueRepresentation):
     def stats(self):
         return self
 
-    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
+    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, baseurl_func=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -472,7 +472,7 @@ class StatsDisplay(UniqueRepresentation):
                          and this object, which adds some totals to the grid
         - ``proprotioner`` -- a function for adding proportions
             See examples at the top of display_stats.py.
-        - ``base_url`` -- a base url, to which col=value tags are appended.
+        - ``baseurl_func`` -- a base url, to which url_for is applied and then col=value tags are appended.
             Defaults to the url for ``self.baseurl_func``.
         - ``url_extras`` -- Text to add to the url after the '?'.
         - ``kwds`` -- used to discard unused extraneous arguments.
@@ -509,12 +509,13 @@ class StatsDisplay(UniqueRepresentation):
         query_formatter = self._query_formatters
         sort_key = self._sort_keys
         reverse = self._reverses
-        if base_url is None:
-            base_url = url_for(self.baseurl_func) + '?'
+        if baseurl_func is None:
+            baseurl_func = self.baseurl_func
+        base_url = url_for(baseurl_func) + '?'
         if url_extras:
             base_url += url_extras
         if constraint:
-            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items())
+            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items() if col not in cols)
         if table is None:
             table = self.table
         self._tmp_table = table = table.stats
