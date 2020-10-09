@@ -1533,8 +1533,20 @@ ORDER BY v.ord LIMIT %s"""
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
-                    selecter_constraints.append(SQL("values->{0} = %s".format(i)))
-                    selecter_values.append(Json(constraint[x]))
+                    cx = constraint[x]
+                    if isinstance(cx, dict) and any(k and k[0] == "$" for k in cx):
+                        # Have to handle some constraint parsing here
+                        from lmfdb.backend.utils import postgres_infix_ops
+                        typ = self.table.col_type[x]
+                        for k, v in cx.items():
+                            op = postgres_infix_ops.get(k)
+                            if not op:
+                                raise ValueError("Unsupported constraint key: %s" % k)
+                            selecter_constraints.append(SQL("(values->>{0})::{1} {2} %s".format(i, typ, op)))
+                            selecter_values.append(Json(v))
+                    else:
+                        selecter_constraints.append(SQL("values->{0} = %s".format(i)))
+                        selecter_values.append(Json(cx))
         else:
             allcols = sorted(cols)
             selecter_values = [split_list, Json(allcols)]
