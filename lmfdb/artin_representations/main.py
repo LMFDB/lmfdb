@@ -618,7 +618,7 @@ def trange(a, b):
         return "1-" + str(10**b)
     return str(10**a+1) + "-" + str(10**b)
 def intervals(start, end, step):
-    return list(zip(range(start, end, step), range(start+step, end+step, step)))
+    return [(a, a+step) for a in range(start, end, step)]
 
 @cached_function
 def galcache():
