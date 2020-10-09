@@ -678,12 +678,25 @@ class STStats(StatsDisplay):
     baseurl_func = ".index"
 
     stat_list = [
-        #{"cols": ["weight", "degree"],
-        # "totaler": totaler(),
-        # "proportioner": proportioners.per_row_total}
-        {"cols": ["identity_component", "component_group"],
+        {"cols": ["component_group", "identity_component"],
          "totaler": totaler(),
-         "proportioner": proportioners.per_row_total}
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["identity_component"],
+         "constraint": {"maximal": True},
+         "top_title": [("maximal subgroups by identity component", None)],
+        },
+        {"cols": ["trace_zero_density", "identity_component"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["second_trace_moment", "identity_component"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["fourth_trace_moment", "identity_component"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["first_a2_moment", "identity_component"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
     ]
 
     knowls = {"identity_component": "st_group.identity_component",
