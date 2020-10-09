@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
+import os, yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
@@ -322,14 +323,38 @@ def parse_prec(info):
         return ["<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)"]
     return []
 
+
+def eta_quotient_texstring(etadata):
+    """
+    Returns a latex string representing an eta quotient.
+
+    etadata should be a dictionary as returned from parsing `eta.yaml`.
+    """
+    texstr = ''
+    for key, value in etadata.items():
+        texstr += '\\eta({}z)'.format(key if key != 1 else '')
+        if value != 1:
+            texstr += '^{%s}' % value
+    return texstr
+
+
 def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
+
     info = to_dict(request.args)
     info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
+
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    etaquotients = yaml.load(
+            open(os.path.join(_curdir, "eta.yaml")),
+            Loader=yaml.FullLoader)
+    if label in etaquotients:
+        info['eta_quotient'] = eta_quotient_texstring(etaquotients[label])
+
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))

@@ -249,6 +249,11 @@ function show_qexp(qstyle) {
 </form>
 {% endif %}
 
+{% if info.eta_quotient %}
+<h2>Expression as an {{KNOWL('mf.half_integral_weight.eta_quotients', title='Eta quotient')}}</h2>
+<p>\(f(z) = {{ info.eta_quotient }}\).</p>
+{% endif %}
+
 {% if newform.char_order != 1 and (newform.dim <= 20 or newform.weight == 1 or newform.embedding_label) %}
 <h2>Character values</h2>
 <p>We give the values of \(\chi\) on generators for \(\left(\mathbb{Z}/{{newform.level}}\mathbb{Z}\right)^\times\).</p>
