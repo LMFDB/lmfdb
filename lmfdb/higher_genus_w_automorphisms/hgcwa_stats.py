@@ -3,18 +3,13 @@
 
 from flask import url_for
 from lmfdb import db
+from lmfdb.backend import SQL
 
 from lmfdb.utils import comma, display_knowl, StatsDisplay
 
-
-the_HGCWAstats = None
-
-def get_stats():
-    global the_HGCWAstats
-    if the_HGCWAstats is None:
-        the_HGCWAstats = HGCWAstats()
-    return the_HGCWAstats
-
+def compute_total_refined_pp():
+    # This is faster than db.hgcwa_passports.count_distinct('passport_label')
+    return db._execute(SQL("SELECT SUM(num_refined_pp[1]) FROM hgcwa_complete")).fetchone()[0]
 
 class HGCWAstats(StatsDisplay):
     """
@@ -33,8 +28,7 @@ class HGCWAstats(StatsDisplay):
             'curve.highergenus.aut.generatingvector',
             title='generating vectors')
         self.distinct_generating_vectors = comma(db.hgcwa_passports.count())
-        #self.distinct_refined_passports = comma(compute_total_refined_pp())
-        self.distinct_refined_passports = comma(len(db.hgcwa_passports.distinct('passport_label')))
+        self.distinct_refined_passports = comma(compute_total_refined_pp())
 
         self.by_genus_data = init_by_genus_data()
 
@@ -62,7 +56,7 @@ class HGCWAstats(StatsDisplay):
             r'There are %s distinct %s in the database. The number of distinct '
             r'%s is %s. ' %
             (2, self.genus_max, self.distinct_refined_passports,
-            self.refined_passports_knowl, self.generating_vectors_knowl, 
+            self.refined_passports_knowl, self.generating_vectors_knowl,
             self.distinct_generating_vectors)
         )
 
@@ -82,18 +76,10 @@ def init_by_genus_data():
     for genus in range(2, hgcwa.max('genus') + 1):
         genus_data = db.hgcwa_complete.lookup(genus)
         genus_detail.append(
-            {'genus_num': genus, 
+            {'genus_num': genus,
              'num_families': genus_data['num_families'],
-             'num_refined_pp': genus_data['num_refined_pp'], 
-             'num_gen_vectors': genus_data['num_gen_vectors'], 
-             'num_unique_groups': genus_data['num_unique_groups'], 
+             'num_refined_pp': genus_data['num_refined_pp'],
+             'num_gen_vectors': genus_data['num_gen_vectors'],
+             'num_unique_groups': genus_data['num_unique_groups'],
              'max_grp_order': hgcwa.max('group_order', {'genus':genus})})
     return genus_detail
-
-'''
-def compute_total_refined_pp():
-    total = 0
-    for genus in range(2, db.hgcwa_passports.max('genus')+1):
-        total += db.hgcwa_complete.lookup(genus)['num_refined_pp'][0]
-    return total
-'''

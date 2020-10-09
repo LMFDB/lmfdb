@@ -23,7 +23,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 from collections import defaultdict
 
 logger = make_logger("hgcwa")
@@ -177,7 +177,7 @@ def index():
     genus_list = list(range(2, genus_max + 1))
     info['count'] = 50
     info['genus_list'] = genus_list
-    info['short_summary'] = get_stats().short_summary
+    info['short_summary'] = HGCWAstats().short_summary
 
     return render_template("hgcwa-index.html",
                            title="Families of higher genus curves with automorphisms",
@@ -209,11 +209,10 @@ def interesting():
 def statistics():
     title = 'Families of higher genus curves with automorphisms: Statistics'
     bread = get_bread('Statistics')
-   
-    return render_template("hgcwa-stats.html", info=get_stats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template("hgcwa-stats.html", info=HGCWAstats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
 
-@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
+@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<int:genus>")
 def groups_per_genus(genus):
     un_grps = db.hgcwa_unique_groups
     # Redirect to 404 if statistic is not found
@@ -223,26 +222,25 @@ def groups_per_genus(genus):
     info = {}
     gp_data = un_grps.search({'genus':genus},projection=['group','g0_is_gt0','g0_gt0_list','gen_vectors','topological','braid'],info=info)
 
-    
     # Make list groups_0 where each entry is a list [ group, gen_vectors, tops, braids
-    groups_0 = []       
+    groups_0 = []
     # Make list groups_gt0 where each entry is a list [group, gen_vectors]
     groups_gt0 = []
 
-    complete_info=db.hgcwa_complete.lucky({'genus':genus})
+    complete_info = db.hgcwa_complete.lucky({'genus':genus})
     show_top_braid = complete_info['top_braid_compute']
     show_g0_gt0 = complete_info['g0_gt0_compute']
-    
+
     for dataz in gp_data:
-        group =dataz['group']
+        group = dataz['group']
         group_str = str(dataz['group'])
-        iso_class = sg_pretty(str(group[0])+"."+str(group[1]))
+        iso_class = sg_pretty("%s.%s" % group)
         if dataz['g0_is_gt0']:
-            groups_gt0.append([iso_class,group_str, dataz['gen_vectors'],cc_display(dataz['g0_gt0_list'])])
+            groups_gt0.append((iso_class, group_str, dataz['gen_vectors'], cc_display(dataz['g0_gt0_list'])))
         elif not show_top_braid:
-            groups_0.append([ iso_class,group_str, dataz['gen_vectors']])             
-        else:    
-            groups_0.append([iso_class,group_str, dataz['gen_vectors'], dataz['topological'], dataz['braid']])
+            groups_0.append((iso_class, group_str, dataz['gen_vectors']))
+        else:
+            groups_0.append((iso_class, group_str, dataz['gen_vectors'], dataz['topological'], dataz['braid']))
 
     info = {
         'genus': genus,
@@ -253,13 +251,11 @@ def groups_per_genus(genus):
         'group_display' : group_display
     }
 
-    title = ('Families of higher genus curves with automorphisms: Genus ' +
-             genus +
-             ' group statistics')
+    title = 'Families of higher genus curves with automorphisms: Genus %s group statistics' % genus
     bread = get_bread([('Statistics', url_for('.statistics')),
                        ('Groups per genus', url_for('.statistics')),
                        (str(genus), ' ')])
-       
+
     return render_template("hgcwa-stats-groups-per-genus.html",
                            info=info,
                            credit=credit,
