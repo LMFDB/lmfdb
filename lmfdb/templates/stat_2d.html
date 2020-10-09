@@ -4,7 +4,7 @@
     <th></th>
     <th></th>
     {% for chead in d.col_headers %}
-    <th class="chead">{{ chead }}</th>
+    <th class="chead">{{ chead | safe}}</th>
     {% endfor %}
   </tr>
   {% for rhead, row in d.grid %}
@@ -12,11 +12,11 @@
     {% if loop.index == 1 %}
     <th rowspan="{{ (d.grid | length) * 2 }}">
       <div class="table_rotate">
-        {{info.stats._short_display[d.attribute.cols[0]]}}
+        {{info.stats._short_display[d.attribute.cols[0]] | safe}}
       </div>
     </th>
     {% endif %}
-    <th class="rhead" rowspan=2>{{ rhead }}</th>
+    <th class="rhead" rowspan=2>{{ rhead | safe}}</th>
     {% for c in row %}
     {% if c.count %}
     {% if c.query %}
