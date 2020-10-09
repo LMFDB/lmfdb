@@ -195,13 +195,13 @@ def index():
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
     niqfs = len(fields_by_sig[0,1])
     nrqfs = len(fields_by_sig[2,0])
-    info['fields'].append(['{} real <a href="{}">quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">real quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_signature', d=2, r=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
     iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
-    info['fields'].append(['{} imaginary <a href="{}">quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">imaginary quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
 

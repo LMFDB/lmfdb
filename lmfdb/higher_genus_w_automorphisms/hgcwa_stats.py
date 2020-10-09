@@ -1,99 +1,85 @@
 # based on /lmfdb/elliptic_curves/ec_stats.py
-# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus
+# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus, Kevin Wang
 
-
-import re
+from flask import url_for
 from lmfdb import db
-from sage.all import UniqueRepresentation, cached_method
-from lmfdb.logger import make_logger
+from lmfdb.backend import SQL
 
-logger = make_logger("hgcwa")
+from lmfdb.utils import comma, display_knowl, StatsDisplay
 
-def oldstat(name):
-    return db.hgcwa_passports.stats.get_oldstat(name)
+def compute_total_refined_pp():
+    # This is faster than db.hgcwa_passports.count_distinct('passport_label')
+    return db._execute(SQL("SELECT SUM(num_refined_pp[1]) FROM hgcwa_complete")).fetchone()[0]
 
-def max_group_order(counts):
-    orders = []
-    for count in counts:
-        group = count[0]
-        order = int(re.search(r'\[(\d+)', group).group(1))
-        orders.append(order)
-    return max(orders)
-
-class HGCWAstats(UniqueRepresentation):
+class HGCWAstats(StatsDisplay):
     """
     Class for creating and displaying statistics for higher genus curves with automorphisms
     """
     #TODO provide getter for subset of stats (e.g. for top matter)
-    @cached_method
-    def stats(self):
-        logger.debug("Computing elliptic curve stats...")
-        stats = {}
 
-        # Populate simple data
-        stats['genus'] = oldstat('genus')
-        stats['dim'] = oldstat('dim')
-        stats['refined_passports'] = oldstat('passport_label')
-        stats['generating_vectors'] = oldstat('total_label')
+    def __init__(self):
+        self.genus_max = db.hgcwa_passports.max('genus')
+        self.dim_max = db.hgcwa_passports.max('dim')
+        self.g0_max = db.hgcwa_passports.max('g0')
+        self.refined_passports_knowl = display_knowl(
+            'curve.highergenus.aut.refinedpassport', 
+            title='refined passports')
+        self.generating_vectors_knowl = display_knowl(
+            'curve.highergenus.aut.generatingvector',
+            title='generating vectors')
+        self.distinct_generating_vectors = comma(db.hgcwa_passports.count())
+        self.distinct_refined_passports = comma(compute_total_refined_pp())
 
-        ##################################
-        # Collect genus joint statistics #
-        ##################################
+        self.by_genus_data = init_by_genus_data()
 
-        # An iterable list of distinct curve genera
-        genus_list = [ count[0] for count in stats['genus']['counts'] ]
-        genus_list.sort()
+    @property
+    def short_summary(self):
+        stats_url = url_for('.statistics')
+        return (
+            r'Currently the database contains all groups $G$ acting as '
+            r'automorphisms of curves $X/\C$ of genus %s to %s such that $X/G$ '
+            r'has genus 0, as well as genus 2 through 4 with quotient genus '
+            r'greater than 0. There are %s distinct %s in the database. The '
+            r'number of distinct %s is %s. Here are some '
+            r'<a href="%s">further statistics</a>.' % 
+            (2, self.genus_max, self.distinct_refined_passports,
+            self.refined_passports_knowl, self.generating_vectors_knowl, 
+            self.distinct_generating_vectors, stats_url)
+        )
 
-        genus_family_counts = oldstat('bygenus/label')
-        genus_rp_counts = oldstat('bygenus/passport_label')
-        genus_gv_counts = oldstat('bygenus/total_label')
+    @property
+    def summary(self):
+        return (
+            r'Currently the database contains all groups $G$ acting as '
+            r'automorphisms of curves $X$ from genus %s up to genus %s so that '
+            r'the quotient space $X/G$ is the Riemann sphere ($X/G$ has genus 0). '
+            r'There are %s distinct %s in the database. The number of distinct '
+            r'%s is %s. ' %
+            (2, self.genus_max, self.distinct_refined_passports,
+            self.refined_passports_knowl, self.generating_vectors_knowl,
+            self.distinct_generating_vectors)
+        )
 
-        # Get unique joint genus stats
-        stats['genus_detail'] = []
+    baseurl_func = '.index'
+    table = db.hgcwa_passports
+    top_titles = {'dim': 'dimension'}
+    short_display = {'dim': 'dimension'}
+    stat_list = [{'cols': 'dim'}]
 
-        for genus in genus_list:
-            genus_stats = {}
-            genus_stats['genus_num'] = genus
-            genus_str = str(genus)
 
-            # Get group data
-            groups = oldstat('bygenus/' + genus_str + '/group')
-            group_count = len(groups['counts'])
-            group_max_order = max_group_order(groups['counts'])
-            genus_stats['groups'] = [group_count, group_max_order]
-
-            # Get family, refined passport and generating vector data
-            genus_stats['families'] = genus_family_counts['distinct'][genus_str]
-            genus_stats['refined_passports'] = genus_rp_counts['distinct'][genus_str]
-            genus_stats['gen_vectors'] = genus_gv_counts['distinct'][genus_str]
-
-            # Keep genus data sorted
-            stats['genus_detail'].append(genus_stats)
-
-        ######################################
-        # Collect dimension joint statistics #
-        ######################################
-
-        # An iterable list of distinct curve genera
-        dim_list = [ count[0] for count in stats['dim']['counts'] ]
-        dim_max = max(dim_list)
-
-        dim_gv_counts = oldstat('bydim/total_label')
-
-        # Get unique joint genus stats
-        stats['dim_detail'] = []
-
-        for dim in range(0, dim_max+1):
-            dim_stats = {}
-            dim_stats['dim_num'] = dim
-            dim_str = str(dim)
-
-            try:
-                dim_stats['gen_vectors'] = dim_gv_counts['distinct'][dim_str]
-            except KeyError:
-                dim_stats['gen_vectors'] = 0
-
-            # Keep dimension data sorted
-            stats['dim_detail'].append(dim_stats)
-
-        return stats
+def init_by_genus_data():
+    hgcwa = db.hgcwa_passports
+    ##################################
+    # Collect genus joint statistics #
+    ##################################
+    genus_detail = []
+    for genus in range(2, hgcwa.max('genus') + 1):
+        genus_data = db.hgcwa_complete.lookup(genus)
+        genus_detail.append(
+            {'genus_num': genus,
+             'num_families': genus_data['num_families'],
+             'num_refined_pp': genus_data['num_refined_pp'],
+             'num_gen_vectors': genus_data['num_gen_vectors'],
+             'num_unique_groups': genus_data['num_unique_groups'],
+             'max_grp_order': hgcwa.max('group_order', {'genus':genus})})
+    return genus_detail
