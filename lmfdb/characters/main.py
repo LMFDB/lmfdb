@@ -228,7 +228,7 @@ def download_search(info):
     postprocess=lambda res, info, query: sum([info_from_db_orbit(x) for x in res],[]),
     url_for_label=url_for_label,
     learnmore=learnmore_list,
-    bread=lambda: get_dirich_bread(("Search results", " ")),
+    bread=lambda: get_bread(("Search results", " ")),
     credit=lambda: dirich_credit,
 )
 def dirichlet_character_search(info, query):
@@ -238,7 +238,7 @@ def dirichlet_character_search(info, query):
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet character labels'
-    info['bread'] = get_dirich_bread(('Labels', ''))
+    info['bread'] = get_bread(('Labels', ''))
     info['learnmore'] = learn('labels')
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
@@ -246,7 +246,7 @@ def labels_page():
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet character data'
-    info['bread'] = get_dirich_bread(('Source', ''))
+    info['bread'] = get_bread(('Source', ''))
     info['learnmore'] = learn('source')
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
@@ -254,7 +254,7 @@ def how_computed_page():
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet character data'
-    info['bread'] = get_dirich_bread(('Reliability', ''))
+    info['bread'] = get_bread(('Reliability', ''))
     info['learnmore'] = learn('reliability')
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
@@ -262,7 +262,7 @@ def reliability():
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet character data'
-    info['bread'] = get_dirich_bread(('Extent', ''))
+    info['bread'] = get_bread(('Extent', ''))
     info['learnmore'] = learn('extent')
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
@@ -321,7 +321,7 @@ def render_DirichletNavigation():
         #return dirichlet_character_browse(info)
     args = to_dict(request.args)
     info = {'args': request.args}
-    info['bread'] = get_dirich_bread()
+    info['bread'] = get_bread()
 =======
     info = {'args':args}
     info['bread'] = get_bread()
@@ -398,7 +398,7 @@ def render_DirichletNavigation():
         info['info'] = search.results()
         info['title'] = 'Dirichlet character search results'
 <<<<<<< HEAD
-        info['bread'] = get_dirich_bread(('Search results', ''))
+        info['bread'] = get_bread(('Search results', ''))
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
@@ -751,7 +751,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = get_dirich_bread(('Table', ' '))
+    info['bread'] = get_bread(('Table', ' '))
     info['credit'] = 'SageMath'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
