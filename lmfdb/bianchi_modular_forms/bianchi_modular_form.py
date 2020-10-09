@@ -329,7 +329,7 @@ def download_bmf_sage(**args):
         data = WebBMF.by_label(label)
     except ValueError:
         flash_error("No Bianchi modular form in the database has label %s", label)
-        return "// No Bianchi modular form in the database has label %s"
+        return "// No Bianchi modular form in the database has label {}".format(label)
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
