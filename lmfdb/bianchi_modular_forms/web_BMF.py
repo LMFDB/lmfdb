@@ -70,7 +70,7 @@ class WebBMF(object):
         # caller must catch this and raise an error
 
 
-    def make_form(self):
+    def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
@@ -105,7 +105,7 @@ class WebBMF(object):
         badp = level.prime_factors()
 
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(50, self.nap)
+        self.nap0 = min(nap0, self.nap)
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),

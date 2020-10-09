@@ -341,6 +341,14 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     properties = []
     friends = []
     bread = get_bread()
+
+    try:
+        numeigs = request.args['numeigs']
+        numeigs = int(numeigs)
+    except:
+        numeigs = 20
+    info['numeigs'] = numeigs
+    
     try:
         data = WebBMF.by_label(label)
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
