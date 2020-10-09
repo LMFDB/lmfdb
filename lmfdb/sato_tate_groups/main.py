@@ -678,7 +678,13 @@ class STStats(StatsDisplay):
     baseurl_func = ".index"
 
     stat_list = [
-        {"cols": ["weight", "degree"],
+        #{"cols": ["weight", "degree"],
+        # "totaler": totaler(),
+        # "proportioner": proportioners.per_row_total}
+        {"cols": ["identity_component", "component_group"],
          "totaler": totaler(),
          "proportioner": proportioners.per_row_total}
     ]
+
+    knowls = {"identity_component": "st_group.identity_component",
+              "component_group": "st_group.component_group"}
