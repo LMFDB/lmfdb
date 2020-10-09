@@ -4,17 +4,18 @@ import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError
-from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
+from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
-    SearchArray, TextBox, SelectBox, CountBox,
+    SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
     StatsDisplay, totaler, proportioners, comma,
-    parse_ints, parse_rational, parse_count, parse_start,
+    parse_ints, parse_rational, parse_bool, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.galois_groups.transitive_group import smallgroup_cache, small_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
 
 ###############################################################################
@@ -283,9 +284,16 @@ def search(info):
         if info.get('identity_component'):
             query['identity_component'] = info['identity_component']
         parse_ints(info,query,'components','components')
+        # The following is used to constraint which mu(n) will show up in search results
+        components_list = None
         if 'components' in query:
             components_list = parse_ints_to_list_flash(info.get('components'), 'components')
+        
         parse_rational(info,query,'trace_zero_density','trace zero density')
+        parse_ints(info,query,'second_trace_moment')
+        parse_ints(info,query,'fourth_trace_moment')
+        parse_ints(info,query,'first_a2_moment')
+        parse_bool(info,query,'maximal')
     except ValueError as err:
         info['err'] = str(err)
         return render_template('st_results.html', info=info, title=err_title, **template_kwds)
@@ -300,9 +308,11 @@ def search(info):
             components_list = range(1, 3 if ratonly else start + count + 1)
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
+        if "second_trace_moment" in query:
+            if query["second_trace_moment"]
         nres = len(components_list) if 'components' in query or ratonly else INFINITY
         if search_type == "Random" and nres > 0:
-            # Need to return mu(1) and mu(2) sometimes
+            # Need to return mu(1), mu(2) or mu(4) sometimes
             otherlen = db.gps_sato_tate.count(query)
             r = ZZ.random_element(nres + otherlen)
             if r < nres:
@@ -660,18 +670,53 @@ class STSearchArray(SearchArray):
             short_label=r"$\mathrm{P}[a_1=0]$",
             example="1/2",
             example_span="0, 1/2, or 3/8")
+        second_trace_moment = TextBox(
+            name="second_trace_moment",
+            label="Second trace moment",
+            knowl="st_group.moments",
+            example="8")
+        fourth_trace_moment = TextBox(
+            name="fourth_trace_moment",
+            label="Fourth trace moment",
+            knowl="st_group.moments",
+            example="96")
+        first_a2_moment = TextBox(
+            name="first_a2_moment",
+            label="First $a_2$ moment",
+            knowl="st_group.moments",
+            example="4")
+        maximal = YesNoBox(
+            name="maximal",
+            label="Maximal",
+            knowl="st_groups.subgroups")
         count = CountBox()
 
         self.browse_array = [
-            [weight],
-            [degree],
-            [include_irrational],
-            [identity_component],
-            [components],
-            [trace_zero_density],
+            [weight, trace_zero_density],
+            [degree, second_trace_moment],
+            [include_irrational, fourth_trace_moment],
+            [identity_component, first_a2_moment],
+            [components, maximal],
             [count]]
 
-        self.refine_array = [[weight, degree, include_irrational, identity_component, components, trace_zero_density]]
+        self.refine_array = [[weight, degree, include_irrational, identity_component, components] [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
+
+@cached_function
+def compcache():
+    return smallgroup_cache(db.gps_sato_tate.distinct("component_group"))
+gapidre = re.compile(r"(\d+)\.(\d+)")
+def compdata(comp):
+    return [int(x) for x in gapidre.findall(comp)[0]]
+def compformatter(comp):
+    n, k = compdata(comp)
+    return small_group_display_knowl(n, k, cache=compcache())
+def compunformatter(comp):
+    n, k = compdata(comp)
+    return "%d.%d" % (n, k)
+def idformatter(grp):
+    return "$%s$" % (r"\operatorname{" + grp.replace("x", r"\times\operatorname{").replace("(", "}("))
+def idunformatter(grp):
+    return grp.replace("$", "").replace(r"\operatorname", "").replace(r"\times", "x").replace("{", "").replace("}", "")
 
 class STStats(StatsDisplay):
     table = db.gps_sato_tate
@@ -699,5 +744,9 @@ class STStats(StatsDisplay):
          "proportioner": proportioners.per_col_total},
     ]
 
+    formatters = {"component_group": compformatter,
+                  "identity_component": idformatter}
+    query_formatters = {"component_group": (lambda comp: "component_group=%s" % compunformatter(comp)),
+                        "identity_component": (lambda grp: "identity_component=%s" % (idunformatter(grp)))}
     knowls = {"identity_component": "st_group.identity_component",
               "component_group": "st_group.component_group"}
