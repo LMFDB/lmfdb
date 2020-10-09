@@ -232,7 +232,7 @@ cellpadding="5";
     {% endif %}
   </th>
   {% for h in ec.heights %}
-  <td>{{ h }}</td>
+  <td>\({{ h }}\)</td>
   {% endfor %}
 </tr>
 {% endif %}
@@ -257,9 +257,16 @@ cellpadding="5";
 </div>
 
 <div>
-<h2> {{ KNOWL('ec.bsdconjecture', title='BSD') }} invariants</h2>
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD invariants') }}</h2>
 <p>
         <table>
+
+        <tr>
+        <th align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</th>
+        <td>
+	  {{ ec.ar }}
+        </td>
+        </tr>
 
         <tr>
         <td colspan="4">
@@ -268,7 +275,7 @@ cellpadding="5";
         </tr>
 
 	<tr>
-	  <th align='left'>{{ KNOWL('ec.rank', title="Rank")}}</th>
+	  <th align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</th>
 	  {% if ec.rk == "not available" %}
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -279,14 +286,6 @@ cellpadding="5";
 	  <td>\({{ ec.rank }}\)</td>
 	  {% endif %}
 	</tr>
-
-        <tr>
-        <th align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</th>
-        <td>
-	  {{ ec.ar }}
-        </td>
-        </tr>
-
         <tr>
 	  <th align='left'>
 	    {% if ec.bsd_status == "conditional" %}
@@ -296,7 +295,7 @@ cellpadding="5";
 	    {% endif %}
 	  </th>
           <td>
-	  {% if ec.ar=='not available' %}
+	  {% if ec.reg=='not available' %}
 	  not available
 	  {% else %}
 	  {{ ec.reg }}
@@ -342,7 +341,7 @@ cellpadding="5";
     </p>
 {% if ec.bsd_status == "conditional" %}
 <p>
-  (*) Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
+  * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
 </p>
 {% if ec.sha != "not available" and ec.sha!="1" %}
 <p>

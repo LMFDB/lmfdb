@@ -505,7 +505,7 @@ class ECNF(object):
                 self.bsd_status = "missing_gens"
 
 
-        # Regulator only in conditional/unconditional cases:
+        # Regulator only in conditional/unconditional cases, or when we know the rank:
         if self.bsd_status in ["conditional", "unconditional"]:
             if self.ar == 0:
                 self.reg = web_latex(1)  # otherwise we only get 1.00000...
@@ -514,6 +514,8 @@ class ECNF(object):
                     self.reg = web_latex(self.reg)
                 except AttributeError:
                     self.reg = "not available"
+        elif self.rk != "not available":
+            self.reg = web_latex(self.reg) if self.rank else web_latex(1)
         else:
             self.reg = "not available"
 
@@ -532,8 +534,8 @@ class ECNF(object):
         # L-value
         try:
             r = int(self.analytic_rank)
-            lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
-            self.Lvalue = "\\(" + lhs + str(self.Lvalue) + "\\)" 
+            # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
+            self.Lvalue = "\\(" + str(self.Lvalue) + "\\)" 
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
             
@@ -549,7 +551,7 @@ class ECNF(object):
 
         # Analytic Sha
         try:
-            self.sha = web_latex(self.sha)
+            self.sha = web_latex(self.sha) + " (rounded)"
         except AttributeError:
             self.sha = "not available"
             
