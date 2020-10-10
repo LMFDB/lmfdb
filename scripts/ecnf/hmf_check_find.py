@@ -845,39 +845,3 @@ def rqf_iterator(d1, d2):
     for d in srange(d1, d2 + 1):
         if is_fundamental_discriminant(d):
             yield d, '2.2.%s.1' % d
-
-# The following function has *not* been converted for postgres since
-# it was a one-off, and the curve upload script now adds the
-# iso_nlabel field itself.
-
-def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=False):
-    r""" One-off utility to add a numeric conversion of the letter-coded
-    class labels 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
-    purposes.
-    """
-    from sage.databases.cremona import class_to_int
-    count = 0
-    query = {}
-    query['conductor_norm'] = {'$gte' : int(min_conductor_norm)}
-    if max_conductor_norm:
-        query['conductor_norm']['$lte'] = int(max_conductor_norm)
-    else:
-        max_conductor_norm = oo
-    curves_to_fix = nfcurves.search(query)
-    print("%s curves to examine of conductor norm between %s and %s."
-          % (curves_to_fix.count(),min_conductor_norm,max_conductor_norm))
-    for c in curves_to_fix:
-        count = count+1
-        if count%100==0: print("%s: %s" % (count, c['label']))
-        fix_data = {}
-        lab = c['iso_label']
-        if 'CM' in lab:
-            nlab = -1 - class_to_int(lab[2:])
-            print("converting label %s to %s" % (lab, nlab))
-        else:
-            nlab = class_to_int(lab.lower())
-        fix_data['iso_nlabel'] = nlab
-        #print("using fixed data %s for form %s" % (fix_data,c['label']))
-        if fix:
-            nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
-
