@@ -4,7 +4,7 @@ import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError
-from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d, cached_function
+from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
@@ -284,16 +284,32 @@ def search(info):
         if info.get('identity_component'):
             query['identity_component'] = info['identity_component']
         parse_ints(info,query,'components','components')
-        # The following is used to constraint which mu(n) will show up in search results
+        # The following are used to constraint which mu(n) will show up in search results
         components_list = None
+        ommitted = set()
         if 'components' in query:
             components_list = parse_ints_to_list_flash(info.get('components'), 'components')
-        
         parse_rational(info,query,'trace_zero_density','trace zero density')
         parse_ints(info,query,'second_trace_moment')
         parse_ints(info,query,'fourth_trace_moment')
+        for name, ones in [('second_trace_moment', [1, 2]),
+                           ('fourth_trace_moment', [1, 2, 4])]:
+            if name in query:
+                # E(x^2) for mu(1) and mu(2) are 1; others are 0
+                # E(x^4) for mu(1), mu(2) and mu(4) are 1; others are 0
+                E = parse_ints_to_list_flash(info.get(name), name.replace("_", " "))
+                if 0 not in E:
+                    if components_list is None:
+                        components_list = ones
+                    else:
+                        components_list = [x for x in ones if x in components_list]
+                if 1 not in E:
+                    ommitted.update(ones)
         parse_ints(info,query,'first_a2_moment')
         parse_bool(info,query,'maximal')
+        if "first_a2_moment" in query or query.get("maximal"):
+            # mu(n) do not have a2 moments and none are maximal
+            components_list = []
     except ValueError as err:
         info['err'] = str(err)
         return render_template('st_results.html', info=info, title=err_title, **template_kwds)
@@ -304,13 +320,15 @@ def search(info):
         (not 'degree' in query or 1 in degree_list) and
         (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and
         (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
-        if not 'components' in query:
-            components_list = range(1, 3 if ratonly else start + count + 1)
+        nres = None
+        if components_list is None:
+            components_list = range(1, 3 if ratonly else (start + count + 1 + len(ommitted)))
+            nres = INFINITY
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
-        if "second_trace_moment" in query:
-            if query["second_trace_moment"]
-        nres = len(components_list) if 'components' in query or ratonly else INFINITY
+        components_list = [n for n in components_list if n not in ommitted]
+        if nres is None:
+            nres = len(components_list)
         if search_type == "Random" and nres > 0:
             # Need to return mu(1), mu(2) or mu(4) sometimes
             otherlen = db.gps_sato_tate.count(query)
@@ -648,6 +666,7 @@ class STSearchArray(SearchArray):
             name="include_irrational",
             label="Include irrational",
             knowl="st_group.rational",
+            example_col=True,
             options=[("", "no"),
                      ("yes", "yes")])
         identity_component = SelectBox(
@@ -688,7 +707,7 @@ class STSearchArray(SearchArray):
         maximal = YesNoBox(
             name="maximal",
             label="Maximal",
-            knowl="st_groups.subgroups")
+            knowl="st_group.supgroups")
         count = CountBox()
 
         self.browse_array = [
@@ -699,7 +718,7 @@ class STSearchArray(SearchArray):
             [components, maximal],
             [count]]
 
-        self.refine_array = [[weight, degree, include_irrational, identity_component, components] [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
+        self.refine_array = [[weight, degree, include_irrational, identity_component, components], [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
 
 @cached_function
 def compcache():
@@ -728,7 +747,9 @@ class STStats(StatsDisplay):
          "proportioner": proportioners.per_col_total},
         {"cols": ["identity_component"],
          "constraint": {"maximal": True},
-         "top_title": [("maximal subgroups by identity component", None)],
+         "top_title": [("maximal subgroups", "st_group.supgroups"),
+                       ("per", None),
+                       ("identity component", "st_group.identity_component")],
         },
         {"cols": ["trace_zero_density", "identity_component"],
          "totaler": totaler(),
@@ -746,7 +767,22 @@ class STStats(StatsDisplay):
 
     formatters = {"component_group": compformatter,
                   "identity_component": idformatter}
+    sort_keys = {"component_group": compdata,
+                 "trace_zero_density": QQ}
     query_formatters = {"component_group": (lambda comp: "component_group=%s" % compunformatter(comp)),
                         "identity_component": (lambda grp: "identity_component=%s" % (idunformatter(grp)))}
+    top_titles = {"trace_zero_density": "trace zero densities",
+                  "first_a2_moment": "first $a_2$ moment"}
     knowls = {"identity_component": "st_group.identity_component",
-              "component_group": "st_group.component_group"}
+              "component_group": "st_group.component_group",
+              "trace_zero_density": "st_group.trace_zero_density",
+              "second_trace_moment": "st_group.moments",
+              "fourth_trace_moment": "st_group.moments",
+              "first_a2_moment": "st_group.moments"}
+
+    def __init__(self):
+        self.ngroups = db.gps_sato_tate.count()
+
+    @property
+    def summary(self):
+        return r"The database currently contains %s Sato-Tate groups.  The statistics below omit the infinite family $\mu(n)$ with trivial identity component since they are generated dynamically in search results." % (self.ngroups)
