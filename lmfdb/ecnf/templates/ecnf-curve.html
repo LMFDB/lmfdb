@@ -227,7 +227,7 @@ cellpadding="5";
 <!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
-<td align='left'>{% if ec.tr==1 %}Torsion generator{% else %}Torsion generators{% endif %}:</td>
+<td align='left'>{{KNOWL('ec.mw_generators','{% if ec.tr==1 %}Torsion generator{% else %}Torsion generators{% endif %}')}}:</td>
 {% for gen in ec.torsion_gens %}
 <td>{{ gen }}</td>
 {% endfor %}
