@@ -81,7 +81,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
         </tr>
-        <tr><td colspan=5>    {{ place_code('cond') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cond') }}</td></tr>
 
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor norm')}}:</td>
@@ -89,7 +89,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
         </tr>
-        <tr><td colspan=5>    {{ place_code('cond_norm') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cond_norm') }}</td></tr>
 
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant')}}:</td>
@@ -100,14 +100,14 @@ cellpadding="5";
         {% endif %}
         </tr>
 
-        <tr><td colspan=4> {{ place_code('disc') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('disc') }}</td></tr>
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
-        <tr><td colspan=4> {{ place_code('disc_norm') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
@@ -136,7 +136,7 @@ cellpadding="5";
         <td colspan=3>{{ ec.j }}</td>
         {% endif %}
         </tr>
-        <tr><td colspan=4>     {{ place_code('jinv') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('jinv') }}</td></tr>
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
@@ -158,7 +158,7 @@ cellpadding="5";
         </td>
         </tr>
 
-        <tr><td colspan=4>     {{ place_code('cm') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cm') }}</td></tr>
         <tr>
         <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
         <td>{{ ec.ST|safe }}</td>
