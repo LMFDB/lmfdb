@@ -7,7 +7,7 @@
     - title: Overview
       url_for: "introduction"
     - title: Random
-      url_for: "random"
+      url_for: "go_random"
     - title: Universe
       url_for: "universe"
     - title: Knowledge
