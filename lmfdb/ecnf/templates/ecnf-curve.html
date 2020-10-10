@@ -188,9 +188,9 @@ cellpadding="5";
 <tr>
   <td align = 'left'>
     {% if ec.ngens==1 %}
-    Generator
+    {{KNOWL('ec.mw_generators','Generator')}}
     {% else %}
-    Generators
+    {{KNOWL('ec'mw_generators','Generators')}}
     {% endif %}
   </td>
   {% if ec.gens == 'not available' %}
@@ -219,7 +219,7 @@ cellpadding="5";
 {% endif %}
 
 <tr>
-<td align='left'>Torsion structure:</td>
+<td align='left'>{{KNOWL('ec.torsion_subgroup','Torsion structure')}}:</td>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
