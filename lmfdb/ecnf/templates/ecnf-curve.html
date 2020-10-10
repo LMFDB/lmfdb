@@ -111,6 +111,7 @@ cellpadding="5";
 
 {% if not ec.is_minimal %}
         <tr>
+        <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant')}}:</td>
         <td>{{ ec.mindisc }}</td>
         {% if ec.fact_mindisc %}
         <td>=</td>
@@ -119,7 +120,7 @@ cellpadding="5";
         </tr>
 
         <tr>
-        <td>
+        <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant norm')}}:</td>
         <td>{{ ec.mindisc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_mindisc_norm }}</td>
