@@ -74,8 +74,7 @@ cellpadding="5";
 
 <h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
-    <div style='overflow:auto; margin-left:1ch;'>
-      <table id="invariants">
+      <table id="invariants" style="overflow:auto;">
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
         <td>{{ ec.cond }}</td>
@@ -101,14 +100,14 @@ cellpadding="5";
         {% endif %}
         </tr>
 
-          <tr><td colspan=5> {{ place_code('disc') }}</td></tr>
+        <tr><td colspan=4> {{ place_code('disc') }}</td></tr>
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
-        <tr><td colspan=5> {{ place_code('disc_norm') }}</td></tr>
+        <tr><td colspan=4> {{ place_code('disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
@@ -128,7 +127,7 @@ cellpadding="5";
 {% endif %}
 
         <tr>
-        <td>{{ KNOWL('ec.j_invariant','j-invariant')}}"</td>
+        <td>{{ KNOWL('ec.j_invariant','j-invariant')}}:</td>
         {% if ec.fact_j %}
         <td>{{ ec.j }}</td>
         <td>=</td>
@@ -137,7 +136,7 @@ cellpadding="5";
         <td colspan=3>{{ ec.j }}</td>
         {% endif %}
         </tr>
-        <tr><td colspan=5>     {{ place_code('jinv') }}</td></tr>
+        <tr><td colspan=4>     {{ place_code('jinv') }}</td></tr>
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
@@ -159,23 +158,21 @@ cellpadding="5";
         </td>
         </tr>
 
-        <tr><td colspan=5>     {{ place_code('cm') }}</td></tr>
+        <tr><td colspan=4>     {{ place_code('cm') }}</td></tr>
         <tr>
         <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
-        <td>=</td>
         <td>{{ ec.ST|safe }}</td>
         </td>
         </tr>
 
 </table>
-</div>
 
 <div>
 <h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
 <p>
 <table>
 <tr>
-  <th align = 'left'>{{ KNOWL('ec.rank', title="Rank")}}:</th>
+  <td align = 'left'>{{ KNOWL('ec.rank', title="Rank")}}:</td>
 {% if ec.rk == "not available" %}
 {% if ec.rank_bounds != "not available" %}
   <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -189,13 +186,13 @@ cellpadding="5";
 
 {% if ec.ngens %}
 <tr>
-  <th align = 'left'>
+  <td align = 'left'>
     {% if ec.ngens==1 %}
     Generator
     {% else %}
     Generators
     {% endif %}
-  </th>
+  </td>
   {% if ec.gens == 'not available' %}
   <td>not available</td>
   {% else %}
@@ -208,13 +205,13 @@ cellpadding="5";
 
 {% if ec.heights %}
 <tr>
-  <th align = 'left'>
+  <td align = 'left'>
     {% if ec.ngens==1 %}
     {{ KNOWL('ec.canonical_height', title="Height") }}
     {% else %}
     {{ KNOWL('ec.canonical_height', title="Heights") }}
     {% endif %}
-  </th>
+  </td>
   {% for h in ec.heights %}
   <td>\({{ h }}\)</td>
   {% endfor %}
@@ -222,14 +219,14 @@ cellpadding="5";
 {% endif %}
 
 <tr>
-<th align='left'>Torsion structure:</th>
+<td align='left'>Torsion structure:</td>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
 <!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
-<th align='left'>{% if ec.tr==1 %}Torsion generator{% else %}Torsion generators{% endif %}:</th>
+<td align='left'>{% if ec.tr==1 %}Torsion generator{% else %}Torsion generators{% endif %}:</td>
 {% for gen in ec.torsion_gens %}
 <td>{{ gen }}</td>
 {% endfor %}
@@ -246,7 +243,7 @@ cellpadding="5";
         <table>
 
         <tr>
-        <th align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</th>
+        <td align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</td>
         <td>
 	  {{ ec.ar }}
         </td>
@@ -259,7 +256,7 @@ cellpadding="5";
         </tr>
 
 	<tr>
-	  <th align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</th>
+	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</td>
 	  {% if ec.rk == "not available" %}
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -271,13 +268,13 @@ cellpadding="5";
 	  {% endif %}
 	</tr>
         <tr>
-	  <th align='left'>
+	  <td align='left'>
 	    {% if ec.bsd_status == "conditional" %}
             {{ KNOWL('ec.regulator', title='Regulator*') }}:
 	    {% else %}
 	    {{ KNOWL('ec.regulator', title='Regulator') }}:
 	    {% endif %}
-	  </th>
+	  </td>
           <td>
 	  {% if ec.reg=='not available' %}
 	  not available
@@ -288,12 +285,12 @@ cellpadding="5";
         </tr>
 
         <tr>
-        <th align='left'>{{ KNOWL('ec.period', title='Period') }}:</th>
+        <td align='left'>{{ KNOWL('ec.period', title='Period') }}:</td>
         <td> {{ ec.omega }}</td>
         </tr>
 
         <tr>
-        <th align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</th>
+        <td align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
         <td> {{ ec.tamagawa_product }}
           {% if ec.tamagawa_factors %}
           &nbsp;=&nbsp; \({{ ec.tamagawa_factors }}\)
@@ -302,23 +299,23 @@ cellpadding="5";
         </tr>
 
         <tr>
-        <th align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</th>
+        <td align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
         <td>\({{ ec.torsion_order }}\)</td>
         </tr>
 
         <tr>
-        <th align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</th>
+        <td align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
         <td> {{ ec.Lvalue }}</td>
         </tr>
 
         <tr>
-	  <th align='left'>
+	  <td align='left'>
 	    {% if ec.bsd_status ==  "conditional" %}
             {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;*') }}:
 	    {% else %}
 	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:
 	    {% endif %}
-	  </th>
+	  </td>
         <td> {{ ec.sha }} </td>
         </tr>
         </table>
