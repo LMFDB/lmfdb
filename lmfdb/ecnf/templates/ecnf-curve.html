@@ -78,9 +78,6 @@ cellpadding="5";
       <table id="invariants">
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
-        <td>
-         \(\mathfrak{N} \)</td>
-        <td>=</td>
         <td>{{ ec.cond }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
@@ -144,9 +141,9 @@ cellpadding="5";
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
-        <td>{% if ec.rational_cm %}{{ ec.End }}{% else %}\(\Z\)</td>
+        <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
         <td>&nbsp;</td>
-        <td>({% if ec.rational_cm %}{{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}){% endif %}</td>
+        <td>{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
         </tr>
         
         <tr>
@@ -155,9 +152,9 @@ cellpadding="5";
         <td>&nbsp;</td>
         <td>
         {%if not ec.cm %}
-        (no {{ KNOWL('ec.complex_multiplication', title='complex multiplication')}})
+          (no {{ KNOWL('ec.complex_multiplication', title='complex multiplication')}})
         {% elif not ec.rational_cm %}
-        ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+          ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
         {% endif %}
         </td>
         </tr>
