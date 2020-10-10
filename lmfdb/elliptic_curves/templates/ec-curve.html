@@ -152,21 +152,25 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism Ring') }}:</td>
+        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
         <td>\(\Z\)</td>
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric Endomorphism Ring') }}:</td>
+        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
         <td>{{ data.data.EndE }}</td>
         <td>&nbsp;</td>
-        <td>({%if data.data.CMD %}potential {%else %}no {%endif %}
-	  {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        <td>
+        {%if not data.data.CMD %}
+        (no {{ KNOWL('ec.complex_multiplication', title='complex multiplication')}})
+        {% else %}
+        ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% endif %}
         </td>
         </tr>
 
         <tr>
-        <td>{{ KNOWL('st_group.definition', title='Sato-Tate Group') }}:</td>
+        <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
         <td>{{ data.data.ST|safe }}</td>
         </tr>
 

@@ -31,7 +31,7 @@
 #}
 
 <div>
-  <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
+  <h2> {{KNOWL('ag.base field','Base field')}} {{ ec.field.knowl()|safe }} </h2>
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  ec.field.generator_name() }}\), with {{
@@ -51,7 +51,7 @@ cellpadding="5";
 </style>
 
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
-<div style='overflow-x:auto; overflow-y:hidden'>
+<div style='overflow-x:auto; overflow-y:hidden; margin-left:1ch;'>
 \({{ ec.equation }}\)
 </div>
     {{ place_code('curve') }}
@@ -74,9 +74,10 @@ cellpadding="5";
 
 <h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
-    <div style='overflow:auto'>
+    <div style='overflow:auto; margin-left:1ch;'>
       <table id="invariants">
         <tr>
+        <td>{{KNOWL('ec.conductor', title='Conductor')}}</td>
         <td>
          \(\mathfrak{N} \)</td>
         <td>=</td>
@@ -87,6 +88,7 @@ cellpadding="5";
         <tr><td colspan=5>    {{ place_code('cond') }}</td></tr>
 
         <tr>
+        <td>{{KNOWL('ec.conductor', title='Conductor norm')}}</td>
         <td>
          \(N(\mathfrak{N}) \)</td>
         <td>=</td>
@@ -97,6 +99,7 @@ cellpadding="5";
         <tr><td colspan=5>    {{ place_code('cond_norm') }}</td></tr>
 
         <tr>
+        <td>{{KNOWL('ec.discriminant', title='Discriminant')}}</td>
         <td>
           {% if ec.is_minimal %}
           \(\mathfrak{D}\)
@@ -114,6 +117,7 @@ cellpadding="5";
 
           <tr><td colspan=5> {{ place_code('disc') }}</td></tr>
         <tr>
+        <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}</td>
         <td>
           {% if ec.is_minimal %}
           \(N(\mathfrak{D})\)
@@ -165,18 +169,32 @@ cellpadding="5";
         <tr><td colspan=5>     {{ place_code('jinv') }}</td></tr>
 
         <tr>
+        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
         <td> \( \text{End} (E) \)</td>
         <td>=</td>
         <td>{{ ec.End }}</td>
         <td>&nbsp;</td>
-        <td>({%if not ec.cm %}no {%endif %}
-   {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
-            )
+        <td>({% if ec.rational_cm %}{{ KNOWL('ec.complex_multiplication', title='complex multiplication')}})</td>
+        </tr>
+        
+        <tr>
+        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
+        <td> \( \text{End} (E) \)</td>
+        <td>=</td>
+        <td>{{ ec.End }}</td>
+        <td>&nbsp;</td>
+        <td>
+        {%if not ec.cm %}
+        (no {{ KNOWL('ec.complex_multiplication', title='complex multiplication')}})
+        {% elif not ec.rational_cm %}
+        ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% endif %}
         </td>
         </tr>
-        <tr><td colspan=5>     {{ place_code('cm') }}</td></tr>
 
+        <tr><td colspan=5>     {{ place_code('cm') }}</td></tr>
         <tr>
+        <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
         <td> \( \text{ST} (E) \)</td>
         <td>=</td>
         <td>{{ ec.ST|safe }}</td>
@@ -513,6 +531,7 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 
 <div>
 <h2> {{KNOWL('ec.base_change','Base change')}} </h2>
+<p>
 This curve {% if ec.base_change %} is the
 {{KNOWL('ec.base_change','base-change')}} of elliptic curves
 {% for E0 in ec.base_change%}
@@ -529,6 +548,7 @@ It is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% endif %}
 {% endif %}
+</p>
 </div>
 
 {% if DEBUG %}

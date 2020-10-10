@@ -735,7 +735,7 @@ class ECNFSearchArray(SearchArray):
         field = TextBox(
             name="field",
             label="Base field",
-            knowl="nf",
+            knowl="ag.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         include_base_change = ExcludeOnlyBox(
