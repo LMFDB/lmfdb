@@ -701,8 +701,10 @@ class WebNumberField:
         r1term= r'2^{%s}\cdot'% r1
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
-        ltx = r'\approx\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(r1term,r2term,str(reg),h,w,disc)
-        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        approx1 = r'\approx' if self.unit_rank()>0 else r'='
+        approx2 = r'\approx' if self.degree()>1 else r'='
+        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
+        ltx += r'%s %s$'%(approx2,2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
     def is_cm_field(self):
