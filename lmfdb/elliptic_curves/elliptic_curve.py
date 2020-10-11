@@ -686,7 +686,7 @@ class ECSearchArray(SearchArray):
             name="include_cm",
             label="CM",
             knowl="ec.complex_multiplication",
-            options=[('', ''), ('exclude', 'no potential CM'), ('only', 'potential CM')])
+            options=[('', ''), ('only', 'potential CM'), ('exclude', 'no potential CM')])
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
