@@ -6,7 +6,7 @@ from __future__ import print_function
 # 2018-12-14: converted to work with the postgres database (JEC)
 
 import sys
-from sage.all import EllipticCurve, Magma, srange, oo
+from sage.all import EllipticCurve, Magma, srange
 from lmfdb import db
 
 print("setting nfcurves")
