@@ -682,10 +682,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = ExcludeOnlyBox(
+        cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('no CM', 'exclude'), ('potential CM', 'only')])
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
