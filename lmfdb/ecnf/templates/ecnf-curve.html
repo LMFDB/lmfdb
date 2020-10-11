@@ -142,15 +142,13 @@ cellpadding="5";
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
         <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
-        <td>&nbsp;</td>
-        <td>{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
+        <td colspan="2">{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
         </tr>
         
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
         <td>{{ ec.End }}</td>
-        <td>&nbsp;</td>
-        <td>
+        <td colspan="2">
         {%if not ec.cm %}
           (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
         {% elif not ec.rational_cm %}
