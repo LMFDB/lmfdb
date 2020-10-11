@@ -692,7 +692,7 @@ class WebNumberField:
 
     def cnf(self):
         if not self.haskey('class_group'):
-            return na_text()
+            return r'$<td>  '+na_text()
         # Otherwise we should have what we need
         [r1,r2] = self.signature()
         reg = self.regulator()
@@ -701,8 +701,8 @@ class WebNumberField:
         r1term= r'2^{%s}\cdot'% r1
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
-        ltx = r'\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(r1term,r2term,str(reg),h,w,disc)
-        ltx += r'\approx %s'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        ltx = r'=\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(r1term,r2term,str(reg),h,w,disc)
+        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
     def is_cm_field(self):
