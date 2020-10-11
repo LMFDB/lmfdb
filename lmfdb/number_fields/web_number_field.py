@@ -701,7 +701,7 @@ class WebNumberField:
         r1term= r'2^{%s}\cdot'% r1
         r2term= r'(2\pi)^{%s}\cdot'% r2
         disc = ZZ(self._data['disc_abs'])
-        ltx = r'=\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(r1term,r2term,str(reg),h,w,disc)
+        ltx = r'\approx\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(r1term,r2term,str(reg),h,w,disc)
         ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
