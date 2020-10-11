@@ -529,10 +529,15 @@ def elliptic_curve_search(info, query):
             query['q_curve'] = True
 
     if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
-            query['cm'] = 0
-        elif info['include_cm'] == 'only':
+    if 'include_cm' in info:
+        if info['include_cm'] == 'PCM':
             query['cm'] = {'$ne' : 0}
+        elif info['include_cm'] == 'PCMnoCM':
+            query['cm'] = {'$lt' : 0}
+        elif info['include_cm'] == 'CM':
+            query['cm'] = {'$gt' : 0}
+        elif info['include_cm'] == 'noPCM':
+            query['cm'] = 0
     parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
@@ -758,10 +763,11 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny_class",
             options=[("", ""),
                      ("yes", "one")])
-        include_cm = ExcludeOnlyBox(
+        include_cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
             label= "CM discriminant",
