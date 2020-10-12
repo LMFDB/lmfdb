@@ -1,7 +1,7 @@
 {% extends "homepage.html" %}
 {% block content %}
 <div>
-{{ KNOWL_INC('st_group.summary') }}
+{{ info.stats.short_summary | safe }}
 </div>
 
 <h2> Browse </h2>

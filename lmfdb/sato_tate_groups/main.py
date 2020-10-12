@@ -9,11 +9,12 @@ from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_fun
 from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
-    to_dict, encode_plot, flash_error,
+    to_dict, encode_plot, flash_error, display_knowl,
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
-    StatsDisplay, totaler, proportioners, comma,
+    StatsDisplay, totaler, proportioners,
     parse_ints, parse_rational, parse_bool, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
+from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import smallgroup_cache, small_group_display_knowl
 from lmfdb.sato_tate_groups import st_page
@@ -116,7 +117,7 @@ def sg_pretty(sg_label):
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
-    
+
 # dictionary for quick and dirty prettification that does not access the database
 st_pretty_dict = {
     'USp(4)':r'\mathrm{USp}(4)',
@@ -133,6 +134,65 @@ def st_pretty(st_name):
 
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+
+# We want to support aliases like S3.  Ths following table is an analogue of the list of aliases in lmfdb/galois_groups/transitive_group.py, but with GAP ids as output.
+aliases = {'C1': '1.1',
+           'C2': '2.1',
+           'C3': '3.1',
+           'C4': '4.1',
+           'C2^2': '4.2',
+           'C2XC2': '4.2',
+           'S3': '6.1',
+           'C6': '6.2',
+           'C2XC4': '8.2',
+           'D4': '8.3',
+           'C2^3': '8.5',
+           'C2XC2XC2': '8.5',
+           'A4': '12.3',
+           'D6': '12.4',
+           'C2XC6': '12.5',
+           'C2XD4': '16.11',
+           'S4': '24.12',
+           'A4XC2': '24.13',
+           'C2^2XS3': '24.14',
+           'C2XC2XS3': '24.14',
+           'C2XS4': '48.48'}
+cyclics = {'1.1': 1,
+           '2.1': 2,
+           '3.1': 3,
+           '4.1': 4,
+           '6.2': 6}
+cyclicre = r'C(\d+)'
+
+@search_parser(clean_info=True, default_field="component_group", default_qfield="component_group", default_name="Component group")
+def parse_component_group(inp, query, qfield):
+    codes = inp.upper()
+    ans = []
+    # some commas separate groups, and others are internal to group names
+    # like PSL(2,7) and gap id [6,1]
+    # after upper casing, we can replace commas we want to keep with "z"
+    commaid = r'\[(\d+),(\d+)\]'
+    labelre = r'(\d+)\.(\d+)'
+    codes = re.sub(commaid, r'\1.\2', codes)
+    codes = re.sub(r'\((\d+),(\d+)\)', r'(\1z\2)', codes)
+    codelist = codes.split(",")
+    codelist = [code.replace("z", ",") for code in codelist]
+    for code in codelist:
+        # Turn zs back into commas and sort direct products
+        code = "X".join(sorted(code.replace("z", ",").split("X")))
+        if code in aliases:
+            code = aliases[code]
+        elif re.match(cyclicre, code):
+            # We leave other cyclic groups intact for use in checking irrational ST groups
+            # These won't match anything in the database
+            pass
+        elif not re.match(labelre, code):
+            raise ValueError("%s is not the component group of a Sato-Tate group in the database" % code)
+        ans.append(code)
+    if len(ans) == 1:
+        query[qfield] = ans[0]
+    else:
+        query[qfield] = {"$in": ans}
 
 ###############################################################################
 # Learnmore display functions
@@ -284,11 +344,34 @@ def search(info):
         if info.get('identity_component'):
             query['identity_component'] = info['identity_component']
         parse_ints(info,query,'components','components')
+        def refine_components(current, condition):
+            if current is None:
+                return condition
+            return [x for x in condition if x in current]
         # The following are used to constraint which mu(n) will show up in search results
         components_list = None
         ommitted = set()
         if 'components' in query:
             components_list = parse_ints_to_list_flash(info.get('components'), 'components')
+        parse_component_group(info,query)
+        gps = query.get("component_group")
+        if gps:
+            if isinstance(gps, dict):
+                gps = gps["$in"]
+            else:
+                gps = [gps]
+            print("Z", gps)
+            if not ratonly:
+                cyclic_labels = set(db.gps_small.search({"cyclic": True}, "label"))
+            irrat = []
+            for code in gps:
+                if code in cyclics:
+                    irrat.append(cyclics[code])
+                elif re.match(cyclicre, code):
+                    irrat.append(int(code[1:]))
+                elif not ratonly and code in cyclic_labels:
+                    irrat.append(int(code.split(".")[0]))
+            components_list = refine_components(components_list, irrat)
         parse_rational(info,query,'trace_zero_density','trace zero density')
         parse_ints(info,query,'second_trace_moment')
         parse_ints(info,query,'fourth_trace_moment')
@@ -299,10 +382,7 @@ def search(info):
                 # E(x^4) for mu(1), mu(2) and mu(4) are 1; others are 0
                 E = parse_ints_to_list_flash(info.get(name), name.replace("_", " "))
                 if 0 not in E:
-                    if components_list is None:
-                        components_list = ones
-                    else:
-                        components_list = [x for x in ones if x in components_list]
+                    components_list = refine_components(components_list, ones)
                 if 1 not in E:
                     ommitted.update(ones)
         parse_ints(info,query,'first_a2_moment')
@@ -708,6 +788,12 @@ class STSearchArray(SearchArray):
             name="maximal",
             label="Maximal",
             knowl="st_group.supgroups")
+        component_group = TextBox(
+            name="component_group",
+            label="Component group",
+            knowl="st_group.component_group",
+            example="[48,48]",
+            example_span="list of %s, e.g. [8,3], or %s, e.g. S4." % (display_knowl("group.small_group_label", "GAP ids"), display_knowl("nf.galois_group.name", "group labels")))
         count = CountBox()
 
         self.browse_array = [
@@ -716,9 +802,9 @@ class STSearchArray(SearchArray):
             [include_irrational, fourth_trace_moment],
             [identity_component, first_a2_moment],
             [components, maximal],
-            [count]]
+            [count, component_group]]
 
-        self.refine_array = [[weight, degree, include_irrational, identity_component, components], [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
+        self.refine_array = [[weight, degree, include_irrational, identity_component, components, component_group], [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
 
 @cached_function
 def compcache():
@@ -785,4 +871,17 @@ class STStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s Sato-Tate groups.  The statistics below omit the infinite family $\mu(n)$ with trivial identity component since they are generated dynamically in search results." % (self.ngroups)
+        return r"The database currently contains %s %s.  The statistics below omit the infinite family $\mu(n)$ with trivial %s since they are generated dynamically in search results." % (
+            self.ngroups,
+            display_knowl('st_group.definition', 'Sato-Tate groups'),
+            display_knowl('st_group.identity_component', 'identity component'))
+
+    @property
+    def short_summary(self):
+        return r'The database currently contains all %s %s of %s 1 and %s up to 4, as well as all Sato-Tate groups of weight 0 and degree 1 with %s of order at most $10^{20}$.  Here are some <a href="%s">further statistics</a>.' % (
+            display_knowl('st_group.rational', 'rational'),
+            display_knowl('st_group.definition', 'Sato-Tate groups'),
+            display_knowl('st_group.weight', 'weight'),
+            display_knowl('st_group.degree', 'degree'),
+            display_knowl('st_group.component_group', 'component group'),
+            url_for('.statistics'))
