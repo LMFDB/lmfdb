@@ -40,7 +40,7 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
 
 class WebBMF(object):
     """
-    Class for an Bianchi Newform
+    Class for a Bianchi Newform
     """
     def __init__(self, dbdata):
         """Arguments:
@@ -100,9 +100,9 @@ class WebBMF(object):
                     return F(str(ap))
             self.hecke_eigs = [conv(str(ap)) for ap in self.hecke_eigs]
 
-        level = ideal_from_label(K,self.level_label)
-        self.level_ideal2 = web_latex(level)
-        badp = level.prime_factors()
+        self.level = ideal_from_label(K,self.level_label)
+        self.level_ideal2 = web_latex(self.level)
+        badp = self.level.prime_factors()
 
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(50, self.nap)
@@ -117,6 +117,8 @@ class WebBMF(object):
                              ideal_label(p),
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
+            # The following helps to create Sage download data
+            self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
 
         try:

@@ -14,7 +14,7 @@ from lmfdb.utils import (
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
-from lmfdb.nfutils.psort import ideal_from_label
+from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 
@@ -40,21 +40,6 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
-def get_bmf(label):
-    """Return a complete BMF, give its label.  Note that the
-    hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
-    separate collection.  Use of this function hides this
-    implementation detail from the user.
-    """
-    f = db.bmf_forms.lookup(label)
-    if f is None:
-        return None
-    if not 'hecke_polynomial' in f:
-        # Hecke data now stored in separate hecke collection:
-        h = db.hmf_hecke.lookup(label)
-        if h:
-            f.update(h)
-    return f
 
 def bc_info(bc):
     return 'yes' if bc > 0 else 'yes (twist)' if bc < 0 else 'no'
@@ -371,61 +356,180 @@ def render_bmf_webpage_download(**args):
 
 
 def download_bmf_magma(**args):
+    label = "-".join([args['field_label'], args['level_label'], args['label_suffix']])
+    f = WebBMF.by_label(label)
 
-    outstr = 'Magma code Under construction'
+    if f is None:
+        return "No such form"
+
+    hecke_pol  = f.hecke_poly
+    hecke_eigs = f.hecke_eigs
+    AL_eigs    = f.AL_table_data
+
+    F = WebNumberField(f.field_label)
+    K = f.field.K()
+
+    primes_in_K = [p for p,t in zip(primes_iter(K),range(len(hecke_eigs)))]
+    prime_gens = [list(p.gens()) for p in primes_in_K]
+
+    outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
+    outstr += '  It will load the data associated to the BMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '  At the *bottom* of the file, there is code to recreate the\n'
+    outstr += '  Bianchi modular form in Magma, by creating the BMF space\n'
+    outstr += '  and cutting out the corresponding Hecke irreducible subspace.\n'
+    outstr += '  From there, you can ask for more eigenvalues or modify as desired.\n'
+    outstr += '  It is commented out, as this computation may be lengthy.\n'
+    outstr += '*/\n\n'
+
+    outstr += 'P<x> := PolynomialRing(Rationals());\n'
+    outstr += 'g := P!' + str(F.coeffs()) + ';\n'
+    outstr += 'F<{}> := NumberField(g);\n'.format(K.gen())
+    outstr += 'ZF := Integers(F);\n\n'
+
+    outstr += 'NN := ideal<ZF | {}>;\n\n'.format(set(f.level.gens()))
+
+    outstr += 'primesArray := [\n' + ','.join([str(st) for st in prime_gens]).replace('],[',
+                                                                                       '],\n[') + '];\n'
+    outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
+
+    if hecke_pol != 'x':
+        outstr += 'heckePol := ' + hecke_pol + ';\n'
+        outstr += 'K<e> := NumberField(heckePol);\n'
+    else:
+        outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
+
+    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([str(st) for st in hecke_eigs]) + '];'
+    outstr += '\nheckeEigenvalues := AssociativeArray();\n'
+    outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
+
+    outstr += 'ALEigenvalues := AssociativeArray();\n'
+    for s in AL_eigs:
+        outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
+
+    outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
+
+    outstr += '\n'.join([
+        'print "To reconstruct the Bianchi newform f, type',
+        '  f, iso := Explode(make_newform());";',
+        '',
+        'function make_newform();',
+        ' M := BianchiCuspForms(F, NN);',
+        ' S := NewSubspace(M);',
+        ' // SetVerbose("Bianchi", 1);',
+        ' NFD := NewformDecomposition(S);',
+        ' newforms := [* Eigenform(U) : U in NFD *];',
+        '',
+        ' if #newforms eq 0 then;',
+        '  print "No Bianchi newforms at this level";',
+        '  return 0;',
+        ' end if;',
+        '',
+        ' print "Testing ", #newforms, " possible newforms";',
+        ' newforms := [* f: f in newforms | IsIsomorphic(BaseField(f), K) *];',
+        ' print #newforms, " newforms have the correct Hecke field";',
+        '',
+        ' if #newforms eq 0 then;',
+        '  print "No Bianchi newform found with the correct Hecke field";',
+        '  return 0;',
+        ' end if;',
+        '',
+        ' autos := Automorphisms(K);',
+        ' xnewforms := [* *];',
+        ' for f in newforms do;',
+        '  if K eq RationalField() then;',
+        '   Append(~xnewforms, [* f, autos[1] *]);',
+        '  else;',
+        '   flag, iso := IsIsomorphic(K,BaseField(f));',
+        '   for a in autos do;',
+        '    Append(~xnewforms, [* f, a*iso *]);',
+        '   end for;',
+        '  end if;',
+        ' end for;',
+        ' newforms := xnewforms;',
+        '',
+        ' for P in primes do;',
+        '  if Valuation(NN,P) eq 0 then;',
+        '   xnewforms := [* *];',
+        '   for f_iso in newforms do;',
+        '    f, iso := Explode(f_iso);',
+        '    if HeckeEigenvalue(f,P) eq iso(heckeEigenvalues[P]) then;',
+        '     Append(~xnewforms, f_iso);',
+        '    end if;',
+        '   end for;',
+        '   newforms := xnewforms;',
+        '   if #newforms eq 0 then;',
+        '    print "No Bianchi newform found which matches the Hecke eigenvalues";',
+        '    return 0;',
+        '   else if #newforms eq 1 then;',
+        '    print "success: unique match";',
+        '    return newforms[1];',
+        '   end if;',
+        '   end if;',
+        '  end if;',
+        ' end for;',
+        ' print #newforms, "Bianchi newforms found which match the Hecke eigenvalues";',
+        ' return newforms[1];',
+        '',
+        'end function;'])
 
     return outstr
 
 
 def download_bmf_sage(**args):
+    """Generates the sage code for the user to obtain the BMF eigenvalues.
+    As in the HMF case, and unlike the website, we export *all* eigenvalues in
+    the database, not just 50, and not just those away from the level."""
 
-    # label = str(args['label'])
-    # f = get_bmf(label)
-    # if f is None:
-    #     return "No such form"
+    label = "-".join([args['field_label'], args['level_label'], args['label_suffix']])
+    f = WebBMF.by_label(label)
 
-    # hecke_pol  = f['hecke_polynomial']
-    # hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    # AL_eigs    = f['AL_eigenvalues']
+    if f is None:
+        return "No such form"
 
-    # F = WebNumberField(f['field_label'])
-    # F_hmf = get_hmf_field(f['field_label'])
+    hecke_pol  = f.hecke_poly
+    hecke_eigs = f.hecke_eigs
+    AL_eigs    = f.AL_table_data
 
-    # outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
-    # outstr += '  It will load the data associated to the HMF, including\n'
-    # outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
-    # outstr += '*/\n\n'
+    F = WebNumberField(f.field_label)
+    K = f.field.K()
 
-    # outstr += 'P.<x> = PolynomialRing(QQ)\n'
-    # outstr += 'g = P(' + str(F.coeffs()) + ')\n'
-    # outstr += 'F.<w> = NumberField(g)\n'
-    # outstr += 'ZF = F.ring_of_integers()\n\n'
+    primes_in_K = [p for p,t in zip(primes_iter(K),range(len(hecke_eigs)))]
+    prime_gens = [p.gens_reduced() for p in primes_in_K]
 
-    # outstr += 'NN = ZF.ideal(' + f["level_ideal"] + ')\n\n'
+    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr += '  It will load the data associated to the BMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '*/\n\n'
 
-    # outstr += 'primes_array = [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[',
-    #                                                                                   '],\\\n[') + ']\n'
-    # outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
+    outstr += 'P.<x> = PolynomialRing(QQ)\n'
+    outstr += 'g = P(' + str(F.coeffs()) + ')\n'
+    outstr += 'F.<{}> = NumberField(g)\n'.format(K.gen())
+    outstr += 'ZF = F.ring_of_integers()\n\n'
 
-    # if hecke_pol != 'x':
-    #     outstr += 'heckePol = ' + hecke_pol + '\n'
-    #     outstr += 'K.<e> = NumberField(heckePol)\n'
-    # else:
-    #     outstr += 'heckePol = x\nK = QQ\ne = 1\n'
+    outstr += 'NN = ZF.ideal({})\n\n'.format(f.level.gens())
 
-    # outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
-    # outstr += '\nhecke_eigenvalues = {}\n'
-    # outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
+    outstr += 'primes_array = [\n' + ','.join([str(st) for st in prime_gens]).replace('],[',
+                                                                                       '],\\\n[') + ']\n'
+    outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
-    # outstr += 'AL_eigenvalues = {}\n'
-    # for s in AL_eigs:
-    #     outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+    if hecke_pol != 'x':
+        outstr += 'heckePol = ' + hecke_pol + '\n'
+        outstr += 'K.<e> = NumberField(heckePol)\n'
+    else:
+        outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    # outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
+    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([str(st) for st in hecke_eigs]) + ']'
+    outstr += '\nhecke_eigenvalues = {}\n'
+    outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
-    outstr = "Sage code under construction"
+    outstr += 'AL_eigenvalues = {}\n'
+    for s in AL_eigs:
+        outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+
+    outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
+
     return outstr
-
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
