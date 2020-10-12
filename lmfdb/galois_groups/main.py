@@ -152,6 +152,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
+    parse_ints(info,query,'arith_equiv')
     parse_ints(info,query,'nilpotency')
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
@@ -392,14 +393,24 @@ class GalSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="1..100",
             example_span="-1, or 1..3")
+        arith_equiv = TextBox(
+            name="arith_equiv",
+            label="Arith. Equiv.",
+            knowl="gg.arithmetically_equiv_input",
+            example="1",
+            example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [arith_equiv], [count]]
 
-        self.refine_array = [[parity, cyc, solv, prim], [n, t, order, gal, nilpotency]]
+        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency]]
 
 def yesone(s):
     return "yes" if s in ["yes", 1] else "no"
+
+def fixminus1(s):
+    return "not computed" if s == -1 else s
+
 def eqyesone(col):
     def inner(s):
         return "%s=%s" % (col, yesone(s))
@@ -418,6 +429,9 @@ class GaloisStats(StatsDisplay):
         {"cols": ["prim", "n"],
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
+        {"cols": ["arith_equiv","n"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
         {"cols": ["n", "nilpotency"],
          "totaler": totaler(),
          "proportioner": proportioners.per_row_total},
@@ -425,19 +439,23 @@ class GaloisStats(StatsDisplay):
     knowls = {"n": "gg.degree",
               "order": "group.order",
               "nilpotency": "group.nilpotent",
+              "arith_equiv": "gg.arithmetically_equivalent",
               "solv": "group.solvable",
               "prim": "gg.primitive",
     }
-    top_titles = {"nilpotency": "niplpotency classes",
+    top_titles = {"nilpotency": "nilpotency classes",
                   "solv": "solvability",
+                  "arith_equiv": "number of arithmetic equivalent siblings",
                   "prim": "primitivity"}
     short_display = {"n": "degree",
                      "nilpotency": "nilpotency class",
                      "solv": "solvable",
+                     "arith_equiv": "arithmetic equivalent count",
                      "prim": "primitive",
     }
     formatters = {"solv": yesone,
-                  "prim": yesone}
+                  "prim": yesone,
+                  "arith_equiv": fixminus1}
     query_formatters = {"solv": eqyesone("solv"),
                         "prim": eqyesone("prim")}
     buckets = {
