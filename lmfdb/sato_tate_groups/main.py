@@ -360,7 +360,6 @@ def search(info):
                 gps = gps["$in"]
             else:
                 gps = [gps]
-            print("Z", gps)
             if not ratonly:
                 cyclic_labels = set(db.gps_small.search({"cyclic": True}, "label"))
             irrat = []
