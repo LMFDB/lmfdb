@@ -415,6 +415,12 @@ def eqyesone(col):
     def inner(s):
         return "%s=%s" % (col, yesone(s))
     return inner
+
+def undominus1(s):
+    if isinstance(s,int):
+        return "arith_equiv=%s" % s
+    return "arith_equiv=-1"
+
 class GaloisStats(StatsDisplay):
     table = db.gps_transitive
     baseurl_func = ".index"
@@ -431,7 +437,7 @@ class GaloisStats(StatsDisplay):
          "proportioner": proportioners.per_col_total},
         {"cols": ["arith_equiv","n"],
          "totaler": totaler(),
-         "proportioner": proportioners.per_row_total},
+         "proportioner": proportioners.per_col_total},
         {"cols": ["n", "nilpotency"],
          "totaler": totaler(),
          "proportioner": proportioners.per_row_total},
@@ -457,7 +463,8 @@ class GaloisStats(StatsDisplay):
                   "prim": yesone,
                   "arith_equiv": fixminus1}
     query_formatters = {"solv": eqyesone("solv"),
-                        "prim": eqyesone("prim")}
+                        "prim": eqyesone("prim"),
+                        "arith_equiv": undominus1}
     buckets = {
         "n": ["1-3", "4-7", "8", "9-11", "12", "13-15", "16", "17-23", "24", "25-31", "32", "33-35", "36", "37-39", "40", "41-47"],
         "order": ["1-15", "16-31", "32-63", "64-127", "128-255", "256-511", "512-1023", "1024-2047", "2048-65535", "65536-40000000000", "40000000000-"]
