@@ -397,7 +397,7 @@ class WebEC(object):
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
                            ('Rank', '%s' % self.mw['rank']),
-                           ('Torsion Structure', r'\(%s\)' % self.mw['tor_struct'])
+                           ('Torsion structure', r'\(%s\)' % self.mw['tor_struct'])
                            ]
 
         if self.label_type == 'Cremona':

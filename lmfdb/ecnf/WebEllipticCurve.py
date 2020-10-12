@@ -335,7 +335,7 @@ class ECNF(object):
             self.mindisc_norm = web_latex(Dmin_norm)
             if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
                 self.fact_mindisc = self.mindisc
-                self.fact_mindisc_norm = self.mindisc
+                self.fact_mindisc_norm = self.mindisc_norm
             else:
                 Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
