@@ -1365,6 +1365,8 @@ ORDER BY v.ord LIMIT %s"""
         - ``suffix`` -- appended to the table name when computing and storing stats.
             Used when reloading a table.
         """
+        self.logger.info("Refreshing statistics on %s" % self.search_table)
+        t0 = time.time()
         with DelayCommit(self, silence=True):
             # Determine the stats and counts currently recorded
             stat_cmds, split_cmds, nstat_cmds = self._status()
@@ -1387,6 +1389,7 @@ ORDER BY v.ord LIMIT %s"""
             if total:
                 # Refresh total in meta_tables
                 self.total = self._slow_count({}, suffix=suffix, extra=False)
+            self.logger.info("Refreshed statistics in %.3f secs" % (time.time() - t0))
 
     def status(self):
         """
