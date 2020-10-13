@@ -402,7 +402,7 @@ def search(info):
         nres = None
         if components_list is None:
             components_list = range(1, 3 if ratonly else (start + count + 1 + len(ommitted)))
-            nres = INFINITY
+            nres = None if ratonly else INFINITY
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
         components_list = [n for n in components_list if n not in ommitted]
