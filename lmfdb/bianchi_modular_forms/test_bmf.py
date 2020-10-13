@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-# To run this, do the following:
-# sage -python lmfdb/bianchi_modular_forms/test_bmf.py BMFTest.test_jump
-import sys
-import unittest
-from sage.all import *
-sys.path.append('/home/barinder/lmfdb')
-
 from lmfdb.tests import LmfdbTest
+from sage.all import *  # needed for 'test_download_sage'
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 
@@ -122,7 +116,7 @@ class BMFTest(LmfdbTest):
 
     def check_compile_and_get_level(self, download_data):
         """Simulates a user downloading the sage code, and then loading it into
-        a sage session."""
+        a sage session. This requires the sage import at the top"""
         aux_file = 'testing.sage'
 
         with open(aux_file, 'w') as the_file:
@@ -153,7 +147,8 @@ class BMFTest(LmfdbTest):
         L = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/88.5/a/download/magma').get_data(as_text=True)
         assert 'NN := ideal<ZF | {44, 2*a + 30}>;' in L
         assert '[263, a + 123],' in L
-        #  assert 'heckeEigenvaluesArray := [-1, 0, 2, 4, -1, -6, 0, 0,' in L
+        assert 'heckeEigenvalues[primes[32]] := 18;' in L
+        assert 'heckeEigenvalues[primes[53]] := -12;' in L
 
         page = self.tc.get('ModularForm/GL2/ImaginaryQuadratic/159.0.7.1/30.5/a/download/magma').get_data(as_text=True)
         assert 'Bianchi newform not found' in page
@@ -162,32 +157,19 @@ class BMFTest(LmfdbTest):
         from sage.all import magma
         import sys
         for label, expected in [
-                #['2.0.4.1/100.2/a',
-                # 'heckeEigenvaluesArray := [0, -1, -1, -2, 2, 2, -6, -6, 6, 6, 2, 2, 6, 6']
-                ['2.0.4.1/1066.4/a2',
-                 'P<x> := PolynomialRing(Rationals());']
+                ['2.0.4.1/100.2/a',
+                 'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
+                ['2.0.11.1/933.1/a',
+                 'heckeEigenvalues[primes[193]] := -30;']
         ]:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
             assert expected in page
             assert  'make_newform'  in page
-            # try:
-            #     print("Yabba Dabba Do!")
-            #     magma_code = page + '\n';
-            #     magma_code += 'f, iso := Explode(make_newform());\n'
-            #     magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
-            #     magma_code += 'f;\n'
-            #     assert 'success' in magma.eval(magma_code)
-            # except RuntimeError:
-            #     pass
-            print("Yabba Dabba Do!")
+
             magma_code = page + '\n';
             magma_code += 'f, iso := Explode(make_newform());\n'
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
             assert 'success' in magma.eval(magma_code)
-
-
-if __name__ == "__main__":
-    unittest.main()

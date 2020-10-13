@@ -158,12 +158,9 @@ class HMFTest(LmfdbTest):
             page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label)).get_data(as_text=True)
             assert expected in page
             assert  'make_newform'  in page
-            try:
-                magma_code = page + '\n';
-                magma_code += 'f, iso := Explode(make_newform());\n'
-                magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
-                magma_code += 'f;\n'
-                assert 'success' in magma.eval(magma_code)
-            except RuntimeError:
-                pass
 
+            magma_code = page + '\n'
+            magma_code += 'f, iso := Explode(make_newform());\n'
+            magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
+            magma_code += 'f;\n'
+            assert 'success' in magma.eval(magma_code)

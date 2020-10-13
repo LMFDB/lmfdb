@@ -401,13 +401,10 @@ def download_bmf_magma(**args):
 
     hecke_eigs_processed = [str(st) if st != 'not known' else '"not known"' for st in hecke_eigs]
     neigs = len(hecke_eigs_processed)
-    # outstr += '\nheckeEigenvaluesArray := [' + ', '.join([str(st) for st in hecke_eigs]) + '];'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
 
     for i in range(neigs):
         outstr += 'heckeEigenvalues[primes[{}]] := {};\n'.format(i+1, hecke_eigs_processed[i])
-
-    # outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
 
     if f.have_AL:
         AL_eigs    = f.AL_table_data
@@ -482,11 +479,6 @@ def download_bmf_magma(**args):
         ' return newforms[1];',
         '',
         'end function;'])
-
-    output_file = 'bmf_testing.m'
-
-    with open(output_file, 'w') as file:
-        file.write(outstr)
 
     return outstr
 
