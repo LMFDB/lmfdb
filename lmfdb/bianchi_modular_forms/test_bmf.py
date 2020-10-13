@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+# To run this, do the following:
+# sage -python lmfdb/bianchi_modular_forms/test_bmf.py BMFTest.test_jump
+import sys
+import unittest
+from sage.all import *
+sys.path.append('/home/barinder/lmfdb')
+
 from lmfdb.tests import LmfdbTest
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
@@ -113,3 +120,74 @@ class BMFTest(LmfdbTest):
             # but the goal is to test that itself doesn't show in the friends list
             assert notitself not in L.get_data(as_text=True)
 
+    def check_compile_and_get_level(self, download_data):
+        """Simulates a user downloading the sage code, and then loading it into
+        a sage session."""
+        aux_file = 'testing.sage'
+
+        with open(aux_file, 'w') as the_file:
+            the_file.write(download_data.get_data(as_text=True))
+
+        load(aux_file)  # if there's a problem with loading, this will make the test fail
+        os.remove(aux_file)
+        return NN
+
+    def test_download_sage(self):
+        # A dimension 1 example
+        L1 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage')
+        L1_level = self.check_compile_and_get_level(L1)
+        assert L1_level.norm() == 18333
+        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1.get_data(as_text=True)
+        assert '(27*a - 22,),(-29*a + 15,),(-29*a + 14,),(29*a - 11,),(-29*a + 18,),(-29*a + 9,)' in L1.get_data(as_text=True)
+        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1.get_data(as_text=True)
+
+        # A dimension 2 example
+        L2 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage')
+        L2_level = self.check_compile_and_get_level(L2)
+        assert L2_level.norm() == 377
+        assert '(2*i + 3,),(i + 4,),(i - 4,),(-2*i + 5,),(2*i + 5,),(i + 6,)' in L2.get_data(as_text=True)
+        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z + 2, "not known", 2*z - 1, 4, 2*z + 3, "not known", 2*z + 1, -2*z - 5' in L2.get_data(as_text=True)
+
+    def test_download_magma(self):
+        # A dimension 1 example
+        L = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/88.5/a/download/magma').get_data(as_text=True)
+        assert 'NN := ideal<ZF | {44, 2*a + 30}>;' in L
+        assert '[263, a + 123],' in L
+        #  assert 'heckeEigenvaluesArray := [-1, 0, 2, 4, -1, -6, 0, 0,' in L
+
+        page = self.tc.get('ModularForm/GL2/ImaginaryQuadratic/159.0.7.1/30.5/a/download/magma').get_data(as_text=True)
+        assert 'Bianchi newform not found' in page
+
+        # These tests take too long to use magma_free, so we run magma when it is installed
+        from sage.all import magma
+        import sys
+        for label, expected in [
+                #['2.0.4.1/100.2/a',
+                # 'heckeEigenvaluesArray := [0, -1, -1, -2, 2, 2, -6, -6, 6, 6, 2, 2, 6, 6']
+                ['2.0.4.1/1066.4/a2',
+                 'P<x> := PolynomialRing(Rationals());']
+        ]:
+            sys.stdout.write("{}...".format(label))
+            sys.stdout.flush()
+            page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
+            assert expected in page
+            assert  'make_newform'  in page
+            # try:
+            #     print("Yabba Dabba Do!")
+            #     magma_code = page + '\n';
+            #     magma_code += 'f, iso := Explode(make_newform());\n'
+            #     magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
+            #     magma_code += 'f;\n'
+            #     assert 'success' in magma.eval(magma_code)
+            # except RuntimeError:
+            #     pass
+            print("Yabba Dabba Do!")
+            magma_code = page + '\n';
+            magma_code += 'f, iso := Explode(make_newform());\n'
+            magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
+            magma_code += 'f;\n'
+            assert 'success' in magma.eval(magma_code)
+
+
+if __name__ == "__main__":
+    unittest.main()

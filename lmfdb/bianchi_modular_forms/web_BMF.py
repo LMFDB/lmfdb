@@ -88,6 +88,9 @@ class WebBMF(object):
         self.newspace_url = url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label)
         K = self.field.K()
 
+        # 'hecke_poly_obj' is the non-LaTeX version of hecke_poly
+        self.hecke_poly_obj = self.hecke_poly
+
         if self.dimension>1:
             Qx = PolynomialRing(QQ,'x')
             self.hecke_poly = Qx(str(self.hecke_poly))
