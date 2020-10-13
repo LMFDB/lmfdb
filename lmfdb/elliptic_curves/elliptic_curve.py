@@ -658,7 +658,7 @@ class ECSearchArray(SearchArray):
         sha = TextBox(
             name="sha",
             label="Analytic order of &#1064;",
-            knowl="ec.q.analytic_sha_order",
+            knowl="ec.analytic_sha_order",
             example="4")
         surj_primes = TextBox(
             name="surj_primes",
