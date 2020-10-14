@@ -513,22 +513,24 @@ class BianchiStats(StatsDisplay):
          'totaler': totaler(),
          'proportioner': proportioners.per_row_total},
         {'cols': ['field_label', 'level_norm'],
-         'top_title': '%s by %s and %s' % (
+         'top_title': 'computed %s by %s and %s' % (
              display_knowl("mf.bianchi.spaces",
-                           r"cusp spaces for $\operatorname{GL}_2$ levels"),
+                           r"$\operatorname{GL}_2$ levels"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
+         'intro': ["The set of %s computed for each level varies." % display_knowl("mf.bianchi.weight", "weights")],
          'constraint': {"gl2_cusp_totaldim": {"$gt": 0}},
          'baseurl_func': ".gl2dims",
          'table': db.bmf_dims,
          'totaler': totaler(col_counts=False),
          'proportioner': proportioners.per_row_total},
         {'cols': ['field_label', 'level_norm'],
-         'top_title': '%s by %s and %s' % (
+         'top_title': 'computed %s by %s and %s' % (
              display_knowl("mf.bianchi.spaces",
-                           r"cusp spaces for $\operatorname{SL}_2$ levels"),
+                           r"$\operatorname{SL}_2$ levels"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
+         'intro': ["The set of %s computed for each level varies." % display_knowl("mf.bianchi.weight", "weights")],
          'constraint': {"sl2_cusp_totaldim": {"$gt": 0}},
          'baseurl_func': ".sl2dims",
          'buckets': {'level_norm': ['1-100', '101-200', '201-400', '401-800', '801-1600', '1601-3200', '3201-6400']},

@@ -32,8 +32,8 @@ by norm, over \(K=\) {{info.field_pretty}}.
 
 {% if info.number %}
 
-<form id='level_flag'>
-<input type="hidden" name="start" value="0"/>
+<form id='level_flag' onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_norm" value="{{info.level_norm}}"/>
 
@@ -73,11 +73,11 @@ by norm, over \(K=\) {{info.field_pretty}}.
                       <option value='new'>Show only levels with positive new dimension</option>
                     </select>
                     {%-endif %}
-<button type='submit' value='Go'>Go</button>
+<button type='submit' onclick="resetStart();" value='Go'>Go</button>
 </p>
 </form>
 
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_flag" value="{{info.level_flag}}"/>
