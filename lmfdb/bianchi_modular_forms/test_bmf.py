@@ -168,7 +168,7 @@ class BMFTest(LmfdbTest):
             assert expected in page
             assert  'make_newform'  in page
 
-            magma_code = page + '\n';
+            magma_code = page + '\n'
             magma_code += 'f, iso := Explode(make_newform());\n'
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
