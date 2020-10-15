@@ -1542,12 +1542,10 @@ ORDER BY v.ord LIMIT %s"""
                         for k, v in cx.items():
                             if k in ['$gte', '$gt']:
                                 oe = '>='
-                                ke = '$gte'
                                 ko = '$gte' if k == '$gt' else '$gt'
                                 op = '>' if k == '$gt' else '>='
                             elif k in ['$lte', '$lt']:
                                 oe = '<='
-                                ke = '$lte'
                                 ko = '$lte' if k == '$lt' else '$lt'
                                 op = '<' if k == '$lt' else '<='
                             else:
