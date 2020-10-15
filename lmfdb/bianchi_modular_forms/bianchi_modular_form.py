@@ -412,7 +412,7 @@ def download_bmf_magma(**args):
         for s in AL_eigs:
             outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
     else:
-        outstr += '\nprint "AL eigenvalues are not known";\n'
+        outstr += '\nALEigenvalues := "not known";\n'
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
 
@@ -537,7 +537,7 @@ def download_bmf_sage(**args):
         for s in AL_eigs:
             outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
     else:
-        outstr += 'print("AL eigenvalues are not known")\n'
+        outstr += 'AL_eigenvalues ="not known"\n'
 
     outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
 

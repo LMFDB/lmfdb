@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
+import socket
 
 class HMFTest(LmfdbTest):
     def test_home(self):
@@ -163,4 +164,13 @@ class HMFTest(LmfdbTest):
             magma_code += 'f, iso := Explode(make_newform());\n'
             magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
             magma_code += 'f;\n'
-            assert 'success' in magma.eval(magma_code)
+
+            if magma.is_local():
+                assert 'success' in magma.eval(magma_code)
+            else:
+                try:
+                    from sage.all import magma_free
+                    assert 'success' in magma_free(magma_code)
+                except socket.timeout as err:
+                    print("Connecting with magma.maths.usyd.edu.au timed out")
+                    print(err)
