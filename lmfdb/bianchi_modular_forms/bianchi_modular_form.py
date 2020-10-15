@@ -3,7 +3,7 @@ from six import string_types
 import re
 
 from flask import render_template, url_for, request, redirect, make_response
-from sage.all import latex
+from sage.all import latex, QQ, PolynomialRing
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -509,9 +509,10 @@ def download_bmf_sage(**args):
     outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data (if known).\n'
     outstr += '"""\n\n'
 
-    outstr += 'P.<x> = PolynomialRing(QQ)\n'
+    outstr += 'P = PolynomialRing(QQ, "x")\nx = P.gen()\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
-    outstr += 'F.<{}> = NumberField(g)\n'.format(K.gen())
+    outstr += 'F = NumberField(g, "{}")\n'.format(K.gen())
+    outstr += '{} = F.gen()\n'.format(K.gen())
     outstr += 'ZF = F.ring_of_integers()\n\n'
 
     outstr += 'NN = ZF.ideal({})\n\n'.format(f.level.gens())
@@ -520,9 +521,11 @@ def download_bmf_sage(**args):
                                                                                        '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
+    Qx = PolynomialRing(QQ,'x')
+
     if hecke_pol != 'x':
-        outstr += 'heckePol = ' + hecke_pol + '\n'
-        outstr += 'K.<z> = NumberField(heckePol)\n'
+        outstr += 'heckePol = P({})\n'.format(str((Qx(hecke_pol)).list()))
+        outstr += 'K = NumberField(heckePol, "z")\nz = K.gen()\n'
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 

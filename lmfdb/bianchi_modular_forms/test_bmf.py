@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import os
 from lmfdb.tests import LmfdbTest
-from sage.all import load, Integer, PolynomialRing, QQ, NumberField
+from sage.all import Integer, PolynomialRing, QQ, NumberField
 import socket
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
@@ -119,13 +118,10 @@ class BMFTest(LmfdbTest):
     def check_compile_and_get_level(self, download_data):
         """Simulates a user downloading the sage code, and then loading it into
         a sage session. This requires the sage import at the top"""
-        aux_file = 'testing.sage'
 
-        with open(aux_file, 'w') as the_file:
-            the_file.write(download_data.get_data(as_text=True))
-
-        load(aux_file)  # if there's a problem with loading, this will make the test fail
-        os.remove(aux_file)
+        sage_code = download_data.get_data(as_text=True)
+        exec(sage_code, globals())
+        global NN
         return NN
 
     def test_download_sage(self):
@@ -136,7 +132,6 @@ class BMFTest(LmfdbTest):
         assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1.get_data(as_text=True)
         assert '(27*a - 22,),(-29*a + 15,),(-29*a + 14,),(29*a - 11,),(-29*a + 18,),(-29*a + 9,)' in L1.get_data(as_text=True)
         assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1.get_data(as_text=True)
-
         """
         Observe that example 1 above checks equality of the level norm between
         the loaded sage code and what appears on the homepage, but then checks
@@ -194,12 +189,16 @@ class BMFTest(LmfdbTest):
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
 
-            if magma.is_local():
+            try:
                 assert 'success' in magma.eval(magma_code)
-            else:
-                try:
-                    from sage.all import magma_free
-                    assert 'success' in magma_free(magma_code)
-                except socket.timeout as err:
-                    print("Connecting with magma.maths.usyd.edu.au timed out")
-                    print(err)
+            except RuntimeError as the_error:
+                if str(the_error).startswith("unable to start magma"):
+                    try:
+                        from sage.all import magma_free
+                        assert 'success' in magma_free(magma_code)
+                    except socket.timeout as err:
+                        print("Connecting with magma.maths.usyd.edu.au timed out")
+                        print(err)
+                        pass
+                else:
+                    raise
