@@ -369,7 +369,7 @@ def download_bmf_magma(**args):
     F = WebNumberField(f.field_label)
     K = f.field.K()
 
-    primes_in_K = [p for p,t in zip(primes_iter(K),range(len(hecke_eigs)))]
+    primes_in_K = [p for p,_ in zip(primes_iter(K),hecke_eigs)]
     prime_gens = [list(p.gens()) for p in primes_in_K]
 
     outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
@@ -501,7 +501,7 @@ def download_bmf_sage(**args):
     F = WebNumberField(f.field_label)
     K = f.field.K()
 
-    primes_in_K = [p for p,t in zip(primes_iter(K),range(len(hecke_eigs)))]
+    primes_in_K = [p for p,_ in zip(primes_iter(K),hecke_eigs)]
     prime_gens = [p.gens_reduced() for p in primes_in_K]
 
     outstr = '"""\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'

@@ -2,7 +2,6 @@
 from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from sage.all import Integer, PolynomialRing, QQ, NumberField
-import socket
 
 base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
 

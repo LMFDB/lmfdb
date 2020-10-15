@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from lmfdb.tests import LmfdbTest
-import socket
 
 class HMFTest(LmfdbTest):
     def test_home(self):
