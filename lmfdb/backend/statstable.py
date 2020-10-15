@@ -12,7 +12,6 @@ from .base import PostgresBase
 from .encoding import Json, numeric_converter
 from .utils import DelayCommit, KeyedDefaultDict, make_tuple
 
-
 # The following is used in bucketing for statistics
 pg_to_py = {}
 for typ in [
@@ -1537,16 +1536,26 @@ ORDER BY v.ord LIMIT %s"""
             for i, x in enumerate(allcols):
                 if x in constraint:
                     cx = constraint[x]
-                    if isinstance(cx, dict) and any(k and k[0] == "$" for k in cx):
+                    if isinstance(cx, dict) and all(isinstance(k, str) and k and k[0] == "$" for k in cx):
                         # Have to handle some constraint parsing here
-                        from lmfdb.backend.utils import postgres_infix_ops
                         typ = self.table.col_type[x]
                         for k, v in cx.items():
-                            op = postgres_infix_ops.get(k)
-                            if not op:
+                            if k in ['$gte', '$gt']:
+                                oe = '>='
+                                ko = '$gte' if k == '$gt' else '$gt'
+                                op = '>' if k == '$gt' else '>='
+                            elif k in ['$lte', '$lt']:
+                                oe = '<='
+                                ko = '$lte' if k == '$lt' else '$lt'
+                                op = '<' if k == '$lt' else '<='
+                            else:
                                 raise ValueError("Unsupported constraint key: %s" % k)
-                            selecter_constraints.append(SQL("(values->>{0})::{1} {2} %s".format(i, typ, op)))
-                            selecter_values.append(Json(v))
+                            selecter_constraints.append(SQL(
+                                "(values->{0}?%s AND (values->{0}->>%s)::{1} {3} %s) OR "
+                                "(values->{0}?%s AND (values->{0}->>%s)::{1} {2} %s) OR "
+                                "(jsonb_typeof(values->{0}) = %s AND (values->>{0})::{1} {2} %s)".format(
+                                    i, typ, op, oe)))
+                            selecter_values.extend([k, k, v, ko, ko, v, "number", v])
                     else:
                         selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                         selecter_values.append(Json(cx))
