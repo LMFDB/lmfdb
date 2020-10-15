@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 import socket
 
@@ -169,12 +170,6 @@ class HMFTest(LmfdbTest):
                 assert 'success' in magma.eval(magma_code)
             except RuntimeError as the_error:
                 if str(the_error).startswith("unable to start magma"):
-                    try:
-                        from sage.all import magma_free
-                        assert 'success' in magma_free(magma_code)
-                    except socket.timeout as err:
-                        print("Connecting with magma.maths.usyd.edu.au timed out")
-                        print(err)
-                        pass
+                    pass
                 else:
                     raise
