@@ -137,15 +137,14 @@
     {% if vflabel %}
     <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
     {% else %}
-    <td> {{ valuefield }} </td>
+    <td> {{ valuefield | safe }} </td>
     {% endif %}
   </tr>
   {% endif %}
   {% if kerfield %}
   <tr>
-    <td>{{ kerfield }}</td>
-    <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
-      defined by {{ kfpol }}
+    <td>{{ KNOWL('character.dirichlet.field_cut_out',title='Fixed Field') }}</td>
+    <td> {{ kerfield | safe }}
     </td>
   </tr>
   {% endif %}
