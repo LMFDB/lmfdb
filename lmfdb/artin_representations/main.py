@@ -25,7 +25,7 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
-    ArtinRepresentation, num2letters)
+    ArtinRepresentation, num2letters, artin_label_pretty)
 
 
 LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
@@ -307,7 +307,7 @@ def render_artin_representation_webpage(label):
         allchars = [ ArtinRepresentation(newlabel+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
     label = newlabel
-    bread = get_bread([(label, ' ')])
+    bread = get_bread([(artin_label_pretty(label), ' ')])
 
     #artin_logger.info("Found %s" % (the_rep._data))
 
@@ -320,7 +320,7 @@ def render_artin_representation_webpage(label):
         processed_root_number = "not computed"
     else:
         processed_root_number = str(the_rep.sign())
-    properties = [("Label", label),
+    properties = [("Label", artin_label_pretty(label)),
                   ("Dimension", str(the_rep.dimension())),
                   ("Group", the_rep.group()),
                   ("Conductor", "$" + the_rep.factored_conductor_latex() + "$")]
@@ -370,14 +370,14 @@ def render_artin_representation_webpage(label):
             friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                               label=the_rep.label())))
         orblabel = re.sub(r'\.[a-z]+$', '', label)
-        friends.append(("Galois orbit "+orblabel,
+        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
         add_lfunction_friends(friends,label)
         friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'.'+num2letters(j)
-            friends.append(("Artin representation "+newlabel,
+            friends.append(("Artin representation " + artin_label_pretty(newlabel),
                 url_for(".render_artin_representation_webpage", label=newlabel)))
 
     info={} # for testing

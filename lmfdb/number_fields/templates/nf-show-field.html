@@ -278,7 +278,7 @@ table.ntdata a {
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <td align="left">
               {{info.mydecomp[loop.index-1]|safe}}
-              <td align="left"><a href = "{{artin.url_for()}}">{{artin.label()}}</a></td><td align="center">${{artin.dimension()}}$</td>
+              <td align="left"><a href = "{{artin.url_for()}}">{{artin.label_pretty()}}</a></td><td align="center">${{artin.dimension()}}$</td>
 {#    <td align="center">${{artin.conductor_equation()}}$</td> #}
       <td align="center">${{artin.factored_conductor_latex()}}$</td>
       {% if artin.number_field_galois_group().url_for() %}
