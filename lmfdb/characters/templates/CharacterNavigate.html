@@ -34,14 +34,13 @@ By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
 Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
 </p>
 
-<h2> Search </h2>
+<h2 id='search_h2'> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
 <h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
   {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
-<h2 id='search_h2'> Search </h2>
 <h2> Find </h2>
 <form>
 <form>
