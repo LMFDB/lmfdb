@@ -403,7 +403,7 @@ def download_bmf_magma(**args):
     neigs = len(hecke_eigs_processed)
     outstr += '\nheckeEigenvaluesList := [*\n'+ ',\n'.join(hecke_eigs_processed) + '\n*];\n'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
-    outstr += 'for i in [1..#hecke_eigs_processed] do\n    heckeEigenvalues[primes[i]] = heckeEigenvaluesList[i];\nend for;\n'
+    outstr += 'for i in [1..#hecke_eigs_processed] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
     #for i in range(neigs):
     #    outstr += 'heckeEigenvalues[primes[{}]] := {};\n'.format(i+1, hecke_eigs_processed[i])
