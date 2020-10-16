@@ -168,7 +168,8 @@ def url_for_label(label):
         flash_error("%s is not a valid label: %s.", label, str(err))
         return redirect(url_for(".render_DirichletNavigation"))
     modulus, number = label.split(".")
-    modulus, number = int(modulus), int(number)
+    modulus = int(modulus)
+    number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
 def download_search(info):
@@ -403,19 +404,6 @@ def make_webchar(args):
     else:
         return WebSmallDirichletCharacter(**args)
 
-def url_for_label(label):
-    """
-    INPUT:
-
-    - label -- a string such as "1052.279" giving a specific Dirichlet character (not an orbit)
-
-    OUTPUT:
-
-    the URL for that Dirichlet character's homepage
-    """
-    modulus, number = label.split(".")
-    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
-
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -537,11 +525,7 @@ def ctx_dirchar():
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():
-    modulus = randint(1,9999)
-    number = randint(1,modulus-1)
-    while gcd(modulus,number) > 1:
-        number = randint(1,modulus-1)
-    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+    return redirect(url_for('.render_DirichletNavigation', search_type="Random"))
 
 @characters_page.route('/Dirichlet/interesting')
 def interesting():
