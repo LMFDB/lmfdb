@@ -1,72 +1,18 @@
-{% extends 'homepage.html' %}
-{% block content %}
+{% extends 'character_refine_search.html' %}
+{% block show_results %}
 
-<h2>Refine search</h2>
-
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-
-{# the front page doesn't have a way to control number of characters
-<input type='hidden' name='limit' value="{{args.limit}}"> #}
-<table border="0">
-<tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='modulus' placeholder="13" style="width:160px;" value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor' placeholder="5" style="width:160px;" value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order' placeholder="2" style="width:160px;" value="{{args.order}}"></td>
-<td align=left>
-<select name='parity' style="width:170px;">
-      <option value="">all</option>
-      <option value="even" {{ "selected" if args.parity == 'even'}}>even</option>
-      <option value="odd" {{ "selected" if args.parity == 'odd'}}>odd</option>
-</select>
-</td>
-<td align=left>
-<select name='primitive' style="width:170px;">
-      <option value="">all</option>
-      <option value="yes" {{ "selected" if args.primitive == 'yes'}}>yes</option>
-      <option value="no" {{ "selected" if args.primitive == 'no'}}>no</option>
-</select>
-</td>
-</tr>
-<tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" onclick='resetStart()'>Search again</button>
-</td> </tr>
-</table>
-
-</form>
-
-{% if not err %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <style type="text/css">
-table td.center {
-  text-align: center;
-}
+    table td.center {
+        text-align: center;
+        padding : 4px;
+    }
 table td.params {
-  text-align: left;
-  font-family: monospace;
+    text-align: left;
+    font-family: monospace;
 }
-
 </style>
-
-{% if info.chars|count > 0 %}
-
-<h2> Results ({{info.report}})&nbsp;
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
-
 <table class=ntdata>
 <thead>
 <tr>
@@ -80,7 +26,7 @@ table td.params {
 </tr>
 </thead>
 
-{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
+{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.results: %}
 <tr>
 <td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
 <td class="center">{{orbit_label}}</a></td>
@@ -92,31 +38,8 @@ table td.params {
 </tr>
 {% endfor %}
 </table>
-
-<br>
-
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-
-{#
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="hidden" name="download" value="1"/>
-</form>
-#}
-
-{% else %}
-<h2> No matches found</h2>
-{% endif %}
-
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
 
 {% endblock %}

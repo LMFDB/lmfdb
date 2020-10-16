@@ -2,10 +2,12 @@
 
 from __future__ import absolute_import
 from lmfdb.app import app
+import ast
 import re
-from flask import render_template, url_for, request, redirect, abort
+from six import BytesIO
+from flask import render_template, url_for, request, redirect, abort, send_file
 from sage.all import gcd, randint, euler_phi
-from lmfdb.utils import to_dict, flash_error
+from lmfdb.utils import to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox, TextBox, CountBox, parse_bool, parse_ints, search_wrap
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
@@ -22,6 +24,8 @@ from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
 from . import ListCharacters
+from .ListCharacters import info_from_db_orbit
+
 
 #### make url_character available from templates
 @app.context_processor
@@ -42,9 +46,10 @@ def learn(current = None):
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     return r
 
+dirich_credit = "" # TODO should anyone be credited?
 def get_bread(tail=[]):
     base = [('Characters',url_for(".render_characterNavigation")),
-            ('Dirichlet', url_for(".render_Dirichletwebpage"))]
+            ('Dirichlet', url_for(".render_DirichletNavigation"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -59,12 +64,220 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
-    return redirect(url_for(".render_Dirichletwebpage"), 301)
+    return redirect(url_for(".render_DirichletNavigation"), 301)
 
+class DirichSearchArray(SearchArray):
+    jump_example = "13.2"
+    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    def __init__(self):
+        modulus = TextBox(
+            "modulus",
+            knowl="character.dirichlet.modulus",
+            label="Modulus",
+            example="13",
+            example_span="13",
+        )
+        conductor = TextBox(
+            "conductor",
+            knowl = "character.dirichlet.conductor",
+            label = "Conductor",
+            example = "5",
+            example_span = "5 or 10,20",
+        )
+        order = TextBox(
+            "order",
+            label="Order",
+            knowl="character.dirichlet.order",
+            example="2",
+            example_span="2 or 3-5"
+        )
+        parity = ParityBox(
+            "parity",
+            knowl="character.dirichlet.parity",
+            label="Parity",
+            example="odd"
+        )
+        is_primitive = YesNoBox(
+            "is_primitive",
+            label="Primitive",
+            knowl="character.dirichlet.primitive",
+            example="yes"
+        )
+        count = CountBox()
+
+        self.refine_array = [
+            [modulus, conductor, order], [parity, is_primitive, count],
+        ]
+        self.browse_array = [
+            [modulus],
+            [conductor],
+            [order],
+            [parity],
+            [is_primitive],
+            [count],
+        ]
+
+    def search_types(self, info):
+        return self._search_again(info, [
+            ('List', 'List of Dirichlet characters'),
+            ('Random', 'Random Dirichlet character')])
+
+def common_parse(info, query):
+    parse_ints(info, query, "modulus", name="base field")
+    parse_ints(info, query, "conductor", name="base cardinality")
+    parse_ints(info, query, "order", name="dimension")
+    if 'parity' in info:
+        parity=info['parity']
+        if parity == 'even':
+            query['parity'] = 1
+        elif parity == 'odd':
+            query['parity'] = -1
+    parse_bool(info, query, "is_primitive", name="is_primitive")
+
+def learnmore_list():
+    return [
+        ('Completeness of the data', url_for(".extent_page")),
+        ('Source of the data', url_for(".how_computed_page")),
+        ('Reliability of the data', url_for(".reliability")),
+        ('Dirichlet character labels', url_for(".labels_page")),
+    ]
+
+def validate_label(label):
+    modulus, number = label.split('.')
+    modulus = int(modulus)
+    numbers = label_to_number(modulus, number, all=True)
+    if numbers == 0:
+        raise ValueError("it must be of the form modulus.number, with modulus and number natural numbers")
+    return True
+
+def jump(info):
+    jump_box = info["jump"].strip() # only called when this present
+    try:
+        validate_label(jump_box)
+    except ValueError as err:
+        flash_error("%s is not a valid label: %s.", jump_box, str(err))
+    return redirect(url_for_label(jump_box))
+
+def url_for_label(label):
+    label = label.replace(" ", "")
+    try:
+        validate_label(label)
+    except ValueError as err:
+        flash_error("%s is not a valid label: %s.", label, str(err))
+        return redirect(url_for(".render_DirichletNavigation"))
+    modulus, number = label.split(".")
+    modulus, number = int(modulus), int(number)
+    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
+
+def download_search(info):
+    dltype = info["Submit"]
+    #R = PolynomialRing(ZZ, "x")
+    #delim = "bracket"
+    #com = r"\\"  # single line comment start
+    #com1 = ""  # multiline comment start
+    #com2 = ""  # multiline comment end
+    filename = "weil_polynomials.gp"
+    #mydate = time.strftime("%d %B %Y")
+    if dltype == "sage":
+        com = "#"
+        filename = "weil_polynomials.sage"
+    if dltype == "magma":
+        com = ""
+        com1 = "/*"
+        com2 = "*/"
+        delim = "magma"
+        filename = "weil_polynomials.m"
+    #s = com1 + "\n"
+    #s += com + " Weil polynomials downloaded from the LMFDB on %s.\n" % (mydate)
+    #s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
+    #s += com + " attached to each isogeny class of an abelian variety.\n"
+    #s += "\n" + com2
+    #s += "\n"
+
+    #if dltype == "magma":
+    #    s += "P<x> := PolynomialRing(Integers()); \n"
+    #    s += "data := ["
+    #else:
+    #    if dltype == "sage":
+    #        s += "x = polygen(ZZ) \n"
+    #    s += "data = [ "
+    #s += "\\\n"
+    s= ""
+    for f in db.char_dir_orbits.search(ast.literal_eval(info["query"])):
+        s += str(f) + "\n"
+    #s = s[:-3]
+    #s += "]\n"
+    #if delim == "magma":
+    #    s = s.replace("[", "[*")
+    #    s = s.replace("]", "*]")
+    #    s += ";"
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+@search_wrap(
+    template="character_search_results.html",
+    table=db.char_dir_orbits,
+    title="Dirichlet character search results",
+    err_title="Dirichlet character search input error",
+    shortcuts={
+        "jump": jump,
+        "download": download_search
+    },
+    postprocess=lambda res, info, query: sum([info_from_db_orbit(x) for x in res],[]),
+    url_for_label=url_for_label,
+    learnmore=learnmore_list,
+    bread=lambda: get_bread("Search results"),
+    credit=lambda: dirich_credit,
+)
+def dirichlet_character_search(info, query):
+    common_parse(info, query)
+
+def label_to_number(modulus, number, all=False):
+    """
+    Takes the second part of a character label and converts it to the second
+    part of a Conrey label.  This could be trivial (just casting to an int)
+    or could require converting from an orbit label to a number.
+
+    If the label is invalid, returns 0.
+    """
+    try:
+        number = int(number)
+    except ValueError:
+        # encoding Galois orbit
+        if modulus < 10000:
+            try:
+                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
+            except ValueError:
+                return 0
+            else:
+                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
+                if number is None:
+                    return 0
+                if not all:
+                    number = number[0]
+        else:
+            return 0
+    else:
+        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
+            return 0
+    return number
+
+@characters_page.route("/Dirichlet")
+@characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
+    info = to_dict(request.args, search_array=DirichSearchArray())
+    if request.args:
+        # hidden_search_type for prev/next buttons
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
+        if search_type in ['List', 'Random']:
+            return dirichlet_character_search(info)
+        assert False
+    #else:
+        #return dirichlet_character_browse(info)
     args = to_dict(request.args)
-
-    info = {'args':args}
+    info = {'args': request.args}
     info['bread'] = get_bread()
     info['learnmore'] = learn()
 
@@ -137,12 +350,14 @@ def render_DirichletNavigation():
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
         info['title'] = 'Dirichlet character search results'
-        info['bread'] = get_bread('Search results')
+        info['bread'] = get_bread(('Search results'))
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
-       info['title'] = 'Dirichlet characters'
-       return render_template('CharacterNavigate.html', **info)
+        info = to_dict(request.args, search_array=DirichSearchArray())
+        info['title'] = 'Dirichlet characters'
+        return render_template('CharacterNavigate.html', info=info,**info)
+
 
 @characters_page.route("/Dirichlet/Labels")
 def labels_page():
@@ -229,15 +444,11 @@ def url_for_label(label):
     modulus, number = label.split(".")
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
-@characters_page.route("/Dirichlet")
-@characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
 
-    if modulus is None:
-        return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
     if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
         modulus, number = modulus.split('.')
@@ -253,10 +464,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
         modulus = 0
     if modulus <= 0:
         flash_error("%s is not a valid modulus for a Dirichlet character. It should be a positive integer.", args['modulus'])
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_DirichletNavigation"))
     if modulus > 10**20:
         flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_DirichletNavigation"))
 
 
 
@@ -284,7 +495,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
             "coprime to and no greater than the modulus %s, or a letter that "
             "corresponds to a valid orbit index.", args['number'], args['modulus']
         )
-        return redirect(url_for(".render_Dirichletwebpage"))
+        return redirect(url_for(".render_DirichletNavigation"))
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
@@ -482,7 +693,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = [('Characters', url_for(".render_characterNavigation")), ('Dirichlet Table', ' ') ]
+    info['bread'] = get_bread('Table')
     info['credit'] = 'SageMath'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
