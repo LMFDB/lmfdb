@@ -105,10 +105,22 @@ class DirichSearchArray(SearchArray):
             knowl="character.dirichlet.primitive",
             example="yes"
         )
+        is_real = YesNoBox(
+            "is_real",
+            label="Real",
+            knowl="character.dirichlet.real",
+            example="yes"
+        )
+        is_minimal = YesNoBox(
+            "is_minimal",
+            label="Minimal",
+            knowl="character.dirichlet.minimal",
+            example="yes"
+        )
         count = CountBox()
 
         self.refine_array = [
-            [modulus, conductor, order], [parity, is_primitive, count],
+            [modulus, conductor, order, is_real], [parity, is_primitive, is_minimal, count],
         ]
         self.browse_array = [
             [modulus],
@@ -116,6 +128,8 @@ class DirichSearchArray(SearchArray):
             [order],
             [parity],
             [is_primitive],
+            [is_real],
+            [is_minimal],
             [count],
         ]
 
@@ -135,6 +149,8 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['parity'] = -1
     parse_bool(info, query, "is_primitive", name="is_primitive")
+    parse_bool(info, query, "is_real", name="is_real")
+    parse_bool(info, query, "is_minimal", name="is_minimal")
 
 def learnmore_list():
     return [
