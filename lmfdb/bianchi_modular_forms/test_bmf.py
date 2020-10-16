@@ -130,7 +130,7 @@ class BMFTest(LmfdbTest):
         L1_level = self.check_compile_and_get_level(L1)
         assert L1_level.norm() == Integer(18333)
         assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1.get_data(as_text=True)
-        assert '(27*a - 22,),(-29*a + 15,),(-29*a + 14,),(29*a - 11,),(-29*a + 18,),(-29*a + 9,)' in L1.get_data(as_text=True)
+        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1.get_data(as_text=True)
         assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1.get_data(as_text=True)
         """
         Observe that example 1 above checks equality of the level norm between
