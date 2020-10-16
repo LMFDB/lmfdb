@@ -10,13 +10,16 @@
 </p>
 {% endif %}
 
+{% block custom_stats %}
+{% endblock %}
+
 {% for d in info.distributions %}
 
 {% if d.attribute.top_title %}
 <h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{ d.attribute.top_title | safe }}</h2>
 {% endif %}
 {% for paragraph in d.attribute.intro %}
-<p>{{paragraph}}</p>
+<p>{{paragraph | safe}}</p>
 {% endfor %}
 
 {% if (d.attribute.cols | length) == 1 %}

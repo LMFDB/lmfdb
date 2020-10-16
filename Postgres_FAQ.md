@@ -649,6 +649,19 @@ Statistics
    with `info` as an argument.  See classical modular forms for an
    examaple.
 
+1. If I change the data in a table, how can I update the statistics on the table?
+
+   If you use a function like `reload` or `update_from_file`,
+   they should refresh the statistics by default (if you don't want
+   this behavior you can use the keyword `restat=False`).  But if there
+   seems to be something wrong with the statistics on a table, you can
+   refresh them manually using, for example, `db.g2c_curves.stats.refresh_statistics()`.
+   Sometimes this isn't sufficient (if there are extra stats that shouldn't
+   be present for example).  A more drastic option is to call
+   `db.g2c_curves._clear_stats_counts()`.  If you do this, make sure to
+   visit the relevant statistics page while logged in as editor,
+   in order to regenerate the statistics used there.
+
 Data Validation
 ---------------
 

@@ -173,7 +173,7 @@ def labels_page():
 def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
-    info = to_dict(request.args, search_array=ECNFSearchArray())
+    info = to_dict(request.args, search_array=ECNFSearchArray(), stats=ECNF_stats())
     if request.args:
         return elliptic_curve_search(info)
     bread = get_bread()
@@ -195,13 +195,13 @@ def index():
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
     niqfs = len(fields_by_sig[0,1])
     nrqfs = len(fields_by_sig[2,0])
-    info['fields'].append(['{} real <a href="{}">quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">real quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_signature', d=2, r=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
     iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
-    info['fields'].append(['{} imaginary <a href="{}">quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">imaginary quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
 
@@ -256,6 +256,12 @@ def interesting():
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
+
+@ecnf_page.route("/stats")
+def statistics():
+    title = "Elliptic curves: statistics"
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=ECNF_stats(), credit=ecnf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
@@ -480,6 +486,7 @@ def elliptic_curve_search(info, query):
 
     parse_ints(info,query,'conductor_norm')
     parse_noop(info,query,'conductor_label')
+    parse_ints(info,query,'rank')
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
@@ -522,10 +529,15 @@ def elliptic_curve_search(info, query):
             query['q_curve'] = True
 
     if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
-            query['cm'] = 0
-        elif info['include_cm'] == 'only':
+        if info['include_cm'] == 'PCM':
             query['cm'] = {'$ne' : 0}
+        elif info['include_cm'] == 'PCMnoCM':
+            query['cm'] = {'$lt' : 0}
+        elif info['include_cm'] == 'CM':
+            query['cm'] = {'$gt' : 0}
+        elif info['include_cm'] == 'noPCM':
+            query['cm'] = 0
+
     parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
@@ -711,16 +723,24 @@ def ecnf_code(**args):
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
 
+def disp_tor(t):
+    if len(t) == 1:
+        return "[%s]" % t, "C%s" % t
+    else:
+        return "[%s,%s]" % t, "C%s&times;C%s" % t
+
 class ECNFSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
+    jump_knowl = "ec.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         field = TextBox(
             name="field",
             label="Base field",
-            knowl="nf",
+            knowl="ag.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         include_base_change = ExcludeOnlyBox(
@@ -743,10 +763,11 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny_class",
             options=[("", ""),
                      ("yes", "one")])
-        include_cm = ExcludeOnlyBox(
+        include_cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
             label= "CM discriminant",
@@ -764,6 +785,11 @@ class ECNFSearchArray(SearchArray):
             example_span_colspan=2,
             example="105474/49 + a*34213/49",
             example_span="")
+        rank = TextBox(
+            name="rank",
+            label="Rank*",
+            knowl="ec.rank",
+            example="2")
         torsion = TextBox(
             name="torsion",
             label="Torsion order",
@@ -776,11 +802,6 @@ class ECNFSearchArray(SearchArray):
             options=[("",""),("2", "2"),("3", "3"),("4", "4"),("5", "5"),("6", "6")]
             )
 
-        def disp_tor(t):
-            if len(t) == 1:
-                return "[%s]" % t, "C%s" % t
-            else:
-                return "[%s,%s]" % t, "C%s&times;C%s" % t
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
@@ -800,14 +821,15 @@ class ECNFSearchArray(SearchArray):
             [jinv],
             [field, bf_deg],
             [conductor_norm, include_base_change],
-            [torsion, include_Q_curves],
-            [cm_disc, torsion_structure],
-            [isodeg, include_cm],
-            [count, one]
+            [rank, include_Q_curves],
+            [torsion, torsion_structure],
+            [cm_disc, include_cm],
+            [isodeg, one],
+            [count]
             ]
 
         self.refine_array = [
             [field, bf_deg, conductor_norm, jinv, include_base_change],
-            [include_Q_curves, isodeg, torsion, torsion_structure, include_cm],
-            [cm_disc, one]
+            [include_Q_curves, isodeg, rank, torsion, torsion_structure],
+            [include_cm, cm_disc, one]
             ]

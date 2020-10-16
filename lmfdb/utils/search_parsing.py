@@ -160,11 +160,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):

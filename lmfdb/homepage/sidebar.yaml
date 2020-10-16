@@ -6,8 +6,8 @@
   parts:
     - title: Overview
       url_for: "introduction"
-    - title: Features
-      url_for: "introduction_features"
+    - title: Random
+      url_for: "go_random"
     - title: Universe
       url_for: "universe"
     - title: Knowledge

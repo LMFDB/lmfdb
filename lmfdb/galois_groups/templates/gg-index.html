@@ -3,10 +3,10 @@
 {% block content %}
 
 <div>
-{{ KNOWL_INC('gg.extent') }}
+  {{ info.stats.short_summary | safe }}
 </div>
 
-<h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
+<h2>Browse</h2>
 
 
 <p>
@@ -51,15 +51,15 @@ Browse by abstract group:
 Some <a href="{{url_for('.interesting')}}">interesting Galois groups</a> or a <a href={{url_for('.random_group')}}>random Galois group</a>
 </p>
 
-<h2>Find a specific Galois group by {{KNOWL('gg.label',title="label")}}</h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
 <h2>Search</h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
+</form>
+
+<h2>Find</h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {% endblock %}

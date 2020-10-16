@@ -3,19 +3,20 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR, latex
+from sage.all import PolynomialRing, QQ, RR, latex, cached_function
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict,
-    search_wrap, Downloader)
+    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
+    knowl_cache, galdata, galunformatter,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
@@ -146,7 +147,7 @@ def ratproc(inp):
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
-    info = to_dict(request.args, search_array=LFSearchArray())
+    info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         return local_field_search(info)
     return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
@@ -372,11 +373,17 @@ def interesting():
         "lf",
         db.lf_fields,
         url_for_label,
-        title=r"Some interesting local fields",
-        bread=get_bread(("Interesting", " ")),
+        title=r"Some interesting $p$-adic fields",
+        bread=get_bread([("Interesting", " ")]),
         credit=LF_credit,
         learnmore=learnmore_list()
     )
+
+@local_fields_page.route("/stats")
+def statistics():
+    title = "Local fields: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=LFStats(), credit=LF_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @local_fields_page.route("/Completeness")
 def cande():
@@ -384,7 +391,7 @@ def cande():
     tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, titletag=tt, bread=bread, 
+                           credit=LF_credit, title=t, titletag=tt, bread=bread,
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
@@ -393,7 +400,7 @@ def labels_page():
     tt = 'Labels for p-adic fields'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
-                  learnmore=learnmore_list_remove('label'), 
+                  learnmore=learnmore_list_remove('label'),
                   credit=LF_credit, title=t, titletag=tt, bread=bread)
 
 @local_fields_page.route("/Source")
@@ -402,7 +409,7 @@ def source():
     ttag = 'Source of p-adic field data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
 @local_fields_page.route("/Reliability")
@@ -411,7 +418,7 @@ def reliability():
     ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):
@@ -419,6 +426,8 @@ class LFSearchArray(SearchArray):
     plural_noun = "fields"
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
+    jump_knowl = "lf.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         degree = TextBox(
             name='n',
@@ -465,3 +474,88 @@ class LFSearchArray(SearchArray):
 
         self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
         self.refine_array = [[degree, c, gal], [qp, e, topslope]]
+
+def ramdisp(p):
+    return {'cols': ['n', 'e'],
+            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'top_title':[('degree', 'lf.degree'),
+                         ('and', None),
+                         ('ramification index', 'lf.ramification_index'),
+                         ('for %s-adic fields'%p, None)],
+            'totaler': totaler(col_counts=False),
+            'proportioner': proportioners.per_row_total}
+
+def discdisp(p):
+    return {'cols': ['n', 'c'],
+            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'top_title':[('degree', 'lf.degree'),
+                         ('and', None),
+                         ('discriminant exponent', 'lf.discriminant_exponent'),
+                         ('for %s-adic fields'%p, None)],
+            'totaler': totaler(col_counts=False),
+            'proportioner': proportioners.per_row_query(lambda n: {'n':int(n)})}
+
+def galdisp(p, n):
+    return {'cols': ['galois_label'],
+            'constraint': {'p': p, 'n': n},
+            'top_title':[('Galois groups', 'nf.galois_group'),
+                         ('for %s-adic fields of'%p, None),
+                         ('degree', 'lf.degree'),
+                         (str(n), None)]}
+
+# We want to look up gap ids and names only once, rather than once for each Galois group
+@cached_function
+def galcache():
+    return knowl_cache(db.lf_fields.distinct("galois_label"))
+def galformatter(gal):
+    n, t = galdata(gal)
+    return group_pretty_and_nTj(n, t, True, cache=galcache())
+class LFStats(StatsDisplay):
+    table = db.lf_fields
+    baseurl_func = ".index"
+    short_display = {'galois_label': 'Galois group',
+                     'n': 'degree',
+                     'e': 'ramification index',
+                     'c': 'discriminant exponent'}
+    sort_keys = {'galois_label': galdata}
+    formatters = {
+        'galois_label': galformatter
+    }
+    query_formatters = {
+        'galois_label': (lambda gal: r'gal=%s' % (galunformatter(gal)))
+    }
+
+    stat_list = [
+        ramdisp(2),
+        ramdisp(3),
+        discdisp(2),
+        discdisp(3),
+        galdisp(2, 4),
+        galdisp(2, 6),
+        galdisp(2, 8),
+        galdisp(2, 10),
+        galdisp(2, 12),
+        galdisp(2, 14),
+        galdisp(3, 6),
+        galdisp(3, 9),
+        galdisp(3, 12),
+        galdisp(3, 15),
+        galdisp(5, 10),
+        galdisp(5, 15),
+        galdisp(7, 14)
+    ]
+
+    def __init__(self):
+        self.numfields = db.lf_fields.count()
+
+    @property
+    def short_summary(self):
+        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
+
+    @property
+    def summary(self):
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.' % (
+            comma(self.numfields),
+            display_knowl("lf.padic_field", r"$p$-adic fields"),
+            display_knowl("lf.degree", "degree")
+        )

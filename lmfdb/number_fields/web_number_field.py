@@ -5,7 +5,7 @@ from six import text_type
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -249,13 +249,26 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
-def formatfield(coef):
+def formatfield(coef, show_poly=False):
+    r"""
+      Take a list of coefficients (which can be a string like '1,3,1'
+      and either produce a number field knowl if the polynomial matches
+      a number field in the database, otherwise produce a knowl which
+      says say "Deg 15", which can be opened to show the degree 15
+      polynomial.  
+      
+      If show_poly is set to true and the polynomial is not in the
+      database, just display the polynomial (no knowl).
+    """
     if isinstance(coef, text_type):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
         mypol = latex(coeff_to_poly(coef))
+        if show_poly:
+            return '$'+mypol+'$'
+
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
         return mypol
@@ -676,6 +689,24 @@ class WebNumberField:
             res = res.replace('\\\\', '\\')
             return res
         return na_text()
+
+    def cnf(self):
+        if self.degree()==1:
+            return r'=\frac{2^1\cdot (2\pi)^0 \cdot 1\cdot 1}{2\sqrt 1}=1$'
+        if not self.haskey('class_group'):
+            return r'$<td>  '+na_text()
+        # Otherwise we should have what we need
+        [r1,r2] = self.signature()
+        reg = self.regulator()
+        h = self.class_number()
+        w = self.root_of_1_order()
+        r1term= r'2^{%s}\cdot'% r1
+        r2term= r'(2\pi)^{%s}\cdot'% r2
+        disc = ZZ(self._data['disc_abs'])
+        approx1 = r'\approx' if self.unit_rank()>0 else r'='
+        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
+        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        return ltx
 
     def is_cm_field(self):
         return self._data['cm']

@@ -553,7 +553,7 @@ def browse():
 
 @hmf_page.route("/stats")
 def statistics():
-    title = r'Hilbert modular forms: Statistics'
+    title = r'Hilbert modular forms: statistics'
     bread = get_bread("Statistics")
     return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
@@ -601,6 +601,8 @@ class HMFSearchArray(SearchArray):
     plural_noun = "forms"
     jump_example = "2.2.5.1-31.1-a"
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
+    jump_knowl = "mf.hilbert.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         field = TextBox(
             name='field_label',

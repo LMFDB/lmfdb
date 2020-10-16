@@ -12,7 +12,6 @@ from .base import PostgresBase
 from .encoding import Json, numeric_converter
 from .utils import DelayCommit, KeyedDefaultDict, make_tuple
 
-
 # The following is used in bucketing for statistics
 pg_to_py = {}
 for typ in [
@@ -1365,6 +1364,8 @@ ORDER BY v.ord LIMIT %s"""
         - ``suffix`` -- appended to the table name when computing and storing stats.
             Used when reloading a table.
         """
+        self.logger.info("Refreshing statistics on %s" % self.search_table)
+        t0 = time.time()
         with DelayCommit(self, silence=True):
             # Determine the stats and counts currently recorded
             stat_cmds, split_cmds, nstat_cmds = self._status()
@@ -1387,6 +1388,7 @@ ORDER BY v.ord LIMIT %s"""
             if total:
                 # Refresh total in meta_tables
                 self.total = self._slow_count({}, suffix=suffix, extra=False)
+            self.logger.info("Refreshed statistics in %.3f secs" % (time.time() - t0))
 
     def status(self):
         """
@@ -1533,8 +1535,30 @@ ORDER BY v.ord LIMIT %s"""
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
-                    selecter_constraints.append(SQL("values->{0} = %s".format(i)))
-                    selecter_values.append(Json(constraint[x]))
+                    cx = constraint[x]
+                    if isinstance(cx, dict) and all(isinstance(k, str) and k and k[0] == "$" for k in cx):
+                        # Have to handle some constraint parsing here
+                        typ = self.table.col_type[x]
+                        for k, v in cx.items():
+                            if k in ['$gte', '$gt']:
+                                oe = '>='
+                                ko = '$gte' if k == '$gt' else '$gt'
+                                op = '>' if k == '$gt' else '>='
+                            elif k in ['$lte', '$lt']:
+                                oe = '<='
+                                ko = '$lte' if k == '$lt' else '$lt'
+                                op = '<' if k == '$lt' else '<='
+                            else:
+                                raise ValueError("Unsupported constraint key: %s" % k)
+                            selecter_constraints.append(SQL(
+                                "(values->{0}?%s AND (values->{0}->>%s)::{1} {3} %s) OR "
+                                "(values->{0}?%s AND (values->{0}->>%s)::{1} {2} %s) OR "
+                                "(jsonb_typeof(values->{0}) = %s AND (values->>{0})::{1} {2} %s)".format(
+                                    i, typ, op, oe)))
+                            selecter_values.extend([k, k, v, ko, ko, v, "number", v])
+                    else:
+                        selecter_constraints.append(SQL("values->{0} = %s".format(i)))
+                        selecter_values.append(Json(cx))
         else:
             allcols = sorted(cols)
             selecter_values = [split_list, Json(allcols)]

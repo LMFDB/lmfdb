@@ -10,9 +10,10 @@ from sage.all import ZZ, latex, gap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
+    list_to_latex_matrix, flash_error, comma, latex_comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
+    StatsDisplay, totaler, proportioners,
     search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
@@ -86,7 +87,7 @@ def by_label(label):
 @galois_groups_page.route("/")
 def index():
     bread = get_bread()
-    info = to_dict(request.args, search_array=GalSearchArray())
+    info = to_dict(request.args, search_array=GalSearchArray(), stats=GaloisStats())
     if request.args:
         return galois_group_search(info)
     info['degree_list'] = list(range(2, 48))
@@ -151,6 +152,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'n','degree')
     parse_ints(info,query,'t')
     parse_ints(info,query,'order')
+    parse_ints(info,query,'arith_equiv')
     parse_ints(info,query,'nilpotency')
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
@@ -288,10 +290,16 @@ def interesting():
         db.gps_transitive,
         url_for_label=lambda label: url_for(".by_label", label=label),
         title=r"Some interesting Galois groups",
-        bread=get_bread(("Interesting", " ")),
+        bread=get_bread([("Interesting", " ")]),
         credit=GG_credit,
         learnmore=learnmore_list()
     )
+
+@galois_groups_page.route("/stats")
+def statistics():
+    title = "Galois groups: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=GaloisStats(), credit=GG_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/Completeness")
 def cande():
@@ -331,6 +339,8 @@ class GalSearchArray(SearchArray):
     plural_noun = "groups"
     jump_example = "8T14"
     jump_egspan = "e.g. 8T14"
+    jump_knowl = "gg.search_input"
+    jump_prompt = "Label, name, or identifier"
     def __init__(self):
         parity = ParityBox(
             name="parity",
@@ -383,8 +393,90 @@ class GalSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="1..100",
             example_span="-1, or 1..3")
+        arith_equiv = TextBox(
+            name="arith_equiv",
+            label="Arith. Equiv.",
+            knowl="gg.arithmetically_equiv_input",
+            example="1",
+            example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [arith_equiv], [count]]
 
-        self.refine_array = [[parity, cyc, solv, prim], [n, t, order, gal, nilpotency]]
+        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency]]
+
+def yesone(s):
+    return "yes" if s in ["yes", 1] else "no"
+
+def fixminus1(s):
+    return "not computed" if s == -1 else s
+
+def eqyesone(col):
+    def inner(s):
+        return "%s=%s" % (col, yesone(s))
+    return inner
+
+def undominus1(s):
+    if isinstance(s,int):
+        return "arith_equiv=%s" % s
+    return "arith_equiv=-1"
+
+class GaloisStats(StatsDisplay):
+    table = db.gps_transitive
+    baseurl_func = ".index"
+
+    stat_list = [
+        {"cols": ["n", "order"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+        {"cols": ["solv", "n"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["prim", "n"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["arith_equiv","n"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["n", "nilpotency"],
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+    ]
+    knowls = {"n": "gg.degree",
+              "order": "group.order",
+              "nilpotency": "group.nilpotent",
+              "arith_equiv": "gg.arithmetically_equivalent",
+              "solv": "group.solvable",
+              "prim": "gg.primitive",
+    }
+    top_titles = {"nilpotency": "nilpotency classes",
+                  "solv": "solvability",
+                  "arith_equiv": "number of arithmetic equivalent siblings",
+                  "prim": "primitivity"}
+    short_display = {"n": "degree",
+                     "nilpotency": "nilpotency class",
+                     "solv": "solvable",
+                     "arith_equiv": "arithmetic equivalent count",
+                     "prim": "primitive",
+    }
+    formatters = {"solv": yesone,
+                  "prim": yesone,
+                  "arith_equiv": fixminus1}
+    query_formatters = {"solv": eqyesone("solv"),
+                        "prim": eqyesone("prim"),
+                        "arith_equiv": undominus1}
+    buckets = {
+        "n": ["1-3", "4-7", "8", "9-11", "12", "13-15", "16", "17-23", "24", "25-31", "32", "33-35", "36", "37-39", "40", "41-47"],
+        "order": ["1-15", "16-31", "32-63", "64-127", "128-255", "256-511", "512-1023", "1024-2047", "2048-65535", "65536-40000000000", "40000000000-"]
+    }
+
+    def __init__(self):
+        self.ngroups = db.gps_transitive.count()
+
+    @property
+    def summary(self):
+        return r"The database currently contains $%s$ transitive subgroups of $S_n$, including all subgroups (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Among the $2{,}801{,}324$ groups in degree $32$, all those with order less than $512$ or greater than $40{,}000{,}000{,}000$ are included." % latex_comma(self.ngroups)
+
+    @property
+    def short_summary(self):
+        return r'The database current contains $%s$ groups, including all transitive subgroups of $S_n$ (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Here are some <a href="%s">further statistics</a>.' % (latex_comma(self.ngroups), url_for(".statistics"))

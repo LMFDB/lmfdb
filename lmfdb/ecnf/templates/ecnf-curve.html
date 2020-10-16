@@ -31,7 +31,7 @@
 #}
 
 <div>
-  <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
+  <h2> {{KNOWL('ag.base_field','Base field')}} {{ ec.field.knowl()|safe }} </h2>
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  ec.field.generator_name() }}\), with {{
@@ -44,14 +44,14 @@
 
 <style type="text/css">
 #invariants th, #invariants  td {
-padding : 4px;
+padding : 1px, 10px;
 text-align: left;
 cellpadding="5";
 }
 </style>
 
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
-<div style='overflow-x:auto; overflow-y:hidden'>
+<div style='overflow-x:auto; overflow-y:hidden; margin-left:1ch;'>
 \({{ ec.equation }}\)
 </div>
     {{ place_code('curve') }}
@@ -74,37 +74,25 @@ cellpadding="5";
 
 <h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
-    <div style='overflow:auto'>
-      <table id="invariants">
+      <table id="invariants" style="overflow:auto;">
         <tr>
-        <td>
-         \(\mathfrak{N} \)</td>
-        <td>=</td>
+        <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
         <td>{{ ec.cond }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
         </tr>
-        <tr><td colspan=5>    {{ place_code('cond') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cond') }}</td></tr>
 
         <tr>
-        <td>
-         \(N(\mathfrak{N}) \)</td>
-        <td>=</td>
+        <td>{{KNOWL('ec.conductor', title='Conductor norm')}}:</td>
         <td>{{ ec.cond_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
         </tr>
-        <tr><td colspan=5>    {{ place_code('cond_norm') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cond_norm') }}</td></tr>
 
         <tr>
-        <td>
-          {% if ec.is_minimal %}
-          \(\mathfrak{D}\)
-          {% else %}
-          \((\Delta)\)
-          {% endif %}
-        </td>
-        <td>=</td>
+        <td>{{KNOWL('ec.discriminant', title='Discriminant')}}:</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
         <td>=</td>
@@ -112,27 +100,18 @@ cellpadding="5";
         {% endif %}
         </tr>
 
-          <tr><td colspan=5> {{ place_code('disc') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('disc') }}</td></tr>
         <tr>
-        <td>
-          {% if ec.is_minimal %}
-          \(N(\mathfrak{D})\)
-          {% else %}
-          \(N(\Delta)\)
-          {% endif %}
-         </td>
-        <td>=</td>
+        <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
-        <tr><td colspan=5> {{ place_code('disc_norm') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
-        <td>
-         \(\mathfrak{D}\)</td>
-        <td>=</td>
+        <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant')}}:</td>
         <td>{{ ec.mindisc }}</td>
         {% if ec.fact_mindisc %}
         <td>=</td>
@@ -141,9 +120,7 @@ cellpadding="5";
         </tr>
 
         <tr>
-        <td>
-         \(N(\mathfrak{D})\)</td>
-        <td>=</td>
+        <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant norm')}}:</td>
         <td>{{ ec.mindisc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_mindisc_norm }}</td>
@@ -151,105 +128,212 @@ cellpadding="5";
 {% endif %}
 
         <tr>
-        <td>
-         \(j\)</td>
-        <td>=</td>
-        <td>{{ ec.j }}</td>
+        <td>{{ KNOWL('ec.j_invariant','j-invariant')}}:</td>
         {% if ec.fact_j %}
+        <td>{{ ec.j }}</td>
         <td>=</td>
         <td>{{ ec.fact_j }}</td>
+        {% else %}
+        <td colspan=3>{{ ec.j }}</td>
         {% endif %}
         </tr>
-        <tr><td colspan=5>     {{ place_code('jinv') }}</td></tr>
+        <tr><td colspan=4 style="padding:0;">{{ place_code('jinv') }}</td></tr>
 
         <tr>
-        <td> \( \text{End} (E) \)</td>
-        <td>=</td>
+        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
+        <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
+        <td colspan="2">{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
+        </tr>
+        
+        <tr>
+        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
         <td>{{ ec.End }}</td>
-        <td>&nbsp;</td>
-        <td>({%if not ec.cm %}no {%endif %}
-   {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
-            )
+        <td colspan="2">
+        {%if not ec.cm %}
+          (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% elif not ec.rational_cm %}
+          ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% endif %}
         </td>
         </tr>
-        <tr><td colspan=5>     {{ place_code('cm') }}</td></tr>
 
+        <tr><td colspan=4 style="padding:0;">{{ place_code('cm') }}</td></tr>
         <tr>
-        <td> \( \text{ST} (E) \)</td>
-        <td>=</td>
+        <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
         <td>{{ ec.ST|safe }}</td>
         </td>
         </tr>
 
 </table>
-</div>
 
 <div>
 <h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
-{% if ec.rk == "?" %}
-{% if ec.rk_bnds != "not available" %}
-<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
-{% if ec.rank_bounds[1] != "Infinity" %}
- \(\le {{ec.rank_bounds[1]}}\)
-{% endif %}
-{% else %}
-Rank not available.
-{% endif %}
-{% else %}
-<b>Rank:</b> \( {{ ec.rank }} \)
-{% endif %}
-<p>{{ place_code('rank') }}</p>
-
-{% if ec.rank_bounds[0] %}
-{% if ec.gens == 'not available' %}
-<p>No generators available.</p>
-{% else %}
-<p><b>
-{% if ec.rank_bounds[0] == 1 %}
-Generator:
-{% else %}
-Generators:
-{% endif %}</b>
-{{ ec.gens }}
-{{ place_code('gens') }}
-</p>
-<p><b>
-{% if ec.rank_bounds[0] == 1 %}
-{{ KNOWL('ec.canonical_height', title="Height") }}:
-{% else %}
-{{ KNOWL('ec.canonical_height', title="Heights") }}:
-{% endif %}</b>
-{% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
-{{ place_code('heights') }}
-</p>
-{% endif %}
-{% endif %}
-
 <p>
-<b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
-{{ ec.reg }}
-{% if not ec.rank_bounds[0] %} {{ place_code('gens') }} {% endif %}
- {{ place_code('reg') }}
-</p>
-</div>
-
-<div>
-<h2> {{ KNOWL('ec.torsion_subgroup', title="Torsion subgroup") }} </h2>
 <table>
 <tr>
-<th>Structure:</th>
+  <td align = 'left'>{{ KNOWL('ec.rank', title="Rank")}}:</td>
+{% if ec.rk == "not available" %}
+{% if ec.rank_bounds != "not available" %}
+  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
+{% else %}
+  <td>not available</td>
+{% endif %}
+{% else %}
+  <td>\({{ ec.rank }}\)</td>
+{% endif %}
+</tr>
+
+{% if ec.ngens %}
+<tr>
+  <td align = 'left'>
+    {% if ec.ngens==1 %}
+    {{KNOWL('ec.mw_generators','Generator')}}
+    {% else %}
+    {{KNOWL('ec.mw_generators','Generators')}}
+    {% endif %}
+  </td>
+  {% if ec.gens == 'not available' %}
+  <td>not available</td>
+  {% else %}
+  {% for gen in ec.gens %}
+  <td>{{ gen }}</td>
+  {% endfor %}
+{% endif %}
+</tr>
+{% endif %}
+
+{% if ec.heights %}
+<tr>
+  <td align = 'left'>
+    {% if ec.ngens==1 %}
+    {{ KNOWL('ec.canonical_height', title="Height") }}
+    {% else %}
+    {{ KNOWL('ec.canonical_height', title="Heights") }}
+    {% endif %}
+  </td>
+  {% for h in ec.heights %}
+  <td>\({{ h }}\)</td>
+  {% endfor %}
+</tr>
+{% endif %}
+
+<tr>
+<td align='left'>{{KNOWL('ec.torsion_subgroup','Torsion structure')}}:</td>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
 <tr><td colspan=2> {{ place_code('tors') }}</td></tr>
 <!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
     {% if ec.tr %}
 <tr>
-<th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
-<td>{{ ec.torsion_gens }}</td>
+<td align='left'>{% if ec.tr==1 %}{{KNOWL('ec.mw_generators','Torsion generator')}}{% else %}{{KNOWL('ec.mw_generators','Torsion generators')}}{% endif %}:</td>
+{% for gen in ec.torsion_gens %}
+<td>{{ gen }}</td>
+{% endfor %}
 </tr>
 <tr><td colspan=2> {{ place_code('torgens') }}</td></tr>
     {% endif %}
 </table>
+</p>
+</div>
+
+<div>
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD invariants') }}</h2>
+<p>
+        <table>
+
+        <tr>
+        <td align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</td>
+        <td>
+	  {{ ec.ar }}
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('rank') }}
+        </td>
+        </tr>
+
+	<tr>
+	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</td>
+	  {% if ec.rk == "not available" %}
+	  {% if ec.rank_bounds != "not available" %}
+	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
+	  {% else %}
+	  <td>not available</td>
+	  {% endif %}
+	  {% else %}
+	  <td>\({{ ec.rank }}\)</td>
+	  {% endif %}
+	</tr>
+        <tr>
+	  <td align='left'>
+	    {% if ec.bsd_status == "conditional" %}
+            {{ KNOWL('ec.regulator', title='Regulator*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.regulator', title='Regulator') }}:
+	    {% endif %}
+	  </td>
+          <td>
+	  {% if ec.reg=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.reg }}
+	  {% endif %}
+	</td>
+        </tr>
+
+        <tr>
+        <td align='left'>{{ KNOWL('ec.period', title='Period') }}:</td>
+        <td> {{ ec.omega }}</td>
+        </tr>
+
+        <tr>
+        <td align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
+        <td> {{ ec.tamagawa_product }}
+          {% if ec.tamagawa_factors %}
+          &nbsp;=&nbsp; \({{ ec.tamagawa_factors }}\)
+          {% endif %}
+        </td>
+        </tr>
+
+        <tr>
+        <td align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
+        <td>\({{ ec.torsion_order }}\)</td>
+        </tr>
+
+        <tr>
+        <td align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
+        <td> {{ ec.Lvalue }}</td>
+        </tr>
+
+        <tr>
+	  <td align='left'>
+	    {% if ec.bsd_status ==  "conditional" %}
+            {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:
+	    {% endif %}
+	  </td>
+        <td> {{ ec.sha }} </td>
+        </tr>
+        </table>
+    </p>
+{% if ec.bsd_status == "conditional" %}
+<p>
+  * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
+</p>
+{% if ec.sha != "not available" and ec.sha!="1" %}
+<p>
+  Note: We expect that the nontriviality of &#1064; explains the
+  discrepancy between the upper bound on the rank and the analytic
+  rank.  The application of further descents should suffice to
+  establish the weak BSD conjecture for this curve.
+</p>
+{% endif %}
+{% endif %}
+
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 </div>
 
 <div>
@@ -390,10 +474,10 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 <div>
   <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
-{% if ec.isogeny_degrees %}
+{% if ec.isodeg %}
 This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
 (excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
-{{ ec.isogeny_degrees}}.
+{{ ec.isodeg}}.
 <br>
 Its {{KNOWL('ec.isogeny_class','isogeny class')}}
 <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
@@ -409,6 +493,7 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 
 <div>
 <h2> {{KNOWL('ec.base_change','Base change')}} </h2>
+<p>
 This curve {% if ec.base_change %} is the
 {{KNOWL('ec.base_change','base-change')}} of elliptic curves
 {% for E0 in ec.base_change%}
@@ -425,6 +510,7 @@ It is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% endif %}
 {% endif %}
+</p>
 </div>
 
 {% if DEBUG %}
