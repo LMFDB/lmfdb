@@ -156,7 +156,7 @@ class BMFTest(LmfdbTest):
         assert L2_level == L2_level_actual
         assert L2_level.norm() == 377
         assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2.get_data(as_text=True)
-        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z + 2, "not known", 2*z - 1, 4, 2*z + 3, "not known", 2*z + 1, -2*z - 5' in L2.get_data(as_text=True)
+        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2.get_data(as_text=True)
 
     def test_download_magma(self):
         # A dimension 1 example
