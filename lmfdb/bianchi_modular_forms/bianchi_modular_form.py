@@ -389,7 +389,7 @@ def download_bmf_magma(**args):
 
     outstr += 'NN := ideal<ZF | {}>;\n\n'.format(set(f.level.gens()))
 
-    outstr += 'primesArray := [\n' + ','.join([str(st) for st in prime_gens]).replace('],[',
+    outstr += 'primesArray := [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
                                                                                        '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
@@ -399,12 +399,14 @@ def download_bmf_magma(**args):
     else:
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
-    hecke_eigs_processed = [str(st) if st != 'not known' else '"not known"' for st in hecke_eigs]
+    hecke_eigs_processed = [str(st).replace(' ', '') if st != 'not known' else '"not known"' for st in hecke_eigs]
     neigs = len(hecke_eigs_processed)
+    outstr += '\nheckeEigenvaluesList := [*\n'+ ','.join(hecke_eigs_processed) + '*];\n'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
+    outstr += 'for i in [1..#hecke_eigs_processed] do\n    hecke_eigenvalues[primes[i]] = nheckeEigenvaluesList[i];\nend for;\n'
 
-    for i in range(neigs):
-        outstr += 'heckeEigenvalues[primes[{}]] := {};\n'.format(i+1, hecke_eigs_processed[i])
+    #for i in range(neigs):
+    #    outstr += 'heckeEigenvalues[primes[{}]] := {};\n'.format(i+1, hecke_eigs_processed[i])
 
     if f.have_AL:
         AL_eigs    = f.AL_table_data
@@ -517,7 +519,7 @@ def download_bmf_sage(**args):
 
     outstr += 'NN = ZF.ideal({})\n\n'.format(f.level.gens())
 
-    outstr += 'primes_array = [\n' + ','.join([str(st) for st in prime_gens]).replace('],[',
+    outstr += 'primes_array = [\n' + ','.join([str(st).replace(' ', '') for st in prime_gens]).replace('],[',
                                                                                        '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
@@ -529,7 +531,7 @@ def download_bmf_sage(**args):
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    hecke_eigs_processed = [str(st) if st != 'not known' else '"not known"' for st in hecke_eigs]
+    hecke_eigs_processed = [str(st).replace(' ', '') if st != 'not known' else '"not known"' for st in hecke_eigs]
     outstr += '\nhecke_eigenvalues_array = [' + ', '.join(hecke_eigs_processed) + ']'
     outstr += '\nhecke_eigenvalues = {}\n'
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
