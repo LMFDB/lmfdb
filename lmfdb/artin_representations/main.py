@@ -307,7 +307,7 @@ def render_artin_representation_webpage(label):
         allchars = [ ArtinRepresentation(newlabel+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
     label = newlabel
-    bread = get_bread([(label, ' ')])
+    bread = get_bread([(artin_label_pretty(label), ' ')])
 
     #artin_logger.info("Found %s" % (the_rep._data))
 
