@@ -155,16 +155,14 @@ class BMFTest(LmfdbTest):
         L2_level_actual = ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
         assert L2_level == L2_level_actual
         assert L2_level.norm() == 377
-        assert '(2*i + 3,),(i + 4,),(i - 4,),(-2*i + 5,),(2*i + 5,),(i + 6,)' in L2.get_data(as_text=True)
+        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2.get_data(as_text=True)
         assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z + 2, "not known", 2*z - 1, 4, 2*z + 3, "not known", 2*z + 1, -2*z - 5' in L2.get_data(as_text=True)
 
     def test_download_magma(self):
         # A dimension 1 example
         L = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/88.5/a/download/magma').get_data(as_text=True)
         assert 'NN := ideal<ZF | {44, 2*a + 30}>;' in L
-        assert '[263, a + 123],' in L
-        assert 'heckeEigenvalues[primes[32]] := 18;' in L
-        assert 'heckeEigenvalues[primes[53]] := -12;' in L
+        assert '[263,a+123],' in L
 
         page = self.tc.get('ModularForm/GL2/ImaginaryQuadratic/159.0.7.1/30.5/a/download/magma').get_data(as_text=True)
         assert 'Bianchi newform not found' in page
@@ -176,7 +174,7 @@ class BMFTest(LmfdbTest):
                 ['2.0.4.1/100.2/a',
                  'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
                 ['2.0.11.1/933.1/a',
-                 'heckeEigenvalues[primes[193]] := -30;']
+                 'ideal<ZF | {a + 30, 933}>;']
         ]:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
