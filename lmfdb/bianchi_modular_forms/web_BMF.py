@@ -42,7 +42,7 @@ class WebBMF(object):
     """
     Class for an Bianchi Newform
     """
-    def __init__(self, dbdata):
+    def __init__(self, dbdata, max_eigs=50):
         """Arguments:
 
             - dbdata: the data from the database
@@ -54,10 +54,10 @@ class WebBMF(object):
         logger.debug("Constructing an instance of WebBMF class from database")
         self.__dict__.update(dbdata)
         # All other fields are handled here
-        self.make_form()
+        self.make_form(max_eigs)
 
     @staticmethod
-    def by_label(label):
+    def by_label(label, max_eigs=50):
         """
         Searches for a specific Hilbert newform in the forms
         collection by its label.
@@ -65,7 +65,7 @@ class WebBMF(object):
         data = db.bmf_forms.lookup(label)
 
         if data:
-            return WebBMF(data)
+            return WebBMF(data, max_eigs)
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 

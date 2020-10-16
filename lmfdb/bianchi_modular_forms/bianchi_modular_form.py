@@ -341,20 +341,6 @@ def render_bmf_space_webpage(field_label, level_label):
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
-@bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
-def render_bmf_webpage_download(**args):
-    if args['download_type'] == 'sage':
-        pass # TODO
-
-def download_bmf_sage(**args):
-    label = "-".join([args['field_label'],args['level_label'],args['label_suffix']])
-    F = WebNumberField(args['field_label'])
-    try:
-        data = WebBMF.by_label(label)
-    except ValueError:
-        flash_error("No Bianchi modular form in the database has label %s", label)
-        return "// No Bianchi modular form in the database has label {}".format(label)
-
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
     label = "-".join([field_label, level_label, label_suffix])
@@ -374,7 +360,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     info['numeigs'] = numeigs
     
     try:
-        data = WebBMF.by_label(label)
+        data = WebBMF.by_label(label, max_eigs=numeigs)
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
         bread = get_bread([
             (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=data.field_label)),
