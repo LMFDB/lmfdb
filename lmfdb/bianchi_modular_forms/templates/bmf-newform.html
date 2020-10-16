@@ -73,10 +73,10 @@ polynomial: {{data.hecke_poly}}.
 <p>The Hecke eigenvalue field is $\Q$</a>.
 {% endif %}
 The eigenvalue of the {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke operator') }} $T_{\mathfrak{p}}$ is $a_{\mathfrak{p}}$.
-{% if data.nap0 < data.nap %}
-The database contains {{data.nap}} eigenvalues of which we only show {{data.nap0}}.
+{% if info.numeigs < data.nap %}
+The database contains {{data.nap}} eigenvalues, of which {{info.numeigs}} are currently shown below.
 {%else%}
-The database contains {{data.nap}} eigenvalues.
+The database contains {{data.nap}} eigenvalues, all of which are displayed below.
 {%endif%}
 We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which do not divide the level.		  
 </p>
@@ -98,7 +98,6 @@ We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which 
 
 
 
-{#
 <form>
 <table>
 <tr>
@@ -111,7 +110,6 @@ We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which 
 </tr>
 </table>
 </form>
-#}
 
 {% endif %}
 

@@ -42,7 +42,7 @@ class WebBMF(object):
     """
     Class for an Bianchi Newform
     """
-    def __init__(self, dbdata):
+    def __init__(self, dbdata, max_eigs=50):
         """Arguments:
 
             - dbdata: the data from the database
@@ -54,10 +54,10 @@ class WebBMF(object):
         logger.debug("Constructing an instance of WebBMF class from database")
         self.__dict__.update(dbdata)
         # All other fields are handled here
-        self.make_form()
+        self.make_form(max_eigs)
 
     @staticmethod
-    def by_label(label):
+    def by_label(label, max_eigs=50):
         """
         Searches for a specific Hilbert newform in the forms
         collection by its label.
@@ -65,12 +65,12 @@ class WebBMF(object):
         data = db.bmf_forms.lookup(label)
 
         if data:
-            return WebBMF(data)
+            return WebBMF(data, max_eigs)
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 
 
-    def make_form(self):
+    def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
@@ -105,7 +105,7 @@ class WebBMF(object):
         badp = level.prime_factors()
 
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(50, self.nap)
+        self.nap0 = min(nap0, self.nap)
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),
