@@ -166,9 +166,9 @@ class ArtinRepresentation(object):
         if self.conductor() == 1:
             return "1"
         if len(factors) == 1 and factors[0][1] == 1:
-            return bigint_knowl(self.conductor())
+            return bigint_knowl(self.conductor(),sides=3)
         else:
-            return bigint_knowl(self.conductor()) + "=" + self.factored_conductor_latex()
+            return bigint_knowl(self.conductor(),sides=3) + r"\(= " + self.factored_conductor_latex() + r"\)"
 
     def factored_conductor(self):
         return [(p, valuation(Integer(self.conductor()), p)) for p in self.bad_primes()]

@@ -369,8 +369,8 @@ def render_artin_representation_webpage(label):
         elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
             friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                               label=the_rep.label())))
-        orblabel = artin_label_pretty(re.sub(r'\.[a-z]+$', '', label))
-        friends.append(("Galois orbit "+orblabel,
+        orblabel = re.sub(r'\.[a-z]+$', '', label)
+        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
         add_lfunction_friends(friends,label)
