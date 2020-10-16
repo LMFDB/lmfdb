@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
+import os, yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
@@ -32,6 +33,11 @@ from lmfdb.classical_modular_forms.download import CMF_download
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
+
+
+_curdir = os.path.dirname(os.path.abspath(__file__))
+ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
+                         Loader=yaml.FullLoader)
 
 @cached_function
 def learnmore_list():
@@ -322,14 +328,63 @@ def parse_prec(info):
         return ["<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)"]
     return []
 
+
+def eta_quotient_texstring(etadata):
+    """
+    Returns a latex string representing an eta quotient.
+
+    etadata should be a dictionary as returned from parsing `eta.yaml`.
+
+    IMPLEMENTATION NOTE:
+      numerstr and denomstr together form a texstring of the form
+      \eta(Az)^B \eta(Cz)^D, potentially in fraction form.
+
+      str will be a string representing something like
+      q^A \prod_{n} (1 - q^{Bn})^C (1 - q^{Dn})^E
+    """
+    numerstr = ''
+    denomstr = ''
+    innerqstr = ''
+    qfirstexp = 0  # compute A in the qstr representation
+    for key, value in etadata.items():
+        _texstr = '\\eta({}z)'.format(key if key != 1 else '')
+        qfirstexp += key * value
+        if value > 0:
+            numerstr += _texstr
+            if value != 1:
+                numerstr += '^{%s}' % (value)
+        else:
+            denomstr += _texstr
+            if value != -1:
+                denomstr += '^{%s}' % (-value)
+        innerqstr += '(1 - q^{%sn})^{%s}' % (key if key != 1 else '',
+                                             value if value != 1 else '')
+    if denomstr == '':
+        etastr = numerstr
+    else:
+        etastr = '\\dfrac{%s}{%s}' % (numerstr, denomstr)
+
+    qfirstexp = qfirstexp // 24
+    etastr += '=q'
+    if qfirstexp != 1:
+        etastr += '^{%s}' % (qfirstexp)
+    etastr += '\\prod_{n=1}^\\infty' + innerqstr
+    return etastr
+
+
 def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
+
     info = to_dict(request.args)
     info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
+
+    if label in ETAQUOTIENTS:
+        info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
+
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
@@ -1594,13 +1649,3 @@ class CMFSearchArray(SearchArray):
             trace_table = self._print_table(self.traces_array, info, layout_type="box")
             layout.append(trace_table)
         return "\n".join(layout)
-
-
-
-
-
-
-
-
-
-
