@@ -39,10 +39,7 @@ Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> 
   {{ info.search_array.html() | safe }}
 </form>
 
-<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
 <h2> Find </h2>
-<form>
 <form>
   {{ info.search_array.jump_box(info) | safe }}
 </form>
