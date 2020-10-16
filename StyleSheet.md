@@ -49,7 +49,7 @@ contains other conventions and information for the development process.
 - Captions in the property box should be sentence case (like all captions) with no colon.
 - The first line of the properties box should be the label (if one exists) followed by a portrait (if available), followed by up to 8 standard invariants or properties of the object that can be displayed in a compact form (the properties box should never scroll).
 - Properties that are words (e.g yes/no, even/odd) or numbers (e.g. 42 or 1.2345), as well as labels, should be listed in standard font and not in math mode.
-- Integers in properties box should not be shown in factored form ( relevant the factorization should be in the body of the page).
+- Integers in properties box should not be shown in factored form (the relevant the factorization should be in the body of the page), unless this makes them too large to fit.
 
 ## Related objects box
 
