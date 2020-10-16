@@ -7,7 +7,10 @@ import re
 from six import BytesIO
 from flask import render_template, url_for, request, redirect, abort, send_file
 from sage.all import gcd, randint, euler_phi
-from lmfdb.utils import to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox, TextBox, CountBox, parse_bool, parse_ints, search_wrap
+from lmfdb.utils import (
+    to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap,
+    StatsDisplay, totaler, proportioners, comma)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
@@ -354,7 +357,7 @@ def render_DirichletNavigation():
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
-        info = to_dict(request.args, search_array=DirichSearchArray())
+        info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
         info['title'] = 'Dirichlet characters'
         return render_template('CharacterNavigate.html', info=info,**info)
 
@@ -582,6 +585,12 @@ def interesting():
         credit="SageMath",
         learnmore=learn())
 
+@characters_page.route('/Dirichlet/stats')
+def statistics():
+    title = "Dirichlet characters: statistics"
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=DirichStats(), credit="SageMath", title=title, bread=bread, learnmore=learn())
+
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
@@ -718,3 +727,75 @@ def get_group_table(modulus, char_list):
     else:
         rows = [[(j * k) % modulus for k in char_list] for j in char_list]
     return headers, rows
+
+def yesno(x):
+    return "yes" if x in ["yes", True] else "no"
+class DirichStats(StatsDisplay):
+    table = db.char_dir_orbits
+    baseurl_func = ".render_DirichletNavigation"
+    stat_list = [
+        {"cols": ["conductor"]},
+        {"cols": ["order", "modulus"],
+         "title_joiner": " by ",
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["is_primitive", "modulus"],
+         "title_joiner": " by ",
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["is_real", "modulus"],
+         "title_joiner": " by ",
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+        {"cols": ["is_minimal", "modulus"],
+         "title_joiner": " by ",
+         "totaler": totaler(),
+         "proportioner": proportioners.per_col_total},
+    ]
+    buckets = {"conductor": ["1-10", "11-100", "101-1000", "1001-10000"],
+               "modulus": ["1-10", "11-100", "101-1000", "1001-10000"],
+               "order": ["1-10", "11-100", "101-1000", "1001-10000"]}
+    knowls = {"conductor": "character.dirichlet.conductor",
+              "modulus": "character.dirichlet.modulus",
+              "order": "character.dirichlet.order",
+              "is_minimal": "character.dirichlet.minimal",
+              "is_primitive": "character.dirichlet.primitive",
+              "is_real": "character.dirichlet.real"}
+    short_display = {"is_minimal": "minimal",
+                     "is_primitive": "primitive",
+                     "is_real": "real"}
+    top_titles = {"order": "order",
+                  "is_minimal": "minimality",
+                  "is_primitive": "primitivity",
+                  "is_real": "real characters"}
+    formatters = {"is_minimal": yesno,
+                  "is_primitive": yesno,
+                  "is_real": yesno}
+
+    def __init__(self):
+        self.nchars = db.char_dir_values.count()
+        self.norbits = db.char_dir_orbits.count()
+        self.maxmod = db.char_dir_orbits.max("modulus")
+
+    @property
+    def short_summary(self):
+        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  In addition, %s, Galois orbits and %s are available up to modulus $10^{20}$.  Here are some <a href="%s">futher statistics</a>.' % (
+            comma(self.nchars),
+            display_knowl("character.dirichlet", "Dirichlet characters"),
+            display_knowl("character.dirichlet.modulus", "modulus"),
+            comma(self.maxmod),
+            comma(self.norbits),
+            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
+            display_knowl("character.dirichlet.basic_properties", "basic properties"),
+            display_knowl("character.dirichlet.value_field", "field of values"),
+            url_for(".statistics"))
+
+    @property
+    def summary(self):
+        return "The database currently contains %s %s of %s up to %s, lying in %s %s.  The tables below show counts of Galois orbits." % (
+            comma(self.nchars),
+            display_knowl("character.dirichlet", "Dirichlet characters"),
+            display_knowl("character.dirichlet.modulus", "modulus"),
+            comma(self.maxmod),
+            comma(self.norbits),
+            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"))
