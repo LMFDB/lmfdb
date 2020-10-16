@@ -69,6 +69,8 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     jump_example = "13.2"
     jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    jump_knowl="character.dirichlet.search_input"
+    jump_prompt="Label"
     def __init__(self):
         modulus = TextBox(
             "modulus",
@@ -400,36 +402,6 @@ def make_webchar(args):
         return WebDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
-
-def label_to_number(modulus, number, all=False):
-    """
-    Takes the second part of a character label and converts it to the second
-    part of a Conrey label.  This could be trivial (just casting to an int)
-    or could require converting from an orbit label to a number.
-
-    If the label is invalid, returns 0.
-    """
-    try:
-        number = int(number)
-    except ValueError:
-        # encoding Galois orbit
-        if modulus < 10000:
-            try:
-                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
-            except ValueError:
-                return 0
-            else:
-                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
-                if number is None:
-                    return 0
-                if not all:
-                    number = number[0]
-        else:
-            return 0
-    else:
-        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
-            return 0
-    return number
 
 def url_for_label(label):
     """
