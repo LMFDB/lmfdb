@@ -244,7 +244,6 @@ def download_search(info):
         "jump": jump,
         "download": download_search
     },
-    postprocess=lambda res, info, query: sum([info_from_db_orbit(x) for x in res],[]),
     url_for_label=url_for_label,
     learnmore=learnmore_list,
     bread=lambda: get_bread("Search results"),

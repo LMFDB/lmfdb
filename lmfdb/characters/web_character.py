@@ -1186,8 +1186,9 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             friendlist.append(('Artin representation '+artlabel,
                 url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
 
-        friendlist.append(('Primitive character '+self.inducing,
-            url_for('characters.render_Dirichletwebpage', modulus=self.conductor, number=self.indlabel)))
+        if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
+            friendlist.append(('Primitive character '+self.inducing,
+                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, number=self.indlabel)))
 
         return friendlist
 
