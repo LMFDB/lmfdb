@@ -592,12 +592,13 @@ def render_field_webpage(args):
         downloads.append(('Download {} code'.format(lang[0]),
                           url_for(".nf_download", nf=label_orig, download_type=lang[1])))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
+    from lmfdb.artin_representations.math_classes import artin_label_pretty
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         arts = [z.label() for z in info["tim_number_field"].artin_representations()]
         #print arts
         for ar in arts:
-            info['friends'].append(('Artin representation '+str(ar),
+            info['friends'].append(('Artin representation '+artin_label_pretty(ar),
                 url_for("artin_representations.render_artin_representation_webpage", label=ar)))
         v = nf.factor_perm_repn(info["tim_number_field"])
 
