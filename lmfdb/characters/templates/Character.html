@@ -40,12 +40,9 @@ testing
   {% if parity %}
   <tr> <td>{{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td>{{ parity }}</td> <td>{{place_code('parity')}}</td> </tr>
   {% endif %}
-  #}
-  {# {% if (type != 'Hecke') and (modulus <= 10000) %}
-  <tr> <td>{{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}}</td> <td>{{ modulus }}.{{ orbit_label }}</td> </tr>
-  {% endif %} #}
 {% endif %}
-  </tbody>
+   #}
+ </tbody>
 </table>
 {% if galoisorbit %}
 
