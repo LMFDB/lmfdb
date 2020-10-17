@@ -27,14 +27,15 @@
 </h2>
 
 <table>
+  <tr> <td colspan='3'> {{ place_code('modulus') }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}</td> <td>=</td> <td>{{ modulus }}</td> </tr>
   <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}</td> <td>=</td> <td>{{ modulus}}</td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
   <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
   <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} {{ '(induced from <a href="'|safe + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">'|safe + inducing + "</a>)" | safe if isprimitive == "no"  }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
   <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
@@ -133,19 +134,14 @@
 <table>
   {% if valuefield %}
   <tr>
-    <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}} </td>
-    {% if vflabel %}
-    <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
-    {% else %}
-    <td> {{ valuefield }} </td>
-    {% endif %}
+    <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}}:</td>
+    <td> {{ valuefield | safe }} </td>
   </tr>
   {% endif %}
   {% if kerfield %}
   <tr>
-    <td>{{ kerfield }}</td>
-    <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
-      defined by {{ kfpol }}
+    <td>{{ KNOWL('character.dirichlet.field_cut_out',title='Fixed field') }}:</td>
+    <td> {{ kerfield | safe }}
     </td>
   </tr>
   {% endif %}
