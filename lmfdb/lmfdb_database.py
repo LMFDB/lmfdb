@@ -348,4 +348,32 @@ class LMFDBDatabase(PostgresDatabase):
         else:
             return pipe
 
+    def reset_all_stats(self, delete=False):
+        """
+        This function clears all stats and counts (extra=False) from tables where statistics have been added, then adds all relevant statistics.
+        """
+        import lmfdb.website # loads all the modules
+        from lmfdb.utils.display_stats import StatsDisplay
+        def find_subs(L):
+            # Assume no multiple inheritance
+            new_subs = sum([C.__subclasses__() for C in L], [])
+            if new_subs:
+                new_subs = find_subs(new_subs)
+            return L + new_subs
+        all_subs = find_subs([StatsDisplay])[1:]
+        attrs = []
+        if delete:
+            all_tables = set()
+            for disp in all_subs:
+                all_tables.add(disp.table)
+                for attr in disp.stat_list:
+                    if "table" in attr:
+                        all_tables.add(attr["table"])
+            for tbl in all_tables:
+                tbl.stats._clear_stats_counts(extra=False)
+        for disp in all_subs:
+            disp.setup(delete=False)
+
+
+
 db = LMFDBDatabase()

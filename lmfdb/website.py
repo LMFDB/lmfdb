@@ -100,7 +100,6 @@ from .lmfdb_database import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
 
-
 def main():
     info("main: ...done.")
     from .utils.config import Configuration
