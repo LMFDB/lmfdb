@@ -255,8 +255,8 @@ def formatfield(coef, show_poly=False):
       and either produce a number field knowl if the polynomial matches
       a number field in the database, otherwise produce a knowl which
       says say "Deg 15", which can be opened to show the degree 15
-      polynomial.
-
+      polynomial.  
+      
       If show_poly is set to true and the polynomial is not in the
       database, just display the polynomial (no knowl).
     """
