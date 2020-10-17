@@ -768,8 +768,11 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def kerfield(self):
-        ker_field_pol = self.kernel_field_poly
-        return formatfield(ker_field_pol)
+        kerpoly = self.kernel_field_poly
+        if kerpoly:
+            return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order)
+        else:
+            return "Number field defined by a degree %d polynomial (not computed)"
 
     @lazy_attribute
     def properties(self):
