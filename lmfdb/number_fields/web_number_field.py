@@ -249,7 +249,7 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
-def formatfield(coef, show_poly=False):
+def formatfield(coef, show_poly=False, missing_text=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -270,7 +270,10 @@ def formatfield(coef, show_poly=False):
             return '$'+mypol+'$'
 
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
-        mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Number Field defined by a degree %d polynomial</a>' % (mypol,deg)
+        if missing_text is None:
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+        else:
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
     return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
 
