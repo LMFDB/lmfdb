@@ -66,6 +66,8 @@ def render_characterNavigation():
     return redirect(url_for(".render_DirichletNavigation"), 301)
 
 class DirichSearchArray(SearchArray):
+    noun = "character"
+    plural_noun = "characters"
     jump_example = "13.2"
     jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl="character.dirichlet.search_input"
@@ -192,9 +194,7 @@ def url_for_label(label):
     table=db.char_dir_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
-    shortcuts={
-        "jump": jump,
-    },
+    shortcuts={ "jump": jump },
     url_for_label=url_for_label,
     learnmore=learnmore_list,
     bread=lambda: get_bread("Search results"),
