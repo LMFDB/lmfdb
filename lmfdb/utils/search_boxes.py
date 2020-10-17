@@ -25,7 +25,7 @@ class TdElt(object):
         if colspan is not None:
             kwds['colspan'] = colspan
         if nowrap:
-            self.add_class(kwds, 'nowrap')
+            self._add_class(kwds, 'nowrap')
         return self._wrap("td", **kwds)
 
 class Spacer(TdElt):
