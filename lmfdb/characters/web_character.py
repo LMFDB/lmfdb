@@ -69,7 +69,7 @@ from lmfdb.utils import web_latex
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
 from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
 from lmfdb.characters.utils import url_character, complex2str, evalpolelt
@@ -767,6 +767,11 @@ class WebChar(WebCharObject):
           return ''
 
     @lazy_attribute
+    def kerfield(self):
+        ker_field_pol = self.kernel_field_poly
+        return formatfield(ker_field_pol)
+
+    @lazy_attribute
     def properties(self):
         f = [
             ("Modulus", [self.modulus]),
@@ -929,6 +934,7 @@ class WebDBDirichlet(WebDirichlet):
         self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
+        self._set_kernel_field_poly(orbit_data)
 
     def _set_generators_and_genvalues(self, values_data):
         """
@@ -1018,6 +1024,12 @@ class WebDBDirichlet(WebDirichlet):
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in orbit
         )
+
+    def _set_kernel_field_poly(self, orbit_data):
+        if 'kernel_field_poly' in orbit_data.keys():
+            self.kernel_field_poly = orbit_data['kernel_field_poly']
+        else:
+            self.kernel_field_poly = None
 
 
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
