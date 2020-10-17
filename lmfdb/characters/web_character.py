@@ -1239,7 +1239,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @lazy_attribute
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+                 'pari': '#znconreyconductor(g,chi)==1' }
 
     @lazy_attribute
     def codecond(self):
