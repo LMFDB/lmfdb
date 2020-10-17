@@ -233,7 +233,7 @@ class ArtinRepresentation(object):
             return 'data not computed'
         if projfield == [0,1]:
             return formatfield(projfield)
-        return 'Galois closure of ' + formatfield(projfield)
+        return 'Galois closure of ' + formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
 
     def number_field_galois_group(self):
         try:
