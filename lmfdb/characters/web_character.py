@@ -789,6 +789,7 @@ class WebChar(WebCharObject):
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
+        print(f)
         return f
 
     @lazy_attribute
