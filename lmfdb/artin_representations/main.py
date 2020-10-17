@@ -335,7 +335,7 @@ def render_artin_representation_webpage(label):
         friends.append(("Artin field", nf_url))
         wnf = the_nf.wnf()
     proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
-    if proj_nf:
+    if proj_nf._data:
         friends.append(("Projective Artin field", 
             str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
     if case == 'rep':
