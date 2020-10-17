@@ -670,10 +670,10 @@ def render_st_group(info, portrait=None):
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
     prop2 += [
         ('Name', r'\(%s\)'%info['pretty']),
-        ('Weight', '%d'%info['weight']),
-        ('Degree', '%d'%info['degree']),
-        ('Real dimension', '%d'%info['real_dimension']),
-        ('Components', '%d'%info['components']),
+        ('Weight', prop_int_pretty(info['weight'])),
+        ('Degree', prop_int_pretty(info['degree'])),
+        ('Real dimension', prop_int_pretty(info['real_dimension'])),
+        ('Components', prop_int_pretty(info['components'])),
         ('Contained in',r'\(%s\)'%info['ambient']),
         ('Identity Component', r'\(%s\)'%info['identity_component']),
         ('Component group', r'\(%s\)'%info['component_group']),
