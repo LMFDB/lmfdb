@@ -11,7 +11,7 @@ from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error, display_knowl,
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
-    StatsDisplay, totaler, proportioners,
+    StatsDisplay, totaler, proportioners, prop_int_pretty,
     parse_ints, parse_rational, parse_bool, parse_count, parse_start,
     parse_ints_to_list_flash, clean_input)
 from lmfdb.utils.search_parsing import search_parser
