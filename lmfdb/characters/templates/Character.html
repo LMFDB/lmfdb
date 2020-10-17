@@ -30,7 +30,7 @@
   <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> <td>{{place_code('cond')}}</td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.order',title='Order')}}:</td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.real',title='Real')}}:</td> <td> {{ isreal }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <<td> {{ isprimitive }}{# {{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }} #}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
   <tr> <td>{{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td>{{ isminimal }}</td> </tr>
