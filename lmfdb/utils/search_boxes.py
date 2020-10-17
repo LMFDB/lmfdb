@@ -21,9 +21,11 @@ class TdElt(object):
             keys.append(' %s="%s"' % (key, val))
         return "<%s%s>" % (typ, "".join(keys))
 
-    def td(self, colspan=None, **kwds):
+    def td(self, colspan=None, nowrap=False, **kwds):
         if colspan is not None:
             kwds['colspan'] = colspan
+        if nowrap:
+            self.add_class(kwds, 'nowrap')
         return self._wrap("td", **kwds)
 
 class Spacer(TdElt):
@@ -35,7 +37,7 @@ class Spacer(TdElt):
         return self.td(self.colspan) + "</td>"
 
     def label_html(self, info=None):
-        return self.td(self.colspan) + "</td>"
+        return self.td(self.colspan, True) + "</td>"
 
     def example_html(self, info=None):
         return self.td() + "</td>"
