@@ -319,13 +319,13 @@ def render_artin_representation_webpage(label):
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
     else:
-        processed_root_number = str(the_rep.sign())
+        processed_root_number = '$%s$' % the_rep.sign()
     properties = [("Label", artin_label_pretty(label)),
                   ("Dimension", prop_int_pretty(the_rep.dimension())),
                   ("Group", the_rep.group()),
                   ("Conductor", prop_int_pretty(the_rep.conductor()))]
     if case == 'rep':
-        properties.append( ("Root number", '$%s$' % processed_root_number) )
+        properties.append( ("Root number", processed_root_number) )
     properties.append( ("Frobenius-Schur indicator", prop_int_pretty(the_rep.indicator())) )
 
     friends = []
