@@ -21,11 +21,11 @@
 
 
 {# Basic properties #}
-
+testing
 <h2>
   {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
 </h2>
-
+testing
 <table>
   <tbody>
   <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}:</td> <td>\({{ modulus }}\)</td> <td>{{place_code('modulus')}}</td> </tr>
@@ -46,7 +46,7 @@
 {% endif %}
   </tbody>
 </table>
-
+testing
 {% if galoisorbit %}
 
 {# Galois Orbits #}
@@ -115,10 +115,11 @@
 </div>
 
 {% set value_default = 2 %}
-<form> value  at&nbsp;
+<form>
   <table>
     <tbody>
     <tr>
+      <td>value at</td>
       <td><input id="calc-value-input" size=10 placeholder={{value_default}}></td>
       <td><button id="calc-value-go"> Compute </button></td>
       <td><span class="formexample"> e.g. {{value_default}}</span></td>

@@ -776,12 +776,6 @@ class WebChar(WebCharObject):
     @lazy_attribute
     def properties(self):
         f = [("Label", [self.label])]
-        try:
-            if self.orbit_label:
-                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-                f.append(("Galois orbit", [formatted_orbit_label]))
-        except KeyError:
-            pass
         f.extend([
             ("Modulus", [prop_int_pretty(self.modulus)]),
             ("Conductor", [prop_int_pretty(self.conductor)]),

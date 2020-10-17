@@ -395,7 +395,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return redirect(url_for(".render_DirichletNavigation"))
     args['number'] = number
     webchar = make_webchar(args)
-    print(webchar.properties)
     info = webchar.to_dict()
     info['bread'] = get_bread(
         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
