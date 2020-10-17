@@ -574,7 +574,7 @@ def resolve_display(resolves):
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
+            ans += '<tr><td align="right">$' + str(j[0]) + '$:&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
@@ -587,7 +587,7 @@ def resolve_display(resolves):
     if ans != '':
         ans += '</td></tr></table>'
     else:
-        ans = 'None'
+        ans = 'none'
     return ans
 
 def group_display_inertia(code):
