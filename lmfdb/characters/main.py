@@ -69,7 +69,7 @@ def render_characterNavigation():
 
 class DirichSearchArray(SearchArray):
     jump_example = "13.2"
-    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl="character.dirichlet.search_input"
     jump_prompt="Label"
     def __init__(self):
@@ -136,8 +136,8 @@ class DirichSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of Dirichlet characters'),
-            ('Random', 'Random Dirichlet character')])
+            ('List', 'List of characters'),
+            ('Random', 'Random character')])
 
 def common_parse(info, query):
     parse_ints(info, query, "modulus", name="base field")
