@@ -135,11 +135,7 @@
   {% if valuefield %}
   <tr>
     <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}}:</td>
-    {% if vflabel %}
-    <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
-    {% else %}
     <td> {{ valuefield | safe }} </td>
-    {% endif %}
   </tr>
   {% endif %}
   {% if kerfield %}

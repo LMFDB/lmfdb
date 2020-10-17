@@ -2,11 +2,9 @@
 
 from __future__ import absolute_import
 from lmfdb.app import app
-import ast
 import re
-from six import BytesIO
-from flask import render_template, url_for, request, redirect, abort, send_file
-from sage.all import gcd, randint, euler_phi
+from flask import render_template, url_for, request, redirect, abort
+from sage.all import gcd, euler_phi
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap,
@@ -19,16 +17,14 @@ from lmfdb.characters.web_character import (
         WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
-        WebDBDirichletGroup
+        WebDBDirichletGroup,
 )
 from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
-from . import ListCharacters
-from .ListCharacters import info_from_db_orbit
-
 
 #### make url_character available from templates
 @app.context_processor
@@ -71,7 +67,7 @@ def render_characterNavigation():
 
 class DirichSearchArray(SearchArray):
     jump_example = "13.2"
-    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl="character.dirichlet.search_input"
     jump_prompt="Label"
     def __init__(self):
@@ -138,13 +134,13 @@ class DirichSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('List', 'List of Dirichlet characters'),
-            ('Random', 'Random Dirichlet character')])
+            ('List', 'List of characters'),
+            ('Random', 'Random character')])
 
 def common_parse(info, query):
-    parse_ints(info, query, "modulus", name="base field")
-    parse_ints(info, query, "conductor", name="base cardinality")
-    parse_ints(info, query, "order", name="dimension")
+    parse_ints(info, query, "modulus", name="modulus")
+    parse_ints(info, query, "conductor", name="conductor")
+    parse_ints(info, query, "order", name="order")
     if 'parity' in info:
         parity=info['parity']
         if parity == 'even':
@@ -191,53 +187,6 @@ def url_for_label(label):
     number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
-def download_search(info):
-    dltype = info["Submit"]
-    #R = PolynomialRing(ZZ, "x")
-    #delim = "bracket"
-    #com = r"\\"  # single line comment start
-    #com1 = ""  # multiline comment start
-    #com2 = ""  # multiline comment end
-    filename = "weil_polynomials.gp"
-    #mydate = time.strftime("%d %B %Y")
-    if dltype == "sage":
-        com = "#"
-        filename = "weil_polynomials.sage"
-    if dltype == "magma":
-        com = ""
-        com1 = "/*"
-        com2 = "*/"
-        delim = "magma"
-        filename = "weil_polynomials.m"
-    #s = com1 + "\n"
-    #s += com + " Weil polynomials downloaded from the LMFDB on %s.\n" % (mydate)
-    #s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
-    #s += com + " attached to each isogeny class of an abelian variety.\n"
-    #s += "\n" + com2
-    #s += "\n"
-
-    #if dltype == "magma":
-    #    s += "P<x> := PolynomialRing(Integers()); \n"
-    #    s += "data := ["
-    #else:
-    #    if dltype == "sage":
-    #        s += "x = polygen(ZZ) \n"
-    #    s += "data = [ "
-    #s += "\\\n"
-    s= ""
-    for f in db.char_dir_orbits.search(ast.literal_eval(info["query"])):
-        s += str(f) + "\n"
-    #s = s[:-3]
-    #s += "]\n"
-    #if delim == "magma":
-    #    s = s.replace("[", "[*")
-    #    s = s.replace("]", "*]")
-    #    s += ";"
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
 @search_wrap(
     template="character_search_results.html",
     table=db.char_dir_orbits,
@@ -245,7 +194,6 @@ def download_search(info):
     err_title="Dirichlet character search input error",
     shortcuts={
         "jump": jump,
-        "download": download_search
     },
     url_for_label=url_for_label,
     learnmore=learnmore_list,
@@ -288,96 +236,67 @@ def label_to_number(modulus, number, all=False):
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
-    info = to_dict(request.args, search_array=DirichSearchArray())
-    if request.args:
-        # hidden_search_type for prev/next buttons
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
-        if search_type in ['List', 'Random']:
-            return dirichlet_character_search(info)
-        assert False
-    #else:
-        #return dirichlet_character_browse(info)
-    args = to_dict(request.args)
-    info = {'args': request.args}
-    info['bread'] = get_bread()
-    info['learnmore'] = learn()
-
     try:
-        if 'modbrowse' in args:
-            arg = args['modbrowse']
+        if 'modbrowse' in request.args:
+            arg = request.args['modbrowse']
             arg = arg.split('-')
             modulus_start = int(arg[0])
             modulus_end = int(arg[1])
+            info = {'args': request.args}
+            info['bread'] = get_bread()
+            info['learnmore'] = learn()
             info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
             info['credit'] = 'Sage'
-            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
+            h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
             info['contents'] = c
             info['headers'] = h
             info['rows'] = rows
             info['cols'] = cols
             return render_template("ModulusList.html", **info)
 
-        elif 'condbrowse' in args:
-            arg = args['condbrowse']
+        elif 'condbrowse' in request.args:
+            arg = request.args['condbrowse']
             arg = arg.split('-')
             conductor_start = int(arg[0])
             conductor_end = int(arg[1])
+            info = {'args': request.args}
+            info['bread'] = get_bread()
+            info['learnmore'] = learn()
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
             info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
             info['credit'] = "Sage"
-            info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
+            info['contents'] = get_character_conductor(conductor_start, conductor_end + 1)
             return render_template("ConductorList.html", **info)
 
-        elif 'ordbrowse' in args:
-            arg = args['ordbrowse']
+        elif 'ordbrowse' in request.args:
+            arg = request.args['ordbrowse']
             arg = arg.split('-')
             order_start = int(arg[0])
             order_end = int(arg[1])
+            info = {'args': request.args}
+            info['bread'] = get_bread()
+            info['learnmore'] = learn()
             info['order_start'] = order_start
             info['order_end'] = order_end
             info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
             info['credit'] = 'SageMath'
-            info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+            info['contents'] = get_character_order(order_start, order_end + 1)
             return render_template("OrderList.html", **info)
-
-        elif 'label' in args:
-            label = args['label'].replace(' ','')
-            if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
-                slabel = label.split('.')
-                m,n = int(slabel[0]), int(slabel[1])
-                if m==n==1 or n < m and gcd(m,n) == 1:
-                    return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
-            if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
-                slabel = label.split('.')
-                return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
-            if re.match(r'^[1-9][0-9]*$', label):
-                return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
-
-            flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
-            return render_template('CharacterNavigate.html', **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
         return render_template('CharacterNavigate.html', title='Dirichlet characters')
 
-    if args:
-        # if user clicked refine search, reset start to 0
-        if args.get('refine'):
-            args['start'] = '0'
-        try:
-            search = ListCharacters.CharacterSearch(args)
-        except ValueError as err:
-            info['err'] = str(err)
-            return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
-        info['info'] = search.results()
-        info['title'] = 'Dirichlet character search results'
-        info['bread'] = get_bread(('Search results'))
-        info['credit'] = 'SageMath'
-        return render_template("character_search_results.html", **info)
-    else:
-        info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
-        info['title'] = 'Dirichlet characters'
-        return render_template('CharacterNavigate.html', info=info,**info)
+    if request.args:
+        # hidden_search_type for prev/next buttons
+        info = to_dict(request.args, search_array=DirichSearchArray())
+        info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
+        if search_type in ['List', 'Random']:
+            return dirichlet_character_search(info)
+        assert False
+    info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
+    info['title'] = 'Dirichlet characters'
+    return render_template('CharacterNavigate.html', info=info,**info)
 
 
 @characters_page.route("/Dirichlet/Labels")

@@ -69,7 +69,7 @@ from lmfdb.utils import web_latex
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
-from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
 from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
 from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
 from lmfdb.characters.utils import url_character, complex2str, evalpolelt
@@ -740,31 +740,26 @@ class WebChar(WebCharObject):
         return self.char2tex(self.conductor, self.indlabel)
 
     @lazy_attribute
-    def valuefield(self):
-        """ compute order """
-        order2 = self.order
-        if order2 % 4 == 2:
-            order2 = order2 / 2
-        if order2 == 1:
-            vf = r'\(\Q\)'
-        elif order2 == 4:
-            vf = r'\(\Q(i)\)'
-        else:
-            vf = r'\(\Q(\zeta_{%d})\)' % order2
-        return vf
-
-    @lazy_attribute
     def vflabel(self):
       order2 = self.order if self.order % 4 != 2 else self.order / 2
-      if order2 == 1:
-          return '1.1.1.1'
-      elif order2 == 4:
-          return '2.0.4.1'
-      valuewnf =  WebNumberField.from_cyclo(order2)
-      if not valuewnf.is_null():
-          return valuewnf.label
+      #if order2 == 1:
+      #    return '1.1.1.1'
+      #elif order2 == 4:
+      #    return '2.0.4.1'
+      nf =  WebNumberField.from_cyclo(order2)
+      if not nf.is_null():
+          return nf.label
       else:
           return ''
+
+    @lazy_attribute
+    def valuefield(self):
+        order2 = self.order if self.order % 4 != 2 else self.order / 2
+        nf =  WebNumberField.from_cyclo(order2)
+        if not nf.is_null():
+            return nf_display_knowl(nf.get_label(),nf.field_pretty())
+        else:
+            return r'$\Q(\zeta_{%d})$' % order2
 
     @lazy_attribute
     def kerfield(self):

@@ -27,7 +27,16 @@ table td.params {
 </thead>
 {% for char in info.results: %}
 <tr>
-    <td class="center">{% for num in char.galois_orbit %}<a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{num}}, \cdot)\)</a>{% endfor %}</td>
+<td class="center">
+  {% set n = char.galois_orbit | length %}
+  {% if n <= 5 %}
+    {% for num in char.galois_orbit %}<a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{num}}, \cdot)\)</a>{% endfor %}
+  {% else %}
+    <a href="{{char.modulus}}/{{char.galois_orbit[0]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[0]}}, \cdot)\)</a>
+    &nbsp;$\vdots$&nbsp;
+    <a href="{{char.modulus}}/{{char.galois_orbit[n-1]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[n-1]}}, \cdot)\)</a>
+  {% endif %}
+</td>
 <td class="center">{{char.label}}</a></td>
 <td class="center">{{char.modulus}}</td>
 <td class="center">{{char.conductor}}</td>
