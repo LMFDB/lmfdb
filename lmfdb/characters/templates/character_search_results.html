@@ -32,9 +32,9 @@ table td.params {
   {% if n <= 5 %}
     {% for num in char.galois_orbit %}<a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{num}}, \cdot)\)</a>{% endfor %}
   {% else %}
-    <a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[0]}}, \cdot)\)</a>
+    <a href="{{char.modulus}}/{{char.galois_orbit[0]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[0]}}, \cdot)\)</a>
     &nbsp;$\vdots$&nbsp;
-    <a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[n-1]}}, \cdot)\)</a>
+    <a href="{{char.modulus}}/{{char.galois_orbit[n-1]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[n-1]}}, \cdot)\)</a>
   {% endif %}
 </td>
 <td class="center">{{char.label}}</a></td>
