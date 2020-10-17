@@ -287,13 +287,17 @@ def render_DirichletNavigation():
         flash_error("Error raised in parsing: %s", err)
         return render_template('CharacterNavigate.html', title='Dirichlet characters')
 
-    info = to_dict(request.args, search_array=DirichSearchArray())
     if request.args:
         # hidden_search_type for prev/next buttons
+        info = to_dict(request.args, search_array=DirichSearchArray())
         info["search_type"] = search_type = info.get("search_type", info.get("hst", "List"))
         if search_type in ['List', 'Random']:
             return dirichlet_character_search(info)
         assert False
+    info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
+    info['title'] = 'Dirichlet characters'
+    return render_template('CharacterNavigate.html', info=info,**info)
+
 
 @characters_page.route("/Dirichlet/Labels")
 def labels_page():
