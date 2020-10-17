@@ -25,16 +25,15 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
 </thead>
-
-{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.results: %}
+{% for char in info.results: %}
 <tr>
-<td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
-<td class="center">{{orbit_label}}</a></td>
-<td class="center">{{mod}}</td>
-<td class="center">{{cond}}</td>
-<td class="center">{{order}}</td>
-<td class="center">{{par}}</td>
-<td class="center">{{'&#x2713;'|safe if prim}}</td>
+    <td class="center">{% for num in char.galois_orbit %}<a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{num}}, \cdot)\)</a>{% endfor %}</td>
+<td class="center">{{char.label}}</a></td>
+<td class="center">{{char.modulus}}</td>
+<td class="center">{{char.conductor}}</td>
+<td class="center">{{char.order}}</td>
+<td class="center">{{ 'even' if char.parity == 1 else 'odd' }}</td>
+<td class="center">{{'&#x2713;'|safe if char.is_primitive}}</td>
 </tr>
 {% endfor %}
 </table>

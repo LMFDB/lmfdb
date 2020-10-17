@@ -72,6 +72,8 @@ def render_characterNavigation():
 class DirichSearchArray(SearchArray):
     jump_example = "13.2"
     jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit."
+    jump_knowl="character.dirichlet.search_input"
+    jump_prompt="Label"
     def __init__(self):
         modulus = TextBox(
             "modulus",
@@ -106,10 +108,22 @@ class DirichSearchArray(SearchArray):
             knowl="character.dirichlet.primitive",
             example="yes"
         )
+        is_real = YesNoBox(
+            "is_real",
+            label="Real",
+            knowl="character.dirichlet.real",
+            example="yes"
+        )
+        is_minimal = YesNoBox(
+            "is_minimal",
+            label="Minimal",
+            knowl="character.dirichlet.minimal",
+            example="yes"
+        )
         count = CountBox()
 
         self.refine_array = [
-            [modulus, conductor, order], [parity, is_primitive, count],
+            [modulus, conductor, order, is_real], [parity, is_primitive, is_minimal, count],
         ]
         self.browse_array = [
             [modulus],
@@ -117,6 +131,8 @@ class DirichSearchArray(SearchArray):
             [order],
             [parity],
             [is_primitive],
+            [is_real],
+            [is_minimal],
             [count],
         ]
 
@@ -136,6 +152,8 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['parity'] = -1
     parse_bool(info, query, "is_primitive", name="is_primitive")
+    parse_bool(info, query, "is_real", name="is_real")
+    parse_bool(info, query, "is_minimal", name="is_minimal")
 
 def learnmore_list():
     return [
@@ -169,7 +187,8 @@ def url_for_label(label):
         flash_error("%s is not a valid label: %s.", label, str(err))
         return redirect(url_for(".render_DirichletNavigation"))
     modulus, number = label.split(".")
-    modulus, number = int(modulus), int(number)
+    modulus = int(modulus)
+    number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
 def download_search(info):
@@ -228,7 +247,6 @@ def download_search(info):
         "jump": jump,
         "download": download_search
     },
-    postprocess=lambda res, info, query: sum([info_from_db_orbit(x) for x in res],[]),
     url_for_label=url_for_label,
     learnmore=learnmore_list,
     bread=lambda: get_bread("Search results"),
@@ -404,49 +422,6 @@ def make_webchar(args):
     else:
         return WebSmallDirichletCharacter(**args)
 
-def label_to_number(modulus, number, all=False):
-    """
-    Takes the second part of a character label and converts it to the second
-    part of a Conrey label.  This could be trivial (just casting to an int)
-    or could require converting from an orbit label to a number.
-
-    If the label is invalid, returns 0.
-    """
-    try:
-        number = int(number)
-    except ValueError:
-        # encoding Galois orbit
-        if modulus < 10000:
-            try:
-                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
-            except ValueError:
-                return 0
-            else:
-                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
-                if number is None:
-                    return 0
-                if not all:
-                    number = number[0]
-        else:
-            return 0
-    else:
-        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
-            return 0
-    return number
-
-def url_for_label(label):
-    """
-    INPUT:
-
-    - label -- a string such as "1052.279" giving a specific Dirichlet character (not an orbit)
-
-    OUTPUT:
-
-    the URL for that Dirichlet character's homepage
-    """
-    modulus, number = label.split(".")
-    return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
-
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -568,11 +543,7 @@ def ctx_dirchar():
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():
-    modulus = randint(1,9999)
-    number = randint(1,modulus-1)
-    while gcd(modulus,number) > 1:
-        number = randint(1,modulus-1)
-    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+    return redirect(url_for('.render_DirichletNavigation', search_type="Random"))
 
 @characters_page.route('/Dirichlet/interesting')
 def interesting():
