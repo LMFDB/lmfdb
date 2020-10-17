@@ -21,7 +21,6 @@
 
 
 {# Basic properties #}
-testing
 <h2>
   {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
 </h2>
@@ -29,24 +28,25 @@ testing
 <table>
   <tbody>
   <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}:</td> <td>\({{ modulus }}\)</td> <td>{{place_code('modulus')}}</td> </tr>
+  {#
   <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> <td>{{place_code('cond')}}</td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}}: </td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}}: </td> <td> {{ isreal }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}}: </td> <<td> {{isprimitive}}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }} </td></tr>
+  <tr> <td>{{KNOWL('character.dirichlet.order',title='Order')}}:</td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.real',title='Real')}}:</td> <td> {{ isreal }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <<td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
-  <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td> {{ isminimal }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td>{{ isminimal }}</td> </tr>
   {% endif %}
   {% if parity %}
-  <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td> {{ parity }}</td> <td>{{place_code('parity')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td>{{ parity }}</td> <td>{{place_code('parity')}}</td> </tr>
   {% endif %}
-  {% if (type != 'Hecke') and (modulus <= 10000) %}
-  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
-  {% endif %}
+  #}
+  {{# {% if (type != 'Hecke') and (modulus <= 10000) %}
+  <tr> <td>{{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}}</td> <td>{{ modulus }}.{{ orbit_label }}</td> </tr>
+  {% endif %} #}
 {% endif %}
   </tbody>
 </table>
-testing
 {% if galoisorbit %}
 
 {# Galois Orbits #}

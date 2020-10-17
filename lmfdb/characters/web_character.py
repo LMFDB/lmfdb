@@ -1034,7 +1034,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     A class using data stored in the database. Currently this is all Dirichlet
     characters with modulus up to 10000.
     """
-    headers = ['orbit label', 'order', 'primitive']
+    headers = ['Character', 'Orbit', 'Order', 'Primitive']
 
     def __init__(self, **kwargs):
         self._contents = None
