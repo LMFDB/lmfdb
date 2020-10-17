@@ -601,7 +601,7 @@ def group_display_inertia(code):
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
     if group.num_conjclasses() >= 50:
-        return 'Data not computed'
+        return 'not computed'
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
