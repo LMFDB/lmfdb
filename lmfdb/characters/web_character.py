@@ -740,6 +740,10 @@ class WebChar(WebCharObject):
         return self.char2tex(self.conductor, self.indlabel)
 
     @lazy_attribute
+    def label(self):
+        return '%s.%s' % (self.modulus, self.number)
+
+    @lazy_attribute
     def vflabel(self):
       order2 = self.order if self.order % 4 != 2 else self.order / 2
       #if order2 == 1:
@@ -789,7 +793,6 @@ class WebChar(WebCharObject):
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
-        print(f)
         return f
 
     @lazy_attribute
