@@ -31,7 +31,7 @@
           {% for cnt in range(galccsize) %}
         {% set artx = initfunc(artin['Baselabel'],cnt+1) %}
         {% if info.sign_code == 0 or info.sign_code == art.sign() %}
-            <a href = "{{artx.url_for()}}">{{artx.label()}}</a>
+            <a href = "{{artx.url_for()}}">{{artx.label_pretty()}}</a>
         {% endif %}
           {% endfor %}
             </td>

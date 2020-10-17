@@ -11,6 +11,12 @@ from lmfdb.number_fields.web_number_field import WebNumberField, formatfield
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 import re
 
+# abbreviate labels with large conductors for display purposes
+def artin_label_pretty(label):
+    s = label.split('.')
+    if len(s[1]) > 20:
+        s[1] = s[1][:3] + "..." + s[1][-3:]
+    return '.'.join(s)
 
 # fun is the function, N the modulus, and n the denominator
 # for values (value a means e(a/n))
@@ -120,6 +126,9 @@ class ArtinRepresentation(object):
     def label(self):
         return str(self._data['label'])
 
+    def label_pretty(self):
+        return artin_label_pretty(self._data['label'])
+
     def dimension(self):
         return int(self._data["Dim"])
 
@@ -151,14 +160,15 @@ class ArtinRepresentation(object):
         return self.central_character_as_artin_rep().label()
 
     def conductor_equation(self):
+        from lmfdb.utils import bigint_knowl
         # Returns things of the type "1", "7", "49 = 7^{2}"
         factors = self.factored_conductor()
         if self.conductor() == 1:
             return "1"
         if len(factors) == 1 and factors[0][1] == 1:
-            return str(self.conductor())
+            return bigint_knowl(self.conductor(),sides=3)
         else:
-            return str(self.conductor()) + "=" + self.factored_conductor_latex()
+            return bigint_knowl(self.conductor(),sides=3) + r"\(\medspace = " + self.factored_conductor_latex() + r"\)"
 
     def factored_conductor(self):
         return [(p, valuation(Integer(self.conductor()), p)) for p in self.bad_primes()]

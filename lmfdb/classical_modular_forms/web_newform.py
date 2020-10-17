@@ -980,7 +980,7 @@ function switch_basis(btype) {
 
     def display_hecke_char_polys(self, num_disp = 5):
         return display_hecke_polys([self.label], num_disp)
-      
+
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'

@@ -6,7 +6,7 @@
     <table>
         <tr><td>{{ KNOWL('artin.dimension', title='Dimension') }}:<td>${{ object.dimension() }}$ </tr>
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
-        <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>${{ object.conductor_equation() }} $</tr>
+        <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>{{ object.conductor_equation() | safe }}</tr>
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
                 $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</tr>
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
