@@ -254,7 +254,7 @@ def render_group_webpage(args):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
-            ('Order', prop_int_prett(order)),
+            ('Order', prop_int_pretty(order)),
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),
