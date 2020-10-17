@@ -2,10 +2,8 @@
 
 from __future__ import absolute_import
 from lmfdb.app import app
-import ast
 import re
-from six import BytesIO
-from flask import render_template, url_for, request, redirect, abort, send_file
+from flask import render_template, url_for, request, redirect, abort
 from sage.all import gcd, euler_phi
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
@@ -140,9 +138,9 @@ class DirichSearchArray(SearchArray):
             ('Random', 'Random character')])
 
 def common_parse(info, query):
-    parse_ints(info, query, "modulus", name="base field")
-    parse_ints(info, query, "conductor", name="base cardinality")
-    parse_ints(info, query, "order", name="dimension")
+    parse_ints(info, query, "modulus", name="modulus")
+    parse_ints(info, query, "conductor", name="conductor")
+    parse_ints(info, query, "order", name="order")
     if 'parity' in info:
         parity=info['parity']
         if parity == 'even':
@@ -189,49 +187,6 @@ def url_for_label(label):
     number = label_to_number(modulus, number)
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
-def download_search(info):
-    import time
-
-    dltype = info["Submit"]
-    #delim = "bracket"
-    com = r"\\"  # single line comment start
-    com1 = ""  # multiline comment start
-    com2 = ""  # multiline comment end
-    filename = "characters.gp"
-    mydate = time.strftime("%d %B %Y")
-    if dltype == "sage":
-        com = "#"
-        filename = "characters.sage"
-    if dltype == "magma":
-        com = ""
-        com1 = "/*"
-        com2 = "*/"
-        #delim = "magma"
-        filename = "characters.m"
-    s = com1 + "\n"
-    s += com + " Dirichlet character data downloaded from the LMFDB on %s.\n" % (mydate)
-    s += "\n" + com2
-    s += "\n"
-    #if dltype == "magma":
-    #    s += "P<x> := PolynomialRing(Integers()); \n"
-    #    s += "data := ["
-    #else:
-    #    if dltype == "sage":
-    #        s += "x = polygen(ZZ) \n"
-    #    s += "data = [ "
-    #s += "\\\n"
-    s= ""
-    for f in db.char_dir_orbits.search(ast.literal_eval(info["query"])):
-        s += str(f) + "\n"
-    #if delim == "magma":
-    #    s = s.replace("[", "[*")
-    #    s = s.replace("]", "*]")
-    #    s += ";"
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
 @search_wrap(
     template="character_search_results.html",
     table=db.char_dir_orbits,
@@ -239,7 +194,6 @@ def download_search(info):
     err_title="Dirichlet character search input error",
     shortcuts={
         "jump": jump,
-        "download": download_search
     },
     url_for_label=url_for_label,
     learnmore=learnmore_list,
