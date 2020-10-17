@@ -37,7 +37,7 @@ class Spacer(TdElt):
         return self.td(self.colspan) + "</td>"
 
     def label_html(self, info=None):
-        return self.td(self.colspan, True) + "</td>"
+        return self.td(self.colspan) + "</td>"
 
     def example_html(self, info=None):
         return self.td() + "</td>"
@@ -141,7 +141,7 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.label_rowspan) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
