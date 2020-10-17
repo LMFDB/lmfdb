@@ -654,9 +654,9 @@ class WebCharGroup(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        return [("Modulus", [self.modulus]),
-                ("Structure", [self.structure]),
-                ("Order", [self.order]),
+        return [("Modulus", [prop_int_pretty(self.modulus)]),
+                ("Structure", [prop_int_pretty(self.structure)]),
+                ("Order", [prop_int_pretty(self.order)]),
                 ]
 
     @lazy_attribute
