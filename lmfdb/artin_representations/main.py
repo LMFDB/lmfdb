@@ -325,8 +325,8 @@ def render_artin_representation_webpage(label):
                   ("Group", the_rep.group()),
                   ("Conductor", prop_int_pretty(the_rep.conductor()))]
     if case == 'rep':
-        properties.append( ("Root number", processed_root_number) )
-    properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )
+        properties.append( ("Root number", '$%s$' % processed_root_number) )
+    properties.append( ("Frobenius-Schur indicator", prop_int_pretty(the_rep.indicator())) )
 
     friends = []
     wnf = None

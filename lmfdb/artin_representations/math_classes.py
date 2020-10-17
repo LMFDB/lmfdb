@@ -403,12 +403,12 @@ class ArtinRepresentation(object):
 
     def parity(self):
         if self._data['Is_Even']:
-            return 'Even'
+            return 'even'
         else:
-            return 'Odd'
+            return 'odd'
         #par = (self.dimension()-self.trace_complex_conjugation())/2
-        #if (par % 2) == 0: return "Even"
-        #return "Odd"
+        #if (par % 2) == 0: return "even"
+        #return "odd"
 
     def field_knowl(self):
         from lmfdb.number_fields.web_number_field import nf_display_knowl
