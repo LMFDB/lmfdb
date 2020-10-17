@@ -28,21 +28,21 @@
 
 <table>
   <tr> <td colspan='3'> {{ place_code('modulus') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}</td> <td>=</td> <td>{{ modulus }}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}:</td> <td>{{ modulus }}</td> </tr>
   <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> </tr>
   <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}}: </td> <td>\({{ order }}\)</td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}}: </td> <td> {{ isreal }} </td> </tr>
   <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} {{ '(induced from <a href="'|safe + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">'|safe + inducing + "</a>)" | safe if isprimitive == "no"  }}</td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}}: </td> <<td> {{ isprimitive }} {{ '(induced from <a href="'|safe + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">'|safe + inducing + "</a>)" | safe if isprimitive == "no"  }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
-  <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td> {{ isminimal }} </td> </tr>
   {% endif %}
   {% if parity %}
   <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td> {{ parity }}</td> </tr>
   {% endif %}
   {% if (type != 'Hecke') and (modulus <= 10000) %}
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
@@ -56,7 +56,7 @@
 {# Galois Orbits #}
 
 <h2>
-  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
+  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }} {{ modulus }}.{{ orbit_label }}
 </h2>
 {{ place_code('galoisorbit') }}
 <p>
@@ -112,9 +112,9 @@
 <div style='overflow:auto'>
   <table class="values">
     <thead>
-      <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
+      <tr>{% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}</tr>
     </thead>
-    <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
+    <tr>{% for v in values %}<td style="text-align:center">{{v}}</td>{%endfor%}</tr>
   </table>
 </div>
 

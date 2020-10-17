@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict, comma)
+    display_knowl, search_wrap, to_dict, comma, prop_int_pretty)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
@@ -321,9 +321,9 @@ def render_artin_representation_webpage(label):
     else:
         processed_root_number = str(the_rep.sign())
     properties = [("Label", artin_label_pretty(label)),
-                  ("Dimension", str(the_rep.dimension())),
+                  ("Dimension", prop_int_pretty(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$")]
+                  ("Conductor", prop_int_pretty(the_rep.conductor()))]
     if case == 'rep':
         properties.append( ("Root number", processed_root_number) )
     properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )

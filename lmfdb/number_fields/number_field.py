@@ -13,11 +13,11 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
-    flash_error, display_knowl, CountBox,
+    flash_error, display_knowl, CountBox, prop_int_pretty,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -65,6 +65,13 @@ def group_character_table_data(n, t):
 
 def number_field_data(label):
     return Markup(nf_knowl_guts(label))
+
+def nf_label_pretty(label):
+    if len(label) <= 25:
+        return label
+    s = label.split('.')
+    s[2] = s[2][:3] + '...' + s[2][-3:]
+    return '.'.join(s)
 
 
 # fixed precision display of float, rounding off
@@ -424,9 +431,9 @@ def render_field_webpage(args):
     D = nf.disc()
     data['disc_factor'] = nf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
-        data['discriminant'] = r"\(%s\)" % str(D)
+        data['discriminant'] = bigint_knowl(D,cutoff=60,sides=3)
     else:
-        data['discriminant'] = r"\(%s=%s\)" % (str(D), data['disc_factor'])
+        data['discriminant'] = bigint_knowl(D,cutoff=60,sides=3) + r"\(\medspace = %s\)" % data['disc_factor']
     if nf.frobs():
         data['frob_data'], data['seeram'] = see_frobs(nf.frobs())
     else:  # fallback in case we haven't computed them in a case
@@ -477,7 +484,7 @@ def render_field_webpage(args):
     grh_label = '<small>(<a title="assuming GRH" knowl="nf.assuming_grh">assuming GRH</a>)</small>' if nf.used_grh() else ''
     # Short version for properties
     grh_lab = nf.short_grh_string()
-    if 'Not' in str(data['class_number']):
+    if 'computed' in str(data['class_number']):
         grh_lab=''
         grh_label=''
     pretty_label = field_pretty(label)
@@ -502,7 +509,7 @@ def render_field_webpage(args):
         'loc_alg': loc_alg
     })
 
-    bread.append(('%s' % info['label_raw'], ' '))
+    bread.append(('%s' % nf_label_pretty(info['label_raw']), ' '))
     info['downloads_visible'] = True
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
@@ -573,24 +580,25 @@ def render_field_webpage(args):
         primes = 'prime'
     else:
         primes = 'primes'
+    if len(ram_primes) > 30:
+        ram_primes = 'see page'
+    else:
+        ram_primes = '$%s$' % ram_primes
 
-    label_orig = label
-    if len(label) > 25:
-        label = label[:16] + '...' + label[-6:]
-    properties = [('Label', label),
-                  ('Degree', '$%s$' % data['degree']),
+    properties = [('Label', nf_label_pretty(label)),
+                  ('Degree', prop_int_pretty(data['degree'])),
                   ('Signature', '$%s$' % data['signature']),
-                  ('Discriminant', '$%s$' % data['disc_factor']),
+                  ('Discriminant', prop_int_pretty(D)),
                   ('Root discriminant', '%s' % data['rd']),
-                  ('Ramified ' + primes + '', '$%s$' % ram_primes),
+                  ('Ramified ' + primes + '', ram_primes),
                   ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                   ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
                   ('Galois group', group_pretty_and_nTj(data['degree'], t))]
     downloads = [('Stored data to gp',
-                  url_for('.nf_download', nf=label_orig, download_type='data'))]
+                  url_for('.nf_download', nf=label, download_type='data'))]
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
         downloads.append(('Download {} code'.format(lang[0]),
-                          url_for(".nf_download", nf=label_orig, download_type=lang[1])))
+                          url_for(".nf_download", nf=label, download_type=lang[1])))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     from lmfdb.artin_representations.math_classes import artin_label_pretty
     try:
@@ -612,7 +620,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label_orig)
+    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label)
 
 
 def format_coeffs2(coeffs):

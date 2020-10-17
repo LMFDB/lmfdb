@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, latex, is_prime,  factor
+from sage.all import srange, spline, line
 
 import tempfile
 import os
@@ -27,7 +27,7 @@ from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.artin_representations.main import parse_artin_label
-from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty
 from lmfdb.app import is_debug_mode
 from lmfdb import db
 from six import string_types
@@ -523,22 +523,13 @@ def set_gaga_properties(L):
     ''' Sets the properties in the properties box in the
     upper right corner
     '''
-    ans = [('Degree', str(L.degree))]
+    ans = [('Degree', prop_int_pretty(L.degree))]
 
-    if not is_prime(int(L.level)):
-        if hasattr(L, 'level_factored'):
-            conductor_str = latex(L.level_factored)
-        else:
-            conductor_str =  latex(factor(int(L.level)))
-        conductor_str = "$ %s $" % conductor_str
-    else:
-        conductor_str = str(L.level)
-
-    ans.append(('Conductor', conductor_str))
-    ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
+    ans.append(('Conductor', prop_int_pretty(L.level)))
+    ans.append(('Sign', "$%s$" % styleTheSign(L.sign) ))
 
     if L.algebraic:
-        ans.append(('Motivic weight', str(L.motivic_weight)))
+        ans.append(('Motivic weight', prop_int_pretty(L.motivic_weight)))
 
 
     primitive =  getattr(L, 'primitive', None)
@@ -551,7 +542,7 @@ def set_gaga_properties(L):
 
     rank = getattr(L, 'order_of_vanishing', None)
     if rank is not None:
-        ans.append(('Analytic rank', str(rank)))
+        ans.append(('Analytic rank', prop_int_pretty(rank)))
 
     return ans
 

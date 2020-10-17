@@ -65,7 +65,7 @@ from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_met
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, prop_int_pretty
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
@@ -771,23 +771,24 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        f = [
-            ("Modulus", [self.modulus]),
-            ("Conductor", [self.conductor]),
-            ("Order", [self.order]),
+        f = [("Label", [self.label])]
+        try:
+            if self.orbit_label:
+                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
+                f.append(("Galois orbit", [formatted_orbit_label]))
+        except KeyError:
+            pass
+        f.extend([
+            ("Modulus", [prop_int_pretty(self.modulus)]),
+            ("Conductor", [prop_int_pretty(self.conductor)]),
+            ("Order", [prop_int_pretty(self.order)]),
             ("Real", [self.isreal]),
             ("Primitive", [self.isprimitive])
-        ]
+        ])
         if self.isminimal:
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
-        try:
-            if self.orbit_label:
-                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-                f.append(("Orbit label", [formatted_orbit_label]))
-        except KeyError:
-            pass
         return f
 
     @lazy_attribute

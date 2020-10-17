@@ -2,7 +2,7 @@
 
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
-           'send_file', 'list_to_factored_poly_otherorder',
+           'send_file', 'list_to_factored_poly_otherorder', 'prop_int_pretty',
            'list_factored_to_factored_poly_otherorder',
            'key_for_numerically_sort', 'an_list', 'coeff_to_poly',
            'coeff_to_power_series', 'display_multiset', 'pair2complex',
@@ -47,6 +47,7 @@ from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
 
 from .utilities import (
+    prop_int_pretty,
     list_to_factored_poly_otherorder,
     list_factored_to_factored_poly_otherorder,
     key_for_numerically_sort, an_list, coeff_to_poly, coeff_to_power_series,

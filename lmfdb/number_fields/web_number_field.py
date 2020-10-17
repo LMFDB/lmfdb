@@ -182,7 +182,7 @@ for n, label in list(rcyclolookup.items()):
         rcyclolookup[2 * n] = label
 
 def na_text():
-    return "Not computed"
+    return "not computed"
 
 ## Turn a list into a string (without brackets)
 
