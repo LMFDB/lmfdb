@@ -6,7 +6,7 @@ import ast
 import re
 from six import BytesIO
 from flask import render_template, url_for, request, redirect, abort, send_file
-from sage.all import gcd, randint, euler_phi
+from sage.all import gcd, euler_phi
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap,
@@ -19,16 +19,14 @@ from lmfdb.characters.web_character import (
         WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
-        WebDBDirichletGroup
+        WebDBDirichletGroup,
 )
 from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order, CharacterSearch
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
-from . import ListCharacters
-from .ListCharacters import info_from_db_orbit
-
 
 #### make url_character available from templates
 @app.context_processor
@@ -192,30 +190,28 @@ def url_for_label(label):
     return url_for(".render_Dirichletwebpage", modulus=modulus, number=number)
 
 def download_search(info):
+    import time
+
     dltype = info["Submit"]
-    #R = PolynomialRing(ZZ, "x")
     #delim = "bracket"
-    #com = r"\\"  # single line comment start
-    #com1 = ""  # multiline comment start
-    #com2 = ""  # multiline comment end
-    filename = "weil_polynomials.gp"
-    #mydate = time.strftime("%d %B %Y")
+    com = r"\\"  # single line comment start
+    com1 = ""  # multiline comment start
+    com2 = ""  # multiline comment end
+    filename = "characters.gp"
+    mydate = time.strftime("%d %B %Y")
     if dltype == "sage":
         com = "#"
-        filename = "weil_polynomials.sage"
+        filename = "characters.sage"
     if dltype == "magma":
         com = ""
         com1 = "/*"
         com2 = "*/"
-        delim = "magma"
-        filename = "weil_polynomials.m"
-    #s = com1 + "\n"
-    #s += com + " Weil polynomials downloaded from the LMFDB on %s.\n" % (mydate)
-    #s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
-    #s += com + " attached to each isogeny class of an abelian variety.\n"
-    #s += "\n" + com2
-    #s += "\n"
-
+        #delim = "magma"
+        filename = "characters.m"
+    s = com1 + "\n"
+    s += com + " Dirichlet character data downloaded from the LMFDB on %s.\n" % (mydate)
+    s += "\n" + com2
+    s += "\n"
     #if dltype == "magma":
     #    s += "P<x> := PolynomialRing(Integers()); \n"
     #    s += "data := ["
@@ -227,8 +223,6 @@ def download_search(info):
     s= ""
     for f in db.char_dir_orbits.search(ast.literal_eval(info["query"])):
         s += str(f) + "\n"
-    #s = s[:-3]
-    #s += "]\n"
     #if delim == "magma":
     #    s = s.replace("[", "[*")
     #    s = s.replace("]", "*]")
@@ -310,7 +304,7 @@ def render_DirichletNavigation():
             modulus_end = int(arg[1])
             info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
             info['credit'] = 'Sage'
-            h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
+            h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
             info['contents'] = c
             info['headers'] = h
             info['rows'] = rows
@@ -326,7 +320,7 @@ def render_DirichletNavigation():
             info['conductor_end'] = conductor_end
             info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
             info['credit'] = "Sage"
-            info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
+            info['contents'] = get_character_conductor(conductor_start, conductor_end + 1)
             return render_template("ConductorList.html", **info)
 
         elif 'ordbrowse' in args:
@@ -338,7 +332,7 @@ def render_DirichletNavigation():
             info['order_end'] = order_end
             info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
             info['credit'] = 'SageMath'
-            info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+            info['contents'] = get_character_order(order_start, order_end + 1)
             return render_template("OrderList.html", **info)
 
         elif 'label' in args:
@@ -365,7 +359,7 @@ def render_DirichletNavigation():
         if args.get('refine'):
             args['start'] = '0'
         try:
-            search = ListCharacters.CharacterSearch(args)
+            search = CharacterSearch(args)
         except ValueError as err:
             info['err'] = str(err)
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
