@@ -252,8 +252,8 @@ class SelectBox(SearchBox):
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
     _options = []
-    _default_width = 160
-    _default_min_width = 80
+    _default_width = 170
+    _default_min_width = 85
 
     def __init__(
         self,
@@ -419,6 +419,7 @@ class YesNoBox(SelectBox):
                 ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
+    _default_min_width = 130
     _options = [("", ""),
                 ("yes", "yes"),
                 ("not_no", "yes or unknown"),
@@ -432,7 +433,7 @@ class ParityBox(SelectBox):
                 ('odd', 'odd')]
 
 class ParityMod(SelectBox):
-    # For modifying a text box
+    _default_min_width = 95
     _options = [('', 'any parity'),
                 ('even', 'even only'),
                 ('odd', 'odd only')]
