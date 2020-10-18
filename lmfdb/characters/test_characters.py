@@ -180,28 +180,3 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
         assert parity_string(-1) in W.get_data(as_text=True) and '536870912' in W.get_data(as_text=True)
         assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True)
-
-class HeckeCharactersTest(LmfdbTest):
-
-    def test_heckeexamples(self):
-        W = self.tc.get('/Character/Hecke/')
-        assert '2.2.8.1' in W.get_data(as_text=True)
-
-    def test_heckefamily(self):
-        W = self.tc.get('/Character/Hecke/3.1.44.1')
-        assert 'C_{5}' in W.get_data(as_text=True)
-
-    def test_heckegroup(self):
-        W = self.tc.get('/Character/Hecke/3.1.44.1/4.1')
-        assert 'Related objects' in W.get_data(as_text=True)
-        assert 'primitive' in W.get_data(as_text=True)
-
-    def test_heckechar(self):
-        W = self.tc.get('/Character/Hecke/2.0.4.1/25.2/2')
-        assert 'Related objects' in W.get_data(as_text=True)
-        assert 'Primitive' in W.get_data(as_text=True)
-
-    def test_hecke_calc(self):
-        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/25.2/1?val=13.2')
-        assert '=-i' in W.get_data(as_text=True)
-

@@ -71,7 +71,7 @@ class ApiTest(LmfdbTest):
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             if '1T1' in query:
-                assert '"name": "rivial"' in data
+                assert '"name": "Trivial"' in data
             if '8T3' in query:
                 assert '"name": "E(8)=2[x]2[x]2"' in data
             if '11a1' in query:
