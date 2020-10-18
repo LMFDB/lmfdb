@@ -376,7 +376,9 @@ class SkipBox(TextBox):
 class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
-        self.select_box._default_width = self.select_box._min_width
+        if self.select_box.width is None:
+            self.select_box._width = self.select_box._min_width
+        print(self.select_box.width)
         TextBox.__init__(self, name, label, **kwds)
 
     def label_html(self, info=None):
