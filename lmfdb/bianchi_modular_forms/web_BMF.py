@@ -140,11 +140,11 @@ class WebBMF(object):
             self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
 
         self.properties = [('Base field', pretty_field),
-                            ('Weight', str(self.weight)),
-                            ('Level norm', str(self.level_norm)),
+                            ('Weight', prop_int_pretty(self.weight)),
+                            ('Level norm', prop_int_pretty(self.level_norm)),
                             ('Level', self.level_ideal2),
                             ('Label', self.label),
-                            ('Dimension', str(self.dimension))
+                            ('Dimension', prop_int_pretty(self.dimension))
         ]
 
         try:
@@ -153,8 +153,9 @@ class WebBMF(object):
             elif self.CM == 0:
                 self.CM = 'no'
             else:
-                if self.CM%4 in [2,3]:
-                    self.CM = 4*self.CM
+                if int(self.CM)%4 in [2,3]:
+                    self.CM = 4*int(self.CM)
+                self.CM = "$%s$" % self.CM
         except AttributeError:
             self.CM = 'not determined'
         self.properties.append(('CM', str(self.CM)))
@@ -198,8 +199,8 @@ class WebBMF(object):
             else:
                 self.ec_status = 'missing'
 
-        self.properties.append(('Sign', self.sign))
-        self.properties.append(('Analytic rank', self.anrank))
+        self.properties.append(('Sign', prop_int_pretty(self.sign)))
+        self.properties.append(('Analytic rank', prop_int_pretty(self.anrank))
 
         self.friends = []
         self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]

@@ -44,11 +44,13 @@
 {% if data.have_AL %} 
 <p>
 <table class="ntdata" cellpadding=5>
+<thead>
 <tr>
 <th>Norm</th>
 <th>Prime</th>
 <th>Eigenvalue</th>
 </tr>
+</thead><tbody>
 {% for entry in data.AL_table: %}
 <tr>
 <td>{{entry[0]}}</td>
@@ -56,6 +58,7 @@
 <td align=right>{{entry[3]}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 </p>
 {% else %}
@@ -82,11 +85,13 @@ We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which 
 </p>
 
 <table class="ntdata" cellpadding=5>
+<thead>
 <tr>
 <th>$N(\mathfrak{p})$</th>
 <th>$\mathfrak{p}$</th>
 <th align=right>$a_{\mathfrak{p}}$</th>
 </tr>
+</thead><tbody>
 {% for entry in data.hecke_table: %}
 <tr>
 <td>{{entry[0]}}</td>
@@ -94,6 +99,7 @@ We only show the eigenvalues $a_{\mathfrak{p}}$ for primes $\mathfrak{p}$ which 
 <td align=right>{{entry[3]}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 
 
