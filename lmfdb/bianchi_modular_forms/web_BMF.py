@@ -200,7 +200,7 @@ class WebBMF(object):
                 self.ec_status = 'missing'
 
         self.properties.append(('Sign', self.sign))
-        self.properties.append(('Analytic rank', prop_int_pretty(self.anrank)))
+        self.properties.append(('Analytic rank', self.anrank))
 
         self.friends = []
         self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]
