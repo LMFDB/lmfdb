@@ -1329,7 +1329,7 @@ class CMFSearchArray(SearchArray):
                      ('square', 'square'),
                      ('squarefree', 'squarefree')
                      ],
-            min_width=115)
+            min_width=110)
         level = TextBoxWithSelect(
             name='level',
             label='Level',
@@ -1364,7 +1364,8 @@ class CMFSearchArray(SearchArray):
             select_box=character_quantifier)
 
         prime_quantifier = SubsetBox(
-            name="prime_quantifier")
+            name="prime_quantifier",
+            min_width=110)
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1389,7 +1390,7 @@ class CMFSearchArray(SearchArray):
         dim_quantifier = SelectBox(
             name='dim_type',
             options=[('', 'absolute'), ('rel', 'relative')],
-            min_width=90)
+            min_width=110)
 
         dim = TextBoxWithSelect(
             name='dim',
