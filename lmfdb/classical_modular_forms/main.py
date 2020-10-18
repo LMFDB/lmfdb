@@ -62,7 +62,7 @@ def credit():
     """
     Return the credit string
     """
-    return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
 
 @cached_function
