@@ -236,7 +236,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
+    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass coefficients)\n'
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here

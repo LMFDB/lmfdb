@@ -45,7 +45,7 @@ table td.params {
     <td class="center">
       {{ curve.field_knowl|safe }}
     </td>
-    <td class="center">{{curve.conductor_norm}}</td>
+    <td class="center">${{curve.conductor_norm}}$</td>
     <td class="center">{{curve.conductor_label}}</td>
     <td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
     <td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>

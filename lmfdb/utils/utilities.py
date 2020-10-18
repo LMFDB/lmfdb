@@ -112,7 +112,7 @@ def prop_int_pretty(n):
     This function should be called whenever displaying an integer in the
     properties table so that we can keep the formatting consistent
     """
-    if abs(n) >= 10**10:
+    if abs(n) >= 10**12:
         e = floor(log(abs(n),10))
         return r'$%.3f\times 10^{%d}$' % (n/10**e, e)
     else:

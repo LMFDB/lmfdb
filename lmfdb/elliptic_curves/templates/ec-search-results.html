@@ -28,7 +28,7 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
-  <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
+  <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
@@ -45,9 +45,9 @@ table td.params {
 <td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.label}}</a></td>
 <td class="center"><a href="{{info.iso_url_LMFDB(curve)}}">{{curve.lmfdb_iso}}</a></td>
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
-<td class="params">{{info.curve_ainvs(curve)}}</td>
-<td class="center">{{curve.rank}}</td>
-<td class="center">{{curve.torsion_structure}}</td>
+<td class="params">${{info.curve_ainvs(curve)}}$</td>
+<td class="center">${{curve.rank}}$</td>
+<td class="center">{% if curve.torsion_sturcutre == "[]" %}trivial{%else}${{curve.torsion_structure}}${% endif %}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
 {% endif %}
