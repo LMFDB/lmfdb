@@ -4,7 +4,7 @@ import os
 import yaml
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot, coeff_to_poly
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, prop_int_pretty
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
@@ -392,11 +392,11 @@ class WebEC(object):
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.label if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
-                           ('Conductor', '%s' % data['conductor']),
-                           ('Discriminant', '%s' % data['disc']),
+                           ('Conductor', prop_int_pretty(data['conductor'])),
+                           ('Discriminant', prop_int_pretty(data['disc']),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', '%s' % self.mw['rank']),
+                           ('Rank', prop_int_pretty(self.mw['rank'])),
                            ('Torsion structure', r'\(%s\)' % self.mw['tor_struct'])
                            ]
 
