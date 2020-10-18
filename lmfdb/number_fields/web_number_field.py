@@ -395,6 +395,10 @@ class WebNumberField:
             return None
         return self.label
 
+    def label_pretty(self):
+        from .main import nf_label_pretty
+        return nf_label_pretty(self.label)
+
     def field_pretty(self):
         return field_pretty(self.get_label())
 
