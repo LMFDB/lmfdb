@@ -436,7 +436,7 @@ class ParityMod(SelectBox):
 
 
 class SubsetBox(SelectBox):
-    _default_width = 80
+    _default_width = 100
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
