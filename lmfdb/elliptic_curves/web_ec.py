@@ -397,7 +397,7 @@ class WebEC(object):
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
                            ('Rank', prop_int_pretty(self.mw['rank'])),
-                           ('Torsion structure', r'\(%s\)' % self.mw['tor_struct']),
+                           ('Torsion structure', (r'\(%s\)' % self.mw['tor_struct']) if self.mw['tor_struct'] else 'trivial'),
                            ]
 
         if self.label_type == 'Cremona':
@@ -429,7 +429,7 @@ class WebEC(object):
         mw['tor_order'] = self.torsion
         tor_struct = [int(c) for c in self.torsion_structure]
         if mw['tor_order'] == 1:
-            mw['tor_struct'] = r'\mathrm{trivial}'
+            mw['tor_struct'] = ''
             mw['tor_gens'] = ''
         else:
             mw['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in tor_struct])
