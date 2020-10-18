@@ -21,9 +21,9 @@ contains other conventions and information for the development process.
 
 ## Browse and search
 
+- Each browse page should have a short summary at the top followed by sections labelled "Browse", "Search", "Find", in that order.
 - Colons should not follow captions on browse/search pages.
-- Jump box captions should have the form "Find a specific blah, or blah by blah" should have knowls on the blahs, the input box should be on the line below (no caption in front), and the button should say "Find".
-- Search heading on main browse page should simply be "Search".
+- Captions should have knowls attached to them.
 - Abbreviated column headings should omit the period.
 - Input boxes should have standard widths (very long boxes, e.g. geometric invariants, may span the entire width),
 - Option boxes should use standard captions in lower case (e.g. include/exclude/exactly or yes/no).
@@ -48,8 +48,9 @@ contains other conventions and information for the development process.
 
 - Captions in the property box should be sentence case (like all captions) with no colon.
 - The first line of the properties box should be the label (if one exists) followed by a portrait (if available), followed by up to 8 standard invariants or properties of the object that can be displayed in a compact form (the properties box should never scroll).
-- Properties that are words (e.g yes/no, even/odd) or numbers (e.g. 42 or 1.2345), as well as labels, should be listed in standard font and not in math mode.
-- Integers in properties box should not be shown in factored form (when relevant the factorization should be in the body of the page).
+- Property values that are words (e.g yes/no, even/odd, Trivial) and labels should be shown in standard font not in math mode in lower case
+- Mathematical values including integers should be in math mode.
+- Integers in properties box should not be shown in factored form (the relevant the factorization should be in the body of the page) and should be shown in scientific notation if they are too large to fit (use prop_int_pretty)
 
 ## Related objects box
 

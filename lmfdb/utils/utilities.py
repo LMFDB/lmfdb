@@ -330,6 +330,9 @@ def to_dict(args, exclude = [], **kwds):
     """
     d = dict(kwds)
     for key, values in args.items():
+        # do not overwrite keys passed as input
+        if key in d:
+            continue
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]

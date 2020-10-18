@@ -40,9 +40,9 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
 
 class WebBMF(object):
     """
-    Class for an Bianchi Newform
+    Class for a Bianchi Newform
     """
-    def __init__(self, dbdata):
+    def __init__(self, dbdata, max_eigs=50):
         """Arguments:
 
             - dbdata: the data from the database
@@ -54,23 +54,23 @@ class WebBMF(object):
         logger.debug("Constructing an instance of WebBMF class from database")
         self.__dict__.update(dbdata)
         # All other fields are handled here
-        self.make_form()
+        self.make_form(max_eigs)
 
     @staticmethod
-    def by_label(label):
+    def by_label(label, max_eigs=50):
         """
-        Searches for a specific Hilbert newform in the forms
+        Searches for a specific Bianchi newform in the forms
         collection by its label.
         """
         data = db.bmf_forms.lookup(label)
 
         if data:
-            return WebBMF(data)
+            return WebBMF(data, max_eigs)
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 
 
-    def make_form(self):
+    def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
@@ -88,6 +88,9 @@ class WebBMF(object):
         self.newspace_url = url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label)
         K = self.field.K()
 
+        # 'hecke_poly_obj' is the non-LaTeX version of hecke_poly
+        self.hecke_poly_obj = self.hecke_poly
+
         if self.dimension>1:
             Qx = PolynomialRing(QQ,'x')
             self.hecke_poly = Qx(str(self.hecke_poly))
@@ -100,12 +103,12 @@ class WebBMF(object):
                     return F(str(ap))
             self.hecke_eigs = [conv(str(ap)) for ap in self.hecke_eigs]
 
-        level = ideal_from_label(K,self.level_label)
-        self.level_ideal2 = web_latex(level)
-        badp = level.prime_factors()
+        self.level = ideal_from_label(K,self.level_label)
+        self.level_ideal2 = web_latex(self.level)
+        badp = self.level.prime_factors()
 
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(50, self.nap)
+        self.nap0 = min(nap0, self.nap)
         self.neigs = self.nap0 + len(badp)
         self.hecke_table = [[web_latex(p.norm()),
                              ideal_label(p),
@@ -117,8 +120,10 @@ class WebBMF(object):
                              ideal_label(p),
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
+            # The following helps to create Sage download data
+            self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        
+
         try:
             if self.sfe == 1:
                 self.sign = "+1"
