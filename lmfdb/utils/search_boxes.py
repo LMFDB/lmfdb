@@ -88,7 +88,6 @@ class SearchBox(TdElt):
     Class abstracting the input boxes used for LMFDB searches.
     """
     _default_width = 160
-    _min_width = 0
 
     def __init__(
         self,
@@ -127,8 +126,6 @@ class SearchBox(TdElt):
         self.qfield = name if qfield is None else qfield
         if width is None:
             width = self._default_width
-            if width < self._min_width:
-                width = self._min_width
         self.width = width
         self.short_width = self.width if short_width is None else short_width
 
@@ -255,7 +252,8 @@ class SelectBox(SearchBox):
     - ``qfield`` -- the corresponding database column (defaults to name).  Not currently used.
     """
     _options = []
-    _default_width = 170
+    _default_width = 160
+    _default_min_width = 80
 
     def __init__(
         self,
@@ -269,6 +267,7 @@ class SelectBox(SearchBox):
         colspan=(1, 1, 1),
         rowspan=(1, 1),
         width=None,
+        min_width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -299,6 +298,9 @@ class SelectBox(SearchBox):
             options = self._options
         self.options = options
         self.extra = extra
+        if min_width is None:
+            min_width = self._default_min_width
+        self.min_width = min_width
 
     def _input(self, info):
         keys = self.extra + ['name="%s"' % self.name]
@@ -376,9 +378,7 @@ class SkipBox(TextBox):
 class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
-        if self.select_box.width is None:
-            self.select_box._width = self.select_box._min_width
-        print(self.select_box.width)
+        self.select_box.width = self.select_box.min_width
         TextBox.__init__(self, name, label, **kwds)
 
     def label_html(self, info=None):
@@ -409,7 +409,6 @@ class DoubleSelectBox(SearchBox):
         )
 
 class ExcludeOnlyBox(SelectBox):
-    _min_width = 85
     _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
@@ -420,7 +419,6 @@ class YesNoBox(SelectBox):
                 ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
-    _min_width = 85
     _options = [("", ""),
                 ("yes", "yes"),
                 ("not_no", "yes or unknown"),
@@ -434,7 +432,6 @@ class ParityBox(SelectBox):
                 ('odd', 'odd')]
 
 class ParityMod(SelectBox):
-    _min_width = 85
     # For modifying a text box
     _options = [('', 'any parity'),
                 ('even', 'even only'),
@@ -442,14 +439,12 @@ class ParityMod(SelectBox):
 
 
 class SubsetBox(SelectBox):
-    _min_width = 85
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
 class SubsetNoExcludeBox(SelectBox):
-    _min_width = 85
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
@@ -494,6 +489,7 @@ class SearchButton(SearchBox):
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
         self.select_box = select_box
+        self.select_box.width = self.select_box.min_width
         SearchButton.__init__(self, value, description, **kwds)
 
     def label_html(self, info=None):
