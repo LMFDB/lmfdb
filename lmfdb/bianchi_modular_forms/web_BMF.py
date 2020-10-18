@@ -139,11 +139,11 @@ class WebBMF(object):
             self.Lratio = QQ(self.Lratio)
             self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
 
-        self.properties = [('Base field', pretty_field),
+        self.properties = [('Label', self.label),
+                            ('Base field', pretty_field),
                             ('Weight', prop_int_pretty(self.weight)),
                             ('Level norm', prop_int_pretty(self.level_norm)),
                             ('Level', self.level_ideal2),
-                            ('Label', self.label),
                             ('Dimension', prop_int_pretty(self.dimension))
         ]
 
