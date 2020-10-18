@@ -393,11 +393,11 @@ class WebEC(object):
         self.properties = [('Label', self.label if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
                            ('Conductor', prop_int_pretty(data['conductor'])),
-                           ('Discriminant', prop_int_pretty(data['disc']),
+                           ('Discriminant', prop_int_pretty(data['disc'])),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
                            ('Rank', prop_int_pretty(self.mw['rank'])),
-                           ('Torsion structure', r'\(%s\)' % self.mw['tor_struct'])
+                           ('Torsion structure', r'\(%s\)' % self.mw['tor_struct']),
                            ]
 
         if self.label_type == 'Cremona':
