@@ -511,6 +511,7 @@ class ArtinSearchArray(SearchArray):
         container = TextBox(
             name="container",
             label="Smallest permutation container",
+            short_label="Smallest permutation",
             knowl="artin.permutation_container",
             example="6T13",
             example_span="6T13 or 7T6")
@@ -519,6 +520,7 @@ class ArtinSearchArray(SearchArray):
         ramified = TextBoxWithSelect(
             name="ramified",
             label="Ramified primes",
+            short_label="Ramified",
             knowl="artin.ramified_primes",
             example="2, 3",
             select_box=ram_quantifier,
@@ -543,6 +545,7 @@ class ArtinSearchArray(SearchArray):
         fsind = TextBoxNoEg(
             name="frobenius_schur_indicator",
             label="Frobenius-Schur indicator",
+            short_label="Frobenius-Schur",
             knowl="artin.frobenius_schur_indicator",
             example="1",
             example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")

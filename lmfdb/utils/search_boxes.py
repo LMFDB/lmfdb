@@ -88,6 +88,7 @@ class SearchBox(TdElt):
     Class abstracting the input boxes used for LMFDB searches.
     """
     _default_width = 160
+    _min_width = 0
 
     def __init__(
         self,
@@ -126,6 +127,8 @@ class SearchBox(TdElt):
         self.qfield = name if qfield is None else qfield
         if width is None:
             width = self._default_width
+            if width < self._min_width:
+                width = self._min_width
         self.width = width
         self.short_width = self.width if short_width is None else short_width
 
@@ -403,7 +406,7 @@ class DoubleSelectBox(SearchBox):
         )
 
 class ExcludeOnlyBox(SelectBox):
-    _default_width = 80
+    _min_width = 85
     _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
@@ -414,7 +417,7 @@ class YesNoBox(SelectBox):
                 ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
-    _default_width = 85
+    _min_width = 85
     _options = [("", ""),
                 ("yes", "yes"),
                 ("not_no", "yes or unknown"),
@@ -428,7 +431,7 @@ class ParityBox(SelectBox):
                 ('odd', 'odd')]
 
 class ParityMod(SelectBox):
-    _default_width = 85
+    _min_width = 85
     # For modifying a text box
     _options = [('', 'any parity'),
                 ('even', 'even only'),
@@ -436,14 +439,14 @@ class ParityMod(SelectBox):
 
 
 class SubsetBox(SelectBox):
-    _default_width = 80
+    _min_width = 85
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
 class SubsetNoExcludeBox(SelectBox):
-    _default_width = 80
+    _min_width = 85
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
