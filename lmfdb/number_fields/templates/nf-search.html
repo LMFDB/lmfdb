@@ -27,7 +27,7 @@
 {% for field in info.results: %}
 {% set wnf = info.wnf(field) %}
 <tr>
-<td align='left'><a href="/NumberField/{{field.label}}">{{wnf.pretty_label()}}</a></td>
+<td align='left'><a href="/NumberField/{{field.label}}">{{wnf.label_pretty()}}</a></td>
 <td>{{ wnf.web_poly() | safe }}</td>
 <td>\( {{ wnf.disc_factored_latex() }} \)</td>
 <td>{{ wnf.galois_string() }}</td>
