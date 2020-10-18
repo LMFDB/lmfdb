@@ -126,9 +126,9 @@ class WebBMF(object):
 
         try:
             if self.sfe == 1:
-                self.sign = "+1"
+                self.sign = "$+1$"
             elif self.sfe == -1:
-                self.sign = "-1"
+                self.sign = "$-1$"
         except AttributeError:
             self.sfe = '?'
 
@@ -199,7 +199,7 @@ class WebBMF(object):
             else:
                 self.ec_status = 'missing'
 
-        self.properties.append(('Sign', prop_int_pretty(self.sign)))
+        self.properties.append(('Sign', self.sign))
         self.properties.append(('Analytic rank', prop_int_pretty(self.anrank)))
 
         self.friends = []
