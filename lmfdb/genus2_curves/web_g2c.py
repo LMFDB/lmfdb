@@ -2,7 +2,7 @@
 
 from ast import literal_eval
 from lmfdb import db
-from lmfdb.utils import (key_for_numerically_sort, encode_plot,
+from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
                          display_knowl, web_latex_factored_integer)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
@@ -817,8 +817,8 @@ class WebG2C(object):
 
             properties += [
                 (None, plot_link),
-                ('Conductor',str(data['cond'])),
-                ('Discriminant', str(data['disc'])),
+                ('Conductor', prop_int_pretty(data['cond'])),
+                ('Discriminant', prop_int_pretty(data['disc'])),
                 ]
             if data['mw_rank_proved']:
                 properties += [('Mordell-Weil group', data['mw_group'])]

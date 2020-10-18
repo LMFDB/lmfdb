@@ -125,7 +125,7 @@ given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
             </div>
           </td>
           {% endfor %}
-        <td>$\cdots$</td>
+          {% if line[1]|length > 0 %}<td>$\cdots$</td>{% endif %}
         </tr>
         {% endfor %}
       </tbody>
