@@ -4,7 +4,7 @@ from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
-from lmfdb.utils import web_latex, names_and_urls
+from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
@@ -200,7 +200,7 @@ class WebBMF(object):
                 self.ec_status = 'missing'
 
         self.properties.append(('Sign', prop_int_pretty(self.sign)))
-        self.properties.append(('Analytic rank', prop_int_pretty(self.anrank))
+        self.properties.append(('Analytic rank', prop_int_pretty(self.anrank)))
 
         self.friends = []
         self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]
