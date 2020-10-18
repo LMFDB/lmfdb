@@ -695,8 +695,9 @@ def render_family(args):
         smallgroup="[" + str(gn) + "," +str(gt) + "]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
-             ('Quotient genus', r'\(%d\)' % g0),
+            ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -819,6 +820,7 @@ def render_passport(args):
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
             ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),

@@ -30,7 +30,7 @@
   <td> {%-for f in data.bc_forms %} {%-if f.exists  %}
     {%-if loop.index > 1 %},{%-endif %} <a href={{f.url}}>{{f.label}}</a>
     {% endif %} {% endfor %}</tr>
-<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> <td>(dimension {{ data.newspace_dimension }}) </tr>
+<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
 <tr><td> {{ KNOWL('mf.bianchi.sign',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:<td> {{data.anrank}} </tr>
 {% if data.Lratio %}
