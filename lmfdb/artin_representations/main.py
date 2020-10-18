@@ -500,9 +500,9 @@ class ArtinSearchArray(SearchArray):
             label="Group",
             knowl="artin.gg_quotient",
             example="A5",
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="%s, e.g. [8,3] or [16,7];%s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("nf.galois_group.name", "group names"),
                 display_knowl("gg.label", "transitive group labels")))
         parity = ParityBox(
             name="parity",
@@ -531,7 +531,7 @@ class ArtinSearchArray(SearchArray):
             example_span="5, 7, 13 (no range allowed)")
         num_ram = TextBox(
             name="num_ram",
-            label="Num. ramified primes",
+            label="Ramified prime count",
             knowl="artin.ramified_primes",
             example="1")
         root_number = TextBoxNoEg(

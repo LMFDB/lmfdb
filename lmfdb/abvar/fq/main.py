@@ -183,7 +183,7 @@ class AbvarSearchArray(SearchArray):
     jump_knowl = "av.fq.search_input"
     jump_prompt = "Label or polynomial"
     def __init__(self):
-        qshort = display_knowl("ag.base_field", "Base field")
+        qshort = display_knowl("ag.base_field", "base field")
         q = TextBox(
             "q",
             label="Cardinality of the %s" % (qshort),
@@ -285,7 +285,7 @@ class AbvarSearchArray(SearchArray):
             short_label=display_knowl("nf.galois_group", "Galois group"),
             example="4T3",
             example_span="C4, or 8T12, a list of "
-            + display_knowl("nf.galois_group.name", "group labels"),
+            + display_knowl("nf.galois_group.name", "group names"),
             colspan=(1, 3, 1),
             width=3*190 - 30,
             short_width=160,
@@ -319,7 +319,7 @@ class AbvarSearchArray(SearchArray):
         )
         hyp_cnt = TextBox(
             "hyp_cnt",
-            label="Number of Hyperelliptic Jacobians",
+            label="Number of hyperelliptic Jacobians",
             knowl="av.hyperelliptic_count",
             example="6",
             example_col=False,
