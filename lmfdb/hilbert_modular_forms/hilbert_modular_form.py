@@ -493,7 +493,7 @@ def render_hmf_webpage(**args):
         info['q_expansions'] = data['q_expansions']
 
     properties = [('Base field', '%s' % info['field'].field_pretty()),
-                   ('Weight', prop_int_pretty(data['weight'])),
+                   ('Weight', '$%s$' % data['weight']),
                    ('Level norm', prop_int_pretty(ata['level_norm'])),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
                    ('Label', '%s' % data['label']),
