@@ -376,6 +376,7 @@ class SkipBox(TextBox):
 class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
+        self.select_box._default_width = self.select_box._min_width
         TextBox.__init__(self, name, label, **kwds)
 
     def label_html(self, info=None):
@@ -384,7 +385,7 @@ class TextBoxWithSelect(TextBox):
             self.td(colspan)
             + '<div style="display: flex; justify-content: space-between;">'
             + self._label(info)
-            + '<span style="margin-left: 5px;"></span>'
+            + '<span style="margin-left: 10px;"></span>'
             + self.select_box._input(info)
             + "</div>"
             + "</td>"
