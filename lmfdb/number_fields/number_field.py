@@ -1016,9 +1016,9 @@ class NFSearchArray(SearchArray):
             knowl="nf.galois_group",
             example="C5",
             example_span_colspan=4,
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="%s, e.g. [8,3] or [16,7]; %s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("nf.galois_group.name", "group names"),
                 display_knowl("gg.label", "transitive group labels")))
         regulator = TextBox(
             name="regulator",
@@ -1039,14 +1039,14 @@ class NFSearchArray(SearchArray):
             example_span="[ ], [3], or [2,4]")
         num_ram = TextBox(
             name="num_ram",
-            label="Number of ramified primes",
+            label="Ramified prime count",
             knowl="nf.ramified_primes",
             example=2)
         ram_quantifier = SubsetNoExcludeBox(
             name="ram_quantifier")
         ram_primes = TextBoxWithSelect(
             name="ram_primes",
-            label="Ram. primes",
+            label="Ramified $p$",
             knowl="nf.ramified_primes",
             example="2,3",
             select_box=ram_quantifier)

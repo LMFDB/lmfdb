@@ -403,6 +403,7 @@ class DoubleSelectBox(SearchBox):
         )
 
 class ExcludeOnlyBox(SelectBox):
+    _default_width = 70
     _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
@@ -413,6 +414,7 @@ class YesNoBox(SelectBox):
                 ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
+    _default_width = 85
     _options = [("", ""),
                 ("yes", "yes"),
                 ("not_no", "yes or unknown"),
@@ -434,14 +436,14 @@ class ParityMod(SelectBox):
 
 
 class SubsetBox(SelectBox):
-    _default_width = 60
+    _default_width = 70
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
 class SubsetNoExcludeBox(SelectBox):
-    _default_width = 60
+    _default_width = 70
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
