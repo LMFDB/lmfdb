@@ -396,7 +396,7 @@ class WebNumberField:
         return self.label
 
     def label_pretty(self):
-        from .main import nf_label_pretty
+        from lmfdb.number_fields.number_field import nf_label_pretty
         return nf_label_pretty(self.label)
 
     def field_pretty(self):
