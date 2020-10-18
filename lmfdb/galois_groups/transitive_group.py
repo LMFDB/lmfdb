@@ -594,7 +594,7 @@ def group_display_inertia(code):
     if str(code[0]) == "t":
         return group_display_knowl(code[1][0], code[1][1])
     if code[1] == [1,1]:
-        return "Trivial"
+        return "trivial"
     ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 

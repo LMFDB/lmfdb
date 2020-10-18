@@ -766,7 +766,7 @@ class NumberFieldGaloisGroup(object):
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
             mygalstring = wnf.galois_string()
-            if re.search('Trivial', mygalstring) is not None:
+            if re.search('rivial', mygalstring) is not None:
                 return '$C_1$'
             # Have to remove dollar signs
             return mygalstring

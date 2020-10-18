@@ -341,7 +341,7 @@ class WebNewformSpace(object):
 
         if self.conrey_indexes[0] == 1:
             self.trivial_character = True
-            character_str = "Trivial character"
+            character_str = "trivial character"
             if self.dim == 0:
                 self.dim_str = r"\(%s\)"%(self.dim)
             else:

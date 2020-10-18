@@ -429,7 +429,7 @@ class WebEC(object):
         mw['tor_order'] = self.torsion
         tor_struct = [int(c) for c in self.torsion_structure]
         if mw['tor_order'] == 1:
-            mw['tor_struct'] = r'\mathrm{Trivial}'
+            mw['tor_struct'] = r'\mathrm{trivial}'
             mw['tor_gens'] = ''
         else:
             mw['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in tor_struct])

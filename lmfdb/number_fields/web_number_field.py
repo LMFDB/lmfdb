@@ -729,7 +729,7 @@ class WebNumberField:
             return na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'Trivial'
+            return 'trivial'
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
