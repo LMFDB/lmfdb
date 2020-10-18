@@ -316,7 +316,7 @@ class WebNewformSpace(object):
         self.properties +=[
             ('Level', prop_int_pretty(self.level)),
             ('Weight', prop_int_pretty(self.weight)),
-            ('Character orbit', self.char_orbit_label),
+            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
             ('Rep. character', '$%s$' % self.char_conrey_str),
             ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension', prop_int_pretty(self.dim)),
