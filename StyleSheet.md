@@ -42,13 +42,15 @@ contains other conventions and information for the development process.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
 - Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
+- Values that are words (e.g yes/no, even/odd, Trivial) should be in lower case using the default (sans serif) font
+- Mathematical values including integers should be displayed in math mode.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py).
 
 ## Properties box
 
 - Captions in the property box should be sentence case (like all captions) with no colon.
 - The first line of the properties box should be the label (if one exists) followed by a portrait (if available), followed by up to 8 standard invariants or properties of the object that can be displayed in a compact form (the properties box should never scroll).
-- Property values that are words (e.g yes/no, even/odd, Trivial) and labels should be shown in standard font not in math mode in lower case
+- Property values that are words (e.g yes/no, even/odd, Trivial) should be in lower case using the default (sans serif) font
 - Mathematical values including integers should be in math mode.
 - Integers in properties box should not be shown in factored form (the relevant the factorization should be in the body of the page) and should be shown in scientific notation if they are too large to fit (use prop_int_pretty)
 
