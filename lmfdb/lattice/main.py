@@ -12,7 +12,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, CountBox,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
-from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.interesting import interesting_knowls, prop_int_pretty
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.lattice_stats import Lattice_stats
