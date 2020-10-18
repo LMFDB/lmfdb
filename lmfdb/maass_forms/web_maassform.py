@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb import db
-from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer
+from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
 from lmfdb.backend.encoding import Json
 from flask import url_for, abort
 from sage.all import RR
@@ -86,13 +86,13 @@ class WebMaassForm(object):
     @property
     def properties(self):
         props = [(None, '<img src="{0}" width="200" height="150" style="margin:10px;"/>'.format(self.portrait))] if self.portrait is not None else []
-        props += [('Level', str(self.level)),
-                 ('Weight', str(self.weight)),
+        props += [('Level', prop_int_pretty(self.level)),
+                 ('Weight', prop_int_pretty(self.weight)),
                  ('Character', self.character_label),
                  ('Symmetry', self.symmetry_pretty),
                  ]
         if self.conrey_index == 1:
-            props.append(('Fricke sign', self.fricke_pretty))
+            props.append(('Fricke sign', prop_int_pretty(self.fricke_pretty)))
         return props
 
     @property
@@ -139,7 +139,7 @@ class WebMaassForm(object):
             return ""
         n = len(self.coefficients)
         assert rows > 0 and cols > 0
-        table = ['<table class="ntdata"><tr><th></th></tr>']
+        table = ['<table class="ntdata"><thead><tr><th></th></tr></thead><tbody>']
         if (rows-1)*cols >= n:
             rows = (n // cols) + (1 if (n%cols) else 0)
         for i in range(rows):
@@ -149,7 +149,7 @@ class WebMaassForm(object):
                     break
                 table.append(td_wrapr(r"\(a_{%d}=%+.9f\)"%(i*cols+j+1,self.coefficients[i*cols+j])))
             table.append('</tr>')
-        table.append('</table>')
+        table.append('</tbody></table>')
         if rows*cols < n:
             table.append('<p>Showing %d of %d available coefficients</p>' % (rows*cols,n))
         else:
