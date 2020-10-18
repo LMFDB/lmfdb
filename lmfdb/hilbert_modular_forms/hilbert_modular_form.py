@@ -494,7 +494,7 @@ def render_hmf_webpage(**args):
 
     properties = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '$%s$' % data['weight']),
-                   ('Level norm', prop_int_pretty(ata['level_norm'])),
+                   ('Level norm', prop_int_pretty(data['level_norm'])),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
                    ('Label', '%s' % data['label']),
                    ('Dimension', prop_int_pretty(data['dimension'])),
