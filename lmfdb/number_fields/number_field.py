@@ -1046,7 +1046,7 @@ class NFSearchArray(SearchArray):
             name="ram_quantifier")
         ram_primes = TextBoxWithSelect(
             name="ram_primes",
-            label="Ramified $p$",
+            label="Ramified",
             knowl="nf.ramified_primes",
             example="2,3",
             select_box=ram_quantifier)
