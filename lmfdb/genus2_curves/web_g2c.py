@@ -822,6 +822,8 @@ class WebG2C(object):
                 ]
             if data['mw_rank_proved']:
                 properties += [('Mordell-Weil group', data['mw_group'])]
+        else:
+            properties += [('Conductor', prop_int_pretty(data['cond']))]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
