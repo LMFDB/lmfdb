@@ -58,7 +58,7 @@ def parse_limit(arg):
 def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
     headers = list(range(1, limit))
-    headers.append("more")
+    headers.append(r"$\cdots$")
     entries = {}
     rows = list(range(a, b + 1))
     for row in rows:

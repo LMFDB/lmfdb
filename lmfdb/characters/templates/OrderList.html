@@ -86,7 +86,7 @@ $(function() {
     </thead>
 </table>
 <div>
-The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
+The table below displays the first several {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
 given {{ KNOWL('character.dirichlet.order', title="order") }}.
 </div>
 
@@ -104,7 +104,7 @@ given {{ KNOWL('character.dirichlet.order', title="order") }}.
     <tbody>
       {% for line in contents %}
       <tr class="{{ row_class.next() }}">
-        <th class="left" > {{ line[0] }}</th>
+        <th class="left" >${{ line[0] }}$</th>
         {% for chi in line[1] %}
         <td>
           <div>
@@ -124,6 +124,7 @@ given {{ KNOWL('character.dirichlet.order', title="order") }}.
             </div>
           </td>
           {% endfor %}
+        <td>$\cdots$</td>
         </tr>
         {% endfor %}
       </tbody>
