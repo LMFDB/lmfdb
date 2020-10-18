@@ -104,7 +104,7 @@ characters are grouped with respect to order and stacked integers indicate (comp
         </tr>
         <th class="left"></th>
         {% for h in headers %}
-        {% if h == "more" %}  <th class="weight">$\cdots$</th> {%else} <th class="weight">${{h}}$</th> {% endif %}
+        {% if h == "more" %}  <th class="weight">$\cdots$</th> {% else %} <th class="weight">${{h}}$</th> {% endif %}
         {% endfor %}
     </tr>
 </thead>
