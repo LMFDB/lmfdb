@@ -160,7 +160,6 @@ class WebDirichlet(WebCharObject):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = DirichletGroup_conrey(m)
-        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
@@ -421,7 +420,6 @@ class WebHecke(WebCharObject):
         #self.number = lmfdb_label2hecke(self.numlabel)
         # make this canonical
         self.modlabel = self.ideal2label(self._modulus)
-        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
         self.parity = None
         logger.debug('###### WebHeckeComputed')
@@ -545,7 +543,7 @@ class WebHecke(WebCharObject):
 
 class WebCharFamily(WebCharObject):
     """ compute first groups """
-    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'code', 'headers', 'contents' ]
     headers = [ 'modulus', 'order', 'structure', 'first characters' ]
 
@@ -594,7 +592,7 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     headers = [ 'order', 'primitive']
-    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
@@ -678,7 +676,7 @@ class WebChar(WebCharObject):
     """
     Class for presenting a character on a web page
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -897,7 +895,6 @@ class WebDBDirichlet(WebDirichlet):
             self.H = DirichletGroup_conrey(self.modulus)
             self.chi = self.H[self.number]
         self.maxcols = 30
-        self.credit = ''
         self.codelangs = ('pari', 'sage')
         self._compute()
 
@@ -1123,7 +1120,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     A class using data stored in the database. Currently, this is all Dirichlet
     characters with modulus up to 10000.
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -1274,7 +1271,6 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = Integers(m).unit_group()
-        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1300,7 +1296,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         self.modulus = int(self.modlabel)
         self.number = int(self.numlabel)
         self.chi = ConreyCharacter(self.modulus, self.number)
-        self.credit = ''
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1423,7 +1418,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     """
     remove all computations for large moduli
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -1484,7 +1479,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
 
-    _keys = [ 'title', 'credit', 'headers', 'contents' ]
+    _keys = [ 'title', 'headers', 'contents' ]
     headers = ['label','signature', 'polynomial' ]
 
     def __init__(self, **args):
@@ -1500,7 +1495,6 @@ class WebHeckeExamples(WebHecke):
                      #'4.4.2403.1',
                      #'4.2.283.1',
                      ]
-        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1530,7 +1524,6 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
-        self.credit = 'Pari, SageMath'
         self.codelangs = ('pari', 'sage')
 
     def first_moduli(self, bound=200):

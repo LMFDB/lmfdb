@@ -19,9 +19,7 @@ from lmfdb.characters.web_character import (
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
 )
-from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
-from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
@@ -53,7 +51,7 @@ def learn(current = None):
     return r
 
 def credit():
-    return "Dirichlet character data computed by Alex Best, David Lowry-Duda, and Andrew Sutherland"
+    return "Alex Best, Jonathan Boboer, David Lowry-Duda, and Andrew Sutherland"
 
 ###############################################################################
 #   Route functions
@@ -279,7 +277,7 @@ def render_DirichletNavigation():
             return render_template("OrderList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
-        return render_template('CharacterNavigate.html', title='Dirichlet characters')
+        return render_template('CharacterNavigate.html', title='Dirichlet characters', bread=bread(), learnmore=learn(), credit=credit())
 
     if request.args:
         # hidden_search_type for prev/next buttons
@@ -380,6 +378,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
         info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
+        info['credit'] = credit()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
         if 'gens' in info:
@@ -401,6 +400,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
          ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ])
     info['learnmore'] = learn()
+    info['credit'] = credit()
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
@@ -502,77 +502,6 @@ def dc_calc(calc, modulus, number):
         return "<span style='color:gray;'>%s</span>" % e
     except Exception:
         return "<span style='color:red;'>Error: bad input</span>"
-
-@characters_page.route("/Hecke/")
-@characters_page.route("/Hecke/<number_field>")
-@characters_page.route("/Hecke/<number_field>/<modulus>")
-@characters_page.route("/Hecke/<number_field>/<modulus>/<number>")
-def render_Heckewebpage(number_field=None, modulus=None, number=None):
-    #args = request.args
-    #temp_args = to_dict(args)
-
-    args = {}
-    args['type'] = 'Hecke'
-    args['number_field'] = number_field
-    args['modulus'] = modulus
-    args['number'] = number
-
-    if number_field is None:
-        info = WebHeckeExamples(**args).to_dict()
-        return render_template('Hecke.html', **info)
-    else:
-        WNF = WebNumberField(number_field)
-        if WNF.is_null():
-            return abort(404, "Number field %s not found." % number_field)
-
-    if modulus is None:
-        try:
-            info = WebHeckeFamily(**args).to_dict()
-        except (ValueError,KeyError,TypeError) as err:
-            return abort(404, err.args)
-        return render_template('CharFamily.html', **info)
-    elif number is None:
-        try:
-            info = WebHeckeGroup(**args).to_dict()
-        except (ValueError,KeyError,TypeError):
-            # Typical failure case is a GP error inside bnrinit which we don't really want to display
-            return abort(404, 'Unable to construct modulus %s for number field %s' % (modulus, number_field))
-        m = info['modlabel']
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Hecke', url_for(".render_Heckewebpage")),
-                         ('Number field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('%s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('CharGroup.html', **info)
-    else:
-        try:
-            X = WebHeckeCharacter(**args)
-        except (ValueError,KeyError,TypeError):
-            return abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.' % (number,modulus,number_field))
-        info = X.to_dict()
-        info['bread'] = [('Characters',url_for(".render_characterNavigation")),
-                         ('Hecke',  url_for(".render_Heckewebpage")),
-                         ('Number field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=X.modlabel)),
-                         ('%s'%X.number2label(X.number), '')]
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('Character.html', **info)
-
-@characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
-def hc_calc(calc, number_field, modulus, number):
-    val = request.args.get("val", [])
-    args = {'type':'Hecke', 'number_field':number_field, 'modulus':modulus, 'number':number}
-    if not val:
-        return abort(404)
-    try:
-        if calc == 'value':
-            return WebHeckeCharacter(**args).value(val)
-        else:
-            return abort(404)
-    except Exception as e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e
 
 ###############################################################################
 ##  TODO: refactor the following
