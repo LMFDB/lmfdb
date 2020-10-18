@@ -20,7 +20,7 @@ from lmfdb.characters.web_character import (
         WebDBDirichletGroup,
 )
 from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
-from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
+from lmfdb.characters.ListCharacters importcharacter_modulus, get_character_conductor, get_character_order
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
@@ -32,6 +32,13 @@ def ctx_characters():
     chardata = {}
     chardata['url_character'] = url_character
     return chardata
+
+def bread(tail=[]):
+    base = [('Characters',url_for(".render_characterNavigation")),
+            ('Dirichlet', url_for(".render_DirichletNavigation"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 def learn(current = None):
     r = []
@@ -45,13 +52,8 @@ def learn(current = None):
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     return r
 
-dirich_credit = "" # TODO should anyone be credited?
-def get_bread(tail=[]):
-    base = [('Characters',url_for(".render_characterNavigation")),
-            ('Dirichlet', url_for(".render_DirichletNavigation"))]
-    if not isinstance(tail, list):
-        tail = [(tail, " ")]
-    return base + tail
+def credit():
+    return "Dirichlet character data computed by Alex Best, David Lowry-Duda, and Andrew Sutherland"
 
 ###############################################################################
 #   Route functions
@@ -197,8 +199,8 @@ def url_for_label(label):
     shortcuts={ "jump": jump },
     url_for_label=url_for_label,
     learnmore=learnmore_list,
-    bread=lambda: get_bread("Search results"),
-    credit=lambda: dirich_credit,
+    bread=lambda: bread("Search results"),
+    credit=credit,
 )
 def dirichlet_character_search(info, query):
     common_parse(info, query)
@@ -236,6 +238,7 @@ def label_to_number(modulus, number, all=False):
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
+    common = {'bread': bread(), 'learnmore': learn(), 'credit': credit() }
     try:
         if 'modbrowse' in request.args:
             arg = request.args['modbrowse']
@@ -243,8 +246,7 @@ def render_DirichletNavigation():
             modulus_start = int(arg[0])
             modulus_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
-            info['learnmore'] = learn()
+            info.update(common)
             info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
             info['credit'] = 'Sage'
             h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
@@ -260,8 +262,7 @@ def render_DirichletNavigation():
             conductor_start = int(arg[0])
             conductor_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
-            info['learnmore'] = learn()
+            info.update(common)
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
             info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
@@ -275,8 +276,7 @@ def render_DirichletNavigation():
             order_start = int(arg[0])
             order_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
-            info['learnmore'] = learn()
+            info.update(common)
             info['order_start'] = order_start
             info['order_end'] = order_end
             info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
@@ -295,6 +295,7 @@ def render_DirichletNavigation():
             return dirichlet_character_search(info)
         assert False
     info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
+    info.update(common)
     info['title'] = 'Dirichlet characters'
     return render_template('CharacterNavigate.html', info=info,**info)
 
@@ -303,7 +304,7 @@ def render_DirichletNavigation():
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet character labels'
-    info['bread'] = get_bread('Labels')
+    info['bread'] = bread('Labels')
     info['learnmore'] = learn('labels')
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
@@ -311,7 +312,7 @@ def labels_page():
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet character data'
-    info['bread'] = get_bread('Source')
+    info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
@@ -319,7 +320,7 @@ def how_computed_page():
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet character data'
-    info['bread'] = get_bread('Reliability')
+    info['bread'] = bread('Reliability')
     info['learnmore'] = learn('reliability')
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
@@ -327,7 +328,7 @@ def reliability():
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet character data'
-    info['bread'] = get_bread('Extent')
+    info['bread'] = bread('Extent')
     info['learnmore'] = learn('extent')
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
@@ -377,7 +378,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-        info['bread'] = get_bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
+        info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -396,7 +397,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
-    info['bread'] = get_bread(
+    info['bread'] = bread(
         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
          ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ])
     info['learnmore'] = learn()
@@ -471,14 +472,14 @@ def interesting():
         db.char_dir_values,
         url_for_label=url_for_label,
         title="Some interesting Dirichlet characters",
-        bread=get_bread("Interesting"),
+        bread=bread("Interesting"),
         credit="SageMath",
         learnmore=learn())
 
 @characters_page.route('/Dirichlet/stats')
 def statistics():
     title = "Dirichlet characters: statistics"
-    bread = get_bread("Statistics")
+    bread = bread("Statistics")
     return render_template("display_stats.html", info=DirichStats(), credit="SageMath", title=title, bread=bread, learnmore=learn())
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
@@ -592,7 +593,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = get_bread('Table')
+    info['bread'] = bread('Table')
     info['credit'] = 'SageMath'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
