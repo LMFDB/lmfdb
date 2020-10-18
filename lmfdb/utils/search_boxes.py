@@ -379,6 +379,7 @@ class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
         self.select_box.width = self.select_box.min_width
+        self.select_box.short_width = self.select_box.min_width
         TextBox.__init__(self, name, label, **kwds)
 
     def label_html(self, info=None):
