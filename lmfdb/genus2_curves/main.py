@@ -520,7 +520,7 @@ class G2CSearchArray(SearchArray):
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
-            width=115,
+            min_width=115,
             options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
         )
 
