@@ -1388,7 +1388,7 @@ class CMFSearchArray(SearchArray):
 
         dim_quantifier = SelectBox(
             name='dim_type',
-            options=[('', 'absolute'), ('rel', 'relative')])
+            options=[('', 'absolute'), ('rel', 'relative')],
             min_width=90)
 
         dim = TextBoxWithSelect(
