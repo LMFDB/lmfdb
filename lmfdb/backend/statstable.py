@@ -1551,9 +1551,9 @@ ORDER BY v.ord LIMIT %s"""
                             else:
                                 raise ValueError("Unsupported constraint key: %s" % k)
                             selecter_constraints.append(SQL(
-                                "(values->{0}?%s AND (values->{0}->>%s)::{1} {3} %s) OR "
+                                "((values->{0}?%s AND (values->{0}->>%s)::{1} {3} %s) OR "
                                 "(values->{0}?%s AND (values->{0}->>%s)::{1} {2} %s) OR "
-                                "(jsonb_typeof(values->{0}) = %s AND (values->>{0})::{1} {2} %s)".format(
+                                "(jsonb_typeof(values->{0}) = %s AND (values->>{0})::{1} {2} %s))".format(
                                     i, typ, op, oe)))
                             selecter_values.extend([k, k, v, ko, ko, v, "number", v])
                     else:
