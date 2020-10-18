@@ -9,7 +9,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, TextBox, CountBox, prop_int_pretty
+    SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
