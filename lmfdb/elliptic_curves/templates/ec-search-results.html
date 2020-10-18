@@ -47,7 +47,7 @@ table td.params {
 <td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
 <td class="params">${{info.curve_ainvs(curve)}}$</td>
 <td class="center">${{curve.rank}}$</td>
-<td class="center">{% if curve.torsion_structure == "[]" %}trivial{% else %}{{curve.torsion_structure|length}}{% endif %}</td>
+<td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
 <td class="center">{{curve.nonmax_primes}}</td>
 {% endif %}
