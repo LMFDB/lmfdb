@@ -407,7 +407,7 @@ class AbvarFq_isoclass(object):
                     bc = av_display_knowl(twist[1])
                 else:
                     bc = "(not in LMFDB)"
-                ans += "<tr><td>%s</td><td style="center">$%s$</td><td>%s</td></tr>\n" % (av_display_knowl(twist[0]), str(twist[2]), bc)
+                ans += "<tr><td>%s</td><td style='center'>$%s$</td><td>%s</td></tr>\n" % (av_display_knowl(twist[0]), str(twist[2]), bc)
                 i += 1
         ans += "</tbody></table>\n"
         return ans
