@@ -7,6 +7,12 @@
         <tr><td>{{ KNOWL('artin.dimension', title='Dimension') }}: </td><td>${{ object.dimension() }}$</td></tr>
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}: </td><td>{{ object.pretty_galois_knowl() | safe }}</td></tr>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}: </td><td>{{ object.conductor_equation() | safe }}</td></tr>
+        {% if object.indicator() %}
+        <tr><td>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}: </td><td>${{ object.indicator()}}$</td></tr>
+        {% endif %}
+        {% if object.sign() %}
+        <tr><td>{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
+        {% endif %}
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>Splitting field of
                 {% if wnf %}
                 {{wnf.knowl()|safe}} defined by

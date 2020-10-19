@@ -14,7 +14,7 @@ import re
 # abbreviate labels with large conductors for display purposes
 def artin_label_pretty(label):
     s = label.split('.')
-    if len(s[1]) > 20:
+    if len(s[1]) > 12:
         s[1] = s[1][:3] + "..." + s[1][-3:]
     return '.'.join(s)
 
