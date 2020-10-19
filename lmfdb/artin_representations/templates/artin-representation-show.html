@@ -36,7 +36,7 @@
     </table>
      
     <h2>Defining polynomial</h2>
-    <table style="margin-left:10px;"><tr><td>$f(x)$</td><td>=</td><td>${{ object.number_field_galois_group().polynomial_latex()}}$.</td></tr></table>
+    <table style="margin-left:10px;"><tr><td>$f(x)$</td><td>$=$</td><td>${{ object.number_field_galois_group().polynomial_latex()}}$.</td></tr></table>
     {% if object.number_field_galois_group().computation_minimal_polynomial()|length > 2 %}
     <p>
     The roots of $f$ are computed in an extension of $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.

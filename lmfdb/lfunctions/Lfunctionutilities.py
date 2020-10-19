@@ -293,10 +293,10 @@ def lfuncEPtex(L, fmt):
         else:
             ans = r"\(" + L.texname + " = "
         if L.Ltype() == "riemann":
-            ans += r"\prod_p (1 - p^{-s})^{-1}"
+            ans += r"\displaystyle \prod_p (1 - p^{-s})^{-1}"
 
         elif L.Ltype() == "dirichlet":
-            ans += r"\prod_p (1- \chi(p) p^{-s})^{-1}"
+            ans += r"\displaystyle\prod_p (1- \chi(p) p^{-s})^{-1}"
 
         elif L.Ltype() == "classical modular form" and fmt == "arithmetic":
                 ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
@@ -305,13 +305,13 @@ def lfuncEPtex(L, fmt):
             #else:
             #    ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s/2})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s/2} + \chi(p)p^{-s})^{-1}"
         elif L.Ltype() == "hilbertmodularform":
-            ans += r"\prod_{\mathfrak{p}\ \mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \prod_{\mathfrak{p}\ \mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
+            ans += r"\displaystyle\prod_{\mathfrak{p}\ \mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \prod_{\mathfrak{p}\ \mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
 
         elif L.Ltype() == "maass":
             if L.group == 'GL2':
-                ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+                ans += r"\displaystyle\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
             elif L.group == 'GL3':
-                ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1}  \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+                ans += r"\displaystyle\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1}  \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
                 ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                     r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
@@ -321,13 +321,13 @@ def lfuncEPtex(L, fmt):
         elif L.langlands:
             if L.degree > 1:
                 if fmt == "arithmetic":
-                    ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                         r"} (1 - \alpha_{j,p}\,    p^{" + str(L.motivic_weight) + "/2 - s})^{-1}")
                 else:
-                    ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                         r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
             else:
-                ans += r"\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
+                ans += r"\displaystyle\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
 
 
         else:
@@ -344,7 +344,7 @@ def lfuncEPhtml(L, fmt):
 
     # Formula
     ans = r"\(L(s) = "  # r"\[L(A,s) = "
-    ans += r"\prod_{p} F_p(p^{-s})^{-1} \)"
+    ans += r"\displaystyle \prod_{p} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
     def unused():
