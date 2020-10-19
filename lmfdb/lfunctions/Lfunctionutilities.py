@@ -342,44 +342,44 @@ def lfuncEPhtml(L, fmt):
         Euler product as a formula and a table of local factors.
     """
 
-
     # Formula
-    texform_gen = r"\(\qquad L(s) = "  # r"\[L(A,s) = "
-    texform_gen += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
+    ans = r"\(\medspace L(s) = "  # r"\[L(A,s) = "
+    ans += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
-    if len(pfactors) == 0:
-        pgoodset = None
-        pbadset =  None
-    elif len(pfactors) == 1:  #i.e., the conductor is prime
-        pgoodset = r"$p \neq " + str(pfactors[0]) + "$"
-        pbadset = "$p = " + str(pfactors[0]) + "$"
-    else:
-        badset = r"\{" + str(pfactors[0])
-        for j in range(1,len(pfactors)):
-            badset += r",\;"
-            badset += str(pfactors[j])
-        badset += r"\}"
-        pgoodset = r"$p \notin " + badset + "$"
-        pbadset = r"$p \in " + badset + "$"
+    def unused():
+        if len(pfactors) == 0:
+            pgoodset = None
+            pbadset =  None
+        elif len(pfactors) == 1:  #i.e., the conductor is prime
+            pgoodset = r"$p \neq " + str(pfactors[0]) + "$"
+            pbadset = "$p = " + str(pfactors[0]) + "$"
+        else:
+            badset = r"\{" + str(pfactors[0])
+            for j in range(1,len(pfactors)):
+                badset += r",\;"
+                badset += str(pfactors[j])
+            badset += r"\}"
+            pgoodset = r"$p \notin " + badset + "$"
+            pbadset = r"$p \in " + badset + "$"
 
 
-    ans = ""
-    ans += texform_gen + "\n where"
-    if pgoodset is not None:
-        ans += ", for " + pgoodset
-    ans += ",\n"
-    if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
-        if L.degree == 4:
-            ans += r"\(F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \)\n"
-            ans += "with $b_p = a_p^2 - a_{p^2}$. "
-        elif L.degree == 2:
-            ans += r"\(F_p(T) = 1 - a_p T + p T^2 .\)\n"
-    else:
-        ans += r"\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
-    if pbadset is not None:
-        ans += "\nIf " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
-        ans += str(L.degree - 1) + ". "
+        ans = ""
+        ans += texform_gen + "<br>where"
+        if pgoodset is not None:
+            ans += ", for " + pgoodset
+        ans += ",<br>"
+        if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
+            if L.degree == 4:
+                ans += r"\(F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \)\n"
+                ans += "with $b_p = a_p^2 - a_{p^2}$. "
+            elif L.degree == 2:
+                ans += r"\(F_p(T) = 1 - a_p T + p T^2 .\)\n"
+        else:
+            ans += r"\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
+        if pbadset is not None:
+            ans += "\nIf " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
+            ans += str(L.degree - 1) + ". "
 
     # Figuring out good and bad primes
     bad_primes = [p for p, _ in L.bad_lfactors]
@@ -589,8 +589,7 @@ def lfuncFEtex(L, fmt):
 
         ans += munu_str(mu_list, r"\R")
         ans += munu_str(nu_list, r"\C")
-        #ans += texname + r"\cr"
-        #ans += r"=\mathstrut & "
+        ans += " = "
         if L.sign == 0:
             ans += r"\epsilon \cdot "
         else:

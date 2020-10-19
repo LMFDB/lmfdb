@@ -64,8 +64,8 @@
 
 <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
-<div id="functionalEqText" class="arithmetic">\[{{ functionalequation_arithmetic }}\]</div>
-<div id="functionalEqText" class="analytic nodisplay">\[{{ functionalequation }}\]</div>
+<div id="functionalEqText" class="arithmetic">{{ functionalequation_arithmetic }}</div>
+<div id="functionalEqText" class="analytic nodisplay">{{ functionalequation }}</div>
 {% else %}
 <div id="functionalEqText">{{ functionalequation }}</div>
 {% endif %}
