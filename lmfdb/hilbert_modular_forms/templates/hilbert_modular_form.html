@@ -12,17 +12,16 @@
 </p>
 
 
-  <h2>  Form  </h2>
+<h2>  Form  </h2>
 
 <p>
 <table>
 <tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}<td> ${{ info.weight }}$ </tr>
 <tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}<td> ${{ info.level_ideal }}$ </tr>
-<tr><td> Label<td> {{ info.label }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}<td> ${{ info.dimension }}$ </tr>
-<tr><td> Is {{ KNOWL('mf.cm', title='CM') }}<td> {{ info.is_CM }} </tr>
-<tr><td> Is {{ KNOWL('mf.base_change', title='base change') }}<td> {{ info.is_base_change }} </tr>
-<tr><td> Parent newspace dimension<td> ${{ info.newspace_dimension }}$ </tr>
+<tr><td> {{ KNOWL('mf.cm', title='CM') }}<td> {{ info.is_CM }} </tr>
+<tr><td> {{ KNOWL('mf.base_change', title='Base change') }}<td> {{ info.is_base_change }} </tr>
+<tr><td> Newspace dimension<td> ${{ info.newspace_dimension }}$ </tr>
 </table>
 </p>
 
@@ -94,11 +93,13 @@ div.scrollable {
 {% else %}
 <p>
 <table class="ntdata" cellpadding=5>
+<thead>
 <tr>
 <th>Norm</th>
 <th>Prime</th>
 <th>Eigenvalue</th>
 </tr>
+</thead><tbody>
 {% for entry in info.AL_eigs: %}
 <tr>
 <td>${{entry.prime_norm}}$</td>
@@ -106,6 +107,7 @@ div.scrollable {
 <td align=right>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 </p>
 {% endif %}
