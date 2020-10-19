@@ -217,8 +217,8 @@
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
-  <div class="arithmetic" style="margin-left:10px;">{{ eulerproduct_arithmetic|safe }}</div>
-  <div class="analytic nodisplay" style="margin-left:10px;">{{ eulerproduct }}</div>
+  <div class="arithmetic">&nbsp;&nbsp;{{ eulerproduct_arithmetic|safe }}</div>
+  <div class="analytic nodisplay">&nbsp;&nbsp;{{ eulerproduct }}</div>
 {% else %}
   <div>{{ eulerproduct }}</div>
 {% endif %}
