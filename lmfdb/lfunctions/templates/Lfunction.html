@@ -216,14 +216,12 @@
 {% endif %}
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
-<p>
 {% if dirichlet_arithmetic -%}
-  <div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
-  <div class="analytic nodisplay">{{ eulerproduct }}</div>
+  <div class="arithmetic" style="margin-left:10px;">{{ eulerproduct_arithmetic|safe }}</div>
+  <div class="analytic nodisplay" style="margin-left:10px;">{{ eulerproduct }}</div>
 {% else %}
   <div>{{ eulerproduct }}</div>
 {% endif %}
-</p>
 
 {% if factorization is defined %}
 <h2>Factorization</h2>
