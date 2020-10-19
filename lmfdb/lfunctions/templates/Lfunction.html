@@ -74,15 +74,12 @@
 <table>
 
   <tr>
-    <td> {{ KNOWL('lfunction.degree', title="\( d \)") }} </td>
-    <td>&nbsp;=&nbsp;</td>
-    <td> \({{ degree }}\)
-    </td>
+    <td> {{ KNOWL('lfunction.degree', title="Degree") }}: </td>
+    <td> \({{ degree }}\) </td>
   </tr>
 
   <tr>
-    <td> {{ KNOWL('lfunction.conductor', title="\( N \)") }} </td>
-    <td>&nbsp;=&nbsp;</td>
+    <td> {{ KNOWL('lfunction.conductor', title="Conductor") }}: </td>
     <td> \({{ conductor }}\)
       {% if conductor_factored -%}
       &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
@@ -91,16 +88,14 @@
   </tr>
 
   <tr>
-    <td> {{ KNOWL('lfunction.sign', title="\( \\varepsilon \)") }}</td>
-    <td>&nbsp;=&nbsp;</td>
+    <td> {{ KNOWL('lfunction.sign', title="Sign }}: </td>
     <td> {{ sign }}
     </td>
   </tr>
 
   {% if motivic_weight %}
   <tr>
-    <td> {{ KNOWL('lfunction.motivic_weight', title="motivic weight") }} </td>
-    <td>&nbsp;=&nbsp;</td>
+    <td> {{ KNOWL('lfunction.motivic_weight', title="Motivic weight") }}: </td>
     <td> {{ motivic_weight }}
     </td>
   </tr>
@@ -109,8 +104,7 @@
 
   {% if chi %}
   <tr>
-    <td> {{ KNOWL('lfunction.central_character', title="character") }} </td>
-    <td>&nbsp;:&nbsp;</td>
+    <td> {{ KNOWL('lfunction.central_character', title="Character") }}: </td>
     <td> {{ chi | safe}}
     </td>
   </tr>
@@ -120,8 +114,7 @@
   {% if st_group -%}
 
   <tr>
-    <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
-    <td>&nbsp;:&nbsp;</td>
+    <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }}: </td>
     <td> {{ st_link | safe}}
     </td>
   </tr>
@@ -129,15 +122,13 @@
   {% endif %}
 
   <tr>
-    <td> {{ KNOWL('lfunction.primitive', title="primitive") }}  </td>
-    <td>&nbsp;:&nbsp;</td>
+    <td> {{ KNOWL('lfunction.primitive', title="Primitive") }}:  </td>
     <td> {{ primitive }}
     </td>
   </tr>
 
   <tr>
-    <td> {{ KNOWL('lfunction.self-dual', title="self-dual") }} </td>
-    <td>&nbsp;:&nbsp;</td>
+    <td> {{ KNOWL('lfunction.self-dual', title="Self-dual") }}: </td>
     <td> {{ selfdual }}
     </td>
   </tr>
@@ -145,8 +136,7 @@
   {% if rank is defined -%}
 
   <tr>
-    <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
-    <td>&nbsp;=&nbsp;</td>
+    <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }}: </td>
     <td> \({{ rank }}\)
     </td>
   </tr>
@@ -154,13 +144,16 @@
   {% endif %}
 
   <tr>
-    <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
-    <td>&nbsp;=&nbsp;</td>
+    <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }}: </td>
     <td> \({{ functionalequationSelberg }}\)
     </td>
   </tr>
+</table>
 
-  {% if dirichlet_arithmetic -%}
+
+
+{% if dirichlet_arithmetic -%}
+<h2>Values</h2>
 
   {% if sv_critical_arithmetic %}
   <tr class="arithmetic">
@@ -206,9 +199,7 @@
     {% endif %}
   </tr>
   {% endif %}
-
-  {% endif %}
-</table>
+{% endif %}
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
