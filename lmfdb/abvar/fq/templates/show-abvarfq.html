@@ -78,18 +78,19 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 
 <p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
+{% set n = cl.length_A_counts() if cl.length_A_counts() < 6 else 5 %}
 <table>
   <thead>
     <tr style="border-bottom: 1px solid #000;"><th>$r$</th>
-        {% for r in range(1, max(6,cl.length_A_counts()+1)) %}
+        {% for r in range(1, n+1) %}
         <td class="center"> ${{ r }}$ </td>
         {% endfor %}
     </tr>
   </thead>
   <tbody>
     <tr><td>$A(\F_{q^r})$</td>
-        {% for count in cl.abvar_counts %}
-        <td> ${{ count }}$ </td>
+        {% for i in range(n) %}
+        <td> ${{ cl.abvar_counts[i] }}$ </td>
         {% endfor %}
     </tr>
   </tbody>
