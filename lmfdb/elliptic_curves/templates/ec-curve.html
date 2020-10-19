@@ -121,7 +121,7 @@ white-space: pre in order to keep line breaks! #}
       </p>
     </div>
     {%else %}
-    <div> None </div>
+    <p> None </p>
     {%endif %}
 
     <h2> Invariants </h2>
@@ -281,8 +281,7 @@ white-space: pre in order to keep line breaks! #}
 {{ data.newform_label }}
 {% endif %}
 </h4>
-    {{ place_code('qexp') }}
-    <p>
+    <p>{{ place_code('qexp') }}</p>
 {#
     <form>
 #}
@@ -292,8 +291,7 @@ white-space: pre in order to keep line breaks! #}
         <button id="morebutton">More coefficients</button>
     </form>
 #}
-      For more coefficients, see the Downloads section to the right.
-    </p>
+    <p>For more coefficients, see the Downloads section to the right.    </p>
 
     {#
     <h4> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
