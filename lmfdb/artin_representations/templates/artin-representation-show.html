@@ -15,9 +15,10 @@
         {% endif %}
         <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>Splitting field of
                 {% if wnf %}
-                {{wnf.knowl()|safe}} defined by
-                {%endif%}
+                {{wnf.knowl()|safe}}
+                {% else %}
                 ${{ object.number_field_galois_group().polynomial_latex()}}$</td></tr>
+                {%endif%}
         <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}: </td><td> {{ object.parity()}}</td></tr>
