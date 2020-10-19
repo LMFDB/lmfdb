@@ -527,8 +527,8 @@ No \(p\)-adic data exists for this curve.
 {% if data.iwdata %}
 <h2>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h2>
 <p>
-<table border=1>
-<tr>
+<table border=1 style="margin-left:5%">
+<tr style="border-bottom: 1px solid #000;">
 <th>$p$</th>
 {% for pdata in data.iw.data %}
 <td>
@@ -631,7 +631,7 @@ are as follows:
 {% endif %}
 </p>
 <p>
-<table class="ntdata"><thead>
+<table border=1 style="margin-left:5%;"><thead>
 <tr>
 <th>$[K:\Q]$</th>
 <th>$K$</th>
@@ -641,11 +641,7 @@ are as follows:
 </thead><tbody>
 {% for tgd in data.tg.data %}
 <tr>
-{% if tgd.m !=0 %}
-<td align=center rowspan={{tgd.m}}>
-${{tgd.d}}$
-</td>
-{% endif %}
+<td align=center rowspan={{tgd.m}}>${{tgd.d}}$</td>
 <td align=center>{{tgd.f | safe}}</td>
 <td align=center>{{tgd.t}}</td>
 <td align=center>
