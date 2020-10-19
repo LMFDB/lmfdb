@@ -399,7 +399,7 @@ class AbvarFq_isoclass(object):
         else:
             ans = "Below are some of the twists of this isogeny class."
         ans += '<table class = "ntdata">\n'
-        ans += "<tr><td>Twist</td><td>Extension degree</td><td>Common base change</td></tr>\n"
+        ans += "<thead><tr><th>Twist</th><th>Extension degree</th><th>Common base change</th></tr></thead><tbody>\n"
         i = 0
         for twist in self.twists:
             if twist[2] <= 3 or show_all or i < 3:
@@ -409,7 +409,7 @@ class AbvarFq_isoclass(object):
                     bc = "(not in LMFDB)"
                 ans += "<tr><td>%s</td><td>$%s$</td><td>%s</td></tr>\n" % (av_display_knowl(twist[0]), str(twist[2]), bc)
                 i += 1
-        ans += "</table>\n"
+        ans += "</tbody></table>\n"
         return ans
 
     def curve_display(self):
