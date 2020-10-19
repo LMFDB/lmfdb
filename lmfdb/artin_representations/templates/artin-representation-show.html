@@ -8,18 +8,18 @@
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}: </td><td>{{ object.pretty_galois_knowl() | safe }}</td></tr>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}: </td><td>{{ object.conductor_equation() | safe }}</td></tr>
         {% if object.indicator() %}
-        <tr><td>{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}: </td><td>${{ object.indicator()}}$</td></tr>
+        <tr><td class="nowrap">{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}: </td><td>${{ object.indicator()}}$</td></tr>
         {% endif %}
         {% if object.sign() %}
-        <tr><td>{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
+        <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
         {% endif %}
-        <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>Splitting field of
+        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>Splitting field of
                 {% if wnf %}
                 {{wnf.knowl()|safe}} defined by
                 {%endif%}
                 $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</td></tr>
-        <tr><td> {{ KNOWL('artin.galois_orbit', title='Galois orbit zie') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
-        <tr><td> {{ KNOWL('artin.permutation_container', title='Containing permutation representation') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
+        <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
+        <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Containing permutation representation') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}: </td><td> {{ object.parity()}}</td></tr>
         {% if object.dimension() == 1 %}
             {%if object.det_url()=="Not available"%}
@@ -30,8 +30,8 @@
         {% else %}
             <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: </td><td> {{ object.det_as_artin_display()|safe}} </td></tr>
         {% endif %}
-        <tr><td> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
-        <tr><td> {{ KNOWL('artin.projective_field', title='Projective field') }}: </td><td> {{ object.projective_field()|safe}} </td></tr>
+        <tr><td class="nowrap"> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
+        <tr><td class="nowrap"> {{ KNOWL('artin.projective_field', title='Projective field') }}: </td><td> {{ object.projective_field()|safe}} </td></tr>
     </table>
 
 
