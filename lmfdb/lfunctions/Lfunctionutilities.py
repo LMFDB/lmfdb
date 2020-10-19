@@ -344,7 +344,7 @@ def lfuncEPhtml(L, fmt):
 
     # Formula
     ans = r"\(L(s) = "  # r"\[L(A,s) = "
-    ans += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
+    ans += r"\prod_{p} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
     def unused():
