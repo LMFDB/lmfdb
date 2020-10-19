@@ -63,10 +63,10 @@
 
 <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
-<div id="functionalEqText" class="arithmetic">&nbsp;\({{ functionalequation_arithmetic }}\)</div>
-<div id="functionalEqText" class="analytic nodisplay">&nbsp;\({{ functionalequation }}\)</div>
+<div id="functionalEqText" class="arithmetic" style="margin-left:7px;">\({{ functionalequation_arithmetic }}\)</div>
+<div id="functionalEqText" class="analytic nodisplay" style="margin-left:7px;">\({{ functionalequation }}\)</div>
 {% else %}
-<div id="functionalEqText">\({{ functionalequation }}\)</div>
+<div id="functionalEqText" style="margin-left:7px;">\({{ functionalequation }}\)</div>
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
