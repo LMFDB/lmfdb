@@ -550,7 +550,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = tex_name_s + r"="
+        ans = r"\begin{aligned}" + tex_name_s + r"=\mathstrut &"
         if L.level > 1:
             if L.level >= 10 ** 8 and not is_prime(int(L.level)):
                 ans += r"\left(%s\right)^{s/2}" % latex(L.level_factored)
@@ -589,7 +589,8 @@ def lfuncFEtex(L, fmt):
 
         ans += munu_str(mu_list, r"\R")
         ans += munu_str(nu_list, r"\C")
-        ans += " = "
+        ans += texname + r"\cr"
+        ans += r"=\mathstrut & "
         if L.sign == 0:
             ans += r"\epsilon \cdot "
         else:
@@ -599,6 +600,7 @@ def lfuncFEtex(L, fmt):
             ans += r"\quad (\text{with }\epsilon \text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += r"\quad (\text{with }\epsilon \text{ unknown})"
+        ans += r"\end{aligned}"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + r",\ "
         if L.level >= 10 ** 8 and not is_prime(int(L.level)):
