@@ -88,7 +88,7 @@
   </tr>
 
   <tr>
-    <td> {{ KNOWL('lfunction.sign', title="Sign }}: </td>
+    <td> {{ KNOWL('lfunction.sign', title="Sign" }}: </td>
     <td> {{ sign }}
     </td>
   </tr>
@@ -96,10 +96,8 @@
   {% if motivic_weight %}
   <tr>
     <td> {{ KNOWL('lfunction.motivic_weight', title="Motivic weight") }}: </td>
-    <td> {{ motivic_weight }}
-    </td>
+    <td> {{ motivic_weight }} </td>
   </tr>
-
   {% endif %}
 
   {% if chi %}
@@ -108,17 +106,14 @@
     <td> {{ chi | safe}}
     </td>
   </tr>
-
   {% endif %}
 
   {% if st_group -%}
-
   <tr>
     <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }}: </td>
     <td> {{ st_link | safe}}
     </td>
   </tr>
-
   {% endif %}
 
   <tr>
@@ -134,13 +129,11 @@
   </tr>
 
   {% if rank is defined -%}
-
   <tr>
     <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }}: </td>
     <td> \({{ rank }}\)
     </td>
   </tr>
-
   {% endif %}
 
   <tr>
@@ -152,7 +145,7 @@
 
 
 
-{% if dirichlet_arithmetic -%}
+{% if dirichlet_arithmetic %}
 <h2>Values</h2>
 
   {% if sv_critical_arithmetic %}
