@@ -346,7 +346,7 @@ cellpadding="5";
   {% endif %}
 
 {% if ec.local_data %}
-<table cellpadding="5">
+<table class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>Norm</th>
@@ -360,6 +360,7 @@ cellpadding="5";
 <th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
 <th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in ec.local_data %}
 <tr>
 <td align=center>
@@ -393,6 +394,7 @@ cellpadding="5";
 <td align=center>\({{pr.ord_den_j}}\)</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% else %}
 No primes of bad reduction.
@@ -418,17 +420,19 @@ for all primes \( p < 1000 \)
 except those listed.
 </p>
 <p>
-<table>
+<table class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>{{KNOWL('ec.galois_rep_image', title='Image of Galois Representation')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in ec.galois_data %}
 <tr>
 <td align=center> \({{pr.p}}\)</td>
 <td align=center>{{pr.image}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% else %}
 .
