@@ -289,9 +289,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = r"\(\qquad" + L.texname_arithmetic + " = "
+            ans = r"\(" + L.texname_arithmetic + " = "
         else:
-            ans = r"\(\qquad" + L.texname + " = "
+            ans = r"\(" + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += r"\prod_p (1 - p^{-s})^{-1}"
 
@@ -335,7 +335,7 @@ def lfuncEPtex(L, fmt):
         ans += r"\)"
         return(ans)
     else:
-        return(r"\text{No information is available about the Euler product.}")
+        return(r"No information is available about the Euler product.")
 
 def lfuncEPhtml(L, fmt):
     """
@@ -343,7 +343,7 @@ def lfuncEPhtml(L, fmt):
     """
 
     # Formula
-    ans = r"&nbsp;&nbsp;\(L(s) = "  # r"\[L(A,s) = "
+    ans = r"\(L(s) = "  # r"\[L(A,s) = "
     ans += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
