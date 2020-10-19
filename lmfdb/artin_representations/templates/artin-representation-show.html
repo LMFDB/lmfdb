@@ -17,7 +17,7 @@
                 {% if wnf %}
                 {{wnf.knowl()|safe}} defined by
                 {%endif%}
-                $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</td></tr>
+                ${{ object.number_field_galois_group().polynomial_latex()}}$</td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}: </td><td> {{ object.parity()}}</td></tr>
