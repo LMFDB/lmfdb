@@ -55,18 +55,18 @@
 
 <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
 {% if dirichlet_arithmetic -%}
-<div class="arithmetic">&nbsp;{{ dirichlet_arithmetic|safe }}</div>
-<div class="analytic nodisplay">&nbsp;{{ dirichlet|safe }}</div>
+<div class="arithmetic" style="margin-left:10px;">{{ dirichlet_arithmetic|safe }}</div>
+<div class="analytic nodisplay" style="margin-left:10px;">{{ dirichlet|safe }}</div>
 {% else %}
-<div>&nbsp;{{ dirichlet|safe }}</div>
+<div style="margin-left:10px;">{{ dirichlet|safe }}</div>
 {% endif %}
 
 <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
-<div id="functionalEqText" class="arithmetic" style="margin-left:7px;">\({{ functionalequation_arithmetic }}\)</div>
-<div id="functionalEqText" class="analytic nodisplay" style="margin-left:7px;">\({{ functionalequation }}\)</div>
+<div id="functionalEqText" class="arithmetic" style="margin-left:10px;">\({{ functionalequation_arithmetic }}\)</div>
+<div id="functionalEqText" class="analytic nodisplay" style="margin-left:10px;">\({{ functionalequation }}\)</div>
 {% else %}
-<div id="functionalEqText" style="margin-left:7px;">\({{ functionalequation }}\)</div>
+<div id="functionalEqText" style="margin-left:10px;">\({{ functionalequation }}\)</div>
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
@@ -151,18 +151,18 @@
     <tr class="arithmetic">
       <td> \({{ sv_critical_arithmetic[0] }}\) </td>
       {% if sv_critical_arithmetic[1] == "0" %}
-      <td>&nbsp;\(=\)&nbsp;</td>
+      <td>\(=\)</td>
       {% else %}
-      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td>\(\approx\)</td>
       {% endif %}
       <td> \({{ sv_critical_arithmetic[1] }}\) </td>
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_critical_analytic[0] }}\) </td>
       {% if sv_critical_analytic[1] == "0" %}
-      <td>&nbsp;\(=\)&nbsp;</td>
+      <td>\(=\)</td>
       {% else %}
-      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td>\(\approx\)</td>
       {% endif %}
 
       <td> \({{ sv_critical_analytic[1] }}\) </td>
@@ -173,20 +173,20 @@
     <tr class="arithmetic">
       <td> \({{ sv_edge_arithmetic[0] }}\) </td>
       {% if sv_edge_arithmetic[1] == 'not computed' %}
-      <td>&nbsp;</td>
+      <td></td>
       <td> not available </td>
       {% else %}
-      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td>\(\approx\)</td>
       <td> \({{ sv_edge_arithmetic[1] }}\) </td>
       {% endif %}
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_edge_analytic[0] }}\) </td>
       {% if sv_edge_analytic[1] == 'not computed' %}
-      <td>&nbsp;</td>
+      <td></td>
       <td> not available </td>
       {% else %}
-      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td>\(\approx\)</td>
       <td> \({{ sv_edge_analytic[1] }}\) </td>
       {% endif %}
     </tr>
