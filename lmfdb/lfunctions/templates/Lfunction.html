@@ -26,13 +26,13 @@
 
 
 {% if dirichlet_arithmetic -%}
-<div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
+<div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
   <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
 {% elif Ltype=="riemann" %}
 
 {% elif algebraic %}
-<div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
+<div><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
   </div>
   <div style="display: inline-block; vertical-align:top;">
     <button class='active'>analytic</button>
@@ -53,13 +53,14 @@
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
+<p>
 {% if dirichlet_arithmetic -%}
 <div class="arithmetic">{{ dirichlet_arithmetic|safe }}</div>
 <div class="analytic nodisplay">{{ dirichlet|safe }}</div>
 {% else %}
 <div>{{ dirichlet|safe }}</div>
 {% endif %}
-
+</p>
 
 <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
@@ -143,97 +144,97 @@
   </tr>
 </table>
 
-
-
 {% if dirichlet_arithmetic %}
-<h2>Values</h2>
-<div align="center">
-<table class="center">
-  {% if sv_critical_arithmetic %}
-  <tr class="arithmetic">
-    <td> \({{ sv_critical_arithmetic[0] }}\) </td>
-    {% if sv_critical_arithmetic[1] == "0" %}
-    <td>&nbsp;\(=\)&nbsp;</td>
-    {% else %}
-    <td>&nbsp;\(\approx\)&nbsp;</td>
-    {% endif %}
-    <td> \({{ sv_critical_arithmetic[1] }}\) </td>
-  </tr>
-  <tr class="analytic nodisplay">
-    <td> \({{ sv_critical_analytic[0] }}\) </td>
-    {% if sv_critical_analytic[1] == "0" %}
-    <td>&nbsp;\(=\)&nbsp;</td>
-    {% else %}
-    <td>&nbsp;\(\approx\)&nbsp;</td>
+  <h2>Particular Values</h2>
+  <div>
+  <table>
+    {% if sv_critical_arithmetic %}
+    <tr class="arithmetic">
+      <td> \({{ sv_critical_arithmetic[0] }}\) </td>
+      {% if sv_critical_arithmetic[1] == "0" %}
+      <td>&nbsp;\(=\)&nbsp;</td>
+      {% else %}
+      <td>&nbsp;\(\approx\)&nbsp;</td>
+      {% endif %}
+      <td> \({{ sv_critical_arithmetic[1] }}\) </td>
+    </tr>
+    <tr class="analytic nodisplay">
+      <td> \({{ sv_critical_analytic[0] }}\) </td>
+      {% if sv_critical_analytic[1] == "0" %}
+      <td>&nbsp;\(=\)&nbsp;</td>
+      {% else %}
+      <td>&nbsp;\(\approx\)&nbsp;</td>
+      {% endif %}
+
+      <td> \({{ sv_critical_analytic[1] }}\) </td>
+    </tr>
     {% endif %}
 
-    <td> \({{ sv_critical_analytic[1] }}\) </td>
-  </tr>
-  {% endif %}
-
-  {% if sv_edge_arithmetic %}
-  <tr class="arithmetic">
-    <td> \({{ sv_edge_arithmetic[0] }}\) </td>
-    {% if sv_edge_arithmetic[1] == 'not computed' %}
-    <td>&nbsp;</td>
-    <td> not available </td>
-    {% else %}
-    <td>&nbsp;\(\approx\)&nbsp;</td>
-    <td> \({{ sv_edge_arithmetic[1] }}\) </td>
+    {% if sv_edge_arithmetic %}
+    <tr class="arithmetic">
+      <td> \({{ sv_edge_arithmetic[0] }}\) </td>
+      {% if sv_edge_arithmetic[1] == 'not computed' %}
+      <td>&nbsp;</td>
+      <td> not available </td>
+      {% else %}
+      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td> \({{ sv_edge_arithmetic[1] }}\) </td>
+      {% endif %}
+    </tr>
+    <tr class="analytic nodisplay">
+      <td> \({{ sv_edge_analytic[0] }}\) </td>
+      {% if sv_edge_analytic[1] == 'not computed' %}
+      <td>&nbsp;</td>
+      <td> not available </td>
+      {% else %}
+      <td>&nbsp;\(\approx\)&nbsp;</td>
+      <td> \({{ sv_edge_analytic[1] }}\) </td>
+      {% endif %}
+    </tr>
     {% endif %}
-  </tr>
-  <tr class="analytic nodisplay">
-    <td> \({{ sv_edge_analytic[0] }}\) </td>
-    {% if sv_edge_analytic[1] == 'not computed' %}
-    <td>&nbsp;</td>
-    <td> not available </td>
-    {% else %}
-    <td>&nbsp;\(\approx\)&nbsp;</td>
-    <td> \({{ sv_edge_analytic[1] }}\) </td>
+  </table>
+  </div>
+{% elif algebraic %}
+  <h2>Particular Values</h2>
+  <p>
+  {% if sv_critical or sv_edge %}
+    <div>
+    {% if sv_critical %}
+      {{ sv_critical }}
     {% endif %}
-  </tr>
+    {% if sv_edge %}
+      {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+        <div>Pole at \(s=1\)</div>
+      {% else %}
+        {{ sv_edge }}
+      {% endif %}
+    {% endif %}
+    </div>
+  {% else %}
+    <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
   {% endif %}
-</table>
-</div>
+  </p>
 {% endif %}
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
+<p>
 {% if dirichlet_arithmetic -%}
-<div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
-<div class="analytic nodisplay">{{ eulerproduct }}</div>
+  <div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
+  <div class="analytic nodisplay">{{ eulerproduct }}</div>
 {% else %}
-<div>{{ eulerproduct }}</div>
+  <div>{{ eulerproduct }}</div>
 {% endif %}
+</p>
 
 {% if factorization is defined %}
 <h2>Factorization</h2>
-<div align="center">
-  {{ factorization|safe }} 
-</div>
-{% endif %}
-
-{% if not dirichlet_arithmetic and algebraic %}
-<h2>Particular Values</h2>
-{% if sv_critical or sv_edge %}
-<div>
-  {% if sv_critical %}
-  {{ sv_critical }}
-  {% endif %}
-  {% if sv_edge %}
-  {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
-  <div align="center">Pole at \(s=1\)</div>
-  {% else %}
-  {{ sv_edge }}
-  {% endif %}
-  {% endif %}
-</div>
-{% else %}
-<div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
-{% endif %}
+<p>
+<div> {{ factorization|safe }} </div>
+</p>
 {% endif %}
 
 <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
-
+<p>
 {% if positive_zeros %}
 <span class='redhighlight'>{{negative_zeros | safe}}</span>
 <span class='positivezero'>{{positive_zeros | safe}}</span>
@@ -245,6 +246,7 @@
 {% else %}
 <div>Zeros not available.</div>
 {% endif %}
+</p>
 
 <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 

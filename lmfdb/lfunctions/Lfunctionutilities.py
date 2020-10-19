@@ -289,9 +289,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = r"\[\begin{aligned}" + L.texname_arithmetic + " = "
+            ans = r"\(\qquad" + L.texname_arithmetic + " = "
         else:
-            ans = r"\[\begin{aligned}" + L.texname + " = "
+            ans = r"\(\qquad" + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += r"\prod_p (1 - p^{-s})^{-1}"
 
@@ -332,7 +332,7 @@ def lfuncEPtex(L, fmt):
 
         else:
             return("No information is available about the Euler product.")
-        ans += r"\end{aligned}\]"
+        ans += r"\)"
         return(ans)
     else:
         return(r"\text{No information is available about the Euler product.}")
@@ -344,8 +344,8 @@ def lfuncEPhtml(L, fmt):
 
 
     # Formula
-    texform_gen = r"\[L(s) = "  # r"\[L(A,s) = "
-    texform_gen += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \]"
+    texform_gen = r"\(\qquad L(s) = "  # r"\[L(A,s) = "
+    texform_gen += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
     if len(pfactors) == 0:
@@ -371,10 +371,10 @@ def lfuncEPhtml(L, fmt):
     ans += ","
     if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
         if L.degree == 4:
-            ans += r"\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+            ans += r"\(F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \)"
             ans += "with $b_p = a_p^2 - a_{p^2}$. "
         elif L.degree == 2:
-            ans += r"\[F_p(T) = 1 - a_p T + p T^2 .\]"
+            ans += r"\(F_p(T) = 1 - a_p T + p T^2 .\)"
     else:
         ans += r"\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
     if pbadset is not None:
@@ -550,7 +550,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = r"\begin{aligned}" + tex_name_s + r"=\mathstrut &"
+        ans = r"\(\qquad" + tex_name_s + r"=\mathstrut &"
         if L.level > 1:
             if L.level >= 10 ** 8 and not is_prime(int(L.level)):
                 ans += r"\left(%s\right)^{s/2}" % latex(L.level_factored)
@@ -589,8 +589,8 @@ def lfuncFEtex(L, fmt):
 
         ans += munu_str(mu_list, r"\R")
         ans += munu_str(nu_list, r"\C")
-        ans += texname + r"\cr"
-        ans += r"=\mathstrut & "
+        #ans += texname + r"\cr"
+        #ans += r"=\mathstrut & "
         if L.sign == 0:
             ans += r"\epsilon \cdot "
         else:
@@ -600,7 +600,7 @@ def lfuncFEtex(L, fmt):
             ans += r"\quad (\text{with }\epsilon \text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += r"\quad (\text{with }\epsilon \text{ unknown})"
-        ans += r"\end{aligned}"
+        ans += r"\)"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + r",\ "
         if L.level >= 10 ** 8 and not is_prime(int(L.level)):
