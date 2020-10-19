@@ -147,7 +147,7 @@
 
 {% if dirichlet_arithmetic %}
 <h2>Values</h2>
-
+<table>
   {% if sv_critical_arithmetic %}
   <tr class="arithmetic">
     <td> \({{ sv_critical_arithmetic[0] }}\) </td>
@@ -192,6 +192,7 @@
     {% endif %}
   </tr>
   {% endif %}
+</table>
 {% endif %}
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
