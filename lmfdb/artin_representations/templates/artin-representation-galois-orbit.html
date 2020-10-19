@@ -7,10 +7,20 @@
         <tr><td>{{ KNOWL('artin.dimension', title='Dimension') }}:<td>${{ object.dimension() }}$ </tr>
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>{{ object.conductor_equation() | safe }}</tr>
-        <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
-                $f={{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</tr>
-        <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
-        <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
+        {% if object.indicator() %}
+        <tr><td class="nowrap">{{ KNOWL('artin.frobenius_schur_indicator', title='Frobenius-Schur indicator') }}: </td><td>${{ object.indicator()}}$</td></tr>
+        {% endif %}
+        {% if object.sign() %}
+        <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
+        {% endif %}
+        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>
+        {% if wnf %}
+        Galois closure of {{wnf.knowl()|safe}}
+        {% else %}
+        Splitting field of ${{ object.number_field_galois_group().polynomial_latex()}}$ over $\Q$</td></tr>
+        {%endif%}
+        <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
+        <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
         <tr><td> {{ KNOWL('artin.projective_image', title='Projective image') }}: <td> {{ object.projective_group()|safe}} </tr>
         <tr><td> {{ KNOWL('artin.projective_field', title='Projective field') }}: <td> {{ object.projective_field()|safe}} </tr>
