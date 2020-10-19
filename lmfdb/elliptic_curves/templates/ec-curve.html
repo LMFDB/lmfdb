@@ -275,13 +275,12 @@ white-space: pre in order to keep line breaks! #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
 <p>
-<h4> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+{{KNOWL('ec.q.modular_form', title='Modular form')}}
 {% if data.newform_exists_in_db %}
-<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
+&nbsp;&nbsp;<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
 {% else %}
 {{ data.newform_label }}
 {% endif %}
-</h4>
 </p>
     <p>{{ place_code('qexp') }}</p>
 {#
