@@ -365,20 +365,20 @@ def lfuncEPhtml(L, fmt):
 
 
     ans = ""
-    ans += texform_gen + "where"
+    ans += texform_gen + "\n where"
     if pgoodset is not None:
         ans += ", for " + pgoodset
-    ans += ","
+    ans += ",\n"
     if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
         if L.degree == 4:
-            ans += r"\(F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \)"
+            ans += r"\(F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \)\n"
             ans += "with $b_p = a_p^2 - a_{p^2}$. "
         elif L.degree == 2:
-            ans += r"\(F_p(T) = 1 - a_p T + p T^2 .\)"
+            ans += r"\(F_p(T) = 1 - a_p T + p T^2 .\)\n"
     else:
         ans += r"\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
     if pbadset is not None:
-        ans += "If " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
+        ans += "\nIf " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
         ans += str(L.degree - 1) + ". "
 
     # Figuring out good and bad primes
@@ -407,7 +407,7 @@ def lfuncEPhtml(L, fmt):
 
 
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
-    eptable += "<table class='ntdata euler'>"
+    eptable += "<table class='ntdata'>"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if display_galois:
