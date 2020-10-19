@@ -209,6 +209,11 @@
       </div>
     {%- endwith %}
     {% if code %}
+        <style>
+        h2:first-of-type {
+          margin-top: 0px;
+        }
+        </style>
         <script>
         var cur_lang = null;
         function show_code(new_lang) {
