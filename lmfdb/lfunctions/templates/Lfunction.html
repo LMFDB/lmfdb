@@ -25,10 +25,10 @@
 </script>
 
 
+<center>
 {% if dirichlet_arithmetic -%}
 <div>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
   <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
-
 {% elif Ltype=="riemann" %}
 
 {% elif algebraic %}
@@ -46,6 +46,7 @@
   </div>
 </div>
 {% endif %}
+</center>
 
 {% if knowltype and label %}
 {% set KNOWL_ID = "lfunction.%s.%s"|format(knowltype,label) %}
@@ -53,21 +54,19 @@
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
-<p>
 {% if dirichlet_arithmetic -%}
-<div class="arithmetic">{{ dirichlet_arithmetic|safe }}</div>
-<div class="analytic nodisplay">{{ dirichlet|safe }}</div>
+<div class="arithmetic">&nbsp;{{ dirichlet_arithmetic|safe }}</div>
+<div class="analytic nodisplay">&nbsp;{{ dirichlet|safe }}</div>
 {% else %}
-<div>{{ dirichlet|safe }}</div>
+<div>&nbsp;{{ dirichlet|safe }}</div>
 {% endif %}
-</p>
 
 <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
-<div id="functionalEqText" class="arithmetic">{{ functionalequation_arithmetic }}</div>
-<div id="functionalEqText" class="analytic nodisplay">{{ functionalequation }}</div>
+<div id="functionalEqText" class="arithmetic">&nbsp;\({{ functionalequation_arithmetic }}\)</div>
+<div id="functionalEqText" class="analytic nodisplay">&nbsp;\({{ functionalequation }}\)</div>
 {% else %}
-<div id="functionalEqText">{{ functionalequation }}</div>
+<div id="functionalEqText">\({{ functionalequation }}\)</div>
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>

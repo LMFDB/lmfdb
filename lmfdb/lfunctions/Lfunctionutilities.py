@@ -343,7 +343,7 @@ def lfuncEPhtml(L, fmt):
     """
 
     # Formula
-    ans = r"\(\medspace L(s) = "  # r"\[L(A,s) = "
+    ans = r"&nbsp;&nbsp;\(L(s) = "  # r"\[L(A,s) = "
     ans += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \)"
     pfactors = prime_divisors(L.level)
 
@@ -550,7 +550,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = r"\(\qquad" + tex_name_s + r"=\mathstrut &"
+        ans = tex_name_s + r"=\mathstrut &"
         if L.level > 1:
             if L.level >= 10 ** 8 and not is_prime(int(L.level)):
                 ans += r"\left(%s\right)^{s/2}" % latex(L.level_factored)
@@ -599,7 +599,6 @@ def lfuncFEtex(L, fmt):
             ans += r"\quad (\text{with }\epsilon \text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += r"\quad (\text{with }\epsilon \text{ unknown})"
-        ans += r"\)"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + r",\ "
         if L.level >= 10 ** 8 and not is_prime(int(L.level)):
