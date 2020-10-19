@@ -10,50 +10,46 @@ table.ntdata a {
 </style>
 
 {% set nf = info.wnf %}
-        <p><h2  style="margin-top:0px;"> 
-        {% if nf.is_reduced() %}
-          {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
-        {{ KNOWL('nf.defining_polynomial', title='defining polynomial') }}</h2>
-        {% else %}
-        {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
-        {% endif %}
-      <p>
-         {{ place_code('field') }}
-      </p>
-        <p>
-            {{ info.polynomial }}
-        {{ place_code('poly') }}
-        </p>
-
-        <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
-        <p>
-          <table>
-            <tr><td>{{ KNOWL('nf.degree', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
-            <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
-             <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
-             <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
-            <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
-            <tr><td> $|{{ info.autstring|safe }}(K/\Q)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
-  {% if info.is_abelian %}
-            <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
-                <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
-            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet character group") }}:
-                <td>&nbsp;&nbsp;<td>
-                {% if info.dirichlet_group is defined %}
-                {{info.dirichlet_group|safe}}
-                {% else %}
-                not computed
-                {% endif %}
-                </tr> 
-  {% elif info.is_galois %}
-            <tr><td colspan="3">This field is Galois over $\Q$.</tr>
+<h2 style="margin-top:0px;"> 
+  {% if nf.is_reduced() %}
+    {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
+  {{ KNOWL('nf.defining_polynomial', title='defining polynomial') }}
   {% else %}
-            <tr><td colspan="3">This field is not Galois over $\Q$.</tr>
+  {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}
+  {% endif %}
+</h2>
+<p>{{ place_code('field') }}</p>
+<p>{{ info.polynomial }} {{ place_code('poly') }}</p>
+
+<h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
+  <p>
+    <table>
+      <tr><td>{{ KNOWL('nf.degree', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
+      <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
+       <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
+       <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
+      <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
+      <tr><td> $|{{ info.autstring|safe }}(K/\Q)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
+{% if info.is_abelian %}
+    <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
+        <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
+    <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet character group") }}:
+        <td>&nbsp;&nbsp;<td>
+        {% if info.dirichlet_group is defined %}
+        {{info.dirichlet_group|safe}}
+        {% else %}
+        not computed
+        {% endif %}
+    </tr> 
+{% elif info.is_galois %}
+    <tr><td colspan="3">This field is Galois over $\Q$.</tr>
+  {% else %}
+     <tr><td colspan="3">This field is not Galois over $\Q$.</tr>
   {% endif %}
   {% if nf.is_cm_field() %}
-  <tr><td colspan="3">This is a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    <tr><td colspan="3">This is a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
   {% else %}
-  <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
   {% endif %}
 
           </table>
@@ -204,12 +200,12 @@ $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_labe
         <thead>
              <tr><th>$p$</th>
             {% for p in info.frob_data %}
-            <th>${{ p[0] | safe }}$ </th>
+            <td>${{ p[0] | safe }}$ </td>
             {% endfor %}
              </tr>
         </thead>
         <tbody>
-             <tr><th>Cycle type</th>
+             <tr><td>Cycle type</td>
             {% for p in info.frob_data %}
             <td>{{ p[1] | safe }} </td>
             {% endfor %}
