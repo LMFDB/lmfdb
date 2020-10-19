@@ -255,7 +255,7 @@ cellpadding="5";
         </tr>
 
 	<tr>
-	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</td>
+	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -337,7 +337,7 @@ cellpadding="5";
 </div>
 
 <div>
-    <h2>{{KNOWL('ec.local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
+    <h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
  {{ place_code('localdata') }}
 
   {% if not ec.is_minimal %}
@@ -495,13 +495,13 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 <h2> {{KNOWL('ec.base_change','Base change')}} </h2>
 <p>
 This curve {% if ec.base_change %} is the
-{{KNOWL('ec.base_change','base-change')}} of elliptic curves
+{{KNOWL('ec.base_change','base change')}} of elliptic curves
 {% for E0 in ec.base_change%}
 <a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
 {% endfor %}
 defined over \(\Q\), so it is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% else %}
-is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
+is not the {{KNOWL('ec.base_change','base change')}} of an elliptic curve defined over \(\Q\).
 {% if ec.qc=="yes" %}
 It is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% elif ec.qc=="no" %}

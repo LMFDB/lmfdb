@@ -514,7 +514,7 @@ class WebEC(object):
         self.torsion_growth_data_exists = True
         self.tg = tg = {}
         tg['data'] = tgextra = []
-        # find all base-changes of this curve in the database, if any
+        # find all base changes of this curve in the database, if any
         bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
         bcfs = [lab.split("-")[0] for lab in bcs]
         for F, T in tor_gro.items():

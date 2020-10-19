@@ -176,12 +176,12 @@ class WebBMF(object):
             self.bc_extra = r', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{' + str(self.bcd) + r'})\)'
         elif self.bc == -1:
             self.bc = 'no'
-            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\)'
+            self.bc_extra = r', but is a twist of the base change of a form over \(\mathbb{Q}\)'
         elif self.bc < -1:
             self.bcd = -self.bc
             self.bc = 'no'
-            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
-        self.properties.append(('Base-change', str(self.bc)))
+            self.bc_extra = r', but is a twist of the base change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
+        self.properties.append(('Base change', str(self.bc)))
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
