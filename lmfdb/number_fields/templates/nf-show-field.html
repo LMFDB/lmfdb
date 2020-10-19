@@ -71,8 +71,8 @@ table.ntdata a {
             {{ place_code('integral_basis') }}
         </p>
 
-        <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
-    <p>
+        <h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
+        <p>
           {{ info.class_group }}
           {{ info.grh_label|safe }}
           {{ place_code('class_group') }}
@@ -106,13 +106,10 @@ table.ntdata a {
           </table>
         </p>
 
-        <p><h2> {{ KNOWL('nf.class_number_formula', title='Class number formula') }}</h2>
- <table class="center">
-   <tr><td>$\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }}
-                {{ info.grh_label|safe }}
-  </table>
+        <h2> {{ KNOWL('nf.class_number_formula', title='Class number formula') }}</h2>
+\[\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_label|safe }}\]
 
-        <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
+        <h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <p>
             {{ info.galois_group | safe }}:
             {{ place_code('galois_group') }}
@@ -124,7 +121,7 @@ table.ntdata a {
             {{ info.character_table | safe }}</tr>
           </table>
 
-        <p><h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <h2> {{ KNOWL('nf.intermediate_fields', title='Intermediate fields') }}</h2>
         <p>
         {% if nf.subfields()==[] %}
         <table>
