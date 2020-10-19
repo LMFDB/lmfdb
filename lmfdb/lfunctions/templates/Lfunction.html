@@ -250,7 +250,9 @@
 {% if degree > 10 %}
 <div>Plot not available for L-functions of degree greater than 10.</div>
 {% elif plotlink   %}
+<center>
 <img src="{{ plotlink|safe }}" >
+</center>
 {% else %}
 <div>Plot not available.</div>
 {% endif %}
