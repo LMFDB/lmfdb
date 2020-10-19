@@ -10,10 +10,6 @@ table.ntdata a {
 </style>
 
 {% set nf = info.wnf %}
-<p>
-   {{ place_code('field') }}
-</p>
-
         <p><h2  style="margin-top:0px;"> 
         {% if nf.is_reduced() %}
           {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
@@ -21,6 +17,9 @@ table.ntdata a {
         {% else %}
         {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}</h2>
         {% endif %}
+      <p>
+         {{ place_code('field') }}
+      </p>
         <p>
             {{ info.polynomial }}
         {{ place_code('poly') }}

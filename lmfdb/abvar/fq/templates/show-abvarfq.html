@@ -78,17 +78,21 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 
 <p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
-<table class = "ntdata">
-    <tr><td>$r$</td>
-        {% for r in range(1, cl.length_A_counts()+1) %}
-        <td class="center"> {{ r }} </td>
+<table>
+  <thead>
+    <tr style="border-bottom: 1px solid #000;"><th>$r$</th>
+        {% for r in range(1, max(6,cl.length_A_counts()+1)) %}
+        <td class="center"> ${{ r }}$ </td>
         {% endfor %}
     </tr>
+  </thead>
+  <tbody>
     <tr><td>$A(\F_{q^r})$</td>
         {% for count in cl.abvar_counts %}
-        <td> {{ count }} </td>
+        <td> ${{ count }}$ </td>
         {% endfor %}
     </tr>
+  </tbody>
 </table>
 </p>
 
@@ -99,17 +103,20 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the (virtual) curve") }}
 {% endif %}
 
-<table class = "ntdata">
-    <tr><td>$r$</td>
+<table>
+  <thead>
+    <tr style="border-bottom: 1px solid #000;"><th>$r$</th>
         {% for r in range(1, cl.length_C_counts()+1) %}
-        <td class="center"> {{ r }} </td>
+        <th class="center">${{ r }}$</th>
         {% endfor %}
     </tr>
+  </thead><tbody>
     <tr><td>$C(\F_{q^r})$</td>
         {% for count in cl.curve_counts %}
-        <td>{{ count }}</td>
+        <td>${{ count }}$</td>
         {% endfor %}
     </tr>
+  </tbody>
 </table>
 
 </p>
