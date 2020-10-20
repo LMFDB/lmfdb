@@ -233,7 +233,7 @@ def geom_end_alg_name(name):
         "CM x CM":r"\mathsf{CM} \times \mathsf{CM}",
         "QM":r"\mathsf{QM}",
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
-        "M_2(CM)":r"\mathrm{M}_2(\mathrm{CM})"
+        "M_2(CM)":r"\mathrm{M}_2(\mathsf{CM})"
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -243,9 +243,9 @@ def geom_end_alg_name(name):
 def end_alg_name(name):
     name_dict = {
         "Q":r"\Q",
-        "RM":r"\mathrm{RM}",
+        "RM":r"\mathsf{RM}",
         "Q x Q":r"\Q \times \Q",
-        "CM":r"\mathrm{CM}",
+        "CM":r"\mathsf{CM}",
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
         }
     if name in name_dict.keys():
