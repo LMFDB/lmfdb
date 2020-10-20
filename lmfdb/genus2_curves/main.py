@@ -620,7 +620,7 @@ class G2CSearchArray(SearchArray):
             label="Bad primes",
             short_label=r"Bad \(p\)",
             example="5,13",
-            example_span="",
+            example_span="2 or 2,3,5",
             select_box=bad_quantifier,
         )
 
