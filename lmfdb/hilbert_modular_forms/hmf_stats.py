@@ -102,5 +102,6 @@ class HMFstats(StatsDisplay):
     def setup(self, attributes=None, delete=False):
         if attributes is None:
             # Per-degree statistics aren't updated by the normal setup function
-            S = self.statistics()
+            # The assert is for pyflakes
+            assert self.statistics()
         super().setup(attributes, delete)
