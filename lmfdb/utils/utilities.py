@@ -742,7 +742,8 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        return r'<a title = "%s [lmfdb.bigint]" knowl="lmfdb.bigint" kwargs="n=%s">\(%s\)</a>'%(str(n), str(n), short)
+        lng = r"<div style='word-break: break-all'>%s</div>" % n
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
         return r'\(%s\)'%n
 def too_big(L, threshold):
