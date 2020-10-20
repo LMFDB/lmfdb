@@ -98,3 +98,9 @@ class HMFstats(StatsDisplay):
                                 for F in C["fields_by_degree"][d]}}
                  for d in C["degrees"]}
         return stats
+
+    def setup(self, attributes=None, delete=False):
+        if attributes is None:
+            # Per-degree statistics aren't updated by the normal setup function
+            S = self.statistics()
+        super().setup(attributes, delete)
