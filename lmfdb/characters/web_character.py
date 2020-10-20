@@ -69,7 +69,7 @@ from lmfdb.utils import web_latex
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
-from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
 from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
 from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
 from lmfdb.characters.utils import url_character, complex2str, evalpolelt
@@ -740,31 +740,34 @@ class WebChar(WebCharObject):
         return self.char2tex(self.conductor, self.indlabel)
 
     @lazy_attribute
-    def valuefield(self):
-        """ compute order """
-        order2 = self.order
-        if order2 % 4 == 2:
-            order2 = order2 / 2
-        if order2 == 1:
-            vf = r'\(\Q\)'
-        elif order2 == 4:
-            vf = r'\(\Q(i)\)'
-        else:
-            vf = r'\(\Q(\zeta_{%d})\)' % order2
-        return vf
-
-    @lazy_attribute
     def vflabel(self):
       order2 = self.order if self.order % 4 != 2 else self.order / 2
-      if order2 == 1:
-          return '1.1.1.1'
-      elif order2 == 4:
-          return '2.0.4.1'
-      valuewnf =  WebNumberField.from_cyclo(order2)
-      if not valuewnf.is_null():
-          return valuewnf.label
+      #if order2 == 1:
+      #    return '1.1.1.1'
+      #elif order2 == 4:
+      #    return '2.0.4.1'
+      nf =  WebNumberField.from_cyclo(order2)
+      if not nf.is_null():
+          return nf.label
       else:
           return ''
+
+    @lazy_attribute
+    def valuefield(self):
+        order2 = self.order if self.order % 4 != 2 else self.order / 2
+        nf =  WebNumberField.from_cyclo(order2)
+        if not nf.is_null():
+            return nf_display_knowl(nf.get_label(),nf.field_pretty())
+        else:
+            return r'$\Q(\zeta_{%d})$' % order2
+
+    @lazy_attribute
+    def kerfield(self):
+        kerpoly = self.kernel_field_poly
+        if kerpoly:
+            return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order)
+        else:
+            return "Number field defined by a degree %d polynomial (not computed)"
 
     @lazy_attribute
     def properties(self):
@@ -929,6 +932,7 @@ class WebDBDirichlet(WebDirichlet):
         self._set_isminimal(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
+        self._set_kernel_field_poly(orbit_data)
 
     def _set_generators_and_genvalues(self, values_data):
         """
@@ -1018,6 +1022,12 @@ class WebDBDirichlet(WebDirichlet):
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in orbit
         )
+
+    def _set_kernel_field_poly(self, orbit_data):
+        if 'kernel_field_poly' in orbit_data.keys():
+            self.kernel_field_poly = orbit_data['kernel_field_poly']
+        else:
+            self.kernel_field_poly = None
 
 
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
@@ -1185,6 +1195,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,
                 url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
+
+        if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
+            friendlist.append(('Primitive character '+self.inducing,
+                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, number=self.indlabel)))
 
         return friendlist
 

@@ -40,7 +40,7 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
 
 class WebBMF(object):
     """
-    Class for an Bianchi Newform
+    Class for a Bianchi Newform
     """
     def __init__(self, dbdata, max_eigs=50):
         """Arguments:
@@ -59,7 +59,7 @@ class WebBMF(object):
     @staticmethod
     def by_label(label, max_eigs=50):
         """
-        Searches for a specific Hilbert newform in the forms
+        Searches for a specific Bianchi newform in the forms
         collection by its label.
         """
         data = db.bmf_forms.lookup(label)
@@ -88,6 +88,9 @@ class WebBMF(object):
         self.newspace_url = url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label)
         K = self.field.K()
 
+        # 'hecke_poly_obj' is the non-LaTeX version of hecke_poly
+        self.hecke_poly_obj = self.hecke_poly
+
         if self.dimension>1:
             Qx = PolynomialRing(QQ,'x')
             self.hecke_poly = Qx(str(self.hecke_poly))
@@ -100,9 +103,9 @@ class WebBMF(object):
                     return F(str(ap))
             self.hecke_eigs = [conv(str(ap)) for ap in self.hecke_eigs]
 
-        level = ideal_from_label(K,self.level_label)
-        self.level_ideal2 = web_latex(level)
-        badp = level.prime_factors()
+        self.level = ideal_from_label(K,self.level_label)
+        self.level_ideal2 = web_latex(self.level)
+        badp = self.level.prime_factors()
 
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(nap0, self.nap)
@@ -117,8 +120,10 @@ class WebBMF(object):
                              ideal_label(p),
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
+            # The following helps to create Sage download data
+            self.AL_table_data = [[p.gens_reduced(),ap] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        
+
         try:
             if self.sfe == 1:
                 self.sign = "+1"

@@ -43,7 +43,7 @@ def parse_interval(arg, name):
         raise ValueError("invalid " + name)
     return a,b
 
-def parse_limit (arg):
+def parse_limit(arg):
     if not arg:
         return 50
     limit = -1
@@ -250,9 +250,6 @@ class CharacterSearch:
         info['chars'] = L
         info['title'] = 'Dirichlet characters'
         return info
-
-    def list_valid(self):
-        return
 
     def _construct_search_query(self):
         query = {}

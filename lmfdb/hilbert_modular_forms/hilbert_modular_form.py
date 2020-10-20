@@ -28,7 +28,7 @@ def get_bread(tail=[]):
         return base + [(tail, " ")]
 
 def get_hmf(label):
-    """Return a complete HMF, give its label.  Note that the
+    """Return a complete HMF, given its label.  Note that the
     hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
     separate collection.  Use of this function hides this
     implementation detail from the user.
