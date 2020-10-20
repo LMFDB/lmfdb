@@ -742,17 +742,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        lng = str(n)
-        if len(lng) > max_width:
-            lines = 1 + (len(lng)-1) // (max_width-1)
-            width = 1 + (len(lng)-1) // lines
-            lng = [lng[i:i+width] for i in range(0,len(lng),width)]
-            for i in range(len(lng)-1):
-                lng[i] = r"<tr><td>%s\</td></tr>" % lng[i]
-            lng[-1] = r"<tr><td>%s</td></tr>" % lng[-1]
-            lng = "<table>" + "".join(lng) + "</table>"
-        else:
-            lng = r"\(%s\)" % lng
+        lng = r"<div style='word-break: break-all'>%s</div>" % n
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
         return r'\(%s\)'%n
