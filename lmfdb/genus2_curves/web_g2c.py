@@ -226,12 +226,12 @@ def real_geom_end_alg_name(name):
 def geom_end_alg_name(name):
     name_dict = {
         "Q":r"\Q",
-        "RM":r"\mathrm{RM}",
+        "RM":r"\mathsf{RM}",
         "Q x Q":r"\Q \times \Q",
-        "CM x Q":r"\mathrm{CM} \times \Q",
-        "CM":r"\mathrm{CM}",
-        "CM x CM":r"\mathrm{CM} \times \mathrm{CM}",
-        "QM":r"\mathrm{QM}",
+        "CM x Q":r"\mathsf{CM} \times \Q",
+        "CM":r"\mathsf{CM}",
+        "CM x CM":r"\mathsf{CM} \times \mathsf{CM}",
+        "QM":r"\mathsf{QM}",
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
         "M_2(CM)":r"\mathrm{M}_2(\mathrm{CM})"
         }
@@ -841,8 +841,8 @@ class WebG2C(object):
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
-            (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', data['geom_end_alg_name']),
-            (r'\(\End(J) \otimes \Q\)', data['end_alg_name']),
+            (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
+            (r'\(\End(J) \otimes \Q\)', r'\(%s\)' % data['end_alg_name']),
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
