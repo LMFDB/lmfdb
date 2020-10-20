@@ -47,6 +47,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End tensored with QQ
+end_alg_list = [ 'Q', 'RM', 'CM', 'Q x Q', 'M_2(Q)']
+end_alg_dict = { x:x for x in end_alg_list }
+
 # End_QQbar tensored with QQ
 geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
 geom_end_alg_dict = { x:x for x in geom_end_alg_list }
@@ -630,7 +634,7 @@ class G2CSearchArray(SearchArray):
             name="st_group",
             knowl="g2c.st_group",
             label="Sato-Tate group",
-            short_label=r"\(\mathrm{ST}\)",
+            short_label=r"\(\mathrm{ST}(X)\)",
             options=([("", "")] + [(elt, st_group_dict[elt]) for elt in st_group_list]),
         )
 
@@ -638,13 +642,9 @@ class G2CSearchArray(SearchArray):
             name="real_geom_end_alg",
             knowl="g2c.st_group_identity_component",
             label="Sate-Tate identity component",
-            short_label=r"\(\mathrm{ST}^0\)",
+            short_label=r"\(\mathrm{ST}^0(X)\)",
             options=(
-                [("", "")]
-                + [
-                    (elt, real_geom_end_alg_to_ST0_dict[elt])
-                    for elt in real_geom_end_alg_list
-                ]
+                [("", "")] + [(elt, real_geom_end_alg_to_ST0_dict[elt]) for elt in real_geom_end_alg_list]
             ),
         )
 
@@ -664,6 +664,17 @@ class G2CSearchArray(SearchArray):
             options=(
                 [("", "")]
                 + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+            ),
+        )
+
+        Q_endomorphism = SelectBox(
+            name="end_alg",
+            knowl="g2c.end_alg",
+            label=r"\(\Q\)-endomorphism algebra",
+            short_label=r"\(\Q\)-end algebra",
+            options=(
+                [("", "")]
+                + [(elt, end_alg_dict[elt]) for elt in end_alg_list]
             ),
         )
 
@@ -702,16 +713,17 @@ class G2CSearchArray(SearchArray):
 
         self.browse_array = [
             [geometric_invariants],
+            [bad_primes, geometrically_simple],
             [conductor, is_gl2_type],
             [discriminant, st_group],
             [rational_points, st_group_identity_component],
             [rational_weirstrass_points, Q_automorphism],
             [torsion_order, geometric_automorphism],
-            [torsion_structure, geometric_endomorphism],
-            [two_selmer_rank, locally_solvable],
+            [torsion_structure, Q_endomorphism],
+            [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
-            [analytic_rank, geometrically_simple],
-            [count, bad_primes],
+            [analytic_rank, locally_solvable],
+            [count],
         ]
 
         self.refine_array = [
@@ -730,7 +742,7 @@ class G2CSearchArray(SearchArray):
                 torsion_structure,
             ],
             [
-                is_gl2_type,
+                Q_endomorphism,
                 st_group,
                 Q_automorphism,
                 has_square_sha,
@@ -741,6 +753,7 @@ class G2CSearchArray(SearchArray):
                 st_group_identity_component,
                 geometric_automorphism,
                 locally_solvable,
+                is_gl2_type,
             ],
         ]
 
