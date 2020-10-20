@@ -412,7 +412,10 @@ def render_field_webpage(args):
         dirichlet_chars = nf.dirichlet_group()
         if dirichlet_chars:
             data['dirichlet_group'] = [r'<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
-            data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
+            if len(data['dirichlet_group']) == 1:
+                data['dirichlet_group'] = r'$\lbrace$' + data['dirichlet_group'] + r'$\rbrace$'
+            else:
+                data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group'][:-1]) + '<span style="white-space:nowrap">' + data['dirichlet_group'][-1] + r'$\rbrace$' + '</span>'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = r"\(%s\)" % str(data['conductor'])
         else:
