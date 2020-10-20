@@ -9,7 +9,7 @@
 
 {% if symbol %}
   {% if (isprimitive == "Yes" or isprimitive == "yes") and indlabel %}
-    <h2>
+    <h2 style="margin-top:0px;">
       {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
     </h2>
 
@@ -21,7 +21,7 @@
 
 
 {# Basic properties #}
-<h2>
+<h2 style="margin-top:0px;">
   {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
 </h2>
 <table>
@@ -100,7 +100,7 @@
   {% endif %}
 </h2>
 <div style='overflow:auto'>
-  <table class="values">
+  <table class="values" style="margin-left:5%; margin-top:10px;">
     <thead>
       <tr>{% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}</tr>
     </thead>
