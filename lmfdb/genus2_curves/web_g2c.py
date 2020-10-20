@@ -240,6 +240,19 @@ def geom_end_alg_name(name):
     else:
         return name
 
+def end_alg_name(name):
+    name_dict = {
+        "Q":r"\Q",
+        "RM":r"\mathrm{RM}",
+        "Q x Q":r"\Q \times \Q",
+        "CM":r"\mathrm{CM}",
+        "M_2(Q)":r"\mathrm{M}_2(\Q)",
+        }
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
+
 def st0_group_name(name):
     st0_dict = {
         'M_2(C)':r'\mathrm{U}(1)',
@@ -784,6 +797,7 @@ class WebG2C(object):
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
+        data['end_alg_name'] = end_alg_name(curve['end_alg'])
 
         # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
         if is_curve:
@@ -827,7 +841,8 @@ class WebG2C(object):
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
-            (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
+            (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', data['geom_end_alg_name']),
+            (r'\(\End(J) \otimes \Q\)', data['end_alg_name']),
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
