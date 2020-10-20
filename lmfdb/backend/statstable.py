@@ -1098,11 +1098,11 @@ class PostgresStatsTable(PostgresBase):
         from sage.all import cartesian_product_iterator
         if split_list and threshold is not None:
             raise ValueError("split_list and threshold not simultaneously supported")
+        cols = sorted(cols)
         where, values, constraint, ccols, cvals, allcols = self._process_constraint(cols, constraint)
         if self._has_stats(Json(cols), ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
-        cols = sorted(cols)
         now = time.time()
         seen_one = False
         if split_list:
@@ -1531,7 +1531,7 @@ ORDER BY v.ord LIMIT %s"""
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
-            allcols = sorted(list(set(cols + list(constraint))))
+            allcols = sorted(set(cols + list(constraint)))
             selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:

@@ -15,6 +15,7 @@ from lmfdb.utils import (
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
+    StatsDisplay, totaler, proportioners,
     to_dict, web_latex)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
@@ -578,7 +579,7 @@ def interesting_families():
         url_for_label,
         regex=HGM_FAMILY_LABEL_RE,
         title=r"Some interesting families of hypergeometric motives",
-        bread=get_bread(("Interesting", " ")),
+        bread=get_bread([("Interesting", " ")]),
         credit=HGM_credit,
         learnmore=learnmore_list()
     )
@@ -591,10 +592,16 @@ def interesting_motives():
         url_for_label,
         regex=HGM_LABEL_RE,
         title=r"Some interesting hypergeometric motives",
-        bread=get_bread(("Interesting motives", " ")),
+        bread=get_bread([("Interesting motives", " ")]),
         credit=HGM_credit,
         learnmore=learnmore_list()
     )
+
+@hypergm_page.route("/stats")
+def statistics():
+    title = "Hypergeometric motives: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=HGMStats(), credit=HGM_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
@@ -779,3 +786,11 @@ class HGMSearchArray(SearchArray):
         table = self._print_table(self.motive_array, None, "horizontal")
         buttons = self.buttons()
         return "\n".join([table, buttons])
+
+class HGMStats(StatsDisplay):
+    table = db.hgm_families
+    baseurl_func = ".index"
+    stat_list = [{"cols": ["degree"],
+                  "constraint": {"weight": 0}},
+                 {"cols": ["weight"]}]
+    buckets = {"weight": ["0-1", "2-4", "5-8"]}
