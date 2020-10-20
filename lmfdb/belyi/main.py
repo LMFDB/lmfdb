@@ -631,20 +631,11 @@ class Belyi_stats(StatsDisplay):
     """
 
     def __init__(self):
-        ngalmaps = comma(db.belyi_galmaps.stats.count())
-        npassports = comma(db.belyi_passports.stats.count())
-        max_deg = comma(db.belyi_passports.max("deg"))
-        deg_knowl = display_knowl("belyi.degree", title="degree")
-        belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
-        stats_url = url_for(".statistics")
-        self.short_summary = (
-            'The database currently contains %s %s of %s up to %s.  Here are some <a href="%s">further statistics</a>.'
-            % (ngalmaps, belyi_knowl, deg_knowl, max_deg, stats_url)
-        )
-        self.summary = (
-            "The database currently contains %s Galois orbits of Belyi maps in %s passports, with %s at most %s."
-            % (ngalmaps, npassports, deg_knowl, max_deg)
-        )
+        self.ngalmaps = comma(db.belyi_galmaps.stats.count())
+        self.npassports = comma(db.belyi_passports.stats.count())
+        self.max_deg = comma(db.belyi_passports.max("deg"))
+        self.deg_knowl = display_knowl("belyi.degree", title="degree")
+        self.belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
@@ -659,6 +650,15 @@ class Belyi_stats(StatsDisplay):
         {"cols": col, "totaler": {"avg": True}} for col in ["deg", "orbit_size", "g"]
     ]
 
+    @property
+    def short_summary(self):
+        return ('The database currently contains %s %s of %s up to %s.  Here are some <a href="%s">further statistics</a>.'
+                % (self.ngalmaps, self.belyi_knowl, self.deg_knowl, self.max_deg, url_for(".statistics")))
+
+    @property
+    def summary(self):
+        return ("The database currently contains %s Galois orbits of Belyi maps in %s passports, with %s at most %s."
+                % (self.ngalmaps, self.npassports, self.deg_knowl, self.max_deg))
 
 @belyi_page.route("/stats")
 def statistics():
