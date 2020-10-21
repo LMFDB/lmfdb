@@ -510,9 +510,10 @@ def demote(ID, timestamp):
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
-    if request.args:
+    info = to_dict(request.args)
+    cap = info.pop("cap", 50)
+    if info:
         try:
-            info = to_dict(request.args)
             beta = None
             ID = info.get('review')
             if ID:
@@ -528,7 +529,7 @@ def review_recent(days):
             raise ValueError
         except Exception:
             return jsonify({"success": 0})
-    knowls = knowldb.needs_review(days)
+    knowls = knowldb.needs_review(days, cap)
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
         k.reviewed_content = json.dumps(k.reviewed_content)
