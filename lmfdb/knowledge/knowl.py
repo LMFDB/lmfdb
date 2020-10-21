@@ -371,7 +371,7 @@ class KnowlBackend(PostgresBase):
 
     def stale_knowls(self):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp").format(
+        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
             SQL(", ").join([SQL("a.{0}").format(Identifier(col)) for col in fields]),
             SQL(", ").join([SQL("b.{0}").format(Identifier(col)) for col in fields]),
             SQL(", ").join(map(Identifier, fields)))
