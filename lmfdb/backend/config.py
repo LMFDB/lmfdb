@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import
 import os, argparse
 from six.moves.configparser import ConfigParser
 from collections import defaultdict
+from copy import deepcopy
 
 def strbool(s):
     """
@@ -34,6 +35,7 @@ class Configuration(object):
       - ``postgresql_port`` -- an integer, the port to use when connecting to the database
       - ``postgresql_user`` -- the username when connecting to the database
       - ``postgresql_password`` -- the password for connecting to the database
+      - ``writeargstofile`` - a boolean, if config file doesn't exist, it determines if command line arguments are written to the config file instead of the default arguments
     """
     def __init__(self, parser=None, defaults={}, writeargstofile=False):
         if parser is None:
@@ -116,6 +118,14 @@ class Configuration(object):
                 default="lmfdb",
             )
 
+        def sec_opt(key):
+            if "_" in key:
+                sec, opt = key.split("_", 1)
+            else:
+                sec = "misc"
+                opt = key
+            return sec, opt
+
         # 1: parsing command-line arguments
         if  writeargstofile:
             args = parser.parse_args()
@@ -124,22 +134,19 @@ class Configuration(object):
             args = parser.parse_args([])
         args_dict = vars(args)
         default_arguments_dict = vars(parser.parse_args([]))
-        if writeargstofile:
-            default_arguments_dict = dict(args_dict)
 
         del default_arguments_dict["config_file"]
         del default_arguments_dict["secrets_file"]
 
-        self.default_args = {}
+        self.default_args = defaultdict(dict)
         for key, val in default_arguments_dict.items():
-            sec, opt = key.split("_", 1)
-            if sec not in self.default_args:
-                self.default_args[sec] = {}
+            sec, opt = sec_opt(key)
             self.default_args[sec][opt] = str(val)
 
         # reading the config file, creating it if necessary
         # 2/1: does config file exist?
         if not os.path.exists(args.config_file):
+            write_args = deepcopy(self.default_args)
             if not writeargstofile:
                 print(
                     "Config file: %s not found, creating it with the default values"
@@ -150,10 +157,17 @@ class Configuration(object):
                     "Config file: %s not found, creating it with the passed values"
                     % args.config_file
                 )
-            _cfgp = ConfigParser()
+                # overwrite default arguments passed via command line args
+                for key, val in args_dict.items():
+                    if key in default_arguments_dict:
+                        sec, opt = sec_opt(key)
+                        write_args[sec][opt] = str(val)
 
+
+
+            _cfgp = ConfigParser()
             # create sections
-            for sec, options in self.default_args.items():
+            for sec, options in write_args.items():
                 _cfgp.add_section(sec)
                 for opt, val in options.items():
                     _cfgp.set(sec, opt, str(val))
@@ -182,11 +196,9 @@ class Configuration(object):
             # if a nondefault value was passed through command line arguments set it
             # or if a default value was not set in the config file
             if args_dict[key] != val or key not in all_set:
-                if "_" in key:
-                    sec, opt = key.split("_")
-                else:
-                    sec = "misc"
-                    opt = key
+                sec, opt = sec_opt(key)
+                if sec not in _cfgp.sections():
+                    _cfgp.add_section(sec)
                 _cfgp.set(sec, opt, str(args_dict[key]))
 
         # We can derive the types from the parser
