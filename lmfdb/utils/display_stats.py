@@ -325,6 +325,11 @@ class totaler(object):
         #    row.append(D)
         #    grid.append(row)
 
+def default_sort_key(val):
+    if val is None:
+        return -infinity
+    return val
+
 class StatsDisplay(UniqueRepresentation):
     """
     A class for displaying statistics in a uniform way.
@@ -405,10 +410,6 @@ class StatsDisplay(UniqueRepresentation):
     @property
     def _sort_keys(self):
         # We want None (unknown) to show up at the beginning
-        def default_sort_key(val):
-            if val is None:
-                return -infinity
-            return val
         A = defaultdict(lambda: default_sort_key)
         A.update(getattr(self, 'sort_keys', {}))
         return A
@@ -531,8 +532,8 @@ class StatsDisplay(UniqueRepresentation):
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
                 headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
             elif cols == list(buckets):
-                #if split_list or avg or sort_key[col]:
-                #    raise ValueError("Unsupported option")
+                if split_list or avg or sort_key[col] is not default_sort_key:
+                    raise ValueError("Unsupported option")
                 headers = [formatter[col](bucket) for bucket in buckets[col]]
                 if show_total or proportioner is None:
                     total = sum(counts[bucket]['count'] for bucket in headers)
