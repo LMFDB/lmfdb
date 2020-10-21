@@ -1158,19 +1158,16 @@ class PostgresSearchTable(PostgresTable):
         """
         return self.stats.count(query, groupby=groupby, record=record)
 
-    def count_distinct(self, col, query={}):
+    def count_distinct(self, col, query={}, record=True):
         """
         Count the number of distinct values taken on by a given column.
 
-        The result will be the same as taking the length of the distinct values, but a bit faster.
+        The result will be the same as taking the length of the distinct values, but a bit faster and caches the answer
 
         INPUT:
 
         - ``col`` -- the name of the column
         - ``query`` -- a query dictionary constraining which rows are considered
+        - ``record`` -- (default True) whether to record the number of results in the stats table.
         """
-        selecter = SQL("SELECT COUNT(DISTINCT {0}) FROM {1}").format(Identifier(col), Identifier(self.search_table))
-        qstr, values = self._parse_dict(query)
-        if qstr is not None:
-            selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
-        return self._execute(selecter, values).fetchone()[0]
+        return self.stats.count_distinct(col, query, record=record)
