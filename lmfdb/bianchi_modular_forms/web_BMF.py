@@ -4,7 +4,7 @@ from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
-from lmfdb.utils import web_latex, names_and_urls
+from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
@@ -126,9 +126,9 @@ class WebBMF(object):
 
         try:
             if self.sfe == 1:
-                self.sign = "+1"
+                self.sign = "$+1$"
             elif self.sfe == -1:
-                self.sign = "-1"
+                self.sign = "$-1$"
         except AttributeError:
             self.sfe = '?'
 
@@ -139,12 +139,12 @@ class WebBMF(object):
             self.Lratio = QQ(self.Lratio)
             self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
 
-        self.properties = [('Base field', pretty_field),
-                            ('Weight', str(self.weight)),
-                            ('Level norm', str(self.level_norm)),
+        self.properties = [('Label', self.label),
+                            ('Base field', pretty_field),
+                            ('Weight', prop_int_pretty(self.weight)),
+                            ('Level norm', prop_int_pretty(self.level_norm)),
                             ('Level', self.level_ideal2),
-                            ('Label', self.label),
-                            ('Dimension', str(self.dimension))
+                            ('Dimension', prop_int_pretty(self.dimension))
         ]
 
         try:
@@ -153,8 +153,9 @@ class WebBMF(object):
             elif self.CM == 0:
                 self.CM = 'no'
             else:
-                if self.CM%4 in [2,3]:
-                    self.CM = 4*self.CM
+                if int(self.CM)%4 in [2,3]:
+                    self.CM = 4*int(self.CM)
+                self.CM = "$%s$" % self.CM
         except AttributeError:
             self.CM = 'not determined'
         self.properties.append(('CM', str(self.CM)))
@@ -175,12 +176,12 @@ class WebBMF(object):
             self.bc_extra = r', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{' + str(self.bcd) + r'})\)'
         elif self.bc == -1:
             self.bc = 'no'
-            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\)'
+            self.bc_extra = r', but is a twist of the base change of a form over \(\mathbb{Q}\)'
         elif self.bc < -1:
             self.bcd = -self.bc
             self.bc = 'no'
-            self.bc_extra = r', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
-        self.properties.append(('Base-change', str(self.bc)))
+            self.bc_extra = r', but is a twist of the base change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
+        self.properties.append(('Base change', str(self.bc)))
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:

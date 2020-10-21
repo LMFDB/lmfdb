@@ -47,6 +47,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End tensored with QQ
+end_alg_list = [ 'Q', 'RM', 'CM', 'Q x Q', 'M_2(Q)']
+end_alg_dict = { x:x for x in end_alg_list }
+
 # End_QQbar tensored with QQ
 geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
 geom_end_alg_dict = { x:x for x in geom_end_alg_list }
@@ -381,7 +385,7 @@ def genus2_curve_search(info, query):
         query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
     if 'class' in info:
         query['class'] = info['class']
-    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
+    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'end_alg', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
     parse_primes(info, query, 'bad_primes', name='bad primes',qfield='bad_primes',mode=info.get('bad_quantifier'))
     info["curve_url"] = lambda label: url_for_curve_label(label)
@@ -513,14 +517,13 @@ def labels_page():
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 
-
 class G2CSearchArray(SearchArray):
     noun = "curve"
     plural_noun = "curves"
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
-            width=115,
+            min_width=115,
             options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
         )
 
@@ -534,6 +537,21 @@ class G2CSearchArray(SearchArray):
             colspan=(1, 4, 1),
             example_span="",
         )  # the last 1 is irrelevant
+
+        bad_quantifier = SubsetBox(
+            name="bad_quantifier",
+            min_width=115,
+        )
+
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            knowl="g2c.good_reduction",
+            label="Bad primes",
+            short_label=r"Bad \(p\)",
+            example="5,13",
+            example_span="2 or 2,3,5",
+            select_box=bad_quantifier,
+        )
 
         conductor = TextBox(
             name="cond",
@@ -606,20 +624,6 @@ class G2CSearchArray(SearchArray):
             example="1",
         )
 
-        bad_quantifier = SubsetBox(
-            name="bad_quantifier",
-        )
-
-        bad_primes = TextBoxWithSelect(
-            name="bad_primes",
-            knowl="g2c.good_reduction",
-            label="Bad primes",
-            short_label=r"Bad \(p\)",
-            example="5,13",
-            example_span="",
-            select_box=bad_quantifier,
-        )
-
         is_gl2_type = YesNoBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
@@ -630,7 +634,7 @@ class G2CSearchArray(SearchArray):
             name="st_group",
             knowl="g2c.st_group",
             label="Sato-Tate group",
-            short_label=r"\(\mathrm{ST}\)",
+            short_label=r"\(\mathrm{ST}(X)\)",
             options=([("", "")] + [(elt, st_group_dict[elt]) for elt in st_group_list]),
         )
 
@@ -638,13 +642,9 @@ class G2CSearchArray(SearchArray):
             name="real_geom_end_alg",
             knowl="g2c.st_group_identity_component",
             label="Sate-Tate identity component",
-            short_label=r"\(\mathrm{ST}^0\)",
+            short_label=r"\(\mathrm{ST}^0(X)\)",
             options=(
-                [("", "")]
-                + [
-                    (elt, real_geom_end_alg_to_ST0_dict[elt])
-                    for elt in real_geom_end_alg_list
-                ]
+                [("", "")] + [(elt, real_geom_end_alg_to_ST0_dict[elt]) for elt in real_geom_end_alg_list]
             ),
         )
 
@@ -662,8 +662,17 @@ class G2CSearchArray(SearchArray):
             label=r"\(\overline{\Q}\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X_{\overline{\Q}})\)",
             options=(
-                [("", "")]
-                + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+                [("", "")] + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+            ),
+        )
+
+        Q_endomorphism = SelectBox(
+            name="end_alg",
+            knowl="g2c.end_alg",
+            label=r"\(\Q\)-endomorphism algebra",
+            short_label=r"\(\Q\)-end algebra",
+            options=(
+                [("", "")] + [(elt, end_alg_dict[elt]) for elt in end_alg_list]
             ),
         )
 
@@ -673,8 +682,7 @@ class G2CSearchArray(SearchArray):
             label=r"\(\overline{\Q}\)-endomorphism algebra",
             short_label=r"\(\overline{\Q}\)-end algebra",
             options=(
-                [("", "")]
-                + [(elt, geom_end_alg_dict[elt]) for elt in geom_end_alg_list]
+                [("", "")] + [(elt, geom_end_alg_dict[elt]) for elt in geom_end_alg_list]
             ),
         )
 
@@ -702,16 +710,17 @@ class G2CSearchArray(SearchArray):
 
         self.browse_array = [
             [geometric_invariants],
+            [bad_primes, geometrically_simple],
             [conductor, is_gl2_type],
             [discriminant, st_group],
             [rational_points, st_group_identity_component],
             [rational_weirstrass_points, Q_automorphism],
             [torsion_order, geometric_automorphism],
-            [torsion_structure, geometric_endomorphism],
-            [two_selmer_rank, locally_solvable],
+            [torsion_structure, Q_endomorphism],
+            [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
-            [analytic_rank, geometrically_simple],
-            [count, bad_primes],
+            [analytic_rank, locally_solvable],
+            [count],
         ]
 
         self.refine_array = [
@@ -730,7 +739,7 @@ class G2CSearchArray(SearchArray):
                 torsion_structure,
             ],
             [
-                is_gl2_type,
+                Q_endomorphism,
                 st_group,
                 Q_automorphism,
                 has_square_sha,
@@ -741,6 +750,7 @@ class G2CSearchArray(SearchArray):
                 st_group_identity_component,
                 geometric_automorphism,
                 locally_solvable,
+                is_gl2_type,
             ],
         ]
 

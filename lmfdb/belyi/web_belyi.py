@@ -4,7 +4,7 @@ from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
-from lmfdb.utils import names_and_urls
+from lmfdb.utils import names_and_urls, prop_int_pretty
 from flask import url_for
 
 from lmfdb import db
@@ -216,13 +216,14 @@ class WebBelyiGalmap(object):
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
-        properties = [ (None, plot_link)] if self.plot is not None else []
+        properties = [("Label", galmap["label"])]
+        if self.plot:
+            properties += [(None, plot_link)]
         properties += [
-            ("Label", galmap["label"]),
             ("Group", str(galmap["group"])),
-            ("Orders", str(galmap["abc"])),
-            ("Genus", str(galmap["g"])),
-            ("Size", str(galmap["orbit_size"])),
+            ("Orders", "$%s$" % (galmap["abc"])),
+            ("Genus", prop_int_pretty(galmap["g"])),
+            ("Size", prop_int_pretty(galmap["orbit_size"])),
         ]
         self.properties = properties
 

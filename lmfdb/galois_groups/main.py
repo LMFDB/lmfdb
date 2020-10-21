@@ -13,7 +13,7 @@ from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, latex_comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
-    StatsDisplay, totaler, proportioners,
+    StatsDisplay, totaler, proportioners, prop_int_pretty,
     search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
@@ -173,8 +173,8 @@ def galois_group_search(info, query):
 
 def yesno(val):
     if val:
-        return 'Yes'
-    return 'No'
+        return 'yes'
+    return 'no'
 
 
 def render_group_webpage(args):
@@ -216,7 +216,7 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(n, data['subfields'])
         data['resolve'] = resolve_display(data['quotients'])
         if data['gapid'] == 0:
-            data['gapid'] = "Data not available"
+            data['gapid'] = "not available"
         else:
             data['gapid'] = small_group_display_knowl(int(data['order']),
                                                       int(data['gapid']),
@@ -253,8 +253,8 @@ def render_group_webpage(args):
         if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
-            ('Order', r'\(%s\)' % order),
-            ('n', r'\(%s\)' % data['n']),
+            ('Degree', prop_int_pretty(data['n'])),
+            ('Order', prop_int_pretty(order)),
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),

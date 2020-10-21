@@ -5,7 +5,9 @@
 from lmfdb import db
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
-from lmfdb.utils import display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder, make_bigint, web_latex_factored_integer
+from lmfdb.utils import (
+    display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder,
+    make_bigint, web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -312,18 +314,18 @@ class WebNewformSpace(object):
         if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
         self.properties +=[
-            ('Level',str(self.level)),
-            ('Weight',str(self.weight)),
-            ('Character orbit',self.char_orbit_label),
-            ('Rep. character',r'\(%s\)'%self.char_conrey_str),
-            ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
-            ('Dimension',str(self.dim)),
+            ('Level', prop_int_pretty(self.level)),
+            ('Weight', prop_int_pretty(self.weight)),
+            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
+            ('Rep. character', '$%s$' % self.char_conrey_str),
+            ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Dimension', prop_int_pretty(self.dim)),
         ]
         if self.num_forms is not None:
-            self.properties.append(('Newform subspaces',str(self.num_forms)))
-        self.properties.append(('Sturm bound',str(self.sturm_bound)))
+            self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))
+        self.properties.append(('Sturm bound', prop_int_pretty(self.sturm_bound)))
         if data.get('trace_bound') is not None:
-            self.properties.append(('Trace bound',str(self.trace_bound)))
+            self.properties.append(('Trace bound', prop_int_pretty(self.trace_bound)))
         # Work around search results not including None
         if data.get('num_forms') is None:
             self.num_forms = None
@@ -339,7 +341,7 @@ class WebNewformSpace(object):
 
         if self.conrey_indexes[0] == 1:
             self.trivial_character = True
-            character_str = "Trivial character"
+            character_str = "trivial character"
             if self.dim == 0:
                 self.dim_str = r"\(%s\)"%(self.dim)
             else:

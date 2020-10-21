@@ -15,7 +15,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberFiel
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
-from lmfdb.utils import names_and_urls
+from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
@@ -492,15 +492,16 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties = [('Base field', '%s' % info['field'].field_pretty()),
-                   ('Weight', '%s' % data['weight']),
-                   ('Level norm', '%s' % data['level_norm']),
-                   ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
-                   ('Label', '%s' % data['label']),
-                   ('Dimension', '%s' % data['dimension']),
-                   ('CM', is_CM),
-                   ('Base change', is_base_change)
-                   ]
+    properties = [
+        ('Label', '%s' % data['label']),
+        ('Base field', '%s' % info['field'].field_pretty()),
+        ('Weight', '$%s$' % data['weight']),
+        ('Level norm', prop_int_pretty(data['level_norm'])),
+        ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
+        ('Dimension', prop_int_pretty(data['dimension'])),
+        ('CM', is_CM),
+        ('Base change', is_base_change)
+    ]
 
     return render_template(
         "hilbert_modular_form.html",

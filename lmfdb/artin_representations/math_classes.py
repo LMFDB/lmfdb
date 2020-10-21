@@ -14,7 +14,7 @@ import re
 # abbreviate labels with large conductors for display purposes
 def artin_label_pretty(label):
     s = label.split('.')
-    if len(s[1]) > 20:
+    if len(s[1]) > 12:
         s[1] = s[1][:3] + "..." + s[1][-3:]
     return '.'.join(s)
 
@@ -403,12 +403,12 @@ class ArtinRepresentation(object):
 
     def parity(self):
         if self._data['Is_Even']:
-            return 'Even'
+            return 'even'
         else:
-            return 'Odd'
+            return 'odd'
         #par = (self.dimension()-self.trace_complex_conjugation())/2
-        #if (par % 2) == 0: return "Even"
-        #return "Odd"
+        #if (par % 2) == 0: return "even"
+        #return "odd"
 
     def field_knowl(self):
         from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -766,7 +766,7 @@ class NumberFieldGaloisGroup(object):
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
             mygalstring = wnf.galois_string()
-            if re.search('Trivial', mygalstring) is not None:
+            if re.search('rivial', mygalstring) is not None:
                 return '$C_1$'
             # Have to remove dollar signs
             return mygalstring

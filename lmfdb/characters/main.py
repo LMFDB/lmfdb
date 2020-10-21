@@ -19,9 +19,7 @@ from lmfdb.characters.web_character import (
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
 )
-from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
-from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
@@ -32,6 +30,13 @@ def ctx_characters():
     chardata = {}
     chardata['url_character'] = url_character
     return chardata
+
+def bread(tail=[]):
+    base = [('Characters',url_for(".render_characterNavigation")),
+            ('Dirichlet', url_for(".render_DirichletNavigation"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 def learn(current = None):
     r = []
@@ -45,13 +50,8 @@ def learn(current = None):
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     return r
 
-dirich_credit = "" # TODO should anyone be credited?
-def get_bread(tail=[]):
-    base = [('Characters',url_for(".render_characterNavigation")),
-            ('Dirichlet', url_for(".render_DirichletNavigation"))]
-    if not isinstance(tail, list):
-        tail = [(tail, " ")]
-    return base + tail
+def credit():
+    return "Alex Best, Jonathan Boboer, David Lowry-Duda, and Andrew Sutherland"
 
 ###############################################################################
 #   Route functions
@@ -66,6 +66,8 @@ def render_characterNavigation():
     return redirect(url_for(".render_DirichletNavigation"), 301)
 
 class DirichSearchArray(SearchArray):
+    noun = "character"
+    plural_noun = "characters"
     jump_example = "13.2"
     jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl="character.dirichlet.search_input"
@@ -151,14 +153,6 @@ def common_parse(info, query):
     parse_bool(info, query, "is_real", name="is_real")
     parse_bool(info, query, "is_minimal", name="is_minimal")
 
-def learnmore_list():
-    return [
-        ('Completeness of the data', url_for(".extent_page")),
-        ('Source of the data', url_for(".how_computed_page")),
-        ('Reliability of the data', url_for(".reliability")),
-        ('Dirichlet character labels', url_for(".labels_page")),
-    ]
-
 def validate_label(label):
     modulus, number = label.split('.')
     modulus = int(modulus)
@@ -192,13 +186,11 @@ def url_for_label(label):
     table=db.char_dir_orbits,
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
-    shortcuts={
-        "jump": jump,
-    },
+    shortcuts={ "jump": jump },
     url_for_label=url_for_label,
-    learnmore=learnmore_list,
-    bread=lambda: get_bread("Search results"),
-    credit=lambda: dirich_credit,
+    learnmore=learn,
+    bread=lambda: bread("Search results"),
+    credit=credit,
 )
 def dirichlet_character_search(info, query):
     common_parse(info, query)
@@ -243,10 +235,10 @@ def render_DirichletNavigation():
             modulus_start = int(arg[0])
             modulus_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
-            info['learnmore'] = learn()
             info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
-            info['credit'] = 'Sage'
+            info['bread'] = bread('Modulus')
+            info['learnmore'] = learn()
+            info['credit'] = credit()
             h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
             info['contents'] = c
             info['headers'] = h
@@ -260,12 +252,12 @@ def render_DirichletNavigation():
             conductor_start = int(arg[0])
             conductor_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
+            info['bread'] = bread('Conductor')
             info['learnmore'] = learn()
+            info['credit'] = credit()
             info['conductor_start'] = conductor_start
             info['conductor_end'] = conductor_end
             info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
-            info['credit'] = "Sage"
             info['contents'] = get_character_conductor(conductor_start, conductor_end + 1)
             return render_template("ConductorList.html", **info)
 
@@ -275,17 +267,17 @@ def render_DirichletNavigation():
             order_start = int(arg[0])
             order_end = int(arg[1])
             info = {'args': request.args}
-            info['bread'] = get_bread()
+            info['bread'] = bread('Order')
             info['learnmore'] = learn()
+            info['credit'] = credit()
             info['order_start'] = order_start
             info['order_end'] = order_end
             info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
-            info['credit'] = 'SageMath'
             info['contents'] = get_character_order(order_start, order_end + 1)
             return render_template("OrderList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
-        return render_template('CharacterNavigate.html', title='Dirichlet characters')
+        return render_template('CharacterNavigate.html', title='Dirichlet characters', bread=bread(), learnmore=learn(), credit=credit())
 
     if request.args:
         # hidden_search_type for prev/next buttons
@@ -295,6 +287,9 @@ def render_DirichletNavigation():
             return dirichlet_character_search(info)
         assert False
     info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
+    info['bread'] = bread()
+    info['learnmore'] = learn()
+    info['credit'] = credit()
     info['title'] = 'Dirichlet characters'
     return render_template('CharacterNavigate.html', info=info,**info)
 
@@ -303,32 +298,36 @@ def render_DirichletNavigation():
 def labels_page():
     info = {}
     info['title'] = 'Dirichlet character labels'
-    info['bread'] = get_bread('Labels')
+    info['bread'] = bread('Labels')
     info['learnmore'] = learn('labels')
+    info['credit'] = credit()
     return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
 @characters_page.route("/Dirichlet/Source")
 def how_computed_page():
     info = {}
     info['title'] = 'Source of Dirichlet character data'
-    info['bread'] = get_bread('Source')
+    info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
+    info['credit'] = credit()
     return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
 @characters_page.route("/Dirichlet/Reliability")
 def reliability():
     info = {}
     info['title'] = 'Reliability of Dirichlet character data'
-    info['bread'] = get_bread('Reliability')
+    info['bread'] = bread('Reliability')
     info['learnmore'] = learn('reliability')
+    info['credit'] = credit()
     return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
 
 @characters_page.route("/Dirichlet/Completeness")
 def extent_page():
     info = {}
     info['title'] = 'Completeness of Dirichlet character data'
-    info['bread'] = get_bread('Extent')
+    info['bread'] = bread('Extent')
     info['learnmore'] = learn('extent')
+    info['credit'] = credit()
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
 
@@ -377,8 +376,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-        info['bread'] = get_bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
+        info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
+        info['credit'] = credit()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
         if 'gens' in info:
@@ -396,10 +396,11 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
     webchar = make_webchar(args)
     info = webchar.to_dict()
-    info['bread'] = get_bread(
+    info['bread'] = bread(
         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
          ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ])
     info['learnmore'] = learn()
+    info['credit'] = credit()
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
@@ -471,15 +472,14 @@ def interesting():
         db.char_dir_values,
         url_for_label=url_for_label,
         title="Some interesting Dirichlet characters",
-        bread=get_bread("Interesting"),
-        credit="SageMath",
+        bread=bread("Interesting"),
+        credit=credit(),
         learnmore=learn())
 
 @characters_page.route('/Dirichlet/stats')
 def statistics():
     title = "Dirichlet characters: statistics"
-    bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=DirichStats(), credit="SageMath", title=title, bread=bread, learnmore=learn())
+    return render_template("display_stats.html", info=DirichStats(), credit=credit(), title=title, bread=bread("Statistics"), learnmore=learn())
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
@@ -503,77 +503,6 @@ def dc_calc(calc, modulus, number):
     except Exception:
         return "<span style='color:red;'>Error: bad input</span>"
 
-@characters_page.route("/Hecke/")
-@characters_page.route("/Hecke/<number_field>")
-@characters_page.route("/Hecke/<number_field>/<modulus>")
-@characters_page.route("/Hecke/<number_field>/<modulus>/<number>")
-def render_Heckewebpage(number_field=None, modulus=None, number=None):
-    #args = request.args
-    #temp_args = to_dict(args)
-
-    args = {}
-    args['type'] = 'Hecke'
-    args['number_field'] = number_field
-    args['modulus'] = modulus
-    args['number'] = number
-
-    if number_field is None:
-        info = WebHeckeExamples(**args).to_dict()
-        return render_template('Hecke.html', **info)
-    else:
-        WNF = WebNumberField(number_field)
-        if WNF.is_null():
-            return abort(404, "Number field %s not found." % number_field)
-
-    if modulus is None:
-        try:
-            info = WebHeckeFamily(**args).to_dict()
-        except (ValueError,KeyError,TypeError) as err:
-            return abort(404, err.args)
-        return render_template('CharFamily.html', **info)
-    elif number is None:
-        try:
-            info = WebHeckeGroup(**args).to_dict()
-        except (ValueError,KeyError,TypeError):
-            # Typical failure case is a GP error inside bnrinit which we don't really want to display
-            return abort(404, 'Unable to construct modulus %s for number field %s' % (modulus, number_field))
-        m = info['modlabel']
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Hecke', url_for(".render_Heckewebpage")),
-                         ('Number field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('%s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('CharGroup.html', **info)
-    else:
-        try:
-            X = WebHeckeCharacter(**args)
-        except (ValueError,KeyError,TypeError):
-            return abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.' % (number,modulus,number_field))
-        info = X.to_dict()
-        info['bread'] = [('Characters',url_for(".render_characterNavigation")),
-                         ('Hecke',  url_for(".render_Heckewebpage")),
-                         ('Number field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=X.modlabel)),
-                         ('%s'%X.number2label(X.number), '')]
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('Character.html', **info)
-
-@characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
-def hc_calc(calc, number_field, modulus, number):
-    val = request.args.get("val", [])
-    args = {'type':'Hecke', 'number_field':number_field, 'modulus':modulus, 'number':number}
-    if not val:
-        return abort(404)
-    try:
-        if calc == 'value':
-            return WebHeckeCharacter(**args).value(val)
-        else:
-            return abort(404)
-    except Exception as e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e
-
 ###############################################################################
 ##  TODO: refactor the following
 ###############################################################################
@@ -592,8 +521,8 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = get_bread('Table')
-    info['credit'] = 'SageMath'
+    info['bread'] = bread('Group')
+    info['credit'] = credit()
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
         info['char_number_list'] = char_number_list

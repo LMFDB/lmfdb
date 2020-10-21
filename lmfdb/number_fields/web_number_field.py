@@ -182,7 +182,7 @@ for n, label in list(rcyclolookup.items()):
         rcyclolookup[2 * n] = label
 
 def na_text():
-    return "Not computed"
+    return "not computed"
 
 ## Turn a list into a string (without brackets)
 
@@ -394,6 +394,10 @@ class WebNumberField:
         if self.label == 'a':
             return None
         return self.label
+
+    def label_pretty(self):
+        from lmfdb.number_fields.number_field import nf_label_pretty
+        return nf_label_pretty(self.label)
 
     def field_pretty(self):
         return field_pretty(self.get_label())
@@ -729,7 +733,7 @@ class WebNumberField:
             return na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'Trivial'
+            return 'trivial'
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):

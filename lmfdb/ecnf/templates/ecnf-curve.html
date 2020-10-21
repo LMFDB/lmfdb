@@ -6,8 +6,7 @@
 </style>
 
 {#
-
-</script><style type="text/css">
+<style type="text/css">
   .sagecell .CodeMirror-scroll {
     height: auto;
     overflow-y: hidden;
@@ -30,8 +29,8 @@
   </style>
 #}
 
+<h2 style="margin-top:0px;"> {{KNOWL('ag.base_field','Base field')}} {{ ec.field.knowl()|safe }} </h2>
 <div>
-  <h2> {{KNOWL('ag.base_field','Base field')}} {{ ec.field.knowl()|safe }} </h2>
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  ec.field.generator_name() }}\), with {{
@@ -166,8 +165,8 @@ cellpadding="5";
 
 </table>
 
-<div>
 <h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
+<div>
 <p>
 <table>
 <tr>
@@ -236,8 +235,8 @@ cellpadding="5";
 </p>
 </div>
 
-<div>
 <h2> {{ KNOWL('ec.bsdconjecture', title='BSD invariants') }}</h2>
+<div>
 <p>
         <table>
 
@@ -255,7 +254,7 @@ cellpadding="5";
         </tr>
 
 	<tr>
-	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}</td>
+	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
@@ -336,8 +335,8 @@ cellpadding="5";
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 </div>
 
+<h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
 <div>
-    <h2>{{KNOWL('ec.local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
  {{ place_code('localdata') }}
 
   {% if not ec.is_minimal %}
@@ -346,7 +345,7 @@ cellpadding="5";
   {% endif %}
 
 {% if ec.local_data %}
-<table cellpadding="5">
+<table class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>Norm</th>
@@ -360,6 +359,7 @@ cellpadding="5";
 <th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
 <th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in ec.local_data %}
 <tr>
 <td align=center>
@@ -393,14 +393,15 @@ cellpadding="5";
 <td align=center>\({{pr.ord_den_j}}\)</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% else %}
 No primes of bad reduction.
 {% endif %}
 </div>
 
-<div>
 <h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
+<div>
 
 {% if ec.galois_images=="?" %}
 
@@ -418,17 +419,19 @@ for all primes \( p < 1000 \)
 except those listed.
 </p>
 <p>
-<table>
+<table class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>{{KNOWL('ec.galois_rep_image', title='Image of Galois Representation')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in ec.galois_data %}
 <tr>
 <td align=center> \({{pr.p}}\)</td>
 <td align=center>{{pr.image}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% else %}
 .
@@ -471,8 +474,8 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 
 </div>
 
+<h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <div>
-  <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
 {% if ec.isodeg %}
 This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
@@ -491,17 +494,17 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 {% endif %}
 </div>
 
-<div>
 <h2> {{KNOWL('ec.base_change','Base change')}} </h2>
+<div>
 <p>
 This curve {% if ec.base_change %} is the
-{{KNOWL('ec.base_change','base-change')}} of elliptic curves
+{{KNOWL('ec.base_change','base change')}} of elliptic curves
 {% for E0 in ec.base_change%}
 <a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
 {% endfor %}
 defined over \(\Q\), so it is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% else %}
-is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
+is not the {{KNOWL('ec.base_change','base change')}} of an elliptic curve defined over \(\Q\).
 {% if ec.qc=="yes" %}
 It is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% elif ec.qc=="no" %}
