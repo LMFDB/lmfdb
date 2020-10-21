@@ -636,15 +636,14 @@ class ECNF(object):
                     self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
 
 
-        self.properties = [
-            ('Base field', self.field.field_pretty()),
-            ('Label', self.label)]
+        self.properties = [('Label', self.label)]
 
         # Plot
         if K.signature()[0]:
             self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
             self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
+        self.properties += [('Base field', self.field.field_pretty())]
 
         self.properties += [
             ('Conductor', self.cond),
@@ -654,10 +653,10 @@ class ECNF(object):
             ('CM', self.cm_bool)]
 
         if self.base_change:
-            self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
+            self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('base-change', 'no')]
+            self.properties += [('Base change', 'no')]
         self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
@@ -669,7 +668,7 @@ class ECNF(object):
         ]
 
         for E0 in self.base_change:
-            self.friends += [(r'Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+            self.friends += [(r'Base change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
 
         self._code = None # will be set if needed by get_code()
 

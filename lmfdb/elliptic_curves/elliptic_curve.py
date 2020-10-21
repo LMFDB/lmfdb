@@ -149,7 +149,7 @@ def statistics():
 def by_conductor(conductor):
     info = to_dict(request.args, search_array=ECSearchArray())
     info['bread'] = get_bread([('%s' % conductor, url_for(".by_conductor", conductor=conductor))])
-    info['title'] = r'Elliptic curves over $\Q$ of Conductor %s' % conductor
+    info['title'] = r'Elliptic curves over $\Q$ of conductor %s' % conductor
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
@@ -236,7 +236,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
+    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass coefficients)\n'
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import web_latex, encode_plot
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND
 from lmfdb import db
@@ -144,10 +144,10 @@ class ECisog_class(object):
             self.iso_label = self.lmfdb_iso
 
         self.properties = [('Label', self.iso if self.label_type=='Cremona' else self.lmfdb_iso),
-                           ('Number of curves', str(ncurves)),
-                           ('Conductor', '%s' % N),
+                           ('Number of curves', prop_int_pretty(ncurves)),
+                           ('Conductor', prop_int_pretty(N)),
                            ('CM', '%s' % self.CM),
-                           ('Rank', '%s' % self.rank)
+                           ('Rank', prop_int_pretty(self.rank))
                            ]
         if self.ncurves>1:
             self.properties += [('Graph', ''),(None, self.graph_link)]

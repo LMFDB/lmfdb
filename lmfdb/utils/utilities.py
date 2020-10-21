@@ -25,7 +25,7 @@ from sage.all import (CC, CBF, CDF,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation, factor
+from sage.all import floor, latex, prime_range, valuation, factor, log
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
@@ -106,6 +106,17 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 ################################################################################
 #   number utilities
 ################################################################################
+
+def prop_int_pretty(n):
+    """
+    This function should be called whenever displaying an integer in the
+    properties table so that we can keep the formatting consistent
+    """
+    if abs(n) >= 10**12:
+        e = floor(log(abs(n),10))
+        return r'$%.3f\times 10^{%d}$' % (n/10**e, e)
+    else:
+        return '$%s$' % n
 
 def try_int(foo):
     try:
@@ -330,9 +341,6 @@ def to_dict(args, exclude = [], **kwds):
     """
     d = dict(kwds)
     for key, values in args.items():
-        # do not overwrite keys passed as input
-        if key in d:
-            continue
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]

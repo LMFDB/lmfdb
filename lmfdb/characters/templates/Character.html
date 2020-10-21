@@ -9,7 +9,7 @@
 
 {% if symbol %}
   {% if (isprimitive == "Yes" or isprimitive == "yes") and indlabel %}
-    <h2>
+    <h2 style="margin-top:0px;">
       {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
     </h2>
 
@@ -21,44 +21,33 @@
 
 
 {# Basic properties #}
-
-<h2>
+<h2 style="margin-top:0px;">
   {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
 </h2>
-
 <table>
-  <tr> <td colspan='3'> {{ place_code('modulus') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}</td> <td>=</td> <td>{{ modulus }}</td> </tr>
-  <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
-  <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
-  <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} {{ '(induced from <a href="'|safe + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">'|safe + inducing + "</a>)" | safe if isprimitive == "no"  }}</td> </tr>
+  <tbody>
+  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}:</td> <td>\({{ modulus }}\)</td> <td>{{place_code('modulus')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> <td>{{place_code('cond')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.order',title='Order')}}:</td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.real',title='Real')}}:</td> <td> {{ isreal }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
-  <tr> <td> {{KNOWL('character.dirichlet.minimal',title='Minimal')}} </td> <td>=</td> <td> {{ isminimal }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td>{{ isminimal }}</td> </tr>
   {% endif %}
   {% if parity %}
-  <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
-  {% endif %}
-  {% if (type != 'Hecke') and (modulus <= 10000) %}
-  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
-  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_index',title='Orbit index')}} </td> <td>=</td> <td> {{ orbit_index }} </td></tr>
+  <tr> <td>{{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td>{{ parity }}</td> <td>{{place_code('parity')}}</td> </tr>
   {% endif %}
 {% endif %}
+ </tbody>
 </table>
-
 {% if galoisorbit %}
 
 {# Galois Orbits #}
 
 <h2>
-  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
+  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }} {{ modulus }}.{{ orbit_label }}
 </h2>
-{{ place_code('galoisorbit') }}
 <p>
 {% for mod,num,label,prim in galoisorbit %}
 {% if loop.index > limit %} ... {% break %} {% endif %}
@@ -67,6 +56,7 @@
 </a>
 {% endfor %}
 </p>
+{{ place_code('galoisorbit') }}
 {% endif %} {# galoisorbit #}
 
 {# Inducing character #}
@@ -110,25 +100,32 @@
   {% endif %}
 </h2>
 <div style='overflow:auto'>
-  <table class="values">
+  <table class="values" style="margin-left:10px; margin-top:5px;">
     <thead>
-      <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
+      <tr>{% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}</tr>
     </thead>
-    <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
+    <tr>{% for v in values %}<td style="text-align:center">{{v}}</td>{%endfor%}</tr>
   </table>
 </div>
 
 {% set value_default = 2 %}
-<form> value  at&nbsp;
-  <input id="calc-value-input" size=10 placeholder={{value_default}}>
-  <button id="calc-value-go"> Compute </button>
-  <span class="formexample"> e.g. {{value_default}} </span>
+<form>
+  <table style="margin-left:10px;">
+    <tbody>
+    <tr>
+      <td>value at</td>
+      <td><input id="calc-value-input" size=10 placeholder={{value_default}}></td>
+      <td><button id="calc-value-go"> Compute </button></td>
+      <td><span class="formexample"> e.g. {{value_default}}</span></td>
+    </tr>
+    </tbody>
+  </table>
 </form>
 <div class="output"><span id="calc-value-output"></span></div>
 {% endif %}
 
 {# Fields #}
-<h2>
+<h2 style="margin-top:0px;">
   {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
 </h2>
 <table>

@@ -27,10 +27,10 @@
        level_label=form.level_label)}}>{{form.level_label}}</a> {#$={{form.level_ideal}}$#}</td>
 <td align='left'><a href="{{form.url}}">
     {{form.short_label}} </a></td>
-<td align='center'>{{form.dimension}}</td>
-<td align='center'>{{form.sfe}}</td>
+<td align='center'>${{form.dimension}}$</td>
+<td align='center'>${{form.sfe}}$</td>
 <td align='center'>{{form.bc}}</td>
-<td align='center'>{{form.cm}}</td>
+<td align='center'>{{'$'+form.cm+'$' if form.cm[0] == '-' else form.cm}}</td>
 </tr>
 {% endfor %}
 <tbody>

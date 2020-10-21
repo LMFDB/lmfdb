@@ -84,9 +84,9 @@ def learnmore_list_remove(matchstring):
 
 def tfTOyn(bool):
     if bool:
-        return "Yes"
+        return "yes"
     else:
-        return "No"
+        return "no"
 
 # Convert [4,1] to 4.1, then  apply sg_pretty
 def group_display(strg):
@@ -695,8 +695,9 @@ def render_family(args):
         smallgroup="[" + str(gn) + "," +str(gt) + "]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
-             ('Quotient genus', r'\(%d\)' % g0),
+            ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -819,6 +820,7 @@ def render_passport(args):
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
             ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
@@ -846,11 +848,11 @@ def render_passport(args):
             dat = dataz[i]
             x1 = dat['total_label']
             if 'full_auto' in dat:
-                x2 = 'No'
+                x2 = 'no'
                 if dat['full_label'] not in Lfriends:
                     Lfriends.append(dat['full_label'])
             else:
-                x2 = 'Yes'
+                x2 = 'yes'
 
             if 'hyperelliptic' in dat:
                 x3 = tfTOyn(dat['hyperelliptic'])

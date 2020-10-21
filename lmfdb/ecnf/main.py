@@ -299,7 +299,7 @@ def show_ecnf_conductor(nf, conductor_label):
     except ValueError:
         return search_input_error()
     info = to_dict(request.args, search_array=ECNFSearchArray())
-    info['title'] = 'Elliptic curves over %s of Conductor %s' % (nf_pretty, conductor_label)
+    info['title'] = 'Elliptic curves over %s of conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search

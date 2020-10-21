@@ -65,7 +65,7 @@ from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_met
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, prop_int_pretty
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
@@ -160,7 +160,6 @@ class WebDirichlet(WebCharObject):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = DirichletGroup_conrey(m)
-        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
@@ -421,7 +420,6 @@ class WebHecke(WebCharObject):
         #self.number = lmfdb_label2hecke(self.numlabel)
         # make this canonical
         self.modlabel = self.ideal2label(self._modulus)
-        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
         self.parity = None
         logger.debug('###### WebHeckeComputed')
@@ -545,7 +543,7 @@ class WebHecke(WebCharObject):
 
 class WebCharFamily(WebCharObject):
     """ compute first groups """
-    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'code', 'headers', 'contents' ]
     headers = [ 'modulus', 'order', 'structure', 'first characters' ]
 
@@ -594,7 +592,7 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     headers = [ 'order', 'primitive']
-    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
@@ -654,9 +652,9 @@ class WebCharGroup(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        return [("Modulus", [self.modulus]),
+        return [("Modulus", [prop_int_pretty(self.modulus)]),
                 ("Structure", [self.structure]),
-                ("Order", [self.order]),
+                ("Order", [prop_int_pretty(self.order)]),
                 ]
 
     @lazy_attribute
@@ -678,7 +676,7 @@ class WebChar(WebCharObject):
     """
     Class for presenting a character on a web page
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -740,6 +738,10 @@ class WebChar(WebCharObject):
         return self.char2tex(self.conductor, self.indlabel)
 
     @lazy_attribute
+    def label(self):
+        return '%s.%s' % (self.modulus, self.number)
+
+    @lazy_attribute
     def vflabel(self):
       order2 = self.order if self.order % 4 != 2 else self.order / 2
       #if order2 == 1:
@@ -771,23 +773,18 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def properties(self):
-        f = [
-            ("Modulus", [self.modulus]),
-            ("Conductor", [self.conductor]),
-            ("Order", [self.order]),
+        f = [("Label", [self.label])]
+        f.extend([
+            ("Modulus", [prop_int_pretty(self.modulus)]),
+            ("Conductor", [prop_int_pretty(self.conductor)]),
+            ("Order", [prop_int_pretty(self.order)]),
             ("Real", [self.isreal]),
             ("Primitive", [self.isprimitive])
-        ]
+        ])
         if self.isminimal:
             f.append(("Minimal", [self.isminimal]))
         if self.parity:
             f.append(("Parity", [self.parity]))
-        try:
-            if self.orbit_label:
-                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-                f.append(("Orbit label", [formatted_orbit_label]))
-        except KeyError:
-            pass
         return f
 
     @lazy_attribute
@@ -898,7 +895,6 @@ class WebDBDirichlet(WebDirichlet):
             self.H = DirichletGroup_conrey(self.modulus)
             self.chi = self.H[self.number]
         self.maxcols = 30
-        self.credit = ''
         self.codelangs = ('pari', 'sage')
         self._compute()
 
@@ -1035,7 +1031,7 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     A class using data stored in the database. Currently this is all Dirichlet
     characters with modulus up to 10000.
     """
-    headers = ['orbit label', 'order', 'primitive']
+    headers = ['Character', 'Orbit', 'Order', 'Primitive']
 
     def __init__(self, **kwargs):
         self._contents = None
@@ -1124,7 +1120,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     A class using data stored in the database. Currently, this is all Dirichlet
     characters with modulus up to 10000.
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -1237,7 +1233,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @lazy_attribute
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+                 'pari': '#znconreyconductor(g,chi)==1' }
 
     @lazy_attribute
     def codecond(self):
@@ -1275,7 +1271,6 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = Integers(m).unit_group()
-        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1301,7 +1296,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         self.modulus = int(self.modlabel)
         self.number = int(self.numlabel)
         self.chi = ConreyCharacter(self.modulus, self.number)
-        self.credit = ''
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1424,7 +1418,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     """
     remove all computations for large moduli
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
+    _keys = [ 'title', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
               'number', 'numlabel', 'texname', 'codeinit',
               'symbol', 'codesymbol',
@@ -1485,7 +1479,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
 
-    _keys = [ 'title', 'credit', 'headers', 'contents' ]
+    _keys = [ 'title', 'headers', 'contents' ]
     headers = ['label','signature', 'polynomial' ]
 
     def __init__(self, **args):
@@ -1501,7 +1495,6 @@ class WebHeckeExamples(WebHecke):
                      #'4.4.2403.1',
                      #'4.2.283.1',
                      ]
-        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
@@ -1531,7 +1524,6 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
-        self.credit = 'Pari, SageMath'
         self.codelangs = ('pari', 'sage')
 
     def first_moduli(self, bound=200):

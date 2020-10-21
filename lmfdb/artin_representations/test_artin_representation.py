@@ -17,7 +17,7 @@ class ArtinRepTest(LmfdbTest):
     def test_display_page(self):
         #L = self.tc.get('/ArtinRepresentation/4/3655/1/')
         L = self.tc.get('/ArtinRepresentation/4.5_17_43.8t44.1c1')
-        assert ('Odd' in L.get_data(as_text=True))
+        assert ('dd' in L.get_data(as_text=True))
 
     # big degree fields ok
     def test_big_degree_old(self):

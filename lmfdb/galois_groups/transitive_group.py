@@ -574,7 +574,7 @@ def resolve_display(resolves):
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
+            ans += '<tr><td align="right">$' + str(j[0]) + '$:&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
@@ -587,21 +587,21 @@ def resolve_display(resolves):
     if ans != '':
         ans += '</td></tr></table>'
     else:
-        ans = 'None'
+        ans = 'none'
     return ans
 
 def group_display_inertia(code):
     if str(code[0]) == "t":
         return group_display_knowl(code[1][0], code[1][1])
     if code[1] == [1,1]:
-        return "Trivial"
+        return "trivial"
     ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
     if group.num_conjclasses() >= 50:
-        return 'Data not computed'
+        return 'not computed'
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>

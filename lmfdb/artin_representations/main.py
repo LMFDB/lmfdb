@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict, comma)
+    display_knowl, search_wrap, to_dict, comma, prop_int_pretty)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
@@ -319,14 +319,14 @@ def render_artin_representation_webpage(label):
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
     else:
-        processed_root_number = str(the_rep.sign())
+        processed_root_number = '$%s$' % the_rep.sign()
     properties = [("Label", artin_label_pretty(label)),
-                  ("Dimension", str(the_rep.dimension())),
+                  ("Dimension", prop_int_pretty(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$")]
+                  ("Conductor", prop_int_pretty(the_rep.conductor()))]
     if case == 'rep':
         properties.append( ("Root number", processed_root_number) )
-    properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )
+    properties.append( ("Indicator", prop_int_pretty(the_rep.indicator())) )
 
     friends = []
     wnf = None
@@ -500,9 +500,9 @@ class ArtinSearchArray(SearchArray):
             label="Group",
             knowl="artin.gg_quotient",
             example="A5",
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="%s, e.g. [8,3] or [16,7];%s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("nf.galois_group.name", "group names"),
                 display_knowl("gg.label", "transitive group labels")))
         parity = ParityBox(
             name="parity",
@@ -511,6 +511,7 @@ class ArtinSearchArray(SearchArray):
         container = TextBox(
             name="container",
             label="Smallest permutation container",
+            short_label="Smallest permutation",
             knowl="artin.permutation_container",
             example="6T13",
             example_span="6T13 or 7T6")
@@ -519,6 +520,7 @@ class ArtinSearchArray(SearchArray):
         ramified = TextBoxWithSelect(
             name="ramified",
             label="Ramified primes",
+            short_label="Ramified",
             knowl="artin.ramified_primes",
             example="2, 3",
             select_box=ram_quantifier,
@@ -531,7 +533,7 @@ class ArtinSearchArray(SearchArray):
             example_span="5, 7, 13 (no range allowed)")
         num_ram = TextBox(
             name="num_ram",
-            label="Num. ramified primes",
+            label="Ramified prime count",
             knowl="artin.ramified_primes",
             example="1")
         root_number = TextBoxNoEg(
@@ -543,6 +545,7 @@ class ArtinSearchArray(SearchArray):
         fsind = TextBoxNoEg(
             name="frobenius_schur_indicator",
             label="Frobenius-Schur indicator",
+            short_label="Frobenius-Schur",
             knowl="artin.frobenius_schur_indicator",
             example="1",
             example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")
