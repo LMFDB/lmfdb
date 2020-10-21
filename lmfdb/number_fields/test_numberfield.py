@@ -21,7 +21,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/5.5.5719140625.2', '275') # conductor
 
     def test_stuff_not_computed(self):
-        self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'Not computed')
+        self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'ot computed')
 
     def test_search_poly_mean2parser(self):
         self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '148') # discriminant

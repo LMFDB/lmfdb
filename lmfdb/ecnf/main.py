@@ -195,13 +195,13 @@ def index():
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
     niqfs = len(fields_by_sig[0,1])
     nrqfs = len(fields_by_sig[2,0])
-    info['fields'].append(['{} real <a href="{}">quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">real quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_signature', d=2, r=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
     iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
-    info['fields'].append(['{} imaginary <a href="{}">quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_degree', d=2)),
+    info['fields'].append(['{} <a href="{}">imaginary quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
 
@@ -299,7 +299,7 @@ def show_ecnf_conductor(nf, conductor_label):
     except ValueError:
         return search_input_error()
     info = to_dict(request.args, search_array=ECNFSearchArray())
-    info['title'] = 'Elliptic curves over %s of Conductor %s' % (nf_pretty, conductor_label)
+    info['title'] = 'Elliptic curves over %s of conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
@@ -529,10 +529,15 @@ def elliptic_curve_search(info, query):
             query['q_curve'] = True
 
     if 'include_cm' in info:
-        if info['include_cm'] == 'exclude':
-            query['cm'] = 0
-        elif info['include_cm'] == 'only':
+        if info['include_cm'] == 'PCM':
             query['cm'] = {'$ne' : 0}
+        elif info['include_cm'] == 'PCMnoCM':
+            query['cm'] = {'$lt' : 0}
+        elif info['include_cm'] == 'CM':
+            query['cm'] = {'$gt' : 0}
+        elif info['include_cm'] == 'noPCM':
+            query['cm'] = 0
+
     parse_ints(info,query,field='cm_disc',qfield='cm')
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
@@ -729,11 +734,13 @@ class ECNFSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "2.2.5.1-31.1-a1"
     jump_egspan = "e.g. 2.2.5.1-31.1-a1 or 2.2.5.1-31.1-a"
+    jump_knowl = "ec.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         field = TextBox(
             name="field",
             label="Base field",
-            knowl="nf",
+            knowl="ag.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         include_base_change = ExcludeOnlyBox(
@@ -756,10 +763,11 @@ class ECNFSearchArray(SearchArray):
             knowl="ec.isogeny_class",
             options=[("", ""),
                      ("yes", "one")])
-        include_cm = ExcludeOnlyBox(
+        include_cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('PCM', 'potential CM'), ('PCMnoCM', 'potential CM but no CM'), ('CM', 'CM'), ('noPCM', 'no potential CM')])
         cm_disc = TextBox(
             name="cm_disc",
             label= "CM discriminant",

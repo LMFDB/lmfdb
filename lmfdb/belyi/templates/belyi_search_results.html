@@ -23,12 +23,12 @@
 {% for galmap in info.results: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
-    <td> {{galmap.deg}} </td>
+    <td> ${{galmap.deg}}$ </td>
     <td> {{galmap.group}} </td>
-    <td> {{galmap.abc}}</td>
-    <td> {{galmap.lambdas}}</td>
-    <td> {{galmap.g}}</td>
-    <td> {{galmap.orbit_size}} </td>
+    <td> ${{galmap.abc}}$ </td>
+    <td> ${{galmap.lambdas}}$ </td>
+    <td> ${{galmap.g}}$ </td>
+    <td> ${{galmap.orbit_size}}$ </td>
     <td> {{info['nf_link'](galmap) | safe}} </td>
 </tr>
 {% endfor %}

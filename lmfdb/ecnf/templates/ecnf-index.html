@@ -6,9 +6,7 @@
   {{ info.stats.short_summary | safe}}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
-{# {{KNOWL('nf',title = "number fields")}} #}
-</h2>
+<h2> Browse </h2>
 
 <p>
 <ul>
@@ -28,7 +26,14 @@
 Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a>
 </p>
 
-<h2> Find a specific curve or {{ KNOWL('ec.isogeny_class',title="isogeny class") }} by {{ KNOWL('ec.curve_label',title='label')}}</h2>
+<h2> Search </h2>
+
+<p></p>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}
@@ -38,15 +43,7 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   {% endif %}
 </form>
 
-
-<h2> Search </h2>
-
-<p></p>
-<form id='search' onsubmit="cleanSubmit(this.id)">
-  {{ info.search_array.html() | safe }}
-  <p>&nbsp;&nbsp;*The rank is not known for many curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
-</form>
-
+<p>&nbsp;&nbsp;*The rank is not known for all curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
 
 {% if DEBUG %}
 <hr>

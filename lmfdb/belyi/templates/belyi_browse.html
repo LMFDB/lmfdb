@@ -5,7 +5,7 @@
 {{ info.stats.short_summary | safe}}
 </p>
 
-<h2> Browse {{ KNOWL('belyi.galmap', title='Belyi maps') }} </h2>
+<h2> Browse </h2>
 <p>
 By {{ KNOWL('belyi.degree', title='degree')}}:
 {% for rnge in info.degree_list %}
@@ -15,16 +15,16 @@ By {{ KNOWL('belyi.degree', title='degree')}}:
 <p>
 Some <a href="{{url_for('.interesting')}}">interesting Belyi maps</a> or a <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a>
 </p>
-<h2> Find a specific Belyi map or passport by {{ KNOWL('belyi.label', title='label')}} </h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
-
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 <!-- Debugging! -->

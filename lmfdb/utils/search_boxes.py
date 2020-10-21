@@ -21,9 +21,11 @@ class TdElt(object):
             keys.append(' %s="%s"' % (key, val))
         return "<%s%s>" % (typ, "".join(keys))
 
-    def td(self, colspan=None, **kwds):
+    def td(self, colspan=None, nowrap=False, **kwds):
         if colspan is not None:
             kwds['colspan'] = colspan
+        if nowrap:
+            self._add_class(kwds, 'nowrap')
         return self._wrap("td", **kwds)
 
 class Spacer(TdElt):
@@ -139,7 +141,7 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.label_rowspan) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
@@ -251,6 +253,7 @@ class SelectBox(SearchBox):
     """
     _options = []
     _default_width = 170
+    _default_min_width = 85
 
     def __init__(
         self,
@@ -264,6 +267,7 @@ class SelectBox(SearchBox):
         colspan=(1, 1, 1),
         rowspan=(1, 1),
         width=None,
+        min_width=None,
         short_width=None,
         short_label=None,
         advanced=False,
@@ -294,6 +298,9 @@ class SelectBox(SearchBox):
             options = self._options
         self.options = options
         self.extra = extra
+        if min_width is None:
+            min_width = self._default_min_width
+        self.min_width = min_width
 
     def _input(self, info):
         keys = self.extra + ['name="%s"' % self.name]
@@ -371,15 +378,17 @@ class SkipBox(TextBox):
 class TextBoxWithSelect(TextBox):
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
+        self.select_box.width = self.select_box.min_width
+        self.select_box.short_width = self.select_box.min_width
         TextBox.__init__(self, name, label, **kwds)
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
         return (
-            self.td(colspan)
+            self.td(colspan, nowrap=True)
             + '<div style="display: flex; justify-content: space-between;">'
             + self._label(info)
-            + '<span style="margin-left: 5px;"></span>'
+            + '<span style="margin-left: 10px;"></span>'
             + self.select_box._input(info)
             + "</div>"
             + "</td>"
@@ -411,6 +420,7 @@ class YesNoBox(SelectBox):
                 ("no", "no")]
 
 class YesNoMaybeBox(SelectBox):
+    _default_min_width = 130
     _options = [("", ""),
                 ("yes", "yes"),
                 ("not_no", "yes or unknown"),
@@ -424,22 +434,19 @@ class ParityBox(SelectBox):
                 ('odd', 'odd')]
 
 class ParityMod(SelectBox):
-    _default_width = 85
-    # For modifying a text box
+    _default_min_width = 95
     _options = [('', 'any parity'),
                 ('even', 'even only'),
                 ('odd', 'odd only')]
 
 
 class SubsetBox(SelectBox):
-    _default_width = 60
     _options = [('', 'include'),
                 ('exclude', 'exclude'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
 class SubsetNoExcludeBox(SelectBox):
-    _default_width = 60
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
@@ -484,6 +491,7 @@ class SearchButton(SearchBox):
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
         self.select_box = select_box
+        self.select_box.width = self.select_box.min_width
         SearchButton.__init__(self, value, description, **kwds)
 
     def label_html(self, info=None):
@@ -687,7 +695,9 @@ class SearchArray(UniqueRepresentation):
         jump_example = info.get("jump_example", getattr(self, "jump_example", ""))
         jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
         jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
+        jump_prompt = info.get("jump_prompt", getattr(self, "jump_prompt", "Label"))
+        jump_knowl = info.get("jump_knowl", getattr(self, "jump_knowl", ""))
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
-        return """<p><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'>
-<button type='submit'>Find</button>
-<br><span class='formexample'>%s</span></p>""" % (jump_example, jump_width, info.get("jump", ""), jump_egspan)
+        return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
+<button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
+""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)

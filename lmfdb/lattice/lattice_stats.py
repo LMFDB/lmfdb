@@ -15,9 +15,9 @@ class Lattice_stats(StatsDisplay):
         self.kposdef = display_knowl('lattice.postive_definite', 'positive definite')
         self.kintegral = display_knowl('lattice.definition', 'integral lattices')
         self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
-        self.kcn = display_knowl('lattice.class_number', 'class_number')
+        self.kcn = display_knowl('lattice.class_number', 'class number')
         self.kdim = display_knowl('lattice.dimension', 'dimension')
-        self.kdet = display_knowl('lattice.determinant', 'dimension')
+        self.kdet = display_knowl('lattice.determinant', 'determinant')
         self.kpri = display_knowl('lattice.primitive', 'primitive')
 
     @property

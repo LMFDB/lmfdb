@@ -25,7 +25,7 @@ from sage.all import (CC, CBF, CDF,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation, factor
+from sage.all import floor, latex, prime_range, valuation, factor, log
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
@@ -106,6 +106,17 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 ################################################################################
 #   number utilities
 ################################################################################
+
+def prop_int_pretty(n):
+    """
+    This function should be called whenever displaying an integer in the
+    properties table so that we can keep the formatting consistent
+    """
+    if abs(n) >= 10**12:
+        e = floor(log(abs(n),10))
+        return r'$%.3f\times 10^{%d}$' % (n/10**e, e)
+    else:
+        return '$%s$' % n
 
 def try_int(foo):
     try:
@@ -495,6 +506,11 @@ def comma(x):
     """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
+def latex_comma(x):
+    """
+    For latex we need to use braces around the commas to get the spacing right.
+    """
+    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
@@ -734,17 +750,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        lng = str(n)
-        if len(lng) > max_width:
-            lines = 1 + (len(lng)-1) // (max_width-1)
-            width = 1 + (len(lng)-1) // lines
-            lng = [lng[i:i+width] for i in range(0,len(lng),width)]
-            for i in range(len(lng)-1):
-                lng[i] = r"<tr><td>%s\</td></tr>" % lng[i]
-            lng[-1] = r"<tr><td>%s</td></tr>" % lng[-1]
-            lng = "<table>" + "".join(lng) + "</table>"
-        else:
-            lng = r"\(%s\)" % lng
+        lng = r"<div style='word-break: break-all'>%s</div>" % n
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
         return r'\(%s\)'%n

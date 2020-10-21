@@ -2,12 +2,12 @@
 
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
-           'send_file', 'list_to_factored_poly_otherorder',
+           'send_file', 'list_to_factored_poly_otherorder', 'prop_int_pretty',
            'list_factored_to_factored_poly_otherorder',
            'key_for_numerically_sort', 'an_list', 'coeff_to_poly',
            'coeff_to_power_series', 'display_multiset', 'pair2complex',
            'round_CBF_to_half_int', 'str_to_CBF', 'to_dict', 'display_float',
-           'display_complex', 'round_to_half_int', 'splitcoeff', 'comma',
+           'display_complex', 'round_to_half_int', 'splitcoeff', 'comma', 'latex_comma',
            'format_percentage', 'signtocolour', 'rgbtohex', 'pol_to_html',
            'web_latex', 'web_latex_factored_integer', 'web_latex_ideal_fact',
            'web_latex_split_on', 'web_latex_split_on_pm', 'web_latex_split_on_re',
@@ -47,12 +47,13 @@ from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
 
 from .utilities import (
+    prop_int_pretty,
     list_to_factored_poly_otherorder,
     list_factored_to_factored_poly_otherorder,
     key_for_numerically_sort, an_list, coeff_to_poly, coeff_to_power_series,
     display_multiset, pair2complex, round_CBF_to_half_int, str_to_CBF,
     to_dict, display_float, display_complex, round_to_half_int,
-    splitcoeff, comma, format_percentage, signtocolour, rgbtohex, pol_to_html,
+    splitcoeff, comma, latex_comma, format_percentage, signtocolour, rgbtohex, pol_to_html,
     web_latex, web_latex_factored_integer, web_latex_ideal_fact, web_latex_split_on,
     web_latex_split_on_pm, web_latex_split_on_re, display_knowl, bigint_knowl, too_big,
     make_bigint, teXify_pol, add_space_if_positive,

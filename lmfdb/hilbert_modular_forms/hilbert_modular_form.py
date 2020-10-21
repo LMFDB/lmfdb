@@ -15,7 +15,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberFiel
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import HMFstats
-from lmfdb.utils import names_and_urls
+from lmfdb.utils import names_and_urls, prop_int_pretty
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
@@ -28,7 +28,7 @@ def get_bread(tail=[]):
         return base + [(tail, " ")]
 
 def get_hmf(label):
-    """Return a complete HMF, give its label.  Note that the
+    """Return a complete HMF, given its label.  Note that the
     hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
     separate collection.  Use of this function hides this
     implementation detail from the user.
@@ -492,15 +492,16 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties = [('Base field', '%s' % info['field'].field_pretty()),
-                   ('Weight', '%s' % data['weight']),
-                   ('Level norm', '%s' % data['level_norm']),
-                   ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
-                   ('Label', '%s' % data['label']),
-                   ('Dimension', '%s' % data['dimension']),
-                   ('CM', is_CM),
-                   ('Base change', is_base_change)
-                   ]
+    properties = [
+        ('Label', '%s' % data['label']),
+        ('Base field', '%s' % info['field'].field_pretty()),
+        ('Weight', '$%s$' % data['weight']),
+        ('Level norm', prop_int_pretty(data['level_norm'])),
+        ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
+        ('Dimension', prop_int_pretty(data['dimension'])),
+        ('CM', is_CM),
+        ('Base change', is_base_change)
+    ]
 
     return render_template(
         "hilbert_modular_form.html",
@@ -553,7 +554,7 @@ def browse():
 
 @hmf_page.route("/stats")
 def statistics():
-    title = r'Hilbert modular forms: Statistics'
+    title = r'Hilbert modular forms: statistics'
     bread = get_bread("Statistics")
     return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
 
@@ -601,6 +602,8 @@ class HMFSearchArray(SearchArray):
     plural_noun = "forms"
     jump_example = "2.2.5.1-31.1-a"
     jump_egspan = "e.g. 2.2.5.1-31.1-a"
+    jump_knowl = "mf.hilbert.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         field = TextBox(
             name='field_label',

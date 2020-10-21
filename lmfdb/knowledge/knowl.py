@@ -334,13 +334,13 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
-    def needs_review(self, days, cap=50):
+    def needs_review(self, days):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time, 0, -2, cap])
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0, -2])
         knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
 
         kids = [k.id for k in knowls]
