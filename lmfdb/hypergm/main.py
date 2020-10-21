@@ -578,7 +578,7 @@ def interesting_families():
         url_for_label,
         regex=HGM_FAMILY_LABEL_RE,
         title=r"Some interesting families of hypergeometric motives",
-        bread=get_bread(("Interesting", " ")),
+        bread=get_bread([("Interesting", " ")]),
         credit=HGM_credit,
         learnmore=learnmore_list()
     )
@@ -591,7 +591,7 @@ def interesting_motives():
         url_for_label,
         regex=HGM_LABEL_RE,
         title=r"Some interesting hypergeometric motives",
-        bread=get_bread(("Interesting motives", " ")),
+        bread=get_bread([("Interesting motives", " ")]),
         credit=HGM_credit,
         learnmore=learnmore_list()
     )
