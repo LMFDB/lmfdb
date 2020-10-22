@@ -536,7 +536,7 @@ def prep_review(knowls):
 @knowl_reviewer_required
 def review_recent(days):
     if request.args:
-        return review_helder(request.args)
+        return review_helper(request.args)
     knowls = knowldb.needs_review(days)
     prep_review(knowls)
     b = get_bread([("Reviewing recent", url_for('.review_recent', days=days))])
