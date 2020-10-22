@@ -507,35 +507,54 @@ def demote(ID, timestamp):
     flash(Markup("Knowl %s has been returned to beta." % ID))
     return redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/review_recent/<int:days>/")
-@knowl_reviewer_required
-def review_recent(days):
-    if request.args:
-        try:
-            info = to_dict(request.args)
-            beta = None
-            ID = info.get('review')
+def review_helper(data):
+    try:
+        info = to_dict(data)
+        beta = None
+        ID = info.get('review')
+        if ID:
+            beta = False
+        else:
+            ID = info.get('beta')
             if ID:
-                beta = False
-            else:
-                ID = info.get('beta')
-                if ID:
-                    beta = True
-            if beta is not None:
-                k = Knowl(ID)
-                k.review(who=current_user.get_id(), set_beta=beta)
-                return jsonify({"success": 1})
-            raise ValueError
-        except Exception:
-            return jsonify({"success": 0})
-    knowls = knowldb.needs_review(days)
+                beta = True
+        if beta is not None:
+            k = Knowl(ID)
+            k.review(who=current_user.get_id(), set_beta=beta)
+            return jsonify({"success": 1})
+        raise ValueError
+    except Exception:
+        return jsonify({"success": 0})
+
+def prep_review(knowls):
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
         k.reviewed_content = json.dumps(k.reviewed_content)
         k.content = json.dumps(k.content)
-    b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
+
+@knowledge_page.route("/review_recent/<int:days>/")
+@knowl_reviewer_required
+def review_recent(days):
+    if request.args:
+        return review_helder(request.args)
+    knowls = knowldb.needs_review(days)
+    prep_review(knowls)
+    b = get_bread([("Reviewing recent", url_for('.review_recent', days=days))])
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,
+                           knowls=knowls,
+                           bread=b)
+
+@knowledge_page.route("/review_stale")
+@knowl_reviewer_required
+def review_stale():
+    if request.args:
+        return review_helper(request.args)
+    knowls = knowldb.stale_knowls()
+    prep_review(knowls)
+    b = get_bread([("Reviewing stale", url_for('.review_stale'))])
+    return render_template("knowl-review-recent.html",
+                           title="Reviewing stale knowls",
                            knowls=knowls,
                            bread=b)
 
