@@ -540,7 +540,7 @@ def reliability_page():
 
 @hmf_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Hilbert fodular forms'
+    t = 'Labels for Hilbert Modular forms'
     bread = get_bread("Labels")
     return render_template("single.html", kid='mf.hilbert.label',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
