@@ -89,14 +89,15 @@ $(function() {
     <tr>
       <td>More</td>
       <td>
-        <a href="{{ url_for('.history') }}">Recently modified Knowls</a>
+        <a href="{{ url_for('.history') }}">Recently modified knowls</a>
         {%- if user_is_authenticated -%},
           <a href="{{ url_for('.comment_history') }}">Recent comments</a>,
           <a href="{{ url_for('.broken_links') }}">Broken links</a>,
           <a href="{{ url_for('.orphans') }}">Orphaned knowls</a>
         {%- endif -%}
         {%- if user_can_review_knowls -%},
-          <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>
+          <a href="{{ url_for('.review_recent', days=10) }}">Review recent knowls</a>,
+          <a href="{{ url_for('.review_stale') }}">Review stale knowls</a>
         {% endif %}
       </td>
     </tr>
