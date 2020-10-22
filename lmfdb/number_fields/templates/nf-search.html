@@ -27,14 +27,14 @@
 {% for field in info.results: %}
 {% set wnf = info.wnf(field) %}
 <tr>
-<td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
+<td align='left'><a href="/NumberField/{{field.label}}">{{wnf.label_pretty()}}</a></td>
 <td>{{ wnf.web_poly() | safe }}</td>
 <td>\( {{ wnf.disc_factored_latex() }} \)</td>
 <td>{{ wnf.galois_string() }}</td>
 {# {% if field.class_group is defined %} #}
 {% if wnf.haskey('class_group') %}
   {% if field.class_group=='' %}
-    <td> Trivial
+    <td> trivial
   {% else %}
     <td>{{ wnf.class_group_invariants() }}
   {% endif %}

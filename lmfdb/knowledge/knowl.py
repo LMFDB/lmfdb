@@ -334,20 +334,8 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
-    def needs_review(self, days, cap=50):
-        now = datetime.utcnow()
-        tdelta = timedelta(days=days)
-        time = now - tdelta
-        fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time, 0, -2, cap])
-        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
-
+    def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
-        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter, [kids])
-        reviewed = {rec[0]:rec[1] for rec in cur}
-
         selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links && %s")
         cur = self._execute(selecter, [0, -2, kids])
         referrers = {k.id: [] for k in knowls}
@@ -355,13 +343,44 @@ class KnowlBackend(PostgresBase):
             for kid in links:
                 if kid in referrers:
                     referrers[kid].append(refid)
-
         for k in knowls:
-            k.reviewed_content = reviewed.get(k.id)
             k.referrers = referrers[k.id]
             k.code_referrers = [
                     code_snippet_knowl(D, full=False)
                     for D in self.code_references(k)]
+
+
+    def needs_review(self, days):
+        now = datetime.utcnow()
+        tdelta = timedelta(days=days)
+        time = now - tdelta
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0, -2])
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+
+        kids = [k.id for k in knowls]
+        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [kids])
+        reviewed = {rec[0]:rec[1] for rec in cur}
+
+        for k in knowls:
+            k.reviewed_content = reviewed.get(k.id)
+        self._set_referrers(knowls)
+        return knowls
+
+    def stale_knowls(self):
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
+            SQL(", ").join([SQL("a.{0}").format(Identifier(col)) for col in fields]),
+            SQL(", ").join([SQL("b.{0}").format(Identifier(col)) for col in fields]),
+            SQL(", ").join(map(Identifier, fields)))
+        data = list(self._execute(selecter))
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in data]
+        for knowl, rec in zip(knowls, data):
+            D = {k:v for k,v in zip(fields, rec[len(fields):])}
+            knowl.reviewed_content = D["content"]
+        self._set_referrers(knowls)
         return knowls
 
     def ids_referencing(self, knowlid, old=False, beta=None):

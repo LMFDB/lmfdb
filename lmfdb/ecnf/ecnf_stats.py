@@ -250,6 +250,16 @@ class ECNF_stats(StatsDisplay):
         cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_nfcurves, UNNEST(isodeg) as elements"))
         return cur.fetchone()[0]
 
+    def setup(self, attributes=None, delete=False):
+        if attributes is None:
+            # The following statistics aren't updated by the normal setup function
+            # The assert is for pyflakes
+            assert self.field_normstats
+            assert self.sig_normstats
+            assert self.deg_normstats
+            assert self.torsion_counts
+        super().setup(attributes, delete)
+
 @app.context_processor
 def ctx_ecnf_summary():
     return {'ecnf_summary': ECNF_stats().summary}

@@ -94,7 +94,14 @@ class HMFstats(StatsDisplay):
                      "counts": {F: {"nforms": counts[F],
                                     "maxnorm": nstats[F]["max"],
                                     "field_knowl": nf_display_knowl(F, F),
-                                    "forms": url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)}
+                                    "forms": lambda : url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)}
                                 for F in C["fields_by_degree"][d]}}
                  for d in C["degrees"]}
         return stats
+
+    def setup(self, attributes=None, delete=False):
+        if attributes is None:
+            # Per-degree statistics aren't updated by the normal setup function
+            # The assert is for pyflakes
+            assert self.statistics()
+        super().setup(attributes, delete)

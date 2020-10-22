@@ -26,7 +26,7 @@
     <td align=center> {{curve.st_group_link|safe}} </td>
     <td align=center> {{('&#x2713;' if curve.is_simple_geom else '')|safe}} </td>
     <td align=center> {{('&#x2713;' if curve.is_gl2_type else '')|safe}} </td>
-    <td align=center> {{curve.analytic_rank}} </td>
+    <td align=center> ${{curve.analytic_rank}}$ </td>
 </tr>
 {% endfor %}
 </table>

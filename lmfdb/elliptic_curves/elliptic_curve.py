@@ -16,7 +16,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
+    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
     YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -149,7 +149,7 @@ def statistics():
 def by_conductor(conductor):
     info = to_dict(request.args, search_array=ECSearchArray())
     info['bread'] = get_bread([('%s' % conductor, url_for(".by_conductor", conductor=conductor))])
-    info['title'] = r'Elliptic curves over $\Q$ of Conductor %s' % conductor
+    info['title'] = r'Elliptic curves over $\Q$ of conductor %s' % conductor
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
@@ -236,7 +236,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
+    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass coefficients)\n'
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
@@ -658,7 +658,7 @@ class ECSearchArray(SearchArray):
         sha = TextBox(
             name="sha",
             label="Analytic order of &#1064;",
-            knowl="ec.q.analytic_sha_order",
+            knowl="ec.analytic_sha_order",
             example="4")
         surj_primes = TextBox(
             name="surj_primes",
@@ -682,10 +682,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = ExcludeOnlyBox(
+        cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('only', 'potential CM'), ('exclude', 'no potential CM')])
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +

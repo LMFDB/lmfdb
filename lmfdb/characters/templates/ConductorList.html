@@ -16,7 +16,6 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
-#chitable { clear:right; }
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
@@ -88,7 +87,7 @@ $(function() {
 </table>
 
 <div>
-The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
+The table below displays the first several {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a
 given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
 </div>
 
@@ -106,7 +105,7 @@ given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
     <tbody>
       {% for line in contents %}
       <tr class="{{ row_class.next() }}">
-        <th class="left" > {{ line[0] }}</th>
+        <th class="left" >${{ line[0] }}$</th>
         {% for chi in line[1] %}
         <td>
           <div>
@@ -126,6 +125,7 @@ given {{ KNOWL('character.dirichlet.conductor', title="conductor") }}.
             </div>
           </td>
           {% endfor %}
+          {% if line[1]|length > 0 %}<td>$\cdots$</td>{% endif %}
         </tr>
         {% endfor %}
       </tbody>

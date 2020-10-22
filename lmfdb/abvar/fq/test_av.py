@@ -53,7 +53,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that length_A_counts and length_C_counts work
         """
-        self.check_args("/Variety/Abelian/Fq/2/79/az_lj", "89648252036631997180633484850766696704")
+        self.check_args("/Variety/Abelian/Fq/2/79/az_lj", "9468043770876073552")
         self.check_args("/Variety/Abelian/Fq/2/79/az_lj", "9468276088941449902")
 
     def test_display_number_fld(self):

@@ -10,7 +10,7 @@ from sage.all import latex, Set
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_ints, parse_ints_to_list_flash,
+    parse_ints, parse_ints_to_list_flash, prop_int_pretty,
     to_dict, flash_error)
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
@@ -267,9 +267,9 @@ def render_sample_page(family, sam, args, bread):
     properties = [('Space', info['space_href']),
                   ('Name', info['name']),
                   ('Type', '<br>'.join(info['type'].split(','))),
-                  ('Weight', str(info['weight'])),
-                  ('Hecke eigenform', str(info['is_eigenform'])),
-                  ('Field degree', str(info['fdeg']))]
+                  ('Weight', prop_int_pretty(info['weight'])),
+                  ('Hecke eigenform', "yes" if info['is_eigenform'] else "no"),
+                  ('Field degree', prop_int_pretty(info['fdeg']))]
     try:
         evs_to_show = parse_ints_to_list_flash(args.get('ev_index'), 'list of $l$')
         fcs_to_show = parse_ints_to_list_flash(args.get('fc_det'), 'list of $\\det(F)$')

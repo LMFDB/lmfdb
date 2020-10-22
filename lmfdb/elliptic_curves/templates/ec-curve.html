@@ -55,7 +55,7 @@ white-space: pre in order to keep line breaks! #}
     </div>
 #}
 
-    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
+    <h2 style="margin-top:0px;"> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
     {{ place_code('curve') }}
 
@@ -63,15 +63,27 @@ white-space: pre in order to keep line breaks! #}
 
 
     <h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>
-   <div>{% if data.mw.rank==1 %}{% if data.mw.tor_order!=1 %} \(\Z\times {{data.mw.tor_struct}}\)
-    {%endif%}  {%endif%}     </div>
-
-    <div>{% if data.mw.rank==1 %}{% if data.mw.tor_order==1 %}\(\Z\) {%endif%}  {%endif%} </div>
-    <div> {% if data.mw.rank !=0 and data.mw.rank!=1 %} {% if data.mw.tor_order!=1 %}\(\Z^{{data.mw.rank}} \times {{data.mw.tor_struct}}\) {%endif%}  {%endif%} </div>
-    <div> {% if data.mw.rank !=0 and data.mw.rank!=1%} {% if data.mw.tor_order==1 %} \(\Z^{{data.mw.rank}}\){%endif%}  {%endif%} </div>
-    <div> {% if data.mw.rank ==0 %} {% if data.mw.tor_order!=1 %} \({{data.mw.tor_struct}}\){%endif%}  {%endif%} </div>
-    <div> {% if data.mw.rank ==0 %} {% if data.mw.tor_order==1 %}
-    Trivial {%endif%}  {%endif%} </div>
+    <p>
+    {% if data.mw.rank == 0 %}
+      {% if data.mw.tor_order == 1 %}
+        trivial
+      {% else %}
+        \({{data.mw.tor_struct}}\)
+      {%endif%}
+    {% elif data.mw.rank==1 %}
+      {% if data.mw.tor_order == 1 %}
+        \(\Z\)
+      {% else %}
+        \(\Z\times {{data.mw.tor_struct}}\)
+      {%endif%}
+    {% else %}
+      {% if data.mw.tor_order == 1 %}
+        \(\Z^{{data.mw.rank}}\)
+      {% else %}
+        \(\Z^{{data.mw.rank}} \times {{data.mw.tor_struct}}\)
+      {% endif %}
+    {%endif%}
+    </p>
 
     {% if data.mw.rank!=0 %}
     {% if data.mw.rank==1 %}
@@ -86,7 +98,7 @@ white-space: pre in order to keep line breaks! #}
           {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
           </tr>
         <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
-          {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
+          {% for ht in data.mw.heights %}<td>${{ht}}$</td>{% endfor %}
           </tr>
         </table>
       </p></div>
@@ -109,14 +121,14 @@ white-space: pre in order to keep line breaks! #}
       </p>
     </div>
     {%else %}
-    <div> None </div>
+    <p> None </p>
     {%endif %}
 
     <h2> Invariants </h2>
         <table>
 
         <tr>
-        <td colspan="6">
+        <td colspan="4">
           {{ place_code('cond') }}
         </td>
         </tr>
@@ -128,7 +140,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td colspan="6">
+        <td colspan="4">
           {{ place_code('disc') }}
         </td>
         </tr>
@@ -140,7 +152,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td colspan="6">
+        <td colspan="4">
           {{ place_code('jinv') }}
         </td>
         </tr>
@@ -152,21 +164,24 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism Ring') }}:</td>
+        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
         <td>\(\Z\)</td>
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric Endomorphism Ring') }}:</td>
+        <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
         <td>{{ data.data.EndE }}</td>
-        <td>&nbsp;</td>
-        <td>({%if data.data.CMD %}potential {%else %}no {%endif %}
-	  {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        <td colspan="2">
+        {%if not data.data.CMD %}
+        (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% else %}
+        ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
+        {% endif %}
         </td>
         </tr>
 
         <tr>
-        <td>{{ KNOWL('st_group.definition', title='Sato-Tate Group') }}:</td>
+        <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
         <td>{{ data.data.ST|safe }}</td>
         </tr>
 
@@ -243,7 +258,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
+        <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
           ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
@@ -259,26 +274,25 @@ white-space: pre in order to keep line breaks! #}
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
-    <h4> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+<p>
+{{KNOWL('ec.q.modular_form', title='Modular form')}}
 {% if data.newform_exists_in_db %}
-<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
+&nbsp;&nbsp;<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
 {% else %}
 {{ data.newform_label }}
 {% endif %}
-</h4>
-    {{ place_code('qexp') }}
-    <p>
+</p>
+    <p>{{ place_code('qexp') }}</p>
 {#
     <form>
 #}
-        <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
-        <div class="emptyspace"><br></div>
+        <div class="output" style="margin-left:1ch;"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
 {#
+        <div class="emptyspace"><br></div>
         <button id="morebutton">More coefficients</button>
     </form>
 #}
-      For more coefficients, see the Downloads section to the right.
-    </p>
+    <p>For more coefficients, see the Downloads section to the right.    </p>
 
     {#
     <h4> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
@@ -362,7 +376,7 @@ text-align: center;
 
     {{ place_code('localdata') }}
 
-<table id = "local_data">
+<table id = "local_data" class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
@@ -373,6 +387,7 @@ text-align: center;
 <th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
 <th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in data.local_data %}
 <tr>
 <td> \({{pr.p}}\)</td>
@@ -393,6 +408,7 @@ text-align: center;
 <td>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 
 
@@ -419,12 +435,10 @@ data.twoadic_index }}.
 {% endif %}
 {% endif %}
 
-
     {{ place_code('galrep') }}
 
 <p>
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-representation')}}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
 {% if not data.data.CMD %}
 \(\GL(2,\F_p)\)
@@ -437,17 +451,19 @@ except those listed.
 </p>
 
 <p>
-<table>
+<table class="ntdata"><thead>
 <tr>
 <th>prime</th>
 <th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois representation')}}</th>
 </tr>
+</thead><tbody>
 {% for pr in data.data.galois_data %}
 <tr>
 <td align=center> \({{pr.p}}\)</td>
 <td align=center>{{pr.image}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 {% else %}
 .
@@ -476,20 +492,18 @@ if \(\left(\frac{ {{data.data.cm_sqf}} }{p}\right)=-1\).
 {% endif %} {# CM case #}
 
 
-
-
-    <h2> $p$-adic data </h2>
+<h2> $p$-adic data </h2>
 
 <h3>$p$-adic regulators</h3>
 
     {{ place_code('padicreg') }}
 
-    <p>
+<p>
 {% if data.rank==0 %}
 All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 {% else %}
 {% if data.data.p_adic_data_exists %}
-<p>
+</p><p>
 Note: \(p\)-adic regulator data only exists for primes \(p\ge5\) of good ordinary
 reduction.
 </p>
@@ -512,8 +526,8 @@ No \(p\)-adic data exists for this curve.
 {% if data.iwdata %}
 <h2>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h2>
 <p>
-<table border=1>
-<tr>
+<table border=1 style="margin-left:5%">
+<tr style="border-bottom: 1px solid #000;">
 <th>$p$</th>
 {% for pdata in data.iw.data %}
 <td>
@@ -616,20 +630,17 @@ are as follows:
 {% endif %}
 </p>
 <p>
-<table border=1>
+<table class="ntdata"><thead>
 <tr>
-<th>$[K:\Q]$
-<th>$K$
-<th>$E(K)_{\rm tors}$
-<th>Base-change curve
+<th>$[K:\Q]$</th>
+<th>$K$</th>
+<th>$E(K)_{\rm tors}$</th>
+<th>Base change curve</th>
 </tr>
+</thead><tbody>
 {% for tgd in data.tg.data %}
 <tr>
-{% if tgd.m !=0 %}
-<td align=center rowspan={{tgd.m}}>
-{{tgd.d}}
-</td>
-{% endif %}
+<td align=center rowspan={{tgd.m}}>${{tgd.d}}$</td>
 <td align=center>{{tgd.f | safe}}</td>
 <td align=center>{{tgd.t}}</td>
 <td align=center>
@@ -639,6 +650,7 @@ are as follows:
 </td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 </p>
 <p>

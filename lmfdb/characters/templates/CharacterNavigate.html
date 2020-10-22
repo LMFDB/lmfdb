@@ -3,14 +3,16 @@
 
 {% block content %}
 
-{{ KNOWL_INC('dq.character.dirichlet.extent') }}
+<div>
+  {{ info.stats.short_summary | safe }}
+</div>
 
 <h2> Browse </h2>
 <p>
 By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
 {% endfor %}
 </p>
 
@@ -18,7 +20,7 @@ By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
 By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
 {% endfor %}
 </p>
 
@@ -26,7 +28,7 @@ By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
 By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
 {% set step = 20 %}
 {% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
 {% endfor %}
 </p>
 
@@ -34,65 +36,14 @@ By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
 Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
 </p>
 
-<h2> Search </h2>
-
+<h2 id='search_h2'> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
-    <table>
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}</td>
-            <td> <input type='text' name='modulus' value="{{args.modulus}}" style="width:160px;" placeholder="13"></td>
-            <td><span class="formexample"> e.g. 13 </span></td>
-        </tr>
-
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td>
-            <td> <input type='text' name='conductor' value="{{args.conductor}}" style="width:160px;" placeholder="5"></td>
-            <td><span class="formexample"> e.g. 5 </span></td>
-        </tr>
-
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td>
-            <td> <input type='text' name='order' value="{{args.order}}" style="width:160px;" placeholder="2"></td>
-            <td><span class="formexample"> e.g. 2 </span></td>
-        </tr>
-        <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-            <td align=left>
-                <select name='parity', style="width: 170px">
-                      <option value="">any</option>
-                      <option value="even">even</option>
-                      <option value="odd">odd</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
-            <td align=left>
-                <select name='primitive', style="width: 170px">
-                      <option value="">any</option>
-                      <option value="yes">yes</option>
-                      <option value="no">no</option>
-                </select>
-                </select>
-            </td>
-        </tr>
-        <tr><td><button type='submit' > Search </button></td></tr>
-    </table>
+  {{ info.search_array.html() | safe }}
 </form>
 
 <h2> Find </h2>
 <form>
-<table>
-    <tr><td>
-    {{KNOWL('character.dirichlet.search_input','Label')}}
-    </td><td>
-    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
-    </td><td>
-    <button type='submit' name='lookup' value='1'> Find  </button>
-    </td></tr>
-    <tr><td></td><td colspan="2">
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13.f for its Galois orbit.</span>
-</td></tr></table>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {#

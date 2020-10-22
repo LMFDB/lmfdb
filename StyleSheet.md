@@ -18,12 +18,13 @@ contains other conventions and information for the development process.
 - Completeness page headings should have the form "Completeness of blah data" where blah is singular (e.g. "modular form" or "elliptic curve"), and similarly for Source and Reliability pages.
 - For sections where labels are relevant, there should also be "Labels of blah" links to knowls that explains the format of the labels for blah.
 - When a particular "Learn more about" page is displayed, the link to that page should not be removed from the "Learn more about" box.
+- In general, all mathematical quantities that are offset in some way (e.g. listed in a table or following a caption) should be displayed in math mode, including integers.  This does not apply to integers that appear in a sentence or as part of a phrase (e.g. "Genus 2 curves" not "Genus $2$ curves")
 
 ## Browse and search
 
+- Each browse page should have a short summary at the top followed by sections labelled "Browse", "Search", "Find", in that order.
 - Colons should not follow captions on browse/search pages.
-- Jump box captions should have the form "Find a specific blah, or blah by blah" should have knowls on the blahs, the input box should be on the line below (no caption in front), and the button should say "Find".
-- Search heading on main browse page should simply be "Search".
+- Captions should have knowls attached to them.
 - Abbreviated column headings should omit the period.
 - Input boxes should have standard widths (very long boxes, e.g. geometric invariants, may span the entire width),
 - Option boxes should use standard captions in lower case (e.g. include/exclude/exactly or yes/no).
@@ -33,6 +34,8 @@ contains other conventions and information for the development process.
 - Search results table should use row striping (ntdata table), headings should all have knowls (or pseudo-knowls).
 - Refine search page headings should have the form "Blah search results", where blah is singular.
 - Refine search pages should have captions above input boxes, no example to right, gray example inside input box.
+- Mathematical values listed in search results, including integers, should be in math mode.
+- Search result values that are words (e.g. yes/no, even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
 
 ## Object pages
 
@@ -42,14 +45,21 @@ contains other conventions and information for the development process.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
 - Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.
+- Values that are words (e.g yes/no, even/odd, Trivial) should be in lower case using the default (sans serif) font
+- Mathematical values including integers should be displayed in math mode.
 - Factorizations of negative numbers should include only the sign, not -1 (use web_latex_factored_integer in utilities.py).
+- Mathematical values, including integers, should be in math mode.
+- Values that are words (e.g. yes/no, even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
+
 
 ## Properties box
 
 - Captions in the property box should be sentence case (like all captions) with no colon.
 - The first line of the properties box should be the label (if one exists) followed by a portrait (if available), followed by up to 8 standard invariants or properties of the object that can be displayed in a compact form (the properties box should never scroll).
-- Properties that are words (e.g yes/no, even/odd) or numbers (e.g. 42 or 1.2345), as well as labels, should be listed in standard font and not in math mode.
-- Integers in properties box should not be shown in factored form (when relevant the factorization should be in the body of the page).
+- Property values that are words (e.g yes/no, even/odd, Trivial) should be in lower case using the default (sans serif) font
+- Mathematical values including integers should be in math mode.
+- Integers in properties box should not be shown in factored form (the relevant the factorization should be in the body of the page) and should be shown in scientific notation if they are too large to fit (use prop_int_pretty).
+- Properties that are words (e.g. yes/no, even/odd, not computed, trivial, etc...) should be lower case in the default html font (not \mathrm).
 
 ## Related objects box
 

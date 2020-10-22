@@ -1,7 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Distribution of groups in curves of genus {{info.genus}} </h2>
+
+<h2> Distribution of groups in curves of genus {{info.genus}} with quotient genus 0 </h2>
 <div>
   <table  class="ntdata">
     <thead>
@@ -9,20 +10,57 @@
         <th>Isomorphism class</th>
         <th>{{KNOWL('group.small_group_label',title='GAP/Magma Group')}}</th>
         <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+        {% if info.show_top_braid %}
+        <th>{{KNOWL('curve.highergenus.aut.topological_equivalence',title='Topologically inequivalent')}} actions</th>
+        <th>{{KNOWL('curve.highergenus.aut.braid_equivalence',title='Braid inequivalent')}} actions</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
-      {% for i in range(0, info.groups | length) %}
+      {% for i in range(0, info.groups_0 | length) %}
       <tr>
-        <td>${{info.iso_classes[i]}}$</td>
-        <td><a href={{url_for('.index', genus=info.genus, group=info.groups[i][0])}}>{{info.groups[i][0]}}</a></td>
+        <td>${{info.groups_0[i][0]}}$</td>
+        <td><a href={{url_for('.index', genus=info.genus, group=info.groups_0[i][1])}}>{{info.groups_0[i][1]}}</a></td>
         <td align="center">
-          {{info.groups[i][1]}}
+          {{info.groups_0[i][2]}}
         </td>
+        {% if info.show_top_braid %}
+        <td align="center">{{info.groups_0[i][3]}}</td>
+        <td align="center">{{info.groups_0[i][4]}}</td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+{% if info.show_g0_gt0 %}
+<h2> Distribution of groups in curves of genus {{info.genus}} with quotient genus greater than 0 </h2>
+<div>
+  <table  class="ntdata">
+    <thead>
+      <tr>
+        <th>Isomorphism class</th>
+        <th>{{KNOWL('group.small_group_label',title='GAP/Magma Group')}}</th>
+        <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+	<th>Quotient Genera </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(0, info.groups_gt0 | length) %}
+      <tr>
+        <td>${{info.group_display(info.groups_gt0[i][0])}}$</td>
+        <td><a href={{url_for('.index', genus=info.genus, group=info.groups_gt0[i][1])}}>{{info.groups_gt0[i][1]}}</a></td>
+        <td align="center">
+          {{info.groups_gt0[i][2]}}
+        </td>
+	<td> {{info.groups_gt0[i][3]}}
+	  </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
 {% endblock %}
