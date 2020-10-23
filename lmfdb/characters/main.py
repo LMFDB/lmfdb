@@ -189,6 +189,7 @@ def url_for_label(label):
     shortcuts={ "jump": jump },
     url_for_label=url_for_label,
     learnmore=learn,
+    random_projection="label",
     bread=lambda: bread("Search results"),
     credit=credit,
 )
