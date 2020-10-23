@@ -82,13 +82,6 @@ class Configuration(_Configuration):
             dest="core_debug",
             help="enable debug mode",
         )
-        parser.add_argument(
-            "--disable-debug",
-            dest="core_debug",
-            help="disable debug mode",
-            action="store_false",
-            default=argparse.SUPPRESS,
-        )
 
         parser.add_argument(
             "--color",

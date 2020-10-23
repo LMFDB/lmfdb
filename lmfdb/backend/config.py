@@ -127,11 +127,7 @@ class Configuration(object):
             return sec, opt
 
         # 1: parsing command-line arguments
-        if  writeargstofile:
-            args = parser.parse_args()
-        else:
-            # only read config file
-            args = parser.parse_args([])
+        args = parser.parse_args()
         args_dict = vars(args)
         default_arguments_dict = vars(parser.parse_args([]))
 
@@ -183,19 +179,19 @@ class Configuration(object):
             _cfgp.read(args.secrets_file)
 
         # 3: override specific settings
-        def all(sep="_"):
+        def file_to_args(sep="_"):
             ret = {}
             for s in _cfgp.sections():
                 for k, v in _cfgp.items(s):
                     ret["%s%s%s" % (s, sep, k)] = v
             return ret
 
-        all_set = all()
+        args_file = file_to_args()
 
         for key, val in default_arguments_dict.items():
             # if a nondefault value was passed through command line arguments set it
             # or if a default value was not set in the config file
-            if args_dict[key] != val or key not in all_set:
+            if args_dict[key] != val or key not in args_file:
                 sec, opt = sec_opt(key)
                 if sec not in _cfgp.sections():
                     _cfgp.add_section(sec)
