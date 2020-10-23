@@ -51,7 +51,7 @@ def learn(current = None):
     return r
 
 def credit():
-    return "Alex Best, Jonathan Boboer, David Lowry-Duda, and Andrew Sutherland"
+    return "Alex Best, Jonathan Bober, David Lowry-Duda, and Andrew Sutherland"
 
 ###############################################################################
 #   Route functions
