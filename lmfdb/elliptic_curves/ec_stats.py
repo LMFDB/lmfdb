@@ -83,7 +83,7 @@ class ECstats(object):
         stats = {}
 
         # rank distribution
-        
+
         rank_counts = []
         for r in range(counts['max_rank'] + 1):
             ncu = ecdb.count({'rank':r})
@@ -93,7 +93,7 @@ class ECstats(object):
         stats['rank_counts'] = rank_counts
 
         # torsion distribution
-        
+
         tor_counts = []
         tor_counts2 = []
         ncurves = counts['ncurves']
@@ -119,7 +119,7 @@ class ECstats(object):
         stats['tor_counts'] = tor_counts+tor_counts2
 
         # Sha distribution
-        
+
         max_sha = ecdb.max('sha')
         stats['max_sha'] = max_sha
         max_sqrt_sha = Integer(max_sha).sqrt() # exact since all sha values are squares!
