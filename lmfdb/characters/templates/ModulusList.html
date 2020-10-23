@@ -111,17 +111,9 @@ characters are grouped with respect to order and stacked integers indicate (comp
 
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
-<table><tr>
-  {% if col == "more"  %}
-    {% for e in entry %}
-    <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
-      {% for chi in e %}
-      <a href="{{url_for('characters.render_Dirichletwebpage', modulus=row, number=chi[0])}}" >{{ chi[0] }}</a>
-      {% if loop.first %}<br/>{% endif %}
-      {% endfor %}
-    </td>
-    {% endfor %}
-  {% else %}
+<table>
+  {% col != "more" %}
+  <tr>
     {% for e in entry %}
     <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
@@ -130,8 +122,9 @@ characters are grouped with respect to order and stacked integers indicate (comp
       {% endfor %}
     </td>
     {% endfor %}
+  </tr>
   {% endif %}
-</tr></table>
+</table>
 {% endif %}
 {%- endmacro %}
 
