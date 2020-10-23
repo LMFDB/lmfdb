@@ -161,7 +161,7 @@ def validate_label(label):
         numbers = label_to_number(modulus, number, all=True)
     else:
         raise ValueError(("It must be of the form modulus.number, with modulus "
-        "and number positive natural coprime numbers"))
+        "and number positive natural numbers"))
     return True
 
 def jump(info):
