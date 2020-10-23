@@ -154,11 +154,14 @@ def common_parse(info, query):
     parse_bool(info, query, "is_minimal", name="is_minimal")
 
 def validate_label(label):
-    modulus, number = label.split('.')
-    modulus = int(modulus)
-    numbers = label_to_number(modulus, number, all=True)
-    if numbers == 0:
-        raise ValueError("it must be of the form modulus.number, with modulus and number natural numbers")
+
+    if re.match(r'^\d+\.([\da-z]+)+$', label):
+        modulus, number = label.split('.')
+        modulus = int(modulus)
+        numbers = label_to_number(modulus, number, all=True)
+    else:
+        raise ValueError(("It must be of the form modulus.number, with modulus "
+        "and number positive natural coprime numbers"))
     return True
 
 def jump(info):
@@ -166,8 +169,7 @@ def jump(info):
     try:
         validate_label(jump_box)
     except ValueError as err:
-        tip_msg = "It must be of the form modulus.number, with modulus and number natural numbers"
-        flash_error("%s is not a valid label: %s.", jump_box, tip_msg)
+        flash_error("%s is not a valid label: %s.", jump_box, str(err))
         return redirect(url_for(".render_DirichletNavigation"))
     return redirect(url_for_label(jump_box))
 
@@ -213,18 +215,22 @@ def label_to_number(modulus, number, all=False):
             try:
                 orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
             except ValueError:
-                return 0
+                raise ValueError("Dirichlet Character of this label not found in database")
             else:
                 number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
                 if number is None:
-                    return 0
+                    raise ValueError("Dirichlet Character of this label not found in database")
                 if not all:
                     number = number[0]
         else:
-            return 0
+            raise ValueError("The modulus cannot be larger than 10,000")
     else:
-        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
-            return 0
+        if number <= 0:
+            raise ValueError("The number after the '.' cannot be negative")
+        elif gcd(modulus, number) != 1:
+            raise ValueError("The two numbers either side of '.' must be coprime")
+        elif number > modulus:
+            raise ValueError("The number after the '.' must be less than the number before")
     return number
 
 @characters_page.route("/Dirichlet")
@@ -386,9 +392,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
         if 'gens' in info:
             info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
         return render_template('CharGroup.html', **info)
-
-    number = label_to_number(modulus, number)
-    if number == 0:
+    try:
+        number = label_to_number(modulus, number)
+    except ValueError:
         flash_error(
             "the value %s is invalid. It should either be a positive integer "
             "coprime to and no greater than the modulus %s, or a letter that "
@@ -411,8 +417,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
     modulus = int(modulus)
-    numbers = label_to_number(modulus, number, all=True)
-    if numbers == 0:
+    try:
+        numbers = label_to_number(modulus, number, all=True)
+    except ValueError:
         return "Invalid label for Dirichlet character: %s" % label
     if isinstance(numbers, list):
         number = numbers[0]
