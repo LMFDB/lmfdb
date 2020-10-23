@@ -166,7 +166,9 @@ def jump(info):
     try:
         validate_label(jump_box)
     except ValueError as err:
-        flash_error("%s is not a valid label: %s.", jump_box, str(err))
+        tip_msg = "It must be of the form modulus.number, with modulus and number natural numbers"
+        flash_error("%s is not a valid label: %s.", jump_box, tip_msg)
+        return redirect(url_for(".render_DirichletNavigation"))
     return redirect(url_for_label(jump_box))
 
 def url_for_label(label):
