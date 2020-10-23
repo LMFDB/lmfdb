@@ -112,7 +112,7 @@ characters are grouped with respect to order and stacked integers indicate (comp
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
 <table>
-  {% col != "more" %}
+  {% if col != "more" %}
   <tr>
     {% for e in entry %}
     <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
