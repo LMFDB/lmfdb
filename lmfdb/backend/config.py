@@ -37,7 +37,7 @@ class Configuration(object):
       - ``postgresql_password`` -- the password for connecting to the database
       - ``writeargstofile`` - a boolean, if config file doesn't exist, it determines if command line arguments are written to the config file instead of the default arguments
     """
-    def __init__(self, parser=None, defaults={}, writeargstofile=False):
+    def __init__(self, parser=None, defaults={}, writeargstofile=False, readargs=True):
         if parser is None:
             parser = argparse.ArgumentParser(description="Default psycodict parser")
 
@@ -127,7 +127,12 @@ class Configuration(object):
             return sec, opt
 
         # 1: parsing command-line arguments
-        args = parser.parse_args()
+        if  readargs:
+            args = parser.parse_args()
+        else:
+            # only read config file
+            args = parser.parse_args([])
+
         args_dict = vars(args)
         default_arguments_dict = vars(parser.parse_args([]))
 
