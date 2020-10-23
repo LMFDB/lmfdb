@@ -10,25 +10,22 @@
 <h2> Browse </h2>
 <p>
 By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
+{% for rnge in info.modulus_list %}
+<a href="?modbrowse={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </p>
 
 <p>
 By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
+{% for rnge in info.conductor_list %}
+<a href="?conductor={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </p>
 
 <p>
 By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}-{{c+step-1}}</a>
+{% for rnge in info.order_list %}
+<a href="?order={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </p>
 

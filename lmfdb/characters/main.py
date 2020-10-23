@@ -246,39 +246,8 @@ def render_DirichletNavigation():
             info['rows'] = rows
             info['cols'] = cols
             return render_template("ModulusList.html", **info)
-
-        elif 'condbrowse' in request.args:
-            arg = request.args['condbrowse']
-            arg = arg.split('-')
-            conductor_start = int(arg[0])
-            conductor_end = int(arg[1])
-            info = {'args': request.args}
-            info['bread'] = bread('Conductor')
-            info['learnmore'] = learn()
-            info['credit'] = credit()
-            info['conductor_start'] = conductor_start
-            info['conductor_end'] = conductor_end
-            info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
-            info['contents'] = get_character_conductor(conductor_start, conductor_end + 1)
-            return render_template("ConductorList.html", **info)
-
-        elif 'ordbrowse' in request.args:
-            arg = request.args['ordbrowse']
-            arg = arg.split('-')
-            order_start = int(arg[0])
-            order_end = int(arg[1])
-            info = {'args': request.args}
-            info['bread'] = bread('Order')
-            info['learnmore'] = learn()
-            info['credit'] = credit()
-            info['order_start'] = order_start
-            info['order_end'] = order_end
-            info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
-            info['contents'] = get_character_order(order_start, order_end + 1)
-            return render_template("OrderList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
-        return render_template('CharacterNavigate.html', title='Dirichlet characters', bread=bread(), learnmore=learn(), credit=credit())
 
     if request.args:
         # hidden_search_type for prev/next buttons
@@ -287,11 +256,15 @@ def render_DirichletNavigation():
         if search_type in ['List', 'Random']:
             return dirichlet_character_search(info)
         assert False
+
     info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
     info['bread'] = bread()
     info['learnmore'] = learn()
     info['credit'] = credit()
     info['title'] = 'Dirichlet characters'
+    info['modulus_list'] = ['1-15', '16-31', '32-47']
+    info['conductor_list'] = ['1-9', '10-99', '100-999', '1000-9999']
+    info['order_list'] = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
     return render_template('CharacterNavigate.html', info=info,**info)
 
 
