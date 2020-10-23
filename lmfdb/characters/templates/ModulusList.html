@@ -103,12 +103,12 @@ characters are grouped with respect to order and stacked integers indicate (comp
                 <span style ="display:block;float:left;margin-right:3px;"> Modulus </span></th>
         </tr>
         <th class="left">Order</th>
-        {% for m in rows %}<th class="weight">${{m}}$</th>
+        {% for m in cols %}<th class="weight">${{m}}$</th>
         {% endfor %}
     </tr>
 </thead>
 
-{% macro show_character(entry, col, row) -%}
+{% macro show_character(entry, row, col) -%}
 {% if not entry is none %}
 <table>
   <tr>
@@ -128,17 +128,15 @@ characters are grouped with respect to order and stacked integers indicate (comp
 
 {% set row_class = cycler('a', 'b') %}
 <tbody>
-{% for row in cols %}
-{% if row != "more" %}
+{% for row in rows %}
   <tr>
   <th class="left">${{ row }}$</th>
-   {% for col in rows %}
+   {% for col in cols %}
    <td class="{{ row_class.next() }}"> 
-      {{ show_character(contents[(row, col)], col, row) }} 
+      {{ show_character(entries[(row, col)], row, col) }} 
    </td>
   {% endfor %}
   </tr>
-{% endif %}
 {% endfor %}
 <tbody>
 </table>
