@@ -241,6 +241,10 @@ def render_DirichletNavigation():
             info['learnmore'] = learn()
             info['credit'] = credit()
             h, c, rows, cols = get_character_modulus(modulus_start, modulus_end+1, limit=modulus_end)
+            print(h)
+            print(c)
+            print(rows)
+            print(cols)
             info['contents'] = c
             info['headers'] = h
             info['rows'] = rows
