@@ -98,11 +98,11 @@ characters are grouped with respect to order and stacked integers indicate (comp
 <table class="ntdata" id="chitable">
     <thead class="space">
         <tr class="space">
-            <th class="spaceleft"> Modulus </th>
+            <th></th>
             <th class="weight" colspan="{{headers|length}}">
-                <span style ="display:block;float:left;margin-right:3px;"> Order </span></th>
+                <span style ="display:block;float:left;margin-right:3px;"> Modulus </span></th>
         </tr>
-        <th class="left"></th>
+        <th class="left">Order</th>
         {% for h in headers %}
         {% if h == "more" %}  <th class="weight">$\cdots$</th> {% else %} <th class="weight">${{h}}$</th> {% endif %}
         {% endfor %}
@@ -138,10 +138,10 @@ characters are grouped with respect to order and stacked integers indicate (comp
 
 {% set row_class = cycler('a', 'b') %}
 <tbody>
-{% for row in rows %}
+{% for row in cols %}
   <tr>
   <th class="left">${{ row }}$</th>
-   {% for col in cols %}
+   {% for col in rows %}
    <td class="{{ row_class.next() }}"> 
       {{ show_character(contents[(row, col)], col, row) }} 
    </td>

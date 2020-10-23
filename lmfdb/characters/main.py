@@ -19,7 +19,7 @@ from lmfdb.characters.web_character import (
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
 )
-from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
+from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
@@ -240,7 +240,7 @@ def render_DirichletNavigation():
             info['bread'] = bread('Modulus')
             info['learnmore'] = learn()
             info['credit'] = credit()
-            h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
+            h, c, rows, cols = get_character_modulus(modulus_start, modulus_end, modulus_end-1)
             info['contents'] = c
             info['headers'] = h
             info['rows'] = rows
