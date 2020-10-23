@@ -240,7 +240,7 @@ def render_DirichletNavigation():
             info['bread'] = bread('Modulus')
             info['learnmore'] = learn()
             info['credit'] = credit()
-            entries = get_character_modulus(modulus_start, modulus_end, limit=modulus_end, entries_only=True)
+            headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=modulus_end)
             print(entries)
             info['entries'] = entries
             info['rows'] = sorted(list({r[1] for r in entries}))

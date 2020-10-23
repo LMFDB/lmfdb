@@ -55,7 +55,7 @@ def parse_limit(arg):
         raise ValueError("limit")
     return limit
 
-def get_character_modulus(a, b, limit=7, entries_only=False):
+def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
     headers = list(range(1, limit))
     headers.append("more")
@@ -71,8 +71,6 @@ def get_character_modulus(a, b, limit=7, entries_only=False):
             entry = entries.get((row, col), [])
             entry.append(el)
             entries[(row, col)] = entry
-    if entries_only:
-        return entries
 
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
