@@ -104,7 +104,7 @@ characters are grouped with respect to order and stacked integers indicate (comp
         </tr>
         <th class="left">Order</th>
         {% for h in headers %}
-        {% if h == "more" %}  <th class="weight">$\cdots$</th> {% else %} <th class="weight">${{h}}$</th> {% endif %}
+        {% if h != "more" %}<th class="weight">${{h}}$</th> {% endif %}
         {% endfor %}
     </tr>
 </thead>
@@ -112,7 +112,7 @@ characters are grouped with respect to order and stacked integers indicate (comp
 {% macro show_character(entry, col, row) -%}
 {% if not entry is none %}
 <table><tr>
-  {% if col == "more"  %}
+  {% if row == "more"  %}
     {% for e in entry %}
     <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
