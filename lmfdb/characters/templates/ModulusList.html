@@ -133,7 +133,7 @@ characters are grouped with respect to order and stacked integers indicate (comp
   <th class="left">${{ row }}$</th>
    {% for col in cols %}
    <td class="{{ row_class.next() }}"> 
-      {{ show_character(entries[(row, col)], row, col) }} 
+      {{ show_character(entries[(col, row)], row, col) }} 
    </td>
   {% endfor %}
   </tr>

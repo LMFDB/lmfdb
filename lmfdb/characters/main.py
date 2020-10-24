@@ -245,7 +245,7 @@ def render_DirichletNavigation():
             info['entries'] = entries
             info['rows'] = sorted(list({r[1] for r in entries}))
             print(info['rows'])
-            info['cols'] = [i for i in range(modulus_start, modulus_end+1)]
+            info['cols'] = list(range(modulus_start, modulus_end+1))
             print(info['cols'])
             return render_template("ModulusList.html", **info)
     except ValueError as err:
