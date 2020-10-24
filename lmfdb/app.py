@@ -62,7 +62,7 @@ def is_running():
 ############################
 
 app.logger.addHandler(logger_file_handler())
-app.url_map.strict_slashes = False
+
 # If the debug toolbar is installed then use it
 if app.debug:
     try:
