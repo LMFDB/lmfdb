@@ -16,15 +16,15 @@ table.browse td {
 <table class="browse">
   <tr>
     <td nowrap>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
-    <td>{% for rnge in info.dim_list %}<a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
+    <td>{% for rnge in info.dim_list %}<a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr>
   <tr>
     <td nowrap>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
-    <td>{% for rnge in info.det_list %}<a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
+    <td>{% for rnge in info.det_list %}<a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr>
   <tr>
     <td nowrap>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
-    <td>{% for rnge in info.class_number_list %}<a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
+    <td>{% for rnge in info.class_number_list %}<a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr>
 </table>
 
