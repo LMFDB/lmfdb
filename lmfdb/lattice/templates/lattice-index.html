@@ -39,6 +39,7 @@
 <td>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
+{% endfor %}
 </td></tr></table>
 <p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></p>
 
