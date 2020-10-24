@@ -11,14 +11,15 @@
 <table class="browse">
   <tr>
     <td>By {{ KNOWL('artin.dimension',title="dimension") }}:</td>
-    <td>{% for d in range(1,11) %} <a href="?dimension={{d}}">{{d}}</a>&nbsp; {% endfor %}</td>
+    <td>{% for d in info.dim_list %} <a href="?dimension={{d}}">{{d}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('artin.conductor',title="conductor") }}:</td>
     <td>
       <a href="?conductor=1-100">1-100</a>&nbsp;
       <a href="?conductor=101-1000">101-1000</a>&nbsp;
       <a href="?conductor=1001-10000">1001-10000</a>&nbsp;
-      <a href="?conductor=10001-100000">10001-100000</a>
+      <a href="?conductor=10001-100000">10001-100000</a>&nbsp;
+      <a href="?conductor=100001-1000000">10001-100000</a>&nbsp;
     </td>
   </tr><tr>
     <td>By {{ KNOWL('artin.gg_quotient',title="group") }}:</td>
