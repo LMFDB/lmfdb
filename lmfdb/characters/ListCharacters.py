@@ -65,12 +65,12 @@ def get_character_modulus(a, b, limit=7):
         G = DirichletGroup_conrey(row)
         for chi in G:
             multorder = chi.multiplicative_order()
-            el = chi
-            col = multorder
-            col = col if col < limit else 'more'
-            entry = entries.get((row, col), [])
-            entry.append(el)
-            entries[(row, col)] = entry
+            if multorder > limit:
+                el = chi
+                col = multorder
+                entry = entries.get((row, col), [])
+                entry.append(el)
+                entries[(row, col)] = entry
 
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
