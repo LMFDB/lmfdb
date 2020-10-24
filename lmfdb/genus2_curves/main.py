@@ -481,7 +481,7 @@ class G2C_stats(StatsDisplay):
                         }
 
     stat_list = [
-        {'cols': 'num_rat_pts', 'totaler': {'avg': True}, 'intro': 'rational points'},
+        {'cols': 'num_rat_pts', 'totaler': {'avg': True}},
         {'cols': 'num_rat_wpts', 'totaler': {'avg': True}},
         {'cols': 'aut_grp_id'},
         {'cols': 'geom_aut_grp_id'},
