@@ -249,7 +249,7 @@ def render_DirichletNavigation():
             print(info['cols'])
             for r in info['rows']:
                 for c in info['cols']:
-                    print(entries[(r,c)])
+                    print(entries[(c,r)])
             return render_template("ModulusList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
