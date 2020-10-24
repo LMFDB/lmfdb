@@ -6,7 +6,6 @@
 table.browse td {
   vertical-align: top;
   padding: 7px 0px 7px 10px;
-  max-width: 300px;
 }
 </style>
 
@@ -27,10 +26,9 @@ table.browse td {
     <td nowrap>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
     <td>{% for rnge in info.class_number_list %}<a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
   </tr>
-  <tr>
-    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td>
-  </tr>
 </table>
+
+<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></p>
 
 <h2> Search </h2>
 
