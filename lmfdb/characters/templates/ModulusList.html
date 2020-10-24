@@ -99,11 +99,11 @@ characters are grouped with respect to order and stacked integers indicate (comp
     <thead class="space">
         <tr class="space">
             <th></th>
-            <th class="weight" colspan="{{headers|length}}">
-                <span style ="display:block;float:left;margin-right:3px;"> Modulus </span></th>
+            <th class="weight" colspan="{{cols|length}}">
+                <span style ="display:block;float:left;margin-right:3px;">Order</span></th>
         </tr>
-        <th class="left">Order</th>
-        {% for m in cols %}<th class="weight">${{m}}$</th>
+        <th class="left">Modulus</th>
+        {% for m in rows %}<th class="weight">${{m}}$</th>
         {% endfor %}
     </tr>
 </thead>
