@@ -24,22 +24,24 @@
 
 <h2> Browse </h2>
 
-<table><tr>
-<td nowrap style="vertical-align:top;">By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
+<table>
+<tr><td nowrap style="vertical-align:top;">By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
-</td>
-<td nowrap>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
+</td></tr>
+<tr><td nowrap>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
-</td>
-<td nowrap>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
+</td></tr>
+<tr><td nowrap>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
-</td></tr></table>
+</td></tr>
+</table>
+
 <p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></p>
 
 <h2> Search </h2>
