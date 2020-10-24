@@ -90,7 +90,7 @@ def index():
     info = to_dict(request.args, search_array=GalSearchArray(), stats=GaloisStats())
     if request.args:
         return galois_group_search(info)
-    info['degree_list'] = list(range(2, 48))
+    info['degree_list'] = list(range(1, 48))
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
