@@ -10,10 +10,10 @@
 
 <table class="browse">
   <tr>
-    <td>Browse by {{KNOWL('gg.degree', title='degree')}}:</td>
+    <td>By {{KNOWL('gg.degree', title='degree')}}:</td>
     <td>{% for n in info.degree_list: %} <a href="?n={{n}}">{{n}}</a> &nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td>Browse by type:</td>
+    <td>By type:</td>
     <td>
       <a href="?parity=-1">odd</a> &nbsp;&nbsp;
       <a href="?parity=1">even</a> &nbsp;&nbsp;
@@ -25,7 +25,7 @@
       <a href="?prim=False">imprimitive</a> &nbsp;&nbsp;
     </td>
   </tr><tr>
-    <td>Browse by abstract group:</td>
+    <td>By group:</td>
     <td>
       <a href="?gal=S3">$S_3$</a> &nbsp;&nbsp;
       <a href="?gal=D4">$D_4$</a> &nbsp;&nbsp;
