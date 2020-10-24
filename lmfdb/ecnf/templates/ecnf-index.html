@@ -12,9 +12,9 @@
 <ul>
 {% for types in info.fields %}
 <li>
-{{types[0] | safe}}:
+{{types[0] | safe}}:&nbsp;
 {% for label,f in types[1] %}
-{% if loop.index0 %},&nbsp;{% endif %}<a href="{{f[0]}}">{{f[1]}}</a>
+{% if loop.index0 %},&nbsp;{% endif %}<a href="{{f[0]}}">{{f[1]}}</a>&nbsp;
 {% endfor %}
 </li>
 {% endfor %}
