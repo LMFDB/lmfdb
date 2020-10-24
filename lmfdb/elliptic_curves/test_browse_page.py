@@ -19,7 +19,7 @@ class HomePageTest(LmfdbTest):
         """
         homepage = self.tc.get("/EllipticCurve/Q/").get_data(as_text=True)
         self.check(homepage, "/EllipticCurve/Q/stats",
-                   'Distribution of rank')
+                   'Distribution of Distribution of <a title="Rank of an elliptic curve over a number field [ec.rank]" knowl="ec.rank" kwargs="">rank</a>')
 
     #
     # Link to random curve
