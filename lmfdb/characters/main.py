@@ -156,13 +156,10 @@ def common_parse(info, query):
 def validate_label(label):
 
     if re.match(r'^\d+\.([\da-z]+)+$', label):
-        modulus, number = label.split('.')
-        modulus = int(modulus)
-        numbers = label_to_number(modulus, number, all=True)
+        return True
     else:
         raise ValueError(("It must be of the form modulus.number, with modulus "
         "and number positive natural numbers"))
-    return True
 
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
