@@ -12,6 +12,11 @@
    font-weight: bold;
    margin: 20px;
 }
+table.brwose td {
+  vertical-align: top;
+  white-space: nowrap;
+  padding: 3px 0;
+}
 </style>
 {% if err_msg %}
 <p class="error_message">
@@ -24,18 +29,18 @@
 
 <h2> Browse </h2>
 
-<table>
-<tr><td nowrap valign="top">By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
+<table class="browse">
+<tr><td>By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr>
-<tr><td nowrap valign="top">By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
+<tr><td>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr>
-<tr><td nowrap valign="top">By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
+<tr><td>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
