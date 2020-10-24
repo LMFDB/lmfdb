@@ -339,7 +339,7 @@ def number_field_render_webpage():
     info = to_dict(request.args, search_array=NFSearchArray())
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 11)], []) + sum([[[d, 0]] for d in range(11, 21)], [])
-    sig_list = [str(s).replace(' ','') for s in sig_list[:20]]
+    sig_list = [str(s).replace(' ','') for s in sig_list[:16]]
     if not request.args:
         init_nf_count()
         discriminant_list_endpoints = [-10000, -1000, -100, 0, 100, 1000, 10000, 100000, 1000000]
@@ -347,7 +347,7 @@ def number_field_render_webpage():
             discriminant_list_endpoints[:-1], discriminant_list_endpoints[1:])]
         info['degree_list'] = list(range(1, max_deg + 1))
         info['signature_list'] = sig_list
-        info['class_number_list'] = list(range(1, 21))
+        info['class_number_list'] = list(range(1, 25))
         info['count'] = '50'
         info['nfields'] = comma(nfields)
         info['maxdeg'] = max_deg
