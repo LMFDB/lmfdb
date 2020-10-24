@@ -241,17 +241,9 @@ def render_DirichletNavigation():
             info['learnmore'] = learn()
             info['credit'] = credit()
             headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=modulus_end)
-            print(entries)
             info['entries'] = entries
-            info['rows'] = sorted(list({r[1] for r in entries}))
-            print(info['rows'])
-            info['cols'] = list(range(modulus_start, modulus_end+1))
-            print(info['cols'])
-            for r in info['rows']:
-                for c in info['cols']:
-                    if (c,r) in entries:
-                        print((c,r))
-                        print(entries[(c,r)])
+            info['rows'] = list(range(modulus_start, modulus_end+1))
+            info['cols'] = sorted(list({r[1] for r in entries}))
             return render_template("ModulusList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
