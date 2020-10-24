@@ -121,7 +121,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 <tbody>
 {% for row in rows %}
   <tr>
-  <th>}<th><a href="{{url_for('render_Dirichletwebpage', modulus=m)}}">${{ row }}$</th>
+  <th>}<th><a href="{{url_for('characters.render_Dirichletwebpage', modulus=m)}}">${{ row }}$</th>
    {% for col in cols %}
    <td> 
       {{ show_character(entries[(row, col)], row, col) }} 
