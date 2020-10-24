@@ -30,12 +30,12 @@
 <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr>
-<tr><td nowrap>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
+<tr><td nowrap style="vertical-align:top;">By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr>
-<tr><td nowrap>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
+<tr><td nowrap style="vertical-align:top;">By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
