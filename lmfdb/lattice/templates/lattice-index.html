@@ -8,6 +8,7 @@ table.browse td {
   padding: 7px 0px 7px 10px;
 }
 table.browse td:first-child {
+  white-space: nowrap;
 }
 </style>
 
@@ -15,7 +16,7 @@ table.browse td:first-child {
 
 <h2> Browse </h2>
 
-<table class="browse">
+<table class="browse" width=100%>
   <tr>
     <td>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
     <td>{% for rnge in info.dim_list %}<a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
