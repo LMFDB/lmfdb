@@ -7,13 +7,11 @@
     tr.topline td, tr.topline th { border-top: 2px solid black; }
 </style>
 
-<p>
-
-      <h2>Browse {{KNOWL('hgm.familes', title="Hypergeometric Families")}}</h2>
+<h2>Browse</h2>
 
 <div>
-The table gives for each degree $d$ and weight $w$ shown, 
-the number of corresponding hypergeometric families.  
+The table below gives for each degree $d$ and weight $w$ shown, 
+the number of corresponding {{KNOWL('hgm.familes', title="hypergeometric families")}}.  
 </div>
 
 <div>
@@ -164,14 +162,14 @@ are blank for combinations of weight and degree which cannot occur.
 Some <a href="{{url_for('.interesting_families')}}">interesting families of hypergeometric motives</a>, a <a href={{url_for('.random_family')}}>random family</a> or a <a href={{url_for('.random_motive')}}>random hypergeometric motive</a>.
 </p>
 
-<h3> Search for families of HGMs</h3>
 <form id="hgmsearch" onsubmit="cleanSubmit(this.id)">
+  <h2> Search for families of HGMs</h2>
   <p>
     Enter values into one or more boxes to restrict the list of families returned.
   </p>
   {{ info.search_array.family_html() | safe }}
 
-  <h3> Search for individual HGMs</h3>
+  <h2> Search for individual HGMs</h2>
   <p>
     Enter values into the boxes above and the boxes below to obtain the
     list of corresponding hypergeometric motives.
