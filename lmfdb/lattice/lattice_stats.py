@@ -22,7 +22,7 @@ class Lattice_stats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return '<p>The database currently contains {} {} {}. It includes data from the {}.</p><p>The largest {} is {}, the largest {} is {}, and the largest {} is {}.</p><p>In the case of {} {} of {} one the database is complete.</p><p>Here are some <a href="{}">further statistics</a>.</p>'.format(
+        return 'The database currently contains {} {} {}. It includes data from the {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>.'.format(
             self.nlats,
             self.kposdef,
             self.kintegral,
@@ -33,9 +33,6 @@ class Lattice_stats(StatsDisplay):
             self.max_dim,
             self.kdet,
             comma(self.max_det),
-            self.kpri,
-            self.kintegral,
-            self.kcn,
             url_for(".statistics"),
         )
 
