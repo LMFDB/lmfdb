@@ -96,7 +96,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 <table class="ntdata" border="2" id="chitable">
 <thead>
     <tr>
-    <td>Modulus</td>{% for ord in cols %}<td>$\mathrm{ord}\chi_q(n,\cdot)={{ord}}$</td>{% endfor %}
+    <td>Modulus</td>{% for ord in cols %}<td>Ord {{ord}}$</td>{% endfor %}
     </tr>
 </thead>
 <tbody>
@@ -121,7 +121,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 <tbody>
 {% for row in rows %}
   <tr>
-  <th>}<th><a href="{{url_for('characters.render_Dirichletwebpage', modulus=m)}}">${{ row }}$</th>
+  <th><a href="{{url_for('characters.render_Dirichletwebpage', modulus=m)}}">${{ row }}$</th>
    {% for col in cols %}
    <td> 
       {{ show_character(entries[(row, col)], row, col) }} 
