@@ -25,18 +25,19 @@
 <h2> Browse </h2>
 
 <table><tr>
-<td>By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
+<td nowrap>By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr></table>
-<td>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
+<table><tr>
+<td nowrap>By {{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr></table>
 <table><tr>
-<td>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
+<td nowrap>By {{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
