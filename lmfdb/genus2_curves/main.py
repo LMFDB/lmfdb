@@ -64,6 +64,14 @@ aut_grp_dict = {
         '[8,3]':'D4',
         '[12,4]':'D6'
         }
+aut_grp_dict_pretty = {
+        '[2,1]':'$C_2$',
+        '[4,1]':'$C_4$',
+        '[4,2]':'$C_2^2$',
+        '[6,2]':'$C_6$',
+        '[8,3]':'$D_4$',
+        '[12,4]':'$D_6$'
+        }
 
 geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
 geom_aut_grp_dict = {
@@ -74,6 +82,14 @@ geom_aut_grp_dict = {
         '[12,4]':'D6',
         '[24,8]':'C3:D4',
         '[48,29]':'GL(2,3)'}
+geom_aut_grp_dict_pretty = {
+        '[2,1]':'$C_2$',
+        '[4,2]':'$C_2^2$',
+        '[8,3]':'$D_4$',
+        '[10,2]':'$C_{10}$',
+        '[12,4]':'$D_6$'
+        '[24,8]':'$C_3:D_4$',
+        '[48,29]':'$\mathrm{GL}_2(3)'}
 
 ###############################################################################
 # Routing for top level and random_curve
@@ -452,8 +468,8 @@ class G2C_stats(StatsDisplay):
                   'real_geom_end_alg': 'Sato-Tate group identity components',
                   'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
-    formatters = {'aut_grp_id': lambda x: aut_grp_dict[x],
-                  'geom_aut_grp_id': lambda x: geom_aut_grp_dict[x],
+    formatters = {'aut_grp_id': lambda x: aut_grp_dict_pretty[x],
+                  'geom_aut_grp_id': lambda x: geom_aut_grp_dict_pretty[x],
                   'has_square_sha': formatters.boolean,
                   'is_gl2_type': formatters.boolean,
                   'real_geom_end_alg': lambda x: "\\("+st0_group_name(x)+"\\)",
