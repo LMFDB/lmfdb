@@ -11,12 +11,12 @@ p {padding-left: 1ch;}
 <p>
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
-<a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
+&nbsp;&nbsp;<a href="?cond={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p><p>
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
-<a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
+&nbsp;&nbsp;<a href="?abs_disc={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p><p>
 Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <a href={{url_for('.random_curve')}}>random genus 2 curve</a>

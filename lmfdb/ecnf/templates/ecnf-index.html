@@ -14,8 +14,7 @@
 <li>
 {{types[0] | safe}}:
 {% for label,f in types[1] %}
-{% if loop.index0 %},{% endif %}
- <a href="{{f[0]}}">{{f[1]}}</a>
+{% if loop.index0 %},&nbsp;{% endif %}<a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
 </li>
 {% endfor %}

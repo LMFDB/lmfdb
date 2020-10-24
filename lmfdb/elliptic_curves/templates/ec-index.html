@@ -35,19 +35,19 @@ Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
 <p>
 By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
 {% for rnge in info.conductor_list %}
-<a href="?conductor={{rnge}}">{{rnge}}</a>
+<a href="?conductor={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </p>
 <p>
 By {{ KNOWL('ec.rank', title="rank")}}:
 {% for r in info.rank_list: %}
-<a href="?rank={{r}}">{{r}}</a>
+&nbsp;&nbsp;<a href="?rank={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
 By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:
 {% for t in info.torsion_list: %}
-<a href="?torsion={{t}}">{{t}}</a>
+&nbsp;&nbsp;<a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
 </p>
 <p>
