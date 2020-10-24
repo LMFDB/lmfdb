@@ -788,7 +788,7 @@ class STSearchArray(SearchArray):
             name="maximal",
             label="Maximal",
             knowl="st_group.supgroups",
-            example="")
+            example_col=True)
         component_group = TextBox(
             name="component_group",
             label="Component group",
