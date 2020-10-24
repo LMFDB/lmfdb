@@ -34,13 +34,8 @@ class DirichletSearchTest(LmfdbTest):
         assert '>%s</t'%(parity_string(-1)) in W.get_data(as_text=True)
 
     def test_modbrowse(self):
-        W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
-        """
-        curl -s '/Character/?modbrowse=51-81' | grep 'Dirichlet/[0-9][0-9]/27' | wc -l
-        There are 20 characters of conductor 27 in this modulus range
-        """
-        import re
-        assert len(re.findall('Dirichlet/[0-9][0-9]/27',W.get_data(as_text=True))) == 20
+        W = self.tc.get('/Character/Dirichlet/?modbrowse=41-60')
+        assert 'Dirichlet/45/11' in W.get_data(as_text=True)
 
     def test_search(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
