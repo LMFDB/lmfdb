@@ -73,7 +73,7 @@ def lattice_render_webpage():
         dim_list = list(range(1, 25, 1))
         max_class_number = 56
         class_number_list = list(range(1, max_class_number + 1, 1))
-        det_list_endpoints = [1, 999, 9999, 99999, 999999, 9999999, 99999999]
+        det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
