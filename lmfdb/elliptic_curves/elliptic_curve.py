@@ -20,11 +20,13 @@ from lmfdb.utils import (
     StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
-# from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
 from sage.misc.cachefunc import cached_method
+from lmfdb.ecnf.ecnf_stats import latex_tor
+from psycopg2.sql import SQL
 q = ZZ['x'].gen()
+the_ECstats = None
 
 #########################
 #   Data credit
@@ -49,6 +51,12 @@ def get_bread(tail=[]):
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
+
+def get_stats():
+    global the_ECstats
+    if the_ECstats is None:
+        the_ECstats = ECstats()
+    return the_ECstats
 
 #########################
 #    Top level
@@ -141,24 +149,6 @@ def todays_curve():
 # Statistics
 ################################################################################
 
-the_ECstats = None
-
-def get_stats():
-    global the_ECstats
-    if the_ECstats is None:
-        the_ECstats = ECstats()
-    return the_ECstats
-
-def elliptic_curve_summary():
-    counts = get_stats()
-    ncurves_c = counts.ncurves_c
-    max_N_c = counts.max_N_c
-    return r'The database currently contains the complete Cremona database.  This contains all %s <a title="Elliptic curves [ec]" knowl="ec" kwargs="">elliptic curves</a> defined over $\Q$ with <a title="Conductor of an elliptic curve over $\Q$ [ec.q.conductor]" knowl="ec.q.conductor" kwargs="">conductor</a> at most %s.' % (str(ncurves_c), str(max_N_c))
-
-@app.context_processor
-def ctx_elliptic_curve_summary():
-    return {'elliptic_curve_summary': elliptic_curve_summary}
-
 class ECstats(StatsDisplay):
     """
     Class for creating and displaying statistics for elliptic curves over Q
@@ -168,38 +158,49 @@ class ECstats(StatsDisplay):
         self.ncurves = db.ec_curves.count()
         self.ncurves_c = comma(db.ec_curves.count())
         self.max_N = db.ec_curves.max('conductor')
-        self.max_N_c = comma(db.ec_curves.max('conductor'))
+
+        # round up to nearest multiple of 1000
+        self.max_N = 1000*int((self.max_N/1000)+1)
+        # NB while we only have the Cremona database, the upper bound
+        # will always be a multiple of 1000, but it looks funny to
+        # show the maximum condictor as something like 399998; there
+        # are no elliptic curves whose conductor is a multiple of
+        # 1000.
+
+        self.max_N_c = comma(self.max_N)
         self.max_rank = db.ec_curves.max('rank')
+        self.max_rank_c = comma(self.max_rank)
         self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
+        self.rank_knowl = display_knowl('ec.rank', title = "rank")
 
     @property
     def short_summary(self):
         stats_url = url_for(".statistics")
         ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        return r'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves, ec_knowl, self.cond_knowl, self.max_N, stats_url)
+        return r'The database currently contains the complete Cremona database. This contains all %s %s defined over $\Q$ with %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
 
     @property
     def summary(self):
         nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
-        return 'The database currently contains %s elliptic curves in %s isogeny classes, with %s at most %s.' % (self.ncurves, nclasses, self.cond_knowl, self.max_N)
+        return 'The database currently contains the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s, all of which have %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c, self.rank_knowl, self.max_rank_c)
 
     table = db.ec_curves
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
                'sha': 'ec.q.analytic_sha_order',
-               'torsion' : 'ec.torsion_order'}
-    row_titles = {'rank': 'rank',
-                   'sha': 'sha',
-                   'torsion':'torsion'}
+               'torsion_structure' : 'ec.torsion_order'}
+
     top_titles = {'rank': 'rank',
                    'sha': 'analytic order of &#1064;',
-                   'torsion': 'torsion subgroup orders'}
+                   'torsion_structure': 'torsion subgroups'}
+
+    formatters = {'torsion_structure': latex_tor}
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
+        {'cols': 'torsion_structure'},
         {'cols': 'sha', 'totaler': {'avg': True}},
-        {'cols': 'torsion', 'totaler': {'avg': True}}
     ]
 
     @cached_method
