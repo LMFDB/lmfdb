@@ -89,7 +89,7 @@ geom_aut_grp_dict_pretty = {
         '[10,2]':'$C_{10}$',
         '[12,4]':'$D_6$',
         '[24,8]':'$C_3:D_4$',
-        '[48,29]':'$\mathrm{GL}_2(3)'}
+        '[48,29]':'$\GL_2(3)'}
 
 ###############################################################################
 # Routing for top level and random_curve
@@ -448,7 +448,7 @@ class G2C_stats(StatsDisplay):
               'torsion_order': 'g2c.torsion_order'}
     row_titles = {'num_rat_pts': 'rational points',
                   'num_rat_wpts': 'Weierstrass points',
-                 'aut_grp_id': 'automorphism group',
+                  'aut_grp_id': 'automorphism group',
                   'geom_aut_grp_id': 'automorphism group',
                   'two_selmer_rank': '2-Selmer rank',
                   'analytic_sha': 'analytic order of &#1064;',
@@ -481,7 +481,7 @@ class G2C_stats(StatsDisplay):
                         }
 
     stat_list = [
-        {'cols': 'num_rat_pts', 'totaler': {'avg': True}},
+        {'cols': 'num_rat_pts', 'totaler': {'avg': True}, 'intro': 'rational points'},
         {'cols': 'num_rat_wpts', 'totaler': {'avg': True}},
         {'cols': 'aut_grp_id'},
         {'cols': 'geom_aut_grp_id'},
