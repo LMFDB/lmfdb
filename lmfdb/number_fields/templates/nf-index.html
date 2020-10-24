@@ -3,7 +3,7 @@
 {# Offers options to browse and search #}
 
 <div>
-{{ KNOWL_INC('nf.extent') }}
+{{ global_numberfield_summary() | safe}}
 </div>
 
 <h2> Browse </h2>
@@ -17,7 +17,7 @@
     <td>{% for r in info.discriminant_list: %} <a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
   </tr><tr>
     <td>By {{KNOWL('nf.signature', title='signature')}}:</td>
-    <td>{% for t in info.signature_list: %} <a href="?signature={{t}}">{{t}}</a>&nbsp; {% endfor %} $\cdots$</td>
+    <td>{% for t in info.signature_list: %} <a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
   </tr><tr>
     <td>By {{KNOWL('nf.class_number', title='class number')}}:</td>
     <td>{% for r in info.class_number_list: %} <a href="?class_number={{r}}">{{r}}</a>&nbsp; {% endfor %} $\cdots$</td>
