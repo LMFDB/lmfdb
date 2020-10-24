@@ -12,9 +12,6 @@
    font-weight: bold;
    margin: 20px;
 }
-table.browse {
-  margin-bottom: -10px;
-}
 table.browse td {
   vertical-align: top;
   padding: 7px 0px 7px 10px;
@@ -35,7 +32,7 @@ table.browse td:first-child {
 
 <h2> Browse </h2>
 
-<table class="browse">
+<table class="browse"><tbody>
 <tr><td>By {{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
@@ -51,9 +48,8 @@ table.browse td:first-child {
 <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;
 {% endfor %}
 </td></tr>
-</table>
-
-<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></p>
+<tr><td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td></tr>
+</tbody></table>
 
 <h2> Search </h2>
 
