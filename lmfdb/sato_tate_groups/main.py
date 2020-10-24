@@ -801,10 +801,10 @@ class STSearchArray(SearchArray):
             [degree, second_trace_moment],
             [include_irrational, fourth_trace_moment],
             [identity_component, first_a2_moment],
-            [components, maximal],
+            [maximal, components],
             [count, component_group]]
 
-        self.refine_array = [[weight, degree, include_irrational, identity_component, components, component_group], [trace_zero_density, second_trace_moment, fourth_trace_moment, first_a2_moment, maximal]]
+        self.refine_array = [[weight, degree, include_irrational, identity_component, maximal], [components, component_group, trace_zero_density, second_trace_moment, fourth_trace_moment], [first_a2_moment]]
 
 @cached_function
 def compcache():
