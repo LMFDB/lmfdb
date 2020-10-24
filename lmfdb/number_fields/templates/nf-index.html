@@ -17,7 +17,7 @@
     <td>{% for r in info.discriminant_list: %} <a href="?discriminant={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{KNOWL('nf.signature', title='signature')}}:</td>
-    <td>{% for t in info.signature_list: %} <a href="?signature={{t}}">{{t}}</a>&nbsp; {% endfor %}</td>
+    <td>{% for t in info.signature_list: %} <a href="?signature={{t.replace(' ','')}}">{{t}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{KNOWL('nf.class_number', title='class number')}}:</td>
     <td>{% for r in info.class_number_list: %} <a href="?class_number={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
