@@ -639,7 +639,7 @@ class Belyi_stats(StatsDisplay):
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
-    row_titles = {"deg": "degree", "orbit_size": "size", "g": "genus"}
+    short_display = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
     knowls = {
         "deg": "belyi.degree",
