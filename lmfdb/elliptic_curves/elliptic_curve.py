@@ -7,7 +7,7 @@ import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime, Integer
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
@@ -57,6 +57,10 @@ def get_stats():
     if the_ECstats is None:
         the_ECstats = ECstats()
     return the_ECstats
+
+def latex_sha(sha_order):
+    sha_order_sqrt = Integer(sha_order).sqrt()
+    return "$%s^2$" % sha_order_sqrt
 
 #########################
 #    Top level
@@ -195,7 +199,8 @@ class ECstats(StatsDisplay):
                    'sha': 'analytic order of &#1064;',
                    'torsion_structure': 'torsion subgroups'}
 
-    formatters = {'torsion_structure': latex_tor}
+    formatters = {'torsion_structure': latex_tor,
+                    'sha': latex_sha }
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
