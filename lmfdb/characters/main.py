@@ -261,7 +261,7 @@ def render_DirichletNavigation():
     info['learnmore'] = learn()
     info['credit'] = credit()
     info['title'] = 'Dirichlet characters'
-    info['modulus_list'] = ['1-15', '16-31', '32-47']
+    info['modulus_list'] = ['1-20', '21-40', '41-60', '61-80']
     info['conductor_list'] = ['1-9', '10-99', '100-999', '1000-9999']
     info['order_list'] = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
     return render_template('CharacterNavigate.html', info=info,**info)
