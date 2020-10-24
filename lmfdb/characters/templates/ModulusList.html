@@ -93,7 +93,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 </div>
 
 <div>
-<table class="ntdata" id="chitable">
+<table style="margin-left:5%;" border="2" id="chitable">
 <thead>
     <tr>
       <td></td>
@@ -126,7 +126,7 @@ The characters are grouped with respect to order and stacked integers indicate (
 <tbody>
 {% for row in rows %}
   <tr>
-  <th class="left">${{ row }}$</th>
+  <th>${{ row }}$</th>
    {% for col in cols %}
    <td> 
       {{ show_character(entries[(row, col)], row, col) }} 
