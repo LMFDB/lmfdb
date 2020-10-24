@@ -8,48 +8,46 @@
 
 <h2>Browse</h2>
 
-
-<p>
-Browse by {{KNOWL('gg.degree', title='degree')}} $n$:
-{% for n in info.degree_list: %}
-&nbsp;<a href="?n={{n}}">{{n}}</a>&nbsp;
-{% endfor %}
-</p>
-
-<p>
-Browse by type:
-&nbsp;<a href="?parity=-1">odd</a>&nbsp;
-&nbsp;<a href="?parity=1">even</a>&nbsp;
-&nbsp;<a href="?cyc=True">cyclic</a>&nbsp;
-&nbsp;<a href="?cyc=False">non-cyclic</a>&nbsp;
-&nbsp;<a href="?solv=True">solvable</a>&nbsp;
-&nbsp;<a href="?solv=False">non-solvable</a>&nbsp;
-&nbsp;<a href="?prim=True">primitive</a>&nbsp;
-&nbsp;<a href="?prim=False">imprimitive</a>
-
-<p>
-Browse by abstract group:
-&nbsp;<a href="?gal=S3">$S_3$</a>&nbsp;
-&nbsp;<a href="?gal=D4">$D_4$</a>&nbsp;
-&nbsp;<a href="?gal=A4">$A_4$</a>&nbsp;
-&nbsp;<a href="?gal=S4">$S_4$</a>&nbsp;
-&nbsp;<a href="?gal=A5">$A_5$</a>&nbsp;
-&nbsp;<a href="?gal=S5">$S_5$</a>&nbsp;
-&nbsp;<a href="?gal=GL(3,2)">$\GL(3,2)$</a>&nbsp;
-&nbsp;<a href="?gal=A6">$A_6$</a>&nbsp;
-&nbsp;<a href="?gal=PSL(2,8)">$\PSL(2,8)$</a>&nbsp;
-&nbsp;<a href="?gal=PSL(2,11)">$\PSL(2,11)$</a>&nbsp;
-&nbsp;<a href="?gal=PSL(2,13)">$\PSL(2,13)$</a>&nbsp;
-&nbsp;<a href="?gal=PSL(3,3)">$\PSL(3,3)$</a>&nbsp;
-&nbsp;<a href="?gal=PSU(3,3)">$\PSU(3,3)$</a>&nbsp;
-&nbsp;<a href="?gal=PSp(4,3)">$\PSp(4,3)$</a>&nbsp;
-&nbsp;<a href="?gal=M11">$M_{11}$</a>&nbsp;
-&nbsp;<a href="?gal=M12">$M_{12}$</a>
-<p>
-
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting Galois groups</a> or a <a href={{url_for('.random_group')}}>random Galois group</a>
-</p>
+<table class="browse">
+  <tr>
+    <td>Browse by {{KNOWL('gg.degree', title='degree')}}:</td>
+    <td>{% for n in info.degree_list: %} <a href="?n={{n}}">{{n}}</a> &nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>Browse by type:</td>
+    <td>
+      <a href="?parity=-1">odd</a> &nbsp;&nbsp;
+      <a href="?parity=1">even</a> &nbsp;&nbsp;
+      <a href="?cyc=True">cyclic</a> &nbsp;&nbsp;
+      <a href="?cyc=False">non-cyclic</a> &nbsp;&nbsp;
+      <a href="?solv=True">solvable</a> &nbsp;&nbsp;
+      <a href="?solv=False">non-solvable</a> &nbsp;&nbsp;
+      <a href="?prim=True">primitive</a> &nbsp;&nbsp;
+      <a href="?prim=False">imprimitive</a> &nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td>Browse by abstract group:</td>
+    <td>
+      <a href="?gal=S3">$S_3$</a> &nbsp;&nbsp;
+      <a href="?gal=D4">$D_4$</a> &nbsp;&nbsp;
+      <a href="?gal=A4">$A_4$</a> &nbsp;&nbsp;
+      <a href="?gal=S4">$S_4$</a> &nbsp;&nbsp;
+      <a href="?gal=A5">$A_5$</a> &nbsp;&nbsp;
+      <a href="?gal=S5">$S_5$</a> &nbsp;&nbsp;
+      <a href="?gal=GL(3,2)">$\GL(3,2)$</a> &nbsp;&nbsp;
+      <a href="?gal=A6">$A_6$</a> &nbsp;&nbsp;
+      <a href="?gal=PSL(2,8)">$\PSL(2,8)$</a> &nbsp;&nbsp;
+      <a href="?gal=PSL(2,11)">$\PSL(2,11)$</a> &nbsp;&nbsp;
+      <a href="?gal=PSL(2,13)">$\PSL(2,13)$</a> &nbsp;&nbsp;
+      <a href="?gal=PSL(3,3)">$\PSL(3,3)$</a> &nbsp;&nbsp;
+      <a href="?gal=PSU(3,3)">$\PSU(3,3)$</a> &nbsp;&nbsp;
+      <a href="?gal=PSp(4,3)">$\PSp(4,3)$</a> &nbsp;&nbsp;
+      <a href="?gal=M11">$M_{11}$</a> &nbsp;&nbsp;
+      <a href="?gal=M12">$M_{12}$</a>
+    </td>
+  </tr><tr>
+     <td>Some <a href="{{url_for('.interesting')}}">interesting Galois groups</a> or a <a href={{url_for('.random_group')}}>random Galois group</a></td>
+  </tr>
+</table>
 
 <h2>Search</h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">

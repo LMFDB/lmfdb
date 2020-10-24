@@ -395,7 +395,7 @@ class GalSearchArray(SearchArray):
             example_span="-1, or 1..3")
         arith_equiv = TextBox(
             name="arith_equiv",
-            label="Arith. Equiv.",
+            label="Equivalent siblings",
             knowl="gg.arithmetically_equiv_input",
             example="1",
             example_span="1 or 2,3 or 1..5 or 1,3..10")
