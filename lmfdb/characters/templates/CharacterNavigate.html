@@ -12,7 +12,7 @@
 <table class="browse">
   <tr>
     <td>By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:</td>
-    <td>{% for rnge in info.modulus_list %} <a href="?modbrowse={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} $\cdots$</td>
+    <td>{% for rnge in info.modulus_list %} <a href="?modbrowse={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
   </tr><tr>
     <td>By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:</td>
     <td>{% for rnge in info.conductor_list %} <a href="?conductor={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
