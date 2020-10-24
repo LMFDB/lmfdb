@@ -370,7 +370,7 @@ def random_field():
 @local_fields_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "lf",
+        "lf.padic_field",
         db.lf_fields,
         url_for_label,
         title=r"Some interesting $p$-adic fields",
@@ -439,7 +439,7 @@ class LFSearchArray(SearchArray):
             name='p',
             label=r'Residue field characteristic',
             short_label='Residue characteristic',
-            knowl='lf.qp',
+            knowl='lf.residue_field',
             example='3',
             example_span='3, or a range like 3..7')
         c = TextBox(
