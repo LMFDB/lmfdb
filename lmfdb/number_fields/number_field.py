@@ -338,7 +338,7 @@ def statistics():
 def number_field_render_webpage():
     info = to_dict(request.args, search_array=NFSearchArray())
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
-        1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
+        1 + (d // 2))] for d in range(1, 11)], []) + sum([[[d, 0]] for d in range(11, 21)], [])
     sig_list = [str(s).replace(' ','') for s in sig_list[:20]]
     if not request.args:
         init_nf_count()
