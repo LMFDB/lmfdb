@@ -7,10 +7,6 @@ table.browse td {
   vertical-align: top;
   padding: 7px 0px 7px 10px;
   max-width: 300px;
-  white-space: normal;
-}
-table.browse td:first-child {
-  white-space: nowrap;
 }
 </style>
 
@@ -20,15 +16,15 @@ table.browse td:first-child {
 
 <table class="browse">
   <tr>
-    <td>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
+    <td nowrap>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
     <td>{% for rnge in info.dim_list %}<a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
   </tr>
   <tr>
-    <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
+    <td nowrap>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
     <td>{% for rnge in info.det_list %}<a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
   </tr>
   <tr>
-    <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
+    <td nowrap>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
     <td>{% for rnge in info.class_number_list %}<a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp;{% endfor %}</td>
   </tr>
   <tr>
