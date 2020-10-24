@@ -1,34 +1,27 @@
 {% extends "homepage.html" %}
 {% block content %}
 
-<style>
-
-table.browse td {
-  vertical-align: top;
-  padding: 7px 0px 7px 10px;
-}
-</style>
-
 {{ info.stats.short_summary | safe }}
 
 <h2> Browse </h2>
 
 <table class="browse">
   <tr>
-    <td nowrap>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
-    <td>{% for rnge in info.dim_list %}<a href="?dim={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+    <td>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
+    <td>{% for rnge in info.dim_list %} <a href="?dim={{rnge}}">{{rnge}}</a> &nbsp;&nbsp; {% endfor %}</td>
   </tr>
   <tr>
-    <td nowrap>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
-    <td>{% for rnge in info.det_list %}<a href="?det={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+    <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
+    <td>{% for rnge in info.det_list %} <a href="?det={{rnge}}">{{rnge}}</a> &nbsp;&nbsp; {% endfor %}</td>
   </tr>
   <tr>
-    <td nowrap>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
-    <td>{% for rnge in info.class_number_list %}<a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+    <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
+    <td>{% for rnge in info.class_number_list %} <a href="?class_number={{rnge}}">{{rnge}}</a> &nbsp;&nbsp; {% endfor %}</td>
+  </tr>
+  <tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td>
   </tr>
 </table>
-
-<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></p>
 
 <h2> Search </h2>
 
