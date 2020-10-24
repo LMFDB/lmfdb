@@ -163,13 +163,13 @@ Some <a href="{{url_for('.interesting_families')}}">interesting families of hype
 </p>
 
 <form id="hgmsearch" onsubmit="cleanSubmit(this.id)">
-  <h2> Search for families of HGMs</h2>
+  <h3> Search for families of HGMs</h3>
   <p>
     Enter values into one or more boxes to restrict the list of families returned.
   </p>
   {{ info.search_array.family_html() | safe }}
 
-  <h2> Search for individual HGMs</h2>
+  <h3> Search for individual HGMs</h3>
   <p>
     Enter values into the boxes above and the boxes below to obtain the
     list of corresponding hypergeometric motives.
