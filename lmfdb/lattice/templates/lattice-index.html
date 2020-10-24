@@ -1,6 +1,18 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+<style>
+
+table.browse td {
+  vertical-align: top;
+  padding: 7px 0px 7px 10px;
+  white-space: wrap;
+}
+table.browse td:first-child {
+  white-space: nowrap;
+}
+</style>
+
 {{ info.stats.short_summary | safe }}
 
 <h2> Browse </h2>
