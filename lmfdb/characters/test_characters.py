@@ -24,10 +24,6 @@ class WebCharacterTest(LmfdbTest):
 
 class DirichletSearchTest(LmfdbTest):
 
-    def test_condbrowse(self):
-        W = self.tc.get('/Character/Dirichlet/?condbrowse=24-41')
-        assert '(\\frac{40}{\\bullet}\\right)' in W.get_data(as_text=True)
-
     def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
         assert r'25.f' in W.get_data(as_text=True)
