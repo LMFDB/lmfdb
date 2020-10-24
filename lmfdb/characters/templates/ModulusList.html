@@ -100,11 +100,11 @@ The characters are grouped with respect to order and stacked integers indicate (
       <td colspan="{{cols|length}}"><span style ="display:block;float:left;margin-right:3px;">Order</span></td>
     </tr>
     <tr>
-    <td class="left">Modulus</td>
-        {% for m in cols %}<td >${{m}}$</td>{% endfor %}
+    <td>Modulus</td>
+        {% for m in cols %}<th>${{m}}$</th>{% endfor %}
     </tr>
 </thead>
-
+<tbody>
 {% macro show_character(entry, row, col) -%}
 {% if not entry is none %}
 <table>
@@ -122,14 +122,13 @@ The characters are grouped with respect to order and stacked integers indicate (
 {% endif %}
 {%- endmacro %}
 
-
 {% set row_class = cycler('a', 'b') %}
 <tbody>
 {% for row in rows %}
   <tr>
   <th class="left">${{ row }}$</th>
    {% for col in cols %}
-   <td class="{{ row_class.next() }}"> 
+   <td> 
       {{ show_character(entries[(row, col)], row, col) }} 
    </td>
   {% endfor %}
