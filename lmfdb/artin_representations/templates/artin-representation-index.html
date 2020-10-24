@@ -11,33 +11,32 @@
 
 <p>
 By {{ KNOWL('artin.dimension',title="dimension") }}:
-<a href="?dimension=1">1</a>, <a href="?dimension=2">2</a>, <a href="?dimension=3">3</a>,
-<a href="?dimension=4">4</a>, <a href="?dimension=5">5</a>, <a href="?dimension=6">6</a>,
-<a href="?dimension=7">7</a>, <a href="?dimension=8">8</a>, <a href="?dimension=9">9</a>,
-<a href="?dimension=10">10</a>
+{% for d in range(1,11) %}
+&nbsp;<a href="?dimension={{d}}">{{d}}</a>&nbsp;
+{% endfor %}
 
 <p>
 By {{ KNOWL('artin.conductor',title="conductor") }}:
-<a href="?conductor=1-100">1-100</a>,
-<a href="?conductor=101-1000">101-1000</a>,
-<a href="?conductor=1001-10000">1001-10000</a>,
-<a href="?conductor=10001-100000">10001-100000</a>
+&nbsp;<a href="?conductor=1-100">1-100</a>&nbsp;
+&nbsp;<a href="?conductor=101-1000">101-1000</a>&nbsp;
+&nbsp;<a href="?conductor=1001-10000">1001-10000</a>&nbsp;
+&nbsp;<a href="?conductor=10001-100000">10001-100000</a>
 
 <p>
 By {{ KNOWL('artin.gg_quotient',title="group") }}:
-<a href="?group=D4">$D_4$</a>,
-<a href="?group=Q8">$Q_8$</a>,
-<a href="?group=A4">$A_4$</a>,
-<a href="?group=S4">$S_4$</a>,
-<a href="?group=GL(2,3)">$\GL(2,3)$</a>,
-<a href="?group=A5">$A_5$</a>,
-<a href="?group=6T13">$C_3^2:D_4$</a>,
-<a href="?group=S5">$S_5$</a>,
-<a href="?group=GL(3,2)">$\GL(3,2)$</a>,
-<a href="?group=A6">$A_6$</a>,
-<a href="?group=S6">$S_6$</a>,
-<a href="?group=A7">$A_7$</a>,
-<a href="?group=S7">$S_7$</a>
+&nbsp;<a href="?group=D4">$D_4$</a>&nbsp;
+&nbsp;<a href="?group=Q8">$Q_8$</a>&nbsp;
+&nbsp;<a href="?group=A4">$A_4$</a>&nbsp;
+&nbsp;<a href="?group=S4">$S_4$</a>&nbsp;
+&nbsp;<a href="?group=GL(2,3)">$\GL(2,3)$</a>&nbsp;
+&nbsp;<a href="?group=A5">$A_5$</a>&nbsp;
+&nbsp;<a href="?group=6T13">$C_3^2:D_4$</a>&nbsp;
+&nbsp;<a href="?group=S5">$S_5$</a>&nbsp;
+&nbsp;<a href="?group=GL(3,2)">$\GL(3,2)$</a>&nbsp;
+&nbsp;<a href="?group=A6">$A_6$</a>&nbsp;
+&nbsp;<a href="?group=S6">$S_6$</a>&nbsp;
+&nbsp;<a href="?group=A7">$A_7$</a>&nbsp;
+&nbsp;<a href="?group=S7">$S_7$</a>
 
 <p>
 Some <a href="{{url_for('.interesting')}}">interesting Artin representations</a> or a <a href="{{url_for('.random_representation')}}">random Artin representation</a>
