@@ -18,13 +18,13 @@ Info was: {{info}}
 <p>
   By {{ KNOWL('cmf.weight',title = "weight")}}:
   {% for weight in info.weight_list %}
-  <a href="?weight={{weight}}">{{weight}}</a>&nbsp;
+  &nbsp;<a href="?weight={{weight}}">{{weight}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
   By {{ KNOWL('cmf.level', title="level")}}:
   {% for level in info.level_list %}
-  <a href="?level={{level}}">{{level}}</a>&nbsp;
+  &nbsp;<a href="?level={{level}}">{{level}}</a>&nbsp;
   {% endfor %}
 </p>
 

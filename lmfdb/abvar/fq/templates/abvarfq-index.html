@@ -18,13 +18,13 @@
 <p>
   By {{ KNOWL('ag.dimension', 'dimension') }}:
   {% for g in info.stats.gs %}
-  <a href="?g={{g}}">{{g}}</a>&nbsp;
+  &nbsp;<a href="?g={{g}}">{{g}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
   By {{ KNOWL('ag.base_field', 'base field cardinality') }}:
   {% for q in info.q_ranges %}
-  <a href="?q={{q}}">{{q}}</a>&nbsp;
+  &nbsp;<a href="?q={{q}}">{{q}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>

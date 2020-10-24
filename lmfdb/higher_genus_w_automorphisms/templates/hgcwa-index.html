@@ -21,12 +21,12 @@ text-align:right;
 <p>
 By  {{KNOWL('ag.curve.genus',title='genus')}}:
 {% for gen in info.genus_list %}
-<a href="?genus={{gen}}">{{gen}}</a>
+&nbsp;<a href="?genus={{gen}}">{{gen}}</a>&nbsp;
 {% endfor %}</p>
 
 <p>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:
 {% for gen in info.genus_list %}
-<a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
+&nbsp;<a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp;
 {% endfor %}
 </p>
 
