@@ -1,23 +1,24 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<div>
 {{ info.stats.short_summary | safe }}
+</div>
 
 <h2> Browse </h2>
-<p>
-By {{ KNOWL('ag.conductor', title='conductor')}}:
-{% for rnge in info.conductor_list %}
-&nbsp;<a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
-{% endfor %}
-</p><p>
-By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
-{% for rnge in info.discriminant_list %}
-&nbsp;<a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
-{% endfor %}
-</p><p>
-Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <a href={{url_for('.random_curve')}}>random genus 2 curve</a>
-</p>
 
+<table  class="browse">
+  <tr>
+    <td>By {{ KNOWL('ag.conductor', 'conductor')}}:</td>
+    <td>{% for rnge in info.conductor_list %} <a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('g2c.abs_discriminant', 'absolute discriminant')}}:</td>
+    <gid>{% for rnge in info.discriminant_list %} <a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</gid>
+  </tr>
+  <tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <a href={{url_for('.random_curve')}}>random genus 2 curve</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 
