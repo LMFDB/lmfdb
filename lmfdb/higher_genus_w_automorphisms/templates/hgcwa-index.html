@@ -45,10 +45,10 @@
       $\cdots$
     </td>
   </tr><tr>
-    <td>{{KNOWL('Hyperelliptic curves', 'ag.hyperelliptic')}} by genus:</td>
+    <td>{{KNOWL('ag.hyperelliptic', 'Hyperelliptic curves')}} by genus:</td>
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td>{{KNOWL('Cyclic trigonal curves', 'ag.cyclic_trigonal')}} by genus:</td>
+    <td>{{KNOWL('ag.cyclic_trigonal', 'Cyclic trigonal curves')}} by genus:</td>
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_cyc_trig=only">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting families</a> or a <a href="{{url_for('.random_passport')}}">random refined passport</a></td>
