@@ -8,22 +8,17 @@
 
 <h2> Browse </h2>
 
-<p>
-<ul>
+<table  class="browse">
 {% for types in info.fields %}
-<li>
-{{types[0] | safe}}:&nbsp;
-{% for label,f in types[1] %}
-&nbsp;<a href="{{f[0]}}">{{f[1]}}</a>&nbsp;
+  <tr>
+    <td>{{types[0] | safe}}:</td>
+    <td>{% for label,f in types[1] %} <a href="{{f[0]}}">{{f[1]}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr>
 {% endfor %}
-</li>
-{% endfor %}
-<li><a href={{url_for('ecnf.browse')}}>All available fields</a>
-</ul>
-</p>
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a>
-</p>
+  <tr>
+    <td colsspan="2">Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 

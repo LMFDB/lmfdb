@@ -187,41 +187,41 @@ def index():
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
     niqfs = len(fields_by_sig[0,1])
     nrqfs = len(fields_by_sig[2,0])
-    info['fields'].append(['{} <a href="{}">real quadratic fields</a>, including'.format(nrqfs, url_for('.statistics_by_signature', d=2, r=2)),
+    info['fields'].append(['By <a href="{}">real quadratic field</a>'.format(url_for('.statistics_by_signature', d=2, r=2)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
     iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
-    info['fields'].append(['{} <a href="{}">imaginary quadratic fields</a>, including'.format(niqfs, url_for('.statistics_by_signature', d=2, r=0)),
+    info['fields'].append(['By <a href="{}">imaginary quadratic field</a>'.format(url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
 
     # Cubics (sample)
     cubics = ['3.1.23.1'] + ['3.3.{}.1'.format(d) for d in [49,148,1957]]
     ncubics = len(fields_by_deg[3])
-    info['fields'].append(['{} <a href="{}">cubic fields</a>, including'.format(ncubics, url_for('.statistics_by_degree', d=3)),
+    info['fields'].append(['By <a href="{}">cubic field</a>'.format(url_for('.statistics_by_degree', d=3)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in cubics)])
 
     # Quartics (sample)
     quartics = ['4.4.{}.1'.format(d) for d in [725,2777,9909,19821]]
     nquartics = len(fields_by_deg[4])
-    info['fields'].append(['{} totally real <a href="{}">quartic fields</a>, including'.format(nquartics, url_for('.statistics_by_degree', d=4)),
+    info['fields'].append(['By <a href="{}">quartic field</a>'.format(url_for('.statistics_by_degree', d=4)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quartics)])
 
     # Quintics (sample)
     quintics = ['5.5.{}.1'.format(d) for d in [14641, 24217, 36497, 38569, 65657]]
     nquintics = len(fields_by_deg[5])
-    info['fields'].append(['{} totally real <a href="{}">quintic fields</a>, including'.format(nquintics, url_for('.statistics_by_degree', d=5)),
+    info['fields'].append(['By <a href="{}">quintic fields</a>'.format(url_for('.statistics_by_degree', d=5)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quintics)])
 
     # Sextics (sample)
     sextics = ['6.6.{}.1'.format(d) for d in [300125, 371293, 434581, 453789, 485125]]
     nsextics = len(fields_by_deg[6])
-    info['fields'].append(['{} totally real <a href="{}">sextic fields</a>, including'.format(nsextics, url_for('.statistics_by_degree', d=6)),
+    info['fields'].append(['By <a href="{}">sextic fields</a>'.format(url_for('.statistics_by_degree', d=6)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in sextics)])
 
