@@ -44,10 +44,14 @@ For the following spaces we provide dimension tables, decompositions, and some a
 <p>View a <a href="{{url_for('.random_sample')}}">random example</a> from the database.</p>
 
 <form>
-<span>Degree <input name="deg" size=9.5 placeholder="2" value="{{info.args.deg}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<span>$k$ <input name="wt" size=10 placeholder="4..16" value="{{info.args.wt}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;
-<span>Field degree <input name="fdeg" size=3 placeholder="1" value="{{info.args.fdeg}}">&nbsp;&nbsp;&nbsp;&nbsp;
-<button type="submit" style="width: 110px"name="search" value="1">Find examples</button>
+<table>
+  <tr>
+    <td>Degree <input name="deg" size=9.5 placeholder="2" value="{{info.args.deg}}"></td>
+    <td>$k$ <input name="wt" size=10 placeholder="4..16" value="{{info.args.wt}}"></td>
+    <td>Field degree <input name="fdeg" size=3 placeholder="1" value="{{info.args.fdeg}}"></td>
+    <td><button type="submit" style="width: 110px"name="search" value="1">Find examples</button></td>
+  </tr>
+</table>
 </form>
 
 {% endblock %}
