@@ -7,46 +7,51 @@
 
 <h2> Browse </h2>
 
-<p>
-By {{ KNOWL('nf', title='base field') }}:
-</p>
-<ul>
-<li>
-{{info.counts.nfields_by_degree[2]}} <a href="{{url_for('hmf.statistics_by_degree', d=2)}}">real quadratic fields</a> including:
-&nbsp;<a href="?field_label=2.2.5.1">\(\Q(\sqrt{5})\)</a>&nbsp;
-&nbsp;<a href="?field_label=2.2.8.1">\(\Q(\sqrt{2})\)</a>&nbsp;
-&nbsp;<a href="?field_label=2.2.12.1">\(\Q(\sqrt{3})\)</a>&nbsp;
-&nbsp;<a href="?field_label=2.2.401.1">\(\Q(\sqrt{401})\)</a>
-</li>
-<li>{{info.counts.nfields_by_degree[3]}} <a href="{{url_for('hmf.statistics_by_degree', d=3)}}">cubic fields</a> including:
-&nbsp;<a href="?field_label=3.3.49.1">3.3.49.1</a>&nbsp;
-&nbsp;<a href="?field_label=3.3.1101.1">3.3.1101.1</a>
-</li>
-<li>
-{{info.counts.nfields_by_degree[4]}} <a href="{{url_for('hmf.statistics_by_degree', d=4)}}">quartic
-fields</a> including:
-&nbsp;<a href="?field_label=4.4.725.1">4.4.725.1</a>&nbsp;
-&nbsp;<a href="?field_label=4.4.1125.1">4.4.1125.1</a>&nbsp;
-&nbsp;<a href="?field_label=4.4.18688.1">4.4.18688.1</a>
-</li>
-<li>
-{{info.counts.nfields_by_degree[5]}}
-<a href="{{url_for('hmf.statistics_by_degree', d=5)}}">quintic fields</a> including:
-&nbsp;<a href="?field_label=5.5.14641.1">5.5.14641.1</a>&nbsp;
-&nbsp;<a href="?field_label=5.5.160801.1">5.5.160801.1</a>
-</li>
-<li>
-{{info.counts.nfields_by_degree[6]}}
-<a href="{{url_for('hmf.statistics_by_degree', d=6)}}">sextic fields</a>
-including:
-&nbsp;<a href="?field_label=6.6.300125.1">6.6.300125.1</a>&nbsp;
-&nbsp;<a href="?field_label=6.6.1397493.1">6.6.1397493.1</a>
-</li>
-<li><a href={{url_for('hmf.browse')}}>All {{info.counts.nfields}} available fields</a>
-</li>
-</ul>
-
-<p>Some <a href="{{url_for('.interesting')}}">interesting Hilbert modular forms</a> or a <a href={{url_for('.random_hmf')}}>random Hilbert modular form</a></p>
+<table>
+  <tr>
+    <td>By <a href="{{url_for('hmf.statistics_by_degree', d=2)}}">quadratic base field</a>:</td>
+    <td>
+      <a href="?field_label=2.2.5.1">\(\Q(\sqrt{5})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.8.1">\(\Q(\sqrt{2})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.12.1">\(\Q(\sqrt{3})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.12.1">\(\Q(\sqrt{13})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.12.1">\(\Q(\sqrt{17})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.12.1">\(\Q(\sqrt{21})\)</a>&nbsp;&nbsp;
+      <a href="?field_label=2.2.12.1">\(\Q(\sqrt{24})\)</a>&nbsp;&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>By <a href="{{url_for('hmf.statistics_by_degree', d=3)}}">cubic base field</a>:</td>
+    <td>
+      <a href="?field_label=3.3.49.1">3.3.49.1</a>&nbsp;&nbsp;
+      <a href="?field_label=3.3.1101.1">3.3.1101.1</a>&nbsp;&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>By <a href="{{url_for('hmf.statistics_by_degree', d=4)}}">quartic base field</a>:</td>
+    <td>
+      <a href="?field_label=4.4.725.1">4.4.725.1</a>&nbsp;&nbsp;
+      <a href="?field_label=4.4.1125.1">4.4.1125.1</a>&nbsp;&nbsp;
+      <a href="?field_label=4.4.18688.1">4.4.18688.1</a>&nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td>By <a href="{{url_for('hmf.statistics_by_degree', d=5)}}">quintic base field</a>:</td>
+    <td>
+      <a href="?field_label=5.5.14641.1">5.5.14641.1</a>&nbsp;&nbsp;
+      <a href="?field_label=5.5.160801.1">5.5.160801.1</a>&nbsp;&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>By <a href="{{url_for('hmf.statistics_by_degree', d=6)}}">sextic base field</a>:</td>
+    <td>
+      <a href="?field_label=6.6.300125.1">6.6.300125.1</a>&nbsp;&nbsp;
+      <a href="?field_label=6.6.1397493.1">6.6.1397493.1</a>&nbsp;&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>Some <a href="{{url_for('.interesting')}}">interesting Hilbert modular forms</a> or a <a href={{url_for('.random_hmf')}}>random Hilbert modular form</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 
