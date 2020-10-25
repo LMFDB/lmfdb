@@ -11,32 +11,29 @@
         margin: 20px;
     }
 </style>
+
 <div>
   {{ info.stats.short_summary | safe }}
 </div>
-<h2> Browse </h2>
-<p>
-  By {{ KNOWL('ag.dimension', 'dimension') }}:
-  {% for g in info.stats.gs %}
-  &nbsp;<a href="?g={{g}}">{{g}}</a>&nbsp;
-  {% endfor %}
-</p>
-<p>
-  By {{ KNOWL('ag.base_field', 'base field cardinality') }}:
-  {% for q in info.q_ranges %}
-  &nbsp;<a href="?q={{q}}">{{q}}</a>&nbsp;
-  {% endfor %}
-</p>
-<p>
-  Some <a href="{{url_for('.interesting')}}">interesting isogeny classes</a> or a <a href="{{url_for('.random_class')}}">random isogeny class</a>
-</p>
-<p>
-  A <a href="?search_type=Counts">table</a> by dimension and base field
-</p>
 
-<h2 id='search_h2'> Search
-  <button id="advancedtoggle" href="#">Advanced search options</button>
-</h2>
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('ag.dimension', 'dimension') }}:</td>
+    <td>{% for g in info.stats.gs %} <a href="?g={{g}}">{{g}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('ag.base_field', 'base field cardinality') }}:</td>
+    <td>{% for q in info.q_ranges %} <a href="?q={{q}}">{{q}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting isogeny classes</a> or a <a href="{{url_for('.random_class')}}">random isogeny class</a></td>
+  </tr><tr>
+    <td colspan="2">A <a href="?search_type=Counts">table</a> by dimension and base field.</td>
+  </tr>
+</table>
+
+<h2 id='search_h2'> Search <button id="advancedtoggle" href="#">Advanced search options</button></h2>
+
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
