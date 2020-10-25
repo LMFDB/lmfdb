@@ -10,13 +10,13 @@
 
 <table class="browse">
   <tr>
-    <td>By  {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}:</td>
+    <td>By  {{KNOWL('curve.highergenus.aut.quotientgenus', 'quotient genus')}}:</td>
     <td>{% for gen in range(3) %} <a href="?g0={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td>By  {{KNOWL('ag.curve.genus',title='genus')}}:</td>
+    <td>By {{KNOWL('ag.curve.genus', 'genus')}}:</td>
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td>By group:</td>
+    <td>By {{KNOWL('group', 'group')}}:</td>
     <td>
       <a href="?group=[2,1]">$C_2$</a>&nbsp;
       <a href="?group=[3,1]">$C_3$</a>&nbsp;
@@ -27,7 +27,7 @@
       <a href="?group=[6,2]">$C_6$</a>&nbsp;
       <a href="?group=[7,1]">$C_7$</a>&nbsp;
       <a href="?group=[8,1]">$C_8$</a>&nbsp;
-      <a href="?group=[8,2]">$C_2\timesC_4$</a>&nbsp;
+      <a href="?group=[8,2]">$C_2\times C_4$</a>&nbsp;
       <a href="?group=[8,3]">$D_4$</a>&nbsp;
       <a href="?group=[8,4]">$Q_8$</a>&nbsp;
       <a href="?group=[8,5]">$C_2^3$</a>&nbsp;
