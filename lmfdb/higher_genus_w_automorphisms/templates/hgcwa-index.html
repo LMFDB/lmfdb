@@ -14,7 +14,7 @@
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:</td>
-    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp;</td>
+    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting families</a> or a <a href="{{url_for('.random_passport')}}">random refined passport</a></td>
   </tr>
