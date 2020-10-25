@@ -9,10 +9,11 @@
 <h2>Browse</h2>
 
 <table class="browse">
-  <tr>
+  {% <tr>
     <td>By  {{KNOWL('curve.highergenus.aut.quotientgenus', 'quotient genus')}}:</td>
     <td>{% for gen in range(3) %} <a href="?g0={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
-  </tr><tr>
+  </tr> %}
+  <tr>
     <td>By {{KNOWL('ag.curve.genus', 'genus')}}:</td>
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
@@ -43,6 +44,12 @@
       <a href="?group=[12,5]">$C_2\times C_6$</a>&nbsp;
       $\cdots$
     </td>
+  </tr><tr>
+    <td>{{KNOWL('Hyperelliptic curves', 'ag.hyperelliptic')}} by genus:</td>
+    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>{{KNOWL('Cyclic trigonal curves', 'ag.cyclic_trigonal')}} by genus:</td>
+    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_cyc_trig=only">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting families</a> or a <a href="{{url_for('.random_passport')}}">random refined passport</a></td>
   </tr>
