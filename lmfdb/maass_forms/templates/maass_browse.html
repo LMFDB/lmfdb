@@ -6,15 +6,38 @@
 </div>
 
 <h2>Browse Maass forms of weight 0 on </h2>
-  <ul>
-    <li><a href="{{ url_for('.browse_graph',min_level = 1,max_level= 10,min_R = 0,max_R = 10) }}">$\Gamma_0(N)$ with $1\leq N\leq 10$ and $0\le R \le 10$</a>;</li>
-    <li><a href="{{ url_for('.browse_graph',min_level = 1,max_level= 15, min_R = 0,max_R = 15) }}">$\Gamma_0(N)$ with $1\leq N\leq 15$ and $0\le R \le 15$</a>;</li>
-    <li><a href="{{ url_for('.browse_graph',min_level = 10,max_level= 100, min_R = 0,max_R = 4) }}">$\Gamma_0(N)$ with $10\leq N< 100$ and $0\le R \le 4$  </a>;</li>
-    <li><a href="{{ url_for('.browse_graph', min_level = 100, max_level= 1090, min_R = 0,max_R = 1) }}">$\Gamma_0(p)$ for prime levels $p$ with $100\leq p \leq 1000$ and $0\leq R\leq 1$</a>.</li>
-  </ul>
 
-  <p>Some <a href="{{url_for('.interesting')}}">interesting Maass forms</a> or a <a href={{url_for('.random')}}>random Maass form</a></p>
-
+<table class="browse">
+  <tr>
+    <td>By {{KNOWL('mf.maass.mwf.level', 'level')}} $N$:</td>
+    <td>
+      {% for N in range(1,10) %} <a href="?level={{N}}">{{N}}</a>&nbsp; {%endfor}
+      <a href="?level=11-20">11-20</a>&nbsp;&nbsp;
+      <a href="?level=21-100">21-100</a>&nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td>By {{KNOWL('mf.maass.mwf.spectralparameter', 'spectral parameter')}} $R$:</td>
+    <td>
+      <a href="?level=1-1">0-1</a>&nbsp;&nbsp;
+      <a href="?level=1-2">1-2</a>&nbsp;&nbsp;
+      <a href="?level=2-3">2-3</a>&nbsp;&nbsp;
+      <a href="?level=3-4">3-4</a>&nbsp;&nbsp;
+      <a href="?level=4-5">4-5</a>&nbsp;&nbsp;
+      <a href="?level=5-10">5-10</a>&nbsp;&nbsp;
+      <a href="?level=10-15">10-15</a>&nbsp;&nbsp;
+      <a href="?level=15-20">15-20</a>&nbsp;&nbsp;
+      <a href="?level=20-50">21-50</a>&nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td colspan="2"><a href="{{ url_for('.browse_graph',min_level = 1,max_level= 15, min_R = 0,max_R = 15) }}">Maass forms with $1\leq N\leq 15$ and $0\le R \le 15$</a></td>
+  </tr><tr>
+    <td colspan="2"><a href="{{ url_for('.browse_graph',min_level = 10,max_level= 100, min_R = 0,max_R = 4) }}">Maass forms with $10\leq N< 100$ and $0\le R \le 4$</a></td>
+  </tr><tr>
+    <td colspan="2"><a href="{{ url_for('.browse_graph', min_level = 100, max_level= 1090, min_R = 0,max_R = 1) }}">Maass forms of prime level $p$ with $100\leq p \leq 1000$ and $0\leq R\leq 1$</a></td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Maass forms</a> or a <a href={{url_for('.random')}}>random Maass form</a></td>
+  </tr>
+</table>
 
 <h2> Search</h2>
 
