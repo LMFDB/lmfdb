@@ -31,23 +31,19 @@ from lmfdb.ecnf.isog_class import ECNF_isoclass
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
 # field 3.1.23.1 uses upper case letters for isogeny class
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
+CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
     (field_label,conductor_label,isoclass_label,curve_number)
     """
-    data = lab.split("-")
-    if len(data) != 3:
+    if not LABEL_RE.fullmatch(lab):
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % escape(lab)))
+    data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
-    try:
-        # field 3.1.23.1 uses upper case letters
-        isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
-        curve_number = re.search(r"\d+", data[2]).group()  # (a string)
-    except AttributeError:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" %  escape(lab)))
-        raise ValueError
+    isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
+    curve_number = re.search(r"\d+", data[2]).group()  # (a string)
     return (field_label, conductor_label, isoclass_label, curve_number)
 
 
@@ -55,16 +51,12 @@ def split_short_label(lab):
     r""" Split a short curve label into 3 components
     (conductor_label,isoclass_label,curve_number)
     """
-    data = lab.split("-")
-    if len(data) != 2:
+    if not CLASS_LABEL_RE.fullmatch(lab):
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+    data = lab.split("-")
     conductor_label = data[0]
-    try:
-        # field 3.1.23.1 uses upper case letters
-        isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
-        curve_number = re.search(r"\d+", data[1]).group()  # (a string)
-    except AttributeError:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % escape(lab)))
+    isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
+    curve_number = re.search(r"\d+", data[1]).group()  # (a string)
     return (conductor_label, isoclass_label, curve_number)
 
 
@@ -449,14 +441,12 @@ def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
     if info.get('jump','') == "random":
         return random_curve()
-    # This label should be a full isogeny class label or a full
-    # curve label (including the field_label component)
-    if re.search("\\d$", label):
+    if LABEL_RE.fullmatch(label):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
-    elif re.search("[a-z]$", label):
-            nf, cond_label, iso_label = split_class_label(label.strip())
-            return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
+    elif CLASS_LABEL_RE.fullmatch(label):
+        nf, cond_label, iso_label = split_class_label(label.strip())
+        return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     else:
         flash_error("%s is not a valid elliptic curve or isogeny class label.", label)
         return redirect(url_for("ecnf.index"))
