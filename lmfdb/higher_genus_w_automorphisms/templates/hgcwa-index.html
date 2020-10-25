@@ -10,8 +10,8 @@
 
 <table class="browse">
   <tr>
-    <td>By  {{KNOWL('ag.curve.quotient_genus',title='quotient genus')}}:</td>
-    <td>{% for gen in range(3) %} <a href="?quotient_genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
+    <td>By  {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}:</td>
+    <td>{% for gen in range(3) %} <a href="?g0={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By  {{KNOWL('ag.curve.genus',title='genus')}}:</td>
     <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
