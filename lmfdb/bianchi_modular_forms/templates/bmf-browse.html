@@ -18,7 +18,7 @@
     <td>{{ KNOWL('mf.bianchi.level', '\(\SL_2\)')}}  {{ KNOWL('mf.bianchi.spaces', 'newform spaces')}} by base field:</td>
     <td>{% for f in info.sl2_field_list %} <a href={{f.url}}>{{f.name}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td>Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></td>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></td>
   </tr>
 </table>
 
