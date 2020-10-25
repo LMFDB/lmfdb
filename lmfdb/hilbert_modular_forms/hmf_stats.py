@@ -44,7 +44,7 @@ class HMFstats(StatsDisplay):
         hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
         nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
         deg_knowl = '<a knowl="nf.degree">degree</a>'
-        return "The database currently contains %s %s over %s %s of %s up to %s." % (comma(self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
+        return "The database currently contains %s %s over %s %s of %s 2 to %s." % (comma(self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
