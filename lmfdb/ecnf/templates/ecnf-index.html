@@ -31,10 +31,6 @@
 
 <form>
   {{ info.search_array.jump_box(info) | safe }}
-  {% if err_msg %}
-  <br>
-  <span class="errmsg">{{err_msg}}</span>
-  {% endif %}
 </form>
 
 <p>&nbsp;&nbsp;*The rank is not known for all curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
