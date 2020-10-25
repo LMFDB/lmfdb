@@ -1261,7 +1261,7 @@ class HGCWASearchArray(SearchArray):
             example_span="[0,2,3,3,6] or [0;2,3,8]")
         group_order = TextBox(
             name="group_order",
-            label="Group order(s)",
+            label="Group order",
             knowl="group.order",
             example="2..5",
             example_span="12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)")
@@ -1278,11 +1278,11 @@ class HGCWASearchArray(SearchArray):
             example_span="1, or a range like 0..2")
         inc_hyper = ExcludeOnlyBox(
             name="inc_hyper",
-            label="Hyperelliptic curve(s)",
+            label="Hyperelliptic curves",
             knowl="ag.hyperelliptic_curve")
         inc_cyc_trig = ExcludeOnlyBox(
             name="inc_cyc_trig",
-            label="Cyclic trigonal curve(s)",
+            label="Cyclic trigonal curves",
             knowl="ag.cyclic_trigonal")
         inc_full = ExcludeOnlyBox(
             name="inc_full",

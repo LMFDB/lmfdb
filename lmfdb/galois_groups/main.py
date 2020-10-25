@@ -145,7 +145,7 @@ def galois_group_search(info, query):
             parse_galgrp(info, query, qfield=['label','n'], 
                 name='a Galois group label', field='jump', list_ok=False,
                 err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
-        except ValueError as err:
+        except ValueError:
             return redirect(url_for('.index'))
 
         if query.get('label', '') in jump_list:
