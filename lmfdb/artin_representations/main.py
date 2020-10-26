@@ -129,6 +129,7 @@ def add_lfunction_friends(friends, label):
 @artin_representations_page.route("/")
 def index():
     info = to_dict(request.args, search_array=ArtinSearchArray(), stats=ArtinStats())
+    info['dim_list'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 24, 25, 27, 28, 30, 35, 40, 44, 45, 55, 56, 64, 70]
     bread = get_bread()
     if not request.args:
         return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)

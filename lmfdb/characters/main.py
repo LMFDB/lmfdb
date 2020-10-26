@@ -19,7 +19,7 @@ from lmfdb.characters.web_character import (
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
 )
-from lmfdb.characters.ListCharacters import get_character_modulus, get_character_conductor, get_character_order
+from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db
@@ -156,13 +156,10 @@ def common_parse(info, query):
 def validate_label(label):
 
     if re.match(r'^\d+\.([\da-z]+)+$', label):
-        modulus, number = label.split('.')
-        modulus = int(modulus)
-        numbers = label_to_number(modulus, number, all=True)
+        return True
     else:
         raise ValueError(("It must be of the form modulus.number, with modulus "
         "and number positive natural numbers"))
-    return True
 
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
@@ -248,45 +245,13 @@ def render_DirichletNavigation():
             info['bread'] = bread('Modulus')
             info['learnmore'] = learn()
             info['credit'] = credit()
-            h, c, rows, cols = get_character_modulus(modulus_start, modulus_end)
-            info['contents'] = c
-            info['headers'] = h
-            info['rows'] = rows
-            info['cols'] = cols
+            headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=8)
+            info['entries'] = entries
+            info['rows'] = list(range(modulus_start, modulus_end+1))
+            info['cols'] = sorted(list({r[1] for r in entries}))
             return render_template("ModulusList.html", **info)
-
-        elif 'condbrowse' in request.args:
-            arg = request.args['condbrowse']
-            arg = arg.split('-')
-            conductor_start = int(arg[0])
-            conductor_end = int(arg[1])
-            info = {'args': request.args}
-            info['bread'] = bread('Conductor')
-            info['learnmore'] = learn()
-            info['credit'] = credit()
-            info['conductor_start'] = conductor_start
-            info['conductor_end'] = conductor_end
-            info['title'] = 'Dirichlet characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
-            info['contents'] = get_character_conductor(conductor_start, conductor_end + 1)
-            return render_template("ConductorList.html", **info)
-
-        elif 'ordbrowse' in request.args:
-            arg = request.args['ordbrowse']
-            arg = arg.split('-')
-            order_start = int(arg[0])
-            order_end = int(arg[1])
-            info = {'args': request.args}
-            info['bread'] = bread('Order')
-            info['learnmore'] = learn()
-            info['credit'] = credit()
-            info['order_start'] = order_start
-            info['order_end'] = order_end
-            info['title'] = 'Dirichlet characters of orders ' + str(order_start) + '-' + str(order_end)
-            info['contents'] = get_character_order(order_start, order_end + 1)
-            return render_template("OrderList.html", **info)
     except ValueError as err:
         flash_error("Error raised in parsing: %s", err)
-        return render_template('CharacterNavigate.html', title='Dirichlet characters', bread=bread(), learnmore=learn(), credit=credit())
 
     if request.args:
         # hidden_search_type for prev/next buttons
@@ -295,11 +260,15 @@ def render_DirichletNavigation():
         if search_type in ['List', 'Random']:
             return dirichlet_character_search(info)
         assert False
+
     info = to_dict(request.args, search_array=DirichSearchArray(), stats=DirichStats())
     info['bread'] = bread()
     info['learnmore'] = learn()
     info['credit'] = credit()
     info['title'] = 'Dirichlet characters'
+    info['modulus_list'] = ['1-20', '21-40', '41-60']
+    info['conductor_list'] = ['1-9', '10-99', '100-999', '1000-9999']
+    info['order_list'] = list(range(1,13))
     return render_template('CharacterNavigate.html', info=info,**info)
 
 

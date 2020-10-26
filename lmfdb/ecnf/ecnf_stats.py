@@ -182,7 +182,7 @@ class ECNF_stats(StatsDisplay):
                         r', over {} '.format(len(self.field_counts)),
                         self.nf_knowls, ' of ',
                         self.deg_knowl,
-                        r' from 2 up to {}.'.format(self.maxdeg),
+                        r' 2 to {}.'.format(self.maxdeg),
                         r' Elliptic curves defined over $\mathbb{Q}$ are contained in a <a href="/EllipticCurve/Q/">separate database</a>.'])
 
     @property

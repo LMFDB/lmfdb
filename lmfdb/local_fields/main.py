@@ -370,7 +370,7 @@ def random_field():
 @local_fields_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "lf",
+        "lf.padic_field",
         db.lf_fields,
         url_for_label,
         title=r"Some interesting $p$-adic fields",
@@ -437,20 +437,20 @@ class LFSearchArray(SearchArray):
             example_span='6, or a range like 3..5')
         qp = TextBox(
             name='p',
-            label=r'Prime $p$ for base field $\Q_p$',
-            short_label='Prime $p$',
-            knowl='lf.qp',
+            label=r'Residue field characteristic',
+            short_label='Residue characteristic',
+            knowl='lf.residue_field',
             example='3',
             example_span='3, or a range like 3..7')
         c = TextBox(
             name='c',
-            label='Discriminant exponent $c$',
+            label='Discriminant exponent',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e = TextBox(
             name='e',
-            label='Ramification index $e$',
+            label='Ramification index',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
@@ -462,7 +462,7 @@ class LFSearchArray(SearchArray):
             example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
         gal = TextBoxNoEg(
             name='gal',
-            label='Galois group $G$',
+            label='Galois group',
             short_label='Galois group',
             knowl='nf.galois_group',
             example='5T3',

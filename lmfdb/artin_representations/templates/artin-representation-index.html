@@ -2,46 +2,50 @@
 
 {% block content %}
 
-
 <div>
   {{ info.stats.short_summary | safe }}
 </div>
 
 <h2>Browse</h2>
 
-<p>
-By {{ KNOWL('artin.dimension',title="dimension") }}:
-<a href="?dimension=1">1</a>, <a href="?dimension=2">2</a>, <a href="?dimension=3">3</a>,
-<a href="?dimension=4">4</a>, <a href="?dimension=5">5</a>, <a href="?dimension=6">6</a>,
-<a href="?dimension=7">7</a>, <a href="?dimension=8">8</a>, <a href="?dimension=9">9</a>,
-<a href="?dimension=10">10</a>
-
-<p>
-By {{ KNOWL('artin.conductor',title="conductor") }}:
-<a href="?conductor=1-100">1-100</a>,
-<a href="?conductor=101-1000">101-1000</a>,
-<a href="?conductor=1001-10000">1001-10000</a>,
-<a href="?conductor=10001-100000">10001-100000</a>
-
-<p>
-By {{ KNOWL('artin.gg_quotient',title="group") }}:
-<a href="?group=D4">$D_4$</a>,
-<a href="?group=Q8">$Q_8$</a>,
-<a href="?group=A4">$A_4$</a>,
-<a href="?group=S4">$S_4$</a>,
-<a href="?group=GL(2,3)">$\GL(2,3)$</a>,
-<a href="?group=A5">$A_5$</a>,
-<a href="?group=6T13">$C_3^2:D_4$</a>,
-<a href="?group=S5">$S_5$</a>,
-<a href="?group=GL(3,2)">$\GL(3,2)$</a>,
-<a href="?group=A6">$A_6$</a>,
-<a href="?group=S6">$S_6$</a>,
-<a href="?group=A7">$A_7$</a>,
-<a href="?group=S7">$S_7$</a>
-
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting Artin representations</a> or a <a href="{{url_for('.random_representation')}}">random Artin representation</a>
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('artin.dimension',title="dimension") }}:</td>
+    <td>{% for d in info.dim_list %} <a href="?dimension={{d}}">{{d}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('artin.conductor',title="conductor") }}:</td>
+    <td>
+      <a href="?conductor=1-99">1-99</a>&nbsp;&nbsp;
+      <a href="?conductor=100-999">100-999</a>&nbsp;&nbsp;
+      <a href="?conductor=1000-9999">1000-9999</a>&nbsp;&nbsp;
+      <a href="?conductor=10000-99999">10000-99999</a>&nbsp;&nbsp;
+      <a href="?conductor=100000-999999">100000-999999</a>&nbsp;&nbsp;
+      <a href="?conductor=1000000-9999999">1000000-9999999</a>&nbsp;&nbsp;
+      <a href="?conductor=10000000-99999999">10000000-99999999</a>&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>By {{ KNOWL('artin.gg_quotient',title="group") }}:</td>
+    <td>
+      <a href="?group=D4">$D_4$</a>&nbsp;
+      <a href="?group=Q8">$Q_8$</a>&nbsp;
+      <a href="?group=A4">$A_4$</a>&nbsp;
+      <a href="?group=S4">$S_4$</a>&nbsp;
+      <a href="?group=GL(2,3)">$\GL(2,3)$</a>&nbsp;
+      <a href="?group=A5">$A_5$</a>&nbsp;
+      <a href="?group=6T13">$C_3^2:D_4$</a>&nbsp;
+      <a href="?group=S5">$S_5$</a>&nbsp;
+      <a href="?group=GL(3,2)">$\GL(3,2)$</a>&nbsp;
+      <a href="?group=A6">$A_6$</a>&nbsp;
+      <a href="?group=S6">$S_6$</a>&nbsp;
+      <a href="?group=A7">$A_7$</a>&nbsp;
+      <a href="?group=S7">$S_7$</a>&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Artin representations</a> or a <a href="{{url_for('.random_representation')}}">random Artin representation</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 

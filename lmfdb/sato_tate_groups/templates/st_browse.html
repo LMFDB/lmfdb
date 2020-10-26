@@ -1,32 +1,26 @@
 {% extends "homepage.html" %}
 {% block content %}
+
 <div>
 {{ info.stats.short_summary | safe }}
 </div>
 
 <h2> Browse </h2>
 
-<p>
-By {{ KNOWL('st_group.weight', title='weight') }}:
-{% for r in info.weight_list %}
-    <a href="?weight={{r}}">{{r}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('st_group.degree', title='degree') }}:
-{% for r in info.degree_list %}
-    <a href="?degree={{r}}">{{r}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('st_group.identity_component', title='identity component') }}:
-{% for r in info.st0_list %}
-    &nbsp;<a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>
-{% endfor %}
-</p>
-<p>Some <a href="{{url_for('.interesting')}}">interesting Sage-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a>
-<br>
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('st_group.weight', title='weight') }}:</td>
+    <td>{% for r in info.weight_list %} <a href="?weight={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('st_group.degree', title='degree') }}:</td>
+    <td>{% for r in info.degree_list %} <a href="?degree={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('st_group.identity_component', title='identity component') }}:</td>
+    <td>{% for r in info.st0_list %} <a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Sage-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 
