@@ -73,7 +73,7 @@ def index():
         return belyi_search(info)
     info["stats"] = Belyi_stats()
     info["stats_url"] = url_for(".statistics")
-    info["degree_list"] = ("1-6", "7-8", "9-10", "10-100")
+    info["degree_list"] = list(range(1,10))
     info["title"] = title = "Belyi maps"
     info["bread"] = bread = get_bread()
 

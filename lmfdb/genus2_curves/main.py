@@ -106,8 +106,8 @@ def index_Q():
         return genus2_curve_search(info)
     info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
-    info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
-    info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["conductor_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
+    info["discriminant_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
     info["equation_search"] = has_magma()
     title = r'Genus 2 curves over $\Q$'
     return render_template(

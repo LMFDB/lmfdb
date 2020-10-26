@@ -15,48 +15,36 @@ Info was: {{info}}
 
 <h2> Browse {{ KNOWL('cmf.newform','newforms')}}</h2>
 
-<p>
-  By {{ KNOWL('cmf.weight',title = "weight")}}:
-  {% for weight in info.weight_list %}
-  <a href="?weight={{weight}}">{{weight}}</a>&nbsp;
-  {% endfor %}
-</p>
-<p>
-  By {{ KNOWL('cmf.level', title="level")}}:
-  {% for level in info.level_list %}
-  <a href="?level={{level}}">{{level}}</a>&nbsp;
-  {% endfor %}
-</p>
-
-<p>Some <a href="{{url_for('.interesting_newforms')}}">interesting newforms</a> or a <a href="{{url_for('.random_form')}}">random newform</a></p>
-
-<p>
-  A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('cmf.q-expansion', title='\(q\)-expansion') }}
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('cmf.weight',title = "weight")}}:</td>
+    <td>{% for weight in info.weight_list %} <a href="?weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('cmf.level', title="level")}}:</td>
+    <td>{% for level in info.level_list %} <a href="?level={{level}}">{{level}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting_newforms')}}">interesting newforms</a> or a <a href="{{url_for('.random_form')}}">random newform</a></td>
+  </tr><tr>
+    <td colspan="2">A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('cmf.q-expansion', title='\(q\)-expansion') }}</td>
+  </tr>
+</table>
 
 <h2> Browse {{ KNOWL('cmf.newspace','newspaces')}}</h2>
 
-<p>
-  By {{ KNOWL('cmf.weight',title = "weight")}}:
-  {% for weight in info.weight_list %}
-  <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;
-  {% endfor %}
-</p>
-<p>
-  By {{ KNOWL('cmf.level', title="level")}}:
-  {% for level in info.level_list %}
-  <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;
-  {% endfor %}
-</p>
-
-<p>Some <a href="{{url_for('.interesting_spaces')}}">interesting newspaces</a> or a <a href="{{url_for('.random_space')}}">random newspace</a></p>
-
-<p>
-Create a <a href = "?search_type=Spaces">search</a> for newspaces,
- a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}
-</p>
-
-{# SEARCHING #}
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('cmf.weight',title = "weight")}}:</td>
+    <td>{% for weight in info.weight_list %} <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('cmf.level', title="level")}}:</td>
+    <td>{% for level in info.level_list %} <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting_spaces')}}">interesting newspaces</a> or a <a href="{{url_for('.random_space')}}">random newspace</a></td>
+  </tr><tr>
+    <td colspan="2">Create a <a href = "?search_type=Spaces">search</a> for newspaces,
+ a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}</td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">

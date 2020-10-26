@@ -13,7 +13,7 @@ class HomePageTest(LmfdbTest):
         homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/L/degree2/", '9.53369')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
-        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/10/0/10/')
+        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/15/0/15/')
         self.check(homepage, "/zeros", 'The zeros are accurate') # the interesting numbers are filled in dynamically
         self.check(homepage, "/NumberField/?degree=2", '"/NumberField/2.0.8.1">2.0.8.1')
 

@@ -1,49 +1,26 @@
 {% extends "homepage.html" %}
 {% block content %}
-<div>
-  {{ info.stats.short_summary | safe }}
-</div>
 
-<style type="text/css">
-.error_message {
-   padding: 4px;
-   color: {{color.red}};
-   font-size: 120%;
-   font-weight: bold;
-   margin: 20px;
-}
-</style>
-{% if err_msg %}
-<p class="error_message">
-{{err_msg}}
-</p>
-<p>
-  <input type=button value="Search again" onClick="history.go(-1)">
-</p>
-{% endif %}
+<div>
+{{ info.stats.short_summary | safe }}
+</div>
 
 <h2> Browse </h2>
 
-<p>
-By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
-{% for rnge in info.dim_list %}
-<a href="?dim={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?dim={{info.stats.max_dim}}">{{info.stats.max_dim}}</a>
-</p>
-<p>
-By {{ KNOWL('lattice.determinant', title='Determinant') }}:
-{% for rnge in info.det_list %}
-<a href="?det={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?det=1000000-{{info.stats.max_det}}">1000000-{{info.stats.max_det}}</a>
-</p>
-<p>
-By {{ KNOWL('lattice.class_number', title='Class number') }}:
-{% for rnge in info.class_number_list %}
-<a href="?class_number={{rnge}}">{{rnge}}</a>
-{% endfor %}... <a href="?class_number={{info.stats.max_cn}}">{{info.stats.max_cn}}</a>
-</p>
-<p>Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a>
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
+    <td>{% for rnge in info.dim_list %} <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
+    <td>{% for rnge in info.det_list %} <a href="?det={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
+    <td>{% for rnge in info.class_number_list %} <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 

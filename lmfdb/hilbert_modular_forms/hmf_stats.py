@@ -2,7 +2,6 @@
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
-from lmfdb.utils.utilities import display_knowl
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -41,18 +40,22 @@ class HMFstats(StatsDisplay):
 
     @property
     def summary(self):
-        return "The database currently contains %s %s over fields up to degree %s." % (comma(self.nforms), display_knowl('mf.hilbert', 'Hilbert modular forms'), self.counts()["maxdeg"])
+        hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
+        nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
+        deg_knowl = '<a knowl="nf.degree">degree</a>'
+        return "The database currently contains %s %s over %s %s of %s 2 to %s." % (comma(self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
         hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
         nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
+        deg_knowl = '<a knowl="nf.degree">degree</a>'
         level_knowl = '<a knowl="mf.hilbert.level_norm">level norm</a>'
         return ''.join([r'The database currently contains %s ' % stats['nforms'],
                         hmf_knowl,
                         r' defined over %s ' % stats['nfields'],
                         nf_knowl,
-                        r' of degree %s, with ' % d,
+                        r' of %s %s, with ' % (deg_knowl, d),
                         level_knowl,
                         r' up to %s.' % stats['maxnorm']])
 

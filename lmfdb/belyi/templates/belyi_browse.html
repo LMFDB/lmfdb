@@ -1,20 +1,20 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<p>
+<div>
 {{ info.stats.short_summary | safe}}
-</p>
+</div>
 
 <h2> Browse </h2>
-<p>
-By {{ KNOWL('belyi.degree', title='degree')}}:
-{% for rnge in info.degree_list %}
-<a href="?deg={{rnge}}">{{rnge}}</a>&nbsp;
-{% endfor %}
-</p>
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting Belyi maps</a> or a <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a>
-</p>
+
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('belyi.degree', title='degree')}}:</td>
+    <td>{% for rnge in info.degree_list %} <a href="?deg={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} </td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Belyi maps</a> or a <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">

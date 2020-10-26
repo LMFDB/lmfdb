@@ -669,6 +669,14 @@ table.newforms {
     clear: right;
 }
 
+table.browse td {
+  vertical-align: top;
+  padding: 7px 0px 7px 10px;
+}
+table.browse td:first-child {
+  white-space: nowrap;
+}
+
 table.ntdata .knowl-header a,
 table.ntdata .knowl-footer a,
 table.ntdata a.knowl-link,
