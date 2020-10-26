@@ -50,7 +50,7 @@ def get_secret_key():
 
 
 class Configuration(_Configuration):
-    def __init__(self, writeargstofile=False):
+    def __init__(self, writeargstofile=False, readargs=False):
         default_config_file = abs_path_lmfdb("config.ini")
 
         # 1: parsing command-line arguments
@@ -230,8 +230,10 @@ class Configuration(_Configuration):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        writeargstofile = writeargstofile or os.path.split(sys.argv[0])[-1] == "start-lmfdb.py"
-        _Configuration.__init__(self, parser, writeargstofile=writeargstofile)
+        fnargv0 = os.path.split(sys.argv[0])[-1]
+        writeargstofile = writeargstofile or fnargv0 == "start-lmfdb.py"
+        readargs = readargs or writeargstofile
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
         opts = self.options
         extopts = self.extra_options
@@ -287,4 +289,4 @@ class Configuration(_Configuration):
 
 
 if __name__ == "__main__":
-    Configuration(writeargstofile=True)
+    Configuration(writeargstofile=True, readargs=True)

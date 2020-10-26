@@ -1,39 +1,29 @@
 {% extends 'homepage.html' %}
 {% block content %}
-{# Offers options to browse and search #}
 
 <div>
-{{ KNOWL_INC('nf.extent') }}
+{{ global_numberfield_summary() | safe}}
 </div>
 
 <h2> Browse </h2>
 
-<ul>
-<li>
-By {{KNOWL('nf.degree', title='degree')}}:
-{% for r in info.degree_list: %}
-<a href="?degree={{r}}">{{r}}</a>&nbsp;&nbsp;
-{% endfor %}
-<li>
-By {{KNOWL('nf.discriminant', title='discriminant')}} range: 
-{% for r in info.discriminant_list: %}
-<a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp;
-{% endfor %}
-<li>
-By {{KNOWL('nf.signature', title='signature')}}: 
-{% for t in info.signature_list: %}
-<a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp;
-{% endfor %}
-<li>
-By {{KNOWL('nf.class_number', title='class number')}}: 
-{% for r in info.class_number_list: %}
-<a href="?class_number={{r}}">{{r}}</a>&nbsp;&nbsp;
-{% endfor %}
-</ul>
-
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting number fields</a> or a <a href={{url_for('.by_label', label='random')}}>random number field</a>
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{KNOWL('nf.degree', title='degree')}}:</td>
+    <td>{% for r in info.degree_list: %} <a href="?degree={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{KNOWL('nf.discriminant', title='discriminant')}}:</td>
+    <td>{% for r in info.discriminant_list: %} <a href="?discriminant={{r}}">{{r}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{KNOWL('nf.signature', title='signature')}}:</td>
+    <td>{% for t in info.signature_list: %} <a href="?signature={{t}}">{{t}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{KNOWL('nf.class_number', title='class number')}}:</td>
+    <td>{% for r in info.class_number_list: %} <a href="?class_number={{r}}">{{r}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting number fields</a> or a <a href={{url_for('.by_label', label='random')}}> random number field</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 <form id="search" onsubmit="cleanSubmit(this.id)">

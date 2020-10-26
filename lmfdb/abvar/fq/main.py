@@ -562,14 +562,16 @@ def jump(info):
             if deg % 2 == 1:
                 raise ValueError
         except Exception:
-            raise ValueError("%s is not valid input.  Expected a label or Weil polynomial.")
+            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         g = deg//2
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
             cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
-            raise ValueError("%s is not valid input.  Polynomial must have constant or leading coefficient 1")
+            flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         try:
             q = lead.nth_root(g)
             if not ZZ(q).is_prime_power():
@@ -578,7 +580,8 @@ def jump(info):
                 if cdict.get(2*g-i, 0) != q**(g-i) * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
-            raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
+            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
@@ -648,7 +651,7 @@ def abelian_variety_count(info, query):
 
 def abelian_variety_browse(info):
     info["stats"] = AbvarFqStats()
-    info["q_ranges"] = ["2", "3", "4", "5", "7-16", "17-25", "27-211", "223-1024"]
+    info["q_ranges"] = ["2", "3", "4", "5", "7", "8", "9", "16", "17", "19", "23", "25", "27-211", "223-1024"]
     return render_template(
         "abvarfq-index.html",
         title="Isogeny classes of abelian varieties over finite fields",

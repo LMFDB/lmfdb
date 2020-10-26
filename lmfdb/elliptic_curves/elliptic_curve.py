@@ -7,24 +7,26 @@ import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime, Integer
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, flash_error, display_knowl,
+    web_latex, to_dict, comma, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    YesNoBox, parse_element_of, parse_bool, search_wrap)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
-
+from sage.misc.cachefunc import cached_method
+from lmfdb.ecnf.ecnf_stats import latex_tor
+from psycopg2.sql import SQL
 q = ZZ['x'].gen()
+the_ECstats = None
 
 #########################
 #   Data credit
@@ -49,6 +51,16 @@ def get_bread(tail=[]):
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
+
+def get_stats():
+    global the_ECstats
+    if the_ECstats is None:
+        the_ECstats = ECstats()
+    return the_ECstats
+
+def latex_sha(sha_order):
+    sha_order_sqrt = Integer(sha_order).sqrt()
+    return "$%s^2$" % sha_order_sqrt
 
 #########################
 #    Top level
@@ -80,18 +92,20 @@ def rational_elliptic_curves(err_args=None):
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '50'
-    counts = get_stats().counts()
 
-    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
+    counts = get_stats()
+
+    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, int(counts.max_N) + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    rank_list = list(range(counts['max_rank'] + 1))
+    rank_list = list(range(counts.max_rank + 1))
     torsion_list = list(range(1, 11)) + [12, 16]
     info['rank_list'] = rank_list
     info['torsion_list'] = torsion_list
     info['conductor_list'] = conductor_list
-    info['counts'] = counts
+    info['stats'] = ECstats()
     info['stats_url'] = url_for(".statistics")
+
     t = r'Elliptic curves over $\Q$'
     if err_args.get("err_msg"):
         # this comes from elliptic_curve_jump_error
@@ -134,15 +148,79 @@ def todays_curve():
     #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
+
+################################################################################
+# Statistics
+################################################################################
+
+class ECstats(StatsDisplay):
+    """
+    Class for creating and displaying statistics for elliptic curves over Q
+    """
+
+    def __init__(self):
+        self.ncurves = db.ec_curves.count()
+        self.ncurves_c = comma(db.ec_curves.count())
+        self.max_N = db.ec_curves.max('conductor')
+
+        # round up to nearest multiple of 1000
+        self.max_N = 1000*int((self.max_N/1000)+1)
+        # NB while we only have the Cremona database, the upper bound
+        # will always be a multiple of 1000, but it looks funny to
+        # show the maximum condictor as something like 399998; there
+        # are no elliptic curves whose conductor is a multiple of
+        # 1000.
+
+        self.max_N_c = comma(self.max_N)
+        self.max_rank = db.ec_curves.max('rank')
+        self.max_rank_c = comma(self.max_rank)
+        self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
+        self.rank_knowl = display_knowl('ec.rank', title = "rank")
+
+    @property
+    def short_summary(self):
+        stats_url = url_for(".statistics")
+        ec_knowl = display_knowl('ec.q', title='elliptic curves')
+        return r'The database currently contains the complete Cremona database. This contains all %s %s defined over $\Q$ with %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
+
+    @property
+    def summary(self):
+        nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
+        return 'The database currently contains the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s, all of which have %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c, self.rank_knowl, self.max_rank_c)
+
+    table = db.ec_curves
+    baseurl_func = ".rational_elliptic_curves"
+
+    knowls = {'rank': 'ec.rank',
+               'sha': 'ec.q.analytic_sha_order',
+               'torsion_structure' : 'ec.torsion_order'}
+
+    top_titles = {'rank': 'rank',
+                   'sha': 'analytic order of &#1064;',
+                   'torsion_structure': 'torsion subgroups'}
+
+    formatters = {'torsion_structure': latex_tor,
+                    'sha': latex_sha }
+
+    query_formatters = {'torsion_structure': lambda x : 'torsion_structure={}'.format(x),
+                        'sha': lambda x : 'sha={}'.format(x) }
+
+    stat_list = [
+        {'cols': 'rank', 'totaler': {'avg': True}},
+        {'cols': 'torsion_structure'},
+        {'cols': 'sha', 'totaler': {'avg': True}},
+    ]
+
+    @cached_method
+    def isogeny_degrees(self):
+        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curves, UNNEST(isodeg) as elements"))
+        return cur.fetchone()[0]
+
 @ec_page.route("/stats")
 def statistics():
-    info = {
-        'counts': get_stats().counts(),
-        'stats': get_stats().stats(),
-    }
-    t = r'Elliptic curves over $\Q$: Statistics'
-    bread = get_bread('Statistics')
-    return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
+    title = r'Elliptic curves over $\Q$: Statistics'
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=ECstats(), credit=ec_credit(), title=title, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")

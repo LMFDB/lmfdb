@@ -378,6 +378,7 @@ def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])
 
 @app.route('/L')
+@app.route('/L/')
 def l_functions():
     t = 'L-functions'
     b = [(t, url_for('l_functions'))]
@@ -392,6 +393,7 @@ def l_functions_history():
     return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
 
 @app.route('/ModularForm')
+@app.route('/ModularForm/')
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
@@ -406,6 +408,7 @@ def modular_forms_history():
     return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
 @app.route('/Variety')
+@app.route('/Variety/')
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
@@ -420,6 +423,7 @@ def varieties_history():
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
 @app.route('/Field')
+@app.route('/Field/')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
@@ -434,6 +438,7 @@ def fields_history():
     return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
 
 @app.route('/Representation')
+@app.route('/Representation/')
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
@@ -448,6 +453,7 @@ def representations_history():
     return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
 
 @app.route('/Motive')
+@app.route('/Motive/')
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
@@ -462,6 +468,7 @@ def motives_history():
     return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
 
 @app.route('/Group')
+@app.route('/Group/')
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]

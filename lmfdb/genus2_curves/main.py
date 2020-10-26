@@ -106,8 +106,8 @@ def index_Q():
         return genus2_curve_search(info)
     info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
-    info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
-    info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["conductor_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
+    info["discriminant_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
     info["equation_search"] = has_magma()
     title = r'Genus 2 curves over $\Q$'
     return render_template(
@@ -430,17 +430,17 @@ class G2C_stats(StatsDisplay):
               'real_geom_end_alg': 'g2c.st_group_identity_component',
               'st_group': 'g2c.st_group',
               'torsion_order': 'g2c.torsion_order'}
-    row_titles = {'num_rat_pts': 'rational points',
-                  'num_rat_wpts': 'Weierstrass points',
-                 'aut_grp_id': 'automorphism group',
-                  'geom_aut_grp_id': 'automorphism group',
-                  'two_selmer_rank': '2-Selmer rank',
-                  'analytic_sha': 'analytic order of &#1064;',
-                  'has_square_sha': 'has square &#1064;',
-                  'is_gl2_type': 'is of GL2-type',
-                  'real_geom_end_alg': 'identity component',
-                  'st_group': 'Sato-Tate group',
-                  'torsion_order': 'torsion order'}
+    short_display = {'num_rat_pts': 'rational points',
+                     'num_rat_wpts': 'Weierstrass points',
+                     'aut_grp_id': 'automorphism group',
+                     'geom_aut_grp_id': 'automorphism group',
+                     'two_selmer_rank': '2-Selmer rank',
+                     'analytic_sha': 'analytic order of &#1064;',
+                     'has_square_sha': 'has square &#1064;',
+                     'is_gl2_type': 'is of GL2-type',
+                     'real_geom_end_alg': 'identity component',
+                     'st_group': 'Sato-Tate group',
+                     'torsion_order': 'torsion order'}
     top_titles = {'num_rat_pts': 'rational points',
                   'num_rat_wpts': 'rational Weierstrass points',
                   'aut_grp_id': r'$\mathrm{Aut}(X)$',

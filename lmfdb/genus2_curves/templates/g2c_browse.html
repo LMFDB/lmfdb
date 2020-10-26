@@ -1,27 +1,35 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<style>
-p {padding-left: 1ch;}
-</style>
-
+<div>
 {{ info.stats.short_summary | safe }}
+</div>
 
 <h2> Browse </h2>
-<p>
-By {{ KNOWL('ag.conductor', title='conductor')}}:
-{% for rnge in info.conductor_list %}
-<a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
-{% endfor %}
-</p><p>
-By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
-{% for rnge in info.discriminant_list %}
-<a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
-{% endfor %}
-</p><p>
-Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <a href={{url_for('.random_curve')}}>random genus 2 curve</a>
-</p>
 
+<table  class="browse">
+  <tr>
+    <td>By {{ KNOWL('ag.conductor', 'conductor')}}:</td>
+    <td>{% for rnge in info.conductor_list %} <a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('g2c.abs_discriminant', 'absolute discriminant')}}:</td>
+    <td>{% for rnge in info.discriminant_list %} <a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr>
+  </tr><tr>
+    <td>By {{ KNOWL('g2c.geom_aut_grp', '$\overline{\Q}$-automorphism group')}}:</td>
+    <td>
+      <a href="?geom_aut_grp_id=[2,1]">$C_2$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[4,2]">$C_2^2$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[8,3]">$D_4$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[10,2]">$C_{10}$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[12,4]">$D_6$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[24,8]">$C_3:D_4$</a>&nbsp;&nbsp;
+      <a href="?geom_aut_grp_id=[48,29]">$\mathrm{GL}(2,3)$</a>
+    </td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting genus 2 curves</a> or a <a href={{url_for('.random_curve')}}>random genus 2 curve</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 

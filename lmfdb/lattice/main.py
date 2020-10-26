@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import ast
 import re
@@ -70,10 +71,9 @@ def lattice_render_webpage():
     info = to_dict(request.args, search_array=LatSearchArray())
     if not request.args:
         stats = Lattice_stats()
-        dim_list = list(range(1, 11, 1))
-        max_class_number = 20
-        class_number_list = list(range(1, max_class_number + 1, 1))
-        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
+        dim_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 24]
+        class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
+        det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
