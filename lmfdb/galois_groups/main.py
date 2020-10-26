@@ -90,7 +90,7 @@ def index():
     info = to_dict(request.args, search_array=GalSearchArray(), stats=GaloisStats())
     if request.args:
         return galois_group_search(info)
-    info['degree_list'] = list(range(2, 48))
+    info['degree_list'] = list(range(1, 48))
     return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
 
 # For the search order-parsing
@@ -141,9 +141,13 @@ def galois_group_search(info, query):
         # If the user entered a simple label
         if re.match(r'^\d+T\d+$',strip_label):
             return redirect(url_for('.by_label', label=strip_label), 301)
-        parse_galgrp(info, query, qfield=['label','n'], 
-            name='a Galois group label', field='jump', list_ok=False,
-            err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
+        try:
+            parse_galgrp(info, query, qfield=['label','n'], 
+                name='a Galois group label', field='jump', list_ok=False,
+                err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
+        except ValueError:
+            return redirect(url_for('.index'))
+
         if query.get('label', '') in jump_list:
             return redirect(url_for('.by_label', label=query['label']), 301)
 
@@ -395,7 +399,7 @@ class GalSearchArray(SearchArray):
             example_span="-1, or 1..3")
         arith_equiv = TextBox(
             name="arith_equiv",
-            label="Arith. Equiv.",
+            label="Equivalent siblings",
             knowl="gg.arithmetically_equiv_input",
             example="1",
             example_span="1 or 2,3 or 1..5 or 1,3..10")
