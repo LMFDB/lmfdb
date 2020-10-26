@@ -3,8 +3,7 @@
 {% block content %}
 
 <div>
-{{elliptic_curve_summary()| safe}}
-Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
+  {{info.stats.short_summary| safe}}
 </div>
 
 <h2> Browse </h2>
