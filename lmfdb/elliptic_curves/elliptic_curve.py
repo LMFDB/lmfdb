@@ -202,6 +202,9 @@ class ECstats(StatsDisplay):
     formatters = {'torsion_structure': latex_tor,
                     'sha': latex_sha }
 
+    query_formatters = {'torsion_structure': lambda x : 'torsion_structure={}'.format(x),
+                        'sha': lambda x : 'sha={}'.format(x) }
+
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
         {'cols': 'torsion_structure'},
