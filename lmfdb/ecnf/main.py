@@ -32,6 +32,7 @@ from lmfdb.ecnf.isog_class import ECNF_isoclass
 # field 3.1.23.1 uses upper case letters for isogeny class
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
 CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+FIELD_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -249,16 +250,27 @@ def statistics():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if "-" in nf:
-        try:
-            nf, cond_label, iso_label, number = split_full_label(nf.strip())
-        except ValueError:
-            return redirect(url_for("ecnf.index"))
-        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    n = len(nf.split('-'))
+    if n > 1:
+        if n == 4:
+            try:
+                nf, cond_label, iso_label, number = split_full_label(nf.strip())
+            except ValueError:
+                return abort(404)
+            return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+        if n == 3:
+            try:
+                nf, cond_label, iso_label = split_class_label(nf.strip())
+            except ValueError:
+                return abort(404)
+            return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
+        return abort(404)
+    if not FIELD_RE.fullmatch(nf.strip()):
+        return abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return redirect(url_for(".index"))
+        return abort(404)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
