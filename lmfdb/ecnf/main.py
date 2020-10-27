@@ -250,7 +250,7 @@ def statistics():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if FULL_LABEL_RE.fullmatch(nf):
+    if LABEL_RE.fullmatch(nf):
         nf, cond_label, iso_label, number = split_full_label(nf.strip())
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     if CLASS_LABEL_RE.fullmatch(nf):
