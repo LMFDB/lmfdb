@@ -675,7 +675,7 @@ def ecnf_code_download(**args):
         return abort(404)
     try:
         response = make_response(ecnf_code(**args))
-    catch ValueError:
+    except ValueError:
         return abort(404)
     response.headers['Content-type'] = 'text/plain'
     return response
