@@ -709,8 +709,11 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
-        raise ValueError("Invalid curve label")
-    E = ECNF.by_label(label)
+        return abort(404)
+    try:
+        E = ECNF.by_label(label)
+    except ValueError:
+        return abort(404)
     Ecode = E.code()
     lang = args['download_type']
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
