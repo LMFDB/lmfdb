@@ -250,21 +250,12 @@ def statistics():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    n = len(nf.split('-'))
-    if n > 1:
-        if n == 4:
-            try:
-                nf, cond_label, iso_label, number = split_full_label(nf.strip())
-            except ValueError:
-                return abort(404)
-            return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
-        if n == 3:
-            try:
-                nf, cond_label, iso_label = split_class_label(nf.strip())
-            except ValueError:
-                return abort(404)
-            return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
-        return abort(404)
+    if FULL_LABEL_RE.fullmatch(nf):
+        nf, cond_label, iso_label, number = split_full_label(nf.strip())
+        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    if CLASS_LABEL_RE.fullmatch(nf):
+        nf, cond_label, iso_label = split_class_label(nf.strip())
+        return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     if not FIELD_RE.fullmatch(nf.strip()):
         return abort(404)
     try:
