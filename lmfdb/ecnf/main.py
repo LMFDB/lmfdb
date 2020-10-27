@@ -671,8 +671,6 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
 
 @ecnf_page.route('/<nf>/<conductor_label>/<class_label>/<number>/download/<download_type>')
 def ecnf_code_download(**args):
-    if not FIELD_RE.fullmatch(nf):
-        return abort(404)
     try:
         response = make_response(ecnf_code(**args))
     except ValueError:
