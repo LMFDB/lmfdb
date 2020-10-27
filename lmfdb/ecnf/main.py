@@ -671,7 +671,12 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
 
 @ecnf_page.route('/<nf>/<conductor_label>/<class_label>/<number>/download/<download_type>')
 def ecnf_code_download(**args):
-    response = make_response(ecnf_code(**args))
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
+    try:
+        response = make_response(ecnf_code(**args))
+    catch ValueError:
+        return abort(404)
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -703,6 +708,8 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
+    if not LABEL_RE.fullmatch(label):
+        raise ValueError("Invalid curve label")
     E = ECNF.by_label(label)
     Ecode = E.code()
     lang = args['download_type']
