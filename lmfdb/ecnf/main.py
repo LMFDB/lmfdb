@@ -31,7 +31,9 @@ from lmfdb.ecnf.isog_class import ECNF_isoclass
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
 # field 3.1.23.1 uses upper case letters for isogeny class
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
+SHORT_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
 CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+SHORT_CLASS_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
 FIELD_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 
 def split_full_label(lab):
@@ -52,7 +54,7 @@ def split_short_label(lab):
     r""" Split a short curve label into 3 components
     (conductor_label,isoclass_label,curve_number)
     """
-    if not CLASS_LABEL_RE.fullmatch(lab):
+    if not SHORT_LABEL_RE.fullmatch(lab):
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
@@ -65,9 +67,9 @@ def split_class_label(lab):
     r""" Split a class label into 3 components
     (field_label, conductor_label,isoclass_label)
     """
+    if not CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
-    if len(data) != 3:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % escape(lab)))
     field_label = data[0]
     conductor_label = data[1]
     isoclass_label = data[2]
@@ -78,9 +80,9 @@ def split_short_class_label(lab):
     r""" Split a short class label into 2 components
     (conductor_label,isoclass_label)
     """
+    if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
-    if len(data) != 2:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % escape(lab)))
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
@@ -251,12 +253,12 @@ def statistics():
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
     if LABEL_RE.fullmatch(nf):
-        nf, cond_label, iso_label, number = split_full_label(nf.strip())
+        nf, cond_label, iso_label, number = split_full_label(nf)
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     if CLASS_LABEL_RE.fullmatch(nf):
-        nf, cond_label, iso_label = split_class_label(nf.strip())
+        nf, cond_label, iso_label = split_class_label(nf)
         return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
-    if not FIELD_RE.fullmatch(nf.strip()):
+    if not FIELD_RE.fullmatch(nf):
         return abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
@@ -278,6 +280,8 @@ def show_ecnf1(nf):
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -302,6 +306,8 @@ def show_ecnf_conductor(nf, conductor_label):
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -331,6 +337,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
 def show_ecnf(nf, conductor_label, class_label, number):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
