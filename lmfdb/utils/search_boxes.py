@@ -385,12 +385,10 @@ class TextBoxWithSelect(TextBox):
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
         return (
-            self.td(colspan, nowrap=True)
-            + '<div style="display: flex; justify-content: space-between;">'
+                self.td(colspan, nowrap=True, style="text-align-last: justify;")
             + self._label(info)
             + '<span style="margin-left: 10px;"></span>'
             + self.select_box._input(info)
-            + "</div>"
             + "</td>"
         )
 
