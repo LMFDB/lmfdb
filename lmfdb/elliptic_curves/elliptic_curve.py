@@ -680,6 +680,10 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
+    if E == "Invalid label":
+        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+    if E == "Curve not found":
+        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)

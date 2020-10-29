@@ -8,7 +8,7 @@ from six import BytesIO
 import time
 from six.moves.urllib_parse import quote, unquote
 
-from flask import render_template, request, url_for, redirect, send_file, make_response
+from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape
 
 from lmfdb import db
@@ -31,7 +31,10 @@ from lmfdb.ecnf.isog_class import ECNF_isoclass
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
 # field 3.1.23.1 uses upper case letters for isogeny class
 LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
+SHORT_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+\d+")
 CLASS_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+-\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+SHORT_CLASS_LABEL_RE = re.compile(r"\d+\.\d+(\.\d+)?-(CM)?[a-zA-Z]+")
+FIELD_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -51,7 +54,7 @@ def split_short_label(lab):
     r""" Split a short curve label into 3 components
     (conductor_label,isoclass_label,curve_number)
     """
-    if not CLASS_LABEL_RE.fullmatch(lab):
+    if not SHORT_LABEL_RE.fullmatch(lab):
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
@@ -64,9 +67,9 @@ def split_class_label(lab):
     r""" Split a class label into 3 components
     (field_label, conductor_label,isoclass_label)
     """
+    if not CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
-    if len(data) != 3:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % escape(lab)))
     field_label = data[0]
     conductor_label = data[1]
     isoclass_label = data[2]
@@ -77,9 +80,9 @@ def split_short_class_label(lab):
     r""" Split a short class label into 2 components
     (conductor_label,isoclass_label)
     """
+    if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
     data = lab.split("-")
-    if len(data) != 2:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % escape(lab)))
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
@@ -249,16 +252,18 @@ def statistics():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if "-" in nf:
-        try:
-            nf, cond_label, iso_label, number = split_full_label(nf.strip())
-        except ValueError:
-            return redirect(url_for("ecnf.index"))
+    if LABEL_RE.fullmatch(nf):
+        nf, cond_label, iso_label, number = split_full_label(nf)
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    if CLASS_LABEL_RE.fullmatch(nf):
+        nf, cond_label, iso_label = split_class_label(nf)
+        return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return redirect(url_for(".index"))
+        return abort(404)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
@@ -275,6 +280,8 @@ def show_ecnf1(nf):
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -299,6 +306,8 @@ def show_ecnf_conductor(nf, conductor_label):
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -328,6 +337,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
 def show_ecnf(nf, conductor_label, class_label, number):
+    if not FIELD_RE.fullmatch(nf):
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -660,7 +671,10 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
 
 @ecnf_page.route('/<nf>/<conductor_label>/<class_label>/<number>/download/<download_type>')
 def ecnf_code_download(**args):
-    response = make_response(ecnf_code(**args))
+    try:
+        response = make_response(ecnf_code(**args))
+    except ValueError:
+        return abort(404)
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -692,7 +706,12 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
-    E = ECNF.by_label(label)
+    if not LABEL_RE.fullmatch(label):
+        return abort(404)
+    try:
+        E = ECNF.by_label(label)
+    except ValueError:
+        return abort(404)
     Ecode = E.code()
     lang = args['download_type']
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
