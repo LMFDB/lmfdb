@@ -232,8 +232,7 @@ class Configuration(_Configuration):
         )
         fnargv0 = os.path.split(sys.argv[0])[-1]
         writeargstofile = writeargstofile or fnargv0 == "start-lmfdb.py"
-        readargs = readargs or writeargstofile
-        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile)
 
         opts = self.options
         extopts = self.extra_options
