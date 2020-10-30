@@ -501,7 +501,10 @@ def rchar_data(label):
   ans += '<br>Schur index: {}'.format(mychar.schur_index)
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
-  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
+  if 'image' in mychar._data:
+      ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
+  else:
+      ans += '<br>Image: not computed'
   return Markup(ans)
 
 def cchar_data(label):
@@ -516,7 +519,10 @@ def cchar_data(label):
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
   ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
-  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+  if 'image' in mychar._data:
+      ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+  else:
+      ans += '<br>Image: not computed'
   return Markup(ans)
 
 def sub_data(label):
