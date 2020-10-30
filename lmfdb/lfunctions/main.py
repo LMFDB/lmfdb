@@ -417,13 +417,13 @@ def l_function_hgm_page(label,t):
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 # L-function of symmetric powers of Elliptic curve #############################
-@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<conductor>/<isogeny>/")
+@l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<int:conductor>/<isogeny>/")
 def l_function_ec_sym_page(power, conductor, isogeny):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q',
             'conductor': conductor, 'isogeny': isogeny}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
-@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
+@l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<label>/")
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -797,24 +797,42 @@ def zerosLfunction(args):
 @l_function_page.route("/download_euler/<path:args>/")
 def download_euler(args):
     args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_euler_factors()
+    try:
+        L = generateLfunctionFromURL(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_euler_factors()
 
 @l_function_page.route("/download_zeros/<path:args>/")
 def download_zeros(args):
     args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_zeros()
+    try:
+        L = generateLfunctionFromURL(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_zeroes()
 
 @l_function_page.route("/download_dirichlet_coeff/<path:args>/")
 def download_dirichlet_coeff(args):
     args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_dirichlet_coeff()
+    try:
+        L = generateLfunctionFromURL(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_dirichlet_coeff()
 
 @l_function_page.route("/download/<path:args>/")
 def download(args):
     args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download()
-
-
+    try:
+        L = generateLfunctionFromURL(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download()
 
 
 ################################################################################
@@ -838,9 +856,12 @@ def render_plotLfunction(request, *args):
 
 
 def getLfunctionPlot(request, *args):
-    pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
-    if not pythonL:
+    try:
+        pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
+        assert pythonL
+    except:
         return ""
+
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
@@ -896,9 +917,7 @@ def render_zerosLfunction(request, *args):
     try:
         L = generateLfunctionFromUrl(*args, **to_dict(request.args))
     except Exception as err:
-        raise
-        if not is_debug_mode():
-            return render_lfunction_exception(err)
+        return render_lfunction_exception(err)
 
     if not L:
         return abort(404)
@@ -1248,7 +1267,11 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 def reliability(prepath):
     t = 'Reliability of L-function data'
     args = tuple(prepath.split('/'))
-    L = generateLfunctionFromUrl(*args)
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
@@ -1277,7 +1300,11 @@ def completeness():
 def source(prepath):
     t = 'Source of L-function data'
     args = tuple(prepath.split('/'))
-    L = generateLfunctionFromUrl(*args)
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
