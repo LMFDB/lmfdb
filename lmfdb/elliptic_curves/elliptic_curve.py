@@ -585,13 +585,15 @@ def padic_data():
     return render_template("ec-padic-data.html", info=info)
 
 
-@ec_page.route("/download_qexp/<label>/<limit>")
+@ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
     N, iso, number = split_lmfdb_label(label)
     if number:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     else:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
+    if limit > 100000:
+        limit = 100000
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
