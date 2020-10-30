@@ -593,7 +593,7 @@ def download_EC_qexp(label, limit):
     else:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
     if limit > 100000:
-        limit = 100000
+        return redirect(url_for('.download_EC_qexp',label=label,limit=10000), 301)
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
