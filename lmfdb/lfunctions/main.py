@@ -417,13 +417,13 @@ def l_function_hgm_page(label,t):
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 # L-function of symmetric powers of Elliptic curve #############################
-@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<conductor>/<isogeny>/")
+@l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<int:conductor>/<isogeny>/")
 def l_function_ec_sym_page(power, conductor, isogeny):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q',
             'conductor': conductor, 'isogeny': isogeny}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
-@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
+@l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<label>/")
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -773,178 +773,6 @@ def set_navi(L):
         return ( prev_data, next_data )
 
 
-################################################################################
-#   Route functions, plotting L-function and displaying zeros
-################################################################################
-
-# L-function of Elliptic curve #################################################
-@l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
-def l_function_ec_plot(label):
-    return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
-                                    None, None, None)
-
-@l_function_page.route("/Plot/<path:args>/")
-def plotLfunction(args):
-    args = tuple(args.split('/'))
-    return render_plotLfunction(request, *args)
-
-
-@l_function_page.route("/Zeros/<path:args>/")
-def zerosLfunction(args):
-    args = tuple(args.split('/'))
-    return render_zerosLfunction(request, *args)
-
-@l_function_page.route("/download_euler/<path:args>/")
-def download_euler(args):
-    args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_euler_factors()
-
-@l_function_page.route("/download_zeros/<path:args>/")
-def download_zeros(args):
-    args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_zeros()
-
-@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
-def download_dirichlet_coeff(args):
-    args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download_dirichlet_coeff()
-
-@l_function_page.route("/download/<path:args>/")
-def download(args):
-    args = tuple(args.split('/'))
-    return generateLfunctionFromUrl(*args).download()
-
-
-
-
-################################################################################
-#   Render functions, plotting L-function and displaying zeros
-################################################################################
-
-
-def render_plotLfunction(request, *args):
-    try:
-        data = getLfunctionPlot(request, *args)
-    except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
-        raise
-        if not is_debug_mode():
-            return render_lfunction_exception(err)
-    if not data:
-        # see note about missing "hardy_z_function" in plotLfunction()
-        return abort(404)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
-
-def getLfunctionPlot(request, *args):
-    pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
-    if not pythonL:
-        return ""
-    plotrange = 30
-    if hasattr(pythonL, 'plotpoints'):
-        F = p2sage(pythonL.plotpoints)
-        #  F[0][0] is the lowest t-coordinated that we have a value for L
-        #  F[-1][0] is the highest t-coordinated that we have a value for L
-        plotrange = min(plotrange, -F[0][0], F[-1][0])
-        # aim to display at most 25 axis crossings
-        # if the L-function is nonprimitive
-        if (hasattr(pythonL, 'positive_zeros') and
-            hasattr(pythonL, 'primitive') and
-            not pythonL.primitive):
-            # we stored them ready to display
-            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
-            if len(zeros) >= 25:
-                zero_range = zeros[24]
-            else:
-                zero_range = zeros[-1]*25/len(zeros)
-            zero_range *= 1.2
-            plotrange = min(plotrange, zero_range)
-    else:
-    # obsolete, because lfunc_data comes from DB?
-        L = pythonL.sageLfunction
-        if not hasattr(L, "hardy_z_function"):
-            return None
-        plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass"]:
-            plotrange = 12
-        F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
-
-    interpolation = spline(F)
-    F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
-    p = line(F_interp)
-
-    styleLfunctionPlot(p, 10)
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
-        p.save(filename=fn.name)
-    with open(fn.name, 'rb') as f:
-        data = f.read()
-    os.remove(fn.name)
-    return data
-
-
-def styleLfunctionPlot(p, fontsize):
-    p.fontsize(fontsize)
-    p.axes_color((0.5, 0.5, 0.5))
-    p.tick_label_color((0.5, 0.5, 0.5))
-    p.axes_width(0.2)
-
-
-def render_zerosLfunction(request, *args):
-    ''' Renders the first few zeros of the L-function with the given arguments.
-    '''
-    try:
-        L = generateLfunctionFromUrl(*args, **to_dict(request.args))
-    except Exception as err:
-        raise
-        if not is_debug_mode():
-            return render_lfunction_exception(err)
-
-    if not L:
-        return abort(404)
-    if hasattr(L,"lfunc_data"):
-        if L.lfunc_data is None:
-            return "<span>" + L.zeros + "</span>"
-        else:
-            website_zeros = L.negative_zeros + L.positive_zeros
-    else:
-        # This depends on mathematical information, all below is formatting
-        # More semantic this way
-        # Allow 10 seconds
-        website_zeros = L.compute_web_zeros(time_allowed = 10)
-
-    # Handle cases where zeros are not available
-    if isinstance(website_zeros, string_types):
-        return website_zeros
-
-    positiveZeros = []
-    negativeZeros = []
-
-    for zero in website_zeros:
-        if abs(float(zero)) < 1e-10:
-            zero = "0"
-        else:
-            zero = display_float(zero, 12, 'round')
-        if float(zero) < 0:
-            negativeZeros.append(zero)
-        else:
-            positiveZeros.append(zero)
-
-    zero_truncation = 25   # show at most 25 positive and negative zeros
-                           # later: implement "show more"
-    negativeZeros = negativeZeros[-1*zero_truncation:]
-    positiveZeros = positiveZeros[:zero_truncation]
-    # Format the html string to render
-    positiveZeros = ", ".join(positiveZeros)
-    negativeZeros = ", ".join(negativeZeros)
-    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-        negativeZeros = negativeZeros + ", "
-
-    return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
-     #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
-        negativeZeros.replace("-","&minus;"), positiveZeros)
-
-
 def generateLfunctionFromUrl(*args, **kwds):
     ''' Returns the L-function object corresponding to the supplied argumnents
     from the url. kwds contains possible arguments after a question mark.
@@ -1020,6 +848,196 @@ def generateLfunctionFromUrl(*args, **kwds):
         raise Exception
     else:
         return None
+
+################################################################################
+#   Route functions, plotting L-function and displaying zeros
+################################################################################
+
+# L-function of Elliptic curve #################################################
+@l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
+def l_function_ec_plot(label):
+    return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
+                                    None, None, None)
+
+@l_function_page.route("/Plot/<path:args>/")
+def plotLfunction(args):
+    args = tuple(args.split('/'))
+    return render_plotLfunction(request, *args)
+
+
+@l_function_page.route("/Zeros/<path:args>/")
+def zerosLfunction(args):
+    args = tuple(args.split('/'))
+    return render_zerosLfunction(request, *args)
+
+@l_function_page.route("/download_euler/<path:args>/")
+def download_euler(args):
+    args = tuple(args.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_euler_factors()
+
+@l_function_page.route("/download_zeros/<path:args>/")
+def download_zeros(args):
+    args = tuple(args.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_zeroes()
+
+@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
+def download_dirichlet_coeff(args):
+    args = tuple(args.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download_dirichlet_coeff()
+
+@l_function_page.route("/download/<path:args>/")
+def download(args):
+    args = tuple(args.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    return L.download()
+
+
+################################################################################
+#   Render functions, plotting L-function and displaying zeros
+################################################################################
+
+
+def render_plotLfunction(request, *args):
+    try:
+        data = getLfunctionPlot(request, *args)
+    except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
+        raise
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
+    if not data:
+        # see note about missing "hardy_z_function" in plotLfunction()
+        return abort(404)
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
+
+
+def getLfunctionPlot(request, *args):
+    try:
+        pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
+        assert pythonL
+    except:
+        return ""
+
+    plotrange = 30
+    if hasattr(pythonL, 'plotpoints'):
+        F = p2sage(pythonL.plotpoints)
+        #  F[0][0] is the lowest t-coordinated that we have a value for L
+        #  F[-1][0] is the highest t-coordinated that we have a value for L
+        plotrange = min(plotrange, -F[0][0], F[-1][0])
+        # aim to display at most 25 axis crossings
+        # if the L-function is nonprimitive
+        if (hasattr(pythonL, 'positive_zeros') and
+            hasattr(pythonL, 'primitive') and
+            not pythonL.primitive):
+            # we stored them ready to display
+            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
+            if len(zeros) >= 25:
+                zero_range = zeros[24]
+            else:
+                zero_range = zeros[-1]*25/len(zeros)
+            zero_range *= 1.2
+            plotrange = min(plotrange, zero_range)
+    else:
+    # obsolete, because lfunc_data comes from DB?
+        L = pythonL.sageLfunction
+        if not hasattr(L, "hardy_z_function"):
+            return None
+        plotStep = .1
+        if pythonL._Ltype not in ["riemann", "maass"]:
+            plotrange = 12
+        F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
+
+    interpolation = spline(F)
+    F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
+    p = line(F_interp)
+
+    styleLfunctionPlot(p, 10)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
+        p.save(filename=fn.name)
+    with open(fn.name, 'rb') as f:
+        data = f.read()
+    os.remove(fn.name)
+    return data
+
+
+def styleLfunctionPlot(p, fontsize):
+    p.fontsize(fontsize)
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
+    p.axes_width(0.2)
+
+
+def render_zerosLfunction(request, *args):
+    ''' Renders the first few zeros of the L-function with the given arguments.
+    '''
+    try:
+        L = generateLfunctionFromUrl(*args, **to_dict(request.args))
+    except Exception as err:
+        return render_lfunction_exception(err)
+
+    if not L:
+        return abort(404)
+    if hasattr(L,"lfunc_data"):
+        if L.lfunc_data is None:
+            return "<span>" + L.zeros + "</span>"
+        else:
+            website_zeros = L.negative_zeros + L.positive_zeros
+    else:
+        # This depends on mathematical information, all below is formatting
+        # More semantic this way
+        # Allow 10 seconds
+        website_zeros = L.compute_web_zeros(time_allowed = 10)
+
+    # Handle cases where zeros are not available
+    if isinstance(website_zeros, string_types):
+        return website_zeros
+
+    positiveZeros = []
+    negativeZeros = []
+
+    for zero in website_zeros:
+        if abs(float(zero)) < 1e-10:
+            zero = "0"
+        else:
+            zero = display_float(zero, 12, 'round')
+        if float(zero) < 0:
+            negativeZeros.append(zero)
+        else:
+            positiveZeros.append(zero)
+
+    zero_truncation = 25   # show at most 25 positive and negative zeros
+                           # later: implement "show more"
+    negativeZeros = negativeZeros[-1*zero_truncation:]
+    positiveZeros = positiveZeros[:zero_truncation]
+    # Format the html string to render
+    positiveZeros = ", ".join(positiveZeros)
+    negativeZeros = ", ".join(negativeZeros)
+    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
+        negativeZeros = negativeZeros + ", "
+
+    return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
+     #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+        negativeZeros.replace("-","&minus;"), positiveZeros)
 
 ################################################################################
 #   Route functions, graphs for browsing L-functions
@@ -1248,7 +1266,11 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 def reliability(prepath):
     t = 'Reliability of L-function data'
     args = tuple(prepath.split('/'))
-    L = generateLfunctionFromUrl(*args)
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
@@ -1277,7 +1299,11 @@ def completeness():
 def source(prepath):
     t = 'Source of L-function data'
     args = tuple(prepath.split('/'))
-    L = generateLfunctionFromUrl(*args)
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
