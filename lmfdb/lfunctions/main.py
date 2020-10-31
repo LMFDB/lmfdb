@@ -773,6 +773,82 @@ def set_navi(L):
         return ( prev_data, next_data )
 
 
+def generateLfunctionFromUrl(*args, **kwds):
+    ''' Returns the L-function object corresponding to the supplied argumnents
+    from the url. kwds contains possible arguments after a question mark.
+    '''
+    if args[0] == 'Riemann':
+        return RiemannZeta()
+
+    elif args[0] == 'Character' and args[1] == 'Dirichlet':
+        return Lfunction_Dirichlet(charactermodulus=args[2], characternumber=args[3])
+
+    elif args[0] == 'EllipticCurve' and args[1] == 'Q':
+        #return Lfunction_EC_Q(conductor=args[2], isogeny=args[3])
+        return Lfunction_EC(field_label="1.1.1.1", conductor_label=args[2], isogeny_class_label=args[3])
+    elif args[0] == 'EllipticCurve' and args[1] != 'Q':
+        return Lfunction_EC(field_label=args[1], conductor_label=args[2], isogeny_class_label=args[3])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'holomorphic':  # this has args: one for weight and one for level
+        if len(args) == 10:
+            return Lfunction_CMF(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7], character=args[8], number=args[9])
+        else:
+            return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
+        instance = db.lfunc_instances.lucky({'url': hmf_url(args[5], args[6], args[7])})
+        return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
+        return Lfunction_BMF(field=args[3], level=args[4], suffix=args[5])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
+        maass_id = args[4]
+        return Lfunction_Maass(maass_id = maass_id, fromDB = False)
+
+    elif args[0] == 'ModularForm' and (args[1] == 'GSp4' or args[1] == 'GL4' or args[1] == 'GL3') and args[2] == 'Q' and args[3] == 'Maass':
+        return Lfunction_Maass(fromDB = True, group = args[1], level = args[4],
+                char = args[5], R = args[6], ap_id = args[7])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
+        return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
+
+    elif args[0] == 'NumberField':
+        return DedekindZeta(label=str(args[1]))
+
+    elif args[0] == "ArtinRepresentation":
+        label = args[1]
+        from lmfdb.artin_representations.main import both_labels
+        for elt in both_labels(label):
+            if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
+                label = elt
+                return ArtinLfunctionDB(label=label)
+        else:
+            label = parse_artin_label(label, safe=True)
+            return ArtinLfunction(label=label)
+
+    elif args[0] == "SymmetricPower":
+        return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
+                                       conductor=args[4], isogeny = args[5])
+
+    elif args[0] == "Motive" and args[1] == "Hypergeometric" and args[2] == "Q":
+        if args[4]:
+            return HypergeometricMotiveLfunction(family = args[3], t = args[4])
+        else:
+            return HypergeometricMotiveLfunction(label = args[3])
+
+    elif args[0] == "Genus2Curve" and args[1] == "Q":
+        return Lfunction_genus2_Q(label=str(args[2])+'.'+str(args[3]))
+
+
+    elif args[0] in ['lhash', 'Lhash']:
+        return Lfunction_from_db(Lhash=str(args[1]))
+
+    elif is_debug_mode():
+        raise Exception
+    else:
+        return None
+
 ################################################################################
 #   Route functions, plotting L-function and displaying zeros
 ################################################################################
@@ -798,7 +874,7 @@ def zerosLfunction(args):
 def download_euler(args):
     args = tuple(args.split('/'))
     try:
-        L = generateLfunctionFromURL(*args)
+        L = generateLfunctionFromUrl(*args)
         assert L
     except:
         return abort(404)
@@ -808,7 +884,7 @@ def download_euler(args):
 def download_zeros(args):
     args = tuple(args.split('/'))
     try:
-        L = generateLfunctionFromURL(*args)
+        L = generateLfunctionFromUrl(*args)
         assert L
     except:
         return abort(404)
@@ -818,7 +894,7 @@ def download_zeros(args):
 def download_dirichlet_coeff(args):
     args = tuple(args.split('/'))
     try:
-        L = generateLfunctionFromURL(*args)
+        L = generateLfunctionFromUrl(*args)
         assert L
     except:
         return abort(404)
@@ -828,7 +904,7 @@ def download_dirichlet_coeff(args):
 def download(args):
     args = tuple(args.split('/'))
     try:
-        L = generateLfunctionFromURL(*args)
+        L = generateLfunctionFromUrl(*args)
         assert L
     except:
         return abort(404)
@@ -962,83 +1038,6 @@ def render_zerosLfunction(request, *args):
     return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
      #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
         negativeZeros.replace("-","&minus;"), positiveZeros)
-
-
-def generateLfunctionFromUrl(*args, **kwds):
-    ''' Returns the L-function object corresponding to the supplied argumnents
-    from the url. kwds contains possible arguments after a question mark.
-    '''
-    if args[0] == 'Riemann':
-        return RiemannZeta()
-
-    elif args[0] == 'Character' and args[1] == 'Dirichlet':
-        return Lfunction_Dirichlet(charactermodulus=args[2], characternumber=args[3])
-
-    elif args[0] == 'EllipticCurve' and args[1] == 'Q':
-        #return Lfunction_EC_Q(conductor=args[2], isogeny=args[3])
-        return Lfunction_EC(field_label="1.1.1.1", conductor_label=args[2], isogeny_class_label=args[3])
-    elif args[0] == 'EllipticCurve' and args[1] != 'Q':
-        return Lfunction_EC(field_label=args[1], conductor_label=args[2], isogeny_class_label=args[3])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'holomorphic':  # this has args: one for weight and one for level
-        if len(args) == 10:
-            return Lfunction_CMF(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7], character=args[8], number=args[9])
-        else:
-            return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
-        instance = db.lfunc_instances.lucky({'url': hmf_url(args[5], args[6], args[7])})
-        return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
-        return Lfunction_BMF(field=args[3], level=args[4], suffix=args[5])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
-        maass_id = args[4]
-        return Lfunction_Maass(maass_id = maass_id, fromDB = False)
-
-    elif args[0] == 'ModularForm' and (args[1] == 'GSp4' or args[1] == 'GL4' or args[1] == 'GL3') and args[2] == 'Q' and args[3] == 'Maass':
-        return Lfunction_Maass(fromDB = True, group = args[1], level = args[4],
-                char = args[5], R = args[6], ap_id = args[7])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
-        return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
-
-    elif args[0] == 'NumberField':
-        return DedekindZeta(label=str(args[1]))
-
-    elif args[0] == "ArtinRepresentation":
-        label = args[1]
-        from lmfdb.artin_representations.main import both_labels
-        for elt in both_labels(label):
-            if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
-                label = elt
-                return ArtinLfunctionDB(label=label)
-        else:
-            label = parse_artin_label(label, safe=True)
-            return ArtinLfunction(label=label)
-
-    elif args[0] == "SymmetricPower":
-        return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
-                                       conductor=args[4], isogeny = args[5])
-
-    elif args[0] == "Motive" and args[1] == "Hypergeometric" and args[2] == "Q":
-        if args[4]:
-            return HypergeometricMotiveLfunction(family = args[3], t = args[4])
-        else:
-            return HypergeometricMotiveLfunction(label = args[3])
-
-    elif args[0] == "Genus2Curve" and args[1] == "Q":
-        return Lfunction_genus2_Q(label=str(args[2])+'.'+str(args[3]))
-
-
-    elif args[0] in ['lhash', 'Lhash']:
-        return Lfunction_from_db(Lhash=str(args[1]))
-
-    elif is_debug_mode():
-        raise Exception
-    else:
-        return None
 
 ################################################################################
 #   Route functions, graphs for browsing L-functions
