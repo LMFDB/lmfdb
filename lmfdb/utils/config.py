@@ -16,10 +16,10 @@ via optional command-line arguments.
 from __future__ import print_function
 
 import argparse
-import sys
 import os
 import random
 import string
+import __main__
 
 from lmfdb.backend.config import Configuration as _Configuration
 
@@ -230,9 +230,12 @@ class Configuration(_Configuration):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        fnargv0 = os.path.split(sys.argv[0])[-1]
-        writeargstofile = writeargstofile or fnargv0 == "start-lmfdb.py"
-        _Configuration.__init__(self, parser, writeargstofile=writeargstofile)
+        # if start-lmfdb.py was executed
+        startlmfdbQ = getattr(__main__, '__file__') == "start-lmfdb.py" if hasattr(__main__, '__file__') else False
+        print("startlmfdbQ", startlmfdbQ)
+        writeargstofile = writeargstofile or startlmfdbQ
+        readargs = readargs or startlmfdbQ
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
         opts = self.options
         extopts = self.extra_options

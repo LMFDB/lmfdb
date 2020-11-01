@@ -40,8 +40,8 @@ class Configuration(object):
     """
     def __init__(self, parser=None, defaults={}, writeargstofile=False, readargs=None):
         if readargs is None:
-            # are we in interactive mode?
             import __main__ as main
+            # if a file was ran
             readargs = hasattr(main, '__file__')
 
         if parser is None:
