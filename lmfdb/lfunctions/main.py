@@ -888,7 +888,7 @@ def download_zeros(args):
         assert L
     except:
         return abort(404)
-    return L.download_zeroes()
+    return L.download_zeros()
 
 @l_function_page.route("/download_dirichlet_coeff/<path:args>/")
 def download_dirichlet_coeff(args):
