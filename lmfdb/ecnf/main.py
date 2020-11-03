@@ -316,9 +316,10 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
         return search_input_error()
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
-    cl = ECNF_isoclass.by_label(label)
     bread = [("Elliptic curves", url_for(".index"))]
-    if not isinstance(cl, ECNF_isoclass):
+    try:
+        cl = ECNF_isoclass.by_label(label)
+    except (ValueError,KeyError):
         flash_error('No elliptic curve isogeny class in the database has label %s.', label)
         return search_input_error(bread=bread)
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
@@ -346,9 +347,10 @@ def show_ecnf(nf, conductor_label, class_label, number):
     except ValueError:
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
-    ec = ECNF.by_label(label)
     bread = [("Elliptic curves", url_for(".index"))]
-    if not ec:
+    try:
+        ec = ECNF.by_label(label)
+    except (ValueError,KeyError):
         flash_error('No elliptic curve in the database has label %s.', label)
         return search_input_error(bread=bread)
 
