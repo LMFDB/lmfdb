@@ -335,7 +335,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            learnmore=learnmore_list())
 
 
-@ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
+@ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<int:number>")
 def show_ecnf(nf, conductor_label, class_label, number):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
