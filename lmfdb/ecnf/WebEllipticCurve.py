@@ -260,7 +260,7 @@ class ECNF(object):
         data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
-        raise ValueError("Elliptic curve not found: %s" % label)
+        raise "Elliptic curve not found: %s" % label # caller must check for this
 
     def make_E(self):
         #print("Creating ECNF object for {}".format(self.label))

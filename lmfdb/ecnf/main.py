@@ -316,9 +316,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
         return abort(404)
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
-    try:
-        cl = ECNF_isoclass.by_label(label)
-    except (ValueError,KeyError):
+    cl = ECNF_isoclass.by_label(label)
+    if not isinstance(cl, ECNF_isoclass):
         abort(404)
     bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
@@ -346,10 +345,9 @@ def show_ecnf(nf, conductor_label, class_label, number):
     except ValueError:
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
-    try:
-        ec = ECNF.by_label(label)
-    except (ValueError,KeyError):
-        return abort(404)
+    ec = ECNF.by_label(label)
+    if not isinstance(ec, ECNF):
+        abort(404)
     bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
@@ -707,9 +705,8 @@ def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    try:
-        E = ECNF.by_label(label)
-    except ValueError:
+    E = ECNF.by_label(label)
+    if not isinstance(E, ECNF):
         return abort(404)
     Ecode = E.code()
     lang = args['download_type']
