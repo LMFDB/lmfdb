@@ -345,7 +345,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
         nf_label = nf_string_to_label(nf)
     except ValueError:
         return search_input_error()
-    label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
+    label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
     ec = ECNF.by_label(label)
     bread = [("Elliptic curves", url_for(".index"))]
     if not ec:
