@@ -41,7 +41,7 @@ def split_full_label(lab):
     (field_label,conductor_label,isoclass_label,curve_number)
     """
     if not LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label." % escape(lab)))
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
@@ -55,7 +55,7 @@ def split_short_label(lab):
     (conductor_label,isoclass_label,curve_number)
     """
     if not SHORT_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve label." % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
     isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
@@ -68,7 +68,7 @@ def split_class_label(lab):
     (field_label, conductor_label,isoclass_label)
     """
     if not CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve isogeny class label." % escape(lab)))
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
@@ -81,7 +81,7 @@ def split_short_class_label(lab):
     (conductor_label,isoclass_label)
     """
     if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve isogeny class label." % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
     isoclass_label = data[1]
@@ -101,7 +101,7 @@ def get_nf_info(lab):
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
     except ValueError:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field. %s" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % escape(lab)))
     return label, pretty
 
 
@@ -316,6 +316,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
         return abort(404)
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
+    if not CLASS_LABEL_RE.fullmatch(full_class_label):
+        flash_error("%s is not a valid elliptic curve isogeny class label", full_class_label)
     cl = ECNF_isoclass.by_label(label)
     if not isinstance(cl, ECNF_isoclass):
         flash_error("There is no elliptic curve isogeny class with label %s in the database", label)
@@ -346,6 +348,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     except ValueError:
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
+    if not LABEL_RE.fullmatch(label):
+        flash_error("%s is not a valid elliptic curve label", label)
     ec = ECNF.by_label(label)
     if not isinstance(ec, ECNF):
         flash_error("There is no elliptic curve with label %s in the database", label)
