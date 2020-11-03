@@ -6,6 +6,7 @@ import unittest2, socket
 from . import cmf_logger
 cmf_logger.setLevel(100)
 
+
 class CmfTest(LmfdbTest):
     def runTest():
         pass
@@ -160,7 +161,7 @@ class CmfTest(LmfdbTest):
         assert "No matches" in page.get_data(as_text=True)
         assert "Only for weight 1" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
-        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)   
+        assert 'maria' in page.get_data(as_text=True) and "is not a valid newform" in page.get_data(as_text=True)
 
     def test_delta(self):
         r"""
@@ -236,7 +237,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/6/a/")
         for elt in ['Decomposition', r'S_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
             assert elt in page.get_data(as_text=True)
-
 
     def test_not_in_db(self):
         # The following redirects to "ModularForm/GL2/Q/holomorphic/12000/12/"
@@ -385,7 +385,6 @@ class CmfTest(LmfdbTest):
 
             assert '13.2.e.a.4.1' in page.get_data(as_text=True)
             assert '13.2.e.a.10.1' in page.get_data(as_text=True)
-
 
     def test_satake(self):
         for url in ['/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake',
@@ -549,10 +548,6 @@ class CmfTest(LmfdbTest):
         assert 'up to 1000 are available' in page.get_data(as_text=True)
         assert 'a_{1000}' in page.get_data(as_text=True)
 
-
-
-
-
     def test_download_qexp(self):
         for label, exp in [
                 ['11.7.b.a'
@@ -630,7 +625,6 @@ class CmfTest(LmfdbTest):
         assert "244.4.w" in page.get_data(as_text=True)
 
     def test_download_magma(self):
-
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/23.1.b.a.z')
         assert 'Label not found' in page.get_data(as_text=True)
 
@@ -682,9 +676,6 @@ class CmfTest(LmfdbTest):
             print("Connecting with magma.maths.usyd.edu.au timed out")
             print(err)
 
-
-
-
     def test_download_search(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
         assert '5.10.a.a' in page.get_data(as_text=True)
@@ -702,8 +693,6 @@ class CmfTest(LmfdbTest):
         assert 'Error: We limit downloads of traces to' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+30000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
         assert '863.2.c' in page.get_data(as_text=True)
-
-
 
     def test_random(self):
         r"""
@@ -731,7 +720,6 @@ class CmfTest(LmfdbTest):
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random?level=%s' % l, follow_redirects = True)
             check(page)
 
-
     def test_dimension(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=10&weight=1-14&dim=1&search_type=List', follow_redirects = True)
         assert "14 matches" in page.get_data(as_text=True)
@@ -751,9 +739,6 @@ class CmfTest(LmfdbTest):
         assert "Results (4 matches)" in page.get_data(as_text=True)
         for elt in map(str,[17,0,-80,60,3780,-1200]):
             assert elt in page.get_data(as_text=True)
-
-
-
 
     def test_trivial_searches(self):
         from sage.all import Subsets
@@ -792,7 +777,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&weight=3&search_type=List')
         assert "No matches" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=odd&search_type=List')
-
 
     def test_coefficient_fields(self):
         r"""
@@ -848,7 +832,6 @@ class CmfTest(LmfdbTest):
         assert "nontrivial" in page.get_data(as_text=True)
         assert "inner twist" in page.get_data(as_text=True)
 
-
     def test_self_twist(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
         for elt in [r'\Q(\sqrt{-591})', r'\Q(\sqrt{-15})', r'\Q(\sqrt{985})']:
@@ -856,7 +839,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
         for elt in [r'\Q(\sqrt{-281})', r'\Q(\sqrt{-1})', r'\Q(\sqrt{281})']:
             assert elt in page.get_data(as_text=True)
-
 
     def test_selft_twist_disc(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-40&weight=1-6&self_twist_discs=-3&search_type=List')
@@ -871,7 +853,6 @@ class CmfTest(LmfdbTest):
         for d in [3,-5]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&self_twist_discs=%d&search_type=List' % d)
             assert 'is not a valid input for' in page.get_data(as_text=True)
-
 
     def test_projective(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
@@ -908,10 +889,6 @@ class CmfTest(LmfdbTest):
         assert 'AL-dims.' in page.get_data(as_text=True)
         assert r'\(0\)+\(1\)+\(0\)+\(0\)' in page.get_data(as_text=True)
 
-
-
-
-
     def test_Fricke_signs_search(self):
         r"""
         Test that we display Fricke sings
@@ -921,13 +898,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?char_order=1&search_type=List',  follow_redirects=True)
         assert 'Fricke sign' in page.get_data(as_text=True)
 
-
     def displaying_weight1_search(self):
         for typ in ['List', 'Traces', 'Dimensions']:
             for search in ['weight=1', 'rm_discs=5','has_self_twist=rm','cm_discs=-3%2C+-39']:
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?%s&search_type=%s' % (search, typ),  follow_redirects=True)
                 assert 'Only for weight 1:' in page.get_data(as_text=True)
-
 
     def test_is_self_dual(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List' ,  follow_redirects=True)
@@ -937,4 +912,36 @@ class CmfTest(LmfdbTest):
         for elt in ['52.1.j.a', '57.1.h.a', '111.1.h.a']:
             assert elt in page.get_data(as_text=True)
 
+    def test_hecke_charpolys(self):
+        """Test that the Hecke charpolys are correct.
 
+        Some expected Hecke charpolys are stored in the dict test_data,
+        which are then checked to be in the relevant page. These examples
+        have been chosen to be readily verifiable from the displayed
+        Fourier coefficients of each respective homepage."""
+
+        test_data = {
+                    '11/2/a/a' : {2: '\( 2 + T \)',
+                                 17: '\( 2 + T \)',
+                                 29: '\( T \)'},
+
+                    '10/3/c/a' :  {5: r'\( 25 + T^{2} \)',
+                                  11: r'\( ( 8 + T )^{2} \)',
+                                  97: r'\( 7938 + 126 T + T^{2} \)'},
+
+                    '/294/5/b/f' : {2: r'\( ( 8 + T^{2} )^{5} \)',
+                                    7: r'\( ( T )^{10} \)'},
+
+                    # The following is a newspace with 5 newforms, hence the more verbose polynomials
+
+                    '255/1/h/' : {2: r'(\( 1 + T \))(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( ( T )^{2} \))',
+                                  3: r'(\( 1 + T \))(\( -1 + T \))(\( 1 + T \))(\( -1 + T \))(\( 1 + T^{2} \))',
+                                  5: r'(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( 1 + T \))(\( 1 + T^{2} \))'}
+                    }
+
+        charpoly_test_string = "<td>${}$</th>\n<td>{}</th>"
+
+        for label, some_expected_charpolys in test_data.items():
+            page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/{}/'.format(label), follow_redirects=True).get_data(as_text=True)
+            for p, expected_pth_charpoly in some_expected_charpolys.items():
+                assert charpoly_test_string.format(p, expected_pth_charpoly) in page_as_text

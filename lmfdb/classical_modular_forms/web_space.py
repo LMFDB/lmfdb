@@ -166,12 +166,12 @@ def display_hecke_polys(form_labels, num_disp = 5):
     """
     Display a table of the characteristic polynomials of the Hecke operators for small primes
     Right now, the number of primes presented by default is 5, but that could be changed easily
-    The rest could be seen by using "show more" / "show less" - 
-    The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
+    The rest could be seen by using "show more" / "show less" -
+    The code for the table wrapping, scrolling etc. is common with many others and should be eventually
     replaced by a call to a single class/function with some parameters.
-  
+
     INPUT:
- 
+
     - ``form_labels`` - a list of strings, the labels of the newforms in the space
     - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
     """
@@ -188,8 +188,8 @@ def display_hecke_polys(form_labels, num_disp = 5):
     hecke_polys_orbits = {}
     #factor_time = 0
     for orbit_code in orbit_codes:
-        for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
-            coeffs = poly_item['lpoly_factorization']
+        for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : orbit_code}):
+            coeffs = poly_item['charpoly_factorization']
             #t2 = clock()
             F_p = list_factored_to_factored_poly_otherorder(coeffs)
             #t3 = clock()
@@ -207,17 +207,17 @@ def display_hecke_polys(form_labels, num_disp = 5):
     polys = ['<div style="max-width: 100%; overflow-x: auto;">',
              '<table class="ntdata">', '<thead>', '  <tr>',
              th_wrap('p', '$p$'),
-             th_wrap('lpoly', '$F_p(T)$'),
+             th_wrap('charpoly', '$F_p(T)$'),
              '  </tr>', '</thead>', '<tbody>']
     loop_count = 0
-    for p, lpoly in hecke_polys_orbits.items():
-        if lpoly.strip() == "":
-            lpoly = "1";
+    for p, charpoly in hecke_polys_orbits.items():
+        if charpoly.strip() == "":
+            charpoly = "1"
         if loop_count < num_disp:
             polys.append('  <tr>')
         else:
             polys.append('  <tr class="more nodisplay">')
-        polys.extend([td_wrap(p), '<td>' + lpoly + '</th>'])
+        polys.extend([td_wrap(p), '<td>' + charpoly + '</th>'])
         polys.append('  </tr>')
         loop_count += 1
     if loop_count > num_disp:
@@ -290,7 +290,7 @@ class DimGrid(object):
                      'new':data['eis_new_dim'],
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
-    
+
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
@@ -386,7 +386,7 @@ class WebNewformSpace(object):
     def display_hecke_char_polys(self, num_disp = 5):
         form_labels = [nf['label'] for nf in self.newforms]
         return display_hecke_polys(form_labels, num_disp)
-    
+
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
 
@@ -596,7 +596,7 @@ class WebGamma1Space(object):
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)
-    
+
     def display_hecke_char_polys(self, num_disp = 5):
         newforms = list(db.mf_newforms.search({'level':self.level, 'weight':self.weight}, ['label']));
         form_labels = [newform['label'] for newform in newforms]
