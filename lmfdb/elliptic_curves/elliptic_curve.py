@@ -145,7 +145,6 @@ def todays_curve():
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
     label = db.ec_curves.lucky({'number': 1}, offset = n)
-    #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
 
