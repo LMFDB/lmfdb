@@ -288,7 +288,7 @@ def show_ecnf_conductor(nf, conductor_label):
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
     except ValueError:
-        return search_input_error()
+        return abort(404)
     info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic curves over %s of conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
@@ -313,15 +313,14 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return search_input_error()
+        return abort(404)
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
-    bread = [("Elliptic curves", url_for(".index"))]
     try:
         cl = ECNF_isoclass.by_label(label)
     except (ValueError,KeyError):
-        flash_error('No elliptic curve isogeny class in the database has label %s.', label)
-        return search_input_error(bread=bread)
+        abort(404)
+    bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
@@ -347,13 +346,11 @@ def show_ecnf(nf, conductor_label, class_label, number):
     except ValueError:
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
-    bread = [("Elliptic curves", url_for(".index"))]
     try:
         ec = ECNF.by_label(label)
     except (ValueError,KeyError):
-        flash_error('No elliptic curve in the database has label %s.', label)
-        return search_input_error(bread=bread)
-
+        return abort(404)
+    bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
     bread.append((ec.field.field_pretty(), ec.urls['field']))
