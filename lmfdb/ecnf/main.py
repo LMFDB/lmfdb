@@ -259,11 +259,11 @@ def show_ecnf1(nf):
         nf, cond_label, iso_label = split_class_label(nf)
         return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     if not FIELD_RE.fullmatch(nf):
-        return abort(404)
+        abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return abort(404)
+        abort(404)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
@@ -318,7 +318,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
     if not isinstance(cl, ECNF_isoclass):
-        abort(404)
+        flash_error("There is no elliptic curve isogeny class with label %s in the database", label)
+        return redirect(url_for(".index"))
     bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
@@ -347,7 +348,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
     ec = ECNF.by_label(label)
     if not isinstance(ec, ECNF):
-        abort(404)
+        flash_error("There is no elliptic curve with label %s in the database", label)
+        return redirect(url_for(".index"))
     bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
