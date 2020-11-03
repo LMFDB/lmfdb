@@ -318,10 +318,10 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
         flash_error("%s is not a valid number field label", nf_label)
         return redirect(url_for(".index"))
     label = "-".join([nf_label, conductor_label, class_label])
-    full_class_label = "-".join([conductor_label, class_label])
-    if not CLASS_LABEL_RE.fullmatch(full_class_label):
-        flash_error("%s is not a valid elliptic curve isogeny class label", full_class_label)
+    if not CLASS_LABEL_RE.fullmatch(label):
+        flash_error("%s is not a valid elliptic curve isogeny class label", label)
         return redirect(url_for(".index"))
+    full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
     if not isinstance(cl, ECNF_isoclass):
         flash_error("There is no elliptic curve isogeny class with label %s in the database", label)
