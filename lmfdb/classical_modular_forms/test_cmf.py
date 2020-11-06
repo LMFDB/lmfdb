@@ -422,7 +422,6 @@ class CmfTest(LmfdbTest):
             assert r'0.990338' in page.get_data(as_text=True)
             assert r'0.550990' in page.get_data(as_text=True)
 
-
         for url in ['/ModularForm/GL2/Q/holomorphic/5/9/c/a/?n=2-10&m=1-6&prec=6&format=satake',
                 '/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/',
                 '/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/',
@@ -437,7 +436,6 @@ class CmfTest(LmfdbTest):
                 ]:
             page = self.tc.get(url)
             assert '0.00593626' in page.get_data(as_text=True)
-
 
         for url in ['/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake',
                 '/ModularForm/GL2/Q/holomorphic/31/2/c/a/5/1/',
@@ -615,7 +613,6 @@ class CmfTest(LmfdbTest):
         assert '-0.498394' in page.get_data(as_text=True)
         assert '0.406839418685' in page.get_data(as_text=True)
         assert '1.2.3.c9' in page.get_data(as_text=True) # Sato-Tate group
-
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_full_space/20.5', follow_redirects = True)
         assert r"""["20.5.b.a", "20.5.d.a", "20.5.d.b", "20.5.d.c", "20.5.f.a"]""" in page.get_data(as_text=True)
@@ -891,7 +888,7 @@ class CmfTest(LmfdbTest):
 
     def test_Fricke_signs_search(self):
         r"""
-        Test that we display Fricke sings
+        Test that we display Fricke signs
         """
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15%2C20&weight=2&dim=1&search_type=List',  follow_redirects=True)
         assert 'Fricke sign' in page.get_data(as_text=True)
@@ -930,13 +927,30 @@ class CmfTest(LmfdbTest):
                                   97: r'\( 7938 + 126 T + T^{2} \)'},
 
                     '/294/5/b/f' : {2: r'\( ( 8 + T^{2} )^{5} \)',
-                                    7: r'\( ( T )^{10} \)'},
+                                    # The following test checks that monomials do not have superfluous parentheses
+                                    7: r'\( T^{10} \)'},
 
-                    # The following is a newspace with 5 newforms, hence the more verbose polynomials
+                    # The following is a newspace with 5 newforms, hence the more verbose polynomials.
+                    # These newspace examples have historically also been prone to superfluous parentheses
+                    # (e.g. LMFDB Issue #4117)
 
-                    '255/1/h/' : {2: r'(\( 1 + T \))(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( ( T )^{2} \))',
+                    '255/1/h/' : {2: r'(\( 1 + T \))(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( T^{2} \))',
                                   3: r'(\( 1 + T \))(\( -1 + T \))(\( 1 + T \))(\( -1 + T \))(\( 1 + T^{2} \))',
-                                  5: r'(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( 1 + T \))(\( 1 + T^{2} \))'}
+                                  5: r'(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( 1 + T \))(\( 1 + T^{2} \))'},
+
+                    # The following is a newspace with 9 newforms, but only 7 have been computed exactly.
+                    # This also checks correct parentheses
+
+                    '4866/2/a/' : {2: r'\( ( 1 + T )^{2} \)\( ( -1 + T )^{11} \)\( ( 1 + T )^{13} \)\( ( 1 + T )^{14} \)\( ( -1 + T )^{14} \)\( ( 1 + T )^{17} \)\( ( -1 + T )^{20} \)',
+                                   3: r'\( ( -1 + T )^{2} \)\( ( -1 + T )^{11} \)\( ( 1 + T )^{13} \)\( ( -1 + T )^{14} \)\( ( 1 + T )^{14} \)\( ( -1 + T )^{17} \)\( ( 1 + T )^{20} \)'},
+
+                    # The last one is the original issue highlighted in #4117
+
+                    '81/2/c/' : {# We want to put brackets around each monomial power for newspaces, to make it clear that we are taking a product over multiple distinct newforms
+                                 3: r'(\( T^{2} \))(\( T^{4} \))',
+                                 5: r'(\( T^{2} \))(\( 9 + 3 T^{2} + T^{4} \))',
+                                 # We *DO NOT* want extra parentheses around powers of non-monomial polynomials
+                                 7: r'(\( 1 - T + T^{2} \))\( ( 4 + 2 T + T^{2} )^{2} \)'}
                     }
 
         charpoly_test_string = "<td>${}$</th>\n<td>{}</th>"

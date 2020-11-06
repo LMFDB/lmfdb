@@ -196,7 +196,9 @@ def display_hecke_polys(form_labels, num_disp = 5):
             #factor_time += (t3-t2)
             F_p = make_bigint(r'\( %s \)' % F_p)
             if (F_p != r"\( 1 \)") and (len(F_p) > 6):
-                if (F_p[0] != '(') and (num_forms > 1):
+                starts_with_bracket = (coeffs[0][1] > 1) and (len(coeffs[0][0]) > 1)
+                is_monomial_power = len([x for x in coeffs[0][0] if x != 0]) == 1
+                if (not starts_with_bracket or is_monomial_power) and (num_forms > 1):
                     F_p = '(' + F_p + ')'
                 hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
             else:
