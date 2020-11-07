@@ -615,10 +615,7 @@ class CmfTest(LmfdbTest):
         assert '"analytic_rank_proved": true' in page.get_data(as_text=True)
         assert '[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' in page.get_data(as_text=True) # a1 (make sure qexp is there)
         assert '[1, 1, 27, 5, 1, 9, 0]' in page.get_data(as_text=True) # non-trivial inner twist
-        assert '-2.2282699087' in page.get_data(as_text=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.get_data(as_text=True)
-        assert '-0.498394' in page.get_data(as_text=True)
-        assert '0.406839418685' in page.get_data(as_text=True)
         assert '1.2.3.c9' in page.get_data(as_text=True) # Sato-Tate group
 
 

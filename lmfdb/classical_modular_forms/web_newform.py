@@ -373,9 +373,9 @@ class WebNewform(object):
             if self.has_exact_qexp:
                 downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=self.label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=self.label)))
-            if self.has_complex_qexp:
-                downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
-                downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
+            #if self.has_complex_qexp:
+            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
+            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
             downloads.append(('All stored data to text', url_for('.download_newform', label=self.label)))
         else:
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
