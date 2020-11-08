@@ -917,40 +917,20 @@ class CmfTest(LmfdbTest):
         have been chosen to be readily verifiable from the displayed
         Fourier coefficients of each respective homepage."""
 
-        test_data = {
+        test_data = {# Dimension 1
                     '11/2/a/a' : {2: '\( 2 + T \)',
                                  17: '\( 2 + T \)',
                                  29: '\( T \)'},
 
+                    # Dimension 2
                     '10/3/c/a' :  {5: r'\( 25 + T^{2} \)',
                                   11: r'\( ( 8 + T )^{2} \)',
                                   97: r'\( 7938 + 126 T + T^{2} \)'},
 
+                    # Dimension 5
                     '/294/5/b/f' : {2: r'\( ( 8 + T^{2} )^{5} \)',
                                     # The following test checks that monomials do not have superfluous parentheses
                                     7: r'\( T^{10} \)'},
-
-                    # The following is a newspace with 5 newforms, hence the more verbose polynomials.
-                    # These newspace examples have historically also been prone to superfluous parentheses
-                    # (e.g. LMFDB Issue #4117)
-
-                    '255/1/h/' : {2: r'(\( 1 + T \))(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( T^{2} \))',
-                                  3: r'(\( 1 + T \))(\( -1 + T \))(\( 1 + T \))(\( -1 + T \))(\( 1 + T^{2} \))',
-                                  5: r'(\( 1 + T \))(\( -1 + T \))(\( -1 + T \))(\( 1 + T \))(\( 1 + T^{2} \))'},
-
-                    # The following is a newspace with 9 newforms, but only 7 have been computed exactly.
-                    # This also checks correct parentheses
-
-                    '4866/2/a/' : {2: r'\( ( 1 + T )^{2} \)\( ( -1 + T )^{11} \)\( ( 1 + T )^{13} \)\( ( 1 + T )^{14} \)\( ( -1 + T )^{14} \)\( ( 1 + T )^{17} \)\( ( -1 + T )^{20} \)',
-                                   3: r'\( ( -1 + T )^{2} \)\( ( -1 + T )^{11} \)\( ( 1 + T )^{13} \)\( ( -1 + T )^{14} \)\( ( 1 + T )^{14} \)\( ( -1 + T )^{17} \)\( ( 1 + T )^{20} \)'},
-
-                    # The last one is the original issue highlighted in #4117
-
-                    '81/2/c/' : {# We want to put brackets around each monomial power for newspaces, to make it clear that we are taking a product over multiple distinct newforms
-                                 3: r'(\( T^{2} \))(\( T^{4} \))',
-                                 5: r'(\( T^{2} \))(\( 9 + 3 T^{2} + T^{4} \))',
-                                 # We *DO NOT* want extra parentheses around powers of non-monomial polynomials
-                                 7: r'(\( 1 - T + T^{2} \))\( ( 4 + 2 T + T^{2} )^{2} \)'}
                     }
 
         charpoly_test_string = "<td>${}$</th>\n<td>{}</th>"
@@ -959,3 +939,8 @@ class CmfTest(LmfdbTest):
             page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/{}/'.format(label), follow_redirects=True).get_data(as_text=True)
             for p, expected_pth_charpoly in some_expected_charpolys.items():
                 assert charpoly_test_string.format(p, expected_pth_charpoly) in page_as_text
+
+        # Check large dimensions behave as we expect. The following is a form of dimension 108
+
+        large_dimension_page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/671/2/i/a/', follow_redirects=True).get_data(as_text=True)
+        assert "There are no characteristic polynomials of Hecke operators in the database" in large_dimension_page_as_text
