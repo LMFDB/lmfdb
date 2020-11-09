@@ -933,7 +933,7 @@ class CmfTest(LmfdbTest):
                                     7: r'\( T^{10} \)'},
                     }
 
-        charpoly_test_string = "<td>${}$</th>\n<td>{}</th>"
+        charpoly_test_string = '<td align="left">${}$</td>\n<td>{}</td>'
 
         for label, some_expected_charpolys in test_data.items():
             page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/{}/'.format(label), follow_redirects=True).get_data(as_text=True)

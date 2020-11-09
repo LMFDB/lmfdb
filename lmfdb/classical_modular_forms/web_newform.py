@@ -134,28 +134,18 @@ def display_hecke_polys(form_label, num_disp = 5):
     - ``form_label`` - a string, the label of the newform
     - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
     """
-    #from time import clock
-    def th_wrap(kwl, title):
-        return '    <th>%s</th>' % display_knowl(kwl, title=title)
-    def td_wrap(val):
-        return '    <td>$%s$</th>' % val
 
     data = db.mf_newforms.lookup(form_label, ['hecke_orbit_code'])
     orbit_code = data['hecke_orbit_code']
     hecke_polys_orbits = {}
-    #factor_time = 0
     for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : orbit_code}):
         coeffs = poly_item['charpoly_factorization']
-        #t2 = clock()
         F_p = list_factored_to_factored_poly_otherorder(coeffs)
-        #t3 = clock()
-        #factor_time += (t3-t2)
         F_p = make_bigint(r'\( %s \)' % F_p)
         if (F_p != r"\( 1 \)") and (len(F_p) > 6):
             hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
         else:
             hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
-    #print "factoring took " + str(factor_time)
     if not hecke_polys_orbits:
         return "There are no characteristic polynomials of Hecke operators in the database"
     polys = ['<div style="max-width: 100%; overflow-x: auto;">',
@@ -171,7 +161,7 @@ def display_hecke_polys(form_label, num_disp = 5):
             polys.append('  <tr>')
         else:
             polys.append('  <tr class="more nodisplay">')
-        polys.extend([td_wrap(p), '<td>' + charpoly + '</th>'])
+        polys.extend([td_wrapl('${}$'.format(p)), '<td>' + charpoly + '</td>'])
         polys.append('  </tr>')
         loop_count += 1
     if loop_count > num_disp:
