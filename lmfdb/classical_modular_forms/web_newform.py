@@ -17,12 +17,13 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty)
+    integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
+    list_factored_to_factored_poly_otherorder)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, display_hecke_polys
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -118,6 +119,67 @@ def td_wrapr(val):
 
 def parity_text(val):
     return 'odd' if val == -1 else 'even'
+
+def display_hecke_polys(form_label, num_disp = 5):
+    """
+    Display a table of the characteristic polynomials of the Hecke operators
+    for small primes. The number of primes presented by default is 5, although
+    there is a "show more" / "show less" button to display all primes up to 97.
+    The code for the table wrapping, scrolling etc. is common with many others
+    and should be eventually replaced by a call to a single class/function with
+    some parameters.
+
+    INPUT:
+
+    - ``form_label`` - a string, the label of the newform
+    - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
+    """
+
+    data = db.mf_newforms.lookup(form_label, ['hecke_orbit_code'])
+    orbit_code = data['hecke_orbit_code']
+    hecke_polys_orbits = {}
+    for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : orbit_code}):
+        coeffs = poly_item['charpoly_factorization']
+        F_p = list_factored_to_factored_poly_otherorder(coeffs)
+        F_p = make_bigint(r'\( %s \)' % F_p)
+        if (F_p != r"\( 1 \)") and (len(F_p) > 6):
+            hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
+        else:
+            hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+    if not hecke_polys_orbits:
+        return "There are no characteristic polynomials of Hecke operators in the database"
+    polys = ['<div style="max-width: 100%; overflow-x: auto;">',
+             '<table class="ntdata">', '<thead>', '  <tr>',
+             th_wrap('p', '$p$'),
+             th_wrap('charpoly', '$F_p(T)$'),
+             '  </tr>', '</thead>', '<tbody>']
+    loop_count = 0
+    for p, charpoly in hecke_polys_orbits.items():
+        if charpoly.strip() == "":
+            charpoly = "1"
+        if loop_count < num_disp:
+            polys.append('  <tr>')
+        else:
+            polys.append('  <tr class="more nodisplay">')
+        polys.extend([td_wrapl('${}$'.format(p)), '<td>' + charpoly + '</td>'])
+        polys.append('  </tr>')
+        loop_count += 1
+    if loop_count > num_disp:
+        polys.append('''
+            <tr class="less toggle">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+                </td>
+            </tr>
+            <tr class="more toggle nodisplay">
+                <td colspan="{{colspan}}">
+                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+                </td>
+            </tr>
+            ''')
+        polys.extend(['</tbody>', '</table>', '</div>'])
+    return '\n'.join(polys)
+
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
@@ -373,9 +435,9 @@ class WebNewform(object):
             if self.has_exact_qexp:
                 downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=self.label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=self.label)))
-            if self.has_complex_qexp:
-                downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
-                downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
+            #if self.has_complex_qexp:
+            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
+            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
             downloads.append(('All stored data to text', url_for('.download_newform', label=self.label)))
         else:
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
@@ -979,8 +1041,8 @@ function switch_basis(btype) {
         return '\n'.join(twists)
 
     def display_hecke_char_polys(self, num_disp = 5):
-        return display_hecke_polys([self.label], num_disp)
-      
+        return display_hecke_polys(self.label, num_disp)
+
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'

@@ -87,7 +87,10 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
-            outstr += '( %s )^{%d}' % (glatex, e)
+            if len(glatex) != 1:
+                outstr += '( %s )^{%d}' % (glatex, e)
+            else:
+                outstr += '%s^{%d}' % (glatex, e)
         elif len(sfacts_fc_list) > 1:
             outstr += '( %s )' % (glatex,)
         else:
@@ -294,7 +297,7 @@ def str_to_CBF(s):
             b = '1'
         else:
             b = b.rstrip(' ').rstrip('I').rstrip('*')
-        
+
         res = CBF(0)
         if a:
             res += CBF(a)

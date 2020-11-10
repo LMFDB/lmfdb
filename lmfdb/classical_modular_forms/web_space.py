@@ -6,8 +6,8 @@ from lmfdb import db
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import (
-    display_knowl, web_latex, coeff_to_power_series, list_factored_to_factored_poly_otherorder,
-    make_bigint, web_latex_factored_integer, prop_int_pretty)
+    display_knowl, web_latex, coeff_to_power_series,
+    web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -162,79 +162,6 @@ def trace_expansion_generic(space, prec_max=10):
     prec = min(len(space.traces)+1, prec_max)
     return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
-def display_hecke_polys(form_labels, num_disp = 5):
-    """
-    Display a table of the characteristic polynomials of the Hecke operators for small primes
-    Right now, the number of primes presented by default is 5, but that could be changed easily
-    The rest could be seen by using "show more" / "show less" - 
-    The code for the table wrapping, scrolling etc. is common with many others and should be eventually 
-    replaced by a call to a single class/function with some parameters.
-  
-    INPUT:
- 
-    - ``form_labels`` - a list of strings, the labels of the newforms in the space
-    - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
-    """
-    #from time import clock
-    def th_wrap(kwl, title):
-        return '    <th>%s</th>' % display_knowl(kwl, title=title)
-    def td_wrap(val):
-        return '    <td>$%s$</th>' % val
-    num_forms = len(form_labels)
-    orbit_codes = []
-    for label in form_labels:
-        data = db.mf_newforms.lookup(label, ['hecke_orbit_code'])
-        orbit_codes.append(data['hecke_orbit_code'])
-    hecke_polys_orbits = {}
-    #factor_time = 0
-    for orbit_code in orbit_codes:
-        for poly_item in db.mf_hecke_lpolys.search({'hecke_orbit_code' : orbit_code}):
-            coeffs = poly_item['lpoly_factorization']
-            #t2 = clock()
-            F_p = list_factored_to_factored_poly_otherorder(coeffs)
-            #t3 = clock()
-            #factor_time += (t3-t2)
-            F_p = make_bigint(r'\( %s \)' % F_p)
-            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
-                if (F_p[0] != '(') and (num_forms > 1):
-                    F_p = '(' + F_p + ')'
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
-            else:
-                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
-    #print "factoring took " + str(factor_time)
-    if not hecke_polys_orbits:
-        return "There are no characteristic polynomials of Hecke operators in the database"
-    polys = ['<div style="max-width: 100%; overflow-x: auto;">',
-             '<table class="ntdata">', '<thead>', '  <tr>',
-             th_wrap('p', '$p$'),
-             th_wrap('lpoly', '$F_p(T)$'),
-             '  </tr>', '</thead>', '<tbody>']
-    loop_count = 0
-    for p, lpoly in hecke_polys_orbits.items():
-        if lpoly.strip() == "":
-            lpoly = "1";
-        if loop_count < num_disp:
-            polys.append('  <tr>')
-        else:
-            polys.append('  <tr class="more nodisplay">')
-        polys.extend([td_wrap(p), '<td>' + lpoly + '</th>'])
-        polys.append('  </tr>')
-        loop_count += 1
-    if loop_count > num_disp:
-        polys.append('''
-            <tr class="less toggle">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
-                </td>
-            </tr>
-            <tr class="more toggle nodisplay">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
-                </td>
-            </tr>
-            ''')
-        polys.extend(['</tbody>', '</table>', '</div>'])
-    return '\n'.join(polys)
 
 class DimGrid(object):
     def __init__(self, grid=None):
@@ -290,7 +217,7 @@ class DimGrid(object):
                      'new':data['eis_new_dim'],
                      'old':data['eis_dim']-data['eis_new_dim']}}
         return DimGrid(grid)
-    
+
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
@@ -383,10 +310,6 @@ class WebNewformSpace(object):
             ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
         return self.char_orbit_link + ord_deg
 
-    def display_hecke_char_polys(self, num_disp = 5):
-        form_labels = [nf['label'] for nf in self.newforms]
-        return display_hecke_polys(form_labels, num_disp)
-    
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
 
@@ -596,8 +519,3 @@ class WebGamma1Space(object):
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)
-    
-    def display_hecke_char_polys(self, num_disp = 5):
-        newforms = list(db.mf_newforms.search({'level':self.level, 'weight':self.weight}, ['label']));
-        form_labels = [newform['label'] for newform in newforms]
-        return display_hecke_polys(form_labels, num_disp)

@@ -41,7 +41,7 @@ def split_full_label(lab):
     (field_label,conductor_label,isoclass_label,curve_number)
     """
     if not LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label." % escape(lab)))
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
@@ -55,7 +55,7 @@ def split_short_label(lab):
     (conductor_label,isoclass_label,curve_number)
     """
     if not SHORT_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve label." % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
     isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
@@ -68,7 +68,7 @@ def split_class_label(lab):
     (field_label, conductor_label,isoclass_label)
     """
     if not CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve isogeny class label." % escape(lab)))
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
@@ -81,7 +81,7 @@ def split_short_class_label(lab):
     (conductor_label,isoclass_label)
     """
     if not SHORT_CLASS_LABEL_RE.fullmatch(lab):
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid short elliptic curve isogeny class label." % escape(lab)))
     data = lab.split("-")
     conductor_label = data[0]
     isoclass_label = data[1]
@@ -101,7 +101,7 @@ def get_nf_info(lab):
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
     except ValueError:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field. %s" % escape(lab)))
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % escape(lab)))
     return label, pretty
 
 
@@ -259,11 +259,11 @@ def show_ecnf1(nf):
         nf, cond_label, iso_label = split_class_label(nf)
         return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     if not FIELD_RE.fullmatch(nf):
-        return abort(404)
+        abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return abort(404)
+        abort(404)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
@@ -281,14 +281,15 @@ def show_ecnf1(nf):
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     if not FIELD_RE.fullmatch(nf):
-        return abort(404)
+        flash_error("%s is not a valid number field label", nf)
+        return redirect(url_for(".index"))
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
     except ValueError:
-        return search_input_error()
+        return abort(404)
     info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic curves over %s of conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
@@ -307,20 +308,25 @@ def show_ecnf_conductor(nf, conductor_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not FIELD_RE.fullmatch(nf):
-        return abort(404)
+        flash_error("%s is not a valid number field label", nf)
+        return redirect(url_for(".index"))
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return search_input_error()
+        flash_error("%s is not a valid number field label", nf_label)
+        return redirect(url_for(".index"))
     label = "-".join([nf_label, conductor_label, class_label])
+    if not CLASS_LABEL_RE.fullmatch(label):
+        flash_error("%s is not a valid elliptic curve isogeny class label", label)
+        return redirect(url_for(".index"))
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
-    bread = [("Elliptic curves", url_for(".index"))]
     if not isinstance(cl, ECNF_isoclass):
-        flash_error('No elliptic curve isogeny class in the database has label %s.', label)
-        return search_input_error(bread=bread)
+        flash_error("There is no elliptic curve isogeny class with label %s in the database", label)
+        return redirect(url_for(".index"))
+    bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
@@ -335,7 +341,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            learnmore=learnmore_list())
 
 
-@ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
+@ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<int:number>")
 def show_ecnf(nf, conductor_label, class_label, number):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
@@ -344,14 +350,17 @@ def show_ecnf(nf, conductor_label, class_label, number):
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
-        return search_input_error()
-    label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
+        flash_error("%s is not a valid number field label", nf_label)
+        return redirect(url_for(".index"))
+    label = "".join(["-".join([nf_label, conductor_label, class_label]), str(number)])
+    if not LABEL_RE.fullmatch(label):
+        flash_error("%s is not a valid elliptic curve label", label)
+        return redirect(url_for(".index"))
     ec = ECNF.by_label(label)
+    if not isinstance(ec, ECNF):
+        flash_error("There is no elliptic curve with label %s in the database", label)
+        return redirect(url_for(".index"))
     bread = [("Elliptic curves", url_for(".index"))]
-    if not ec:
-        flash_error('No elliptic curve in the database has label %s.', label)
-        return search_input_error(bread=bread)
-
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
     bread = [("Elliptic curves", url_for(".index"))]
     bread.append((ec.field.field_pretty(), ec.urls['field']))
@@ -536,19 +545,6 @@ def elliptic_curve_search(info, query):
     info['web_ainvs'] = web_ainvs
     parse_ints(info,query,'bf_deg',name='Base field degree',qfield='degree')
 
-def search_input_error(info=None, bread=None):
-    if info is None:
-        info = {'err':''}
-    info['search_array'] = ECNFSearchArray()
-    if bread is None:
-        bread = [('Elliptic curves', url_for(".index")) ('Search results', '.')]
-    return render_template("ecnf-search-results.html",
-                           info=info,
-                           title='Elliptic curve search input error',
-                           bread=bread,
-                           learnmore=learnmore_list())
-
-
 @ecnf_page.route("/browse/")
 def browse():
     data = ECNF_stats().sigs_by_deg
@@ -659,11 +655,16 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
-        return search_input_error()
+        flash_error("%s is not a valid number field label", nf_label)
+        return redirect(url_for(".index"))
     label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
+    if not LABEL_RE.fullmatch(label):
+        flash_error("%s is not a valid elliptic curve label.", label)
+        return redirect(url_for(".index"))
     data = db.ec_nfcurves.lookup(label)
     if data is None:
-        return search_input_error()
+        flash_error("%s is not the label of an elliptic curve in the database.", label)
+        return redirect(url_for(".index"))
 
     response = make_response(Json.dumps(data))
     response.headers['Content-type'] = 'text/plain'
@@ -708,9 +709,8 @@ def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    try:
-        E = ECNF.by_label(label)
-    except ValueError:
+    E = ECNF.by_label(label)
+    if not isinstance(E, ECNF):
         return abort(404)
     Ecode = E.code()
     lang = args['download_type']
