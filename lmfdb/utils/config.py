@@ -231,8 +231,7 @@ class Configuration(_Configuration):
             default=argparse.SUPPRESS,
         )
         # if start-lmfdb.py was executed
-        startlmfdbQ = getattr(__main__, '__file__') == "start-lmfdb.py" if hasattr(__main__, '__file__') else False
-        print("startlmfdbQ", startlmfdbQ)
+        startlmfdbQ =  getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
         writeargstofile = writeargstofile or startlmfdbQ
         readargs = readargs or startlmfdbQ
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
