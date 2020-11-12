@@ -807,7 +807,12 @@ def input_to_subfield(inp):
     if 'x' in F:
         F1 = F.replace('^', '**')
         R = PolynomialRing(ZZ, 'x')
-        pol = PolynomialRing(QQ,'x')(str(F1))
+        if ',' in F:
+            raise SearchParsingError("You may only specify one subfield.")
+        try:
+            pol = PolynomialRing(QQ,'x')(str(F1))
+        except:
+            raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():
             raise SearchParsingError("It is not an irreducible polynomial.")

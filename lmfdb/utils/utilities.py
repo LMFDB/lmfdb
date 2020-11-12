@@ -87,7 +87,10 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
-            outstr += '( %s )^{%d}' % (glatex, e)
+            if len(glatex) != 1:
+                outstr += '( %s )^{%d}' % (glatex, e)
+            else:
+                outstr += '%s^{%d}' % (glatex, e)
         elif len(sfacts_fc_list) > 1:
             outstr += '( %s )' % (glatex,)
         else:
@@ -294,7 +297,7 @@ def str_to_CBF(s):
             b = '1'
         else:
             b = b.rstrip(' ').rstrip('I').rstrip('*')
-        
+
         res = CBF(0)
         if a:
             res += CBF(a)
@@ -796,7 +799,7 @@ def make_bigint(s, cutoff=20, max_width=70):
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
-        lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
+        lng = make_bigint(lng, bigint_cutoff, max_width=70)
     if len([c for c in f if c != 0]) > nterms_cutoff:
         short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
         i = len(f) - 2
@@ -807,7 +810,8 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
                 short += r" + \cdots"
             else:
                 short += r" - \cdots"
-        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+#        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
     else:
         return lng
 

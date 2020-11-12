@@ -196,7 +196,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ad_c_a_b")
+        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ag_t_abq_cr")
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c")
 
     def test_search_princpol(self):

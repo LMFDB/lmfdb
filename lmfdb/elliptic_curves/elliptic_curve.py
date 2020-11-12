@@ -145,7 +145,6 @@ def todays_curve():
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
     label = db.ec_curves.lucky({'number': 1}, offset = n)
-    #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
 
@@ -587,11 +586,16 @@ def padic_data():
 
 @ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
-    N, iso, number = split_lmfdb_label(label)
+    try:
+        N, iso, number = split_lmfdb_label(label)
+    except (ValueError,AttributeError):
+        return elliptic_curve_jump_error(label, {})
     if number:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     else:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
+    if ainvs is None:
+        return elliptic_curve_jump_error(label, {})        
     if limit > 100000:
         return redirect(url_for('.download_EC_qexp',label=label,limit=10000), 301)
     E = EllipticCurve(ainvs)

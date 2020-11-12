@@ -907,6 +907,10 @@ class PostgresBase(object):
         - ``tmp_table`` -- string, the name of the new table to create
         """
         if self._table_exists(tmp_table):
+            # remove suffix for display message
+            for suffix in ['_counts', '_stats']:
+                if table.endswith(suffix):
+                    table = table[:-len(suffix)]
             raise ValueError(
                 "Temporary table %s already exists. "
                 "Run db.%s.cleanup_from_reload() if you want to delete it and proceed."

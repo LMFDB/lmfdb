@@ -304,8 +304,8 @@ class CMF_download(Downloader):
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
-        if form.has_complex_qexp:
-            data['complex_embeddings'] = form.cc_data
+        #if form.has_complex_qexp:
+        #    data['complex_embeddings'] = form.cc_data
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
