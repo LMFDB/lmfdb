@@ -799,7 +799,7 @@ def make_bigint(s, cutoff=20, max_width=70):
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
-        lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
+        lng = make_bigint(lng, bigint_cutoff, max_width=70)
     if len([c for c in f if c != 0]) > nterms_cutoff:
         short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
         i = len(f) - 2
@@ -810,7 +810,8 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
                 short += r" + \cdots"
             else:
                 short += r" - \cdots"
-        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+#        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
     else:
         return lng
 
