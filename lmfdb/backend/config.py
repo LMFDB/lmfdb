@@ -133,7 +133,7 @@ class Configuration(object):
             return sec, opt
 
         # 1: parsing command-line arguments
-        if  readargs:
+        if readargs:
             args = parser.parse_args()
         else:
             # only read config file
