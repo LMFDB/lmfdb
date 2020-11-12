@@ -415,7 +415,7 @@ def render_field_webpage(args):
             if len(data['dirichlet_group']) == 1:
                 data['dirichlet_group'] = r'<span style="white-space:nowrap">$\lbrace$' + data['dirichlet_group'][0] + r'$\rbrace$</span>'
             else:
-                data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group'][:-1]) + '<span style="white-space:nowrap">' + data['dirichlet_group'][-1] + r'$\rbrace$</span>'
+                data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group'][:-1]) + ', <span style="white-space:nowrap">' + data['dirichlet_group'][-1] + r'$\rbrace$</span>'
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = r"\(%s\)" % str(data['conductor'])
         else:
