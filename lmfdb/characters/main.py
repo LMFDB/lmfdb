@@ -12,12 +12,9 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
-        WebDirichletGroup,
-        WebSmallDirichletGroup,
         WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
-        WebDBDirichletGroup,
 )
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
@@ -346,13 +343,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 
     if number is None:
+        info = WebDirichletCharacter(**args).to_dict()
         if modulus < 10000:
-            info = WebDBDirichletGroup(**args).to_dict()
             info['show_orbit_label'] = True
-        elif modulus < 100000:
-            info = WebDirichletGroup(**args).to_dict()
-        else:
-            info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
         info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()

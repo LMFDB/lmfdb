@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
-from lmfdb.characters.web_character import WebDirichlet, WebHecke, parity_string, bool_string
+from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
@@ -11,16 +11,6 @@ class WebCharacterTest(LmfdbTest):
       assert WebDirichlet.ideal2label(mod) == modlabel
       num = WebDirichlet.label2number(numlabel)
       assert WebDirichlet.number2label(num) == numlabel
-
-  def test_Heckemethods(self):
-      from sage.all import NumberField, var
-      x = var('x')
-      k = NumberField(x**3-x**2+x+1,'a')
-      modlabel, numlabel = '128.1', '1.1'
-      mod = WebHecke.label2ideal(k, modlabel)
-      assert WebHecke.ideal2label(mod) == modlabel
-      num = WebHecke.label2number(numlabel)
-      assert WebHecke.number2label(num) == numlabel
 
 class DirichletSearchTest(LmfdbTest):
 
