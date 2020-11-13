@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -11,7 +12,7 @@ rep_galois_modl_logger = make_logger(rep_galois_modl_page)
 def body_class():
     return {'body_class': 'rep_galois_modl'}
 
-import main
+from . import main
 assert main #silence pyflakes
 
 app.register_blueprint(rep_galois_modl_page, url_prefix="/Representation/Galois/ModL")

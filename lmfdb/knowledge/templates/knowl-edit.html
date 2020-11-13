@@ -47,9 +47,8 @@
           </td>
         </tr>
       </table>
-      <input type="hidden" name="finish_rename" value="finish">
-      <button type="submit" style="margin:10px;" onclick="return true;">Finish Renaming</button>
-      <button type="submit" style="margin:10px;" onclick=`$('input[name="finish_rename"]').val('undo'); return true;`>Undo Renaming</button>
+      <button type="submit" style="margin:10px;" name="finish_rename" value="finish">Finish Renaming</button>
+      <button type="submit" style="margin:10px;" name="undo_rename" value="undo">Undo Renaming</button>
         {% else %}
         {% if k.type == -2 %} {# -2 is a comment #}
         <tr>
@@ -62,7 +61,7 @@
             {{KNOWL("doc.knowl.identifier",title="Identifier")}}
           </td>
           <td>
-            <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
+            {{ k.id }}
           </td>
         </tr>
         {% if renamable %}
@@ -190,7 +189,7 @@ var all_defines = {
 };
 
 $("body").on("click", ".insert_klink", insert_klink);
-$("body").on("mouseenter", ".insert_klink", hover_klink);
+$("body").on("click", ".select_klink", select_klink);
 
 /* register keyhandlers */
 $(function() {

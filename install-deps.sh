@@ -168,7 +168,7 @@ done
 ###
 ## First see if we already have it and if not we get an egg and install it.
 ##
-test=`$sage_exec -c "print sys.modules.get('dirichlet_conrey')==None"` 
+test=`$sage_exec -c "print(sys.modules.get('dirichlet_conrey') is None)"` 
 if [ $test='True' ]
 then
     if [ $verbose -gt 0 ]

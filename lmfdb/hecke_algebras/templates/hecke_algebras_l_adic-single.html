@@ -5,7 +5,7 @@
 <table>
     <tr><td align=right>{{ KNOWL('cmf.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td align=right>{{ KNOWL('cmf.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('cmf.hecke-orbit', title='Hecke orbits') }}:</td><td><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=info.base_lab)}}">{{info.orbit_label}}</a></td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}:</td><td><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=info.base_lab)}}">{{info.orbit_label}}</a></td></tr>
     <tr><td align=right>Number of $\Z_{ {{info.ell}} }$ orbits:</td><td>${{info.num_l_adic_orbits}}$</td></tr>
 </table>
 

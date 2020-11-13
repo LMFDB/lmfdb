@@ -16,12 +16,11 @@
     white-space:nowrap;
 }
 .chi a { display: inline; text-align: center; font-family: serif;}
-#chitable { clear:right; }
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
 #chitable td.a { background: {{color.chi_table_background}}; }
-#chitable td.b { background: none; }
+#chitable td.b { background: {{color.white}}; }
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child { background: none; }
@@ -87,64 +86,45 @@ $(function() {
   <tr><td class="primitive" id="legend-prim"><input type="checkbox" checked /> Primitive</td></tr>
 </table>
 
-<div>
+<div style="margin-right:10px;">
 The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
-given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and {{KNOWL('character.dirichlet.conrey.index', title='index')}} \(n\). If \(q\) is the 
-{{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
-represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
-characters are grouped with respect to order and stacked integers indicate (complex) conjugate characters.
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and {{KNOWL('character.dirichlet.conrey.index', title='index')}} \(n\) of {{ KNOWL('character.dirichlet.order', title="order") }} up to {{cols[-1]}}.
+The characters are grouped with respect to order and stacked integers indicate (complex) conjugate characters.
 </div>
 
 <div>
-<table class="ntdata" id="chitable">
-    <thead class="space">
-        <tr class="space">
-            <th class="spaceleft"> Modulus </th>
-            <th class="weight" colspan="{{headers|length}}">
-                <span style ="display:block;float:left;margin-right:3px;"> Order </span></th>
-        </tr>
-        <th class="left"></th>
-        {% for h in headers %}
-        <th class="weight"> {{h}}</th>
-        {% endfor %}
+<table class="ntdata" border="2" id="chitable">
+<thead>
+    <tr>
+    <th>Modulus</th>{% for ord in cols %}<th nowrap>Order ${{ord}}$</th>{% endfor %}
     </tr>
 </thead>
-
-{% macro show_character(entry, col, row) -%}
+<tbody>
+{% macro show_character(entry, row, col) -%}
 {% if not entry is none %}
-<table><tr>
-  {% if col == "more"  %}
+<table>
+  <tr>
     {% for e in entry %}
     <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
       {% for chi in e %}
-      <a href="{{url_for('characters.render_Dirichletwebpage', modulus=row, number=chi[0])}}" >{{ chi[0] }}</a>
+        <a href="{{url_for('characters.render_Dirichletwebpage', modulus=row, number=chi[0])}}">${{ chi[0] }}$</a>
       {% if loop.first %}<br/>{% endif %}
       {% endfor %}
     </td>
     {% endfor %}
-  {% else %}
-    {% for e in entry %}
-    <td class="{% if e[0][1] -%}primitive{%- else -%}imprimitive{%- endif %}">
-      {% for chi in e %}
-        <a href="{{url_for('characters.render_Dirichletwebpage', modulus=row, number=chi[0])}}" >{{ chi[0] }}</a>
-      {% if loop.first %}<br/>{% endif %}
-      {% endfor %}
-    </td>
-    {% endfor %}
-  {% endif %}
-</tr></table>
+  </tr>
+</table>
 {% endif %}
 {%- endmacro %}
-
 
 {% set row_class = cycler('a', 'b') %}
 <tbody>
 {% for row in rows %}
   <tr>
-  <th class="left"> {{ row }} </th>
+  <th><a href="{{url_for('characters.render_Dirichletwebpage', modulus=row)}}">${{ row }}$</th>
    {% for col in cols %}
-   <td class="{{ row_class.next() }}"> 
-      {{ show_character(contents[(row, col)], col, row) }} 
+   <td> 
+      {{ show_character(entries[(row, col)], row, col) }} 
    </td>
   {% endfor %}
   </tr>

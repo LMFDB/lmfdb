@@ -32,47 +32,56 @@ by norm, over \(K=\) {{info.field_pretty}}.
 
 {% if info.number %}
 
-<form id='level_flag'>
+<form id='level_flag' onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="level_norm" value="{{info.level_norm}}"/>
 
-<p>{{info.report}}
+{# We don't use matches.html since we want to call the results levels rather than matches #}
+{% if info.level_norm %}
+{% set level_desc = ' and norm ' + info.level_norm %}
+{% set all_desc = ' with norm ' + info.level_norm %}
+{% else %}
+{% set level_desc = '' %}
+{% set all_desc = '' %}
+{% endif %}
+<p>{{info.report | safe}}
                     {# we have to decide which option is preselected
                     based on a judgement of what users will want to
                     switch to, i.e. one of the other two options.  For
                     simplicity I have used the 3-cycle new -> all ->
                     cusp -> new. #}
                     {%-if info.level_flag=='new' %}
-                    showing only levels with positive new dimension.
+                    showing only levels with positive new dimension{{level_desc}}.
                     <select name='level_flag'>
                       <option value='all' selected>Show all levels</option>
                       <option value='cusp'>Show only levels with positive cuspidal dimension</option>
                       <option value='new'>Show only levels with positive new dimension</option>
                     </select>
                     {%-elif info.level_flag=='cusp' %}
-                    showing only levels with positive cuspidal dimension.
+                    showing only levels with positive cuspidal dimension{{level_desc}}.
                     <select name='level_flag'>
                       <option value='all'>Show all levels</option>
                       <option value='cusp'>Show only levels with positive cuspidal dimension</option>
                       <option value='new' selected>Show only levels with positive new dimension</option>
                     </select>
                     {%-else %}
-                    showing all levels.
+                    showing all levels{{all_desc}}.
                     <select name='level_flag'>
                       <option value='all'>Show all levels</option>
                       <option value='cusp' selected>Show only levels with positive cuspidal dimension</option>
                       <option value='new'>Show only levels with positive new dimension</option>
                     </select>
                     {%-endif %}
-<button type='submit' value='Go'>Go</button>
+<button type='submit' onclick="resetStart();" value='Go'>Go</button>
 </p>
 </form>
 
-<form id='next_previous'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_flag" value="{{info.level_flag}}"/>
-</form>
+<input type="hidden" name="level_norm" value="{{info.level_norm}}"/>
 
 <div align=left>
   {% include 'forward_back.html' %}
@@ -118,6 +127,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 {% include 'forward_back.html' %}
 
 </div>
+</form>
 {% else %}
 <p>
 No data available for {{info.field_pretty}}

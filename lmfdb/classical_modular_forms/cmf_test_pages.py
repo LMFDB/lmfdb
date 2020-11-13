@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
-from lmfdb.backend.database import PostgresDatabase
+from lmfdb.lmdfb_database import LMFDBDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt, ceil
 import multiprocessing
@@ -22,26 +23,26 @@ class CMFTest(LmfdbTest):
             load = time.time() - now
             k = int(label.split(".")[1])
             if k > 1:
-                assert label in page.data
+                assert label in page.get_data(as_text=True)
                 if dim <= 80:
-                    assert 'L-function %s' % label in page.data
-                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
-                assert 'Analytic rank' in page.data
+                    assert 'L-function %s' % label in page.get_data(as_text=True)
+                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.get_data(as_text=True)
+                assert 'Analytic rank' in page.get_data(as_text=True)
             if dim == 1:
-                assert 'Satake parameters' in page.data
+                assert 'Satake parameters' in page.get_data(as_text=True)
             else:
-                assert 'Embeddings' in page.data
+                assert 'Embeddings' in page.get_data(as_text=True)
             return (load, url)
         except Exception as err:
-            print "Error on page "+url
-            print str(err)
+            print("Error on page " + url)
+            print(str(err))
             print_exc()
             return (None, url)
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
         logging.getLogger().disabled = True
-        db = PostgresDatabase()
+        db = LMFDBDatabase()
         logging.getLogger().disabled = False
         res = []
         errors = []
@@ -54,16 +55,16 @@ class CMFTest(LmfdbTest):
                 errors.append(r[1])
 
         if errors:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
-                print url
+                print(url)
 
         return res
 
     @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
         logging.getLogger().disabled = True
-        db = PostgresDatabase()
+        db = LMFDBDatabase()
         logging.info.disabled = False
         errors = []
         res = []
@@ -75,7 +76,7 @@ class CMFTest(LmfdbTest):
         if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
-            assert newforms == []
+            assert not(newforms)
             return []
 
         try:
@@ -84,23 +85,23 @@ class CMFTest(LmfdbTest):
             now = time.time()
             page = self.tc.get(url)
             load = time.time() - now
-            assert 'The following table gives the dimensions of various subspaces of' in page.data
+            assert 'The following table gives the dimensions of various subspaces of' in page.get_data(as_text=True)
             for space in newspaces:
-                assert space['label'] in page.data
+                assert space['label'] in page.get_data(as_text=True)
                 gamma1_dim += space['dim']
             assert gamma1_dim == dim
 
             gamma1_dim = 0
             for form in newforms:
-                assert form['label'] in page.data
+                assert form['label'] in page.get_data(as_text=True)
                 gamma1_dim += form['dim']
             assert gamma1_dim == dim
             res.append((load, url))
 
         except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
@@ -116,17 +117,17 @@ class CMFTest(LmfdbTest):
                 page = self.tc.get(url)
                 load = time.time() - now
                 space_dim = 0
-                assert label in page.data
+                assert label in page.get_data(as_text=True)
                 for nf in newforms:
                     if nf['space_label'] == label:
-                        assert nf['label'] in page.data
+                        assert nf['label'] in page.get_data(as_text=True)
                         space_dim += nf['dim']
                 assert space_dim == dim
                 res.append((load, url))
             except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
@@ -139,22 +140,22 @@ class CMFTest(LmfdbTest):
                 now = time.time()
                 page = self.tc.get(url)
                 load = time.time() - now
-                assert "There are no modular forms of weight" in page.data
-                assert "odd" in page.data
-                assert "even" in page.data
+                assert "There are no modular forms of weight" in page.get_data(as_text=True)
+                assert "odd" in page.get_data(as_text=True)
+                assert "even" in page.get_data(as_text=True)
                 res.append((load, url))
             except Exception as err:
-                print "Error on page "+url
-                print str(err)
-                print print_exc()
+                print("Error on page " + url)
+                print(str(err))
+                print(print_exc())
                 errors.append(url)
                 res.append((None, url))
 
 
         if errors:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
+            print("Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors)))
             for url in errors:
-                print url
+                print(url)
 
         return res
 
@@ -184,29 +185,29 @@ class CMFTest(LmfdbTest):
                 else:
                     res.extend(o)
 
-        if errors == []:
-            print "No errors while running the tests!"
+        if not errors:
+            print("No errors while running the tests!")
         else:
-            print "Unexpected errors occurring while running:"
+            print("Unexpected errors occurring while running:")
             for e in errors:
-                print e
+                print(e)
 
         broken_urls = [ u for l, u in res  if u is None ]
         working_urls = [ (l, u) for l, u in res if u is not None]
         working_urls.sort(key= lambda elt: elt[0])
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
-        if broken_urls == []:
-            print "All the pages passed the tets"
+        if not broken_urls:
+            print("All the pages passed the tests")
             if total > 0:
-                print "Average loading time: %.2f" % (sum(just_times)/total,)
-                print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
-                print "Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]])
-                print "Slowest pages:"
+                print("Average loading time: %.2f" % (sum(just_times)/total,))
+                print("Min: %.2f Max %.2f" % (just_times[0], just_times[-1]))
+                print("Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]]))
+                print("Slowest pages:")
                 for t, u in working_urls[-10:]:
-                    print "%.2f - %s" % (t,u)
+                    print("%.2f - %s" % (t,u))
             if total > 2:
-                print "Histogram"
+                print("Histogram")
                 h = 0.5
                 nbins = (just_times[-1] - just_times[0])/h
                 while  nbins < 50:
@@ -221,17 +222,8 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d
+                    print('%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d)
         else:
-            print "These pages didn't pass the tests:"
+            print("These pages didn't pass the tests:")
             for u in broken_urls:
-                print u
-
-
-
-
-
-
-
-
-
+                print(u)

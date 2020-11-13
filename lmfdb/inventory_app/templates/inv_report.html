@@ -84,18 +84,18 @@ Inventory structure is
   <h2>Rescrape Data</h2>
 
 <p>
-  Latest scrape of an LMFDB table was
+  Latest scrape of an LMFDB collection was
   {{rept.report.latest.latest_scan.nice_name}} on {{rept.report.latest.latest_scan.scan_date}}
 </p>
 </div>
 
 <div>
-  <h2>Removed Tables</h2>
+  <h2>Removed Collections</h2>
   <p>
-      {% if rept.report.gone.tables_gone.num > 0 %}
-       {{rept.report.gone.tables_gone.num}} tables have been removed
+      {% if rept.report.gone.colls_gone.num > 0 %}
+       {{rept.report.gone.colls_gone.num}} collections have been removed
       {%else %}
-      No tables have been removed
+      No collections have been removed
       {% endif %}
   </p>
 </div>

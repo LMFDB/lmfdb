@@ -1,27 +1,50 @@
-TODO:
+Soon:
+- Improve the pages under "Learn more about" and add a reliability page
+- Knowl for passport, and improve label knowl
+- Upload the rest of our data
+- Browse maps by base field, and see statistics on base field data
+- Browse by orbit size on Belyi main page
+- browsing passports in general? adding passport knowl on main browse page
+- search passports and add search on passport size
+- browse columns: degs and gs...column names for db in sage?
+- fix breadcrumbs (top of galmap pages)
+- display groups as in the fields page and perhaps as a knowl
+
+Short term:
+- add friends: specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good reduction outside of 2 and 3?
+- improve display of equations; table of coeffs? Polredfunctionfieldabs?
+- Compute L-functions of curves, if possible
+- show automorphism group on lmfdb page for galmaps
+
+Long term:
+- pictures of dessins: Mike's ribbon graphs?; Bailey's drawing software (keeping the action of complex conjugation and other evident symmetries)?
+- allow passports without all maps computed
+- compute and identify fiber products and imprimitive maps
+- add friends: links to HGMs?
+- database of passports even if the maps are not computed
+- make input file modular enough to accept data from all sources (allowing pages with partial info)
+- incorporate David Roberts's and Noam's data into the database; will probably require rewriting infrastructure
+- allow multiple versions of the same map, and show the relevant automorphism when available
 - genus 0 corner cases
-- hyperelliptic RR
 - hyperelliptic Newton
 - deg 7, g=2,3
-- show automorphism group on lmfdb page for galmaps
-- display coeffs for map, phi = (a0xy+a1xy^2+...)/(b0+b1x+...) where a0=... etc
-- database of passports even if the maps are not computed
-- incorporate Bailey's drawing software
 
 It would be nice if:
 - sort a,b,c
-- we use dots instead of dashes in the labels
-- we display the full S_3-action of maps (including the data when these are the same, and a map is isomorphic to one of its pullbacks under an element of S_3), including 1/phi, ...
-- we display the genus of the Galois closure and its ramification type; and then to link this with the curves with "many automorphisms"
-- we label arithmetic maps, and when they are congruence
-- we identify the (non)congruence subgroup of SL_2(ZZ) or Gamma(2) it corresponds to
+- display the full S_3-action of maps (including the data when these are the same, and a map is isomorphic to one of its pullbacks under an element of S_3), including 1/phi, ...
+- display the genus of the Galois closure and its ramification type; and then to link this with the curves with "many automorphisms"
+- label arithmetic maps, and when they are congruence
+- identify the (non)congruence subgroup of SL_2(ZZ) or Gamma(2) it corresponds to
 - maps with triangle groups mapping to other triangle groups are separately identified (and easy to browse)
 - compute and identify fiber products and imprimitive maps
 - when F=QQ, use polyring over QQ not QQ(nu)
-- Friends
-- embeddings in binary
+- Friends: HGMs, specializations of number fields, genus 1 and 2 curves
+- Give descent of lax Belyi map when available
+- renamed "abc triple" to something less triggering
+- make links direct to passport pages (and search on them)
+- add annotations?
+- embeddings in binary?
 - factorization of phi (or divisor)
-- tripleredabs?
 - display info about group
-- computed Galois group over K(t)
-- download curve/map in magma then in sage and/or pari
+- compute Galois group over K(t)
+- larger interactive conformal picture of fundamental domain with HTML regions over labels that display side-pairing elements

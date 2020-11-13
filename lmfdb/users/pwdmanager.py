@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-
+from __future__ import print_function
+from __future__ import absolute_import
+from six import string_types
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -9,12 +11,13 @@
 # NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-from lmfdb.backend.database import PostgresBase, db
+from lmfdb import db
+from lmfdb.backend.base import PostgresBase
 from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
-from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
+from .main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
 from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
@@ -71,8 +74,8 @@ class PostgresUserTable(PostgresBase):
         try:
             import bcrypt
             if not existing_hash:
-                existing_hash = unicode(bcrypt.gensalt())
-            return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
+                existing_hash = bcrypt.gensalt().decode('utf-8')
+            return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8')).decode('utf-8')
         except Exception:
             logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
             return None
@@ -242,8 +245,8 @@ class LmfdbUser(UserMixin):
     properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
-        if not isinstance(uid, basestring):
-            raise Exception("Username is not a basestring")
+        if not isinstance(uid, string_types):
+            raise Exception("Username is not a string")
 
         self._uid = uid
         self._authenticated = False
@@ -350,7 +353,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
         return True
 
 if __name__ == "__main__":
-    print "Usage:"
-    print "add user"
-    print "remove user"
-    print "…"
+    print("Usage:")
+    print("add user")
+    print("remove user")
+    print("…")

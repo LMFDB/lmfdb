@@ -16,8 +16,8 @@ def half_integral_weight_form_render_webpage():
     if len(args) == 0:
         info = {}
         credit = 'Samuele Anni, Soma Purkait'
-        t = 'Half Integral Weight Cusp Forms'
-        bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage"))]
+        t = 'Half integral weight cusp forms'
+        bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage"))]
         info['learnmore'] = []
         return render_template("half_integral_weight_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
@@ -25,21 +25,21 @@ def half_integral_weight_form_render_webpage():
 
 @search_wrap(template="half_integral_weight_form_search.html",
              table=db.halfmf_forms,
-             title='Half Integral Weight Cusp Forms Search Results',
-             err_title='Half Integral Weight Cusp Forms Search Input Error',
+             title='Half integral weight cusp forms search results',
+             err_title='Half integral weight cusp forms search input error',
              per_page=50,
              shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
              projection=['level','label','weight','character','dim'],
-             cleaners={'char': lambda v:"\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)",
+             cleaners={'char': lambda v: r"\chi_{" + v['character'].split(".")[0] + "}(" + v['character'].split(".")[1] + r",\cdot)",
                        'ch_lab': lambda v: v.pop('character').replace('.','/'),
                        'dimension': lambda v: v.pop('dim')},
-             bread=lambda:[('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")),('Search Results', ' ')],
+             bread=lambda:[('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")),('Search results', ' ')],
              properties=lambda: [])
 def half_integral_weight_form_search(info, query):
     parse_ints(info, query, 'weight')
     parse_ints(info, query, 'level')
     if info.get('character','').strip():
-        if re.match('^\d+.\d+$', info['character'].strip()):
+        if re.match(r'^\d+.\d+$', info['character'].strip()):
             query['character'] = info['character'].strip()
         else:
             flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
@@ -55,11 +55,11 @@ def print_q_expansion(list):
 
 def my_latex_from_qexp(s):
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\zeta', ss)
     ss += ""
     return ss
 
@@ -78,8 +78,8 @@ def render_hiwf_webpage(**args):
 
     info['friends'] = []
 
-    bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")), ('%s' % data['label'], ' ')]
-    t = "Half Integral Weight Cusp Forms %s" % info['label']
+    bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")), ('%s' % data['label'], ' ')]
+    t = "Half integral weight cusp forms %s" % info['label']
     credit = 'Samuele Anni and Soma Purkait'
 
     dim = data['dim']
@@ -91,7 +91,7 @@ def render_hiwf_webpage(**args):
     chi = data['character']
     info['ch_lab']= chi.replace('.','/')
     chi1=chi.split(".")
-    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"
+    chi2=r"\chi_{"+chi1[0]+"}("+chi1[1]+r",\cdot)"
     info['char']= chi2
     info['newpart']=data['newpart']
     new=[]
@@ -113,7 +113,7 @@ def render_hiwf_webpage(**args):
             for n in m:
                 n_lab= n.replace('.','/')
                 n_l=n.split(".")
-                n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"
+                n_lat=r"\chi_{"+n_l[0]+"}("+n_l[1]+r",\cdot)"
                 v=[n_lab, n_lat]
                 theta.append(v)
         info['theta']= theta

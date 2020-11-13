@@ -1,5 +1,5 @@
 # Code for creating plots for browsing L-functions
-
+from __future__ import print_function
 import math
 from flask import url_for
 from lmfdb import db
@@ -82,8 +82,8 @@ def getGroupHtml(group):
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s + i \\mu_3)"
         ans += "\\end{aligned}\\]\n"
-        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
-        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
+        ans += "with \\(\\mu_j\\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
+        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \\ge \\mu_2 \\ge 0\\), \n"
         ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
         ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
     elif group == 'r0r0r0r0':
@@ -96,7 +96,7 @@ def getGroupHtml(group):
         ans += "\\Gamma_\\R(s + i \\mu_3)"
         ans += "\\Gamma_\\R(s + i \\mu_4)"
         ans += "\\end{aligned}\\]\n"
-        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
+        ans += "with \\(\\mu_j\\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
         ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
         ans += "</div>\n"
     elif group == 'r0r0r0r0selfdual':
@@ -131,10 +131,10 @@ def getGroupHtml(group):
         ans += "to Maass cusp forms for GL(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
         ans += "\\[\\begin{aligned}"
-        ans += "\\Gamma_\R(s + i \\mu_1)"
-        ans += "\\Gamma_\R(s + i \\mu_2)"
-        ans += "\\Gamma_\R(s - i \\mu_3)"
-        ans += "\\Gamma_\R(s - i \\mu_4)"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s - i \\mu_3)"
+        ans += "\\Gamma_\\R(s - i \\mu_4)"
         ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
@@ -178,7 +178,7 @@ def getOneGraphHtml(gls):
     else:
         ans = ("<h4>L-functions of conductor " + str(gls[1]) + "</h4>\n")
     ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\\epsilon=1\\)). "
     ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
@@ -476,8 +476,8 @@ def paintSvgHoloNew(condmax):
         # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
-        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8))
-
+        return ["("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")"
+                for r,g,b in seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8)]
 
     radius = 3
 
@@ -497,7 +497,7 @@ def paintSvgHoloNew(condmax):
                 values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
             for character in nf['conrey_indexes']:
-                for j in range(nf['dim']/nf['char_degree']):
+                for j in range(nf['dim'] // nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
                     z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
@@ -601,7 +601,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numminuslabels = 0
             for newsp in newspaces:  # looping over Galois orbit
                 for MF in newsp[1]:
-                    print MF
+                    print(MF)
                     linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
                     numberwithlabel = MF['dim'] # number of forms in the Galois orbit
                     # frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
@@ -1204,7 +1204,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
-    for arg, val in urlinfo['space'].iteritems():   # this does things like: level=4&weight=8&character=0
+    for arg, val in urlinfo['space'].items():   # this does things like: level=4&weight=8&character=0
         if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
             urlbase += arg + "=" + str(val) + "&amp;"
 

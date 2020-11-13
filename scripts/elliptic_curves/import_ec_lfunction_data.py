@@ -58,22 +58,23 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
 
 """
+from __future__ import print_function
 import os
 from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 
 from lmfdb.base import getDBConnection
-print "getting connection"
+print("getting connection")
 C= getDBConnection()
-print "authenticating on the elliptic_curves database"
+print("authenticating on the elliptic_curves database")
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting curves"
+print("setting curves")
 curves = C.elliptic_curves.curves
 
-print "authenticating on the Lfunctions database"
+print("authenticating on the Lfunctions database")
 C['Lfunctions'].authenticate(username, password)
 Lfunctions = C.Lfunctions.Lfunctions
 #Lfunctions = C.Lfunctions.LfunctionsECtest
@@ -328,7 +329,7 @@ def read_line_old(line):
 def upload_to_db(base_path, f, test=True):
     f = os.path.join(base_path, f)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     data_to_insert = {}  # will hold all the data to be inserted
     instances_to_insert = {}  # will hold all the data to be inserted
@@ -337,13 +338,13 @@ def upload_to_db(base_path, f, test=True):
     for line in h.readlines():
         count += 1
         if count%1000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         Lhash, data, instance = read_line(line)
         if Lhash not in data_to_insert:
             data_to_insert[Lhash] = data
             instances_to_insert[Lhash] = instance
 
-    print "finished reading %s lines from file" % count
+    print("finished reading %s lines from file" % count)
     vals = data_to_insert.values()
 
     print("Number of records to insert = %s" % len(vals))

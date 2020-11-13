@@ -25,9 +25,9 @@ def linked_name(item, level=""):
             this_entry = '&nbsp;'
         if 'status' in item and item['status'] == 'future':
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
-	if 'status' in item and item['status'] == 'beta':
+    if 'status' in item and item['status'] == 'beta':
             this_entry = ''.join(['<div class="beta">',this_entry,'</div>'])
-        return this_entry
+    return this_entry
 
 # The unique instance of the class SideBar:
 
@@ -48,9 +48,10 @@ class SideBar(object):
     Class for holding the sidebar content.
     """
     def __init__(self):
+
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.toc_dic =  yaml.load(open(os.path.join(_curdir, "sidebar.yaml")))
-        self.main_headings = self.toc_dic.keys()
+        self.toc_dic = yaml.load(open(os.path.join(_curdir, "sidebar.yaml")), Loader=yaml.FullLoader)
+        self.main_headings = list(self.toc_dic)
         self.main_headings.sort()
         heading = lambda k: linked_name(self.toc_dic[k]['heading'],'heading')
         self.data = [(k,heading(k),self.toc_dic[k]) for k in self.main_headings]

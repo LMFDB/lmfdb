@@ -1,21 +1,28 @@
-import lmfdb_inventory as inv
-import inventory_db_core as idc
+from __future__ import absolute_import
+from . import inventory_db_core as idc
 
-from lmfdb import db
-
-def update_scrape_progress(db_name, table_name, uid, complete=None, running=None):
-    """Update progress of scrape from db/table names and uid """
+def update_scrape_progress_helper(db_id, coll_id, uid, complete=None, running=None):
+    """Update the stored progress value
+    If running is provided, then set it.
+    """
     try:
-        db_id = idc.get_db_id(db_name)
-        table_id = idc.get_table_id(table_name)
-        rec_find = {'db_id':db_id, 'table_id':table_id, 'uid':uid}
+        rec_find = {'db':db_id, 'table':coll_id, 'uid':uid}
         rec_set = {}
         if complete is not None:
             rec_set['complete'] = complete
         if running is not None:
             rec_set['running'] = running
         if rec_set:
-            db.inv_ops.update(rec_find, rec_set)
-    except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
+            idc.update_ops(rec_find, rec_set)
+    except:
+        pass
+
+def update_scrape_progress(db_name, coll, uid, complete=None, running=None):
+    """Update progress of scrape from db/coll names and uid """
+
+    try:
+        db_id = idc.get_db_id(db_name)
+        coll_id = idc.get_coll_id(db_id['id'], coll)
+        update_scrape_progress_helper(db_id['id'], coll_id['id'], uid, complete=complete, running=running)
+    except:
         return False

@@ -1,0 +1,37 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+<thead>
+<tr>
+    <th>{{ KNOWL('mf.maass.mwf.level', title='Level') }}</th>
+    <th>{{ KNOWL('mf.maass.mwf.weight', title='Weight') }}</th>
+    <th>{{ KNOWL('mf.maass.mwf.character', title='Char') }}</th>
+    <th>{{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}</th>
+    <th>{{ KNOWL('mf.maass.mwf.symmetry', title='Symmetry') }}</th>
+    <th>{{ KNOWL('cmf.fricke', title='Fricke') }}</th>
+</tr>
+</thead>
+{% for mf in info.results: %}
+<tr>
+    <td align=right> ${{ mf.level }}$ </td>
+    <td align=center> ${{ mf.weight }}$ </td>
+    <td align=center> {{ mf.character_link | safe }} </td>
+    <td> {{ mf.spectral_link | safe }} </td>
+    <td align=center> {{ mf.symmetry_pretty }} </td>
+    <td align=center> {{ mf.fricke_pretty }} </td>
+</tr>
+{% endfor %}
+</table>
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

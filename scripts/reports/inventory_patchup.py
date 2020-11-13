@@ -1,4 +1,5 @@
 #A collection of functions usesd to patch up uploads which had bugs
+from __future__ import print_function
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_core as idc
 
@@ -14,7 +15,7 @@ def amend_collection_info(inv_db):
 
     for collection in a:
          if collection['INFO'] == '' or collection['NOTES'] == '':
-             print 'Fixing ', collection['name']
+             print('Fixing ', collection['name'])
              idc.set_coll(inv_db, collection['db_id'], collection['name'], collection['name'], {'description':''}, dummy_info)
 
 def get_sample_of_table(inv_db, table_name, size=10, condition=None):

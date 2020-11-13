@@ -8,20 +8,32 @@
 <table>
     <tr><td>{{ KNOWL('ag.base_field',title = "Base field") }}:</td><td>&nbsp;&nbsp;${{cl.field()}}$</td></tr>
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td><td>&nbsp;&nbsp;${{cl.g}}$</td></tr>
-    <tr><td>{{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
+    <tr><td>{{ KNOWL('av.fq.l-polynomial',title='L-polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
     <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}}</td></tr>
-    <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.ang_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
-    {% if cl.is_simple() %}
+    <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.angle_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
+    {% if cl.is_simple %}
     <tr><td>{{KNOWL('av.fq.number_field',title='Number field')}}:</td><td>&nbsp;&nbsp;{{cl.display_number_field()|safe}}</td></tr>
     <tr><td>{{KNOWL('av.fq.galois_group',title='Galois group')}}:</td><td>&nbsp;&nbsp;{{cl.display_galois_group()|safe}}</td></tr>
     {% endif %}
+    {% if cl.jacobian_count is not none %}
+    <tr><td>{{KNOWL('av.fq.jacobian',title='Jacobians')}}:</td><td>&nbsp;&nbsp;{{cl.jacobian_count}}</td></tr>
+    {% endif %}
+    {#
+    {% if cl.size is not none %}
+    <tr><td>{{KNOWL('av.fq.isogeny_class_size',title='Isomorphism classes')}}:</td><td>&nbsp;&nbsp;{{cl.size}}</td></tr>
+    {% endif %}
+    #}
 </table>
 </p>
 
 <p>
-{% if cl.is_simple() %}
-This isogeny class is {{ KNOWL('av.simple',title="simple") }}.
-{% endif %}
+  {% if cl.is_geometrically_simple %}
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} and {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  {% elif cl.is_simple %}
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} but not {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  {% else %}
+  This isogeny class is not {{ KNOWL('av.simple',title='simple') }}.
+  {% endif %}
 </p>
 
 <h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
@@ -47,80 +59,119 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 <h2>Point counts</h2>
 
 <p>
-{% if cl.is_pp == 1 %}
-{% if cl.is_jac == 1 %}
-This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
-{% elif cl.is_jac == -1 %}
+{% if cl.has_principal_polarization == 1 %}
+{% if cl.has_jacobian == -1 %}
 This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+{% elif cl.jacobian_count is not none %}
+This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians')}} of {{ cl.jacobian_count }} curves, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
+{% elif cl.has_jacobian == 1 %}
+This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% else %}
 This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% endif %}
-{% elif cl.is_pp == -1 %}
+{% elif cl.has_principal_polarization == -1 %}
 This isogeny class is not {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
-{% elif cl.is_jac == -1 %}
+{% elif cl.has_jacobian == -1 %}
 This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}, and it is unknown whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% endif %}
 </p>
 
 <p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
-<table class = "ntdata">
-    <tr><td>$r$</td>
-        {% for r in range(1, cl.length_A_counts()+1) %}
-        <td class="center"> {{ r }} </td>
+{% set n = cl.length_A_counts() if cl.length_A_counts() < 6 else 5 %}
+<table style="margin-left:5%;">
+  <thead>
+    <tr style="border-bottom: 1px solid #000;"><th>$r$</th>
+        {% for r in range(1, n+1) %}
+        <th class="center"> ${{ r }}$ </th>
         {% endfor %}
     </tr>
+  </thead>
+  <tbody>
     <tr><td>$A(\F_{q^r})$</td>
-        {% for count in cl.A_counts %}
-        <td> {{ count }} </td>
+        {% for i in range(n) %}
+        <td> ${{ cl.abvar_counts[i] }}$ </td>
         {% endfor %}
     </tr>
+  </tbody>
 </table>
 </p>
 
 <p>
-{% if cl.is_jac == 1 %}
+{% if cl.has_jacobian == 1 %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the curve") }}
 {% else %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the (virtual) curve") }}
 {% endif %}
 
-<table class = "ntdata">
-    <tr><td>$r$</td>
+<table style="margin-left:5%;">
+  <thead>
+    <tr style="border-bottom: 1px solid #000;"><th>$r$</th>
         {% for r in range(1, cl.length_C_counts()+1) %}
-        <td class="center"> {{ r }} </td>
+        <th class="center">${{ r }}$</th>
         {% endfor %}
     </tr>
+  </thead><tbody>
     <tr><td>$C(\F_{q^r})$</td>
-        {% for count in cl.C_counts %}
-        <td>{{ count }}</td>
+        {% for count in cl.curve_counts %}
+        <td>${{ count }}$</td>
         {% endfor %}
     </tr>
+  </tbody>
 </table>
 
 </p>
 
-<h2>{{ KNOWL('av.decomposition',title="Decomposition") }}</h2>
 
-<p>
-{% if cl.is_simple() %}
-This is a {{ KNOWL('av.simple',title="simple") }} isogeny class.
-{% else %}
-<blockquote>
-    {{cl.decompositioninfo|safe}}
-</blockquote>
-{% endif %}
-</p>
+<h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
+
+{{cl.all_endo_info_display()|safe}}
+
 
 <h2>Base change</h2>
 
 <p>
-{% if cl.is_primitive() %}
+{% if cl.is_primitive %}
 This is a {{ KNOWL('ag.primitive',title="primitive") }} isogeny class.
 {% else %}
 This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is a {{ KNOWL('ag.base_change',title="base change") }} from the following isogeny classes over subfields of ${{cl.field()}}$.
 {{cl.basechangeinfo|safe}}
 {% endif %}
 </p>
+
+<h2 id="twist-anchor">Twists</h2>
+{% if cl.twists|length > 3 %}
+<script>
+function show_twists(number) {
+    $('.smalloutput').hide();
+    $('.alltwistoutput').hide();
+    $('.'+number).show();
+    var elementBottom = $('#twist-anchor').offset().top + $('#twist-anchor').outerHeight();
+    var viewportTop = $(window).scrollTop();
+    return elementBottom < viewportTop;
+  }
+</script>
+<div>
+  <form>
+    <span class="smalloutput">{{ cl.twist_display(False)|safe }}</span>
+    <span class="alltwistoutput nodisplay">{{ cl.twist_display(True)|safe }}</span>
+    <p>
+      <div class="toggle">
+        <span class="smalloutput"><a onclick="show_twists('alltwistoutput'); return false;" href='#'>Show All</a></span>
+        <span class="alltwistoutput nodisplay"><a onclick="return show_twists('smalloutput');" href='#twist-anchor'>Show Less</a></span>
+      </div>
+    </p>
+  </form>
+</div>
+
+{% else %}
+<div>
+  {{ cl.twist_display(True)|safe }}
+</div>
+
+{% endif %}
+
+
+
 
 {% endblock %}

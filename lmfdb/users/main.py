@@ -3,6 +3,7 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
+from __future__ import absolute_import
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -10,6 +11,8 @@ from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
+from lmfdb.utils import flash_error
+from markupsafe import Markup
 
 from lmfdb import db
 assert db
@@ -25,7 +28,7 @@ login_manager = LoginManager()
 
 # We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
 FLASK_LOGIN_LIMIT = '0.3.0'
-from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
+from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
 
@@ -69,7 +72,7 @@ def ctx_proc_userdata():
 
         userdata['user_is_admin'] = current_user.is_admin()
         userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
-        userdata['get_username'] = get_username # this is a function
+        userdata['get_username'] = get_username  # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -105,18 +108,21 @@ def list():
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
     n = len(users)/COLS
-    user_rows = zip(*[users[i*n:(i+1)*n] for i in range(COLS)])
+    user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
+
 
 @login_page.route("/change_colors/<int:scheme>")
 @login_required
 def change_colors(scheme):
     userid = current_user.get_id()
     userdb.change_colors(userid, scheme)
-    flask.flash("Color scheme successfully changed")
-    return flask.redirect(url_for(".info"))
+    flask.flash(Markup("Color scheme successfully changed"))
+    response = make_response(flask.redirect(url_for(".info")))
+    response.set_cookie('color', str(scheme))
+    return response
 
 @login_page.route("/myself")
 def info():
@@ -127,7 +133,7 @@ def info():
     info['next'] = request.referrer
     from lmfdb.utils.color import all_color_schemes
     return render_template("user-info.html",
-                           all_colors = all_color_schemes.values(),
+                           all_colors=all_color_schemes.values(),
                            info=info, title="Userinfo",
                            bread=base_bread() + [("Myself", url_for(".info"))])
 
@@ -137,10 +143,10 @@ def info():
 @login_page.route("/info", methods=['POST'])
 @login_required
 def set_info():
-    for k, v in request.form.iteritems():
+    for k, v in request.form.items():
         setattr(current_user, k, v)
     current_user.save()
-    flask.flash("Thank you for updating your details!")
+    flask.flash(Markup("Thank you for updating your details!"))
     return flask.redirect(url_for(".info"))
 
 
@@ -159,18 +165,19 @@ def profile(userid):
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
     # login and validate the user …
-    # remember = True sets a cookie to remmeber the user
+    # remember = True sets a cookie to remember the user
     name = request.form["name"]
     password = request.form["password"]
     next = request.form["next"]
-    remember = True if request.form["remember"] == "on" else False
+    remember = request.form.get("remember") == "on"
     user = LmfdbUser(name)
     if user and user.authenticate(password):
         login_user(user, remember=remember)
-        flask.flash("Hello %s, your login was successful!" % user.name)
+        flask.flash(Markup("Hello %s, your login was successful!" % user.name))
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
+        # FIXME add color cookie, see change_colors
         return flask.redirect(next or url_for(".info"))
-    flask.flash("Oops! Wrong username or password.", "error")
+    flash_error("Oops! Wrong username or password.")
     return flask.redirect(url_for(".info"))
 
 
@@ -240,31 +247,31 @@ def register_token(token):
     if not userdb.token_exists(token):
         flask.abort(401)
     bread = base_bread() + [('Register', url_for(".register_new"))]
-    if request.method == "GET":
+    if request.method != 'POST':
         return render_template("register.html", title="Register", bread=bread, next=request.referrer or "/", token=token)
-    elif request.method == 'POST':
+    else: # must be post
         name = request.form['name']
         if not allowed_usernames.match(name):
-            flask.flash("""Oops, usename '%s' is not allowed.
+            flash_error("""Oops, usename '%s' is not allowed.
                   It must consist of lower/uppercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % name, "error")
+                  no spaces, numbers or '.', '_' and '-'.""", name)
             return flask.redirect(url_for(".register_new"))
 
         pw1 = request.form['password1']
         pw2 = request.form['password2']
         if pw1 != pw2:
-            flask.flash("Oops, passwords do not match!", "error")
+            flash_error("Oops, passwords do not match!")
             return flask.redirect(url_for(".register_new"))
 
-        if len(pw1) <= 3:
-            flask.flash("Oops, password too short. Minimum 4 characters please!", "error")
+        if len(pw1) < 8:
+            flash_error("Oops, password too short. Minimum 8 characters please!")
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
         #next = request.form["next"]
 
         if userdb.user_exists(name):
-            flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
+            flash_error("Sorry, user ID '%s' already exists!", name)
             return flask.redirect(url_for(".register_new"))
 
         newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
@@ -272,7 +279,7 @@ def register_token(token):
         #newuser.full_name = full_name
         #newuser.save()
         login_user(newuser, remember=True)
-        flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
+        flask.flash(Markup("Hello %s! Congratulations, you are a new user!" % newuser.name))
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
         return flask.redirect(url_for(".info"))
@@ -284,30 +291,53 @@ def change_password():
     uid = current_user.get_id()
     pw_old = request.form['oldpwd']
     if not current_user.authenticate(pw_old):
-        flask.flash("Ooops, old password is wrong!", "error")
+        flash_error("Ooops, old password is wrong!")
         return flask.redirect(url_for(".info"))
 
     pw1 = request.form['password1']
     pw2 = request.form['password2']
     if pw1 != pw2:
-        flask.flash("Oops, new passwords do not match!", "error")
+        flash_error("Oops, new passwords do not match!")
         return flask.redirect(url_for(".info"))
 
     userdb.change_password(uid, pw1)
-    flask.flash("Your password has been changed.")
+    flask.flash(Markup("Your password has been changed."))
     return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/logout")
 @login_required
 def logout():
+    # FIXME delete color cookie
     logout_user()
-    flask.flash("You are logged out now. Have a nice day!")
+    flask.flash(Markup("You are logged out now. Have a nice day!"))
     return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
 
 
 @login_page.route("/admin")
-@login_required
 @admin_required
 def admin():
     return "success: only admins can read this!"
+
+
+@app.route("/restartserver")
+@admin_required
+def restart():
+    import sys
+    from subprocess import Popen, PIPE
+    from six.moves.urllib.parse import urlparse
+    urlparts = urlparse(request.url)
+    if urlparts.netloc == "beta.lmfdb.org":
+        command = ['bash', '/home/lmfdb/restart-dev']
+    elif urlparts.netloc in  ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
+        command = ['bash', '/home/lmfdb/restart-web']
+    else:
+        command = None
+    if command:
+        if sys.version_info[0] == 3:
+            out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
+        else:
+            out = Popen(command, stdout=PIPE).communicate()[0]
+        return out.replace('\n', '<br>')
+    else:
+        return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"

@@ -2,7 +2,7 @@
 {% block content %}
 
 <div>
-L-functions of {{ KNOWL('lfunction.known_degree1', title='degree 1') }} are associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} and they are called
+{{ KNOWL('lfunction', title='L-functions') }} of {{ KNOWL('lfunction.known_degree1', title='degree 1') }} are associated to {{ KNOWL('character.dirichlet', title='Dirichlet characters') }} and they are called
 {{ KNOWL('lfunction.dirichlet', title='Dirichlet L-functions') }}.
 These L-functions have a {{ KNOWL('lfunction.functional_equation', title='functional equation')}} of the form
 \[
@@ -50,6 +50,8 @@ take you to the associated Dirichlet L-function.
       $("#charGraph").hide();
       $("#charGraph").attr( 'src', '{{url_for(".browseGraphChar")}}?min_cond=' + ui.values[ 0 ] + '&max_cond=' + ui.values[ 1 ] + '&max_order=' + {{maxOrder}} + '&min_order=1');
       $("#charGraph").attr( 'height', 60 + 30 * (ui.values[ 1 ]-ui.values[ 0 ]+1));
+      cg = $("#charGraph")[0];
+      cg.outerHTML = cg.outerHTML;
       $("#charGraph").show();
     }
   });

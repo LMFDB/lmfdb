@@ -1,0 +1,167 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining parameters') }}</h2>
+
+<p>
+  <p>
+    <table>
+      <tr><td> $A$: </td> <td> ${{ family.A }}$ </td>
+        <td> $\alpha$: </td> <td> {{ family.alpha_latex }} </td></tr>
+      <tr><td> $B$: </td> <td> ${{ family.B }}$ </td>
+        <td> $\beta$: </td> <td> {{ family.beta_latex }} </td></tr>
+      <tr><td>$\gamma$: </td><td colspan="3"> ${{ family.gammas }}$ </td></tr>
+    </table>
+  </p>
+  <p>
+    <table>
+    </table>
+  </p>
+</p>
+
+<p><h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
+  <p>
+    <table>
+      <tr><td>{{KNOWL('hgm.degree', title="Degree")}}:<td>${{family.degree}}$
+      <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:<td>${{family.weight}}$
+      <tr><td>{{KNOWL('hgm.type', title="Type")}}:<td>{{family.type}}
+      <tr><td>{{KNOWL('hgm.wildprime', title="Wild primes")}}:<td>{{family.wild_primes}}
+      <tr><td>{{KNOWL('mot.hodgevector', title="Hodge vector")}}:<td>${{family.hodge}}$
+      <tr><td>{{KNOWL('hgm.rotation_number', title="Rotation number")}}:<td>${{family.rotation_number}}$
+      <tr><td>{{KNOWL('hgm.determinant', title="Motive determinant character")}}:<td>${{family.motivic_det_char}}$
+      <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:<td>${{family.bezout_latex}}$
+      <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:<td>${{family.bezout_det}}$
+      <tr><td>{{KNOWL('hgm.bezout_module', title="Bezout module")}}:<td>${{family.bezout_module}}$
+      <!--Levelt matrices purposefully tex'd slightly oddly for better viewing on narrow screens-->
+      <tr><td>{{KNOWL('hgm.levelt_matrices', title="Levelt matrices")}}:<td>${h_{\infty}={{family.hinf_latex}},\;}$ ${h_0={{family.h0_latex}},\;}$ $ {h_1={{family.h1_latex}}}$ 
+    </table>
+  <p>
+<p><h2> $p$-parts of defining parameters</h2>
+<p>
+<table>
+<tr> <th> $p$ <th> $A_p$ <th> $B_p$ <th> $C_p$
+ {% for p, Ap, Bp, Cp  in family.ppart %}
+ <tr>
+   <td> ${{p}}$
+   <td> ${{Ap}}$
+   <td> ${{Bp}}$
+   <td> ${{Cp}}$
+ {% endfor %}
+
+</table>
+
+<p>
+<p>
+<h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$</h2>
+<table>
+  <tr>
+    <th> $\ell$ </th>
+    <th> Index </th>
+    <th> Subimage</th>
+    <th> Image  </th>
+    <th> $A^{\perp} _\ell$ </th>
+    <th> $B^{\perp} _\ell$ </th>
+    <th> $C^{\perp} _\ell$ </th>
+    <th> Imprimitivity </th>
+    {% for m in family.monodromy %}
+      {% if m[1]!=0 %}
+        <tr>
+          <td> ${{m[0]}}$ </td>
+          <td> ${{m[3]}}$</td>
+          <td> {{m[2] | safe}}</td>
+          <td> {{m[1][2] | safe}}</td>
+          {% for i in range(3) %}
+            {% if m[1][3][i] %}
+              <td> ${{m[1][3][i]}}$ </td>
+            {% else %}
+              <td> $[\ ]$ </td>
+            {% endif %}
+          {% endfor %}
+          <td> ${{m[1][3][3]}}$</td>
+        {% endif %}
+      {% endfor %}
+</table>
+{% if family.defaultp %}
+<p>
+<h2>Good Euler factors</h2>
+<form id='euler_factors'>
+  <table>
+    <tr>
+      <td>\(p\)</td>
+      <td><input type='text' name='p' style="width: 60px" value="{{info.p}}" placeholder="{{family.default_prange}}"></td>
+      <td><span class="formexample"> e.g. 2 or 2-10</span></td>
+    </tr>
+    <tr>
+      <td>\(t\)</td>
+      <td><input type='text' name='t' style="width: 60px" value="{{info.t}}" placeholder="1/3"></td>
+      <td><span class="formexample"> e.g. 2 or 1/2</span></td>
+    </tr>
+  </table>
+  <button id="refresh_euler">Refresh table</button>
+</form>
+
+  {% for var, value, col_var, euler_factors in family.table_euler_factors_generic(info.ps, info.ts) %}
+  <h3>${{var}}={{value}}$</h3>
+  <table class='ntdata'>
+    <thead>
+    <tr class='space'>
+      <th class='weight'> ${{col_var}}$ </th>
+      {% if family.degree < 12 and family.degree > 2 %}
+        {% set colspan = 3 %}
+        <th class='weight'> $\Gal(F_p)$ </th>
+      {% else %}
+        {% set colspan = 2 %}
+      {% endif %}
+      <th class='weight'> $F_p(T)$ </th>
+      {% if family.weight > 0 %}
+        {% set colspan = colspan + 1 %}
+        <th class='weight'> Ordinary? </th>
+      {% endif %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for t, Gal, Fp, ord in euler_factors %}
+      {% if loop.index < 20 %}
+        <tr>
+      {% else %}
+        <tr class="more nodisplay">
+      {% endif %}
+        <td style="text-align: center;"> ${{t}}$ </td>
+        {% if family.degree < 12 and family.degree > 2 %}
+          <td class='galois'>
+            {{Gal | safe}}
+          </td>
+        {% endif %}
+        <td> {{Fp}} </td>
+        {% if family.weight > 0 %}
+          <td style="text-align: center;">
+          {% if not ord %}
+            No
+          {% endif %}
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+
+    {% if euler_factors | length > 20 %}
+    <tr class="less toggle">
+      <td colspan="{{colspan}}">
+        <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+      </td>
+    </tr>
+    <tr class="more toggle nodisplay">
+      <td colspan="{{colspan}}">
+        <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+      </td>
+    </tr>
+    {% endif %}
+    </tbody>
+  </table>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
+
+
+

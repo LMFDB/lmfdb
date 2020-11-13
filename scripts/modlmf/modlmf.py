@@ -8,7 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
-
+from __future__ import print_function
 import sys
 import re
 import json
@@ -29,7 +29,7 @@ saving = True
 
 def sd(f):
   for k in f.keys():
-    print '%s ---> %s'%(k, f[k])
+    print('%s ---> %s'%(k, f[k]))
 
 def makels(li):
   li2 = [str(x) for x in li]
@@ -61,7 +61,7 @@ modlmf.create_index('level')
 modlmf.create_index('weight_grading')
 modlmf.create_index('dirchar')
 
-print "finished indices"
+print("finished indices")
 
 
 ## Main importing function
@@ -93,10 +93,10 @@ def do_import(ll):
     modl_mf = modlmf.find_one({'label': label})
 
     if modl_mf is None:
-        print "new mod l modular form"
+        print("new mod l modular form")
         modl_mf = data
     else:
-        print "mod l modular form already in the database"
+        print("mod l modular form already in the database")
         modl_mf.update(data)
     if saving:
         modlmf.update({'label': label} , {"$set": modl_mf}, upsert=True)
@@ -106,7 +106,7 @@ def do_import(ll):
 # Loop over files
 
 for path in sys.argv[1:]:
-    print path
+    print(path)
     filename = os.path.basename(path)
     fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
     for line in fn.readlines():

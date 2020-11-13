@@ -25,7 +25,7 @@
   <strong>Authors:</strong>
   <ul>
   {% for a in k.author_links() %}
-    <li><a href="{{ url_for('users.profile', userid=a['username']) }}">{{ a['full_name'] or a['username'] }}</a></li>
+    <li><a href="{{ url_for('users.profile', userid=a['username']) }}">{{ a['full_name'] or a['username'] }}</a>{% if a['username'] == cur_username and (k.author_links() | length) > 1 %} (<a onclick='return confirm("Remove yourself as an author of this knowl?  This cannot easily be undone.")' href="{{ url_for('.remove_author', ID=k.id) }}">Remove</a>){% endif %}</li>
   {% endfor %}
   </ul>
 </div>

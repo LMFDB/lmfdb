@@ -1,227 +1,182 @@
 1intro:
-   type: simple
-   heading:
-      title: Introduction and more
+  type: simple
+  heading:
+     title: Introduction
+     url_for: "introduction"
+  parts:
+    - title: Overview
       url_for: "introduction"
-   parts:
-    - title: Introduction
-      url_for: "introduction"
-    - title: Features
-      url_for: "introduction_features"
+    - title: Random
+      url_for: "go_random"
     - title: Universe
       url_for: "universe"
-    - title: Future Plans
-      url_for: "roadmap"
-    - title: News
-      url_for: "news"
+    - title: Knowledge
+      url_for: "knowledge.index"
 
 2L-functions:
-   type: L
-   heading:
-      title: L-functions
-      url_for: "l_functions.l_function_top_page"
-   firstpart:
-      type: head_row
-      heading: "Degree:"
-      entries:
-        - title: "1"
-          url_for: "l_functions.l_function_degree_page"
-          url_args:
-            degree: 'degree1'
-        - title: "2"
-          url_for: "l_functions.l_function_degree_page"
-          url_args:
-            degree: 'degree2'
-        - title: "3"
-          url_for: "l_functions.l_function_degree_page"
-          url_args:
-            degree: 'degree3'
-        - title: "4"
-          url_for: "l_functions.l_function_degree_page"
-          url_args:
-            degree: 'degree4'
-        - title: "5+"
-          status: future
-   secondpart:
-       type: multilevel
-       parts:
-        - title: First zeros
-          url_for: "first L-function zeros.firstzeros"
-          status: beta
-        - title: $\zeta$&nbsp;zeros
-          url_for: "zeta zeros.zetazeros"
-        - title: Operations
-          url_for: "tensor_products.index"
-          status: beta
-        - title: dummy
-          status: future
-        - title: Local L-functions
-          status: future
-          colspan: onecolumn
+  type: simple
+  heading:
+    title: L-functions
+    url_for: "l_functions"
+  parts:
+    - title: "Degree 1"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree1'
+    - title: "Degree 2"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree2'
+    - title: "Degree 3"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree3'
+    - title: "Degree 4"
+      url_for: "l_functions.l_function_degree_page"
+      url_args:
+        degree: 'degree4'
+    - title: $\zeta$&nbsp;zeros
+      url_for: "zeta zeros.zetazeros"
+    - title: First zeros
+      url_for: "first L-function zeros.firstzeros"
+      status: beta
+    - title: Operations
+      url_for: "tensor_products.index"
+      status: future
+    - title: Local L-functions
+      status: future
 
 3ModForm:
-   type: multilevel
-   heading:
-      title: Modular Forms
-      url_for: "mf.modular_form_main_page"
-   parts:
-     - title: GL(2)
-       style: rotate
-       part2:
-         - title: Classical
-           url_for: "cmf.index"
-         - title: Maass
-           url_for: "mwf.render_maass_waveforms"
-         - title: Hilbert
-           url_for: "hmf.hilbert_modular_form_render_webpage"
-         - title: Bianchi
-           url_for: "bmf.index"
-         - title: Half-integral
-           status: future
-           colspan: onecolumn
-         - title: Noncongruence
-           status: future
-           colspan: onecolumn
-         - title: mod &#8467; 
-           url_for: "modlmf.modlmf_render_webpage"
-           status: future
-           colspan: onecolumn
-         - title: Hecke Algebra 
-           url_for: "hecke_algebras.hecke_algebras_render_webpage"
-           status: future
-           colspan: onecolumn
-     - title: GL(3)
-       style: rotate
-       status: beta
-       part2:
-         - title: Maass
-           status: future
-           colspan: onecolumn
-         - title: Cohomological
-           status: future
-           colspan: onecolumn
-     - title: Other
-       style: rotate
-       status: beta
-       part2:
-         - title: Siegel
-           status: beta
-           url_for: "smf.index"
-         - title: U(2,1)
-           status: future
-         - title: Other
-           status: future
+  type: simple
+  heading:
+    title: Modular forms
+    url_for: "modular_forms"
+  parts:
+    - title: Classical
+      url_for: "cmf.index"
+    - title: Maass
+      url_for: "maass.index"
+    - title: Hilbert
+      url_for: "hmf.hilbert_modular_form_render_webpage"
+    - title: Bianchi
+      url_for: "bmf.index"
+    - title: Half-integral
+      status: future
+    - title: Noncongruence
+      status: future
+    - title: mod &#8467;
+      url_for: "modlmf.modlmf_render_webpage"
+      status: future
+    - title: Hecke algebra
+      url_for: "hecke_algebras.hecke_algebras_render_webpage"
+      status: future
+    - title: GL(3) Maass
+      status: future
+    - title: Cohomological
+      status: future
+    - title: Siegel
+      status: beta
+      url_for: "smf.index"
+    - title: U(2,1)
+      status: future
 
 4Var:
-   type: multilevel
-   heading:
-      title: Varieties
-      url_for: "varieties"
-   parts:
-     - title: Curves
-       style: rotate
-       part2:
-         - title: "Elliptic:"
-           part3:
-             - title: $/\Q$
-               url_for: "ec.rational_elliptic_curves"
-             - title: $/\F_{q}(t)$
-               status: future
-             - title: /NumberFields
-               url_for: "ecnf.index"
-               colspan: onecolumn
-             - title: $\Q$-curves
-               status: future
-               colspan: onecolumn
-           colspan: onecolumn
-         - title: "Genus 2:"
-           part3:
-             - title: $/\Q$
-               url_for: "g2c.index_Q"
-             - title: $/\F_{q}(t)$
-               status: future
-             - title: /NumberFields
-               status: future
-               colspan: onecolumn
-           colspan: onecolumn
-         - title: Belyi
-           status: beta
-           url_for: "belyi.index"
-         - title: Shimura
-           status: future
-         - title: "Higher genus:"
-           part3:
-             - title: Families
-               url_for:  "higher_genus_w_automorphisms.index"
-               colspan: onecolumn
-           colspan: onecolumn
-     - title: 2-d
-       style: rotate
-       status: future_rotated
-       part2:
-         - title: Abelian
-           status: future
-         - title: K3
-           status: future
-     - title: $3^+$-d
-       style: rotate
-       status: future_rotated
-       part2:
-         - title: Calabi-Yau
-           status: future
-         - title: Shimura varieties
-           status: future
-           colspan: onecolumn
-         - title: Higher
-           status: future
-     - title: ""
-       style: rotate
-       part2:
-         - title: "Abelian Varieties:"
-           part3:
-              - title: $/\F_{q}$
-                url_for: "abvarfq.abelian_varieties"
-                colspan: onecolumn
+  type: simple
+  heading:
+    title: Varieties
+    url_for: "varieties"
+  parts:
+    - title: Elliptic curves over $\Q$
+      url_for: "ec.rational_elliptic_curves"
+      colspan: onecolumn
+    - title: Elliptic curves over $\Q(\alpha)$
+      url_for: "ecnf.index"
+      colspan: onecolumn
+    - title: Elliptic curves over $\F_{q}(t)$
+      status: future
+      colspan: onecolumn
+    - title: Genus 2 curves over $\Q$
+      url_for: "g2c.index_Q"
+      colspan: onecolumn
+    - title: Genus 2 curves over $\Q(\alpha)$
+      status: future
+      colspan: onecolumn
+    - title: Genus 2 curves over $\F_{q}(t)$
+      status: future
+      colspan: onecolumn
+    - title: Genus 3 curves over $\Q$
+      status: future
+      colspan: onecolumn
+    - title: Genus 3 curves over $\Q(\alpha)$
+      status: future
+      colspan: onecolumn
+    - title: Genus 3 curves over $\F_{q}(t)$
+      status: future
+      colspan: onecolumn
+    - title: Shimura curves
+      status: future
+      colspan: onecolumn
+    - title: Higher genus families
+      url_for:  "higher_genus_w_automorphisms.index"
+      colspan: onecolumn
+    - title: Abelian surfaces
+      status: future
+      colspan: onecolumn
+    - title: K3 surfaces
+      status: future
+    - title: $3^+$-d
+      style: rotate
+      status: future_rotated
+    - title: Calabi-Yau varieties
+      status: future
+    - title: Shimura varieties
+      status: future
+      colspan: onecolumn
+    - title: Abelian varieties over $\F_{q}$
+      url_for: "abvarfq.abelian_varieties"
+      colspan: onecolumn
+    - title: Belyi maps
+      status: beta
+      url_for: "belyi.index"
+      colspan: onecolumn
 
 5Fields:
-   type: simple
-   heading:
-      title: Fields
-      url_for: "fields"
-   parts:
-    - title: "Number fields:"
-      part2:
-         - title: Global
-           url_for:  "number_fields.number_field_render_webpage"
-         - title: Local
-           url_for:  "local_fields.index"
+  type: simple
+  heading:
+    title: Fields
+    url_for: "fields"
+  parts:
+    - title: Number fields
+      url_for:  "number_fields.number_field_render_webpage"
       colspan: onecolumn
-    - title: Function fields
+    - title: $p$-adic fields
+      url_for:  "local_fields.index"
+      colspan: onecolumn
+    - title: Global function fields
+      status: future
+      colspan: onecolumn
+    - title: Local function fields
       status: future
       colspan: onecolumn
 
 6Repn:
-   type: simple
-   heading:
-      title: Representations
-      url_for: "representations"
-   parts:
-    - title: "Characters:"
-      url_for: "characters.render_characterNavigation"
-      part2:
-         - title: Dirichlet
-           url_for:  "characters.render_Dirichletwebpage"
-         - title: Hecke
-           url_for:  "characters.render_Heckewebpage"
-           status: beta
+  type: simple
+  heading:
+    title: Representations
+    url_for: "representations"
+  parts:
+    - title: Dirichlet characters
+      url_for:  "characters.render_DirichletNavigation"
       colspan: onecolumn
-    - title: "Galois:"
+    - title: Hecke characters
+      url_for:  "characters.render_Heckewebpage"
       status: future
-      part2:
-         - title: Artin
-           url_for: "artin_representations.index"
-         - title: mod &#8467;
-           status: future
+      colspan: onecolumn
+    - title: Artin representations
+      url_for: "artin_representations.index"
+      colspan: onecolumn
+    - title: mod &#8467;
+      status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
@@ -231,65 +186,62 @@
       colspan: onecolumn
 
 7Mot:
-   type: simple
-   status: beta
-   heading:
-      title: Motives
-   parts:
-    - title: "Hypergeometric:"
+  type: simple
+  status: beta
+  heading:
+    title: Motives
+    url_for: "motives"
+  parts:
+    - title: Hypergeometric over $\Q$
       status: beta
-      part2:
-         - title: $/\Q$
-           status:  beta
-           url_for:  "hypergm.index"
-         - title: dummy
-           status: future
-         - title: $/\Q(\sqrt{d})$
-           status: future
+      url_for:  "hypergm.index"
+      colspan: onecolumn
+    - title: Hypergeometric over $\Q(\sqrt{d})$
+      status: future
       colspan: onecolumn
     - title: Jacobi
       status: future
+      colspan: onecolumn
     - title: $G_2$
       status: future
+      colspan: onecolumn
 
 8Groups:
-   type: simple
-   heading:
-      title: Groups
-      url_for: "groups"
-   parts:
-    - title: Galois groups
-      url_for: "galois_groups.index"
-      colspan: onecolumn
-    - title: Sato-Tate groups
-      url_for: "st.index"
-      colspan: onecolumn
-    - title: Lattices
-      url_for: "lattice.lattice_render_webpage"
-      status:  beta
-    - title: Subgroups of
-      part2:
-         - title: $\SL(2)$
-           status:  future
-         - title: dummy
-           status: future
-         - title: $\GL(2,\F_p)$
-           status:  future
-      status: future
-      colspan: onecolumn
+  type: simple
+  heading:
+    title: Groups
+    url_for: "groups"
+  parts:
+  - title: Galois groups
+    url_for: "galois_groups.index"
+    colspan: onecolumn
+  - title: Sato-Tate groups
+    url_for: "st.index"
+    colspan: onecolumn
+  - title: Lattices
+    url_for: "lattice.lattice_render_webpage"
+    status: beta
+    colspan: onecolumn
+  - title: Small groups
+    status: future
+    colspan: onecolumn
+  - title: Finite subgroups of
+    part2:
+      - title: $\GL(n,\F_q)$
+        status:  future
+      - title: $\GL(n,\Z)$
+        status: future
+      - title: $\GL(n,\C)$
+        status:  future
+    status: future
+    colspan: onecolumn
 
-9Know:
-   type: single
-   heading:
-       title: Knowledge
-       url_for: "knowledge.index"
-       type: knowl
-
-9Inv:
-   type: single
-   heading:
-       title: Inventory
-       url_for: "inventory_app.show_edit_root"
-       type: knowl
+8Inv:
+  type: single
+  status: beta
+  heading:
+    title: Inventory
+    url_for: "inventory_app.show_edit_root"
+    type: knowl
 
 ...

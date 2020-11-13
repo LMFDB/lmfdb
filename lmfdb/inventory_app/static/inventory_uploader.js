@@ -125,7 +125,7 @@ function checkAtLevel(textAsJson, fmtInfo){
   //console.log(fmtInfo, textAsJson);
   var currText = textAsJson;
   if(fmtInfo.fmt == 0 && fmtInfo.depth < fmtInfo.maxDepth && currText){
-    if(currText.db == pageId.db && currText.table == pageId.table && currText.diffs){
+    if(currText.db == pageId.db && currText.collection == pageId.collection && currText.diffs){
       fmtInfo.fmt = 1;
     }else if(currText.name && currText.data){
       fmtInfo.fmt = 2;

@@ -1,18 +1,33 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<div>
 <p>
-We encourage authors of books, papers and other articles which mention
-the LMFDB to cite it, following <a href="{{url_for('citing')}}">these
-instructions</a>.
+  We encourage authors of books, papers and other articles which mention the LMFDB to cite it.
+  For a list of publications citing the LMFDB see our <a href="https://scholar.google.com/citations?user=XHF22vEAAAAJ&hl=en&oi=ao">Google Scholar profile</a>.
 </p>
-<p>
-A list of articles which cite the LMFDB (last updated on {% include
-"citations_update.html" %}) is
-available <a href="{{url_for('citations')}}">here</a>.  Please let us
-know if there any omissions using the Contact link below.
-</p>
+
+{{ KNOWL_INC('content.how_to_cite') }}
+
+<script>
+function update_date_tags() {
+  var date = new Date();
+  var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var date_str = date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear();
+  var year_str = date.getFullYear();
+
+  var date_tags = document.getElementsByClassName("date-today");
+  for (var i = 0; i < date_tags.length; i++) {
+    date_tags[i].innerHTML = date_str;
+  }
+  var year_tags = document.getElementsByClassName("year-today");
+  for (var i = 0; i < year_tags.length; i++) {
+    year_tags[i].innerHTML = year_str;
+  }
+}
+update_date_tags()
+</script>
+
+
 </div>
 
 

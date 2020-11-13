@@ -11,24 +11,27 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
+from __future__ import absolute_import
 import string
 import re
 import json
 import time
+from collections import Counter
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
                   redirect, render_template, render_template_string,\
                   request, url_for
+from markupsafe import Markup
 from flask_login import login_required, current_user
-from knowl import Knowl, knowldb, knowl_title, knowl_exists
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
 from lmfdb.utils import datetime_to_timestamp_in_ms,\
-                        timestamp_in_ms_to_datetime
+                        timestamp_in_ms_to_datetime, flash_error
 
 #ejust for those, who still use an older markdown
 try:
@@ -44,14 +47,23 @@ _cache_time = 120
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
-    if ID.startswith('belyi') and\
-            (ID.endswith('top') or ID.endswith('bottom')):
-        for c in "[],T":
+    if ID.endswith('top') or ID.endswith('bottom'):
+        if ID.startswith('belyi'):
+            extras = "[],T"
+        elif ID.startswith('hgm'):
+            extras = "AB"
+        elif ID.startswith('ec'):
+            extras = "CM"
+        elif ID.startswith('gg'):
+            extras = "T"
+        else:
+            extras = ""
+        for c in extras:
             ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
+        flash_error("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+                  no spaces, numbers or '.', '_' and '-'.""", ID)
         return False
     return True
 
@@ -83,20 +95,21 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+# priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('math$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
-md.inlinePatterns.add('math$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
-md.inlinePatterns.add('math\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
-md.inlinePatterns.add('math\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
+md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
+md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
 
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
+md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
 knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
-md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex), '<escape')
+md.inlinePatterns.register(KnowlTagPatternWithTitle(knowltagtitle_regex), 'knowltagtitle', 181)
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
@@ -169,8 +182,8 @@ def ref_to_link(txt):
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
         this_link = ""
         if ref.startswith("href"):
-            the_link = re.sub(".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(".*}{([^}]+)}\s*", r"\1", ref)
+            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
+            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
             this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
@@ -195,7 +208,7 @@ def ref_to_link(txt):
                 ans += ", "
             ans += this_link
 
-    return '[' + ans + ']' + " " + everythingelse
+    return '[' + ans + ']'  + everythingelse
 
 def md_latex_accents(text):
     """
@@ -215,7 +228,7 @@ def md_latex_accents(text):
     return knowl_content
 
 def md_preprocess(text):
-    """
+    r"""
     Markdown preprocessor: html paragraph breaks before display math,
     \cite{MR:...} and \cite{arXiv:...} converted to links.
     """
@@ -233,7 +246,7 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
 
 
 @app.template_filter("render_knowl")
@@ -259,7 +272,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
     # this, but not for the javascript markdown parser
     try:
         return render_template_string(render_me, **kwargs)
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 
@@ -306,7 +319,7 @@ def test():
     logger.info("test")
     return render_template("knowl-test.html",
                            bread=get_bread([("Test", url_for(".test"))]),
-                           title="Knowledge Test",
+                           title="Knowledge test",
                            k1=Knowl("k1"))
 
 
@@ -324,7 +337,7 @@ def edit(ID):
     author = knowl._last_author
     # Existing comments can only be edited by admins and the author
     if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
-        flash("You can only edit your own comments", "error")
+        flash_error("You can only edit your own comments")
         return redirect(url_for(".show", ID=knowl.source))
 
     lock = None
@@ -389,15 +402,27 @@ def show(ID):
             can_delete = (current_user.is_admin() or current_user.get_id() == author)
             author_name = userdb.lookup(author)["full_name"]
             k.comments[i] = (cid, author_name, timestamp, can_delete)
-    b = get_bread([('%s' % title, url_for('.show', ID=ID))])
+    b = get_bread([(k.category, url_for('.index', category=k.category)), ('%s' % title, url_for('.show', ID=ID))])
 
     return render_template(u"knowl-show.html",
                            title=title,
                            k=k,
+                           cur_username=current_user.get_id(),
                            render=r,
                            bread=b)
 
-
+@knowledge_page.route("/remove_author/<ID>")
+@login_required
+def remove_author(ID):
+    k = Knowl(ID)
+    uid = current_user.get_id()
+    if uid not in k.authors:
+        flash_error("You are not an author on %s", k.id)
+    elif len(k.authors) == 1:
+        flash_error("You cannot remove yourself unless there are other authors")
+    else:
+        knowldb.remove_author(ID, uid)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/content/<ID>/<int:timestamp>")
 def content(ID, timestamp):
@@ -430,7 +455,7 @@ def history(limit=25):
     h_items = knowldb.get_history(limit)
     bread = get_bread([("History", url_for('.history', limit=limit))])
     return render_template("knowl-history.html",
-                           title="Knowledge History",
+                           title="Knowledge history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -442,7 +467,7 @@ def comment_history(limit=25):
     h_items = knowldb.get_comment_history(limit)
     bread = get_bread([("Comment History", url_for('.comment_history', limit=limit))])
     return render_template("knowl-comment-history.html",
-                           title="Comment History",
+                           title="Comment history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -452,7 +477,7 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flash("Knowl %s has been deleted." % ID)
+    flash(Markup("Knowl %s has been deleted." % ID))
     return redirect(url_for(".index"))
 
 
@@ -461,7 +486,7 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flash("Knowl %s has been resurrected." % ID)
+    flash(Markup("Knowl %s has been resurrected." % ID))
     return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/review/<ID>/<int:timestamp>")
@@ -470,7 +495,7 @@ def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flash("Knowl %s has been positively reviewed." % ID)
+    flash(Markup("Knowl %s has been positively reviewed." % ID))
     return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/demote/<ID>/<int:timestamp>")
@@ -479,38 +504,57 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flash("Knowl %s has been returned to beta." % ID)
+    flash(Markup("Knowl %s has been returned to beta." % ID))
     return redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/review_recent/<int:days>/")
-@knowl_reviewer_required
-def review_recent(days):
-    if len(request.args) > 0:
-        try:
-            info = to_dict(request.args)
-            beta = None
-            ID = info.get('review')
+def review_helper(data):
+    try:
+        info = to_dict(data)
+        beta = None
+        ID = info.get('review')
+        if ID:
+            beta = False
+        else:
+            ID = info.get('beta')
             if ID:
-                beta = False
-            else:
-                ID = info.get('beta')
-                if ID:
-                    beta = True
-            if beta is not None:
-                k = Knowl(ID)
-                k.review(who=current_user.get_id(), set_beta=beta)
-                return jsonify({"success": 1})
-            raise ValueError
-        except Exception:
-            return jsonify({"success": 0})
-    knowls = knowldb.needs_review(days)
+                beta = True
+        if beta is not None:
+            k = Knowl(ID)
+            k.review(who=current_user.get_id(), set_beta=beta)
+            return jsonify({"success": 1})
+        raise ValueError
+    except Exception:
+        return jsonify({"success": 0})
+
+def prep_review(knowls):
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
         k.reviewed_content = json.dumps(k.reviewed_content)
         k.content = json.dumps(k.content)
-    b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
+
+@knowledge_page.route("/review_recent/<int:days>/")
+@knowl_reviewer_required
+def review_recent(days):
+    if request.args:
+        return review_helper(request.args)
+    knowls = knowldb.needs_review(days)
+    prep_review(knowls)
+    b = get_bread([("Reviewing recent", url_for('.review_recent', days=days))])
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,
+                           knowls=knowls,
+                           bread=b)
+
+@knowledge_page.route("/review_stale")
+@knowl_reviewer_required
+def review_stale():
+    if request.args:
+        return review_helper(request.args)
+    knowls = knowldb.stale_knowls()
+    prep_review(knowls)
+    b = get_bread([("Reviewing stale", url_for('.review_stale'))])
+    return render_template("knowl-review-recent.html",
+                           title="Reviewing stale knowls",
                            knowls=knowls,
                            bread=b)
 
@@ -523,6 +567,15 @@ def broken_links():
                            title="Broken knowl links",
                            bad_knowls=bad_knowls,
                            bad_code=bad_code,
+                           bread=b)
+
+@knowledge_page.route("/orphans")
+def orphans():
+    orphans = knowldb.orphans()
+    b = get_bread([("Orphaned knowls", " ")])
+    return render_template("knowl-orphans.html",
+                           title="Orphaned knowls",
+                           orphans=orphans,
                            bread=b)
 
 @knowledge_page.route("/new_comment/<ID>")
@@ -542,7 +595,7 @@ def delete_comment(ID):
             raise ValueError
         comment.delete()
     except ValueError:
-        flash("Only admins and the original author can delete comments", "error")
+        flash_error("Only admins and the original author can delete comments")
     return redirect(url_for(".show", ID=comment.source))
 
 @knowledge_page.route("/edit", methods=["POST"])
@@ -562,8 +615,19 @@ def save_form():
     if not allowed_id(ID):
         return redirect(url_for(".index"))
 
-    NEWID = request.form.get('krename', '').strip()
     FINISH_RENAME = request.form.get('finish_rename', '')
+    UNDO_RENAME = request.form.get('undo_rename', '')
+    if FINISH_RENAME:
+        k = Knowl(ID)
+        k.actually_rename()
+        flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
+        return redirect(url_for(".show", ID=k.source_name))
+    elif UNDO_RENAME:
+        k = Knowl(ID)
+        k.undo_rename()
+        flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
+        return redirect(url_for(".show", ID=ID))
+    NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
@@ -572,7 +636,7 @@ def save_form():
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
             k.resurrect()
-            flash("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored.")
+            flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
         k.timestamp = datetime.now()
@@ -580,33 +644,27 @@ def save_form():
         k.save(who=who)
     if NEWID:
         if not current_user.is_admin():
-            flash("You do not have permissions to rename knowl", "error")
+            flash_error("You do not have permissions to rename knowl")
         elif not allowed_id(NEWID):
             pass
         else:
             try:
-                k.start_rename(NEWID, who)
+                if k.sed_safety == 0:
+                    time.sleep(0.01)
+                    k.actually_rename(NEWID)
+                    flash(Markup("Knowl renamed to {0} successfully.".format(NEWID)))
+                else:
+                    k.start_rename(NEWID, who)
             except ValueError as err:
-                flash(str(err))
+                flash_error(str(err), "error")
             else:
                 if k.sed_safety == 1:
-                    flash("Knowl rename process started. You can change code references using".format(NEWID))
-                    flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
-                    flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
+                    flash(Markup("Knowl rename process started. You can change code references using"))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
                 elif k.sed_safety == -1:
-                    flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
-                else:
-                    time.sleep(0.01)
-                    k.actually_rename()
-                    flash("Knowl renamed to {0} successfully.".format(NEWID))
+                    flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
-    elif FINISH_RENAME:
-        # We need to sleep briefly so that we don't have two identical timestamps
-        time.sleep(0.01)
-        if FINISH_RENAME == 'finish':
-            k.actually_rename()
-        elif FINISH_RENAME == 'undo':
-            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:
@@ -633,7 +691,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     include *just* the string and not the response object.
     """
     # logger.debug("kwargs: %s", request.args)
-    kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
+    kwargs = kwargs or dict(((k, v) for k, v in request.args.items()))
     # logger.debug("kwargs: %s" , kwargs)
     if timestamp is None:
         # fetch and convert the ms timestamp to datetime
@@ -661,7 +719,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # the idea is to pass the keyword arguments of the knowl further along the chain
     # of links, in this case the title and the permalink!
     # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.iteritems()))
+    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.items()))
     logger.debug("kw_params: %s" % kw_params)
 
     # this is a very simple template based on no other template to render one single Knowl
@@ -669,7 +727,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     if request.method == "POST":
         con = request.form['content']
         foot = footer or request.form['footer']
-    elif request.method == "GET":
+    else:
         con = request.args.get("content", k.content)
         foot = footer or request.args.get("footer", "1")
 
@@ -731,39 +789,57 @@ def render_knowl(ID, footer=None, kwargs=None,
             return data
         resp = make_response(data)
         # cache if it is a usual GET
-        if request.method == 'GET':
+        if request.method != 'POST':
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
-    except Exception, e:
+    except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
+    from psycopg2 import DataError
     cur_cat = request.args.get("category", "")
 
-
-    filtermode = request.args.get("filtered")
-    from knowl import knowl_status_code, knowl_type_code
+    from .knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
-        qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
-        types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
-    elif request.method == 'GET':
-        qualities = request.args.getlist('qualities')
-        types = request.args.getlist('types')
-
-    if filtermode:
-        filters = [ q for q in qualities if q in knowl_status_code ]
-        types = [ typ for typ in types if typ in knowl_type_code ]
-        # If "in progress" requested, should add author = current_user.get_id()
+        data = request.form
     else:
-        filters = []
+        data = request.args
+    qualities = [quality for quality in knowl_status_code if data.get(quality, "") == "on"]
+    if not qualities:
+        qualities = ["reviewed", "beta"]
+
+    types = [typ for typ in knowl_type_code if data.get(typ, "") == "on"]
+    if not types:
         types = ["normal"]
 
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    if search:
+        types = list(knowl_type_code)
+    try:
+        # We omit the category so that we can compute the number of results in each category.
+        # Eventually it would be good to do the category filtering client-side
+        all_knowls = knowldb.search(filters=qualities, types=types, keywords=keywords, regex=regex)
+    except DataError as e:
+        knowls = {}
+        if regex and "invalid regular expression" in str(e):
+            flash_error("The string %s is not a valid regular expression", keywords)
+        else:
+            flash_error("Unexpected error %s occured during knowl search", str(e))
+    categories = Counter()
+    if cur_cat:
+        # Always include the current category
+        categories[cur_cat] = 0
+    knowls = []
+    for k in all_knowls:
+        cat = k["id"].split(".")[0]
+        categories[cat] += 1
+        if cur_cat in ["", cat]:
+            knowls.append(k)
 
     def first_char(k):
         t = k['title']
@@ -787,23 +863,18 @@ def index():
     #    knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
+    b = []
+    if cur_cat:
+        b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
-                           title="Knowledge Database",
-                           bread=get_bread(),
+                           title="Knowledge database",
+                           bread=get_bread(b),
                            knowls=knowls,
                            search=search,
-                           searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
-                           qualities = qualities,
-                           searchmode=bool(search),
+                           qualities=qualities,
                            use_regex=regex,
-                           categories = knowldb.get_categories(),
-                           cur_cat = cur_cat,
-                           categorymode = bool(cur_cat),
-                           filtermode = filtermode,
-                           knowl_types=knowl_type_code.keys(),
+                           categories=categories,
+                           cur_cat=cur_cat,
+                           knowl_types=list(knowl_type_code),
                            types=types)
-
-
-
-

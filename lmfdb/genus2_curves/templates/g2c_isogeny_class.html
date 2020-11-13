@@ -1,11 +1,9 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<!--New table class to avoid spacing in LaTeX-links -->
-<style type="text/css">
-table.g2 a {
-  padding: 0;
-}
+<style>
+p {padding-left: 1ch;}
+</style>
 
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
@@ -30,9 +28,17 @@ text-align: center;
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 
 <p>
-<!-- Someone please redo this table with css.-->
 <table>
-    <tr><td> {{KNOWL('g2c.analytic_rank', title='Analytic rank')}}:</td><td>\({{ data.analytic_rank }}\)</td> </tr>
+    {% if data.analytic_rank < 2 %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}:</td><td>\({{data.analytic_rank}}\)&nbsp;&nbsp;(upper bound)</td></tr>
+    {% endif %}
+    {% if data.mw_rank_proved %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)</td></tr>
+    {% else %}
+    <tr><td>{{ KNOWL('g2c.mordell_weil_rank', title='Mordell-Weil rank') }}:</td><td>\({{data.mw_rank}}\)&nbsp;&nbsp;(lower bound)</td></tr>
+    {% endif %}
     <tr><td>&nbsp;</td></tr>
     <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
         <table id = "bad_lfactors_table">
@@ -75,20 +81,17 @@ text-align: center;
 
 <p>{{data.gl2_statement_base}}</p>
 
-<!-- Description over QQ: --(<p> intentionally omitted for spacing)>
-{{data.end_statement_base|safe}}
+<!-- Description over QQ: -->
+<p>{{data.end_statement_base|safe}}</p>
 
 <!-- Description of field of definition: -->
 <p>{{data.end_field_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
-{{data.end_statement_geom|safe}}
+<p>{{data.end_statement_geom|safe}}</p>
 
 <p>More complete information on endomorphism algebras and rings can be found on the pages of the individual curves in the isogeny class.</p>
 
-<!-- <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
+<!-- <h2>{{ KNOWL('av.isogeny', title='Isogenies') }}</h2> -->
 
-<p>More complete information on the decomposition of the Jacobian found on the
-pages of the individual curves in the isogeny class.</p>
--->
 {% endblock %}

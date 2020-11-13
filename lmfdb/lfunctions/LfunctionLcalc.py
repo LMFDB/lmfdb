@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 # Contains code for constructing and parsing lcalc files
 
 import math
@@ -7,7 +8,7 @@ import socket  # for printing the machine used to generate the lcalc file
 from sage.all import Infinity, imag_part, real_part
 
 from lmfdb.utils import splitcoeff, pair2complex
-from Lfunctionutilities import string2number
+from .Lfunctionutilities import string2number
 
 def parse_complex_number(z):
     """convert a string representing a complex number to another string looking like "(x,y)"

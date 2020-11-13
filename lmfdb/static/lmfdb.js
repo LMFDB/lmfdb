@@ -66,10 +66,6 @@ function properties_collapser(evt) {
 $(function() {
  /* properties box collapsable click handlers */
  $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
- /* providing watermark examples in those forms, that have an 'example=...' attribute */
- /* Add extra spaces so that if you type in exactly the example it does not disappear */
- $('input[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   '  ) } )
- $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
 
@@ -90,6 +86,7 @@ function properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
   for (var k = 0; k < initialFriends.length; k++) {
     add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
   }
+  renderMathInElement(ul, katexOpts);
 
   for (var i = 0; i < conrey_indexes.length; i++) {
     for (var j = 1; j <= rel_dim; j++) {
@@ -158,7 +155,12 @@ function knowl_click_handler($el) {
       } else {
         var sibebar_width = sidebar.offsetWidth;
       }
-      var header_width = document.getElementById("header").offsetWidth;
+      var header = document.getElementById("header");
+      if ( header == undefined ) {
+        var header_width = row_width;
+      } else {
+        var header_width = header.offsetWidth;
+      }
       var desired_main_width =  header_width - sibebar_width;
       log("row_width: " + row_width);
       log("desired_main_width: " + desired_main_width);
@@ -178,7 +180,7 @@ function knowl_click_handler($el) {
 
       //compute max number of columns in the table
       var cols = Array.from(tr_tag.children()).reduce((acc, td) => acc + td.colSpan, 0)
-      cols = Array.from(tr_tag.siblings()).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
+      cols = Array.from(tr_tag.siblings("tr")).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
       log("cols: " + cols);
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();
@@ -237,8 +239,9 @@ function knowl_click_handler($el) {
     } else {
       $output.addClass("loading");
       $output.show();
-      log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
-      $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
+      // log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
+	  // the prefix holds the base URL prefix. why necessary? if you're running on cocalc, javascript doesn't know that this isn't just the base domain!
+      $output.load(url_prefix + '/knowledge/render/' + knowl_id + "?" + kwargs,
        function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {
@@ -331,24 +334,18 @@ $(function() {
 });
 
 function decrease_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
-  newstart = parseInt(startelem.val())-count;
-  if(newstart<0) 
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
+  var newstart = parseInt(startelem.val())-count;
+  if(newstart<0)
     newstart = 0;
   startelem.val(newstart);
-  pagingelem = $('input[name=paging]');
-  if (typeof pagingelem != 'undefined')
-    pagingelem.val(1);
   $('form[id='+form_id+']').submit()
 };
 function increase_start_by_count_and_submit_form(form_id) {
-  startelem = $('input[name=start]');
-  count = parseInt($('input[name=count]').val());
+  var startelem = $('input[name=start]');
+  var count = parseInt($('input[name=count]').val());
   startelem.val(parseInt(startelem.val())+count);
-  pagingelem = $('input[name=paging]');
-  if (typeof pagingelem != 'undefined')
-    pagingelem.val(1);
   $('form[id='+form_id+']').submit()
 };
 
@@ -367,8 +364,9 @@ function get_count_of_results(download_limit) {
 
 function get_count_callback(res, download_limit) {
     $('#result-count').html(res['nres']);
+    $('#result-count2').html(res['nres']);
     if (parseInt(res['nres'], 10) > download_limit) {
-        $("#download-msg").html("There are too many search results for downloading.");
+        $("#download-msg").html("There are too many search results ("+res['nres']+") for downloading.");
     } else {
         $("#download-msg").html("");
         $("#download-form").show();
@@ -442,8 +440,8 @@ function cleanSubmit(id)
         if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   for(i = 0; item = allSelects[i]; i++) {
@@ -451,8 +449,8 @@ function cleanSubmit(id)
       if (!item.value) {
         item.setAttribute('name', '');
       } else {
-        n++
-      };
+        n++;
+      }
     }
   }
   if (!n) {
@@ -549,6 +547,38 @@ function debounce(func, wait, immediate){
 	return debounced;
 };
 
+/* Showing advanced search boxes */
+
+
+$(document).ready(function () {
+  $('#advancedtoggle').click(
+    function (evt) {
+      evt.preventDefault();
+      var advanced = $('.advanced');
+      if( advanced.is(":visible") )
+      {
+        advanced.hide();
+        $('#advancedtoggle').text('Advanced search options');
+      } else {
+        advanced.show();
+        $('#advancedtoggle').text('Hide advanced search options');
+      }
+      return false;
+    });
+});
+
+function show_advancedQ () {
+  var values = $('select.advanced, input.advanced');
+  for(var i = 0; i < values.length; i++) {
+    if( values[i].value != "" ) {
+      $('.advanced').show();
+      $('#advancedtoggle').text('Hide advanced search options');
+      break;
+    }
+  }
+};
+
+
 /* Contracting and expanding statistics displays */
 
 function show_stats_rows(hsh, to_show) {
@@ -562,8 +592,6 @@ function show_stats_rows(hsh, to_show) {
 
 /* Show/hide sidebar */
 $(document).ready(function () {
-  console.log("ready");
-  console.log(document.cookie);
   $('#menutoggle').click(
     function (evt) {
       evt.preventDefault();
@@ -575,14 +603,19 @@ $(document).ready(function () {
         sidebar.hide();
         document.cookie = 'showmenu=False;path=/';
         $('#menutoggle').text('Show Menu');
-        console.log(document.cookie);
       } else {
         main.css( { "margin-left" : "200px", "transition": "margin 0.2s"} );
         sidebar.show("fast");
         document.cookie = 'showmenu=True;path=/';
         $('#menutoggle').text('Hide Menu');
-        console.log(document.cookie);
       }
       return false;
     });
 });
+
+function show_moreless(ml) {
+  $('.more').hide();
+  $('.less').hide();
+  $('.'+ml).show();
+}
+

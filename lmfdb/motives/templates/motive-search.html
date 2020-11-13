@@ -3,53 +3,41 @@
 {% block content %}
 
 <form id="re-search">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
 <tr>
-<td align=left> 
-{{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
-</td>
-<td align=left> 
-{{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:
-<td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
+<td align=left> {{KNOWL('lf.degree',title='Degree')}}:</td>
+<td align=left> <input type='text' name='n' size=3 value="{{info.n}}"></td>
+<td align=left> {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:</td>
+<td align=left> <input type="text" name="c" size="3" value="{{info.c}}" ></td>
 
-<td align=left> 
-{{KNOWL('nf.galois_group',title='Galois group')}}:
-<td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" >
-
-</tr>
-<tr>
-<td align=left> 
-Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
-</td>
-<td align=left> 
-{{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
-<td align=left> 
-<input type="text" name="e" size="3" value="{{info.e}}" >
+<td align=left> {{KNOWL('nf.galois_group',title='Galois group')}}:</td>
+<td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" ></td>
 </tr>
 
 <tr>
-<td align='left' colspan='4'>Maximum number of fields to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
+<td align=left> Prime $p$:</td>
+<td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
+<td align=left> {{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:</td>
+<td align=left> <input type="text" name="e" size="3" value="{{info.e}}" ></td>
 </tr>
 
 <tr>
-<td align=left colspan="2"> 
-<button type='submit' value='refine'>Search again</button>
+<td align=left colspan="2">
+<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td></tr>
 </table>
 </form>
 
 {% if info.err is defined %}
 
-{% if info.label is defined %}
+{% if info.jump is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
 <td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
+<td ><input type='text' name='jump' size=60 value="{{info.jump}}"> </td>
 <td><button type='submit' value='Find'>Find</button></td>
 </tr>
 <tr>

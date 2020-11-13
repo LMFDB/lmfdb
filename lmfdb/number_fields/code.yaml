@@ -39,12 +39,17 @@ signature:
 discriminant:
   sage:  K.disc()
   pari:  K.disc
-  magma: Discriminant(K);
+  magma: Discriminant(Integers(K));
+
+rd:
+  sage: (K.disc().abs())^(1./K.degree())
+  pari: abs(K.disc)^(1/poldegree(K.pol))
+  magma: Abs(Discriminant(Integers(K)))^(1/Degree(K));
 
 ramified_primes:
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
-  magma: PrimeDivisors(Discriminant(K));
+  magma: PrimeDivisors(Discriminant(Integers(K)));
 
 integral_basis:
   sage:  K.integral_basis()

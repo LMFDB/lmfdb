@@ -5,9 +5,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from flask import flash
-from markupsafe import Markup
 from sage.all import is_odd, is_even, ZZ, QQ, FunctionField, PowerSeriesRing
+from lmfdb.utils import flash_error
 
 from lmfdb import db
 from lmfdb.utils import parse_ints_to_list_flash
@@ -32,19 +31,19 @@ def parse_dim_args(dim_args, default_dim_args):
     args={}
     if 'k' in res:
         if res['k'][-1] > MAXWT:
-            flash(Markup("Error: <span style='color:black'>$k$</span> cannot exceed <span style='color:black'>%s</span>." % MAXWT), "error")
+            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.",  MAXWT)
             raise ValueError("dim_args")
         if len(res['k']) > MAXWTRANGE:
-            flash(Markup("Error: range for <span style='color:black'>$k$</span> cannot include more than %s</span> values." % MAXWTRANGE), "error")
+            flash_error("range for <span style='color:black'>$k$</span> cannot include more than %s values.", MAXWTRANGE)
             raise ValueError("dim_args")
         args = {'k_range':res['k']}
     if 'j' in res:
         if res['j'][-1] > MAXJ:
-            flash(Markup("Error: <span style='color:black'>$j$</span> cannot exceed <span style='color:black'>%s</span>." % MAXJ), "error")
+            flash_error("<span style='color:black'>$j$</span> cannot exceed %s.", MAXJ)
             raise ValueError("dim_args")
         args['j_range'] = [j for j in res['j'] if j%2 == 0]
         if not args['j_range']:
-            flash(Markup("Error: <span style='color:black'>$j$</span> should be a nonnegative even integer."), "error")
+            flash_error("<span style='color:black'>$j$</span> should be a nonnegative even integer.")
             raise ValueError("dim_args")
     return args
 
@@ -53,7 +52,7 @@ def parse_dim_args(dim_args, default_dim_args):
 ####################################################################
 
 def dimension_Gamma_2(wt_range, j):
-    """
+    r"""
     <ul>
       <li>First entry of the respective triple: The full space.</li>
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
@@ -81,7 +80,7 @@ def dimension_Gamma_2(wt_range, j):
     return _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)')
 
 def dimension_Gamma1_2(wt_range, j):
-    """
+    r"""
     <ul>
       <li>First entry of the respective triple: The full space.</li>
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
@@ -136,7 +135,7 @@ def dimension_Sp4Z_2(wt_range):
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """
-    return _dimension_Gamma_2(wt_range, 2, group = 'Sp4(Z)')
+    return _dimension_Gamma_2(wt_range, 2, group='Sp4(Z)')
 
 def dimension_table_Sp4Z_j(wt_range, j_range):
     result = {}
@@ -145,11 +144,11 @@ def dimension_table_Sp4Z_j(wt_range, j_range):
     for j in j_range:
         if is_odd(j):
             for wt in wt_range:
-                result[wt][j]=0
+                result[wt][j] = 0
         else:
-            _,olddim= dimension_Sp4Z_j(wt_range, j)
+            _, olddim = dimension_Sp4Z_j(wt_range, j)
             for wt in wt_range:
-                result[wt][j]=olddim[wt]['Total']
+                result[wt][j] = olddim[wt]['Total']
     return result
 
 def dimension_Sp4Z_j(wt_range, j):
@@ -159,8 +158,8 @@ def dimension_Sp4Z_j(wt_range, j):
       <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
-    """    
-    return _dimension_Gamma_2(wt_range, j, group = 'Sp4(Z)')
+    """
+    return _dimension_Gamma_2(wt_range, j, group='Sp4(Z)')
 
 
 
@@ -200,16 +199,16 @@ def _dimension_Sp4Z(wt_range):
 
 
 def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
-    """
+    r"""
     Return the dict
     {(k-> partition ->  [ d(k), e(k), c(k)] for k in wt_range]},
     where d(k), e(k), c(k) are the dimensions
     of the $p$-canonical part of $M_{k,j}(\Gamma(2))$ and its subspaces of
-    Non-cusp forms and Cusp forms.
+    Non-cusp forms and cusp forms.
     """
 
     partitions = [ u'6', u'51', u'42', u'411', u'33', u'321', u'3111', u'222', u'2211', u'21111', u'111111']
-    latex_names = { 'Gamma(2)':'\\Gamma(2)', 'Gamma0(2)':'\\Gamma_0(2)', 'Gamma1(2)':'\\Gamma_1(2)', 'Sp4(Z)':'\\mathrm{Sp}(4,\mathbb{Z})' }
+    latex_names = { 'Gamma(2)':r'\Gamma(2)', 'Gamma0(2)':r'\Gamma_0(2)', 'Gamma1(2)':r'\Gamma_1(2)', 'Sp4(Z)':r'\mathrm{Sp}(4,\mathbb{Z})' }
 
     if is_odd(j):
         dct = dict((k,dict((h,[0,0,0]) for h in partitions)) for k in wt_range)
@@ -230,16 +229,16 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         return headers, dct
     
     if j>=2 and  wt_range[0] < 4:
-        raise NotImplementedError("Dimensions of \(M_{k,j}(%s)\) for <span style='color:black'>\(k<4\)</span> and <span style='color:black'>\(j\ge 2\)</span> not implemented" % latex_names.get(group,group))
+        raise NotImplementedError(r"Dimensions of \(M_{k,j}(%s)\) for <span style='color:black'>\(k<4\)</span> and <span style='color:black'>\(j\ge 2\)</span> not implemented" % latex_names.get(group,group))
 
     query = { 'sym_power': str(j), 'group' : 'Gamma(2)', 'space': 'total' }
     db_total = db.smf_dims.lucky(query)
     if not db_total:
-        raise NotImplementedError('Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
+        raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
     query['space'] = 'cusp'
     db_cusp = db.smf_dims.lucky(query)
     if not db_cusp:
-        raise NotImplementedError('Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
+        raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
     
     P = PowerSeriesRing(ZZ,  default_prec =wt_range[-1] + 1,  names = ('t'))
     Qt = FunctionField(QQ, names=('t'))
@@ -273,9 +272,9 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         for k in dct:
             dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]       
 
-        headers = ps.keys()
-        headers.sort(reverse = True)
-        headers.insert(0,'All')
+        headers = list(ps)
+        headers.sort(reverse=True)
+        headers.insert(0, 'All')
 
     elif 'Gamma0(2)' == group:
         headers = ['Total', 'Non cusp', 'Cusp']
@@ -386,7 +385,7 @@ def _dimension_Sp8Z(wt):
         ('Total', 'Ikeda lifts', 'Miyawaki lifts', 'Other')
     """
     if wt > 16:
-        raise NotImplementedError('Dimensions of $M_{k}(Sp(8,Z))$ for \(k > 16\) not implemented')
+        raise NotImplementedError(r'Dimensions of $M_{k}(Sp(8,Z))$ for \(k > 16\) not implemented')
     if wt == 8:
         return (1, 1, 0, 0)
     if wt == 10:
@@ -489,7 +488,7 @@ def dimension_Gamma0_3_psi_3(wt_range):
 
 
 def _dimension_Gamma0_3_psi_3(wt):
-    """
+    r"""
     Return the dimensions of the space of Siegel modular forms
     on $Gamma_0(3)$ with character $\psi_3$.
 
@@ -532,7 +531,7 @@ def dimension_Gamma0_4_psi_4(wt_range):
 
 
 def _dimension_Gamma0_4_psi_4(wt):
-    """
+    r"""
     Return the dimensions of subspaces of Siegel modular forms
     on $Gamma_0(4)$
     with character $\psi_4$.
@@ -549,7 +548,7 @@ def _dimension_Gamma0_4_psi_4(wt):
     if is_even(wt):
         return (H_all_even[wt],)
     else:
-        raise NotImplementedError('Dimensions of $M_{k}(\Gamma_0(4), \psi_4)$ for odd $k$ not implemented')
+        raise NotImplementedError(r'Dimensions of $M_{k}(\Gamma_0(4), \psi_4)$ for odd $k$ not implemented')
 
 
 
@@ -582,11 +581,10 @@ def _dimension_Gamma0_4(wt):
     REMARK
         Not completely implemented
     """
-    R = PowerSeriesRing(ZZ, default_prec = wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
-    H_all = (1 + x ** 4)(1 + x ** 11) / (1 - x ** 2) ** 3 / (1 - x ** 6)
+    R = PowerSeriesRing(ZZ, 'x')
+    x = R.gen().O(wt + 1)
+    H_all = (1 + x**4) * (1 + x**11) / (1 - x**2)**3 / (1 - x**6)
     return (H_all[wt],)
-
 
 
 ####################################################################
@@ -617,12 +615,10 @@ def _dimension_Gamma0_3(wt):
     REMARK
         Only total dimension implemented.
     """
-    R = PowerSeriesRing(ZZ, default_prec = wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
-    H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 6) ** 2
+    R = PowerSeriesRing(ZZ, 'x')
+    x = R.gen().O(wt + 1)
+    H_all = (1 + 2 * x**4 + x**6 + x**15 * (1 + 2 * x**2 + x**6)) / (1 - x**2) / (1 - x**4) / (1 - x**6)**2
     return (H_all[wt],)
-
-
 
 
 ####################################################################
@@ -654,7 +650,7 @@ def _dimension_Dummy_0(wt):
     """
     # Here goes your code ike e.g.:
     if wt > 37:
-        raise NotImplementedError('Dimensions of $Dummy_0$ for \(k > 37\) not implemented')
+        raise NotImplementedError(r'Dimensions of $Dummy_0$ for \(k > 37\) not implemented')
     a,b,c = 1728, 28, 37
 
     return (a,b,c)

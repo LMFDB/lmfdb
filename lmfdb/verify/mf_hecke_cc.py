@@ -1,8 +1,10 @@
-
+from __future__ import print_function
 from dirichlet_conrey import DirichletGroup_conrey
 from sage.all import prime_range, CC, gcd, ZZ
 
-from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
+from lmfdb.lmfdb_database import db
+from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from psycopg2.sql import SQL, Literal
 from .mf import MfChecker
 from .verification import overall, overall_long, slow
 
@@ -123,7 +125,7 @@ class mf_hecke_cc(MfChecker):
         for p, angle in zip(prime_range(1000), rec['angles']):
             if (level % p == 0) != (angle is None):
                 if verbose:
-                    print "Angle presence failure", p, ZZ(level).factor(), angle
+                    print("Angle presence failure", p, ZZ(level).factor(), angle)
                 return False
         return True
 
@@ -145,7 +147,7 @@ class mf_hecke_cc(MfChecker):
                 charval = 0
             if (CC(*Z[p**2 - 1]) - (CC(*Z[p-1])**2 - charval)).abs() > 1e-13:
                 if verbose:
-                    print "ap2 failure", p, CC(*Z[p**2 - 1]), CC(*Z[p-1])**2 - charval
+                    print("ap2 failure", p, CC(*Z[p**2 - 1]), CC(*Z[p-1])**2 - charval)
                 return False
         return True
 
@@ -160,6 +162,6 @@ class mf_hecke_cc(MfChecker):
                 if gcd(k, pp) == 1:
                     if (Z[pp*k] - Z[pp]*Z[k]).abs() > 1e-13:
                         if verbose:
-                            print "amn failure", k, pp, Z[pp*k], Z[pp]*Z[k]
+                            print("amn failure", k, pp, Z[pp*k], Z[pp]*Z[k])
                         return False
         return True

@@ -23,8 +23,8 @@
 <h2> {{ KNOWL('st_group.component_group', title='Component Group') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.component_group', title='Name') }}:</td><td>${{info['component_group']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.order', title='Order') }}:</td><td>${{info['components']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.abelian', title='Abelian') }}:</td><td>${{info['abelian']}}$</td></tr>
+    <tr><td>{{ KNOWL('group.order', title='Order') }}:</td><td>${{info['components']}}$</td></tr>
+    <tr><td>{{ KNOWL('group.abelian', title='Abelian') }}:</td><td>${{info['abelian']}}$</td></tr>
     {% if info['numgens'] > 0 %}
         <tr><td>{{ KNOWL('st_group.generators', title='Generators') }}:</td><td>${{info['gens']}}$</td></tr>
     {% endif %}

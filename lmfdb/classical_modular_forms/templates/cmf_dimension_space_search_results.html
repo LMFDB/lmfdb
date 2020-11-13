@@ -1,6 +1,8 @@
-{% extends 'cmf_space_refine_search.html' %}
+{% extends 'homepage.html' %}
 
-{% block show_results %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
 
 <script>
   function switch_space(newspace, title) {
@@ -26,5 +28,7 @@
 </table>
 <p>The dimensions shown are for spaces of modular forms in each weight and level that satisfy the specified conditions.</p>
 {% include 'cmf_dimension_table_display.html' %}
+
+{% include 'debug_info.html' %}
 
 {% endblock %}

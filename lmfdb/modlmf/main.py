@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+from six import BytesIO
+import time
 
-from flask import render_template, request, url_for, make_response, redirect, flash, send_file
-from markupsafe import Markup
+from flask import render_template, request, url_for, make_response, redirect, send_file
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
 from lmfdb import db
-from lmfdb.utils import web_latex_split_on_pm, parse_ints, search_wrap
+from lmfdb.utils import web_latex, parse_ints, search_wrap, flash_error
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 
@@ -16,25 +18,26 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 # utilitary functions for displays
 
 def print_q_expansion(list):
-    list=[str(c) for c in list]
-    Qb=PolynomialRing(QQ,'b')
-    Qq=PowerSeriesRing(Qb['a'],'q')
-    return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
+    list = [str(c) for c in list]
+    Qb = PolynomialRing(QQ,'b')
+    Qq = PowerSeriesRing(Qb['a'],'q')
+    return web_latex(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
+    # This code was copy pasted and should be refactored
     ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
+    ss += re.sub(r'x\d', 'x', s)
+    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
+    ss = re.sub(r'\*', '', ss)
+    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
+    ss = re.sub('zeta', r'\zeta', ss)
     ss += ""
     return ss
 
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [("mod &#x2113; Modular Forms", url_for(".index"))]
+    bc = [("mod &#x2113; modular forms", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -46,7 +49,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
 # webpages: main, random and search results
@@ -57,15 +60,15 @@ def modlmf_render_webpage():
         counts = get_stats().counts()
         characteristic_list= [2,3,5,7,11]
         max_lvl=min(counts['max_level'],150)
-        level_list_endpoints = range(1, max_lvl+1, 10)
+        level_list_endpoints = list(range(1, max_lvl + 1, 10))
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
         max_wt=min(counts['max_weight'], 10)
-        weight_list= range(1, max_wt+1)
+        weight_list = list(range(1, max_wt + 1))
         label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
-        t = 'Mod &#x2113; Modular Forms'
-        bread = [('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage"))]
+        t = 'Mod &#x2113; modular forms'
+        bread = [('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("modlmf-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
@@ -87,9 +90,9 @@ def modlmf_by_label(lab):
     if db.modlmf_forms.exists({'label': lab}):
         return render_modlmf_webpage(label=lab)
     if modlmf_label_regex.match(lab):
-        flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The mod &#x2113; modular form %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No mod &#x2113; modular form in the database has label %s", lab)
     return redirect(url_for(".modlmf_render_webpage"))
 
 #download
@@ -120,19 +123,19 @@ def download_search(info):
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 @search_wrap(template="modlmf-search.html",
              table=db.modlmf_forms,
-             title='Mod &#x2113; Modular Forms Search Results',
-             err_title='Mod &#x2113; Modular Forms Search Error',
+             title='Mod &#x2113; modular forms search results',
+             err_title='Mod &#x2113; modular forms search error',
              shortcuts={'download':download_search,
                         'label':lambda info:modlmf_by_label(info.get('label'))},
              projection=['label','characteristic','deg','level','weight_grading'],
-             bread=lambda:[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')],
+             bread=lambda:[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search results', ' ')],
              learnmore=learnmore_list,
              properties=lambda:[])
 def modlmf_search(info, query):
@@ -149,16 +152,16 @@ def render_modlmf_webpage(**args):
         lab = args.get('label')
         data = db.modlmf_forms.lookup(lab)
     if data is None:
-        t = "Mod &#x2113; Modular Form Search Error"
-        bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
+        t = "Mod &#x2113; modular form search error"
+        bread = [('mod &#x2113; modular forms', url_for(".modlmf_render_webpage"))]
+        flash_error("%s is not a valid label for a mod &#x2113; modular form in the database.", lab)
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
     info['friends'] = []
 
-    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
+    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
 
     for m in ['characteristic','deg','level','weight_grading', 'n_coeffs', 'min_theta_weight', 'ordinary']:
@@ -204,14 +207,14 @@ def render_modlmf_webpage(**args):
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
 
-        t = "Mod "+str(info['characteristic'])+" Modular Form "+info['label']
+        t = "Mod "+str(info['characteristic'])+" modular form "+info['label']
     info['properties'] = [
         ('Label', '%s' %info['label']),
         ('Field characteristic', '%s' %info['characteristic']),
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Weight grading', '%s' %info['weight_grading'])]
-    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
+    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
 
 
 
@@ -233,25 +236,25 @@ def q_exp_display(label, number):
 #data quality pages
 @modlmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the mod &#8467; Modular Form Data'
-    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
+    t = 'Completeness of mod &#8467; modular form data'
+    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @modlmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the mod &#8467; Modular Form Data'
-    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
+    t = 'Source of mod &#8467; modular form data'
+    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @modlmf_page.route("/Labels")
 def labels_page():
-    t = 'Label of a mod &#x2113; Modular Forms'
+    t = 'Label of a mod &#x2113; modular forms'
 
-    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
+    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='modlmf.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))

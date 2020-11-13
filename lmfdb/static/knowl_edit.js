@@ -50,7 +50,7 @@ function knowl_link(kid, label, title=null) {
 function enable(edit_mode) {
   view_refresh(edit_mode);
   for (var i = 0; i < all_modes.length; i++) {
-    mode = all_modes[i];
+    var mode = all_modes[i];
     if (mode === edit_mode) {
       $('#activate-' + mode).hide();
       $('#inactive-' + mode).show();
@@ -78,12 +78,11 @@ function refresh_link_suggestions() {
   var bad_intervals = [];
   var content = $kcontent.val();
   do {
-    m = wedef.exec(content);
+    var m = wedef.exec(content);
     if (m) {
       we_define[normalize_define(m[1])] = true;
     }
   } while (m);
-  log(we_define);
   do {
     m = knowldef.exec(content);
     if (m) {
@@ -131,39 +130,56 @@ function refresh_link_suggestions() {
   bad_intervals.sort(sort_pairs);
   i = 0;
   while (i < bad_intervals.length-1) {
-    cur = bad_intervals[i];
-    next = bad_intervals[i+1];
+    var cur = bad_intervals[i];
+    var next = bad_intervals[i+1];
     if (cur[1] >= next[0]) {
-      cur[1] = next[1];
+      if (cur[1] < next[1]) {
+        cur[1] = next[1];
+      }
       bad_intervals.splice(i+1, 1); // remove next
     } else {
       i++;
     }
   }
-  function is_bad(pos, i0=0, i1=bad_intervals.length) {
+  function is_bad(pos, dir=0, i0=0, i1=bad_intervals.length) {
+    // If dir=0, return a boolean value: whether pos is in a bad interval
+    // If dir is 1 or -1, return the closest non-bad position in that direction.
     // We can just use pos as the start of the string, because kdef_finder is delimited at word boundaries
     if (bad_intervals.length == 0) {
-      return false;
+      if (dir == 0) {
+        return false;
+      } else {
+        return pos;
+      }
     }
     if (i1 <= i0+1) {
-      return (bad_intervals[i0][0] <= pos) && (pos < bad_intervals[i0][1]);
+      var spot_is_bad = (bad_intervals[i0][0] <= pos) && (pos < bad_intervals[i0][1]);
+      if (dir == 0) {
+        return spot_is_bad;
+      } else if (!spot_is_bad) {
+        return pos;
+      } else if (dir == 1) {
+        return bad_intervals[i0][1];
+      } else {
+        return bad_intervals[i0][0];
+      }
     }
-    mid = Math.floor((i0+i1)/2);
+    var mid = Math.floor((i0+i1)/2);
     if (pos < bad_intervals[mid][0]) {
-      return is_bad(pos, i0, mid);
+      return is_bad(pos, dir, i0, mid);
     } else {
-      return is_bad(pos, mid, i1);
+      return is_bad(pos, dir, mid, i1);
     }
   }
   $linkul.empty();
   var some_link = false;
   var to_insert = [];
-  for (kdef in all_defines) {
+  for (var kdef in all_defines) {
     if (normalize_define(kdef) in we_define) {
       continue;
     }
-    found = false;
-    for (pdef in text_present) {
+    var found = false;
+    for (var pdef in text_present) {
       if (pdef.indexOf(kdef) != -1) {
         found = true;
         break;
@@ -181,10 +197,35 @@ function refresh_link_suggestions() {
         for (var i = 0; i < all_defines[kdef].length; i++) {
           var definer_id = all_defines[kdef][i];
           if (!(definer_id in kid_present)) {
-            var label = match[0]+' ['+definer_id+']';
-            var klink = knowl_link(definer_id, label, label);
-            var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+(match.index+match[0].length)+` match="`+match[0]+`">insert</a>`;
-            to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
+            var match_end = match.index + match[0].length;
+            var label = match[0];
+            var klink = knowl_link(definer_id, label);
+            // Add five words of context on each side, stopping at newlines
+            var pre_mark = match.index;
+            for (var j = 0; j < 5; j++) {
+              pre_mark = content.lastIndexOf(" ", pre_mark-1);
+              if (pre_mark == -1) {
+                pre_mark = 0;
+                break;
+              }
+            }
+            var nl_mark = content.lastIndexOf("\n", match.index);
+            pre_mark = Math.max(pre_mark, nl_mark);
+            pre_mark = is_bad(pre_mark, -1); // Don't stop in the middle of mathmode/KNOWL
+            var post_mark = match_end;
+            for (var j = 0; j < 5; j++) {
+              post_mark = content.indexOf(" ", post_mark+1);
+              if (post_mark == -1) {
+                post_mark = content.length;
+                break;
+              }
+            }
+            var nl_mark = content.indexOf("\n", match_end);
+            post_mark = Math.min(post_mark, nl_mark);
+            post_mark = is_bad(post_mark, 1); // Don't stop in the middle of mathmode/KNOWL
+            var select_link = `<a href="#" class="select_klink" start=`+match.index+` end=`+match_end+`>Select</a>`;
+            var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+match_end+` match="`+match[0]+`">insert `+definer_id+`</a>`;
+            to_insert.push([match.index, "<li>" + inserter + " &bull; " + content.substring(pre_mark, match.index) + klink + content.substring(match_end, post_mark) + " &bull; " + select_link + "</li>"]);
           }
         }
         break;
@@ -213,25 +254,14 @@ function insert_klink(evt) {
   // This knowl link is showing up in the content, so we can use jinja. :-)
   var new_link = "{{KNOWL('"+kid+"', '"+ktext+"')}}"
   update_content(start, end, new_link);
-  //var content = $kcontent.val();
-  //var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
-  //var match = ktext_finder.exec(content);
-  //if (match !== null) {
-  //  start = match.index;
-  //  end = start + match[0].length;
-  //  var new_link = knowl_link(kid, match[0]);
-  //  update_content(start, end, new_link);
-  //}
-  //refresh_link_suggestions();
   $kcontent.keyup();
 }
 
-function hover_klink(evt) {
+function select_klink(evt) {
   evt.preventDefault();
   var $kcontent = $("#kcontent");
   var start = $(this).attr("start");
   var end = $(this).attr("end");
-  log("Hovering " + $(this).attr("definer_id") + " " + start + " " + end);
   // There's no good way to scroll a textarea to
   var content = $kcontent.val();
   var pretext = content.substr(0, start);
@@ -250,6 +280,7 @@ function update_content(start, end, new_text) {
   if (isFirefox) {
     // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
+    var content = $kcontent.val();
     var new_content = content.substring(0, start) + new_text + content.substring(end);
     $kcontent.val(new_content);
   } else {
@@ -269,7 +300,6 @@ function refresh_preview() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
       renderMathInElement($content.get(0), katexOpts);
       refresh_id = null;
       // once rendering is done.
@@ -281,6 +311,7 @@ function refresh_preview() {
       }
       /* finally, set the title and hide the refresh link */
       $title.html($("#ktitle").val());
+      renderMathInElement($title.get(0), katexOpts); // render any math in the title
       $refresh.fadeOut();
     }).fail(function() { $title.html("ERROR"); })
 }
@@ -294,7 +325,7 @@ function refresh_diffs() {
 
 function find_current_edit_mode() {
   for (var i = 0; i < all_modes.length; i++) {
-    mode = all_modes[i];
+    var mode = all_modes[i];
     if ($('#activate-' + mode).is(":hidden")) {
       return mode;
     }
@@ -304,7 +335,7 @@ function find_current_edit_mode() {
 
 function dispatch_refresh() {
   // Some edit modes want a timer, others don't.  This is the function that's called by the keyup event on content.
-  edit_mode = find_current_edit_mode();
+  var edit_mode = find_current_edit_mode();
   if (edit_mode == 'preview') {
     delay_refresh();
   } else {

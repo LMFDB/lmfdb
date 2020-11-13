@@ -29,8 +29,8 @@
 
 
 
+    <script type="text/javascript">var url_prefix = "{{ knowl_url_prefix() }}";</script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
@@ -41,15 +41,15 @@
 
 
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.css"
-          integrity="sha384-dbVIfZGuN1Yq7/1Ocstc1lUEm+AT+/rCkibIcC/OmWo5f0EA48Vf8CytHzGrSwbQ"
+          href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css"
+          integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j"
           crossorigin="anonymous">
     <script defer
-          src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.js"
-          integrity="sha384-2BKqo+exmr9su6dir+qCw08N2ZKRucY4PrGQPPWU1A7FtlCGjmEGFqXCv5nyM5Ij"
+          src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js"
+          integrity="sha384-9Nhn55MVVN0/4OFx7EE5kpFBPsEMZxKTCnA+4fqDmg12eCTqGi6+BB2LjY8brQxJ"
           crossorigin="anonymous"></script>
     <script defer
-          src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/auto-render.min.js"
+          src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/auto-render.min.js"
           integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
           crossorigin="anonymous"></script>
     <script>
@@ -75,6 +75,8 @@ katexOpts = {
   "\\PGL": '{\\textrm{PGL}}',
   "\\Sp": '{\\textrm{Sp}}',
   "\\GSp": '{\\textrm{GSp}}',
+  "\\PSp": '{\\textrm{PSp}}',
+  "\\PSU": '{\\textrm{PSU}}',
   "\\Gal": '{\\mathop{\\rm Gal}}',
   "\\Aut": '{\\mathop{\\rm Aut}}',
   "\\Sym": '{\\mathop{\\rm Sym}}',
@@ -94,8 +96,8 @@ katexOpts = {
   renderMathInElement(document.body, katexOpts);
 });
     </script>
-    <link href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/copy-tex.css" rel="stylesheet" type="text/css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/copy-tex.min.js" integrity="sha384-XhWAe6BtVcvEdS3FFKT7Mcft4HJjPqMQvi5V4YhzH9Qxw497jC13TupOEvjoIPy7" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/copy-tex.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/copy-tex.min.js" integrity="sha384-XhWAe6BtVcvEdS3FFKT7Mcft4HJjPqMQvi5V4YhzH9Qxw497jC13TupOEvjoIPy7" crossorigin="anonymous"></script>
 
     {#- the defs for the knowls, needed to be after mathjax, before analytics, but we do not use mathjax any more -#}
     {%- include "knowl-defs.html" -%}

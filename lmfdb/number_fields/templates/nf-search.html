@@ -1,0 +1,55 @@
+{% extends 'homepage.html' %}
+{% block content %}
+{# Refine search page #}
+
+{% include 'refine_search_form.html' %}
+
+{% if info.err is defined %}
+{% if info.label is defined %}
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+{% endif %}
+{% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
+<table class="ntdata" id="fieldTab"`>
+<thead>
+<tr>
+<th>{{KNOWL('nf.label', 'Label')}}</th>
+<th>{{KNOWL('nf.defining_polynomial', 'Polynomial')}}</th>
+<th>{{KNOWL('nf.discriminant', 'Discriminant')}}</th>
+<th>{{KNOWL('nf.galois_group', 'Galois group')}}</th>
+<th>{{KNOWL('nf.ideal_class_group', 'Class group')}}</th>
+</tr>
+</thead>
+<tbody>
+{% for field in info.results: %}
+{% set wnf = info.wnf(field) %}
+<tr>
+<td align='left'><a href="/NumberField/{{field.label}}">{{wnf.label_pretty()}}</a></td>
+<td>{{ wnf.web_poly() | safe }}</td>
+<td>\( {{ wnf.disc_factored_latex() }} \)</td>
+<td>{{ wnf.galois_string() }}</td>
+{# {% if field.class_group is defined %} #}
+{% if wnf.haskey('class_group') %}
+  {% if field.class_group=='' %}
+    <td> trivial
+  {% else %}
+    <td>{{ wnf.class_group_invariants() }}
+  {% endif %}
+  {{ wnf.short_grh_string()|safe }}
+  </td>
+{% else %}
+  <td>n/a</td>
+{% endif %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

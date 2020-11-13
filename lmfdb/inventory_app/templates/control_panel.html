@@ -19,36 +19,36 @@ Inventory Control Panel
   <div class='unbreaking'>
       {% if user_is_authenticated %}
       <h2>General Inventory Control</h2>
-        <input type='button' id = 'genreport' title = 'Generate a report on the inventory state' value ='Generate Inventory Report' onclick='sendControlRequest("gen_report")'>
+        <input type='button' id = 'genreport' title = 'Generate a report on the inventory state' value ='Generate inventory report' onclick='sendControlRequest("gen_report")'>
         </p>
-        <input type='button' id = 'markgone' title = 'Check which tables are gone and mark' value ='Mark Tables Gone' onclick='sendControlRequest("mark_gone")'>
+        <input type='button' id = 'markgone' title = 'Check which collections are gone and mark' value ='Mark collections gone' onclick='sendControlRequest("mark_gone")'>
         </p>
-        <input type='button' id = 'cleangone' title = 'Check which tables are marked gone and remove' value ='Cleanup Removed Tables' onclick='sendControlRequest("clean_gone")'>
+        <input type='button' id = 'cleangone' title = 'Check which collections are marked gone and remove' value ='Cleanup removed collections' onclick='sendControlRequest("clean_gone")'>
       <h2>Inventory Editing Control</h2>
-        <input type='button' id = 'lockedit' title = 'Lock ALL inventory editing' value ='Lock Editing' onclick='sendControlRequest("lock_edit")'>
+        <input type='button' id = 'lockedit' title = 'Lock ALL inventory editing' value ='Lock editing' onclick='sendControlRequest("lock_edit")'>
         </p>
-        <input type='button' id = 'unlockedit' title = 'Unlock inventory editing' value ='Unlock Editing' onclick='sendControlRequest("unlock_edit")'>
+        <input type='button' id = 'unlockedit' title = 'Unlock inventory editing' value ='Unlock editing' onclick='sendControlRequest("unlock_edit")'>
       <h2>Inventory Rescraping Control</h2>
-        <input type='button' id = 'cleanscrape' title = 'Cancel expired failed scrape processes' value ='Cleanup Scraping' onclick='sendControlRequest("clean_scrapes")'>
+        <input type='button' id = 'cleanscrape' title = 'Cancel expired failed scrape processes' value ='Cleanup scraping' onclick='sendControlRequest("clean_scrapes")'>
       </p>
-        <input type='button' id = 'downloadorph' title = 'Download all orphaned key data as json' value ='Download Orphan Data' onclick='sendControlRequest("download_orphans")'>
+        <input type='button' id = 'downloadorph' title = 'Download all orphaned key data as json' value ='Download orphan data' onclick='sendControlRequest("download_orphans")'>
       {% else %}
       <h2>General Inventory Control</h2>
-        <input type='button' value = 'Generate Inventory Report' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value = 'Generate inventory report' title ='Please login for controls' disabled class=disabledbutton>
         </p>
-        <input type='button' value ='Mark Tables Gone' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Mark collections gone' title ='Please login for controls' disabled class=disabledbutton>
         </p>
-        <input type='button' value ='Cleanup Removed Tables' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Cleanup removed collections' title ='Please login for controls' disabled class=disabledbutton>
 
       <h2>Inventory Editing Control</h2>
-        <input type='button' value ='Lock Editing' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Lock editing' title ='Please login for controls' disabled class=disabledbutton>
         </p>
-        <input type='button' value ='Unlock Editing' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Unlock editing' title ='Please login for controls' disabled class=disabledbutton>
 
       <h2>Inventory Rescraping Control</h2>
-        <input type='button' value ='Cleanup Scraping' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Cleanup scraping' title ='Please login for controls' disabled class=disabledbutton>
       </p>
-        <input type='button' value ='Download Orphan Data' title ='Please login for controls' disabled class=disabledbutton>
+        <input type='button' value ='Download orphan data' title ='Please login for controls' disabled class=disabledbutton>
       {% endif %}
 
   </div>

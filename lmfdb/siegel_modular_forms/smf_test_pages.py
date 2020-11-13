@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -11,22 +12,22 @@ class SMFPageTest(LmfdbTest):
         errors = []
         data = db.smf_samples.search({'collection':{'$exists':True},'name':{'$exists':True}},['collection','name'])
         n = 0
-        print ""
+        print("")
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
             url = "/ModularForm/GSp/Q/"+full_label+"/"
-            print "Checking home page for SMF sample " + full_label
+            print("Checking home page for SMF sample " + full_label)
             try:
                 n = n+1
-                pagedata = self.tc.get(url, follow_redirects=True).data
+                pagedata = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
                 #print "Got %d bytes" % len(pagedata)
                 assert full_label in pagedata and "Hecke eigenform" in pagedata
             except:
-                print "Error on page " + url
+                print("Error on page " + url)
                 errors.append(url)
         if not errors:
-            print "Tested %s pages with no errors" % n
+            print("Tested %s pages with no errors" % n)
         else:
-            print "Tested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
+            print("Tested %d pages with %d errors occuring on the following pages:" %(n,len(errors)))
             for url in errors:
-                print url
+                print(url)

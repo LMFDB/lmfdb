@@ -1,9 +1,7 @@
-{# template defs #}
+t{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
-  -webkit-border-radius: {{R}}px;
-  -moz-border-radius: {{R}}px;
 {%- endmacro -%}
 
 {# end defs #}
@@ -67,6 +65,14 @@ h2.link > a {
 
 #content > h2 a[knowl], #content > h3 a[knowl] {
     color: {{color.col_main}};
+}
+
+#content p {
+  padding-left: 1ch;
+}
+
+#content ul {
+  padding-left: 24px;
 }
 
 #content > h2.inline,
@@ -179,27 +185,27 @@ a:hover {
 
 #header {
   background: {{color.header_background}};
-  box-shadow:          0px 5px 5px {{color.header_shadow}};
+  box-shadow: 0px 5px 5px {{color.header_shadow}};
 }
 
 body.knowl #header {
   background: {{ color.knowl_l }};
-  box-shadow:          0px 5px 5px {{color.knowl_shadow}};
+  box-shadow: 0px 5px 5px {{color.knowl_shadow}};
 }
 
 #header #logo {
     display: inline-block;
     margin: 0px;
     padding-top: 8px;
-    padding-left: 40px;
+    padding-left: 46px;
 }
 #header #logo img {
-    max-height: 70px;
+    max-height: 50px;
 }
 #header .right {
     margin-top: 0px;
     display: inline-block;
-    padding-left: 48px;
+    padding-left: 60px;
     vertical-align: top;
     width: calc(100% - 210px);
 }
@@ -207,7 +213,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    padding-top: 25px;
+    padding-top: 5px;
     color: {{color.header_text_title}};
 }
 
@@ -259,7 +265,7 @@ body.knowl #header {
     color: {{color.header_text_topright}};
 }
 #header .undertopright:first-child {
-      margin-top: 0;
+    margin-top: 0;
 }
 
 #header #navi {
@@ -291,7 +297,7 @@ body.knowl #header {
 }
 
 #main {
-  margin:  0px 0px 0px 200px;
+  margin:  0px 0px 0px 184px;
   padding: 0px 0px 0px 10px;
   min-height: 700px;
 }
@@ -358,7 +364,6 @@ body > .debug {
 
 .properties-body ul:last-child li:last-child a {
   border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
 }
 .properties-body li {
   display: block;
@@ -384,13 +389,11 @@ body > .debug {
   background: {{color.properties_body_background}};
   min-width: 200px;
   border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
   max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
   overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
   border-top-left-radius: 10px;
-  -moz-border-radius-topleft: 10px;
   margin: 0;
   margin-top: 10px;
   padding: 5px 9px;
@@ -429,17 +432,15 @@ body > .debug {
 
 #sidebar {
   float: left;
-  width: 200px;
-  margin: 20px 0px 0px 0px;
+  width: 184px;
+  margin: 10px 0px 0px 0px;
   font-family: sans-serif;
   font-size: 85%;
   color: {{color.sidebar_text}};
   background: {{color.sidebar_background}};
   margin-bottom: 100px;
   border-top-right-radius: 10px;
-  -moz-border-radius-topright: 10px;
   border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px;
 }
 #sidebar .list li {
   padding: 5px;
@@ -464,10 +465,7 @@ body > .debug {
     background-color: {{ color.sidebar_background_h2 }};/*sidebar tabs*/
     color: {{ color.sidebar_text_h2 }};
     padding: 5px;
-    margin: 15px 0 0 0;
-}
-#sidebar h2:first-child {
-  margin-top: 0;
+    margin: 0;
 }
 
 #sidebar ul:first-child a:first-child,
@@ -475,12 +473,10 @@ body > .debug {
 #sidebar h2:first-child {
   margin: 0;
   border-top-right-radius: 10px;
-  -moz-border-radius-topright: 10px;
 }
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px;
 }
 #sidebar ul {
     margin: 0px;
@@ -509,7 +505,8 @@ body > .debug {
     padding: 5px;
 }
 #sidebar h2 a:hover {
-  background: {{ color.sidebar_background_h2_hover }};
+    background: {{ color.sidebar_background_h2_hover }};
+    color: {{ color.sidebar_h2_hover }};
 }
 #sidebar h2.link {
   padding: 0px;
@@ -524,12 +521,12 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 
 
 .visible {
-	visibility: visible;
+    visibility: visible;
 }
 
 .hidden {
-	visibility: hidden;
-	height: 0px;
+    visibility: hidden;
+    height: 0px;
 }
 
 .code {
@@ -557,7 +554,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 td.forminfo {
    font-size: 80%;
    font-style: italic;
-   color: {{color.grey}};
+   color: #333333;
    vertical-align: top;
 }
 
@@ -566,23 +563,45 @@ input, textarea {
   font-size: 110%;
   padding: 3px;
   border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
 }
 /* TODO: above? */
 
-button, select {
+button, select, a.like-button {
   padding: 3px 6px;
   border-radius: 4px;
-  -moz-border-radius:4px;
-  -webkit-border-radius:4px;
   cursor: pointer;
   border: 2px solid {{color.button_border}};
   min-width: 75px;
 }
 
-button {
-   background: {{color.button_background}};
+button, a.like-button {
+  background: {{color.button_background}};
+}
+
+a.like-button {
+  color: {{color.black}};
+  font-size: 11px;
+  padding: 6px 16px 3px 16px;
+}
+
+button.like-link {
+  background: none!important;
+  border: none!important;
+  padding: 0!important;
+  cursor: pointer;
+
+  color: {{color.col_link}};
+  text-decoration: none;
+  font-family: sans-serif;
+  min-width: 0px;
+  font-size: 15px;
+}
+button.like-link:visited {
+  color: {{color.a_text_visited}};
+}
+button.like-link:hover {
+  color: {{color.a_text_hover}};
+  background: {{color.a_background_hover}};
 }
 
 select {
@@ -615,6 +634,11 @@ button.inactive:hover {
     border: 2px solid {{color.button_border_inactive}};
 }
 
+/* HGCWA */
+.tab button.active {
+    background-color: {{color.col_main_ll}}; <!-- col_main_ll -->
+}
+
 body.knowl form button:hover,
 body.knowl form select:hover {
     background:    {{color.knowl_hover}};
@@ -622,7 +646,7 @@ body.knowl form select:hover {
 }
 
 form table td.button {
-	padding-top: 7px
+    padding-top: 7px
 }
 
 table {
@@ -645,6 +669,14 @@ table.newforms {
     clear: right;
 }
 
+table.browse td {
+  vertical-align: top;
+  padding: 7px 0px 7px 10px;
+}
+table.browse td:first-child {
+  white-space: nowrap;
+}
+
 table.ntdata .knowl-header a,
 table.ntdata .knowl-footer a,
 table.ntdata a.knowl-link,
@@ -655,17 +687,23 @@ table a[knowl] {
   padding: 0;
 }
 
-table.ntdata a {
+table.ntdata td>a {
   display: block;
 }
+
 table.chardata a {
   display: inline;
 }
+
 table td.top {
   vertical-align:top;
 }
 table.ntdata td {
   white-space: nowrap;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table a:hover {
@@ -673,23 +711,33 @@ table a:hover {
 }
 
 
+
 table td.spacing {
   height: 20px;
 }
 
+
 table.ntdata {
   width: auto;
-  border: 0;
+  border: 3px;
+  margin-left: 5%;
   margin-top: 15px;
   margin-bottom: 15px;
 }
-table.ntdata thead tr {
+table.ntdata thead th {
   background: {{ color.table_ntdata_background }};
+}
+table.ntdata > thead {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
 table.ntdata th {
   text-align: left;
+  padding-right: 7px;
+  padding-left: 7px;
 }
 
 table.ntdata > tr.odd,
@@ -704,6 +752,10 @@ table.ntdata > thead > tr:first-child {
     background: {{color.table_ntdata_background_c1}};
 }
 
+table.ntdata > tbody > tr:last-child {
+    border-bottom:  2px solid {{ color.table_ntdata_border }};
+}
+
 table.ntdata > tr.even,
 table.ntdata > tbody > tr.even,
 table.ntdata > thead > tr.even,
@@ -711,6 +763,13 @@ table.ntdata > tr:nth-child(even),
 table.ntdata > tbody > tr:nth-child(even),
 table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
+}
+table.ntdata tr.toggle { font-size: 80%; text-align: left; }
+table.ntdata tr.toggle:nth-child(2n) { 
+    background: {{color.table_ntdata_background_c1}};
+}
+table.ntdata tr.toggle a:hover {
+  background: {{color.table_ntdata_background_c1}};
 }
 
 table.ntdata tr.line {
@@ -723,6 +782,43 @@ table.ntdata tr.endsection {
 table.right_align_table td {
   text-align: right;
 }
+
+
+
+
+table.number_table td
+{
+text-align:right;
+border:0px;
+cellpadding:3px;
+
+}
+
+
+table.number_table {
+  border-collapse:collapse;
+  border: 3px;
+  margin-left: 7px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+table.number_table tr:nth-child(even) {
+    background: {{color.table_ntdata_background_cn}};
+}
+
+table.number_table thead th {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table thead th:first-child{
+border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.number_table tbody th  {
+  border-right: 2px solid {{ color.table_ntdata_border }};
+}
+
 
 /* TODO: where? */
 div.literature {
@@ -764,7 +860,6 @@ table .knowl-link {
   display: inline;
   border-bottom: 1px dotted {{ color.knowl_hyper_text }};
   border-radius: 0px;
-  -moz-border-radius: 0px;
   padding: 1px;
 }
 .knowl-bar {
@@ -774,7 +869,6 @@ table .knowl-link {
   margin-bottom: 5px;
   border-bottom: 1px solid {{ color.knowl_thin_border }};
   border-top-left-radius: 10px;
-  -moz-border-radius-topleft: 10px;
 }
 .knowl-bar button,
 .knowl-bar input,
@@ -809,7 +903,6 @@ table .knowl-link {
   padding: 3px 5px 0px 5px;
   background: {{ color.knowl_l_1 }};
   border-top-left-radius: 5px;
-  -moz-border-radius-topleft: 5px;
 }
 .knowl {
   padding: 0;
@@ -839,8 +932,6 @@ table .knowl-link {
   padding: 2px;
   margin: 1px;
   border-radius: 2px;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
 }
 #knowl-index td div:hover {
   background: {{ color.knowl_hover }};
@@ -952,6 +1043,7 @@ td.right {
 table.ntdata .middle {
     vertical-align: middle;
 }
+
 table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
 }
@@ -1022,8 +1114,6 @@ table.statgrid td.cnt {
   border-bottom: 1px dotted {{ color.knowl_underline }};
   cursor: pointer;
   border-radius: 0;
-  -webkit-border-radius: 0;
-  -moz-border-radius: 0;
   margin: 3px 0 0 0;
 }
 *[knowl]:hover,
@@ -1034,9 +1124,7 @@ table.statgrid td.cnt {
   margin: 0;
   padding: 3px 0 0 0;
   border-top-left-radius: 3px;
-  -moz-border-radius-topleft: 3px;
   border-top-right-radius: 3px;
-  -moz-border-radius-topright: 3px;
 }
 
 body.knowl #header {
@@ -1156,7 +1244,7 @@ div.limit-height {
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
-  color: {{color.grey}};
+  color: {{ color.knowl_border_text }};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
@@ -1172,12 +1260,12 @@ div.limit-height {
 }
 .knowl-header a,
 .knowl-footer a {
-  color: {{ color.knowl_hyper_text }};
+    color: {{ color.knowl_border_links }};
 }
 .knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
-  color: {{ color.knowl_hover_text }};
+  color: {{ color.knowl_border_hover }};
 }
 
 /* end knowl */
@@ -1211,6 +1299,7 @@ div.limit-height {
 /*  font-size: 75%;
 */
   font-style: italic;
+  font-family: KaTeX_Math;
 }
 
 /*** Tables for the Siegel corner ***/
@@ -1244,6 +1333,7 @@ div.limit-height {
     border: 1px solid {{color.black}};
 }
 
+/* FIXME: I think we no longer use this */
 .watermark {
     color: {{color.grey}} !important;
 }
@@ -1276,7 +1366,8 @@ a.navlink {
   outline: 1px solid {{color.a_nav_background}};
   text-decoration: none;
   margin-left: 1px;
-  margin-top: 10px
+  margin-top: 10px;
+  vertical-align: top;
 }
 
 hr {
@@ -1296,41 +1387,41 @@ body.knowl hr {
 /* tables */
 /* TODO: where? do colors get used?*/
 table.tablesorter {
-	font-family:arial;
-	background-color: {{color.light_grey_2}};
-	margin:10px 0pt 15px;
-	font-size: 8pt;
-	width: 100%;
-	text-align: left;
+    font-family:arial;
+    background-color: {{color.light_grey_2}};
+    margin:10px 0pt 15px;
+    font-size: 8pt;
+    width: 100%;
+    text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
   background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
   border: 1px solid {{color.white}};
-	font-size: 8pt;
-	padding: 4px;
+    font-size: 8pt;
+    padding: 4px;
 }
 table.tablesorter thead tr .header {
-	background-image: url("static/images/black-unsorted.gif");
-	background-repeat: no-repeat;
-	background-position: center right;
-	cursor: pointer;
+    background-image: url("static/images/black-unsorted.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+    cursor: pointer;
   padding-left: 4px;
   padding-right: 15px;
 }
 table.tablesorter tbody td {
     color: {{color.dark_grey}};
-	padding: 4px;
-	background-color: {{color.white}};
-	vertical-align: top;
+    padding: 4px;
+    background-color: {{color.white}};
+    vertical-align: top;
 }
 table.tablesorter tbody tr.odd td {
     background-color:{{color.knowl_background}};
 }
 table.tablesorter thead tr .headerSortUp {
-	background-image: url("static/images/black-asc.gif");
+    background-image: url("static/images/black-asc.gif");
 }
 table.tablesorter thead tr .headerSortDown {
-	background-image: url("static/images/black-desc.gif");
+    background-image: url("static/images/black-desc.gif");
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
     background-color: {{color.light_grey_2}};
@@ -1342,48 +1433,48 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 }
 
 .dataTables_processing {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 250px;
-	height: 30px;
-	margin-left: -125px;
-	margin-top: -15px;
-	padding: 14px 0 2px 0;
-	border: 1px solid {{color.light_grey_3}};
-	text-align: center;
-	color: {{color.grey}};
-	font-size: 14px;
-	background-color: {{color.white}};
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 250px;
+    height: 30px;
+    margin-left: -125px;
+    margin-top: -15px;
+    padding: 14px 0 2px 0;
+    border: 1px solid {{color.light_grey_3}};
+    text-align: center;
+    color: {{color.grey}};
+    font-size: 14px;
+    background-color: {{color.white}};
 }
 
 .dataTables_length {
-	width: 100%;
-        line-height: 40px;
+    width: 100%;
+    line-height: 40px;
 }
 
 .dataTables_filter {
-	width: 100%;
-        line-height: 40px;
+    width: 100%;
+    line-height: 40px;
 }
 
 .dataTables_info {
-	width: 45%;
-	float: left;
-        margin: 5px;
+    width: 45%;
+    float: left;
+    margin: 5px;
 }
 
 .dataTables_paginate {
-	width: 50%;
-	* width: 50px;
-	float: right;
-	text-align: right;
-        margin: 5px;
+    width: 50%;
+    * width: 50px;
+    float: right;
+    text-align: right;
+    margin: 5px;
 }
 
 a.paginate_active {
-        font-weight: bold;
-        padding: 5px;
+    font-weight: bold;
+    padding: 5px;
 }
 
 a.paginate_button {
@@ -1392,46 +1483,46 @@ a.paginate_button {
 
 /* Pagination nested */
 .paginate_disabled_previous, .paginate_enabled_previous, .paginate_disabled_next, .paginate_enabled_next {
-	height: 19px;
-	width: 19px;
-	margin-left: 3px;
-	float: left;
+    height: 19px;
+    width: 19px;
+    margin-left: 3px;
+    float: left;
 }
 
 .paginate_disabled_previous {
-	background-image: url('/static/images/back_disabled.jpg');
+    background-image: url('/static/images/back_disabled.jpg');
 }
 
 .paginate_enabled_previous {
-	background-image: url('/static/images/back_enabled.jpg');
+    background-image: url('/static/images/back_enabled.jpg');
 }
 
 .paginate_disabled_next {
-	background-image: url('/static/images/forward_disabled.jpg');
+    background-image: url('/static/images/forward_disabled.jpg');
 }
 
 .paginate_enabled_next {
-	background-image: url('/static/images/forward_enabled.jpg');
+    background-image: url('/static/images/forward_enabled.jpg');
 }
 
 table.display {
-	margin: 0 auto;
-	clear: both;
-	width: 100%;
+    margin: 0 auto;
+    clear: both;
+    width: 100%;
 }
 
 table.display thead th {
-	padding: 3px 18px 3px 10px;
-	border-bottom: 1px solid {{color.black}};
-	font-weight: bold;
-	cursor: pointer;
-	* cursor: hand;
+    padding: 3px 18px 3px 10px;
+    border-bottom: 1px solid {{color.black}};
+    font-weight: bold;
+    cursor: pointer;
+    * cursor: hand;
 }
 
 table.display tfoot th {
-	padding: 3px 18px 3px 10px;
-	border-top: 1px solid {{color.black}};
-	font-weight: bold;
+    padding: 3px 18px 3px 10px;
+    border-top: 1px solid {{color.black}};
+    font-weight: bold;
 }
 
 table.display tr.heading2 td {
@@ -1439,31 +1530,31 @@ table.display tr.heading2 td {
 }
 
 table.display td {
-	padding: 3px 10px;
+    padding: 3px 10px;
 }
 
 table.display td.center {
-	text-align: center;
+    text-align: center;
 }
 
 .sorting_asc {
-	background: url('/static/images/sort_asc.png') no-repeat center right;
+    background: url('/static/images/sort_asc.png') no-repeat center right;
 }
 
 .sorting_desc {
-	background: url('/static/images/sort_desc.png') no-repeat center right;
+    background: url('/static/images/sort_desc.png') no-repeat center right;
 }
 
 .sorting {
-	background: url('/static/images/sort_both.png') no-repeat center right;
+    background: url('/static/images/sort_both.png') no-repeat center right;
 }
 
 .sorting_asc_disabled {
-	background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
 }
 
 .sorting_desc_disabled {
-	background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
 }
 
 
@@ -1503,35 +1594,35 @@ table.display tr.even.gradeU {
 */
 
 .dataTables_scroll {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_scrollBody {
-	*margin-top: -1px;
+    *margin-top: -1px;
 }
 
 .top, .bottom {
-	padding: 52px 5px 5px;
-	background-color: {{color.white_1}};
-	border: 1px solid {{color.light_grey_4}};
+    padding: 52px 5px 5px;
+    background-color: {{color.white_1}};
+    border: 1px solid {{color.light_grey_4}};
 }
 
 .top .dataTables_info {
-	float: none;
+    float: none;
 }
 
 .clear {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_empty {
-	text-align: center;
+    text-align: center;
 }
 
 tfoot input {
-	margin: 0.5em 0;
-	width: 100%;
-	color: {{color.dark_grey_1}};
+    margin: 0.5em 0;
+    width: 100%;
+    color: {{color.dark_grey_1}};
 }
 
 tfoot input.search_init {
@@ -1551,23 +1642,21 @@ td.details {
 
 
 .example_alt_pagination div.dataTables_info {
-	width: 40%;
+    width: 40%;
 }
 
 .paging_full_numbers {
-	height: 22px;
-	line-height: 22px;
+    height: 22px;
+    line-height: 22px;
 }
 
 .paging_full_numbers span.paginate_button,
- 	.paging_full_numbers span.paginate_active {
-	    border: 1px solid {{color.grey}};
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	padding: 2px 5px;
-	margin: 0 3px;
-	cursor: pointer;
-	*cursor: hand;
+.paging_full_numbers span.paginate_active {
+    border: 1px solid {{color.grey}};
+    padding: 2px 5px;
+    margin: 0 3px;
+    cursor: pointer;
+    *cursor: hand;
 }
 
 .paging_full_numbers span.paginate_button {
@@ -1753,7 +1842,7 @@ tr.even.gradeU td.sorting_3 {
 }
 
 table.KeyTable td {
-	border: 3px solid transparent;
+    border: 3px solid transparent;
 }
 
 table.KeyTable td.focus {
@@ -1779,17 +1868,16 @@ table.display tr.gradeU {
 
 /* TODO: div? */
 div.box {
-	height: 100px;
-	padding: 10px;
-	overflow: auto;
-	border: 1px solid {{color.knowl_thin_border}};
-	background-color: {{color.knowl_background}};
+    height: 100px;
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid {{color.knowl_thin_border}};
+    background-color: {{color.knowl_background}};
 }
 
 div.codebox {
     padding: 5px;
     text-padding: 10px;
-    overflow: auto;
     border: 1px solid {{color.knowl_thin_border}};
     border-radius: 5px;
     background-color: {{color.knowl_background}};
@@ -1801,8 +1889,8 @@ div.codebox {
 
 div.maassformplot {
     position: absolute;
-            width: 720px;
-         position: relative;
+    width: 720px;
+    position: relative;
     /*    height: 800px;
         overflow: hidden;
         position: relative; */
@@ -1833,7 +1921,6 @@ div.maassformplot img {
 
 #sidebar .heading {
     padding-right: 1px;
-    padding-left: 2px;
     margin-bottom: 1px;
 }
 
@@ -1875,13 +1962,13 @@ div.maassformplot img {
 
 
 #sidebar .beta {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
     display: inherit;
 }
 
 
 #sidebar .beta a {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
 }
 
 
@@ -1900,16 +1987,17 @@ div.maassformplot img {
 }
 
 #sidebar .list a {
-  display: block;
-  background: none;
-  padding: 0px;
+    display: block;
+    background: none;
+    padding: 0px;
 
 }
 #sidebar h2 {
-      margin: 5px 0px 0px;}
+    margin: 5px 0px 0px;}
 
 p.rotation  {
-             transform: rotate(270deg); }
+    transform: rotate(270deg);
+}
 
 /* temporary over-side for GL(2) on beta */
 body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
@@ -1917,41 +2005,41 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 }
 
 #sidebar table th, #sidebar table td {
-	text-align: left;
-	padding: 2px;
+    text-align: left;
+    padding: 2px;
 }
 
 #sidebar table.short{
     width: 100%;
     table-layout: fixed;
-	border-width: 2px;
+    border-width: 2px;
     border-bottom: 0px;
-	border-style: solid;
-	padding: 2px;
-	border-spacing: 0px;
-	border-color: {{color.sidebar_background}};
-	border-collapse: separate;
+    border-style: solid;
+    padding: 2px;
+    border-spacing: 0px;
+    border-color: {{color.sidebar_background}};
+    border-collapse: separate;
 }
 
 #sidebar table.short td.bor{
-	text-align: left;
+    text-align: left;
 }
 
 #sidebar table.short td.nbor{
-	padding: 0px; text-align: left;
+    padding: 0px; text-align: left;
 }
 
 #sidebar table.short td.borc{
-	text-align: center;
+    text-align: center;
 }
 
 #sidebar table.short td.full{
-        text-align: left;
+    text-align: left;
 }
 
 #sidebar table.short td.off {
-	text-align: center;
-	background: {{color.sidebar_background_off}};
+    text-align: center;
+    background: {{color.sidebar_background_off}};
 }
 
 
@@ -1966,7 +2054,6 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 0px;
-  -moz-border-radius-bottomright: 0px;
 }
 
 #sidebar .list li {
@@ -1980,14 +2067,14 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar table.short2{
     width: 100%;
     table-layout:fixed;
-	padding: 10px;
-	border-spacing: 0px;
-	border-color: {{color.sidebar_background}};
-	border-collapse: collapse;
+    padding: 10px;
+    border-spacing: 0px;
+    border-color: {{color.sidebar_background}};
+    border-collapse: collapse;
 }
 
 #sidebar table.short2 td{
-	padding-left: 10px;
+    padding-left: 10px;
 }
 
 /*End of Sidebar style*/
@@ -2139,6 +2226,10 @@ table.ntdata td.nowrap a {
     padding-top: 10px;
 }
 
+table.coeff_ring_basis {
+    margin-left: 14px;
+}
+
 table.coeff_ring_basis td {
     vertical-align: top;
 }
@@ -2221,23 +2312,16 @@ table.qexp-table td.output {
     font-family: MJX_Math;
 }
 
-input::-webkit-input-placeholder {
+input::placeholder {
     color: #cccccc;
 }
 
 .table_rotate {
-  /* FF3.5+ */
-  -moz-transform: rotate(180deg);
-  /* Opera 10.5 */
-  -o-transform: rotate(180deg);
-  /* Saf3.1+, Chrome */
-  -webkit-transform: rotate(180deg);
-  /* IE6,IE7 */
-  filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=0.166);
-  /* IE8 */
-  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.166)";
-  /* Standard */
+   /* see the word "Weight" on the left edge of the table in
+        /ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&dim=1
+   */
   transform: rotate(180deg);
+
   writing-mode: vertical-lr;
   white-space: nowrap;
 }
@@ -2262,4 +2346,14 @@ ul.horizontal-list li:after {
 
 input.color_selecter {
     margin: 10px;
+}
+
+/* the button to show advanced search options */
+#advancedtoggle {
+    margin-left: 20px;
+}
+
+/* the advanced search options themselves, hidden by default */
+.advanced {
+    display: none;
 }

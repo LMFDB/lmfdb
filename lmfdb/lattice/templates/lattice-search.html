@@ -1,47 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Further refine search </h2>
-<form id='re-search'>
-<input type="hidden" name="start" value="{{info.start}}"/>
-<table border="0">
-
-<tr>
-<td align=left>{{ KNOWL('lattice.dimension', title='Dimension') }}</td>
-<td align=left>{{ KNOWL('lattice.determinant', title='Determinant') }}</td>
-<td align=left>{{ KNOWL('lattice.level', title='Level') }}</td>
-<td align=left>{{ KNOWL('lattice.gram', title='Gram matrix') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='dim' size=10 value="{{info.dim}}"></td>
-<td align=left><input type='text' name='det' size=10 value="{{info.det}}"></td>
-<td align=left><input type='text' name='level' size=10 value="{{info.level}}"></td>
-<td align=left><input type='text' name='gram' size=10 value="{{info.gram}}"></td>
-</tr>
-
-<tr>
-<td align=left>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length</td>
-<td align=left>{{ KNOWL('lattice.class_number', title='Class number') }}</td>
-<td align=left>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='minimum' size=10 value="{{info.minimum}}"> </td>
-<td align=left><input type='text' name='class_number' size=10 value="{{info.class_number}}"> </td>
-<td align=left><input type='text' name='aut' size=10 value="{{info.aut}}"> </td>
-</tr>
-
-<tr>&nbsp;</tr>
-<tr>
-<td align=left colspan=2>Maximum number of integral lattices to display</td>
-<td align=left><input type='text' name='count' value={{info.count}} size=10></td>
-</tr>
-<tr>
-<td class="button"><button type='submit' size=10  value='refine'>Search again</button></td>
-</tr>
-</table>
-</form>
+{% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
 {% if info.number %}
@@ -58,16 +18,15 @@
   {% for l in info.results %}
   <tr>
     <td align='center'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-    <td align='center'>{{l.dim}}</td>
-    <td align='center'>{{l.det}}</td>
-    <td align='center'>{{l.level}}</td>
-    <td align='center'>{{l.class_number}}</td>
-    <td align='center'>{{l.min}}</td>
-    <td align='center'>{{l.aut}}</td>
+    <td align='center'>${{l.dim}}$</td>
+    <td align='center'>${{l.det}}$</td>
+    <td align='center'>${{l.level}}$</td>
+    <td align='center'>${{l.class_number}}$</td>
+    <td align='center'>${{l.min}}$</td>
+    <td align='center'>${{l.aut}}$</td>
   </tr>
   {% endfor %}
 </table>
-<hr>
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
 {% endif %}

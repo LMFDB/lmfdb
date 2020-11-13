@@ -30,7 +30,7 @@ CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
 
 COLLABORATION SUGGESTIONS:
-* Forms that have no zeros except at the cusps
+* newforms that have no zeros except at the cusps
 
 GOOD:
 * Create links to dynamics stats from each entry in the curated stats
@@ -119,6 +119,7 @@ Style:
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
+* How does git work again?
 
 ISSUES todo:
 Ask David Farmer if he wants to reopen #59

@@ -1,10 +1,10 @@
+from __future__ import absolute_import
 from flask import url_for
-from sage.all import ZZ, is_prime, latex, imag_part, lazy_attribute, sqrt
-from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
-                                styleTheSign, specialValueString,
-                                specialValueTriple)
-from math import pi
 from label_factory import make_label
+from sage.all import ZZ, is_prime, latex, imag_part
+from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
+                                styleTheSign, specialValueString,
+                                 specialValueTriple,scientific_notation_helper)
 
 
 #############################################################################
@@ -36,7 +36,10 @@ class Lfunction(object):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
-            self.Q_fe = float(sqrt(ZZ(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+            from sage.functions.other import sqrt 
+            from sage.rings.all import Integer
+            from math import pi
+            self.Q_fe = float(sqrt(Integer(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
@@ -48,7 +51,7 @@ class Lfunction(object):
     ############################################################################
 
     def compute_web_zeros(self, time_allowed = 10, **kwargs):
-	""" A function that dispatches web computations to the correct tool"""
+        """ A function that dispatches web computations to the correct tool"""
         # Do not pass 0 to either lower bound or step_size
         # Not dependent on time actually
         # Manual tuning required
@@ -86,7 +89,7 @@ class Lfunction(object):
         if not hasattr(self,"fromDB"):
             self.fromDB = False
 
-        if via_N == True:
+        if via_N is True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
             if self.fromDB:
@@ -125,7 +128,7 @@ class Lfunction(object):
 
         info['degree'] = int(self.degree)
         info['conductor'] = self.level
-        if not is_prime(int(self.level)):
+        if not is_prime(int(self.level)) and int(self.level)!=1:
             if self.level >= 10**8:
                 info['conductor'] = latex(self.level_factored)
             else:
@@ -171,8 +174,8 @@ class Lfunction(object):
                arith_center = str(ZZ(1)/2 + self.motivic_weight/2)
             svt_crit = specialValueTriple(self, 0.5, '\\frac12',arith_center)
             info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
-            info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
-            info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
+            info['sv_critical_analytic'] = [svt_crit[0], scientific_notation_helper(svt_crit[2])]
+            info['sv_critical_arithmetic'] = [svt_crit[1], scientific_notation_helper(svt_crit[2])]
 
             if self.motivic_weight % 2 == 1:
                arith_edge = "\\frac{" + str(2 + self.motivic_weight) + "}{2}"
@@ -181,14 +184,14 @@ class Lfunction(object):
 
             svt_edge = specialValueTriple(self, 1, '1',arith_edge)
             info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
-            info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
-            info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+            info['sv_edge_analytic'] = [svt_edge[0], scientific_notation_helper(svt_edge[2])]
+            info['sv_edge_arithmetic'] = [svt_edge[1], scientific_notation_helper(svt_edge[2])]
 
-            chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
+            chilatex = r"$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) + r", \cdot )$"
             info['chi'] = ''
             if self.charactermodulus != self.level:
                 info['chi'] += "induced by "
-            info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage', 
+            info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage',
                                                     modulus=self.charactermodulus, number=self.characternumber)
             info['chi'] += '">' + chilatex + '</a>'
 

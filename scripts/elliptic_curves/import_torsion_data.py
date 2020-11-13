@@ -14,14 +14,18 @@ Additional data fields for each elliptic curve over Q
  'tor_gro': u'jsonb',    dictionary, keys are field labels or poly
                          strings, values are structure constants of the larger torsion
 
-
+NB We have hard-coded the maximum degree of number field for which we
+currently have data (currently 7) in lmfdb/elliptic_curves/web_ec.py
+since tor_degs and the other extra columns are in the extr table.  If
+data for higher degrees is uploaded that will need to be changed.
 """
+from __future__ import print_function
 import os
 from sage.all import ZZ, PolynomialRing, QQ, NumberField
 
 from lmfdb import db
 
-print "setting curves"
+print("setting curves")
 curves = db.ec_curves
 fields = db.nf_fields
 
@@ -60,7 +64,7 @@ def find_field(pol, verbose=False):
     from lmfdb.number_fields.number_field import poly_to_field_label
     poly = Qx(coeffs)
     Flabel = poly_to_field_label(poly)
-    if Flabel==None:
+    if Flabel is None:
         print("********* field with polynomial {} is not in the database!".format(poly))
         K = NumberField(poly, 'a')
         poly = K.optimized_representation()[0].defining_polynomial()
@@ -136,13 +140,16 @@ def read_line(line, degree, debug=0):
     # Qt = str_to_list(fields[1]) # string representing list of ints of length <=2
 
     tordata = [onefieldtor(dat, degree) for dat in fields[2:]]
-    if debug: print("before degree check, tordata = {}".format(tordata))
-    tordata = [t for t in tordata if t!=None]
-    if debug: print("after  degree check, tordata = {}".format(tordata))
+    if debug:
+        print("before degree check, tordata = {}".format(tordata))
+    tordata = [t for t in tordata if t is not None]
+    if debug:
+        print("after  degree check, tordata = {}".format(tordata))
     data = dict(tordata)
 
     if debug: print("label {}, data {}".format(clabel,data))
     return clabel, data
+
 
 def read_xline(line, degree, debug=0):
     r""" Parses one line from input file.  Returns a dict containing ...
@@ -181,7 +188,7 @@ def read_xline(line, degree, debug=0):
 def upload_to_db(base_path, f, test=True):
     f = os.path.join(base_path, f)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     data_to_insert = {}  # will hold all the data to be inserted
     count = 0
@@ -189,12 +196,12 @@ def upload_to_db(base_path, f, test=True):
     for line in h.readlines():
         count += 1
         if count%1000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         label, data = read_line(line,0)
         #if data['torsion_growth']label]
         data_to_insert[label] = data
 
-    print "finished reading %s lines from file" % count
+    print("finished reading %s lines from file" % count)
     vals = data_to_insert.values()
 
     print("Number of records to insert = %s" % len(vals))
@@ -222,7 +229,7 @@ def add_iw_data1(C, tor_data):
 def read_torsion_growth_data(base_path, filename, degree, maxlines=0):
     f = os.path.join(base_path, filename)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     tor_data = {}
     count = 0
@@ -230,7 +237,7 @@ def read_torsion_growth_data(base_path, filename, degree, maxlines=0):
     for line in h.readlines():
         count += 1
         if count%10000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         if maxlines and count>maxlines:
             break
         label, data = read_line(line,degree,0)
@@ -242,7 +249,7 @@ def read_torsion_growth_data(base_path, filename, degree, maxlines=0):
 def read_xtorsion_growth_data(base_path, filename, degree, maxlines=0):
     f = os.path.join(base_path, filename)
     h = open(f)
-    print "opened %s" % f
+    print("opened %s" % f)
 
     tor_data = {}
     count = 0
@@ -250,7 +257,7 @@ def read_xtorsion_growth_data(base_path, filename, degree, maxlines=0):
     for line in h.readlines():
         count += 1
         if count%10000==0:
-            print "read %s lines" % count
+            print("read %s lines" % count)
         if maxlines and count>maxlines:
             break
         label, data = read_xline(line,degree,0)
@@ -289,7 +296,7 @@ def tor_data_update(N1, N2, base_path, maxlines=0):
 
 def tor_xdata_update(N1, N2, base_path, degrees=None, overwrite=False, maxlines=0):
     tordata = {}
-    if degrees == None:
+    if degrees is None:
         degrees = [str(d) for d in range(2,8)]
     else:
         degrees = [str(d) for d in degrees]
@@ -326,8 +333,9 @@ def tor_xdata_update(N1, N2, base_path, degrees=None, overwrite=False, maxlines=
         return C
     return tordata, update_function
 
+
 def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
-    if degrees == None:
+    if degrees is None:
         degrees = [str(d) for d in range(2,8)]
     else:
         degrees = [str(d) for d in degrees]
@@ -335,10 +343,10 @@ def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
     for d in degrees:
         f = os.path.join(base_path, "growth{}x.000000-399999".format(d))
         h = open(f, mode='w')
-        print "opened {}".format(f)
+        print("opened {}".format(f))
         td = tordata[d]
         count = 0
-        for lab, dat in td.iteritems():
+        for lab, dat in td.items():
             h.write(" ".join([lab]+["[{}]:{}".format(T,F.replace(":",".")) for F,T in dat.items()]) + "\n")
             count +=1
             if count==maxlines:

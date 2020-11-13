@@ -1,18 +1,39 @@
-# -*- coding: utf-8 -*-
-import os, time
 
-from flask import Flask, g, render_template, request, make_response, redirect, url_for, current_app, abort
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+import os
+from socket import gethostname
+import time
+import six
+from urllib.parse import urlparse, urlunparse
+
+from flask import (Flask, g, render_template, request, make_response,
+                   redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 
-from lmfdb.logger import logger_file_handler, critical
-from lmfdb.homepage import load_boxes, contribs
+from .logger import logger_file_handler, critical
+from .homepage import load_boxes, contribs
+
+LMFDB_VERSION = "LMFDB Release 1.2"
 
 ############################
 #         Main app         #
 ############################
 
+class ReverseProxied(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        scheme = environ.get('HTTP_X_FORWARDED_PROTO')
+        if scheme:
+            environ['wsgi.url_scheme'] = scheme
+        return self.app(environ, start_response)
+
 app = Flask(__name__)
+
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 ############################
 # App attribute functions  #
@@ -47,10 +68,14 @@ app.logger.addHandler(logger_file_handler())
 if app.debug:
     try:
         from flask_debugtoolbar import DebugToolbarExtension
-        app.config['SECRET_KEY'] = '''shh, it's a secret'''
         toolbar = DebugToolbarExtension(app)
     except ImportError:
         pass
+
+# secret key, necessary for sessions, and sessions are
+# in turn necessary for users to login
+from .utils.config import get_secret_key
+app.secret_key = get_secret_key()
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -82,6 +107,9 @@ def ctx_proc_userdata():
     # default title
     vars['title'] = r'LMFDB'
 
+    # LMFDB version number displayed in footer
+    vars['version'] = LMFDB_VERSION
+
     # meta_description appears in the meta tag "description"
     vars['meta_description'] = r'Welcome to the LMFDB, the database of L-functions, modular forms, and related objects. These pages are intended to be a modern handbook including tables, formulas, links, and references for L-functions and their underlying objects.'
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation, the UK Engineering and Physical Sciences Research Council, and the Simons Foundation.' % (url_for('acknowledgment') + "#sponsors")
@@ -91,6 +119,12 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+
+    def modify_url(**replace):
+        urlparts = urlparse(request.url)
+        urlparts = urlparts._replace(**replace)
+        return urlunparse(urlparts)
+    vars['modify_url'] = modify_url
 
     return vars
 
@@ -103,7 +137,7 @@ def ctx_proc_userdata():
 # so instead we do this to ensure that the sidebar content is available to every page:
 @app.context_processor
 def inject_sidebar():
-    from lmfdb.homepage import get_sidebar
+    from .homepage import get_sidebar
     return dict(sidebar=get_sidebar())
 
 ##############################
@@ -119,29 +153,22 @@ def git_infos():
         from subprocess import Popen, PIPE
         # cwd should be the root of git repo
         cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..")
-        git_rev_cmd = '''git rev-parse HEAD'''
-        git_date_cmd = '''git show --format="%ci" -s HEAD'''
-        git_contains_cmd = '''git branch --contains HEAD'''
-        git_reflog_cmd = '''git reflog -n5'''
-        git_graphlog_cmd = '''git log --graph  -n 10'''
-        rev = Popen([git_rev_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        date = Popen([git_date_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        graphlog = Popen([git_graphlog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
-        pairs = [[git_rev_cmd, rev],
-                [git_date_cmd, date],
-                [git_contains_cmd, contains],
-                [git_reflog_cmd, reflog],
-                [git_graphlog_cmd, graphlog]]
-        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
-        cmd_output = rev, date,  summary
+        commands = ['''git rev-parse HEAD''',
+                    '''git show --format="%ci" -s HEAD''',
+                    '''git branch --contains HEAD''',
+                    '''git reflog -n5''',
+                    '''git log --graph  -n 10''']
+        kwdargs = {'shell': True, 'stdout' : PIPE, 'cwd' : cwd}
+        if six.PY3:
+            kwdargs['encoding'] = 'utf-8'
+        pairs = [(c, Popen(c, **kwdargs).communicate()[0]) for c in commands]
+        rev = pairs[0][1]
+        date = pairs[0][1]
+        summary = "\n".join("$ %s\n%s" % p for p in pairs)
+        return rev, date, summary
     except Exception:
-        cmd_output = '-', '-', '-'
-    return cmd_output
+        return '-', '-', '-'
 
-def git_summary():
-    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
 
 git_rev, git_date, _  = git_infos()
 
@@ -178,29 +205,56 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
 # You can use this formatter to turn newlines in a string into HTML line breaks
 @app.template_filter("nl2br")
 def nl2br(s):
-    return s.replace('\n', '<br>\n')
+    return s.replace('\n', '<br/>\n')
 
 # You can use this formatter to encode a dictionary into a url string
 @app.template_filter('urlencode')
 def urlencode(kwargs):
-    import urllib
-    return urllib.urlencode(kwargs)
+    from six.moves.urllib.parse import urlencode
+    return urlencode(kwargs)
 
 ##############################
 #    Redirects and errors    #
 ##############################
 
+
 @app.before_request
-def redirect_nonwww():
-    """Redirect lmfdb.org requests to www.lmfdb.org"""
-    from urlparse import urlparse, urlunparse
+def netloc_redirect():
+    """
+        Redirect lmfdb.org -> www.lmfdb.org
+        Redirect {www, beta, }.lmfdb.com -> {www, beta, }.lmfdb.org
+        Force https on www.lmfdb.org
+        Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
+    """
+    from six.moves.urllib.parse import urlparse, urlunparse
+
     urlparts = urlparse(request.url)
-    if urlparts.netloc == 'lmfdb.org':
-        replaced = urlparts._replace(netloc='www.lmfdb.org')
+
+    if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
+        replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=301)
+    elif urlparts.netloc == "beta.lmfdb.com":
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=301)
+    elif (
+        urlparts.netloc == "www.lmfdb.org"
+        and request.headers.get("X-Forwarded-Proto", "http") != "https"
+        and request.url.startswith("http://")
+    ):
+        url = request.url.replace("http://", "https://", 1)
+        return redirect(url, code=301)
+    elif (
+        urlparts.netloc == "www.lmfdb.org"
+        and
+        not white_listed(urlparts.path)
+    ):
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=302)
+
+
 
 def timestamp():
-    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -244,23 +298,56 @@ def index():
 def about():
     return render_template("about.html", title="About the LMFDB")
 
-# basic health check
 @app.route("/health")
 @app.route("/alive")
 def alive():
-    from lmfdb import db
+    """
+    a basic health check
+    """
+    from . import db
     if db.is_alive():
         return "LMFDB!"
     else:
         abort(503)
 
+
+
+@app.route("/statshealth")
+def statshealth():
+    """
+    a health check on the stats pages
+    """
+    from . import db
+    if db.is_alive():
+        tc = app.test_client()
+        for url in ['/NumberField/stats',
+                    '/ModularForm/GL2/Q/holomorphic/stats',
+                    '/EllipticCurve/Q/stats',
+                    '/EllipticCurve/browse/2/',
+                    '/EllipticCurve/browse/3/',
+                    '/EllipticCurve/browse/4/',
+                    '/EllipticCurve/browse/5/',
+                    '/EllipticCurve/browse/6/',
+                    '/Genus2Curve/Q/stats',
+                    '/Belyi/stats',
+                    '/HigherGenus/C/Aut/stats',
+                    ]:
+            try:
+                if tc.get(url).status_code != 200:
+                    abort(503)
+            except Exception:
+                abort(503)
+        else:
+            return "LMFDB stats are healthy!"
+    else:
+        abort(503)
+
 @app.route("/info")
 def info():
-    from socket import gethostname
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
-    output += "# PostgreSQL info\n";
-    from lmfdb import db
+    output += "# PostgreSQL info\n"
+    from . import db
     if not db.is_alive():
         output += "db is offline\n"
     else:
@@ -270,11 +357,11 @@ def info():
         output += "Read only: %s\n" % db._read_only
         output += "Read and write to userdb: %s\n" % db._read_and_write_userdb
         output += "Read and write to knowls: %s\n" % db._read_and_write_knowls
-    output += "\n# GIT info\n";
+    output += "\n# GIT info\n"
     output += git_infos()[-1]
-    output += "\n\n";
-    
+    output += "\n\n"
     return output.replace("\n", "<br>")
+
 
 @app.route("/acknowledgment")
 def acknowledgment():
@@ -291,64 +378,110 @@ def workshops():
 def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])
 
+@app.route('/L')
+@app.route('/L/')
+def l_functions():
+    t = 'L-functions'
+    b = [(t, url_for('l_functions'))]
+    lm = [('History of L-functions', '/L/history'),('Completeness of the data',url_for('l_functions.completeness'))]
+    return render_template('single.html', title=t, kid='lfunction.about', bread=b, learnmore=lm)
+
+@app.route("/L/history")
+def l_functions_history():
+    t = 'L-functions'
+    b = [(t, url_for('l_functions'))]
+    b.append(('History', url_for("l_functions_history")))
+    return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
+
+@app.route('/ModularForm')
+@app.route('/ModularForm/')
+def modular_forms():
+    t = 'Modular forms'
+    b = [(t, url_for('modular_forms'))]
+    # lm = [('History of modular forms', '/ModularForm/history')]
+    return render_template('single.html', title=t, kid='mf.about', bread=b) #, learnmore=lm)
+
+# @app.route("/ModularForm/history")
+def modular_forms_history():
+    t = 'Modular forms'
+    b = [(t, url_for('modular_forms'))]
+    b.append(('History', url_for("modular_forms_history")))
+    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+
 @app.route('/Variety')
+@app.route('/Variety/')
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
     # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
-
-@app.route("/Variety/history")
+# @app.route("/Variety/history")
 def varieties_history():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
     b.append(('History', url_for("varieties_history")))
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
-
 @app.route('/Field')
+@app.route('/Field/')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
     # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Field/history")
+# @app.route("/Field/history")
 def fields_history():
     t = 'Fields'
     b = [(t, url_for('fields'))]
     b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A Brief History of Fields", kid='f.history', body_class=_bc, bread=b)
-
+    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
 
 @app.route('/Representation')
+@app.route('/Representation/')
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
     # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Representation/history")
+# @app.route("/Representation/history")
 def representations_history():
     t = 'Representations'
     b = [(t, url_for('representations'))]
     b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief History of Representations", kid='rep.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
+
+@app.route('/Motive')
+@app.route('/Motive/')
+def motives():
+    t = 'Motives'
+    b = [(t, url_for('motives'))]
+    # lm = [('History of motives', '/Motives/history')]
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+
+# @app.route("/Motives/history")
+def motives_history():
+    t = 'Motives'
+    b = [(t, url_for('motives'))]
+    b.append(('History', url_for("motives_history")))
+    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
 
 @app.route('/Group')
+@app.route('/Group/')
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
     # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
-@app.route("/Group/history")
+# @app.route("/Group/history")
 def groups_history():
     t = 'Groups'
     b = [(t, url_for('groups'))]
     b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief History of Groups", kid='g.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
 
 @app.route("/editorial-board")
 @app.route("/management-board")
@@ -364,22 +497,6 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
-@app.route("/citation/citing")
-def citing():
-    t = "How to Cite LMFDB"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
-    return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
-
-@app.route("/citation/citations")
-def citations():
-    t = "LMFDB Citations"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
-    return render_template('citations.html', title=t, body_class='', bread=b)
-
-@app.route("/citation/citations_bib")
-def citations_bib():
-    t = "LMFDB Citations (BiBTeX Entries)"
-    return render_template('citations_content_bib.html', title=t, body_class='')
 
 @app.route("/contact")
 def contact():
@@ -391,11 +508,14 @@ def root_static_file(name):
     def static_fn():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
-            return open(fn).read()
+            return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
-map(root_static_file, ['favicon.ico'])
+
+
+for fn in ['favicon.ico']:
+    root_static_file(fn)
 
 
 @app.route("/robots.txt")
@@ -418,7 +538,14 @@ def humans_txt():
 
 @app.context_processor
 def add_colors():
-    from lmfdb.utils.color import all_color_schemes
+    # FIXME:
+    # - the template should use global variable g.color
+    # - try to get the color from
+    #       - the cookie
+    #       - from the config file
+    # - remove cookie at logout (see line 307 of users/main)
+    # - add cookie at login or when a color change happens (see line 175 of users/main)
+    from .utils.color import all_color_schemes
     color = request.args.get('color')
     if color and color.isdigit():
         color = int(color)
@@ -428,12 +555,12 @@ def add_colors():
         from flask_login import current_user
         userid = current_user.get_id()
         if userid is not None:
-            from lmfdb.users.pwdmanager import userdb
+            from .users.pwdmanager import userdb
             color = userdb.lookup(userid).get('color_scheme')
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from lmfdb.utils.config import Configuration
+            from .utils.config import Configuration
             color = Configuration().get_color()
     return dict(color=all_color_schemes[color].dict())
 
@@ -479,7 +606,6 @@ def introduction():
     b = intro_bread()
     return render_template(_single_knowl, title="Introduction", kid='intro', body_class=_bc, bread=b)
 
-
 @app.route("/intro/features")
 def introduction_features():
     b = intro_bread()
@@ -491,28 +617,195 @@ def introduction_features():
 def introduction_zetatour():
     b = intro_bread()
     b.append(('Tutorial', url_for("introduction_zetatour")))
-    return render_template(_single_knowl, title="A Tour of the Riemann Zeta Function", kid='intro.tutorial', body_class=_bc, bread=b)
-
+    return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 @app.route("/bigpicture")
 def bigpicture():
-    b = [('Big Picture', url_for('bigpicture'))]
-    return render_template("bigpicture.html", title="A Map of the LMFDB", body_class=_bc, bread=b)
+    b = [('Big picture', url_for('bigpicture'))]
+    return render_template("bigpicture.html", title="A map of the LMFDB", body_class=_bc, bread=b)
 
 @app.route("/universe")
 def universe():
-    b = [('LMFDB Universe', url_for('universe'))]
-    return render_template("universe.html", title="The LMFDB Universe", body_class=_bc, bread=b)
-
-
-@app.route("/roadmap")
-def roadmap():
-    t = "Future Plans"
-    b = [(t, url_for('roadmap'))]
-    return render_template('roadmap.html', title=t, body_class=_bc, bread=b)
+    b = [('LMFDB universe', url_for('universe'))]
+    return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
 
 @app.route("/news")
 def news():
     t = "News"
     b = [(t, url_for('news'))]
-    return render_template(_single_knowl, title="LMFDB in the News", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="LMFDB in the news", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+
+
+
+
+###############################################
+# White listing routes for www.lmfdb.org      #
+###############################################
+
+
+def routes():
+    """
+    Returns all routes
+    """
+    links = []
+    for rule in app.url_map.iter_rules():
+        # Filter out rules we can't navigate to in a browser
+        # and rules that require parameters
+        if "GET" in rule.methods:  # and has_no_empty_params(rule):
+            try:
+                url = url_for(rule.endpoint, **(rule.defaults or {}))
+            except Exception:
+                url = None
+            links.append((url, str(rule)))
+    return sorted(links, key= lambda elt: elt[1])
+
+@app.route("/sitemap")
+def sitemap():
+    """
+    Listing all routes
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+            ]
+        )
+        + "</ul>"
+    )
+
+WhiteListedRoutes = [
+    'ArtinRepresentation',
+    'Character/Dirichlet',
+    'EllipticCurve',
+    'Field',
+    'GaloisGroup',
+    'Genus2Curve/Q',
+    'Group',
+    'HigherGenus/C/Aut',
+    'L/Completeness',
+    'L/Lhash',
+    'L/Plot',
+    'L/Riemann',
+    'L/SymmetricPower',
+    'L/Zeros',
+    'L/browseGraphChar',
+    'L/degree',
+    'L/download',
+    'L/history',
+    'L/lhash',
+    'L/tracehash',
+    'LocalNumberField',
+    'ModularForm/GL2/ImaginaryQuadratic',
+    'ModularForm/GL2/Q/Maass',
+    'ModularForm/GL2/Q/holomorphic',
+    'ModularForm/GL2/TotallyReal',
+    'NumberField',
+    'Representation/foo',  # allows /Representation but not /Representation/Galois/ModL/
+    'SatoTateGroup',
+    'Variety/Abelian/Fq',
+    'about',
+    'acknowledgment',
+    'alive',
+    'api',
+    'api2',
+    'bigpicture',
+    'callback_ajax',
+    'citation',
+    'contact',
+    'editorial-board',
+    'favicon.ico',
+    'features',
+    'forcebetasitemap',
+    'health',
+    'humans.txt',
+    'info',
+    'intro',
+    'inventory',
+    'knowledge',
+    'management',
+    'news',
+    'not_yet_implemented',
+    'random',
+    'robots.txt',
+    'search',
+    'sitemap',
+    'static',
+    'statshealth',
+    'style.css',
+    'universe',
+    'users',
+    'whitelistedsitemap',
+    'zeros/zeta'
+]
+
+WhiteListedBreads = set()
+for elt in WhiteListedRoutes:
+    elt_split = elt.split('/')
+    bread = ''
+    for s in elt.split('/'):
+        if bread:
+            bread += '/' + s
+        else:
+            bread = s
+        WhiteListedBreads.add(bread)
+
+def white_listed(url):
+    url = url.rstrip("/").lstrip("/")
+    if not url:
+        return True
+    if (
+        any(url.startswith(elt) for elt in WhiteListedRoutes)
+        # check if is an allowed bread
+        or url in WhiteListedBreads
+    ):
+        return True
+    # check if it starts with an L
+    elif url[:2] == "L/":
+        return white_listed(url[1:])
+    else:
+        return False
+
+
+@app.route("/forcebetasitemap")
+def forcebetasitemap():
+    """
+    Listing routes that are not allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if not white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+
+
+@app.route("/whitelistedsitemap")
+def whitelistedsitemap():
+    """
+    Listing routes that are allowed on www.lmfdb.org
+    """
+    return (
+        "<ul>"
+        + "\n".join(
+            [
+                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                if url is not None
+                else "<li>{0}</li>".format(endpoint)
+                for url, endpoint in routes()
+                if white_listed(endpoint)
+            ]
+        )
+        + "</ul>"
+    )
+
