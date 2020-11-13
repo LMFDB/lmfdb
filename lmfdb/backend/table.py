@@ -1551,7 +1551,7 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _write_header_lines(self, F, cols, sep=u"|"):
+    def _write_header_lines(self, F, cols, sep=u"|", include_id=True):
         """
         Writes the header lines to a file
         (row of column names, row of column types, blank line).
@@ -1562,7 +1562,7 @@ class PostgresTable(PostgresBase):
         - ``cols`` -- a list of columns to write (either self.search_cols or self.extra_cols)
         - ``sep`` -- a string giving the column separator.  You should not use comma.
         """
-        if cols and cols[0] != "id":
+        if include_id and cols and cols[0] != "id":
             cols = ["id"] + cols
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n" % (sep.join(cols), sep.join(types)))
@@ -2026,6 +2026,9 @@ class PostgresTable(PostgresBase):
         constraintsfile=None,
         metafile=None,
         commit=True,
+        columns=None,
+        query=None,
+        include_id=True,
         **kwds
     ):
         """
@@ -2044,15 +2047,22 @@ class PostgresTable(PostgresBase):
         - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
         - ``constraintsfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_constraints table.
         - ``metafile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
+        - ``columns`` -- a list of column names to export
+        - ``query`` -- a query dictionary
+        - ``include_id`` -- whether to include the id column in the output file
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.pop("sep", u"|")
 
+        search_cols = [col for col in self.search_cols if columns is None or col in columns]
+        extra_cols = [col for col in self.extra_cols if columns is None or col in columns]
+        if columns is not None and len(columns) != len(search_cols) + len(extra_cols):
+            raise ValueError("Invalid columns %s" % (", ".join([col for col in columns if col not in search_cols and col not in extra_cols])))
         tabledata = [
             # tablename, cols, addid, write_header, filename
-            (self.search_table, self.search_cols, True, True, searchfile),
-            (self.extra_table, self.extra_cols, True, True, extrafile),
+            (self.search_table, search_cols, include_id, True, searchfile),
+            (self.extra_table, extra_cols, include_id, True, extrafile),
         ]
         if self.stats.saving:
             tabledata.extend([
@@ -2079,8 +2089,20 @@ class PostgresTable(PostgresBase):
                 with open(filename, "w") as F:
                     try:
                         if write_header:
-                            self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
+                            self._write_header_lines(F, cols, include_id=include_id, sep=sep)
+                        if query is None:
+                            cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
+                        else:
+                            if sep == "\t":
+                                sep_clause = SQL("")
+                            else:
+                                sep_clause = SQL(" (DELIMITER {0})").format(Literal(sep))
+                            qstr, values = self._build_query(query, sort=[])
+                            scols = SQL(", ").join(map(IdentifierWrapper, cols))
+                            selecter = SQL("SELECT {0} FROM {1}{2}").format(scols, IdentifierWrapper(table), qstr)
+                            copyto = SQL("COPY ({0}) TO STDOUT{1}").format(selecter, sep_clause)
+                            # copy_expert doesn't support values
+                            cur.copy_expert(cur.mogrify(copyto, values), F, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
