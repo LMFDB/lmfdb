@@ -21,6 +21,11 @@ def CCcmp(z1, z2):
     elif y2 < y1:
         return 1
     return 0
+
+def CCtuple(z):
+    return (z.real(), z.imag())
+
+
 def spectral_str(x):
     res = ""
     if x < 0:
@@ -39,9 +44,9 @@ def make_label(L):
         L['central_character'] = '1.1'
     GR, GC = L['gamma_factors']
     GR = [CC(str(elt)) for elt in GR]
-    GR.sort(cmp=CCcmp)
+    GR.sort(key=CCtuple)
     GC = [CC(str(elt)) for elt in GC]
-    GC.sort(cmp=CCcmp)
+    GC.sort(key=CCtuple)
 
     rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
     cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])

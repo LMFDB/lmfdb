@@ -571,7 +571,7 @@ class Lfunction_from_db(Lfunction):
         makeLfromdata(self)
         self.info = self.general_webpagedata()
         self._set_knowltype()
-        self._set_title()
+        self.info['title'] = "L-function " + self.lfun_label
         self.credit = ''
         self.label = ''
 
@@ -713,43 +713,6 @@ class Lfunction_from_db(Lfunction):
                 lang = 'text',
                 title = 'The L-function object of %s' % self.url)
 
-    @lazy_attribute
-    def chilatex(self):
-        try:
-            if int(self.characternumber) != 1:
-                return r"character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
-            else:
-                return "trivial character"
-        except KeyError:
-            return None
-
-
-    def _set_title(self):
-        '''
-        If `charactermodulus` and `characternumber` are defined, make a title
-        which includes the character. Otherwise, make a title without character.
-        '''
-        if len(str(self.level)) < sum([len(str(elt)) + min(2, k) for elt, k in self.level_factored]):
-            conductor_str = "$%s$" % self.level
-        else:
-            conductor_str = "$%s$" % latex(self.level_factored)
-
-        if self.chilatex is not None:
-            title_end = (
-                    " of degree {degree}, motivic weight {weight},"
-                    " conductor {conductor}, and {character}"
-                    ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=conductor_str, character=self.chilatex)
-        else:
-            title_end = (
-                    " of degree {degree}, motivic weight {weight},"
-                    " and conductor {conductor}"
-                    ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=conductor_str)
-        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = ("L-function" + title_end)
-        self.info['title_analytic'] = ("L-function" + title_end)
-        return
 
     @lazy_attribute
     def htmlname(self):
@@ -858,12 +821,7 @@ class Lfunction_CMF(Lfunction_from_db):
             lfriends += names_and_urls([self.orbit_url])
         return lfriends
 
-#    def _set_title(self):
-#        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
-#            self.weight, self.level, self.chilatex)
-#
-#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-#
+
 
 #############################################################################
 
