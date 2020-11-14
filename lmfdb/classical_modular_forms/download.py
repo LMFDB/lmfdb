@@ -4,7 +4,7 @@ from flask import  url_for, redirect, abort
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import Downloader, flash_error
-from lmfdb.classical_modular_forms.web_newform import WebNewform, encode_hecke_orbit
+from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 class CMF_download(Downloader):
@@ -240,42 +240,42 @@ class CMF_download(Downloader):
     def download_multiple_space_traces(self, info):
         return self.download_multiple_traces(info, spaces=True)
 
-    def _download_cc(self, label, lang, col, suffix, title):
-        try:
-            code = encode_hecke_orbit(label)
-        except ValueError:
-            return abort(404, "Invalid label: %s"%label)
-        if not db.mf_hecke_cc.exists({'hecke_orbit_code':code}):
-            return abort(404, "No form found for %s"%(label))
-        def cc_generator():
-            yield '[\n'
-            for ev in db.mf_hecke_cc.search(
-                    {'hecke_orbit_code':code},
-                    ['label',
-                     'embedding_root_real',
-                     'embedding_root_imag',
-                     col],
-                    sort=['conrey_index', 'embedding_index']):
-                D = {'label':ev.get('label'),
-                     col:ev.get(col)}
-                root = (ev.get('embedding_root_real'),
-                        ev.get('embedding_root_imag'))
-                if root != (None, None):
-                    D['root'] = root
-                yield Json.dumps(D) + ',\n\n'
-            yield ']\n'
-        filename = label + suffix
-        title += ' for newform %s,'%(label)
-        return self._wrap_generator(cc_generator(),
-                                    filename,
-                                    lang=lang,
-                                    title=title)
-
-    def download_cc_data(self, label, lang='text'):
-        return self._download_cc(label, lang, 'an_normalized', '.cplx', 'Complex embeddings')
-
-    def download_satake_angles(self, label, lang='text'):
-        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
+#    def _download_cc(self, label, lang, col, suffix, title):
+#        try:
+#            code = encode_hecke_orbit(label)
+#        except ValueError:
+#            return abort(404, "Invalid label: %s"%label)
+#        if not db.mf_hecke_cc.exists({'hecke_orbit_code':code}):
+#            return abort(404, "No form found for %s"%(label))
+#        def cc_generator():
+#            yield '[\n'
+#            for ev in db.mf_hecke_cc.search(
+#                    {'hecke_orbit_code':code},
+#                    ['label',
+#                     'embedding_root_real',
+#                     'embedding_root_imag',
+#                     col],
+#                    sort=['conrey_index', 'embedding_index']):
+#                D = {'label':ev.get('label'),
+#                     col:ev.get(col)}
+#                root = (ev.get('embedding_root_real'),
+#                        ev.get('embedding_root_imag'))
+#                if root != (None, None):
+#                    D['root'] = root
+#                yield Json.dumps(D) + ',\n\n'
+#            yield ']\n'
+#        filename = label + suffix
+#        title += ' for newform %s,'%(label)
+#        return self._wrap_generator(cc_generator(),
+#                                    filename,
+#                                    lang=lang,
+#                                    title=title)
+#
+#    def download_cc_data(self, label, lang='text'):
+#        return self._download_cc(label, lang, 'an_normalized', '.cplx', 'Complex embeddings')
+#
+#    def download_satake_angles(self, label, lang='text'):
+#        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_embedding(self, label, lang='text'):
         data = db.mf_hecke_cc.lucky({'label':label},
