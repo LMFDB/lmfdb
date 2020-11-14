@@ -562,7 +562,7 @@ def render_curve_webpage_by_label(label):
     return T
 
 @ec_page.route("/padic_data/<label>/<int:p>")
-def padic_data(label, p, rank):
+def padic_data(label, p):
     try:
         N, iso, number = split_lmfdb_label(label)
     except AttributeError:
