@@ -73,8 +73,8 @@ def make_label(L):
     for elt in GR:
         GRcount[elt] += 1
     GCcount = defaultdict(int)
-    for elt in GR:
-        GRcount[elt] += 1
+    for elt in GC:
+        GCcount[elt] += 1
     ge = GCD(GCD(list(GRcount.values())), GCD(list(GRcount.values())))
     if ge > 1:
         GR = []
