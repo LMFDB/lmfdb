@@ -48,7 +48,7 @@ def make_label(L):
     # issue 2885, avoid c0 in the label
     # convert Gamma_C to Gamma_R
     GR += [0,1]*len([1 for elt in GC if elt == 0])
-    GC = [elt in GC if elt != 0]
+    GC = [elt for elt in GC if elt != 0]
     GR.sort(key=CCtuple)
     GC.sort(key=CCtuple)
 
