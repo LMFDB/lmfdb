@@ -14,7 +14,7 @@ from sage.all import (
     ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
     is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,
     EllipticCurve, NumberField, RealNumber, PowerSeriesRing,
-    latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute)
+    CBF, RIF, primes_first_n, next_prime, lazy_attribute)
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.backend.encoding import Json
