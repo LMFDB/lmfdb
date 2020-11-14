@@ -507,7 +507,7 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 Note: \(p\)-adic regulator data only exists for primes \(p\ge 5\) of good ordinary
 reduction.
 </p>
-  <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label)}}+'/'+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
+  <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p=0)}}+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
   <option value=''>Choose a prime...</option>
   {% for p in data.data.p_adic_primes %}
   <option value="{{ p }}">{{ p }}</option>
