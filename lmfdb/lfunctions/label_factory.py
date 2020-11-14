@@ -49,7 +49,7 @@ def make_label(L):
     # find inducing primitive character
     m, n = L['central_character']
     char = DirichletCharacter_conrey(DirichletGroup_conrey(m), n).primitive_character()
-    central_character = "%d.%d" % (char.modulos(), char.number())
+    central_character = "%d.%d" % (char.modulus(), char.number())
 
     GR, GC = L['gamma_factors']
     GR = [CC(str(elt)) for elt in GR]
