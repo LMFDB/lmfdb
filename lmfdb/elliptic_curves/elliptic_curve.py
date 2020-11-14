@@ -6,7 +6,7 @@ from six import BytesIO
 import tempfile
 import time
 
-from flask import render_template, url_for, request, redirect, make_response, send_file
+from flask import render_template, url_for, request, redirect, make_response, send_file, abort
 from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime, Integer
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
@@ -561,14 +561,14 @@ def render_curve_webpage_by_label(label):
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
 
-@ec_page.route("/padic_data")
-def padic_data():
-    info = {}
-    label = request.args['label']
-    p = int(request.args['p'])
-    info['p'] = p
-    N, iso, number = split_lmfdb_label(label)
-    if request.args['rank'] == '0':
+@ec_page.route("/padic_data/<label>/<int:p>")
+def padic_data(label, p):
+    try:
+        N, iso, number = split_lmfdb_label(label)
+    except AttributeError:
+        return abort(404)
+    info = {'p': p}
+    if db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank") == 0:
         info['reg'] = 1
     elif number == '1':
         data = db.ec_padic.lucky({'lmfdb_iso': N + '.' + iso, 'p': p})
