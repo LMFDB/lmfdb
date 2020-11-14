@@ -1,4 +1,5 @@
 from sage.all import CC, round, ZZ
+from collections import defaultdict
 import re
 
 def round_to_half_str(num, fraction=2):
@@ -55,8 +56,10 @@ def make_label(L):
     GR.sort(key=CCtuple)
     GC.sort(key=CCtuple)
 
-    rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
-    cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])
+
+
+
+
 
     b, e = ZZ(L['conductor']).perfect_power()
     if e == 1:
@@ -64,14 +67,36 @@ def make_label(L):
     else:
         conductor = "{}e{}".format(b, e)
     beginning = "{}.{}.{}".format(L['degree'], conductor, L['central_character'])
-    gammas = "-" + rs + cs + "-"
+
+
+    GRcount = defaultdict(int)
+    for elt in GR:
+        GRcount[elt] += 1
+    GCcount = defaultdict(int)
+    for elt in GR:
+        GRcount[elt] += 1
+    ge = GCD(GCD(list(GRcount.values())), GCD(list(GRcount.values())))
+    if ge > 1:
+        GR = []
+        for k, v in GRcount.items():
+            GR.extend([k]*v//ge)
+        GC = []
+        for k, v in GCcount.items():
+            GC.extend([k]*v//ge)
+        GR.sort(key=CCtuple)
+        GC.sort(key=CCtuple)
     if L['algebraic']:
         end = "0"
     else:
         end = ""
         for G in [GR, GC]:
             end += ''.join([spectral_str(elt.imag()) for elt in G])
-    label = beginning + gammas + end + "-?"
+    rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
+    cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])
+    gammas = "-" + rs + cs
+    if ge > 1:
+        gammas += "e%d" % ge
+    label = beginning + gammas + "-" + end + "-?"
     return label
 
 def break_label(label):
