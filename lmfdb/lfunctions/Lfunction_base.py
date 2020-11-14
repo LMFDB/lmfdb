@@ -220,7 +220,7 @@ class Lfunction(object):
     def lfun_label(self):
         data = {
                 'algebraic': self.algebraic,
-                'central_character': '%d.%d' % (self.charactermodulus, self.characternumber),
+                'central_character': (self.charactermodulus, self.characternumber),
                 'conductor': self.level,
                 'degree': self.degree,
                 'gamma_factors': [self.mu_fe, self.nu_fe]

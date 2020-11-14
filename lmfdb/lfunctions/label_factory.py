@@ -1,5 +1,6 @@
 from sage.all import CC, round, ZZ, GCD
 from collections import defaultdict
+from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import re
 
 def round_to_half_str(num, fraction=2):
@@ -44,8 +45,12 @@ def make_label(L):
     # special $-_.+!*'(),
     #L = db.lfunc_lfunctions.lucky({'Lhash':Lhash},['conductor', 'degree', 'central_character','gamma_factors','algebraic'])
     L = dict(L)
-    if L['central_character'].endswith('.1'):
-        L['central_character'] = '1.1'
+
+    # find inducing primitive character
+    m, n = L['central_character']
+    char = DirichletCharacter_conrey(DirichletGroup_conrey(m), n).primitive()
+    central_character = "%d.%d" % (char.modulos(), char.number())
+
     GR, GC = L['gamma_factors']
     GR = [CC(str(elt)) for elt in GR]
     GC = [CC(str(elt)) for elt in GC]
@@ -58,15 +63,12 @@ def make_label(L):
 
 
 
-
-
-
     b, e = ZZ(L['conductor']).perfect_power()
     if e == 1:
         conductor = b
     else:
         conductor = "{}e{}".format(b, e)
-    beginning = "-".join(map(str, [L['degree'], conductor, L['central_character']]))
+    beginning = "-".join(map(str, [L['degree'], conductor, central_character]))
 
 
     GRcount = defaultdict(int)
