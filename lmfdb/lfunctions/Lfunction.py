@@ -427,7 +427,7 @@ class RiemannZeta(Lfunction):
         self.selfdual = True
         self.dirichlet_coefficients = [1 for n in range(self.numcoeff)]
         self.label = "zeta"
-
+        self.charactermodulus = self.characternumber = 1
         # Specific properties
         self.is_zeta = True
 
