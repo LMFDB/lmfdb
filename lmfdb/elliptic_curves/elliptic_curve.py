@@ -568,10 +568,7 @@ def padic_data(label, p):
     except AttributeError:
         return abort(404)
     info = {'p': p}
-    rank = request.args.get('rank')
-    if rank is None:
-        rank = db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank")
-    if rank == '0':
+    if db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank") == 0:
         info['reg'] = 1
     elif number == '1':
         data = db.ec_padic.lucky({'lmfdb_iso': N + '.' + iso, 'p': p})
