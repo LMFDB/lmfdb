@@ -23,7 +23,7 @@ def CCcmp(z1, z2):
     return 0
 
 def CCtuple(z):
-    return (z.real(), z.imag())
+    return (z.real(), z.imag().abs(), z.imag())
 
 
 def spectral_str(x):
@@ -33,7 +33,10 @@ def spectral_str(x):
         res += "m"
     else:
         res += "p"
-    res += "%.2f" % x
+    if x == 0:
+        res += "0"
+    else:
+        res += "%.2f" % x
     return res
 
 def make_label(L):
@@ -68,7 +71,7 @@ def make_label(L):
         end = ""
         for G in [GR, GC]:
             end += ''.join([spectral_str(elt.imag()) for elt in G])
-    label = beginning + gammas + end + "-*"
+    label = beginning + gammas + end + "-?"
     return label
 
 def break_label(label):
