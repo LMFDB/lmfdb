@@ -79,10 +79,10 @@ def make_label(L):
     if ge > 1:
         GR = []
         for k, v in GRcount.items():
-            GR.extend([k]*v//ge)
+            GR.extend([k]*(v//ge))
         GC = []
         for k, v in GCcount.items():
-            GC.extend([k]*v//ge)
+            GC.extend([k]*(v//ge))
         GR.sort(key=CCtuple)
         GC.sort(key=CCtuple)
     if L['algebraic']:
