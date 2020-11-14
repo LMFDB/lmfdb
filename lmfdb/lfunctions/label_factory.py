@@ -66,7 +66,7 @@ def make_label(L):
         conductor = b
     else:
         conductor = "{}e{}".format(b, e)
-    beginning = "{}.{}.{}".format(L['degree'], conductor, L['central_character'])
+    beginning = "-".join(map(str, [L['degree'], conductor, L['central_character']]))
 
 
     GRcount = defaultdict(int)
