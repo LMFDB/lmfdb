@@ -44,8 +44,12 @@ def make_label(L):
         L['central_character'] = '1.1'
     GR, GC = L['gamma_factors']
     GR = [CC(str(elt)) for elt in GR]
-    GR.sort(key=CCtuple)
     GC = [CC(str(elt)) for elt in GC]
+    # issue 2885, avoid c0 in the label
+    # convert Gamma_C to Gamma_R
+    GR += [0,1]*len([1 for elt in GC if elt == 0])
+    GC = [elt in GC if elt != 0]
+    GR.sort(key=CCtuple)
     GC.sort(key=CCtuple)
 
     rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
