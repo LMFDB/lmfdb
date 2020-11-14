@@ -1,4 +1,4 @@
-from sage.all import CC, round, ZZ
+from sage.all import CC, round, ZZ, GCD
 from collections import defaultdict
 import re
 
