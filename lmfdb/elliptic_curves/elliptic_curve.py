@@ -561,13 +561,16 @@ def render_curve_webpage_by_label(label):
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
 
-@ec_page.route("/padic_data/<label>/<int:p>/<int:rank>")
+@ec_page.route("/padic_data/<label>/<int:p>")
 def padic_data(label, p, rank):
     try:
         N, iso, number = split_lmfdb_label(label)
     except AttributeError:
         return abort(404)
     info = {'p': p}
+    rank = request.args.get('rank')
+    if rank is None:
+        rank = db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank")
     if rank == 0:
         info['reg'] = 1
     elif number == '1':
