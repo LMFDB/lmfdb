@@ -62,7 +62,7 @@ def make_label(L):
     if e == 1:
         conductor = b
     else:
-        conductor = "{}p{}".format(b, e)
+        conductor = "{}e{}".format(b, e)
     beginning = "{}.{}.{}".format(L['degree'], conductor, L['central_character'])
     gammas = "-" + rs + cs + "-"
     if L['algebraic']:
