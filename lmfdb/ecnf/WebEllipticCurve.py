@@ -370,9 +370,9 @@ class ECNF(object):
 
         # The equation is stored in the database as a latex string.
         # Some of these have extraneous double quotes at beginning and
-        # end, shich we fix here.  We also strip out initial \( and \)
+        # end, which we fix here.  We also strip out initial \( and \)
         # (if present) which are added in the template.
-        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','')
+        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','').replace('x','{x}').replace('y','{y}')
 
         # Images of Galois representations
 
