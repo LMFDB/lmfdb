@@ -266,14 +266,14 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-        
+
 def plot_from_label(label):
     curve = db.g2c_curves.lookup(label)
     ratpts = db.g2c_ratpts.lookup(curve['label'])
     min_eqn = literal_eval(curve['eqn'])
     plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
     return plot
-    
+
 ###############################################################################
 # Statement functions for displaying formatted endomorphism data
 ###############################################################################
@@ -603,6 +603,32 @@ def ratpts_table(pts,pts_v):
     return '\n'.join(ptstab)
 
 
+def make_galois_data_table(nonmax_primes, torsion_primes, verbose_output):
+    """Unpack nonsurjective prime arrays into output for html templates"""
+    print(nonmax_primes)
+    print(torsion_primes)
+    print(verbose_output)
+
+    verbose_output_split = [x.split(':') for x in verbose_output]
+    image_types, witnesses = map(list, zip(*verbose_output_split))
+
+    image_types = [x.split('.',1)[1] for x in image_types]
+    witnesses = [x.split('=',1)[1] for x in witnesses]
+
+    is_torsion = [p in torsion_primes for p in nonmax_primes]
+    is_torsion = ['yes' if t else 'no' for t in is_torsion]
+
+    table = [{'p': p,
+              'image_type': im,
+              'witnesses': wit,
+              'is_torsion' : tors}
+                               for p,im,wit,tors in zip(nonmax_primes,
+                                                        image_types,
+                                                        witnesses,
+                                                        is_torsion)]
+    print(table)
+    return table
+
 ###############################################################################
 # Genus 2 curve class definition
 ###############################################################################
@@ -618,8 +644,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, ratpts, clus, is_curve=True):
-        self.make_object(curve, endo, tama, ratpts, clus, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, clus, galrep, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, clus, galrep, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -668,9 +694,10 @@ class WebG2C(object):
                 except Exception:
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
-        return WebG2C(curve, endo, tama, ratpts, clus, is_curve=(len(slabel)==4))
+        galrep = db.g2c_nonmaximal_test.lookup(curve['label'])
+        return WebG2C(curve, endo, tama, ratpts, clus, galrep, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, ratpts, clus, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, clus, galrep, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -734,7 +761,7 @@ class WebG2C(object):
             data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
             if data['mw_rank'] == 0 and data['mw_rank_proved']:
                 data['regulator'] = '1' # display an exact 1 when we know this
-                
+
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
@@ -787,7 +814,7 @@ class WebG2C(object):
         data['end_field_label'] = endo['fod_label']
         data['end_field_poly'] = intlist_to_poly(endo['fod_coeffs'])
         data['end_field_statement'] = end_field_statement(data['end_field_label'], data['end_field_poly'])
-        
+
         # Endomorphism data over QQbar:
         data['factorsQQ_geom'] = endo['factorsQQ_geom']
         data['factorsRR_geom'] = endo['factorsRR_geom']
@@ -818,6 +845,22 @@ class WebG2C(object):
                 data['split_labels'] = endo['spl_facs_labels']
             data['split_condnorms'] = endo['spl_facs_condnorms']
             data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
+
+        # Galois representation data
+        if not galrep:
+            data['exists_galrep_data'] = False
+            print('No data')
+        else:
+            print('Data!!!')
+            data['exists_galrep_data'] = True
+            data['nonmax_primes'] = galrep['nonmax_primes']
+            data['torsion_primes'] = galrep['torsion_primes']
+            data['verbose_output'] = galrep['verbose_output']
+            data['is_rigorous'] = galrep['is_rigorous']
+            if data['nonmax_primes']:
+                data['galois_data'] = make_galois_data_table(data['nonmax_primes'],
+                                                            data['torsion_primes'],
+                                                            data['verbose_output'])
 
         # Properties
         self.properties = properties = [('Label', data['label'])]

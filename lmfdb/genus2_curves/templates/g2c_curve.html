@@ -171,9 +171,9 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', 'Hasse-Weil conjecture') }}:</td>
         <td>{% if data.hasse_weil_proved  %} verified {%else %} unverified {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_rank', 'Analytic rank') }}:</td>
-        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
+        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', 'Mordell-Weil rank') }}:</td>
-        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>    
+        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.two_selmer_rank', '2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
     <tr><td>{{ KNOWL('g2c.regulator', 'Regulator') }}:</td>
         <td>{% if data.regulator == 'unknown' %} unknown {% else %} \( {{data.regulator}} \) {% endif %}</td></tr>
@@ -192,6 +192,44 @@ function show_eqns(invstyle) {
 <h2> {{KNOWL('g2c.local_invariants', 'Local invariants')}} </h2>
 
 <p>{{ data.local_table | safe }}</p>
+
+<h2> {{KNOWL('g2c.local_invariants', 'Galois representations')}} </h2>
+<p>
+{% if data.exists_galrep_data %}
+    The mod \( \ell \) {{KNOWL('ec.galois_rep', title='Galois representation')}}
+    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
+    for all primes \( \ell \)
+
+    {% if data.nonmax_primes %} {# there are non-maximal primes #}
+        except those listed.
+        </p>
+        <p>
+        <table class="ntdata"><thead>
+        <tr>
+        <th>prime</th>
+        <th>{{KNOWL('g2c.galois_rep_image', title='Image type')}}</th>
+        <th>Witnesses</th>
+        <th>Is Torsion prime?</th>
+        </tr>
+        </thead><tbody>
+        {% for pr in data.galois_data %}
+        <tr>
+        <td align=center> \({{pr.p}}\)</td>
+        <td align=center>{{pr.image_type}}</td>
+        <td align=center>{{pr.witnesses}}</td>
+        <td align=center>{{pr.is_torsion}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    {% else %}
+        .
+    {% endif %}
+{% else %}
+    The Galois representation data has not been computed for this curve since it is
+    not generic.
+{% endif %}
+</p>
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
