@@ -215,6 +215,12 @@ class ECstats(StatsDisplay):
         cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curves, UNNEST(isodeg) as elements"))
         return cur.fetchone()[0]
 
+# NB the contex processor wants something callable and the summary is a *property*
+
+@app.context_processor
+def ctx_elliptic_curve_summary():
+    return {'elliptic_curve_summary': lambda: ECstats().summary}
+
 @ec_page.route("/stats")
 def statistics():
     title = r'Elliptic curves over $\Q$: Statistics'
