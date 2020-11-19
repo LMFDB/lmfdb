@@ -594,16 +594,7 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.foo', follow_redirects=True)
-        assert 'Invalid label' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.foo.bar', follow_redirects=True)
-        assert 'No form found' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
-        assert '0.5, -2.2282699087' in page.get_data(as_text=True)
-        assert '-0.498394' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_satake_angles/27.2.e.a', follow_redirects=True)
-        assert '0.5, -2.2282699087' in page.get_data(as_text=True)
-        assert '0.406839418685' in page.get_data(as_text=True)
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform/27.2.e.a', follow_redirects=True)
         assert '"analytic_rank_proved": true' in page.get_data(as_text=True)
         assert '[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' in page.get_data(as_text=True) # a1 (make sure qexp is there)

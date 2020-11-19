@@ -504,17 +504,16 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 {% else %}
 {% if data.data.p_adic_data_exists %}
 </p><p>
-Note: \(p\)-adic regulator data only exists for primes \(p\ge5\) of good ordinary
+Note: \(p\)-adic regulator data only exists for primes \(p\ge 5\) of good ordinary
 reduction.
 </p>
-        <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
-        <option value=''>Choose a prime...</option>
-        {% for p in data.data.p_adic_primes %}
-        <option value="{{ p }}">{{ p }}</option>
-        {% endfor %}
-        </select>
-        <div id='padic'>
-        </div>
+  <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p=0)}}'+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
+  <option value=''>Choose a prime...</option>
+  {% for p in data.data.p_adic_primes %}
+  <option value="{{ p }}">{{ p }}</option>
+  {% endfor %}
+  </select>
+  <div id='padic'></div>
 {% elif data.data.Gamma0optimal %}
 No \(p\)-adic data exists for this curve.
 {% else %}
