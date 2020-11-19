@@ -97,7 +97,7 @@ class HMFstats(StatsDisplay):
                      "counts": {F: {"nforms": counts[F],
                                     "maxnorm": nstats[F]["max"],
                                     "field_knowl": nf_display_knowl(F, F),
-                                    "forms": lambda : url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)}
+                                    "forms": lambda label: url_for('hmf.hilbert_modular_form_render_webpage', field_label=label)}
                                 for F in C["fields_by_degree"][d]}}
                  for d in C["degrees"]}
         return stats

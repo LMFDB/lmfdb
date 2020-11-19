@@ -605,14 +605,6 @@ def download_qexp(label):
 def download_traces(label):
     return CMF_download().download_traces(label)
 
-@cmf.route("/download_cc_data/<label>")
-def download_cc_data(label):
-    return CMF_download().download_cc_data(label)
-
-@cmf.route("/download_satake_angles/<label>")
-def download_satake_angles(label):
-    return CMF_download().download_satake_angles(label)
-
 @cmf.route("/download_newform_to_magma/<label>")
 def download_newform_to_magma(label):
     return CMF_download().download_newform_to_magma(label)
