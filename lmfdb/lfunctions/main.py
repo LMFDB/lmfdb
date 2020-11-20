@@ -29,8 +29,8 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty,
-    search_wrap, parse_bool, parse_ints, parse_floats,
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox)
+    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
+    SearchArray, TextBox, YesNoBox, CountBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
@@ -93,6 +93,8 @@ def l_function_search(info, query):
     parse_bool(info,query,'self_dual')
     parse_floats(info,query,'root_angle', allow_singletons=True)
     parse_ints(info,query,'order_of_vanishing')
+    parse_noop(info,query,'central_character')
+    parse_ints(info,query,'motivic_weight')
 
 class LFunctionSearchArray(SearchArray):
     def __init__(self):
@@ -119,15 +121,15 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.central_character",
             label="Central character",
             example="37.1")
-        primitive = ExcludeOnlyBox(
+        primitive = YesNoBox(
             name="primitive",
             knowl="lfunction.primitive",
             label="Primitive")
-        algebraic = ExcludeOnlyBox(
+        algebraic = YesNoBox(
             name="algebraic",
             knowl="lfunction.arithmetic",
             label="Arithmetic")
-        self_dual = ExcludeOnlyBox(
+        self_dual = YesNoBox(
             name="self_dual",
             knowl="lfunction.self-dual",
             label="Self-dual")
@@ -142,19 +144,25 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.analytic_rank",
             label="Analytic rank",
             example="2")
+        motivic_weight = TextBox(
+            name="motivic_weight",
+            knowl="lfunction.motivic_weight",
+            label="Motivic weight",
+            example="2")
         count = CountBox()
 
         self.browse_array = [
             [z1, degree],
             [conductor, central_character],
-            [analytic_rank, root_angle],
+            [analytic_rank, motivic_weight],
             [primitive, algebraic],
-            [self_dual, count]
+            [root_angle, self_dual],
+            [count]
         ]
 
         self.refine_array = [
-            [z1, degree, conductor, central_character, analytic_rank],
-            [primitive, algebraic, self_dual, root_angle]
+            [degree, conductor, central_character, analytic_rank, motivic_weight],
+            [primitive, algebraic, self_dual, z1, root_angle]
         ]
 
 @l_function_page.route("/history")

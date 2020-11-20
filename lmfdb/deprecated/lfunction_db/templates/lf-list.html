@@ -22,7 +22,7 @@
 {% macro Lfunction_to_html_in_table(L): -%}
 {% if L.special.type == "dirichlet" %}
     <td><a href="{{url_for("l_functions.l_function_dirichlet_page", modulus=L.special.modulus, number=L.special.number)}}">
-            {{L.first_zero}}</a></td>
+            {{L.z1}}</a></td>
     <td>{{L.degree}}</td>
     <td>{{L.level}}</td>
     <td>{{L.signature}}</td>
