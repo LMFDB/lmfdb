@@ -21,9 +21,15 @@ The code thus defines, from the generic top class WebCharObject
 
 2. the mathematical objects classes
 
+   - WebCharGroup
+
    - WebChar
 
 and one obtains:
+
+- WebDirichletGroup
+
+- WebDBDirichletGroup
 
 - WebDBDirichletCharacter
 
@@ -42,7 +48,7 @@ The design is the following:
 from flask import url_for
 
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import gcd, Rational, power_mod, xsrange, cached_method
+from sage.all import gcd, Rational, power_mod, Integers, xsrange, cached_method
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
@@ -678,6 +684,218 @@ class WebDBDirichlet(WebDirichlet):
             self.kernel_field_poly = None
 
 
+class WebCharGroup(WebCharObject):
+    """
+    Class for presenting character groups on a web page
+    self.H is the character group
+    self.G is the underlying group
+    """
+    headers = [ 'order', 'primitive']
+    _keys = [ 'title', 'codelangs', 'type', 'nf', 'nflabel',
+            'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
+            'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
+            'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
+            'vfpol', 'headers', 'groupelts', 'contents',
+            'properties', 'friends', 'rowtruncate', 'coltruncate']
+
+    def __init__(self, **args):
+        self._contents = None
+        self.maxrows, self.maxcols = 35, 30
+        self.rowtruncate, self.coltruncate = False, False
+        WebCharObject.__init__(self, **args)
+
+    @lazy_attribute
+    def structure(self):
+        inv = self.H.invariants()
+        return r'\(%s\)' % ('\\times '.join('C_{%s}' % d for d in inv))
+
+    @lazy_attribute
+    def codestruct(self):
+        return {'sage':'G.invariants()',
+                'pari':'g.cyc'}
+
+    @lazy_attribute
+    def order(self):
+        return self.H.order()
+
+    @lazy_attribute
+    def codeorder(self):
+        return {'sage': 'G.order()',
+                'pari': 'g.no' }
+
+    @lazy_attribute
+    def modulus(self):
+        return self.ideal2tex(self._modulus)
+
+    def add_row(self, chi):
+        prim = chi.is_primitive()
+        self._contents.append(
+                 ( self._char_desc(chi, prim=prim),
+                   ( chi.multiplicative_order(),
+                     bool_string(prim) ),
+                     self.charvalues(chi) ) )
+
+    @cached_method
+    def first_chars(self):
+        r = []
+        for i,c in enumerate(self.H):
+            r.append(c)
+            if i > self.maxrows:
+                self.rowtruncate = True
+                break
+        return r
+
+    def _fill_contents(self):
+        for c in self.first_chars():
+            self.add_row(c)
+
+    @lazy_attribute
+    def properties(self):
+        return [("Modulus", [prop_int_pretty(self.modulus)]),
+                ("Structure", [self.structure]),
+                ("Order", [prop_int_pretty(self.order)]),
+                ]
+
+    @lazy_attribute
+    def friends(self):
+        if self.nflabel:
+            return [ ("Number field", '/NumberField/' + self.nflabel), ]
+
+    @lazy_attribute
+    def contents(self):
+        if self._contents is None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
+
+
+class WebDirichletGroup(WebCharGroup, WebDirichlet):
+    """
+    Heritage: WebCharGroup -> __init__()
+              WebDirichlet -> _compute()
+    """
+
+    def _compute(self):
+        """ WARNING: do not remove otherwise _compute
+        is called once for each ancestor (I don't know why)
+        """
+        WebDirichlet._compute(self)
+        logger.debug('######## WebDirichletGroup Computed')
+
+    @lazy_attribute
+    def codeinit(self):
+        return {
+                'sage': [
+                    'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                    'H = DirichletGroup_conrey(%i)'%(self.modulus)
+                    ],
+                'pari': 'g = idealstar(,%i,2)'%(self.modulus)
+                }
+
+    @lazy_attribute
+    def title(self):
+      return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
+
+    @lazy_attribute
+    def codegen(self):
+        return {'sage': 'H.gens()',
+                'pari': 'g.gen' }
+
+    @lazy_attribute
+    def codestruct(self):
+        return {'sage': 'H.invariants()',
+                'pari': 'g.cyc'}
+
+    @lazy_attribute
+    def order(self):
+        return self.H.order()
+
+
+class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    headers = ['Character', 'Orbit', 'Order', 'Primitive']
+
+    def __init__(self, **kwargs):
+        self._contents = None
+        self.maxrows = 30
+        self.maxcols = 30
+        self.rowtruncate = False
+        self.coltruncate = False
+        WebDBDirichlet.__init__(self, **kwargs)
+        self._set_groupelts()
+
+    def add_row(self, chi):
+        """
+        Add a row to _contents for display on the webpage.
+        Each row of content takes the form
+            character_name, (header..data), (several..values)
+        where `header..data` is expected to be a tuple of length the same
+        size as `len(headers)`, and given in the same order as in `headers`,
+        and where `several..values` are the values of the character
+        on self.groupelts, in order.
+        """
+        mod = chi.modulus()
+        num = chi.number()
+        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
+        formatted_orbit_label = "{}.{}".format(
+            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
+        )
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            (formatted_orbit_label, order, bool_string(prim)),
+            self._determine_values(valuepairs, order)
+        ))
+
+    def char_dbdata(self, mod, num):
+        """
+        Determine if the character is primitive by checking if its primitive
+        inducing character is itself, according to the database. Also return
+        the order of chi, the orbit_label of chi,  and the values within the
+        database.
+        Using only char_dir_values saves one database lookup, and combining
+        these steps saves more database lookups.
+        """
+        db_data = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num)
+        )
+        is_prim = (db_data['label'] == db_data['prim_label'])
+        order = db_data['order']
+        valuepairs = db_data['values']
+        orbit_label = db_data['orbit_label']
+        return is_prim, order, orbit_label, valuepairs
+
+    def _compute(self):
+        WebDirichlet._compute(self)
+        logger.debug("WebDBDirichletGroup Computed")
+
+    def _set_groupelts(self):
+        if self.modulus == 1:
+            self.groupelts = [1]
+        else:
+            db_data = db.char_dir_values.lookup(
+                "{}.{}".format(self.modulus, 1)
+            )
+            valuepairs = db_data['values']
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+
+    def _char_desc(self, num, mod=None, prim=None):
+        return (mod, num, self.char2tex(mod, num), prim)
+
+    def _determine_values(self, valuepairs, order):
+        """
+        Translate the db's values into the actual values.
+        """
+        raw_values = [int(v) for g, v in valuepairs]
+        values = [
+            self._tex_value(v, order, texify=True) for v in raw_values
+        ]
+        return values
+
+
 class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
@@ -828,6 +1046,27 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         }
 
 
+class WebSmallDirichletGroup(WebDirichletGroup):
+
+    def _compute(self):
+        if self.modlabel:
+            self.modulus = m = int(self.modlabel)
+            self.H = Integers(m).unit_group()
+        self.codelangs = ('pari', 'sage')
+
+    @lazy_attribute
+    def contents(self):
+        return None
+
+    @lazy_attribute
+    def gens(self):
+        return self.H.gens_values()
+
+    @lazy_attribute
+    def generators(self):
+        return self.textuple([str(v) for v in self.H.gens_values()])
+
+
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """
     Heritage: WebChar -> __init__()
@@ -889,17 +1128,17 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         return { 'sage': 'chi.is_odd()',
                  'pari': 'zncharisodd(g,chi)' }
 
-    @lazy_attribute
-    def galoisorbit(self):
-        order = self.order
-        mod, num = self.modulus, self.number
-        prim = self.isprimitive
-        #beware this **must** be a generator
-        upper_limit = min(200, order + 1)
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
-                  if gcd(k, order) == 1) # use xsrange not xrange
-        ret = list(self._char_desc(num, prim=prim) for num in orbit)
-        return ret
+    # @lazy_attribute
+    # def galoisorbit(self):
+    #     order = self.order
+    #     mod, num = self.modulus, self.number
+    #     prim = self.isprimitive
+    #     #beware this **must** be a generator
+    #     upper_limit = min(200, order + 1)
+    #     orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
+    #               if gcd(k, order) == 1) # use xsrange not xrange
+    #     ret = list(self._char_desc(num, prim=prim) for num in orbit)
+    #     return ret
 
     @lazy_attribute
     def orbit_label(self):

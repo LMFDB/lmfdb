@@ -15,6 +15,8 @@ from lmfdb.characters.web_character import (
         WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
+        WebDBDirichletGroup,
+        WebSmallDirichletGroup
 )
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
@@ -310,8 +312,6 @@ def make_webchar(args):
     modulus = int(args['modulus'])
     if modulus < 10000:
         return WebDBDirichletCharacter(**args)
-    elif modulus < 100000:
-        return WebDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
 
@@ -340,12 +340,12 @@ def render_Dirichletwebpage(modulus=None, number=None):
         flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_DirichletNavigation"))
 
-
-
     if number is None:
-        info = WebDirichletCharacter(**args).to_dict()
         if modulus < 10000:
+            info = WebDBDirichletGroup(**args).to_dict()
             info['show_orbit_label'] = True
+        else:
+            info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
         info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
         info['learnmore'] = learn()
