@@ -1,0 +1,49 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+<thead>
+<tr>
+    <th>{{ KNOWL('lfunction.label', title='Label') }}</th>
+    <th align=center>{{ KNOWL('lfunction.first_zero', title='First zero') }}</th>
+    <th align=center>{{ KNOWL('lfunction.degree', title='d') }}</th>
+    <th align=center>{{ KNOWL('lfunction.conductor', title='N') }}</th>
+    <th align=center>{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
+    <th>{{ KNOWL('lfunction.primitive', title='primitive') }}</th>
+    <th>{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
+    <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
+    <th>{{ KNOWL('lfunction.functional_equation', title='$\mu$') }}</th>
+    <th>{{ KNOWL('lfunction.functional_equation', title='$\nu$') }}</th>
+    <th>{{ KNOWL('lfunction.sign', title='$\epsilon$') }}</th>
+    <th>{{ KNOWL('lfunction.analytic_rank', title='analytic rank') }}</th>
+</tr>
+</thead>
+{% for L in info.results: %}
+<tr>
+    <td> <a href="{{L.url}}"> {{L.label}} </a> </td>
+    <td> ${{L.z1}}$ </td>
+    <td> ${{L.degree}}$ </td>
+    <td> ${{L.conductor}}$ </td>
+    <td> <a href="{{url_for('characters.render_Dirichletwebpage', modulus=L.central_character)}}">{{L.central_character}}</a> </td>
+    <td align=center> {{('&#x2713;' if L.primitive else '')|safe}} </td>
+    <td align=center> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
+    <td align=center> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
+    <td> {{L.gamma_factors[0]}} </td>
+    <td> {{L.gamma_factors[1]}} </td>
+    <td> ${{L.root_number}}$ </td>
+    <td align=center> ${{L.order_of_vanishing}}$ </td>
+</tr>
+{% endfor %}
+</table>
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
