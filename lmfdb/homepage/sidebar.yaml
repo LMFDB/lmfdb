@@ -17,7 +17,7 @@
   type: simple
   heading:
     title: L-functions
-    url_for: "l_functions"
+    url_for: "l_functions.index"
   parts:
     - title: "Degree 1"
       url_for: "l_functions.l_function_degree_page"

@@ -857,16 +857,17 @@ def getConductorIsogenyFromLabel(label):
 
 
 
-def get_bread(degree, breads=[]):
+def get_bread(degree=None, breads=[]):
     """
     Returns the two top levels of bread crumbs plus the ones supplied in breads.
     """
-    breadcrumb = [('L-functions', url_for('.l_function_top_page')),
+    bread = [('L-functions', url_for('.index'))]
+    if degree is not None:
+        bread.append(
           ('Degree ' + str(degree),
-           url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        breadcrumb.append(b)
-    return breadcrumb
+           url_for('.l_function_degree_page', degree='degree' + str(degree))))
+    bread.extend(breads)
+    return bread
 
 # Convert  r0r0c1 to (0,0;1), for example
 def parse_codename(text):

@@ -1,32 +1,25 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
-<h2> Browse {{KNOWL('lfunction', title='L-functions' )}}
-by
-{{ KNOWL('lfunction.signature', title='signature') }}
-or
-{{KNOWL("lfunction.underlying_object",title="underlying object")}}</h2>
-<table>
-{% for i in type_row_list: %}
-<tr>
-  {% for t in type_table[i]: %}
-  <td><a  style="padding: 5px;" href="{{t.link}}">{{t.title|safe}}</a></td>
-  {% endfor %}
-<tr>
-{% endfor %}
+
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{KNOWL('lfunction.degree', 'degree')}}:</td>
+    <td><a href="{{url_for('.l_function_dirichlet_browse_page')}}">1</a> {% for d in [2, 3, 4] %} <a href="{{url_for('.l_function_degree%s_browse_page'%d)}}">{{d}}</a>{% endfor %}</td>
+  </tr>
 </table>
 
-<h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL('lfunction.degree', title='degree') }}</h2>
-<table>
- <tr>
-  {% for r in degree_list: %}
-    <td style="text-align: center;">
-       <a style="width: 2em;" href="degree{{r}}">{{r}}</a>
-    </td>
-  {% endfor %}
- </tr>
+<h2> Search </h2>
 
-</table>
-<br />
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}
