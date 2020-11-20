@@ -75,7 +75,7 @@ class SearchParser(object):
                 self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
-        except (ValueError, AttributeError, TypeError, KeyError) as err:
+        except ValueError as err:
             if self.error_is_safe:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
@@ -887,7 +887,10 @@ def pol_string_to_list(pol, deg=None, var=None):
         var = findvar(pol)
         if not var:
             var = 'a'
-    pol = PolynomialRing(QQ, var)(str(pol))
+    try:
+        pol = PolynomialRing(QQ, var)(str(pol))
+    except (ValueError,KeyError):
+        raise SearchPaarsingError("Input not recognized as a polynomial.")
     if deg is None:
         fill = 0
     else:
