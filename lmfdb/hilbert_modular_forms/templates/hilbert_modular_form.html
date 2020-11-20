@@ -12,25 +12,24 @@
 </p>
 
 
-  <h2>  Form  </h2>
+<h2>  Form  </h2>
 
 <p>
 <table>
-<tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}<td> {{ info.weight }} </tr>
-<tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}<td> ${{ info.level_ideal }}$ </tr>
-<tr><td> Label<td> {{ info.label }} </tr>
-<tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}<td> {{ info.dimension }} </tr>
-<tr><td> Is {{ KNOWL('mf.cm', title='CM') }}<td> {{ info.is_CM }} </tr>
-<tr><td> Is {{ KNOWL('mf.base_change', title='base change') }}<td> {{ info.is_base_change }} </tr>
-<tr><td> Parent newspace dimension<td> {{ info.newspace_dimension }} </tr>
+<tr><td> {{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}:</td><td> ${{ info.weight }}$ </td></tr>
+<tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}:</td><td> ${{ info.level_ideal }}$ </td></tr>
+<tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}:</td><td> ${{ info.dimension }}$ </td></tr>
+<tr><td> {{ KNOWL('mf.cm', title='CM') }}:</td><td> {{ info.is_CM }} </td></tr>
+<tr><td> {{ KNOWL('mf.base_change', title='Base change') }}:</td><td> {{ info.is_base_change }} </td></tr>
+<tr><td> Newspace dimension:</td><td> ${{ info.newspace_dimension }}$ </td></tr>
 </table>
 </p>
 
   <h2>  Hecke eigenvalues ({{ KNOWL('mf.hilbert.q_expansion', title='$q$-expansion') }}) </h2>
 
 {% if info.dimension > 1 %}
-<div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
-<div>{{ info.hecke_polynomial }}</div>
+<p>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</p>
+<table style="margin-left:20px;"><tr><td>{{ info.hecke_polynomial }}</td></tr></table>
 
 <p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True&numeigs={{ info.numeigs }}'>Show full eigenvalues</a>
 &nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False&numeigs={{ info.numeigs }}'>Hide large eigenvalues</a></p>
@@ -50,11 +49,13 @@ div.scrollable {
 </style>
 
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<thead>
 <tr>
 <th>Norm</th>
 <th>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
 <th>Eigenvalue</th>
 </tr>
+</thead><tbody>
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
@@ -62,6 +63,7 @@ div.scrollable {
 <td>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 
 <form>
@@ -91,18 +93,21 @@ div.scrollable {
 {% else %}
 <p>
 <table class="ntdata" cellpadding=5>
+<thead>
 <tr>
 <th>Norm</th>
 <th>Prime</th>
 <th>Eigenvalue</th>
 </tr>
+</thead><tbody>
 {% for entry in info.AL_eigs: %}
 <tr>
-<td>{{entry.prime_norm}}</td>
+<td>${{entry.prime_norm}}$</td>
 <td>${{entry.prime_ideal}}$</td>
 <td align=right>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
 </p>
 {% endif %}

@@ -11,7 +11,6 @@ import random
 import re
 import tempfile
 import time
-from collections import defaultdict
 from copy import copy
 from itertools import islice
 from types import GeneratorType
@@ -26,7 +25,7 @@ from sage.all import (CC, CBF, CDF,
                       PolynomialRing, PowerSeriesRing, QQ,
                       RealField, RR, RIF, TermOrder, ZZ)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation
+from sage.all import floor, latex, prime_range, valuation, factor, log
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
@@ -88,7 +87,10 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
-            outstr += '( %s )^{%d}' % (glatex, e)
+            if len(glatex) != 1:
+                outstr += '( %s )^{%d}' % (glatex, e)
+            else:
+                outstr += '%s^{%d}' % (glatex, e)
         elif len(sfacts_fc_list) > 1:
             outstr += '( %s )' % (glatex,)
         else:
@@ -107,6 +109,17 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 ################################################################################
 #   number utilities
 ################################################################################
+
+def prop_int_pretty(n):
+    """
+    This function should be called whenever displaying an integer in the
+    properties table so that we can keep the formatting consistent
+    """
+    if abs(n) >= 10**12:
+        e = floor(log(abs(n),10))
+        return r'$%.3f\times 10^{%d}$' % (n/10**e, e)
+    else:
+        return '$%s$' % n
 
 def try_int(foo):
     try:
@@ -284,7 +297,7 @@ def str_to_CBF(s):
             b = '1'
         else:
             b = b.rstrip(' ').rstrip('I').rstrip('*')
-        
+
         res = CBF(0)
         if a:
             res += CBF(a)
@@ -292,6 +305,25 @@ def str_to_CBF(s):
             res  +=  sign * CBF(b)* CBF.gens()[0]
         return res
 
+# Conversion from numbers to letters and back
+def letters2num(s):
+    r"""
+    Convert a string into a number
+    """
+    letters = [ord(z)-96 for z in list(s)]
+    ssum = 0
+    for j in range(len(letters)):
+        ssum = ssum*26+letters[j]
+    return ssum
+
+def num2letters(n):
+    r"""
+    Convert a number into a string of letters
+    """
+    if n <= 26:
+        return chr(96+n)
+    else:
+        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
 
 
 def to_dict(args, exclude = [], **kwds):
@@ -312,6 +344,8 @@ def to_dict(args, exclude = [], **kwds):
     """
     d = dict(kwds)
     for key, values in args.items():
+        if key in d:
+            continue
         if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]
@@ -477,6 +511,11 @@ def comma(x):
     """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
+def latex_comma(x):
+    """
+    For latex we need to use braces around the commas to get the spacing right.
+    """
+    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
@@ -543,10 +582,24 @@ def web_latex(x, enclose=True):
     """
     if isinstance(x, string_types):
         return x
-    if enclose:
-        return r"\( %s \)" % latex(x)
-    return " %s " % latex(x)
+    return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
+def web_latex_factored_integer(x, enclose=True, equals=False):
+    r"""
+    Given any x that can be converted to a ZZ, creates latex string representing x in factored form
+    Returns 0 for 0, replaces -1\cdot with -.
+
+    If equals=true returns latex string for x = factorization but omits "= factorization" if abs(x)=0,1,prime
+    """
+    x = ZZ(x)
+    if abs(x) in [0,1] or abs(x).is_prime():
+        return web_latex(x, enclose=enclose)
+    if equals:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+        s = " %s = %s " % (x, s)
+    else:
+        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
+    return r"\( %s \)" % s if enclose else s
 
 def web_latex_ideal_fact(x, enclose=True):
     r"""
@@ -702,17 +755,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        lng = str(n)
-        if len(lng) > max_width:
-            lines = 1 + (len(lng)-1) // (max_width-1)
-            width = 1 + (len(lng)-1) // lines
-            lng = [lng[i:i+width] for i in range(0,len(lng),width)]
-            for i in range(len(lng)-1):
-                lng[i] = r"<tr><td>%s\</td></tr>" % lng[i]
-            lng[-1] = r"<tr><td>%s</td></tr>" % lng[-1]
-            lng = "<table>" + "".join(lng) + "</table>"
-        else:
-            lng = r"\(%s\)" % lng
+        lng = r"<div style='word-break: break-all'>%s</div>" % n
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
         return r'\(%s\)'%n
@@ -756,7 +799,7 @@ def make_bigint(s, cutoff=20, max_width=70):
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     lng = web_latex(coeff_to_poly(f, var))
     if bigint_cutoff:
-        lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
+        lng = make_bigint(lng, bigint_cutoff, max_width=70)
     if len([c for c in f if c != 0]) > nterms_cutoff:
         short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
         i = len(f) - 2
@@ -767,7 +810,8 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
                 short += r" + \cdots"
             else:
                 short += r" - \cdots"
-        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+#        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
     else:
         return lng
 
@@ -1205,56 +1249,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         buf = virtual_file.buf
     return "data:image/png;base64," + quote(b64encode(buf))
 
-class KeyedDefaultDict(defaultdict):
-    """
-    A defaultdict where the default value takes the key as input.
-    """
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError((key,))
-        self[key] = value = self.default_factory(key)
-        return value
-
-def make_tuple(val):
-    """
-    Converts lists and dictionaries into tuples, recursively.  The main application
-    is so that the result can be used as a dictionary key.
-    """
-    if isinstance(val, (list, tuple)):
-        return tuple(make_tuple(x) for x in val)
-    elif isinstance(val, dict):
-        return tuple((make_tuple(a), make_tuple(b)) for a,b in val.items())
-    else:
-        return val
-
-def range_formatter(x):
-    if x is None:
-        return 'Unknown'
-    elif isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            return "..{0}".format(b)
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
-
-
-
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.utcfromtimestamp(0)
 def datetime_to_timestamp_in_ms(dt):
@@ -1306,4 +1300,3 @@ def add_space_if_positive(texified_pol):
     if texified_pol[0] == '-':
         return texified_pol
     return r"\phantom{-}" + texified_pol
-

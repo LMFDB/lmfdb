@@ -3,7 +3,7 @@
 <table border=1>
   {% for r in rows %}
   <tr>
-    <th>{{d.attribute.row_title}}</th>
+    <th>{{d.attribute.row_title | safe}}</th>
     {% for c in r %}
     <td>{{c.value|safe}}</td>
     {% endfor %}

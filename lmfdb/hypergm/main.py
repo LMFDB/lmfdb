@@ -16,6 +16,7 @@ from lmfdb.utils import (
     parse_restricted, integer_options, search_wrap,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton,
     to_dict, web_latex)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
@@ -187,8 +188,8 @@ def make_t_label(t):
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
-    bc = [("Motives", url_for("motive.index")),
-          ("Hypergeometric", url_for("motive.index2")),
+    bc = [("Motives", url_for("motives")),
+          ("Hypergeometric", url_for(".index")),
           (r"$\Q$", url_for(".index"))]
     for b in breads:
         bc.append(b)
@@ -266,7 +267,7 @@ def index():
         return hgm_search(info)
     return render_template(
         "hgm-index.html",
-        title=r"Hypergeometric Motives over $\Q$",
+        title=r"Hypergeometric motives over $\Q$",
         bread=get_bread(),
         credit=HGM_credit,
         info=info,
@@ -344,19 +345,19 @@ def url_for_label(label):
 
 @search_wrap(template="hgm-search.html",
              table=db.hgm_motives,  # overridden if family search
-             title=r'Hypergeometric Motive over $\Q$ Search Result',
-             err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
+             title=r'Hypergeometric motive over $\Q$ search resultS',
+             err_title=r'Hypergeometric motive over $\Q$ search input error',
              per_page=50,
              shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,
-             bread=lambda: get_bread([("Search Results", '')]),
+             bread=lambda: get_bread([("Search results", '')]),
              credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
     if search_type in ["Family", "RandomFamily"]:
-        query['__title__'] = r'Hypergeometric Family over $\Q$ Search Result'
-        query['__err_title__'] = r'Hypergeometric Family over $\Q$ Search Input Error'
+        query['__title__'] = r'Hypergeometric family over $\Q$ search result'
+        query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
         query['__table__'] = db.hgm_families
 
     queryab = {}
@@ -411,7 +412,7 @@ def render_hgm_webpage(label):
     data = db.hgm_motives.lookup(label)
     if data is None:
         abort(404, "Hypergeometric motive " + label + " was not found in the database.")
-    title = 'Hypergeometric Motive:' + label
+    title = 'Hypergeometric motive:' + label
     A = data['A']
     B = data['B']
 
@@ -490,7 +491,17 @@ def render_hgm_webpage(label):
     t_data = str(QQ(data['t']))
 
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
-    return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template(
+        "hgm-show-motive.html",
+        credit=HGM_credit,
+        title=title,
+        bread=bread,
+        info=info,
+        properties=prop2,
+        friends=friends,
+        learnmore=learnmore_list(),
+        KNOWL_ID="hgm.%s" % label,
+    )
 
 
 
@@ -559,9 +570,35 @@ def random_motive():
     s = label.split('_t')
     return redirect(url_for(".by_label", label=s[0], t='t'+s[1]))
 
+@hypergm_page.route("/interesting_families")
+def interesting_families():
+    return interesting_knowls(
+        "hgm",
+        db.hgm_families,
+        url_for_label,
+        regex=HGM_FAMILY_LABEL_RE,
+        title=r"Some interesting families of hypergeometric motives",
+        bread=get_bread([("Interesting", " ")]),
+        credit=HGM_credit,
+        learnmore=learnmore_list()
+    )
+
+@hypergm_page.route("/interesting_motives")
+def interesting_motives():
+    return interesting_knowls(
+        "hgm",
+        db.hgm_motives,
+        url_for_label,
+        regex=HGM_LABEL_RE,
+        title=r"Some interesting hypergeometric motives",
+        bread=get_bread([("Interesting motives", " ")]),
+        credit=HGM_credit,
+        learnmore=learnmore_list()
+    )
+
 @hypergm_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of Hypergeometric Motive Data over $\Q$'
+    t = r'Completeness of hypergeometric motive data over $\Q$'
     bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
@@ -569,7 +606,7 @@ def completeness_page():
 
 @hypergm_page.route("/Source")
 def how_computed_page():
-    t = r'Source of Hypergeometric Motive Data over $\Q$'
+    t = r'Source of hypergeometric motive Data over $\Q$'
     bread = get_bread(('Source',''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread,
@@ -577,7 +614,7 @@ def how_computed_page():
 
 @hypergm_page.route("/Labels")
 def labels_page():
-    t = r'Labels for Hypergeometric Motives over $\Q$'
+    t = r'Labels for hypergeometric motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread,
@@ -586,6 +623,8 @@ def labels_page():
 class HGMSearchArray(SearchArray):
     jump_example = "A2.2_B1.1_t1.2"
     jump_egspan = "an HGM label encoding the triple $(A, B, t)$"
+    jump_knowl = 'hgm.search_input'
+    jump_prompt = 'Label'
     def __init__(self):
         degree = TextBox(
             name="degree",

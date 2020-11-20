@@ -33,8 +33,8 @@ from . import half_integral_weight_forms
 assert half_integral_weight_forms
 from . import siegel_modular_forms
 assert siegel_modular_forms
-from . import modular_forms
-assert modular_forms
+# from . import modular_forms
+# assert modular_forms
 from . import elliptic_curves
 assert elliptic_curves
 from . import ecnf
@@ -87,13 +87,18 @@ from . import rep_galois_modl
 assert rep_galois_modl
 from . import hecke_algebras
 assert hecke_algebras
+from . import cluster_pictures
+assert cluster_pictures
 from . import inventory_app
 assert inventory_app
+from . import maass_forms
+assert maass_forms
+from .homepage import random
+assert random
 
-from .backend import db
+from .lmfdb_database import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
-
 
 def main():
     info("main: ...done.")
@@ -103,7 +108,7 @@ def main():
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
-        from werkzeug.contrib.profiler import ProfilerMiddleware
+        from werkzeug.middleware.profiler import ProfilerMiddleware
 
         app.wsgi_app = ProfilerMiddleware(
             app.wsgi_app, restrictions=[30], sort_by=("cumulative", "time", "calls")

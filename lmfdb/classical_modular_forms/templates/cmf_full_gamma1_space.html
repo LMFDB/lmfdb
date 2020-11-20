@@ -9,7 +9,7 @@
     <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>=</td>
-    <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
+    <td> {{ space.factored_level }} </td>
   </tr>
   <tr>
     <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
@@ -178,9 +178,5 @@ function show_qexp(qstyle) {
   \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
 </div>
 {% endif %}
-
-<h2>{{KNOWL('cmf.heckecharpolys', title='Hecke Characteristic Polynomials')}}</h2>
-
-{{ space.display_hecke_char_polys() | safe }}
 
 {% endblock %}

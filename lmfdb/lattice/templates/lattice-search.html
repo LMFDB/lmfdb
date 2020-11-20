@@ -18,12 +18,12 @@
   {% for l in info.results %}
   <tr>
     <td align='center'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-    <td align='center'>{{l.dim}}</td>
-    <td align='center'>{{l.det}}</td>
-    <td align='center'>{{l.level}}</td>
-    <td align='center'>{{l.class_number}}</td>
-    <td align='center'>{{l.min}}</td>
-    <td align='center'>{{l.aut}}</td>
+    <td align='center'>${{l.dim}}$</td>
+    <td align='center'>${{l.det}}$</td>
+    <td align='center'>${{l.level}}$</td>
+    <td align='center'>${{l.class_number}}$</td>
+    <td align='center'>${{l.min}}$</td>
+    <td align='center'>${{l.aut}}$</td>
   </tr>
   {% endfor %}
 </table>

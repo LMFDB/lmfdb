@@ -7,7 +7,7 @@ from flask import url_for
 from sage.all import (
     ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
     LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part,
-    latex, factor, prime_divisors, exp, pi, prod, floor, is_prime, prime_range)
+    latex, factor, exp, pi, prod, floor, is_prime, prime_range)
 
 from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
@@ -289,14 +289,14 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = r"\[\begin{aligned}" + L.texname_arithmetic + " = "
+            ans = r"\(" + L.texname_arithmetic + " = "
         else:
-            ans = r"\[\begin{aligned}" + L.texname + " = "
+            ans = r"\(" + L.texname + " = "
         if L.Ltype() == "riemann":
-            ans += r"\prod_p (1 - p^{-s})^{-1}"
+            ans += r"\displaystyle \prod_p (1 - p^{-s})^{-1}"
 
         elif L.Ltype() == "dirichlet":
-            ans += r"\prod_p (1- \chi(p) p^{-s})^{-1}"
+            ans += r"\displaystyle\prod_p (1- \chi(p) p^{-s})^{-1}"
 
         elif L.Ltype() == "classical modular form" and fmt == "arithmetic":
                 ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
@@ -305,13 +305,13 @@ def lfuncEPtex(L, fmt):
             #else:
             #    ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s/2})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s/2} + \chi(p)p^{-s})^{-1}"
         elif L.Ltype() == "hilbertmodularform":
-            ans += r"\prod_{\mathfrak{p}\ \mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \prod_{\mathfrak{p}\ \mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
+            ans += r"\displaystyle\prod_{\mathfrak{p}\ \mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \prod_{\mathfrak{p}\ \mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
 
         elif L.Ltype() == "maass":
             if L.group == 'GL2':
-                ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+                ans += r"\displaystyle\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1} \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
             elif L.group == 'GL3':
-                ans += r"\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1}  \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
+                ans += r"\displaystyle\prod_{p\ \mathrm{bad}} (1- a(p) p^{-s})^{-1}  \prod_{p\ \mathrm{good}} (1- a(p) p^{-s} + \overline{a(p)} p^{-2s} - p^{-3s})^{-1}"
             else:
                 ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                     r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
@@ -321,65 +321,30 @@ def lfuncEPtex(L, fmt):
         elif L.langlands:
             if L.degree > 1:
                 if fmt == "arithmetic":
-                    ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                         r"} (1 - \alpha_{j,p}\,    p^{" + str(L.motivic_weight) + "/2 - s})^{-1}")
                 else:
-                    ans += (r"\prod_p \ \prod_{j=1}^{" + str(L.degree) +
+                    ans += (r"\displaystyle\prod_p \ \prod_{j=1}^{" + str(L.degree) +
                         r"} (1 - \alpha_{j,p}\,  p^{-s})^{-1}")
             else:
-                ans += r"\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
+                ans += r"\displaystyle\prod_p \  (1 - \alpha_{p}\,  p^{-s})^{-1}"
 
 
         else:
             return("No information is available about the Euler product.")
-        ans += r"\end{aligned}\]"
+        ans += r"\)"
         return(ans)
     else:
-        return(r"\text{No information is available about the Euler product.}")
+        return(r"No information is available about the Euler product.")
 
 def lfuncEPhtml(L, fmt):
     """
         Euler product as a formula and a table of local factors.
     """
 
-
     # Formula
-    texform_gen = r"\[L(s) = "  # r"\[L(A,s) = "
-    texform_gen += r"\prod_{p \text{ prime}} F_p(p^{-s})^{-1} \]"
-    pfactors = prime_divisors(L.level)
-
-    if len(pfactors) == 0:
-        pgoodset = None
-        pbadset =  None
-    elif len(pfactors) == 1:  #i.e., the conductor is prime
-        pgoodset = r"$p \neq " + str(pfactors[0]) + "$"
-        pbadset = "$p = " + str(pfactors[0]) + "$"
-    else:
-        badset = r"\{" + str(pfactors[0])
-        for j in range(1,len(pfactors)):
-            badset += r",\;"
-            badset += str(pfactors[j])
-        badset += r"\}"
-        pgoodset = r"$p \notin " + badset + "$"
-        pbadset = r"$p \in " + badset + "$"
-
-
-    ans = ""
-    ans += texform_gen + "where"
-    if pgoodset is not None:
-        ans += ", for " + pgoodset
-    ans += ","
-    if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
-        if L.degree == 4:
-            ans += r"\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-            ans += "with $b_p = a_p^2 - a_{p^2}$. "
-        elif L.degree == 2:
-            ans += r"\[F_p(T) = 1 - a_p T + p T^2 .\]"
-    else:
-        ans += r"\(F_p(T)\) is a polynomial of degree " + str(L.degree) + ". "
-    if pbadset is not None:
-        ans += "If " + pbadset + ", then $F_p(T)$ is a polynomial of degree at most "
-        ans += str(L.degree - 1) + ". "
+    ans = r"\(L(s) = "  # r"\[L(A,s) = "
+    ans += r"\displaystyle \prod_{p} F_p(p^{-s})^{-1} \)"
 
     # Figuring out good and bad primes
     bad_primes = [p for p, _ in L.bad_lfactors]
@@ -407,7 +372,7 @@ def lfuncEPhtml(L, fmt):
 
 
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
-    eptable += "<table class='ntdata euler'>"
+    eptable += "<table class='ntdata'>"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if display_galois:
@@ -739,6 +704,15 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
             Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
+
+
+##################################################################
+#Function to help display Lvalues when scientific notation is used
+##################################################################
+
+def scientific_notation_helper(lval_string):
+    return(re.sub(r"[Ee](-?\d+)",r"\\times10^{\1}",lval_string))
+
 
 ###############################################################
 # Functions for Siegel dirichlet series

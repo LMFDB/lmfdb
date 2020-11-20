@@ -43,7 +43,7 @@ def parse_interval(arg, name):
         raise ValueError("invalid " + name)
     return a,b
 
-def parse_limit (arg):
+def parse_limit(arg):
     if not arg:
         return 50
     limit = -1
@@ -65,12 +65,12 @@ def get_character_modulus(a, b, limit=7):
         G = DirichletGroup_conrey(row)
         for chi in G:
             multorder = chi.multiplicative_order()
-            el = chi
-            col = multorder
-            col = col if col <= 6 else 'more'
-            entry = entries.get((row, col), [])
-            entry.append(el)
-            entries[(row, col)] = entry
+            if multorder <= limit:
+                el = chi
+                col = multorder
+                entry = entries.get((row, col), [])
+                entry.append(el)
+                entries[(row, col)] = entry
 
     entries2 = {}
     out = lambda chi: (chi.number(), chi.is_primitive(),
@@ -248,11 +248,8 @@ class CharacterSearch:
         info['start'] = self.start
         info['count'] = len(L)
         info['chars'] = L
-        info['title'] = 'Dirichlet Characters'
+        info['title'] = 'Dirichlet characters'
         return info
-
-    def list_valid(self):
-        return
 
     def _construct_search_query(self):
         query = {}

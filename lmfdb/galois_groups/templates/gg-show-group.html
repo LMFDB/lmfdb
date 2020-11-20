@@ -12,19 +12,19 @@ table.reptable td, table.reptable th {
 
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
-      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
-      <tr><td>{{KNOWL('gg.tnumber', 'Transitive number')}} $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
+      <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
       {% if info.pretty_name %}
-      <tr><td>{{KNOWL('gg.simple_name', title='Group')}} :<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
+      <tr><td>{{KNOWL('gg.simple_name', title='Group')}}:<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
       {% if info.n < 16 %}
-      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}} :<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
       {% endif %}
       <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
-      <tr><td>{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</tr>
+      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</tr>
+      <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$|\Aut(F/K)|$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
       <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
-      <tr><td>{{KNOWL('gg.field_automorphisms', '$|\Aut(F/K)|$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
     </table>
   </p>
 
@@ -52,7 +52,7 @@ table.reptable td, table.reptable th {
    </blockquote>
    </p>
 
-  <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
+  <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy classes') }}</h2>
    <p>
 
       {% if info.cclasses is defined %}
@@ -88,14 +88,14 @@ table.reptable td, table.reptable th {
     </table>
 
     <table>
-      <tr><td>Character table:
+      <tr><td>{{KNOWL('group.character_table', 'Character table')}}:
       {% if info.chartable is defined %}
       <td>&nbsp;&nbsp;<td>
       <pre>
 {{info.chartable}}
 </pre>
       {% else %}
-      Data not available.
+      not available.
       {% endif %}
     </table> </div> </p>
 {% if info.int_reps %}

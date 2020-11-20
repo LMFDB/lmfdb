@@ -1,10 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <style>
-p {padding-left: 1ch;}
-</style>
-
-<style>
 .toggle {margin-top:5px; margin-left:20px;}
 div.properties-body table tr td.label { vertical-align: top; }
 #content > h2.subhead { color:{{color.black}};}
@@ -34,9 +30,9 @@ function show_eqns(invstyle) {
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
 
-<h2 class='min_eqn'>            {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
-<h2 class='proj_eqn nodisplay'> {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
-<h2 class='simp_eqn nodisplay'> {{ KNOWL('g2c.simple_equation',  'Simplified equation') }} </h2>
+<h2 class='min_eqn' style='margin-top:0px;'>            {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
+<h2 class='proj_eqn nodisplay' style='margin-top:0px;'> {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
+<h2 class='simp_eqn nodisplay' style='margin-top:0px;'> {{ KNOWL('g2c.simple_equation',  'Simplified equation') }} </h2>
 
 <table>
 <tr class='min_eqn'>
@@ -56,10 +52,10 @@ function show_eqns(invstyle) {
 
 <h2> {{ KNOWL('g2c.invariants', 'Invariants') }} </h2>
 <table>
-<tr><td>{{KNOWL("ag.conductor", "Conductor")}}:</td><td> \( N \) </td><td>&nbsp;=&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
+<tr><td>{{KNOWL("ag.conductor", "Conductor")}}:</td><td> \( N \) </td><td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
     <td>{{place_code('cond')}}</td>
 </tr>
-<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;=&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;=&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
+<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
     <td>{{place_code('disc')}}</td>
 </tr>
 </table>
@@ -70,49 +66,49 @@ function show_eqns(invstyle) {
 
 <table>
     <tr class='igusa_clebsch'>
-        <td> \( I_2 \) </td> <td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[0] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_2 \) </td> <td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_4 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[1] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_6 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[2] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_{10} \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa_clebsch[3]}}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( I_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[3]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_2 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[0] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_4 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[1] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_6 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[2] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_8 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[3] }}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_8 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[3] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_{10} \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.igusa[4]}}\)</td><td>&nbsp;=&nbsp;</td>
+        <td> \( J_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[4]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[4] }}</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_1 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[0] }}\)</td>
+        <td> \( g_1 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[0] }}\)</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_2 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[1] }}\)</td>
+        <td> \( g_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[1] }}\)</td>
     </tr>
     <tr class='G2 nodisplay'>
-        <td> \( g_3 \) </td><td>&nbsp;=&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
+        <td> \( g_3 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.g2[2] }}\)</td>
     </tr>
 </table>
 <p></p>
@@ -175,9 +171,9 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', 'Hasse-Weil conjecture') }}:</td>
         <td>{% if data.hasse_weil_proved  %} verified {%else %} unverified {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_rank', 'Analytic rank') }}:</td>
-        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
+        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', 'Mordell-Weil rank') }}:</td>
-        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>    
+        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.two_selmer_rank', '2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
     <tr><td>{{ KNOWL('g2c.regulator', 'Regulator') }}:</td>
         <td>{% if data.regulator == 'unknown' %} unknown {% else %} \( {{data.regulator}} \) {% endif %}</td></tr>
@@ -196,6 +192,44 @@ function show_eqns(invstyle) {
 <h2> {{KNOWL('g2c.local_invariants', 'Local invariants')}} </h2>
 
 <p>{{ data.local_table | safe }}</p>
+
+<h2> {{KNOWL('g2c.local_invariants', 'Galois representations')}} </h2>
+<p>
+{% if data.exists_galrep_data %}
+    The mod \( \ell \) {{KNOWL('ec.galois_rep', title='Galois representation')}}
+    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
+    for all primes \( \ell \)
+
+    {% if data.nonmax_primes %} {# there are non-maximal primes #}
+        except those listed.
+        </p>
+        <p>
+        <table class="ntdata"><thead>
+        <tr>
+        <th>prime</th>
+        <th>{{KNOWL('g2c.galois_rep_image', title='Image type')}}</th>
+        <th>Witnesses</th>
+        <th>Is Torsion prime?</th>
+        </tr>
+        </thead><tbody>
+        {% for pr in data.galois_data %}
+        <tr>
+        <td align=center> \({{pr.p}}\)</td>
+        <td align=center>{{pr.image_type}}</td>
+        <td align=center>{{pr.witnesses}}</td>
+        <td align=center>{{pr.is_torsion}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    {% else %}
+        .
+    {% endif %}
+{% else %}
+    The Galois representation data has not been computed for this curve since it is
+    not generic.
+{% endif %}
+</p>
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 

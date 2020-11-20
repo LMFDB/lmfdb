@@ -5,7 +5,7 @@ from six import text_type
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, euler_phi, CyclotomicField, gap, RealField,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -67,7 +67,7 @@ cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
   '32.0.47330370277129322496000000000000000000000000.1':120,
   '40.0.118511797886229481159007653491590053243629014721874976833536.1':132}
 # Real cyclotomic subfields
-rcycloinfo = {'3.3.49.1': 7, '3.3.81.1': 9, '5.5.14641.1': 11, 
+rcycloinfo = {'3.3.49.1': 7, '3.3.81.1': 9, '5.5.14641.1': 11,
   '6.6.371293.1': 13, '4.4.1125.1':15, '4.4.2048.1':16,
   '8.8.410338673.1':17, '9.9.16983563041.1':19, '4.4.2000.1':20,
   '6.6.453789.1':21, '11.11.41426511213649.1':23, '4.4.2304.1':24,
@@ -182,7 +182,7 @@ for n, label in list(rcyclolookup.items()):
         rcyclolookup[2 * n] = label
 
 def na_text():
-    return "Not computed"
+    return "not computed"
 
 ## Turn a list into a string (without brackets)
 
@@ -249,15 +249,31 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
-def formatfield(coef):
+def formatfield(coef, show_poly=False, missing_text=None):
+    r"""
+      Take a list of coefficients (which can be a string like '1,3,1'
+      and either produce a number field knowl if the polynomial matches
+      a number field in the database, otherwise produce a knowl which
+      says say "Deg 15", which can be opened to show the degree 15
+      polynomial.  
+      
+      If show_poly is set to true and the polynomial is not in the
+      database, just display the polynomial (no knowl).
+    """
     if isinstance(coef, text_type):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
         mypol = latex(coeff_to_poly(coef))
+        if show_poly:
+            return '$'+mypol+'$'
+
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
-        mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+        if missing_text is None:
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+        else:
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
     return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
 
@@ -275,15 +291,15 @@ def modules2string(n, t, modlist):
 @cached_function
 def nf_display_knowl(label, name=None):
     if not name:
-        name = "Global Number Field %s" % label
+        name = "Number field %s" % label
     return '<a title = "%s [nf.field.data]" knowl="nf.field.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
 def nf_knowl_guts(label):
     out = ''
     wnf = WebNumberField(label)
     if wnf.is_null():
-        return 'Cannot find global number field %s' % label
-    out += "Global number field %s" % label
+        return 'Cannot find number field %s' % label
+    out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
     out += r"\(%s\)" % latex(wnf.poly())
@@ -378,6 +394,10 @@ class WebNumberField:
         if self.label == 'a':
             return None
         return self.label
+
+    def label_pretty(self):
+        from lmfdb.number_fields.number_field import nf_label_pretty
+        return nf_label_pretty(self.label)
 
     def field_pretty(self):
         return field_pretty(self.get_label())
@@ -504,7 +524,7 @@ class WebNumberField:
             if galord<48:
                 del repcounts[galord]
                 if self.degree() < galord:
-                    gc = 1 
+                    gc = 1
             if numae>0:
                 repcounts[self.degree()] -= numae
             if repcounts[self.degree()] == 0:
@@ -677,6 +697,24 @@ class WebNumberField:
             return res
         return na_text()
 
+    def cnf(self):
+        if self.degree()==1:
+            return r'=\frac{2^1\cdot (2\pi)^0 \cdot 1\cdot 1}{2\sqrt 1}=1$'
+        if not self.haskey('class_group'):
+            return r'$<td>  '+na_text()
+        # Otherwise we should have what we need
+        [r1,r2] = self.signature()
+        reg = self.regulator()
+        h = self.class_number()
+        w = self.root_of_1_order()
+        r1term= r'2^{%s}\cdot'% r1
+        r2term= r'(2\pi)^{%s}\cdot'% r2
+        disc = ZZ(self._data['disc_abs'])
+        approx1 = r'\approx' if self.unit_rank()>0 else r'='
+        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
+        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        return ltx
+
     def is_cm_field(self):
         return self._data['cm']
 
@@ -695,7 +733,7 @@ class WebNumberField:
             return na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'Trivial'
+            return 'trivial'
         return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):

@@ -1,20 +1,22 @@
 #-*- coding: utf-8 -*-
-# This Blueprint is about Local Number Fields
+# This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR, latex
+from sage.all import PolynomialRing, QQ, RR, latex, cached_function
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict,
-    search_wrap, Downloader)
+    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
+    knowl_cache, galdata, galunformatter,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
@@ -24,7 +26,7 @@ import re
 LF_credit = 'J. Jones and D. Roberts'
 
 def get_bread(breads=[]):
-    bc = [("Local Number Fields", url_for(".index"))]
+    bc = [("$p$-adic fields", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -82,7 +84,7 @@ def local_field_data(label):
     nicename = ''
     if f['n'] < 3:
         nicename = ' = '+ prettyname(f)
-    ans = 'Local number field %s%s<br><br>'% (label, nicename)
+    ans = '$p$-adic field %s%s<br><br>'% (label, nicename)
     ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = int(f['galois_label'].split('T')[1])
     gn = f['n']
@@ -145,10 +147,10 @@ def ratproc(inp):
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
-    info = to_dict(request.args, search_array=LFSearchArray())
+    info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -168,7 +170,7 @@ def local_field_jump(info):
 
 class LF_download(Downloader):
     table = db.lf_fields
-    title = 'Local Number Fields'
+    title = '$p$-adic fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
     data_description = 'defining the local field over Qp by adjoining a root of f(x).'
@@ -181,11 +183,12 @@ class LF_download(Downloader):
 
 @search_wrap(template="lf-search.html",
              table=db.lf_fields,
-             title='Local Number Field Search Results',
-             err_title='Local Field Search Input Error',
+             title='$p$-adic field search results',
+             titletag=lambda:'p-adic field search results',
+             err_title='Local field search input error',
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
-             bread=lambda:get_bread([("Search Results", ' ')]),
+             bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
              credit=lambda:LF_credit)
@@ -211,9 +214,10 @@ def render_field_webpage(args):
             if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
                 flash_error("Field %s was not found in the database.", label)
             else:
-                flash_error("%s is not a valid label for a local number field.", label)
+                flash_error("%s is not a valid label for a $p$-adic field.", label)
             return redirect(url_for(".index"))
-        title = 'Local Number Field ' + prettyname(data)
+        title = '$p$-adic field ' + prettyname(data)
+        titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         Qp = r'\Q_{%d}' % p
@@ -225,7 +229,7 @@ def render_field_webpage(args):
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}$.'%p
+        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
@@ -308,7 +312,18 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties=prop2, friends=friends, learnmore=learnmore_list())
+        return render_template(
+            "lf-show-field.html",
+            credit=LF_credit,
+            title=title,
+            titletag=titletag,
+            bread=bread,
+            info=info,
+            properties=prop2,
+            friends=friends,
+            learnmore=learnmore_list(),
+            KNOWL_ID="lf.%s" % label,
+        )
 
 
 def show_slopes(sl):
@@ -345,43 +360,65 @@ def printquad(code, p):
 
 
 def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='Local Field Search Input Error', bread=bread)
+    return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
 
 @local_fields_page.route("/random")
 def random_field():
     label = db.lf_fields.random()
     return redirect(url_for(".by_label", label=label), 307)
 
+@local_fields_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "lf.padic_field",
+        db.lf_fields,
+        url_for_label,
+        title=r"Some interesting $p$-adic fields",
+        bread=get_bread([("Interesting", " ")]),
+        credit=LF_credit,
+        learnmore=learnmore_list()
+    )
+
+@local_fields_page.route("/stats")
+def statistics():
+    title = "Local fields: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=LFStats(), credit=LF_credit, title=title, bread=bread, learnmore=learnmore_list())
+
 @local_fields_page.route("/Completeness")
 def cande():
-    t = 'Completeness of the Local Field Data'
+    t = 'Completeness of $p$-adic field data'
+    tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=tt, bread=bread,
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Local Number Fields'
+    t = 'Labels for $p$-adic fields'
+    tt = 'Labels for p-adic fields'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
-                  learnmore=learnmore_list_remove('label'), 
-                  credit=LF_credit, title=t, bread=bread)
+                  learnmore=learnmore_list_remove('label'),
+                  credit=LF_credit, title=t, titletag=tt, bread=bread)
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of the Local Field Data'
+    t = 'Source of $p$-adic field data'
+    ttag = 'Source of p-adic field data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
 @local_fields_page.route("/Reliability")
 def reliability():
-    t = 'Reliability of the Local Field Data'
+    t = 'Reliability of $p$-adic field data'
+    ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, bread=bread, 
+                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):
@@ -389,6 +426,8 @@ class LFSearchArray(SearchArray):
     plural_noun = "fields"
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
+    jump_knowl = "lf.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         degree = TextBox(
             name='n',
@@ -398,20 +437,20 @@ class LFSearchArray(SearchArray):
             example_span='6, or a range like 3..5')
         qp = TextBox(
             name='p',
-            label=r'Prime $p$ for base field $\Q_p$',
-            short_label='Prime $p$',
-            knowl='lf.qp',
+            label=r'Residue field characteristic',
+            short_label='Residue characteristic',
+            knowl='lf.residue_field',
             example='3',
             example_span='3, or a range like 3..7')
         c = TextBox(
             name='c',
-            label='Discriminant exponent $c$',
+            label='Discriminant exponent',
             knowl='lf.discriminant_exponent',
             example='8',
             example_span='8, or a range like 2..6')
         e = TextBox(
             name='e',
-            label='Ramification index $e$',
+            label='Ramification index',
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
@@ -423,7 +462,7 @@ class LFSearchArray(SearchArray):
             example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
         gal = TextBoxNoEg(
             name='gal',
-            label='Galois group $G$',
+            label='Galois group',
             short_label='Galois group',
             knowl='nf.galois_group',
             example='5T3',
@@ -435,3 +474,88 @@ class LFSearchArray(SearchArray):
 
         self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
         self.refine_array = [[degree, c, gal], [qp, e, topslope]]
+
+def ramdisp(p):
+    return {'cols': ['n', 'e'],
+            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'top_title':[('degree', 'lf.degree'),
+                         ('and', None),
+                         ('ramification index', 'lf.ramification_index'),
+                         ('for %s-adic fields'%p, None)],
+            'totaler': totaler(col_counts=False),
+            'proportioner': proportioners.per_row_total}
+
+def discdisp(p):
+    return {'cols': ['n', 'c'],
+            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'top_title':[('degree', 'lf.degree'),
+                         ('and', None),
+                         ('discriminant exponent', 'lf.discriminant_exponent'),
+                         ('for %s-adic fields'%p, None)],
+            'totaler': totaler(col_counts=False),
+            'proportioner': proportioners.per_row_query(lambda n: {'n':int(n)})}
+
+def galdisp(p, n):
+    return {'cols': ['galois_label'],
+            'constraint': {'p': p, 'n': n},
+            'top_title':[('Galois groups', 'nf.galois_group'),
+                         ('for %s-adic fields of'%p, None),
+                         ('degree', 'lf.degree'),
+                         (str(n), None)]}
+
+# We want to look up gap ids and names only once, rather than once for each Galois group
+@cached_function
+def galcache():
+    return knowl_cache(db.lf_fields.distinct("galois_label"))
+def galformatter(gal):
+    n, t = galdata(gal)
+    return group_pretty_and_nTj(n, t, True, cache=galcache())
+class LFStats(StatsDisplay):
+    table = db.lf_fields
+    baseurl_func = ".index"
+    short_display = {'galois_label': 'Galois group',
+                     'n': 'degree',
+                     'e': 'ramification index',
+                     'c': 'discriminant exponent'}
+    sort_keys = {'galois_label': galdata}
+    formatters = {
+        'galois_label': galformatter
+    }
+    query_formatters = {
+        'galois_label': (lambda gal: r'gal=%s' % (galunformatter(gal)))
+    }
+
+    stat_list = [
+        ramdisp(2),
+        ramdisp(3),
+        discdisp(2),
+        discdisp(3),
+        galdisp(2, 4),
+        galdisp(2, 6),
+        galdisp(2, 8),
+        galdisp(2, 10),
+        galdisp(2, 12),
+        galdisp(2, 14),
+        galdisp(3, 6),
+        galdisp(3, 9),
+        galdisp(3, 12),
+        galdisp(3, 15),
+        galdisp(5, 10),
+        galdisp(5, 15),
+        galdisp(7, 14)
+    ]
+
+    def __init__(self):
+        self.numfields = db.lf_fields.count()
+
+    @property
+    def short_summary(self):
+        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
+
+    @property
+    def summary(self):
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.' % (
+            comma(self.numfields),
+            display_knowl("lf.padic_field", r"$p$-adic fields"),
+            display_knowl("lf.degree", "degree")
+        )

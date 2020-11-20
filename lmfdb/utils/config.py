@@ -14,13 +14,14 @@ is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
 from __future__ import print_function
-from six.moves.configparser import ConfigParser
 
 import argparse
-import sys
 import os
 import random
 import string
+import __main__
+
+from lmfdb.backend.config import Configuration as _Configuration
 
 root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -48,14 +49,15 @@ def get_secret_key():
     return open(secret_key_file).read()
 
 
-class Configuration(object):
-    def __init__(self, writeargstofile=False):
+class Configuration(_Configuration):
+    def __init__(self, writeargstofile=False, readargs=False):
         default_config_file = abs_path_lmfdb("config.ini")
 
         # 1: parsing command-line arguments
         parser = argparse.ArgumentParser(
             description="LMFDB - The L-functions and modular forms database"
         )
+
         parser.add_argument(
             "-c",
             "--config-file",
@@ -63,6 +65,14 @@ class Configuration(object):
             metavar="FILE",
             help="configuration file [default: %(default)s]",
             default=default_config_file,
+        )
+        parser.add_argument(
+            "-s",
+            "--secrets-file",
+            dest="secrets_file",
+            metavar="SECRETS",
+            help="secrets file [default: %(default)s]",
+            default="secrets.ini",
         )
 
         parser.add_argument(
@@ -128,6 +138,13 @@ class Configuration(object):
             dest="logging_slowlogfile",
             metavar="FILE",
             default="slow_queries.log",
+        )
+        logginggroup.add_argument(
+            "--editor",
+            help="username for editor making data changes",
+            dest="logging_editor",
+            metavar="EDITOR",
+            default="",
         )
 
         # PostgresSQL options
@@ -213,115 +230,44 @@ class Configuration(object):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        if os.path.split(sys.argv[0])[-1] == "start-lmfdb.py" or writeargstofile:
-            args = parser.parse_args()
-        else:
-            # only read config file
-            args = parser.parse_args([])
-        args_dict = vars(args)
-        default_arguments_dict = vars(parser.parse_args([]))
-        if writeargstofile:
-            default_arguments_dict = dict(args_dict)
+        # if start-lmfdb.py was executed
+        startlmfdbQ =  getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
+        writeargstofile = writeargstofile or startlmfdbQ
+        readargs = readargs or startlmfdbQ
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
-        del default_arguments_dict["config_file"]
-
-        self.default_args = {}
-        for key, val in default_arguments_dict.items():
-            sec, opt = key.split("_", 1)
-            if sec not in self.default_args:
-                self.default_args[sec] = {}
-            self.default_args[sec][opt] = str(val)
-
-        # reading the config file, creating it if necessary
-        # 2/1: does config file exist?
-        if not os.path.exists(args.config_file):
-            if not writeargstofile:
-                print(
-                    "Config file: %s not found, creating it with the default values"
-                    % args.config_file
-                )
-            else:
-                print(
-                    "Config file: %s not found, creating it with the passed values"
-                    % args.config_file
-                )
-            _cfgp = ConfigParser()
-
-            # create sections
-            _cfgp.add_section("core")
-            _cfgp.add_section("web")
-            _cfgp.add_section("postgresql")
-            _cfgp.add_section("logging")
-
-            for sec, options in self.default_args.items():
-                for opt, val in options.items():
-                    _cfgp.set(sec, opt, str(val))
-
-            with open(args.config_file, "w") as configfile:
-                _cfgp.write(configfile)
-
-        # 2/2: reading the config file
-        _cfgp = ConfigParser()
-        _cfgp.read(args.config_file)
-
-        # 3: override specific settings
-        def all(sep="_"):
-            ret = {}
-            for s in _cfgp.sections():
-                for k, v in _cfgp.items(s):
-                    ret["%s%s%s" % (s, sep, k)] = v
-            return ret
-
-        all_set = all()
-
-        for key, val in default_arguments_dict.items():
-            # if a nondefault value was passed through command line arguments set it
-            # or if a default value was not set in the config file
-            if args_dict[key] != val or key not in all_set:
-                sec, opt = key.split("_")
-                _cfgp.set(sec, opt, str(args_dict[key]))
-
-        # some generic functions
-        def get(section, key):
-            return _cfgp.get(section, key)
-
-        def getint(section, key):
-            return _cfgp.getint(section, key)
-
-        def getboolean(section, key):
-            return _cfgp.getboolean(section, key)
-
+        opts = self.options
+        extopts = self.extra_options
         self.flask_options = {
-            "port": getint("web", "port"),
-            "host": get("web", "bindip"),
-            "debug": getboolean("core", "debug"),
+            "port": opts["web"]["port"],
+            "host": opts["web"]["bindip"],
+            "debug": opts["core"]["debug"],
         }
         for opt in ["use_debugger", "use_reloader", "profiler"]:
-            if opt in args_dict:
-                self.flask_options[opt] = args_dict[opt]
+            if opt in extopts:
+                self.flask_options[opt] = extopts[opt]
 
-        self.color = getint("core", "color")
+        self.color = opts["core"]["color"]
 
         self.postgresql_options = {
-            "port": getint("postgresql", "port"),
-            "host": get("postgresql", "host"),
-            "dbname": get("postgresql", "dbname"),
+            "port": opts["postgresql"]["port"],
+            "host": opts["postgresql"]["host"],
+            "dbname": opts["postgresql"]["dbname"],
         }
 
         # optional items
         for elt in ["user", "password"]:
-            if _cfgp.has_option("postgresql", elt):
-                self.postgresql_options[elt] = get("postgresql", elt)
+            if elt in opts["postgresql"]:
+                self.postgresql_options[elt] = opts["postgresql"][elt]
 
         self.logging_options = {
-            "logfile": get("logging", "logfile"),
-            "slowcutoff": float(get("logging", "slowcutoff")),
-            "slowlogfile": get("logging", "slowlogfile"),
+            "logfile": opts["logging"]["logfile"],
+            "slowcutoff": opts["logging"]["slowcutoff"],
+            "slowlogfile": opts["logging"]["slowlogfile"],
+            "editor": opts["logging"]["editor"],
         }
-        if "logfocus" in args_dict:
-            self.logging_options["logfocus"] = args_dict["logfocus"]
-        if _cfgp.has_option("logging", "editor"):
-            self.logging_options["editor"] = get("logging", "editor")
+        if "logfocus" in extopts:
+            self.logging_options["logfocus"] = extopts["logfocus"]
 
     def get_all(self):
         return {
@@ -339,14 +285,9 @@ class Configuration(object):
     def get_postgresql(self):
         return self.postgresql_options
 
-    def get_postgresql_default(self):
-        res = dict(self.default_args["postgresql"])
-        res["port"] = int(res["port"])
-        return res
-
     def get_logging(self):
         return self.logging_options
 
 
 if __name__ == "__main__":
-    Configuration(writeargstofile=True)
+    Configuration(writeargstofile=True, readargs=True)

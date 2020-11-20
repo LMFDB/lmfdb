@@ -2,11 +2,7 @@
 from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
-import inspect
 import os
-import shutil
-import signal
-import subprocess
 import tempfile
 import time
 
@@ -130,6 +126,7 @@ class PostgresTable(PostgresBase):
     - ``_primary_sort`` -- either None, a column name or a pair ``(col, direction)``, the most significant column when sorting
     - ``_sort`` -- the psycopg2.sql.Composable object containing the default sort clause
     """
+    _stats_table_class_ = PostgresStatsTable
 
     def __init__(
         self,
@@ -167,8 +164,7 @@ class PostgresTable(PostgresBase):
         self.search_cols, extend_coltype, self.has_id = self._column_types(search_table, data_types=data_types)
         self.col_type.update(extend_coltype)
         self._set_sort(sort)
-        self.stats = PostgresStatsTable(self, total)
-        self._verifier = None  # set when importing lmfdb.verify
+        self.stats = self._stats_table_class_(self, total)
 
     def _set_sort(self, sort):
         """
@@ -947,7 +943,7 @@ class PostgresTable(PostgresBase):
         - ``reindex`` -- whether to reindex the table after running the rewrite
         - ``restat`` -- whether to recompute statistics after running the rewrite
         - ``tostr_func`` -- a function to be used when writing data to the temp file
-            defaults to copy_dumps from lmfdb.backend.encoding
+            defaults to copy_dumps from encoding
         - ``commit`` -- whether to actually execute the rewrite
         - ``searchfile`` -- a filename to use for the temp file holding the search table
         - ``extrafile`` -- a filename to use for the temp file holding the extra table
@@ -995,26 +991,27 @@ class PostgresTable(PostgresBase):
         start = time.time()
         count = 0
         tot = self.count(query)
+        sep = kwds.get("sep", u"|")
         try:
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u"|".join(search_cols) + u"\n")
+                    searchfile.write(sep.join(search_cols) + u"\n")
                     searchfile.write(
-                        u"|".join(self.col_type.get(col) for col in search_cols)
+                        sep.join(self.col_type.get(col) for col in search_cols)
                         + u"\n\n"
                     )
                     if self.extra_table is not None:
-                        extrafile.write(u"|".join(extra_cols) + u"\n")
+                        extrafile.write(sep.join(extra_cols) + u"\n")
                         extrafile.write(
-                            u"|".join(self.col_type.get(col) for col in extra_cols)
+                            sep.join(self.col_type.get(col) for col in extra_cols)
                             + u"\n\n"
                         )
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
                         searchfile.write(
-                            u"|".join(
+                            sep.join(
                                 tostr_func(processed.get(col), self.col_type[col])
                                 for col in search_cols
                             )
@@ -1022,7 +1019,7 @@ class PostgresTable(PostgresBase):
                         )
                         if self.extra_table is not None:
                             extrafile.write(
-                                u"|".join(
+                                sep.join(
                                     tostr_func(processed.get(col), self.col_type[col])
                                     for col in extra_cols
                                 )
@@ -1184,7 +1181,7 @@ class PostgresTable(PostgresBase):
                     Identifier(tmp_table),
                     Identifier(label_col),
                 ))
-            if restat:
+            if restat and self.stats.saving:
                 if not inplace:
                     for table in [self.stats.counts, self.stats.stats]:
                         if not self._table_exists(table + "_tmp"):
@@ -1229,12 +1226,13 @@ class PostgresTable(PostgresBase):
             self._break_order()
             self._break_stats()
             nrows = cur.rowcount
-            self.stats.total -= nrows
-            self.stats._record_count({}, self.stats.total)
             if resort:
                 self.resort()
-            if restat:
-                self.stats.refresh_stats(total=False)
+            if self.stats.saving:
+                self.stats.total -= nrows
+                self.stats._record_count({}, self.stats.total)
+                if restat:
+                    self.stats.refresh_stats(total=False)
             self.log_db_change("delete", query=query, nrows=nrows)
 
     def update(self, query, changes, resort=True, restat=True, commit=True):
@@ -1275,7 +1273,7 @@ class PostgresTable(PostgresBase):
             self._break_stats()
             if resort:
                 self.resort()
-            if restat:
+            if restat and self.stats.saving:
                 self.stats.refresh_stats(total=False)
             self.log_db_change("update", query=query, changes=changes)
 
@@ -1387,7 +1385,8 @@ class PostgresTable(PostgresBase):
                     )
                     self._execute(inserter, self._parse_values(dat))
                 self._break_order()
-                self.stats.total += 1
+                if self.stats.saving:
+                    self.stats.total += 1
             self._break_stats()
             self.log_db_change("upsert", query=query, data=data)
             return new_row, row_id
@@ -1401,9 +1400,7 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``data`` -- a list of dictionaries, whose keys are columns and values the values to be set.
-          All dictionaries should have the same set of keys;
-          if this assumption is broken, some values may be set to their default values
-          instead of the desired value, or an error may be raised.
+          All dictionaries must have the same set of keys.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
@@ -1421,15 +1418,17 @@ class PostgresTable(PostgresBase):
             extra_cols = [col for col in self.extra_cols if col in data[0]]
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
+            search_cols = set(search_cols)
+            extra_cols = set(extra_cols)
         else:
             # we don't want to alter the input
             search_data = data[:]
+            search_cols = set(data[0])
         with DelayCommit(self, commit):
-            if reindex:
-                self.drop_pkeys()
-                self.drop_indexes()
             jsonb_cols = [col for col, typ in self.col_type.items() if typ == "jsonb"]
             for i, SD in enumerate(search_data):
+                if set(SD) != search_cols:
+                    raise ValueError("All dictionaries must have the same set of keys")
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
                     if col in SD:
@@ -1437,12 +1436,17 @@ class PostgresTable(PostgresBase):
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
+                    if set(ED) != extra_cols:
+                        raise ValueError("All dictionaries must have the same set of keys")
                     ED["id"] = self.max_id() + i + 1
                     for col in jsonb_cols:
                         if col in ED:
                             ED[col] = Json(ED[col])
                 cases.append((self.extra_table, extra_data))
             now = time.time()
+            if reindex:
+                self.drop_pkeys()
+                self.drop_indexes()
             for table, L in cases:
                 template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0])))
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
@@ -1454,15 +1458,16 @@ class PostgresTable(PostgresBase):
             )
             self._break_order()
             self._break_stats()
-            self.stats.total += len(search_data)
-            self.stats._record_count({}, self.stats.total)
             if resort:
                 self.resort()
             if reindex:
                 self.restore_pkeys()
                 self.restore_indexes()
-            if restat:
-                self.stats.refresh_stats(total=False)
+            if self.stats.saving:
+                self.stats.total += len(search_data)
+                self.stats._record_count({}, self.stats.total)
+                if restat:
+                    self.stats.refresh_stats(total=False)
             self.log_db_change("insert_many", nrows=len(search_data))
 
     def _identify_tables(self, search_table, extra_table):
@@ -1690,9 +1695,12 @@ class PostgresTable(PostgresBase):
         tabledata = [
             (self.search_table, self.search_cols, True, searchfile),
             (self.extra_table, self.extra_cols, True, extrafile),
-            (self.stats.counts, _counts_cols, False, countsfile),
-            (self.stats.stats, _stats_cols, False, statsfile),
         ]
+        if self.stats.saving:
+            tabledata.extend([
+                (self.stats.counts, _counts_cols, False, countsfile),
+                (self.stats.stats, _stats_cols, False, statsfile),
+            ])
         addedid = None
         with DelayCommit(self, commit, silence=True):
             for table, cols, header, filename in tabledata:
@@ -1745,7 +1753,7 @@ class PostgresTable(PostgresBase):
             if reindex:
                 # Also restores constraints
                 self.restore_indexes(suffix=suffix)
-            if restat:
+            if restat and self.stats.saving:
                 # create tables before restating
                 for table in [self.stats.counts, self.stats.stats]:
                     if not self._table_exists(table + suffix):
@@ -1816,7 +1824,7 @@ class PostgresTable(PostgresBase):
             ),
             [self.search_table],
         ).fetchone()
-        table = PostgresTable(self._db, *tabledata)
+        table = self._db._search_table_class_(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
@@ -2001,10 +2009,11 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.restore_indexes()
             self._break_stats()
-            if restat:
-                self.stats.refresh_stats(total=False)
-            self.stats.total += search_count
-            self.stats._record_count({}, self.stats.total)
+            if self.stats.saving:
+                if restat:
+                    self.stats.refresh_stats(total=False)
+                self.stats.total += search_count
+                self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
     def copy_to(
@@ -2044,9 +2053,12 @@ class PostgresTable(PostgresBase):
             # tablename, cols, addid, write_header, filename
             (self.search_table, self.search_cols, True, True, searchfile),
             (self.extra_table, self.extra_cols, True, True, extrafile),
-            (self.stats.counts, _counts_cols, False, False, countsfile),
-            (self.stats.stats, _stats_cols, False, False, statsfile),
         ]
+        if self.stats.saving:
+            tabledata.extend([
+                (self.stats.counts, _counts_cols, False, False, countsfile),
+                (self.stats.stats, _stats_cols, False, False, statsfile),
+            ])
 
         metadata = [
             ("meta_indexes", "table_name", _meta_indexes_cols, indexesfile),
@@ -2118,7 +2130,7 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             if sort:
                 updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
-                values = [sort, self.search_table]
+                values = [Json(sort), self.search_table]
             else:
                 updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
                 values = [self.search_table]
@@ -2415,202 +2427,6 @@ class PostgresTable(PostgresBase):
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
-
-    def _check_verifications_enabled(self):
-        """
-        Check whether verifications have been enabled in this session (by importing db from lmfdb.verify and implementing an appropriate file).
-        """
-        if not self._db.is_verifying:
-            raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
-        if self._verifier is None:
-            raise ValueError("No verifications defined for this table; add a class {0} in lmfdb/verify/{0}.py to enable".format(self.search_table))
-
-    def verify(
-        self,
-        speedtype="all",
-        check=None,
-        label=None,
-        ratio=None,
-        logdir=None,
-        parallel=4,
-        follow=["errors", "log", "progress"],
-        poll_interval=0.1,
-        debug=False,
-    ):
-        """
-        Run the tests on this table defined in the lmfdb/verify folder.
-
-        If parallel is True, sage should be in your path or aliased appropriately.
-
-        Note that if check is not provided and parallel is False, no output will be printed, files
-        will still be written to the log directory.
-
-        INPUT:
-
-        - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
-        - ``check`` -- a string, giving the function name for a particular test.
-            If provided, ``speedtype`` will be ignored.
-        - ``label`` -- a string, giving the label for a particular object on which to run tests
-            (as in the label_col attribute of the verifier).
-        - ``ratio`` -- for slow and fast tests, override the ratio of rows to be tested. Only valid
-            if ``check`` is provided.
-        - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
-        - ``parallel`` -- A cap on the number of threads to use in parallel (if 0, doesn't use parallel).
-            If ``check`` or ``label`` is set, parallel is ignored and tests are run directly.
-        - ``follow`` -- Which output logs to print to stdout.  'log' contains failed tests,
-            'errors' details on errors in tests, and 'progress' shows progress in running tests.
-            If False or empty, a subprocess.Popen object to the subprocess will be returned.
-        - ``poll_interval`` -- The polling interval to follow the output if executed in parallel.
-        - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
-        """
-        self._check_verifications_enabled()
-        if ratio is not None and check is None:
-            raise ValueError("You can only provide a ratio if you specify a check")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
-        if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-        if label is not None:
-            parallel = 0
-        verifier = self._verifier
-        if check is None:
-            olddir = os.path.join(logdir, "old")
-            if not os.path.exists(olddir):
-                os.makedirs(olddir)
-
-            def move_to_old(tname):
-                for suffix in [".log", ".errors", ".progress", ".started", ".done"]:
-                    filename = os.path.join(logdir, tname + suffix)
-                    if os.path.exists(filename):
-                        n = 0
-                        oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                        while os.path.exists(oldfile):
-                            n += 1
-                            oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                        shutil.move(filename, oldfile)
-
-            if speedtype == "all":
-                types = verifier.all_types()
-            else:
-                types = [verifier.speedtype(speedtype)]
-            tabletypes = [
-                "%s.%s" % (self.search_table, typ.shortname)
-                for typ in types
-                if verifier.get_checks_count(typ) > 0
-            ]
-            if len(tabletypes) == 0:
-                raise ValueError(
-                    "No checks of type %s defined for %s"
-                    % (", ".join(typ.__name__ for typ in types), self.search_table)
-                )
-            for tname in tabletypes:
-                move_to_old(tname)
-            if parallel:
-                parallel = min(parallel, len(tabletypes))
-                for tabletype in tabletypes:
-                    print("Starting %s" % tabletype)
-                cmd = os.path.abspath(os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),
-                    "..",
-                    "verify",
-                    "verify_tables.py",
-                ))
-                cmd = [
-                    "sage",
-                    "-python",
-                    cmd,
-                    "-j%s" % int(parallel),
-                    logdir,
-                    str(self.search_table),
-                    speedtype,
-                ]
-                if debug:
-                    pipe = subprocess.Popen(cmd)
-                else:
-                    DEVNULL = open(os.devnull, "wb")
-                    pipe = subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
-                if follow:
-                    from lmfdb.verify.follower import Follower
-
-                    try:
-                        Follower(logdir, tabletypes, follow, poll_interval).follow()
-                    finally:
-                        # kill the subprocess
-                        # From the man page, the following will terminate child processes
-                        if pipe.poll() is None:
-                            pipe.send_signal(signal.SIGTERM)
-                            pipe.send_signal(signal.SIGTERM)
-                else:
-                    return pipe
-            else:
-                for typ in types:
-                    if verifier.get_checks_count(typ) == 0:
-                        print("No %s checks defined for %s" % (typ.__name__, self.search_table))
-                    else:
-                        print("Starting %s checks for %s" % (typ.__name__, self.search_table))
-                        verifier.run(typ, logdir, label)
-        else:
-            msg = "Starting check %s" % check
-            if label is not None:
-                msg += " for label %s" % label
-            print(msg)
-            verifier.run_check(check, label=label, ratio=ratio)
-
-    def list_verifications(self, details=True):
-        """
-        Lists all verification functions available for this table.
-
-        INPUT:
-
-        - ``details`` -- if True, details such as the docstring, ratio of rows on which the test
-            is run by default and the constraint on rows for which this test is run are shown.
-        """
-        self._check_verifications_enabled()
-        green = "\033[92m"
-        red = "\033[91m"
-        stop = "\033[0m"
-
-        def show_check(name, check, typ):
-            if typ.__name__ in ["overall", "fast"]:
-                color = green
-            else:
-                color = red
-            print("* " + color + name + stop)
-            if details:
-                if check.ratio < 1:
-                    ratio_fmt = "Ratio of rows: {val:.2%}"
-                else:
-                    ratio_fmt = "Ratio of rows: {val:.0%}"
-                for line in inspect.getdoc(check).split("\n"):
-                    print(" " * 4 + line)
-                for attr, fmt in [
-                    ("disabled", "Disabled"),
-                    ("ratio", ratio_fmt),
-                    ("max_failures", "Max failures: {val}"),
-                    ("timeout", "Timeout after: {val}s"),
-                    ("constraint", "Constraint: {val}"),
-                    ("projection", "Projection: {val}"),
-                    ("report_slow", "Report slow test after: {val}s"),
-                    ("max_slow", "Maximum number of slow tests: {val}"),
-                ]:
-                    cattr = getattr(check, attr, None)
-                    tattr = getattr(typ, attr, None)
-                    if cattr is not None and cattr != tattr:
-                        print(" " * 6 + fmt.format(val=cattr))
-
-        verifier = self._verifier
-        for typ in ["over", "fast", "long", "slow"]:
-            color = green if typ in ["over", "fast"] else red
-            typ = verifier.speedtype(typ)
-            if verifier.get_checks_count(typ) > 0:
-                name = color + typ.__name__ + stop
-                print("\n{0} checks (default {1:.0%} of rows, {2}s timeout)".format(
-                        name, float(typ.ratio), typ.timeout
-                ))
-                for checkname, check in inspect.getmembers(verifier.__class__):
-                    if isinstance(check, typ):
-                        show_check(checkname, check, typ)
 
     def set_importance(self, importance):
         """

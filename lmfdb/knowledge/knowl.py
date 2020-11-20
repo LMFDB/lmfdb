@@ -8,7 +8,8 @@ import subprocess
 import os, sys
 
 from lmfdb.backend.base import PostgresBase
-from lmfdb.backend import db, DelayCommit
+from lmfdb.backend import DelayCommit
+from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
@@ -22,25 +23,25 @@ top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
-    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Curve {0}'),
-    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Isogeny Class {0}'),
-    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois Group {0}T{1}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 isogeny class {0}'),
+    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois group {0}T{1}'),
     (re.compile(r'lattice\.(.*)'), 'Lattice/{0}', 'Lattice {0}'),
     (re.compile(r'cmf\.(.*)'), 'ModularForm/GL2/Q/holomorphic/{0}', 'Newform {0}'),
-    (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number Field {0}'),
-    (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic Curve {0}'),
-    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic Curve {0}-{1}-{2}{3}'),
-    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian Variety Isogeny Class {0}'),
-    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate Group {0}'),
+    (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number field {0}'),
+    (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic curve {0}'),
+    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic curve {0}-{1}-{2}{3}'),
+    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian variety isogeny class {0}'),
+    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate group {0}'),
     (re.compile(r'belyi\.(.*)'), 'Belyi/{0}', 'Belyi Map {0}'),
-    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke Algebra {0}'),
-    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke Algebra {0}'),
-    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
-    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
+    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke algebra {0}'),
+    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke algebra {0}'),
+    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois representation {0}'),
+    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l modular form {0}'),
 ]
 grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
-link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
+link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
 defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
@@ -102,7 +103,7 @@ def extract_typ(kid):
     return typ, url, name
 
 def extract_links(content):
-    return sorted(set(x[1] for x in link_finder_re.findall(content)))
+    return sorted(set(x[2] for x in link_finder_re.findall(content)))
 
 def normalize_define(term):
     m = define_fixer.search(term)
@@ -173,11 +174,11 @@ class KnowlBackend(PostgresBase):
         if cur.rowcount > 0:
             return {k:v for k,v in zip(fields, cur.fetchone())}
 
-    def get_all_knowls(self, fields=None):
+    def get_all_knowls(self, fields=None, types=[1,0,-1,-2]):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [0])
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [0, types])
         return [{k:v for k,v in zip(fields, res)} for res in cur]
 
     def get_all_defines(self):
@@ -333,20 +334,8 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
-    def needs_review(self, days, cap=50):
-        now = datetime.utcnow()
-        tdelta = timedelta(days=days)
-        time = now - tdelta
-        fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time, 0, -2, cap])
-        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
-
+    def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
-        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter, [kids])
-        reviewed = {rec[0]:rec[1] for rec in cur}
-
         selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links && %s")
         cur = self._execute(selecter, [0, -2, kids])
         referrers = {k.id: [] for k in knowls}
@@ -354,17 +343,49 @@ class KnowlBackend(PostgresBase):
             for kid in links:
                 if kid in referrers:
                     referrers[kid].append(refid)
-
         for k in knowls:
-            k.reviewed_content = reviewed.get(k.id)
             k.referrers = referrers[k.id]
             k.code_referrers = [
                     code_snippet_knowl(D, full=False)
                     for D in self.code_references(k)]
+
+
+    def needs_review(self, days):
+        now = datetime.utcnow()
+        tdelta = timedelta(days=days)
+        time = now - tdelta
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0, -2])
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+
+        kids = [k.id for k in knowls]
+        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [kids])
+        reviewed = {rec[0]:rec[1] for rec in cur}
+
+        for k in knowls:
+            k.reviewed_content = reviewed.get(k.id)
+        self._set_referrers(knowls)
+        return knowls
+
+    def stale_knowls(self):
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
+            SQL(", ").join([SQL("a.{0}").format(Identifier(col)) for col in fields]),
+            SQL(", ").join([SQL("b.{0}").format(Identifier(col)) for col in fields]),
+            SQL(", ").join(map(Identifier, fields)))
+        data = list(self._execute(selecter))
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in data]
+        for knowl, rec in zip(knowls, data):
+            D = {k:v for k,v in zip(fields, rec[len(fields):])}
+            knowl.reviewed_content = D["content"]
+        self._set_referrers(knowls)
         return knowls
 
     def ids_referencing(self, knowlid, old=False, beta=None):
-        """Returns all ids that reference the given one.
+        """
+        Returns all ids that reference the given one.
 
         Note that if running on prod, and the reviewed version of a knowl doesn't
         reference knowlid but a more recent beta version does, it will be included
@@ -399,6 +420,46 @@ class KnowlBackend(PostgresBase):
             return sorted(set(new_ids + good_ids))
         else:
             return [rec[0] for rec in cur]
+
+    def orphans(self, old=False, beta=None):
+        """
+        Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
+        """
+        kids = set(k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."]))
+        def filter_from_matches(pattern):
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
+            for match in matches:
+                lines = match.split('\n')
+                for line in lines:
+                    m = grep_extractor.match(line)
+                    if m and m.group(2) == ':': # active match rather than context
+                        for kid in extract_links(line):
+                            if kid in kids:
+                                kids.remove(kid)
+
+        # Find references in the codebase
+        filter_from_matches(link_finder_re.pattern)
+        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [0])
+        categories = {}
+        titles = {}
+        for rec in cur:
+            categories[rec[0]] = rec[2]
+            titles[rec[0]] = rec[3]
+            for link in rec[1]:
+                if link in kids:
+                    kids.remove(link)
+        # Some of these might be spurious since they may occur in the code in strange ways, so we do a grep for all of the ids.
+        pattern = "|".join(kid.replace(".", r"\.") for kid in kids)
+        filter_from_matches(pattern)
+        # Now group by category
+        by_category = defaultdict(list)
+        for kid in kids:
+            by_category[categories[kid]].append((titles[kid], kid))
+        for cat in by_category:
+            L = sorted(by_category[cat])
+            by_category[cat] = [kid for (title, kid) in L]
+        return by_category
 
     @staticmethod
     def _process_git_grep(match):
@@ -569,9 +630,9 @@ class KnowlBackend(PostgresBase):
         """
         all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
         if sys.version_info[0] == 3:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""],encoding='utf-8').split('\n--\n')
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
         else:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
+            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern]).split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')

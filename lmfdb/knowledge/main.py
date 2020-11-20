@@ -16,6 +16,7 @@ import string
 import re
 import json
 import time
+from collections import Counter
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
@@ -51,6 +52,10 @@ def allowed_id(ID):
             extras = "[],T"
         elif ID.startswith('hgm'):
             extras = "AB"
+        elif ID.startswith('ec'):
+            extras = "CM"
+        elif ID.startswith('gg'):
+            extras = "T"
         else:
             extras = ""
         for c in extras:
@@ -314,7 +319,7 @@ def test():
     logger.info("test")
     return render_template("knowl-test.html",
                            bread=get_bread([("Test", url_for(".test"))]),
-                           title="Knowledge Test",
+                           title="Knowledge test",
                            k1=Knowl("k1"))
 
 
@@ -450,7 +455,7 @@ def history(limit=25):
     h_items = knowldb.get_history(limit)
     bread = get_bread([("History", url_for('.history', limit=limit))])
     return render_template("knowl-history.html",
-                           title="Knowledge History",
+                           title="Knowledge history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -462,7 +467,7 @@ def comment_history(limit=25):
     h_items = knowldb.get_comment_history(limit)
     bread = get_bread([("Comment History", url_for('.comment_history', limit=limit))])
     return render_template("knowl-comment-history.html",
-                           title="Comment History",
+                           title="Comment history",
                            bread=bread,
                            history=h_items,
                            limit=limit)
@@ -502,35 +507,54 @@ def demote(ID, timestamp):
     flash(Markup("Knowl %s has been returned to beta." % ID))
     return redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/review_recent/<int:days>/")
-@knowl_reviewer_required
-def review_recent(days):
-    if request.args:
-        try:
-            info = to_dict(request.args)
-            beta = None
-            ID = info.get('review')
+def review_helper(data):
+    try:
+        info = to_dict(data)
+        beta = None
+        ID = info.get('review')
+        if ID:
+            beta = False
+        else:
+            ID = info.get('beta')
             if ID:
-                beta = False
-            else:
-                ID = info.get('beta')
-                if ID:
-                    beta = True
-            if beta is not None:
-                k = Knowl(ID)
-                k.review(who=current_user.get_id(), set_beta=beta)
-                return jsonify({"success": 1})
-            raise ValueError
-        except Exception:
-            return jsonify({"success": 0})
-    knowls = knowldb.needs_review(days)
+                beta = True
+        if beta is not None:
+            k = Knowl(ID)
+            k.review(who=current_user.get_id(), set_beta=beta)
+            return jsonify({"success": 1})
+        raise ValueError
+    except Exception:
+        return jsonify({"success": 0})
+
+def prep_review(knowls):
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
         k.reviewed_content = json.dumps(k.reviewed_content)
         k.content = json.dumps(k.content)
-    b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
+
+@knowledge_page.route("/review_recent/<int:days>/")
+@knowl_reviewer_required
+def review_recent(days):
+    if request.args:
+        return review_helper(request.args)
+    knowls = knowldb.needs_review(days)
+    prep_review(knowls)
+    b = get_bread([("Reviewing recent", url_for('.review_recent', days=days))])
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,
+                           knowls=knowls,
+                           bread=b)
+
+@knowledge_page.route("/review_stale")
+@knowl_reviewer_required
+def review_stale():
+    if request.args:
+        return review_helper(request.args)
+    knowls = knowldb.stale_knowls()
+    prep_review(knowls)
+    b = get_bread([("Reviewing stale", url_for('.review_stale'))])
+    return render_template("knowl-review-recent.html",
+                           title="Reviewing stale knowls",
                            knowls=knowls,
                            bread=b)
 
@@ -543,6 +567,15 @@ def broken_links():
                            title="Broken knowl links",
                            bad_knowls=bad_knowls,
                            bad_code=bad_code,
+                           bread=b)
+
+@knowledge_page.route("/orphans")
+def orphans():
+    orphans = knowldb.orphans()
+    b = get_bread([("Orphaned knowls", " ")])
+    return render_template("knowl-orphans.html",
+                           title="Orphaned knowls",
+                           orphans=orphans,
                            bread=b)
 
 @knowledge_page.route("/new_comment/<ID>")
@@ -694,7 +727,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     if request.method == "POST":
         con = request.form['content']
         foot = footer or request.form['footer']
-    elif request.method == "GET":
+    else:
         con = request.args.get("content", k.content)
         foot = footer or request.args.get("footer", "1")
 
@@ -756,7 +789,7 @@ def render_knowl(ID, footer=None, kwargs=None,
             return data
         resp = make_response(data)
         # cache if it is a usual GET
-        if request.method == 'GET':
+        if request.method != 'POST':
             resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
@@ -768,34 +801,45 @@ def index():
     from psycopg2 import DataError
     cur_cat = request.args.get("category", "")
 
-    filtermode = request.args.get("filtered")
     from .knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
-        qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
-        types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
-    elif request.method == 'GET':
-        qualities = request.args.getlist('qualities')
-        types = request.args.getlist('types')
-
-    if filtermode:
-        filters = [ q for q in qualities if q in knowl_status_code ]
-        types = [ typ for typ in types if typ in knowl_type_code ]
-        # If "in progress" requested, should add author = current_user.get_id()
+        data = request.form
     else:
-        filters = []
+        data = request.args
+    qualities = [quality for quality in knowl_status_code if data.get(quality, "") == "on"]
+    if not qualities:
+        qualities = ["reviewed", "beta"]
+
+    types = [typ for typ in knowl_type_code if data.get(typ, "") == "on"]
+    if not types:
         types = ["normal"]
 
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    if search:
+        types = list(knowl_type_code)
     try:
-        knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+        # We omit the category so that we can compute the number of results in each category.
+        # Eventually it would be good to do the category filtering client-side
+        all_knowls = knowldb.search(filters=qualities, types=types, keywords=keywords, regex=regex)
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occured during knowl search", str(e))
+    categories = Counter()
+    if cur_cat:
+        # Always include the current category
+        categories[cur_cat] = 0
+    knowls = []
+    for k in all_knowls:
+        cat = k["id"].split(".")[0]
+        categories[cat] += 1
+        if cur_cat in ["", cat]:
+            knowls.append(k)
 
     def first_char(k):
         t = k['title']
@@ -823,18 +867,14 @@ def index():
     if cur_cat:
         b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
-                           title="Knowledge Database",
+                           title="Knowledge database",
                            bread=get_bread(b),
                            knowls=knowls,
                            search=search,
-                           searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
-                           qualities = qualities,
-                           searchmode=bool(search),
+                           qualities=qualities,
                            use_regex=regex,
-                           categories = knowldb.get_categories(),
-                           cur_cat = cur_cat,
-                           categorymode = bool(cur_cat),
-                           filtermode = filtermode,
+                           categories=categories,
+                           cur_cat=cur_cat,
                            knowl_types=list(knowl_type_code),
                            types=types)

@@ -1,9 +1,9 @@
-{% extends 'homepage.html' %}
-{% block content %}
+{% extends 'display_stats.html' %}
+{% block custom_stats %}
 
 {% set max_cols = 10 %}
-{% set genus_detail = info.stats.genus_detail %}
-{% set dim_detail = info.stats.dim_detail %}
+{% set genus_detail = info.by_genus_data %}
+
 
 <style>
 table.ntdata th.center {
@@ -15,18 +15,7 @@ table.ntdata td {
 }
 </style>
 
-<div>
-  <p>
-    Currently the database contains all groups G acting as automorphisms of
-    curves  X from genus {{info.stats.genus.min}} up to genus
-    {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
-    sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
-    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
-  </p>
-</div>
-
-<h2> Distribution by genus </h2>
+<h2> Distribution by {{KNOWL('ag.curve.genus',title='genus')}}</h2>
 {% for i in range(0, genus_detail | length, max_cols) %}
 <div>
   <table border=0 cellpadding=3 class="ntdata">
@@ -35,7 +24,7 @@ table.ntdata td {
         <th>Genus</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <th class="center">
-          <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.genus_num}}</a>
+           {{genus.genus_num}}
         </th>
         {% endfor %}
       </tr>
@@ -44,37 +33,36 @@ table.ntdata td {
       <tr>
         <th>distinct families</th>
         {% for genus in genus_detail[i:i+max_cols] %}
-        <td>{{genus.families}}</td>
+        <td>{{genus.num_families[0]}}</td>
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct refined passports</th>
+        <th>distinct  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} </th>
         {% for genus in genus_detail[i:i+max_cols] %}
-        <td>{{genus.refined_passports}}</td>
+        <td> <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.num_refined_pp[0]}}</a></td>
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct generating vectors</th>
+        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}  </th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-          {{genus.gen_vectors}}
+          {{genus.num_gen_vectors[0]}}
         </td>
         {% endfor %}
       </tr>
       <tr>
-        <th>unique groups</th>
+        <th>unique  {{KNOWL('group',title='groups')}} </th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
+          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.num_unique_groups}}</a>
         </td>
         {% endfor %}
       </tr>
       <tr>
-        <th>maximum group order</th>
+        <th>maximum {{KNOWL('group.order',title='group order')}}</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-	  <!--   <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>-->
-	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.groups[1])}}>{{genus.groups[1]}}</a>
+	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.max_grp_order)}}>{{genus.max_grp_order}}</a>
         </td>
         {% endfor %}
       </tr>
@@ -83,31 +71,114 @@ table.ntdata td {
 </div>
 {% endfor %}
 
-<br>
 
+<h2>Distinct families by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level center" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{2 + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(0, info.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
+        -
+        {% else %}
+        {{genus_detail[j].num_families[index]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-<h2> Distribution by dimension </h2>
-{% for i in range(0, dim_detail | length, max_cols) %}
-<div>
-  <table border=1 cellpadding=5 class="ntdata">
-    <thead>
-      <tr>
-        <th>Dimension</th>
-        {% for dim in dim_detail[i:i+max_cols] %}
-        <th class="center">{{dim.dim_num}}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>distinct generating vectors</th>
-        {% for dim in dim_detail[i:i+max_cols] %}
-        <td>{{dim.gen_vectors}}</td>
-        {% endfor %}
-      </tr>
-    </tbody>
-  </table>
-</div>
-{% endfor %}
+<h2>Distinct  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level center" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{2 + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(0, info.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
+        -
+        {% else %}
+         <a href={{ url_for('.index', genus=genus, g0=g0)}}>{{genus_detail[j].num_refined_pp[index]}}</a>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Distinct  {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} by {{KNOWL('ag.curve.genus',title='genus')}} and {{KNOWL('curve.highergenus.aut.quotientgenus',title='quotient genus')}}</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Quotient</th>
+      <th class="level center" colspan="{{genus_detail | length}}">Genus</th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft">Genus</th>
+      {% for i in range(0, genus_detail | length) %}
+      <th class="level">{{2 + i}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for g0 in range(0, info.g0_max + 1) %}
+    <tr>
+      <th class="left">{{g0}}</th>
+      {% for j in range(0, genus_detail | length) %}
+      {% set genus = 2 + j %}
+      {% set index = g0 + 1 %}
+      <td class="center">
+        {% if (g0 > (genus / 2) | round(0, 'ceil') | int) %}
+        -
+        {% elif (index >= genus_detail[j].num_families | length) %}
+        -
+        {% else %}
+        {{genus_detail[j].num_gen_vectors[index]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 {% endblock %}

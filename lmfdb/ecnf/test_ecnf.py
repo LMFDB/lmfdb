@@ -102,7 +102,7 @@ class EllCurveTest(LmfdbTest):
         """
         L = self.tc.get('/EllipticCurve/?start=0&isodeg=2')
         assert '27.2-a4' in L.get_data(as_text=True)
-        L = self.tc.get('EllipticCurve/?start=0&torsion=1&isodeg=2')
+        L = self.tc.get('/EllipticCurve/?start=0&torsion=1&isodeg=2')
         assert 'No matches' in L.get_data(as_text=True)
 
     def test_cm_disc_search(self):
@@ -116,8 +116,8 @@ class EllCurveTest(LmfdbTest):
         for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',
                 ['Isogeny class 324.3-a',
                  'Twists',
-                 'Base-change of 36.a4',
-                 'Base-change of 576.f3',
+                 'Base change of 36.a4',
+                 'Base change of 576.f3',
                  'Bianchi modular form 2.0.8.1-324.3-a',
                  'Hilbert modular form 2.2.24.1-36.1-a',
                  'Isogeny class 2.2.24.1-36.1-a',

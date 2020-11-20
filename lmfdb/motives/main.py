@@ -33,5 +33,5 @@ def index2():
     #bread = get_bread([('Hypergeometric', url_for('.index2'))])
     #info = {}
     #friends=[('Hypergeometric over $\Q$', url_for("hypergm.index"))]
-    #return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
+    #return render_template("hypergeometric-index.html", title="Hypergeometric motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 

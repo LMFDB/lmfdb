@@ -1,0 +1,48 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>
+  {{ info.stats.short_summary | safe }}
+</div>
+
+<h2>Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{KNOWL('mf.maass.mwf.level', 'level')}}:</td>
+    <td>
+      {% for N in range(1,10) %} <a href="?level={{N}}">{{N}}</a>&nbsp;&nbsp; {% endfor %}
+      <a href="?level=11-20">11-20</a>&nbsp;&nbsp;
+      <a href="?level=21-100">21-100</a>&nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td>By {{KNOWL('mf.maass.mwf.spectralparameter', 'spectral parameter')}}:</td>
+    <td>
+      <a href="?spectral_parameter=0-1">0-1</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=1-2">1-2</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=2-3">2-3</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=3-4">3-4</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=4-5">4-5</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=5-10">5-10</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=10-15">10-15</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=15-20">15-20</a>&nbsp;&nbsp;
+      <a href="?spectral_parameter=20-50">21-50</a>&nbsp;&nbsp;
+    </td>
+  </tr><tr>
+    <td colspan="2">A <a href="{{ url_for('.browse_graph',min_level = 1,max_level= 15, min_R = 0,max_R = 15) }}">table of Maass forms</a> of level $N\le 15$ and spectral paramter $R\le 15$</td>
+  </tr><tr>
+    <td colspan="2">A <a href="{{ url_for('.browse_graph',min_level = 10,max_level= 100, min_R = 0,max_R = 4) }}">table of Maass forms</a> of level $N\in [15,100]$ and spectral parameter $R\le 4$</td>
+  </tr><tr>
+    <td colspan="2">A <a href="{{ url_for('.browse_graph', min_level = 100, max_level= 1000, min_R = 0,max_R = 1) }}">table of Maass forms</a> of prime level $p\in [100,1000]$ and spectral parameter $R\leq 1$</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Maass forms</a> or a <a href={{url_for('.random')}}>random Maass form</a></td>
+  </tr>
+</table>
+
+<h2> Search</h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+{% endblock %}

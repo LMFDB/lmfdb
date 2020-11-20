@@ -13,6 +13,7 @@ from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
+from lmfdb.backend.utils import SearchParsingError
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -32,12 +33,6 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
-
-class SearchParsingError(ValueError):
-    """
-    Used for errors raised when parsing search boxes
-    """
-    pass
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
@@ -165,11 +160,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):
@@ -302,10 +297,17 @@ def integer_options(arg, max_opts=None, contained_in=None):
     check = max_opts is not None and contained_in is None
     if check and len(intervals) > max_opts:
         raise ValueError("Too many options.")
+    if contained_in is not None:
+        if not isinstance(contained_in, (list, tuple)):
+            # Allow for lazy evaluation here
+            contained_in = contained_in()
+        M = max(contained_in)
     ans = set()
     for interval in intervals:
         if isinstance(interval, list):
             a,b = interval
+            if contained_in is not None:
+                b = min(b, M)
             if check and len(ans) + b - a + 1 > max_opts:
                 raise ValueError("Too many options")
             for n in range(a, b+1):
@@ -383,13 +385,14 @@ def parse_floats(inp, query, qfield, allow_singletons=False):
         raise SearchParsingError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):
+def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int, contained_in=None):
     if split_interval:
-        options = integer_options(inp, max_opts=split_interval)
+        options = integer_options(inp, max_opts=split_interval, contained_in=contained_in)
         if len(options) == 1:
             query[qfield] = {'$contains': options}
         elif len(options) > 1:
-            query[qfield] = {'$or': [{'$contains': [n]} for n in options]}
+            query[qfield] = {'$overlaps': options}
+            #query[qfield] = {'$or': [{'$contains': [n]} for n in options]}
     else:
         query[qfield] = {'$contains': [parse_singleton(inp)]}
 
@@ -779,7 +782,7 @@ def input_to_subfield(inp):
         return '.'.join([str(z) for z in result])
 
     def notq():
-        raise SearchParsingError("The rational numbers $\Q$ cannot be a proper intermediate field.")
+        raise SearchParsingError(r"The rational numbers $\Q$ cannot be a proper intermediate field.")
 
     # Change unicode dash with minus sign
     inp = inp.replace(u'\u2212', '-')
@@ -804,7 +807,12 @@ def input_to_subfield(inp):
     if 'x' in F:
         F1 = F.replace('^', '**')
         R = PolynomialRing(ZZ, 'x')
-        pol = PolynomialRing(QQ,'x')(str(F1))
+        if ',' in F:
+            raise SearchParsingError("You may only specify one subfield.")
+        try:
+            pol = PolynomialRing(QQ,'x')(str(F1))
+        except:
+            raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():
             raise SearchParsingError("It is not an irreducible polynomial.")

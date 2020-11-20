@@ -6,24 +6,27 @@ from six import BytesIO
 import tempfile
 import time
 
-from flask import render_template, url_for, request, redirect, make_response, send_file
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from flask import render_template, url_for, request, redirect, make_response, send_file, abort
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime, Integer
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, flash_error, display_knowl,
+    web_latex, to_dict, comma, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
-    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, ExcludeOnlyBox, CountBox,
-    YesNoBox, parse_element_of, parse_bool, search_wrap)
+    SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
-
+from sage.misc.cachefunc import cached_method
+from lmfdb.ecnf.ecnf_stats import latex_tor
+from psycopg2.sql import SQL
 q = ZZ['x'].gen()
+the_ECstats = None
 
 #########################
 #   Data credit
@@ -43,6 +46,22 @@ def sorting_label(lab1):
     a, b, c = parse_cremona_label(lab1)
     return (int(a), class_to_int(b), int(c))
 
+def get_bread(tail=[]):
+    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
+
+def get_stats():
+    global the_ECstats
+    if the_ECstats is None:
+        the_ECstats = ECstats()
+    return the_ECstats
+
+def latex_sha(sha_order):
+    sha_order_sqrt = Integer(sha_order).sqrt()
+    return "$%s^2$" % sha_order_sqrt
+
 #########################
 #    Top level
 #########################
@@ -51,7 +70,7 @@ def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Elliptic Curve labels', url_for(".labels_page"))]
+            ('Elliptic curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -73,20 +92,21 @@ def rational_elliptic_curves(err_args=None):
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '50'
-    counts = get_stats().counts()
 
-    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
+    counts = get_stats()
+
+    conductor_list_endpoints = [1, 100, 1000, 10000, 100000, int(counts.max_N) + 1]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    rank_list = list(range(counts['max_rank'] + 1))
+    rank_list = list(range(counts.max_rank + 1))
     torsion_list = list(range(1, 11)) + [12, 16]
     info['rank_list'] = rank_list
     info['torsion_list'] = torsion_list
     info['conductor_list'] = conductor_list
-    info['counts'] = counts
+    info['stats'] = ECstats()
     info['stats_url'] = url_for(".statistics")
-    t = r'Elliptic Curves over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', ' ')]
+
+    t = r'Elliptic curves over $\Q$'
     if err_args.get("err_msg"):
         # this comes from elliptic_curve_jump_error
         flash_error(err_args.pop("err_msg"), err_args.pop("label"))
@@ -95,10 +115,23 @@ def rational_elliptic_curves(err_args=None):
                            info=info,
                            credit=ec_credit(),
                            title=t,
-                           bread=bread,
+                           bread=get_bread(),
                            learnmore=learnmore_list(),
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
+
+@ec_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "ec.q",
+        db.ec_curves,
+        url_for_label,
+        label_col="lmfdb_label",
+        title=r"Some interesting elliptic curves over $\Q$",
+        bread=get_bread("Interesting"),
+        credit=ec_credit(),
+        learnmore=learnmore_list()
+    )
 
 @ec_page.route("/random")
 def random_curve():
@@ -112,33 +145,94 @@ def todays_curve():
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
     label = db.ec_curves.lucky({'number': 1}, offset = n)
-    #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
+
+
+################################################################################
+# Statistics
+################################################################################
+
+class ECstats(StatsDisplay):
+    """
+    Class for creating and displaying statistics for elliptic curves over Q
+    """
+
+    def __init__(self):
+        self.ncurves = db.ec_curves.count()
+        self.ncurves_c = comma(db.ec_curves.count())
+        self.max_N = db.ec_curves.max('conductor')
+
+        # round up to nearest multiple of 1000
+        self.max_N = 1000*int((self.max_N/1000)+1)
+        # NB while we only have the Cremona database, the upper bound
+        # will always be a multiple of 1000, but it looks funny to
+        # show the maximum condictor as something like 399998; there
+        # are no elliptic curves whose conductor is a multiple of
+        # 1000.
+
+        self.max_N_c = comma(self.max_N)
+        self.max_rank = db.ec_curves.max('rank')
+        self.max_rank_c = comma(self.max_rank)
+        self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
+        self.rank_knowl = display_knowl('ec.rank', title = "rank")
+
+    @property
+    def short_summary(self):
+        stats_url = url_for(".statistics")
+        ec_knowl = display_knowl('ec.q', title='elliptic curves')
+        return r'The database currently contains the complete Cremona database. This contains all %s %s defined over $\Q$ with %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
+
+    @property
+    def summary(self):
+        nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
+        return 'The database currently contains the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s, all of which have %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c, self.rank_knowl, self.max_rank_c)
+
+    table = db.ec_curves
+    baseurl_func = ".rational_elliptic_curves"
+
+    knowls = {'rank': 'ec.rank',
+               'sha': 'ec.q.analytic_sha_order',
+               'torsion_structure' : 'ec.torsion_order'}
+
+    top_titles = {'rank': 'rank',
+                   'sha': 'analytic order of &#1064;',
+                   'torsion_structure': 'torsion subgroups'}
+
+    formatters = {'torsion_structure': latex_tor,
+                    'sha': latex_sha }
+
+    query_formatters = {'torsion_structure': lambda x : 'torsion_structure={}'.format(x),
+                        'sha': lambda x : 'sha={}'.format(x) }
+
+    stat_list = [
+        {'cols': 'rank', 'totaler': {'avg': True}},
+        {'cols': 'torsion_structure'},
+        {'cols': 'sha', 'totaler': {'avg': True}},
+    ]
+
+    @cached_method
+    def isogeny_degrees(self):
+        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curves, UNNEST(isodeg) as elements"))
+        return cur.fetchone()[0]
 
 @ec_page.route("/stats")
 def statistics():
-    info = {
-        'counts': get_stats().counts(),
-        'stats': get_stats().stats(),
-    }
-    t = r'Elliptic Curves over $\Q$: Statistics'
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for(".rational_elliptic_curves")),
-             ('Statistics', ' ')]
-    return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
+    title = r'Elliptic curves over $\Q$: Statistics'
+    bread = get_bread("Statistics")
+    return render_template("display_stats.html", info=ECstats(), credit=ec_credit(), title=title, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
     info = to_dict(request.args, search_array=ECSearchArray())
-    info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
-    info['title'] = r'Elliptic Curves over $\Q$ of Conductor %s' % conductor
+    info['bread'] = get_bread([('%s' % conductor, url_for(".by_conductor", conductor=conductor))])
+    info['title'] = r'Elliptic curves over $\Q$ of conductor %s' % conductor
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
-        info['title'] += ' Search Results'
-        info['bread'].append(('Search Results',''))
+        info['title'] += ' Search results'
+        info['bread'].append(('Search results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
 
@@ -219,7 +313,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
+    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass coefficients)\n'
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
@@ -241,16 +335,14 @@ def url_for_label(label):
 
 @search_wrap(template="ec-search-results.html",
              table=db.ec_curves,
-             title='Elliptic Curves Search Results',
-             err_title='Elliptic Curve Search Input Error',
+             title='Elliptic curve search results',
+             err_title='Elliptic curve search input error',
              per_page=50,
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
-             bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
-                           (r'$\Q$', url_for(".rational_elliptic_curves")),
-                           ('Search Results', '.')],
+             bread=lambda:get_bread('Search results'),
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):
@@ -271,10 +363,8 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-    #parse_ints(info,query,field='cm_disc',qfield='cm')
-    if 'cm_disc' in info:
-        query['cm'] = info['cm_disc']
-    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
+    parse_ints(info,query,field='cm_disc',qfield='cm')
+    parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=get_stats().isogeny_degrees)
     #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     parse_primes(info, query, 'surj_primes', name='maximal primes',
                  qfield='nonmax_primes', mode='exclude')
@@ -471,14 +561,14 @@ def render_curve_webpage_by_label(label):
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T
 
-@ec_page.route("/padic_data")
-def padic_data():
-    info = {}
-    label = request.args['label']
-    p = int(request.args['p'])
-    info['p'] = p
-    N, iso, number = split_lmfdb_label(label)
-    if request.args['rank'] == '0':
+@ec_page.route("/padic_data/<label>/<int:p>")
+def padic_data(label, p):
+    try:
+        N, iso, number = split_lmfdb_label(label)
+    except AttributeError:
+        return abort(404)
+    info = {'p': p}
+    if db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank") == 0:
         info['reg'] = 1
     elif number == '1':
         data = db.ec_padic.lucky({'lmfdb_iso': N + '.' + iso, 'p': p})
@@ -494,13 +584,20 @@ def padic_data():
     return render_template("ec-padic-data.html", info=info)
 
 
-@ec_page.route("/download_qexp/<label>/<limit>")
+@ec_page.route("/download_qexp/<label>/<int:limit>")
 def download_EC_qexp(label, limit):
-    N, iso, number = split_lmfdb_label(label)
+    try:
+        N, iso, number = split_lmfdb_label(label)
+    except (ValueError,AttributeError):
+        return elliptic_curve_jump_error(label, {})
     if number:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     else:
         ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
+    if ainvs is None:
+        return elliptic_curve_jump_error(label, {})        
+    if limit > 100000:
+        return redirect(url_for('.download_EC_qexp',label=label,limit=10000), 301)
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
@@ -530,37 +627,29 @@ def download_EC_all(label):
 
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of the Elliptic Curve data over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Completeness', '')]
+    t = r'Completeness of Elliptic curve data over $\Q$'
+    bread = get_bread('Completeness')
     return render_template("single.html", kid='dq.ec.extent',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
-    t = r'Source of the Elliptic Curve data over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Source', '')]
+    t = r'Source of Elliptic curve data over $\Q$'
+    bread = get_bread('Source')
     return render_template("single.html", kid='dq.ec.source',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Reliability")
 def reliability_page():
-    t = r'Reliability of the Elliptic Curve data over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Reliability', '')]
+    t = r'Reliability of Elliptic curve data over $\Q$'
+    bread = get_bread('Reliability')
     return render_template("single.html", kid='dq.ec.reliability',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
-    t = r'Labels for Elliptic Curves over $\Q$'
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             (r'$\Q$', url_for("ec.rational_elliptic_curves")),
-             ('Labels', '')]
+    t = r'Labels for Elliptic curves over $\Q$'
+    bread = get_bread('Labels')
     return render_template("single.html", kid='ec.q.lmfdb_label',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
@@ -597,6 +686,10 @@ Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
+    if E == "Invalid label":
+        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+    if E == "Curve not found":
+        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
@@ -631,6 +724,8 @@ class ECSearchArray(SearchArray):
     plural_noun = "curves"
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224]"
+    jump_prompt = "Label or coefficients"
+    jump_knowl = "ec.q.search_input"
     def __init__(self):
         cond = TextBox(
             name="conductor",
@@ -651,7 +746,7 @@ class ECSearchArray(SearchArray):
         sha = TextBox(
             name="sha",
             label="Analytic order of &#1064;",
-            knowl="ec.q.analytic_sha_order",
+            knowl="ec.analytic_sha_order",
             example="4")
         surj_primes = TextBox(
             name="surj_primes",
@@ -675,10 +770,11 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.j_invariant",
             example="1728",
             example_span="1728 or -4096/11")
-        cm = ExcludeOnlyBox(
+        cm = SelectBox(
             name="include_cm",
             label="CM",
-            knowl="ec.complex_multiplication")
+            knowl="ec.complex_multiplication",
+            options=[('', ''), ('only', 'potential CM'), ('exclude', 'no potential CM')])
         tor_opts = ([("", ""),
                      ("[]", "trivial")] +
                     [("[%s]"%n, "C%s"%n) for n in range(2, 13) if n != 11] +
@@ -721,8 +817,9 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
-        cm_opts = [('', ''), ('-3', -3), ('-4', -4), ('-7', -7), ('-8', -8), ('-11', -11), ('-12', -12), ('-16', -16),
-                        ('-19', -19), ('-27', -27), ('-28', -28), ('-43', -43), ('-67', -67), ('-163', -163)]
+        cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
+                        ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
+                        ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
         cm_disc = SelectBox(
             name="cm_disc",
             label="CM discriminant",

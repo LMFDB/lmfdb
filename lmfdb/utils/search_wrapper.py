@@ -125,11 +125,14 @@ class SearchWrapper(Wrapper):
             if info.get(key, "").strip():
                 try:
                     return func(info)
-                except ValueError as err:
+                except Exception as err:
                     # Errors raised in jump box, for example
                     # Using the search results is an okay default, though some
                     # jump boxes will use their own error processing
-                    flash_error(str(err))
+                    if "%s" in str(err):
+                        flash_error(str(err), info[key])
+                    else:
+                        flash_error(str(err))
                     info["err"] = str(err)
                     return render_template(
                         self.template, info=info, title=self.err_title, **template_kwds
