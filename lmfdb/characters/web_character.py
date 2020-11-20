@@ -39,22 +39,19 @@ The design is the following:
 - the object classe ancestor triggers the __init__ method
 
 """
-from six.moves import range
 from flask import url_for
 
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_method
+from sage.all import gcd, Rational, power_mod, xsrange, cached_method
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import web_latex, prop_int_pretty
+from lmfdb.utils import prop_int_pretty
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
-from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
-from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
 from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
-from lmfdb.characters.utils import url_character, complex2str, evalpolelt
+from lmfdb.characters.utils import url_character, complex2str
 from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("DC")
