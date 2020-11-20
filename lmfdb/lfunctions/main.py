@@ -3,11 +3,12 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line
+from sage.all import srange, spline, line, QQ, latex, real_part, imag_part
 
 import tempfile
 import os
 import re
+from collections import defaultdict
 
 from . import LfunctionPlot
 
@@ -19,8 +20,9 @@ from .Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfun
                        SymmetricPowerLfunction, HypergeometricMotiveLfunction,
                        Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
-from .Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
-                                getConductorIsogenyFromLabel)
+from .Lfunctionutilities import (
+    p2sage, styleTheSign, get_bread, parse_codename,
+    getConductorIsogenyFromLabel, string2number)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -28,9 +30,10 @@ from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils import (
-    to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty,
+    to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty, round_to_half_int, display_complex,
     search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
     SearchArray, TextBox, YesNoBox, CountBox)
+from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
@@ -76,8 +79,31 @@ def index():
         learnmore=learnmore_list(),
         bread=get_bread())
 
+def process_search(res, info, query):
+    origins = defaultdict(lambda: defaultdict(list))
+    for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
+        origins[rec["Lhash"]][rec["type"]].append(rec["url"])
+    for L in res:
+        if L.get('motivic_weight') is None:
+            L['analytic_normalization'] = round_to_half_int(L.get('analytic_normalization'))
+            L['motivic_weight'] = ''
+        else:
+            L['analytic_normalization'] = QQ(L['motivic_weight'])/2
+        mus = [L['analytic_normalization'] + string2number(mu) for mu in L['gamma_factors'][0]]
+        L['mus'] = ", ".join(latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus)
+        nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
+        L['nus'] = ", ".join(latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus)
+        L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
+        eps = string2number(L['root_number'])
+        if imag_part(eps) != 0:
+            eps = display_complex(real_part(eps), imag_part(eps), 3)
+        L['root_number'] = eps
+        L['z1'] = display_float(L['z1'], 6)
+    return res
+
 @search_wrap(template="LfunctionSearchResults.html",
              table=db.lfunc_lfunctions, # switch to search table once available
+             postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
              #url_for_label=url_for_label,
@@ -124,7 +150,8 @@ class LFunctionSearchArray(SearchArray):
         primitive = YesNoBox(
             name="primitive",
             knowl="lfunction.primitive",
-            label="Primitive")
+            label="Primitive",
+            example_col=True)
         algebraic = YesNoBox(
             name="algebraic",
             knowl="lfunction.arithmetic",
