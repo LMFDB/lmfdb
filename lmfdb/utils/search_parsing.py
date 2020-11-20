@@ -890,7 +890,7 @@ def pol_string_to_list(pol, deg=None, var=None):
     try:
         pol = PolynomialRing(QQ, var)(str(pol))
     except TypeError:
-        raise SearchPaarsingError("Input not recognized as a polynomial.")
+        raise SearchParsingError("Input not recognized as a polynomial.")
     if deg is None:
         fill = 0
     else:
