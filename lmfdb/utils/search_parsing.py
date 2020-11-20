@@ -75,7 +75,7 @@ class SearchParser(object):
                 self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
-        except (ValueError, AttributeError, TypeError) as err:
+        except (ValueError, AttributeError, TypeError, KeyError) as err:
             if self.error_is_safe:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
