@@ -106,11 +106,11 @@ class DirichletCharactersTest(LmfdbTest):
             This test also makes sure the code scales a little bit.
         """
         W = self.tc.get('/Character/Dirichlet/40487/5')
-        assert '40486' in W.get_data(as_text=True)
-        assert '12409' in W.get_data(as_text=True), "log on generator"
+        assert '40486' in W.get_data(as_text=True), "order"
+        assert '20243' in W.get_data(as_text=True), "field of values"
         W = self.tc.get('/Character/Dirichlet/40487.5', follow_redirects=True)
-        assert '40486' in W.get_data(as_text=True)
-        assert '12409' in W.get_data(as_text=True), "log on generator"
+        assert '40486' in W.get_data(as_text=True), "order"
+        assert '20243' in W.get_data(as_text=True), "field of values"
 
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
@@ -159,5 +159,5 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
-        assert parity_string(-1) in W.get_data(as_text=True) and '536870912' in W.get_data(as_text=True)
-        assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True)
+        assert '$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
+        assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"

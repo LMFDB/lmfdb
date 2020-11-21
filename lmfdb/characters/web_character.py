@@ -48,7 +48,7 @@ The design is the following:
 from flask import url_for
 
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import gcd, Rational, power_mod, Integers, xsrange, cached_method
+from sage.all import gcd, Rational, Integers, cached_method
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
@@ -1127,18 +1127,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codeparity(self):
         return { 'sage': 'chi.is_odd()',
                  'pari': 'zncharisodd(g,chi)' }
-
-    # @lazy_attribute
-    # def galoisorbit(self):
-    #     order = self.order
-    #     mod, num = self.modulus, self.number
-    #     prim = self.isprimitive
-    #     #beware this **must** be a generator
-    #     upper_limit = min(200, order + 1)
-    #     orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
-    #               if gcd(k, order) == 1) # use xsrange not xrange
-    #     ret = list(self._char_desc(num, prim=prim) for num in orbit)
-    #     return ret
 
     @lazy_attribute
     def orbit_label(self):
