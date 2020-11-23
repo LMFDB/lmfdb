@@ -1,4 +1,4 @@
-from sage.all import CC, round, ZZ, GCD
+from sage.all import CDF, round, ZZ, GCD
 from collections import defaultdict
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import re
@@ -28,13 +28,15 @@ def CCtuple(z):
     return (z.real(), z.imag().abs(), z.imag())
 
 
-def spectral_str(x):
-    res = ""
-    if x < 0:
+def spectral_str(x, conjugate=False):
+    if conjugate:
+        assert x>=0
+        res = "c"
+    elif x < 0:
         x = -x
-        res += "m"
+        res = "m"
     else:
-        res += "p"
+        res = "p"
     if x == 0:
         res += "0"
     else:
@@ -52,16 +54,8 @@ def make_label(L):
     central_character = "%d.%d" % (char.modulus(), char.number())
 
     GR, GC = L['gamma_factors']
-    GR = [CC(str(elt)) for elt in GR]
-    GC = [CC(str(elt)) for elt in GC]
-    # issue 2885, avoid c0 in the label
-    # convert Gamma_C to Gamma_R
-    GR += [CC(0), CC(1)]*len([1 for elt in GC if elt == 0])
-    GC = [elt for elt in GC if elt != 0]
-    GR.sort(key=CCtuple)
-    GC.sort(key=CCtuple)
-
-
+    GR = [CDF(elt) for elt in GR]
+    GC = [CDF(elt) for elt in GC]
 
     b, e = ZZ(L['conductor']).perfect_power()
     if e == 1:
@@ -77,6 +71,28 @@ def make_label(L):
     GCcount = defaultdict(int)
     for elt in GC:
         GCcount[elt] += 1
+    # convert gamma_R to gamma_C
+    for elt in GRcount:
+        if elt + 1 in GRcount:
+            while GRcount[elt] > 0 and GRcount[elt + 1] > 0:
+                GCcount[elt] += 1
+                GRcount[elt] -= 1
+                GRcount[elt + 1] -= 1
+    GR = sum([[m]*c for m, c in GRcount.items()], [])
+    GC = sum([[m]*c for m, c in GCcount.items()], [])
+    assert L['degree'] == len(GR) + 2*len(GC)
+    GR.sort(key=CCtuple)
+    GC.sort(key=CCtuple)
+
+    # deal with real parts
+    GR_real = [elt.real() for elt in GR]
+    GC_real = [elt.real() for elt in GC]
+    GRcount = defaultdict(int)
+    for elt in GR_real:
+        GRcount[elt] += 1
+    GCcount = defaultdict(int)
+    for elt in GC_real:
+        GCcount[elt] += 1
     ge = GCD(GCD(list(GRcount.values())), GCD(list(GCcount.values())))
     if ge > 1:
         GR = []
@@ -85,19 +101,25 @@ def make_label(L):
         GC = []
         for k, v in GCcount.items():
             GC.extend([k]*(v//ge))
-        GR.sort(key=CCtuple)
-        GC.sort(key=CCtuple)
-    if L['algebraic']:
-        end = "0"
-    else:
-        end = ""
-        for G in [GR, GC]:
-            end += ''.join([spectral_str(elt.imag()) for elt in G])
+
     rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
     cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])
     gammas = "-" + rs + cs
     if ge > 1:
         gammas += "e%d" % ge
+    if L['algebraic']:
+        end = "0"
+    else:
+        end = ""
+        for G in [GR, GC]:
+            for i, elt in G:
+                conjugate = False
+                if elt.imag() >= 0 and i < len(G) and elt.conjugate() == G[i + 1]:
+                    conjugate=True
+                elif elt.imag() <= 0 and i > 0 and elt.conjugate() == G[i - 1]:
+                    # we already listed this one as a conjugate
+                    continue
+                end += spectral_str(elt.imag(), conjugate=conjugate)
     label = beginning + gammas + "-" + end + "-?"
     return label
 
