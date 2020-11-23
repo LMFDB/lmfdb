@@ -30,7 +30,8 @@ def CCtuple(z):
 
 def spectral_str(x, conjugate=False):
     if conjugate:
-        assert x>=0
+        assert x <= 0
+        x = -x
         res = "c"
     elif x < 0:
         x = -x
@@ -95,15 +96,11 @@ def make_label(L):
         GCcount[elt] += 1
     ge = GCD(GCD(list(GRcount.values())), GCD(list(GCcount.values())))
     if ge > 1:
-        GR = []
-        for k, v in GRcount.items():
-            GR.extend([k]*(v//ge))
-        GC = []
-        for k, v in GCcount.items():
-            GC.extend([k]*(v//ge))
+        GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
+        GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
 
-    rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR])
-    cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])
+    rs = ''.join(['r%d' % ZZ(elt.real()) for elt in GR_real])
+    cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC_real])
     gammas = "-" + rs + cs
     if ge > 1:
         gammas += "e%d" % ge
@@ -112,11 +109,11 @@ def make_label(L):
     else:
         end = ""
         for G in [GR, GC]:
-            for i, elt in G:
+            for i, elt in enumerate(G):
                 conjugate = False
-                if elt.imag() >= 0 and i < len(G) and elt.conjugate() == G[i + 1]:
+                if elt.imag() <= 0 and i < len(G) - 1 and elt.conjugate() == G[i + 1]:
                     conjugate=True
-                elif elt.imag() <= 0 and i > 0 and elt.conjugate() == G[i - 1]:
+                elif elt.imag() >= 0 and i > 0 and elt.conjugate() == G[i - 1]:
                     # we already listed this one as a conjugate
                     continue
                 end += spectral_str(elt.imag(), conjugate=conjugate)
