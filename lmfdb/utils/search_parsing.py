@@ -17,7 +17,7 @@ from lmfdb.backend.utils import SearchParsingError
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
-FLOAT_STR = r'-?((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?|\d+/\d+'
+FLOAT_STR = r'(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(\d+/\d+))'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
