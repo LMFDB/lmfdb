@@ -94,10 +94,7 @@ def process_search(res, info, query):
         nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
         L['nus'] = ", ".join(latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus)
         L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
-        eps = string2number(L['root_number'])
-        if imag_part(eps) != 0:
-            eps = display_complex(real_part(eps), imag_part(eps), 3)
-        L['root_number'] = eps
+        L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6)
     return res
 
@@ -111,13 +108,13 @@ def process_search(res, info, query):
              bread=lambda: get_bread(breads=[("Search results", " ")]),
              credit=lambda: credit_string)
 def l_function_search(info, query):
-    parse_floats(info,query,'z1', allow_singletons=True)
+    info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
     parse_bool(info,query,'algebraic') # not the same as arithmetic....
     parse_bool(info,query,'self_dual')
-    parse_floats(info,query,'root_angle', allow_singletons=True)
+    info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
     parse_ints(info,query,'order_of_vanishing')
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')

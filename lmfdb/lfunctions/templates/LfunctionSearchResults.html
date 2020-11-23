@@ -10,37 +10,37 @@
 <thead>
 <tr>
     <th>{{ KNOWL('lfunction.label', title='Label') }}</th>
-    <th>{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
-    <th align=center>{{ KNOWL('lfunction.first_zero', title='First zero') }}</th>
-    <th align=center>{{ KNOWL('lfunction.degree', title='d') }}</th>
-    <th align=center>{{ KNOWL('lfunction.conductor', title='N') }}</th>
-    <th align=center>{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
-    <th>{{ KNOWL('lfunction.sign', title='$\epsilon$') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.degree', title='d') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.conductor', title='N') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.functional_equation', title='$\\mu$') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.functional_equation', title='$\\nu$') }}</th>
     <th>{{ KNOWL('lfunction.motivic_weight', title='w') }}</th>
-    <th>{{ KNOWL('lfunction.primitive', title='primitive') }}</th>
-    <th>{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
+    <th>{{ KNOWL('lfunction.primitive', title='prim') }}</th>
+    <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
     <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
-    <th align=center>{{ KNOWL('lfunction.functional_equation', title='$\\mu$') }}</th>
-    <th align=center>{{ KNOWL('lfunction.functional_equation', title='$\\nu$') }}</th>
-    <th align=center>{{ KNOWL('lfunction.analytic_rank', title='analytic rank') }}</th>
+    <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\epsilon)$') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.analytic_rank', title='r') }}</th>
+    <th text-align=center>{{ KNOWL('lfunction.first_zero', title='First zero') }}</th>
+    <th>{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
 </tr>
 </thead>
 {% for L in info.results: %}
 <tr>
     <td> <a href="{{L.url}}"> {{L.label}} </a> </td>
-    <td> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
-    <td> ${{L.z1}}$ </td>
     <td> ${{L.degree}}$ </td>
     <td> ${{L.conductor}}$ </td>
     <td> <a href="{{url_for('characters.render_Dirichletwebpage', modulus=L.central_character)}}">{{L.central_character}}</a> </td>
-    <td> ${{L.root_number}}$ </td>
-    <td> {{L.motivic_weight}} </td>
-    <td align=center> {{('&#x2713;' if L.primitive else '')|safe}} </td>
-    <td align=center> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
-    <td align=center> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
     <td align=center> ${{L.mus}}$ </td>
     <td align=center> ${{L.nus}}$ </td>
-    <td align=center> ${{L.order_of_vanishing}}$ </td>
+    <td> {{L.motivic_weight}} </td>
+    <td text-align=center> {{('&#x2713;' if L.primitive else '')|safe}} </td>
+    <td text-align=center> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
+    <td text-align=center> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
+    <td> ${{L.root_angle}}$ </td>
+    <td text-align=center> ${{L.order_of_vanishing}}$ </td>
+    <td> ${{L.z1}}$ </td>
+    <td> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
 </tr>
 {% endfor %}
 </table>
