@@ -95,7 +95,7 @@ def process_search(res, info, query):
         L['nus'] = ", ".join(latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus)
         L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
         L['root_angle'] = display_float(L['root_angle'], 3)
-        L['z1'] = display_float(L['z1'], 6)
+        L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
     return res
 
 @search_wrap(template="LfunctionSearchResults.html",

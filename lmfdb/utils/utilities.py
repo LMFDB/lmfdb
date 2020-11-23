@@ -360,7 +360,8 @@ def is_exact(x):
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
-                             try_halfinteger=True):
+                             try_halfinteger=True,
+                             no_sci=None):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     # if small, try to display it as an exact or half integer
@@ -387,7 +388,8 @@ def display_float(x, digits, method = "truncate",
         rnd = 'RNDZ'
     else:
         rnd = 'RNDN'
-    no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+    if no_sci is None:
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
         s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:

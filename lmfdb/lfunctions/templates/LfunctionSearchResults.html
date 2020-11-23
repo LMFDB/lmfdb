@@ -20,6 +20,7 @@
     <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
     <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
     <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\epsilon)$') }}</th>
+    <th>Signarg</th>
     <th text-align=center>{{ KNOWL('lfunction.analytic_rank', title='r') }}</th>
     <th text-align=center>{{ KNOWL('lfunction.first_zero', title='First zero') }}</th>
     <th>{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
@@ -38,6 +39,7 @@
     <td text-align=center> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
     <td text-align=center> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
     <td> ${{L.root_angle}}$ </td>
+    <td> ${{L.sign_arg}}$ </td>
     <td text-align=center> ${{L.order_of_vanishing}}$ </td>
     <td> ${{L.z1}}$ </td>
     <td> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
@@ -51,3 +53,7 @@
 {% include 'debug_info.html' %}
 
 {% endblock %}
+
+Add: prelabel, label, double_mu_real, double_mu_imag, nu_real, nu_imag, analytic_conductor
+Port: conductor, gamma_factors, motivic_weight, degree, central_character, algebraic, self_dual, order_of_vanishing, root_angle, z1, Lhash, primitive
+Drop: analytic_normalization, selfdual, sign_arg (after updating code)

@@ -7,8 +7,8 @@ from six import string_types
 import re
 from collections import Counter
 
-from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, PolynomialRing, pari
+from lmfdb.utils.utilities import flash_error, display_float
+from sage.all import ZZ, QQ, RR, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
@@ -17,7 +17,7 @@ from lmfdb.backend.utils import SearchParsingError
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
-FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
+FLOAT_STR = r'-?((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?|\d+/\d+'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
@@ -50,7 +50,7 @@ class SearchParser(object):
         try:
             if field is None: field=self.default_field
             inp = info.get(field)
-            if not inp: return
+            if not inp: return ""
             if name is None:
                 if self.default_name is None:
                     name = field.replace('_',' ').capitalize()
@@ -70,11 +70,12 @@ class SearchParser(object):
             if self.prep_plus:
                 inp = inp.replace('+','')
             if self.pass_name:
-                self.f(inp, query, name, qfield, *args, **kwds)
+                rval = self.f(inp, query, name, qfield, *args, **kwds)
             else:
-                self.f(inp, query, qfield, *args, **kwds)
+                rval = self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
+            return rval
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
@@ -364,23 +365,47 @@ def parse_posints(inp, query, qfield, parse_singleton=int):
         raise SearchParsingError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_floats(inp, query, qfield, allow_singletons=False):
+def parse_floats(inp, query, qfield, exact_prec=5, allow_singletons=False):
     parse_endpoint = float
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
             if isinstance(a, string_types) and '.' in a:
+                exact = False
                 prec = len(a) - a.find('.') - 1
             else:
-                prec = 0
+                exact = True
+                prec = exact_prec
+            if '/' in a:
+                a = QQ(a)
             a = float(a)
-            return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
+            if exact or a == 0:
+                return {'$gte': a - 10**(-prec), '$lte': a + 10**(-prec)}
+            elif a > 0:
+                return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 1 * 10**(-prec)}
+            elif a < 0:
+                return {'$gte': a - 1 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
     else:
         msg = "It must be a range of floats (such as 2.1-8.7) or a comma-separated list of these (such as 4-25.1, 81-121)."
         def parse_singleton(a):
             raise SearchParsingError(msg)
     if LIST_FLOAT_RE.match(inp):
-        collapse_ors(parse_range2(inp, qfield, parse_singleton, parse_endpoint), query)
+        A = parse_range2(inp, qfield, parse_singleton, parse_endpoint)
+        collapse_ors(A, query)
+        if allow_singletons:
+            def find_prec(a, b):
+                return 
+            if A[0] == '$or':
+                clauses = [list(c.values())[0] for c in A[1]]
+            else:
+                clauses = [A[1]]
+            clauses = [(c["$gte"], c["$lte"]) for c in clauses]
+            # The following still works for the range -0.001..0.001
+            precs = [-((b - a) * RR(2/3)).log(10).round() for a,b in clauses]
+            disps = [(("%.{}f".format(p+1) % a).rstrip("0"), ("%.{}f".format(p+1) % b).rstrip("0")) for (a, b), p in zip(clauses, precs)]
+            print(clauses, precs, disps)
+            clauses = ["%s-%s" % (a, b) if c[1] >= 0 else "%s..%s" % (a, b) for (a, b), c in zip(disps, clauses)]
+            return ", ".join(clauses)
     else:
         raise SearchParsingError(msg)
 
