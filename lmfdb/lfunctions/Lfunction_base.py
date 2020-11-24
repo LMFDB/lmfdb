@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 from flask import url_for
+from .label_factory import make_label
 from sage.all import ZZ, is_prime, latex, imag_part
+from sage.misc.lazy_attribute import lazy_attribute
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                  specialValueTriple,scientific_notation_helper)
@@ -13,7 +15,8 @@ from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 #############################################################################
 
 class Lfunction(object):
-    """Class representing a general L-function
+    """
+    Class representing a general L-function
     """
 
     def Ltype(self):
@@ -210,7 +213,20 @@ class Lfunction(object):
                 info['sv_critical'] = "L(1/2): not computed"
                 info['sv_edge'] = "L(1): not computed"
 
+        info['label'] = self.lfun_label
         return info
+
+    @lazy_attribute
+    def lfun_label(self):
+        data = {
+                'algebraic': self.algebraic,
+                'central_character': (self.charactermodulus, self.characternumber),
+                'conductor': self.level,
+                'degree': self.degree,
+                'gamma_factors': [self.mu_fe, self.nu_fe]
+                }
+        return make_label(data)
+
 
 
 

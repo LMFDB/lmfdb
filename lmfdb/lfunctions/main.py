@@ -650,7 +650,10 @@ def set_gaga_properties(L):
     ''' Sets the properties in the properties box in the
     upper right corner
     '''
-    ans = [('Degree', prop_int_pretty(L.degree))]
+    ans = []
+    if hasattr(L, 'lfun_label'):
+        ans.append(('Label', L.lfun_label))
+    ans.append(('Degree', prop_int_pretty(L.degree)))
 
     ans.append(('Conductor', prop_int_pretty(L.level)))
     ans.append(('Sign', "$%s$" % styleTheSign(L.sign) ))
