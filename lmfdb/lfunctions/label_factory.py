@@ -44,7 +44,8 @@ def spectral_str(x, conjugate=False):
         res += "%.2f" % x
     return res
 
-def make_label(L):
+
+def make_label(L, normalized=True):
     # special $-_.+!*'(),
     #L = db.lfunc_lfunctions.lucky({'Lhash':Lhash},['conductor', 'degree', 'central_character','gamma_factors','algebraic'])
     L = dict(L)
@@ -55,8 +56,13 @@ def make_label(L):
     central_character = "%d.%d" % (char.modulus(), char.number())
 
     GR, GC = L['gamma_factors']
-    GR = [CDF(elt) for elt in GR]
-    GC = [CDF(elt) for elt in GC]
+    if normalized:
+        analytic_normalization = 0
+    else:
+        analytic_normalization = L['motivic_weight']/2
+
+    GR = [CDF(elt) + analytic_normalization for elt in GR]
+    GC = [CDF(elt) + analytic_normalization for elt in GC]
 
     b, e = ZZ(L['conductor']).perfect_power()
     if e == 1:
@@ -117,45 +123,88 @@ def make_label(L):
                     # we already listed this one as a conjugate
                     continue
                 end += spectral_str(elt.imag(), conjugate=conjugate)
-    label = beginning + gammas + "-" + end + "-?"
+    label = beginning + gammas + "-" + end
     return label
 
-def break_label(label):
-    inv, rscs, spectral, smth = label.split('-')
-    deg, cond, char_mod, char_index = inv.split('.')
-    if 'p' in cond:
-        b, e = map(int, cond.split('p'))
-        cond = b**e
-    else:
-        cond = int(cond)
+def foobar(L):
+    from collections import defaultdict
+    def log_L_inf(s, mu, nu):
+        return (sum([psi((s + elt)/2) for elt in  mu]) -len(mu)*log(pi))/2 + sum([psi(s + elt) for elt in nu]) - len(nu)*log(2*pi)
+    def conductor_an(mu, nu):
+        return (2*CDF(log_L_inf(1/2, mu, nu)).real()).exp()
+    def conductor_ar(w, mu, nu):
+        return (2*CDF(log_L_inf(1/2 + w/2, mu, nu)).real()).exp()
+    def CCtuple(z):
+        return (z.real(), z.imag().abs(), z.imag())
 
-    L = {'degree':int(deg),
-         'conductor': cond,
-         'central_character': ".".join([char_mod, char_index])}
-    GR = []
-    GC = []
-    for elt in re.findall('([r|c][0-9\.]+)', rscs):
-        if elt[0] == 'r':
-            G = GR
-            fraction = 1
-        else:
-            G = GC
-            fraction = 2
-        G.append(CC(elt[1:])/fraction)
 
-    if spectral == '0':
-        L['algebraic'] = True
-    else:
-        L['algebraic'] = False
-        for i, elt in enumerate(re.findall('([m|p][0-9\.]+)', spectral)):
-            if i > len(GR):
-                i -= len(GR)
-                G = GC
-            else:
-                G = GR
-            if elt[0] == 'p':
-                G[i] += CC(0,1) * CC(elt[1:])
-            elif elt[0] == 'm':
-                G[i] -= CC(0,1) * CC(elt[1:])
-    L['gamma_factors'] = [GR, GC]
-    return L
+    #projection=['id', 'motivic_weight', 'gamma_factors', 'degree', 'conductor']
+    #L = db.lfunc_lfunctions.lucky(projection=projection)
+    w = ZZ(L['motivic_weight'])
+    analytic_normalization = w/2
+    mu = [CDF(elt) for elt in L['gamma_factors'][0]]
+    nu = [CDF(elt) for elt in L['gamma_factors'][1]]
+    assert L['degree'] == len(mu_ar) + 2*len(nu_ar)
+    mu_count = defaultdict(int)
+    for elt in mu_ar:
+        mu_count[elt] += 1
+    for elt in mu_count:
+        if (elt + 1) in mu_count:
+            while mu_count[elt] > 0 and mu_count[elt + 1] > 0:
+                mu_count.append(elt)
+                mu_count[elt] -= 1
+                mu_count[elt + 1] -=1
+
+    mu_ar = sum([[m]*c for m, c in mu_ar_count.items()], [])
+    assert L['degree'] == len(mu) + 2*len(nu)
+    mu.sort(key=CCtuple)
+    nu.sort(key=CCtuple)
+    newL = {}
+    newL['id'] = L['id']
+    newL['2mu_real'] = [ZZ(2*elt.real()) for elt in mu]
+    newL['2nu_real'] = [ZZ(2*elt.real()) for elt in nu]
+    newL['mu_imag'] = [elt.imag() for elt in mu]
+    newL['nu_imag'] = [elt.imag() for elt in mu]
+    newL['analytic_conductor'] = RDF(N*conductor_ar(w, mu, nu))
+
+
+# out of date
+#def break_label(label):
+#    inv, rscs, spectral, smth = label.split('-')
+#    deg, cond, char_mod, char_index = inv.split('.')
+#    if 'p' in cond:
+#        b, e = map(int, cond.split('p'))
+#        cond = b**e
+#    else:
+#        cond = int(cond)
+#
+#    L = {'degree':int(deg),
+#         'conductor': cond,
+#         'central_character': ".".join([char_mod, char_index])}
+#    GR = []
+#    GC = []
+#    for elt in re.findall('([r|c][0-9\.]+)', rscs):
+#        if elt[0] == 'r':
+#            G = GR
+#            fraction = 1
+#        else:
+#            G = GC
+#            fraction = 2
+#        G.append(CC(elt[1:])/fraction)
+#
+#    if spectral == '0':
+#        L['algebraic'] = True
+#    else:
+#        L['algebraic'] = False
+#        for i, elt in enumerate(re.findall('([m|p][0-9\.]+)', spectral)):
+#            if i > len(GR):
+#                i -= len(GR)
+#                G = GC
+#            else:
+#                G = GR
+#            if elt[0] == 'p':
+#                G[i] += CC(0,1) * CC(elt[1:])
+#            elif elt[0] == 'm':
+#                G[i] -= CC(0,1) * CC(elt[1:])
+#    L['gamma_factors'] = [GR, GC]
+#    return L
