@@ -223,6 +223,7 @@
     status: beta
     colspan: onecolumn
   - title: Small groups
+    url_for: "abstract.index"
     status: beta
     colspan: onecolumn
   - title: Finite subgroups of
