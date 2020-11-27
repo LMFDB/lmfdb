@@ -1,9 +1,11 @@
+
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import os
 from socket import gethostname
 import time
 import six
+from urllib.parse import urlparse, urlunparse
 
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
@@ -13,7 +15,7 @@ from sage.env import SAGE_VERSION
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.1.1"
+LMFDB_VERSION = "LMFDB Release 1.2"
 
 ############################
 #         Main app         #
@@ -117,6 +119,12 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
+
+    def modify_url(**replace):
+        urlparts = urlparse(request.url)
+        urlparts = urlparts._replace(**replace)
+        return urlunparse(urlparts)
+    vars['modify_url'] = modify_url
 
     return vars
 
@@ -241,7 +249,7 @@ def netloc_redirect():
         not white_listed(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
-        return redirect(urlunparse(replaced), code=301)
+        return redirect(urlunparse(replaced), code=302)
 
 
 
@@ -371,6 +379,7 @@ def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])
 
 @app.route('/L')
+@app.route('/L/')
 def l_functions():
     t = 'L-functions'
     b = [(t, url_for('l_functions'))]
@@ -385,6 +394,7 @@ def l_functions_history():
     return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
 
 @app.route('/ModularForm')
+@app.route('/ModularForm/')
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
@@ -399,6 +409,7 @@ def modular_forms_history():
     return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
 @app.route('/Variety')
+@app.route('/Variety/')
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
@@ -413,6 +424,7 @@ def varieties_history():
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
 @app.route('/Field')
+@app.route('/Field/')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
@@ -427,6 +439,7 @@ def fields_history():
     return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
 
 @app.route('/Representation')
+@app.route('/Representation/')
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
@@ -441,6 +454,7 @@ def representations_history():
     return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
 
 @app.route('/Motive')
+@app.route('/Motive/')
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
@@ -455,6 +469,7 @@ def motives_history():
     return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
 
 @app.route('/Group')
+@app.route('/Group/')
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
@@ -482,11 +497,6 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
-@app.route("/citation/citing")
-def citing():
-    t = "How to Cite LMFDB"
-    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
-    return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
 @app.route("/contact")
 def contact():
@@ -719,6 +729,7 @@ WhiteListedRoutes = [
     'management',
     'news',
     'not_yet_implemented',
+    'random',
     'robots.txt',
     'search',
     'sitemap',

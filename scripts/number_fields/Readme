@@ -1,5 +1,10 @@
+
 Adding new fields to the lmfdb involves computing more data for them,
 managing labels, and then importing them.
+
+Warning: the programs here rely on access to the local database in file form
+         as well as functions in (my) gp and magma init files, and an exterior
+         program used to connect magma to gp
 
 Fields are represented in the form [polynomial in x, [list of ramified primes]]
 Polynomials should always be run through polredabs first

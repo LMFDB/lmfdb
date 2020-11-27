@@ -32,11 +32,11 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_index_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/')
-        assert 'Find specific automorphisms of higher genus curves' in L.get_data(as_text=True)
+        assert 'Cyclic trigonal' in L.get_data(as_text=True)
 
     def test_stats_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats')
-        assert 'unique groups' in L.get_data(as_text=True)
+        assert 'distinct families' in L.get_data(as_text=True)
 
     def test_unique_groups_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/stats/groups_per_genus/5')
@@ -48,7 +48,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_quo_genus_search(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=3&g0=1..3')
-        assert 'displaying all 10 matches' in L.get_data(as_text=True)
+        assert '10 matches' in L.get_data(as_text=True)
 
     def idG_showing(self):
         L = self.tc.get('/HigherGenus/C/Aut/2.2-1.1.2-2.1')

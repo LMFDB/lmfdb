@@ -60,7 +60,7 @@ def ZpX_key(k):
 def make_keys(K,p):
     """Find and sort all primes of K above p, and store their sort keys in
     a dictionary with keys the primes P and values their sort keys
-    (n,j,e,i) with n the norm, e the ramificatino index, i the index
+    (n,j,e,i) with n the norm, e the ramification index, i the index
     (from 1) in the list of all those primes with the same (n,e), and
     j the index (from 1) in the sorted list of all with the same norm.
     This dict is stored in K in a dict called psort_dict, whose keys

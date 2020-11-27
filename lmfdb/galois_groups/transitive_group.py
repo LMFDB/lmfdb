@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 from lmfdb import db
 
@@ -6,14 +7,58 @@ from sage.all import ZZ, gap, cached_function
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
+def knowl_cache(galois_labels):
+    """
+    Returns a dictionary for use in small_group_display_knowl and
+    group_pretty_and_nTj as the cache argument.
 
-@cached_function
-def small_group_display_knowl(n, k, name=None):
+    INPUT:
+
+    - ``galois_labels`` -- a list of labels from gps_transitive
+
+    OUTPUT:
+
+    A dictionary with keys labels from gps_transitive and gps_small;
+    the associated value is a dictionary that can be used instead of
+    the result of a database lookup from these tables.
+    """
+    cache = {}
+    reverse = defaultdict(list)
+    gap_labels = []
+    for rec in db.gps_transitive.search({"label": {"$in": galois_labels}}, ["label", "order", "gapid", "pretty"]):
+        label = rec["label"]
+        cache[label] = rec
+        gapid = "%d.%d" % (rec["order"], rec["gapid"])
+        gap_labels.append(gapid)
+        reverse[gapid].append(label)
+    smallgroup_cache(gap_labels, cache, reverse)
+    return cache
+
+def smallgroup_cache(gap_labels, cache=None, reverse=None):
+    if cache is None:
+        cache = {}
+    for rec in db.gps_small.search({"label": {"$in": gap_labels}}, ["label", "pretty"]):
+        label = rec["label"]
+        cache[label] = rec
+        if reverse is not None:
+            pretty = rec.get("pretty")
+            for nTj in reverse[label]:
+                if "pretty" in cache[nTj]:
+                    continue
+                cache[nTj]["pretty"] = ("$%s$" % pretty) if pretty else ""
+    return cache
+
+@cached_function(key=lambda n,k,name,cache: (n,k,name))
+def small_group_display_knowl(n, k, name=None, cache=None):
+    label = '%s.%s' % (n, k)
     if not name:
         myname = '$[%d, %d]$'%(n,k)
     else:
         myname = name
-    group = db.gps_small.lookup('%s.%s' % (n, k))
+    if cache:
+        group = cache.get(label)
+    else:
+        group = db.gps_small.lookup(label)
     if group is None:
         return myname
     if not name:
@@ -125,7 +170,7 @@ class WebGaloisGroup:
         return(self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
-        if self._data.get('pretty',None) is not None:
+        if self._data.get('pretty') is not None:
             return self._data['pretty']
         gapid = "%d.%d"%(self.order(),self.gapid())
         gapgroup = db.gps_small.lookup(gapid)
@@ -212,11 +257,14 @@ def trylink(n, t):
 def group_display_short(n, t, emptyifnotpretty=False):
     return WebGaloisGroup.from_nt(n,t).display_short(emptyifnotpretty)
 
-@cached_function
-def group_pretty_and_nTj(n, t, useknowls=False):
+@cached_function(key=lambda n,t,useknowls,skip_nTj,cache: (n,t,useknowls,skip_nTj))
+def group_pretty_and_nTj(n, t, useknowls=False, skip_nTj=False, cache=None):
     label = base_label(n, t)
     string = label
-    group = db.gps_transitive.lookup(label)
+    if cache:
+        group = cache.get(label)
+    else:
+        group = db.gps_transitive.lookup(label)
     group_obj = WebGaloisGroup.from_data(group)
     if useknowls and group is not None:
         ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
@@ -227,13 +275,40 @@ def group_pretty_and_nTj(n, t, useknowls=False):
         # modify if we use knowls and have the gap id
         if useknowls:
             gapid = "%d.%d"%(group['order'],group['gapid'])
-            gapgroup = db.gps_small.lookup(gapid)
+            if cache:
+                gapgroup = cache.get(gapid)
+            else:
+                gapgroup = db.gps_small.lookup(gapid)
             if gapgroup is not None:
-                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$')
-        string = pretty + ' (as ' + ntj + ')'
+                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$', cache=cache)
+        if skip_nTj:
+            # This is used for statistics where we want to display the abstract group, but we still need to be able to get back to the nTj label for searching
+            if useknowls and group is not None and gapgroup is None:
+                # Use the nTj knowl
+                string = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + pretty + '</a>'
+            else:
+                string = pretty + '<span style="display:none">%s</span>' % label
+        else:
+            string = pretty + ' (as ' + ntj + ')'
     else:
         string = ntj
     return string
+
+# These functions are used for displaying statistics.
+Tfinder = re.compile(r"(\d+)T(\d+)")
+def galdata(gal):
+    if isinstance(gal, list):
+        return tuple(gal)
+    # Containers can be large enough that we don't have T numbers
+    if gal.isdigit():
+        return [int(gal), 0]
+    return [int(x) for x in Tfinder.findall(gal.upper())[0]]
+def galunformatter(gal):
+    n, t = galdata(gal)
+    if t == 0:
+        return str(n)
+    else:
+        return "%dT%d" % (n, t)
 
 @cached_function
 def group_display_knowl(n, t, name=None):
@@ -499,7 +574,7 @@ def resolve_display(resolves):
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
+            ans += '<tr><td align="right">$' + str(j[0]) + '$:&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
@@ -512,21 +587,21 @@ def resolve_display(resolves):
     if ans != '':
         ans += '</td></tr></table>'
     else:
-        ans = 'None'
+        ans = 'none'
     return ans
 
 def group_display_inertia(code):
     if str(code[0]) == "t":
         return group_display_knowl(code[1][0], code[1][1])
     if code[1] == [1,1]:
-        return "Trivial"
+        return "trivial"
     ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
     if group.num_conjclasses() >= 50:
-        return 'Data not computed'
+        return 'not computed'
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
