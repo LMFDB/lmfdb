@@ -1,8 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Further refine search </h2>
-
 {% include 'refine_search_form.html' %}
 
 {% include 'matches.html' %}
@@ -22,15 +20,15 @@
     <tbody>
 {% for form in info.results: %}
 <tr>
-<td>{{form.field_label}}</td>
+<td>{{form.field_knowl|safe}}</td>
 <td><a href={{url_for("bmf.render_bmf_space_webpage",field_label=form.field_label,
        level_label=form.level_label)}}>{{form.level_label}}</a> {#$={{form.level_ideal}}$#}</td>
 <td align='left'><a href="{{form.url}}">
     {{form.short_label}} </a></td>
-<td align='center'>{{form.dimension}}</td>
-<td align='center'>{{form.sfe}}</td>
+<td align='center'>${{form.dimension}}$</td>
+<td align='center'>${{form.sfe}}$</td>
 <td align='center'>{{form.bc}}</td>
-<td align='center'>{{form.cm}}</td>
+<td align='center'>{{'$'+form.cm+'$' if form.cm[0] == '-' else form.cm}}</td>
 </tr>
 {% endfor %}
 <tbody>

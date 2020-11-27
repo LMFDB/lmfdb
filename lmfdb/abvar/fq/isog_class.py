@@ -207,16 +207,16 @@ class AbvarFq_isoclass(object):
             ("Dimension", "$%s$" % (self.g)),
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-            ("Ordinary", "Yes" if self.is_ordinary() else "No"),
-            ("Supersingular", "Yes" if self.is_supersingular() else "No"),
-            ("Simple", "Yes" if self.is_simple else "No"),
-            ("Geometrically simple", "Yes" if self.is_geometrically_simple else "No"),
-            ("Primitive", "Yes" if self.is_primitive else "No"),
+            ("Ordinary", "yes" if self.is_ordinary() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Simple", "yes" if self.is_simple else "no"),
+            ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
+            ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "Yes" if self.has_principal_polarization == 1 else "No")]
+            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "Yes" if self.has_jacobian == 1 else "No")]
+            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
@@ -399,7 +399,7 @@ class AbvarFq_isoclass(object):
         else:
             ans = "Below are some of the twists of this isogeny class."
         ans += '<table class = "ntdata">\n'
-        ans += "<tr><td>Twist</td><td>Extension Degree</td><td>Common base change</td></tr>\n"
+        ans += "<thead><tr><th>Twist</th><th>Extension degree</th><th>Common base change</th></tr></thead><tbody>\n"
         i = 0
         for twist in self.twists:
             if twist[2] <= 3 or show_all or i < 3:
@@ -407,9 +407,9 @@ class AbvarFq_isoclass(object):
                     bc = av_display_knowl(twist[1])
                 else:
                     bc = "(not in LMFDB)"
-                ans += "<tr><td>%s</td><td>$%s$</td><td>%s</td></tr>\n" % (av_display_knowl(twist[0]), str(twist[2]), bc)
+                ans += "<tr><td>%s</td><td style='center'>$%s$</td><td>%s</td></tr>\n" % (av_display_knowl(twist[0]), str(twist[2]), bc)
                 i += 1
-        ans += "</table>\n"
+        ans += "</tbody></table>\n"
         return ans
 
     def curve_display(self):

@@ -24,6 +24,7 @@ from lmfdb.utils import (
     SelectBox,
     CountBox,
 )
+from lmfdb.utils.interesting import interesting_knowls
 from . import belyi_page
 from .web_belyi import (
     WebBelyiGalmap,
@@ -59,6 +60,11 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+def get_bread(tail=[]):
+    base = [("Belyi maps", url_for(".index"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 @belyi_page.route("/")
 def index():
@@ -67,21 +73,9 @@ def index():
         return belyi_search(info)
     info["stats"] = Belyi_stats()
     info["stats_url"] = url_for(".statistics")
-    info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
-    belyi_galmap_labels = (
-        "7T6-7_4.2.1_4.2.1-b",
-        "7T7-7_4.3_4.3-d",
-        "7T5-7_7_3.3.1-a",
-        "6T15-5.1_5.1_5.1-a",
-        "7T7-6.1_6.1_3.2.2-a",
-    )
-    info["belyi_galmap_list"] = [
-        {"label": label, "url": url_for_belyi_galmap_label(label)}
-        for label in belyi_galmap_labels
-    ]
-    info["degree_list"] = ("1-6", "7-8", "9-10", "10-100")
+    info["degree_list"] = list(range(1,10))
     info["title"] = title = "Belyi maps"
-    info["bread"] = bread = [("Belyi maps", url_for(".index"))]
+    info["bread"] = bread = get_bread()
 
     # search options
     info["geometry_types_list"] = geometry_types_list
@@ -102,6 +96,17 @@ def random_belyi_galmap():
     label = db.belyi_galmaps.random()
     return redirect(url_for_belyi_galmap_label(label), 307)
 
+@belyi_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "belyi",
+        db.belyi_galmaps,
+        url_for_label,
+        title=r"Some interesting Belyi maps and passports",
+        bread=get_bread("Interesting"),
+        credit=credit_string,
+        learnmore=learnmore_list()
+    )
 
 ###############################################################################
 # Galmaps, passports, triples and groups routes
@@ -122,14 +127,13 @@ def by_url_belyi_passport_label(group, sigma0, sigma1, sigmaoo):
 def by_url_belyi_search_group_triple(group, abc):
     info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s and orders %s" % (group, abc)
-    info["bread"] = [
-        ("Belyi maps", url_for(".index")),
+    info["bread"] = get_bread([
         ("%s" % group, url_for(".by_url_belyi_search_group", group=group)),
         (
             "%s" % abc,
             url_for(".by_url_belyi_search_group_triple", group=group, abc=abc),
         ),
-    ]
+    ])
     if request.args:
         # if group or abc changed, fall back to a general search
         if "group" in request.args and (
@@ -137,7 +141,7 @@ def by_url_belyi_search_group_triple(group, abc):
         ):
             return redirect(url_for(".index", **request.args), 307)
         info["title"] += " search results"
-        info["bread"].append(("search results", ""))
+        info["bread"].append(("Search results", ""))
     info["group"] = group
     info["abc_list"] = abc
     return belyi_search(info)
@@ -177,22 +181,25 @@ def by_url_belyi_search_url(smthorlabel):
             ),
             301,
         )
+    else:
+        # It could be an old label
+        flash_error("%s is not a valid label for a Belyi map", smthorlabel)
+        return redirect(url_for(".index"))
 
 
 @belyi_page.route("/<group>")
 def by_url_belyi_search_group(group):
     info = to_dict(request.args, search_array=BelyiSearchArray())
     info["title"] = "Belyi maps with group %s" % group
-    info["bread"] = [
-        ("Belyi maps", url_for(".index")),
+    info["bread"] = get_bread([
         ("%s" % group, url_for(".by_url_belyi_search_group", group=group)),
-    ]
+    ])
     if request.args:
         # if the group changed, fall back to a general search
         if "group" in request.args and request.args["group"] != str(group):
             return redirect(url_for(".index", **request.args), 307)
         info["title"] += " search results"
-        info["bread"].append(("search results", ""))
+        info["bread"].append(("Search results", ""))
     info["group"] = group
     return belyi_search(info)
 
@@ -554,6 +561,9 @@ def belyi_galmap_sage_download(label):
 def belyi_galmap_text_download(label):
     return Belyi_download().download_galmap_text(label)
 
+def url_for_label(label):
+    return url_for(".by_url_belyi_search_url", smthorlabel=label)
+
 @search_wrap(
     template="belyi_search_results.html",
     table=db.belyi_galmaps,
@@ -561,8 +571,8 @@ def belyi_galmap_text_download(label):
     err_title="Belyi map search input error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
     projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "moduli_field", "moduli_field_label"],
-    url_for_label=lambda label: url_for(".by_url_belyi_search_url", smthorlabel=label),
-    bread=lambda: [("Belyi maps", url_for(".index")), ("Search results", ".")],
+    url_for_label=url_for_label,
+    bread=lambda: get_bread("Search results"),
     credit=lambda: credit_string,
     learnmore=learnmore_list,
 )
@@ -621,24 +631,15 @@ class Belyi_stats(StatsDisplay):
     """
 
     def __init__(self):
-        ngalmaps = comma(db.belyi_galmaps.stats.count())
-        npassports = comma(db.belyi_passports.stats.count())
-        max_deg = comma(db.belyi_passports.max("deg"))
-        deg_knowl = display_knowl("belyi.degree", title="degree")
-        belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
-        stats_url = url_for(".statistics")
-        self.short_summary = (
-            'The database currently contains %s %s of %s up to %s.  Here are some <a href="%s">further statistics</a>.'
-            % (ngalmaps, belyi_knowl, deg_knowl, max_deg, stats_url)
-        )
-        self.summary = (
-            "The database currently contains %s Galois orbits of Belyi maps in %s passports, with %s at most %s."
-            % (ngalmaps, npassports, deg_knowl, max_deg)
-        )
+        self.ngalmaps = comma(db.belyi_galmaps.stats.count())
+        self.npassports = comma(db.belyi_passports.stats.count())
+        self.max_deg = comma(db.belyi_passports.max("deg"))
+        self.deg_knowl = display_knowl("belyi.degree", title="degree")
+        self.belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
-    row_titles = {"deg": "degree", "orbit_size": "size", "g": "genus"}
+    short_display = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
     knowls = {
         "deg": "belyi.degree",
@@ -649,11 +650,20 @@ class Belyi_stats(StatsDisplay):
         {"cols": col, "totaler": {"avg": True}} for col in ["deg", "orbit_size", "g"]
     ]
 
+    @property
+    def short_summary(self):
+        return ('The database currently contains %s %s of %s up to %s.  Here are some <a href="%s">further statistics</a>.'
+                % (self.ngalmaps, self.belyi_knowl, self.deg_knowl, self.max_deg, url_for(".statistics")))
+
+    @property
+    def summary(self):
+        return ("The database currently contains %s Galois orbits of Belyi maps in %s passports, with %s at most %s."
+                % (self.ngalmaps, self.npassports, self.deg_knowl, self.max_deg))
 
 @belyi_page.route("/stats")
 def statistics():
     title = "Belyi maps: statistics"
-    bread = (("Belyi maps", url_for(".index")), ("Statistics", " "))
+    bread = get_bread("Statistics")
     return render_template(
         "display_stats.html",
         info=Belyi_stats(),
@@ -667,7 +677,7 @@ def statistics():
 @belyi_page.route("/Completeness")
 def completeness_page():
     t = "Completeness of Belyi map data"
-    bread = (("Belyi maps", url_for(".index")), ("Completeness", ""))
+    bread = get_bread("Completeness")
     return render_template(
         "single.html",
         kid="dq.belyi.extent",
@@ -681,7 +691,7 @@ def completeness_page():
 @belyi_page.route("/Source")
 def how_computed_page():
     t = "Source of Belyi map data"
-    bread = (("Belyi maps", url_for(".index")), ("Source", ""))
+    bread = get_bread("Source")
     return render_template(
         "single.html",
         kid="dq.belyi.source",
@@ -695,7 +705,7 @@ def how_computed_page():
 @belyi_page.route("/Labels")
 def labels_page():
     t = "Labels for Belyi maps"
-    bread = (("Belyi maps", url_for(".index")), ("Labels", ""))
+    bread = get_bread("Labels")
     return render_template(
         "single.html",
         kid="belyi.label",
@@ -710,6 +720,8 @@ class BelyiSearchArray(SearchArray):
     plural_noun = "maps"
     jump_example = "4T5-4_4_3.1-a"
     jump_egspan = "e.g. 4T5-4_4_3.1-a"
+    jump_knowl = "belyi.search_input"
+    jump_label = "Label"
     def __init__(self):
         deg = TextBox(
             name="deg",

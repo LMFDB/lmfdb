@@ -145,3 +145,10 @@ class EllCurveTest(LmfdbTest):
         #print L.get_data(as_text=True)
         self.assertTrue(row in L.get_data(as_text=True),
                         "990h appears to have the wrong optimal curve.")
+
+    def test_completeness(self):
+        """
+        Test that the dynamic completeness knowl displays OK.
+        """
+        L = self.tc.get('/EllipticCurve/Q/Completeness')
+        assert 'The database currently contains' in L.get_data(as_text=True)

@@ -991,26 +991,27 @@ class PostgresTable(PostgresBase):
         start = time.time()
         count = 0
         tot = self.count(query)
+        sep = kwds.get("sep", u"|")
         try:
             with searchfile:
                 with extrafile:
                     # write headers
-                    searchfile.write(u"|".join(search_cols) + u"\n")
+                    searchfile.write(sep.join(search_cols) + u"\n")
                     searchfile.write(
-                        u"|".join(self.col_type.get(col) for col in search_cols)
+                        sep.join(self.col_type.get(col) for col in search_cols)
                         + u"\n\n"
                     )
                     if self.extra_table is not None:
-                        extrafile.write(u"|".join(extra_cols) + u"\n")
+                        extrafile.write(sep.join(extra_cols) + u"\n")
                         extrafile.write(
-                            u"|".join(self.col_type.get(col) for col in extra_cols)
+                            sep.join(self.col_type.get(col) for col in extra_cols)
                             + u"\n\n"
                         )
 
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
                         searchfile.write(
-                            u"|".join(
+                            sep.join(
                                 tostr_func(processed.get(col), self.col_type[col])
                                 for col in search_cols
                             )
@@ -1018,7 +1019,7 @@ class PostgresTable(PostgresBase):
                         )
                         if self.extra_table is not None:
                             extrafile.write(
-                                u"|".join(
+                                sep.join(
                                     tostr_func(processed.get(col), self.col_type[col])
                                     for col in extra_cols
                                 )
@@ -1399,9 +1400,7 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``data`` -- a list of dictionaries, whose keys are columns and values the values to be set.
-          All dictionaries should have the same set of keys;
-          if this assumption is broken, some values may be set to their default values
-          instead of the desired value, or an error may be raised.
+          All dictionaries must have the same set of keys.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
@@ -1419,15 +1418,17 @@ class PostgresTable(PostgresBase):
             extra_cols = [col for col in self.extra_cols if col in data[0]]
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
+            search_cols = set(search_cols)
+            extra_cols = set(extra_cols)
         else:
             # we don't want to alter the input
             search_data = data[:]
+            search_cols = set(data[0])
         with DelayCommit(self, commit):
-            if reindex:
-                self.drop_pkeys()
-                self.drop_indexes()
             jsonb_cols = [col for col, typ in self.col_type.items() if typ == "jsonb"]
             for i, SD in enumerate(search_data):
+                if set(SD) != search_cols:
+                    raise ValueError("All dictionaries must have the same set of keys")
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
                     if col in SD:
@@ -1435,12 +1436,17 @@ class PostgresTable(PostgresBase):
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
+                    if set(ED) != extra_cols:
+                        raise ValueError("All dictionaries must have the same set of keys")
                     ED["id"] = self.max_id() + i + 1
                     for col in jsonb_cols:
                         if col in ED:
                             ED[col] = Json(ED[col])
                 cases.append((self.extra_table, extra_data))
             now = time.time()
+            if reindex:
+                self.drop_pkeys()
+                self.drop_indexes()
             for table, L in cases:
                 template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0])))
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
@@ -1545,7 +1551,7 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _write_header_lines(self, F, cols, sep=u"|"):
+    def _write_header_lines(self, F, cols, sep=u"|", include_id=True):
         """
         Writes the header lines to a file
         (row of column names, row of column types, blank line).
@@ -1556,7 +1562,7 @@ class PostgresTable(PostgresBase):
         - ``cols`` -- a list of columns to write (either self.search_cols or self.extra_cols)
         - ``sep`` -- a string giving the column separator.  You should not use comma.
         """
-        if cols and cols[0] != "id":
+        if include_id and cols and cols[0] != "id":
             cols = ["id"] + cols
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n" % (sep.join(cols), sep.join(types)))
@@ -1818,7 +1824,7 @@ class PostgresTable(PostgresBase):
             ),
             [self.search_table],
         ).fetchone()
-        table = PostgresTable(self._db, *tabledata)
+        table = self._db._search_table_class_(self._db, *tabledata)
         self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
@@ -2020,6 +2026,9 @@ class PostgresTable(PostgresBase):
         constraintsfile=None,
         metafile=None,
         commit=True,
+        columns=None,
+        query=None,
+        include_id=True,
         **kwds
     ):
         """
@@ -2038,15 +2047,22 @@ class PostgresTable(PostgresBase):
         - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
         - ``constraintsfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_constraints table.
         - ``metafile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
+        - ``columns`` -- a list of column names to export
+        - ``query`` -- a query dictionary
+        - ``include_id`` -- whether to include the id column in the output file
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.pop("sep", u"|")
 
+        search_cols = [col for col in self.search_cols if columns is None or col in columns]
+        extra_cols = [col for col in self.extra_cols if columns is None or col in columns]
+        if columns is not None and len(columns) != len(search_cols) + len(extra_cols):
+            raise ValueError("Invalid columns %s" % (", ".join([col for col in columns if col not in search_cols and col not in extra_cols])))
         tabledata = [
             # tablename, cols, addid, write_header, filename
-            (self.search_table, self.search_cols, True, True, searchfile),
-            (self.extra_table, self.extra_cols, True, True, extrafile),
+            (self.search_table, search_cols, include_id, True, searchfile),
+            (self.extra_table, extra_cols, include_id, True, extrafile),
         ]
         if self.stats.saving:
             tabledata.extend([
@@ -2073,8 +2089,20 @@ class PostgresTable(PostgresBase):
                 with open(filename, "w") as F:
                     try:
                         if write_header:
-                            self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
+                            self._write_header_lines(F, cols, include_id=include_id, sep=sep)
+                        if query is None:
+                            cur.copy_to(F, table, columns=cols_wquotes, sep=sep, **kwds)
+                        else:
+                            if sep == "\t":
+                                sep_clause = SQL("")
+                            else:
+                                sep_clause = SQL(" (DELIMITER {0})").format(Literal(sep))
+                            qstr, values = self._build_query(query, sort=[])
+                            scols = SQL(", ").join(map(IdentifierWrapper, cols))
+                            selecter = SQL("SELECT {0} FROM {1}{2}").format(scols, IdentifierWrapper(table), qstr)
+                            copyto = SQL("COPY ({0}) TO STDOUT{1}").format(selecter, sep_clause)
+                            # copy_expert doesn't support values
+                            cur.copy_expert(cur.mogrify(copyto, values), F, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise

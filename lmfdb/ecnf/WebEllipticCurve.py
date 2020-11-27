@@ -107,7 +107,7 @@ def ideal_from_string(K,s, IQF_format=False):
         return "wrong" ## caller must check
 
 def pretty_ideal(I):
-    easy = I.number_field().degree()==2 or I.norm()==1
+    easy = True#I.number_field().degree()==2 or I.norm()==1
     gens = I.gens_reduced() if easy else I.gens()
     return r"\((" + ",".join([latex(g) for g in gens]) + r")\)"
 
@@ -260,7 +260,7 @@ class ECNF(object):
         data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
-        print("No such curve in the database: %s" % label)
+        return "Elliptic curve not found: %s" % label # caller must check for this
 
     def make_E(self):
         #print("Creating ECNF object for {}".format(self.label))
@@ -335,7 +335,7 @@ class ECNF(object):
             self.mindisc_norm = web_latex(Dmin_norm)
             if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
                 self.fact_mindisc = self.mindisc
-                self.fact_mindisc_norm = self.mindisc
+                self.fact_mindisc_norm = self.mindisc_norm
             else:
                 Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
@@ -390,7 +390,13 @@ class ECNF(object):
         self.cm_bool = "no"
         self.End = r"\(\Z\)"
         if self.cm:
-            self.rational_cm = K(self.cm).is_square()
+            # When we switch to storing rational cm by having |D| in
+            # the column, change the following lines:
+            if self.cm>0:
+                self.rational_cm = True
+                self.cm = -self.cm
+            else:
+                self.rational_cm = K(self.cm).is_square()
             self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = r"yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -435,51 +441,121 @@ class ECNF(object):
         self.ntors = web_latex(self.torsion_order)
         self.tr = len(self.torsion_structure)
         if self.tr == 0:
-            self.tor_struct_pretty = "Trivial"
+            self.tor_struct_pretty = "trivial"
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
 
-        torsion_gens = [parse_point(K,P) for P in self.torsion_gens]
-        self.torsion_gens = ",".join([web_point(P) for P in torsion_gens])
+        self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
 
-        # Rank or bounds
+        # BSD data
+        #
+        # We divide into 3 cases, based on rank_bounds [lb,ub],
+        # analytic_rank ar, (lb=ngens always).  The flag
+        # self.bsd_status is set to one of the following:
+        #
+        # "unconditional"
+        #     lb=ar=ub: we always have reg but in some cases over sextic fields we do not have omega, Lvalue, sha.
+        #     i.e. [lb,ar,ub] = [r,r,r]
+        #
+        # "conditional"
+        #     lb=ar<ub: we always have reg but in some cases over sextic fields we do not have omega, Lvalue, sha.
+        #     e.g. [lb,ar,ub] = [0,0,2], [1,1,3]
+        #
+        # "missing_gens"
+        #     lb<ar<=ub
+        #     e.g. [lb,ar,ub] = [0,1,1], [0,2,2], [1,2,2], [0,1,3]
+        #
+        # "incomplete"
+        #     ar not computed.  (We can always set lb=0, ub=Infinity.)
+
+        # Rank and bounds
         try:
             self.rk = web_latex(self.rank)
         except AttributeError:
-            self.rk = "?"
+            self.rank = None
+            self.rk = "not available"
+
         try:
-            self.rk_bnds = "%s...%s" % tuple(self.rank_bounds)
+            self.rk_lb, self.rk_ub = self.rank_bounds
         except AttributeError:
-            self.rank_bounds = [0, Infinity]
-            self.rk_bnds = "not available"
+            self.rk_lb = 0
+            self.rk_ub = Infinity
+            self.rank_bounds = "not available"
+
+        # Analytic rank
+        try:
+            self.ar = web_latex(self.analytic_rank)
+        except AttributeError:
+            self.analytic_rank = None
+            self.ar = "not available"
+
+        # for debugging:
+        assert self.rk=="not available" or (self.rk_lb==self.rank          and self.rank         ==self.rk_ub)
+        assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
+
+        self.bsd_status = "incomplete"
+        if self.analytic_rank != None:
+            if self.rk_lb==self.rk_ub:
+                self.bsd_status = "unconditional"
+            elif self.rk_lb==self.analytic_rank:
+                self.bsd_status = "conditional"
+            else:
+                self.bsd_status = "missing_gens"
+
+
+        # Regulator only in conditional/unconditional cases, or when we know the rank:
+        if self.bsd_status in ["conditional", "unconditional"]:
+            if self.ar == 0:
+                self.reg = web_latex(1)  # otherwise we only get 1.00000...
+            else:
+                try:
+                    self.reg = web_latex(self.reg)
+                except AttributeError:
+                    self.reg = "not available"
+        elif self.rk != "not available":
+            self.reg = web_latex(self.reg) if self.rank else web_latex(1)
+        else:
+            self.reg = "not available"
 
         # Generators
         try:
-            gens = [parse_point(K, P) for P in self.gens]
-            self.gens = ", ".join(web_point(P) for P in gens)
-            if self.rk == "?":
-                self.reg = "not available"
-            else:
-                if gens:
-                    try:
-                        self.reg
-                    except AttributeError:
-                        self.reg = "not available"
-                    # self.reg already set
-                else:
-                    self.reg = 1  # otherwise we only get 1.00000...
-
+            self.gens = [web_point(parse_point(K, P)) for P in self.gens]
         except AttributeError:
-            self.gens = "not available"
-            self.reg = "not available"
-            try:
-                if self.rank == 0:
-                    self.reg = 1
-            except AttributeError:
-                pass
+            self.gens = []
 
+        # Global period
+        try:
+            self.omega = web_latex(self.omega)
+        except AttributeError:
+            self.omega = "not available"
+
+        # L-value
+        try:
+            r = int(self.analytic_rank)
+            # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
+            self.Lvalue = "\\(" + str(self.Lvalue) + "\\)" 
+        except (TypeError, AttributeError):
+            self.Lvalue = "not available"
+            
+        # Tamagawa product
+        tamagawa_numbers = [ZZ(_ld['cp']) for _ld in self.local_data]
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        if len(cp_fac)>1:
+            self.tamagawa_factors = r'\cdot'.join(cp_fac)
+        else:
+            self.tamagawa_factors = None
+        self.tamagawa_product = web_latex(prod(tamagawa_numbers,1))
+
+        # Analytic Sha
+        try:
+            self.sha = web_latex(self.sha) + " (rounded)"
+        except AttributeError:
+            self.sha = "not available"
+            
+        
         # Local data
 
         # Fix for Kodaira symbols, which in the database start and end
@@ -512,11 +588,11 @@ class ECNF(object):
         # Isogeny information
 
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        isodegs = [str(d) for d in self.isodeg if d>1]
         if len(isodegs)<3:
-            self.isogeny_degrees = " and ".join(isodegs)
+            self.isodeg = " and ".join(isodegs)
         else:
-            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+            self.isodeg = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
 
 
         sig = self.signature
@@ -560,15 +636,14 @@ class ECNF(object):
                     self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
 
 
-        self.properties = [
-            ('Base field', self.field.field_pretty()),
-            ('Label', self.label)]
+        self.properties = [('Label', self.label)]
 
         # Plot
         if K.signature()[0]:
             self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
             self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
+        self.properties += [('Base field', self.field.field_pretty())]
 
         self.properties += [
             ('Conductor', self.cond),
@@ -578,10 +653,10 @@ class ECNF(object):
             ('CM', self.cm_bool)]
 
         if self.base_change:
-            self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
+            self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('base-change', 'no')]
+            self.properties += [('Base change', 'no')]
         self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
@@ -593,7 +668,7 @@ class ECNF(object):
         ]
 
         for E0 in self.base_change:
-            self.friends += [(r'Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+            self.friends += [(r'Base change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
 
         self._code = None # will be set if needed by get_code()
 

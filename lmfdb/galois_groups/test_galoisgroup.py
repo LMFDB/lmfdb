@@ -8,7 +8,7 @@ class GalGpTest(LmfdbTest):
     #
     def test_search_deg(self):
         L = self.tc.get('/GaloisGroup/?start=0&parity=0&cyc=0&solv=0&prim=0&n=7&t=&count=50')
-        assert 'all 7 matches' in L.get_data(as_text=True)
+        assert '7 matches' in L.get_data(as_text=True)
 
     def test_search_t_solv_prim(self):
         L = self.tc.get('/GaloisGroup/?start=0&parity=-1&cyc=0&solv=1&prim=-1&n=&t=18&count=50')
@@ -27,7 +27,7 @@ class GalGpTest(LmfdbTest):
     def test_search_order(self):
         L = self.tc.get('GaloisGroup/?order=18')
         assert '9T5' in L.get_data(as_text=True)
-        assert 'all 9 matches' in L.get_data(as_text=True)
+        assert '9 matches' in L.get_data(as_text=True)
 
     def test_search_gapid(self):
         L = self.tc.get('GaloisGroup/?gapid=[60,5]')

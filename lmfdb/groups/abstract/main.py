@@ -123,6 +123,7 @@ def index():
     info['count']= 50
     info['order_list']= ['1-10', '20-100', '101-200']
     info['nilp_list']= range(1,5)
+    info['maxgrp']= db.gps_groups.max('order')
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 

@@ -3,14 +3,8 @@
 {% block content %}
 
 
-<div>
-  <p>
-    Currently the database contains all finite groups of order up to  FILL HERE
-  </p>
-</div>
 
-
-<h2>Browse abstract groups</h2>
+<h2>Browse</h2>
 
 <p>
   By {{KNOWL('group.order', 'order')}}: 
@@ -27,16 +21,18 @@
 
 
 
-<h2> Find a specific abstract group by {{ KNOWL('group.label', title='label')}} </h2>
+<h2>Search</h2>
+<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+
+
+<h2> Find </h2>
 
 
 <form name="search" method = "get" action="{{url_for('.index')}}">
   {{ info.search_array.jump_box(info) | safe }}
-</form>
-
-<h2>Search</h2>
-<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
-  {{ info.search_array.html() | safe }}
 </form>
 
 

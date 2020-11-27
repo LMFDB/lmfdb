@@ -5,23 +5,27 @@
 import re, random
 
 from flask import render_template, request, url_for, redirect
-from sage.all import ZZ
+from sage.all import ZZ, cached_function
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_primes, parse_restricted, parse_element_of, parse_galgrp,
+    parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox, 
+    SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict)
+    display_knowl, search_wrap, to_dict, comma, prop_int_pretty)
+from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.number_fields.web_number_field import WebNumberField
-from lmfdb.galois_groups.transitive_group import complete_group_code
+from lmfdb.galois_groups.transitive_group import (
+    complete_group_code, knowl_cache, galdata, galunformatter,
+    group_pretty_and_nTj)
 
 from lmfdb.artin_representations import artin_representations_page
 #from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
-    ArtinRepresentation, num2letters)
+    ArtinRepresentation, num2letters, artin_label_pretty)
 
 
 LABEL_RE = re.compile(r'^\d+\.\d+\.\d+(t\d+)?\.[a-z]+\.[a-z]+$')
@@ -124,7 +128,8 @@ def add_lfunction_friends(friends, label):
 
 @artin_representations_page.route("/")
 def index():
-    info = to_dict(request.args, search_array=ArtinSearchArray())
+    info = to_dict(request.args, search_array=ArtinSearchArray(), stats=ArtinStats())
+    info['dim_list'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 24, 25, 27, 28, 30, 35, 40, 44, 45, 55, 56, 64, 70]
     bread = get_bread()
     if not request.args:
         return render_template("artin-representation-index.html", title="Artin representations", bread=bread, learnmore=learnmore_list(), info=info)
@@ -207,11 +212,16 @@ def parse_projective_type(inp, query, qfield):
         if current and current != query[qfield]:
             raise ValueError('Projective image and projective image type are inconsistent')
     elif inp == 'dn':
-        query[qfield] = {'$in': dihedrals}
+        dih_list = [{qfield: z} for z in dihedrals]
+        query[qfield] = {'$or': dih_list}
+        #query[qfield] = {'$in': dihedrals}
         if current and current not in dihedrals:
             raise ValueError('Projective image and projective image type are inconsistent')
-        else:
+        elif current:
             query[qfield] = current
+
+def url_for_label(label):
+    return url_for(".render_artin_representation_webpage", label=label)
 
 @search_wrap(template="artin-representation-search.html",
              table=db.artin_reps,
@@ -219,7 +229,7 @@ def parse_projective_type(inp, query, qfield):
              err_title='Artin representation search error',
              per_page=50,
              learnmore=learnmore_list,
-             url_for_label=lambda label: url_for(".render_artin_representation_webpage", label=label),
+             url_for_label=url_for_label,
              shortcuts={'jump':artin_representation_jump},
              bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
              initfunc=lambda:ArtinRepresentation)
@@ -230,13 +240,14 @@ def artin_representation_search(info, query):
                  qfield="BadPrimes",mode="exclude")
     parse_primes(info,query,"ramified",name="Ramified primes",
                  qfield="BadPrimes",mode=info.get("ram_quantifier"))
-    parse_element_of(info,query,"root_number",qfield="GalConjSigns")
+    parse_restricted(info,query,"root_number",qfield="GalConjSigns",allowed=[-1,1],process=lambda x:{"$contains":[int(x)]})
     parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                      allowed=[1,0,-1],process=int)
     parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
     parse_galgrp(info,query,"group",name="Group",qfield=("GaloisLabel",None))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_ints(info,query,'num_ram',qfield='NumBadPrimes')
     parse_projective_group(info, query, 'projective_image', qfield='Proj_GAP')
     parse_projective_type(info, query, 'projective_image_type', qfield='Proj_GAP')
     # Backward support for old URLs
@@ -297,7 +308,7 @@ def render_artin_representation_webpage(label):
         allchars = [ ArtinRepresentation(newlabel+'.'+num2letters(j)).character_formatted() for j in range(1,num_conj+1)]
 
     label = newlabel
-    bread = get_bread([(label, ' ')])
+    bread = get_bread([(artin_label_pretty(label), ' ')])
 
     #artin_logger.info("Found %s" % (the_rep._data))
 
@@ -309,14 +320,14 @@ def render_artin_representation_webpage(label):
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
     else:
-        processed_root_number = str(the_rep.sign())
-    properties = [("Label", label),
-                  ("Dimension", str(the_rep.dimension())),
+        processed_root_number = '$%s$' % the_rep.sign()
+    properties = [("Label", artin_label_pretty(label)),
+                  ("Dimension", prop_int_pretty(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  ("Conductor", "$" + the_rep.factored_conductor_latex() + "$")]
+                  ("Conductor", prop_int_pretty(the_rep.conductor()))]
     if case == 'rep':
         properties.append( ("Root number", processed_root_number) )
-    properties.append( ("Frobenius-Schur indicator", str(the_rep.indicator())) )
+    properties.append( ("Indicator", prop_int_pretty(the_rep.indicator())) )
 
     friends = []
     wnf = None
@@ -325,7 +336,7 @@ def render_artin_representation_webpage(label):
         friends.append(("Artin field", nf_url))
         wnf = the_nf.wnf()
     proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
-    if proj_nf:
+    if proj_nf._data:
         friends.append(("Projective Artin field", 
             str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
     if case == 'rep':
@@ -360,22 +371,51 @@ def render_artin_representation_webpage(label):
             friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                               label=the_rep.label())))
         orblabel = re.sub(r'\.[a-z]+$', '', label)
-        friends.append(("Galois orbit "+orblabel,
+        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
             url_for(".render_artin_representation_webpage", label=orblabel)))
     else:
         add_lfunction_friends(friends,label)
         friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'.'+num2letters(j)
-            friends.append(("Artin representation "+newlabel,
+            friends.append(("Artin representation " + artin_label_pretty(newlabel),
                 url_for(".render_artin_representation_webpage", label=newlabel)))
 
     info={} # for testing
 
     if case == 'rep':
-        return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+        return render_template(
+            "artin-representation-show.html",
+            credit=tim_credit,
+            support=support_credit,
+            title=title,
+            bread=bread,
+            friends=friends,
+            object=the_rep,
+            cycle_string=cycle_string,
+            wnf=wnf,
+            properties=properties,
+            info=info,
+            learnmore=learnmore_list(),
+            KNOWL_ID="artin.%s" % label,
+        )
     # else we have an orbit
-    return render_template("artin-representation-galois-orbit.html", credit=tim_credit, support=support_credit, title=title, bread=bread, allchars=allchars, friends=friends, object=the_rep, cycle_string=cycle_string, wnf=wnf, properties=properties, info=info, learnmore=learnmore_list())
+    return render_template(
+        "artin-representation-galois-orbit.html",
+        credit=tim_credit,
+        support=support_credit,
+        title=title,
+        bread=bread,
+        allchars=allchars,
+        friends=friends,
+        object=the_rep,
+        cycle_string=cycle_string,
+        wnf=wnf,
+        properties=properties,
+        info=info,
+        learnmore=learnmore_list(),
+        KNOWL_ID="artin.%s" % label,
+    )
 
 @artin_representations_page.route("/random")
 def random_representation():
@@ -383,6 +423,25 @@ def random_representation():
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"."+num2letters(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
+
+@artin_representations_page.route("/interesting")
+def interesting():
+    return interesting_knowls(
+        "artin",
+        db.artin_reps,
+        url_for_label,
+        label_col="Baselabel",
+        title=r"Some interesting Artin representations",
+        bread=get_bread([("Interesting", " ")]),
+        credit=tim_credit,
+        learnmore=learnmore_list(),
+    )
+
+@artin_representations_page.route("/stats")
+def statistics():
+    title = "Artin representations: statistics"
+    bread = get_bread([("Statistics", " ")])
+    return render_template("display_stats.html", info=ArtinStats(), credit=tim_credit, title=title, bread=bread, learnmore=learnmore_list())
 
 @artin_representations_page.route("/Labels")
 def labels_page():
@@ -423,6 +482,8 @@ class ArtinSearchArray(SearchArray):
     plural_noun = "representations"
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"
+    jump_knowl = "artin.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         dimension = TextBox(
             name="dimension",
@@ -440,9 +501,9 @@ class ArtinSearchArray(SearchArray):
             label="Group",
             knowl="artin.gg_quotient",
             example="A5",
-            example_span="list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5" % (
+            example_span="%s, e.g. [8,3] or [16,7];%s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
                 display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "list of group labels"),
+                display_knowl("nf.galois_group.name", "group names"),
                 display_knowl("gg.label", "transitive group labels")))
         parity = ParityBox(
             name="parity",
@@ -451,6 +512,7 @@ class ArtinSearchArray(SearchArray):
         container = TextBox(
             name="container",
             label="Smallest permutation container",
+            short_label="Smallest permutation",
             knowl="artin.permutation_container",
             example="6T13",
             example_span="6T13 or 7T6")
@@ -459,6 +521,7 @@ class ArtinSearchArray(SearchArray):
         ramified = TextBoxWithSelect(
             name="ramified",
             label="Ramified primes",
+            short_label="Ramified",
             knowl="artin.ramified_primes",
             example="2, 3",
             select_box=ram_quantifier,
@@ -469,6 +532,11 @@ class ArtinSearchArray(SearchArray):
             knowl="artin.unramified_primes",
             example="5,7",
             example_span="5, 7, 13 (no range allowed)")
+        num_ram = TextBox(
+            name="num_ram",
+            label="Ramified prime count",
+            knowl="artin.ramified_primes",
+            example="1")
         root_number = TextBoxNoEg(
             name="root_number",
             label="Root number",
@@ -478,6 +546,7 @@ class ArtinSearchArray(SearchArray):
         fsind = TextBoxNoEg(
             name="frobenius_schur_indicator",
             label="Frobenius-Schur indicator",
+            short_label="Frobenius-Schur",
             knowl="artin.frobenius_schur_indicator",
             example="1",
             example_span="+1 for orthogonal, -1 for symplectic, 0 for non-real character")
@@ -507,13 +576,177 @@ class ArtinSearchArray(SearchArray):
             [container],
             [ramified],
             [unramified],
+            [num_ram],
             [root_number],
             [fsind],
-            [projective_image], 
+            [projective_image],
             [projective_image_type],
             [count]]
 
         self.refine_array = [
             [dimension, conductor, group, root_number, parity],
-            [container, ramified, unramified, fsind],
+            [container, ramified, unramified, num_ram, fsind],
             [projective_image, projective_image_type]]
+
+def scinot(rng, minlen=None):
+    if "^" in rng or not rng:
+        return rng
+    if "-" in rng:
+        pieces = rng.split("-")
+        minlen = min(len(piece) for piece in pieces if piece)
+        return "-".join(scinot(piece, minlen) for piece in pieces)
+    if minlen is None:
+        minlen = len(rng)
+    if minlen > 3 and rng[0] == "1" and rng[-1] in ["0", "1"] and all(ch == "0" for ch in rng[1:-1]):
+        return "$10^{%s}$" % (len(rng)-1)
+    return "$%s$" % rng
+
+tpow = re.compile(r"10\^\{(\d+)\}")
+def unsci(rng, first=False):
+    if "^" not in rng:
+        return rng
+    if "-" in rng:
+        pieces = "-".split(rng)
+        fz = [True] + [False]*(len(pieces)-1)
+        return "-".join(unsci(piece, z) for (piece, z) in zip(pieces, fz))
+    e = tpow.findall(rng)
+    if not e:
+        return rng
+    if first:
+        return str(1 + 10**int(e[0]))
+    else:
+        return str(10**int(e[0]))
+
+def trange(a, b):
+    if b is None:
+        return str(10**a) + "-"
+    elif a == 0:
+        return "1-" + str(10**b)
+    return str(10**a+1) + "-" + str(10**b)
+def intervals(start, end, step):
+    return [(a, a+step) for a in range(start, end, step)]
+
+@cached_function
+def galcache():
+    return knowl_cache(db.artin_reps.distinct("GaloisLabel"))
+def galformatter(gal):
+    n, t = galdata(gal)
+    return group_pretty_and_nTj(n, t, True, cache=galcache())
+
+@cached_function
+def projcache():
+    return knowl_cache(["%sT%s" % tuple(label) for label in db.artin_reps.distinct("Proj_nTj")])
+def projformatter(proj):
+    if isinstance(proj, list):
+        proj = "%sT%s" % tuple(proj)
+    n, t = galdata(proj)
+    return group_pretty_and_nTj(n, t, True, cache=projcache(), skip_nTj=True)
+
+@cached_function
+def contcache():
+    return knowl_cache([label for label in db.artin_reps.distinct("Container") if "T" in label])
+def contformatter(cont):
+    n, t = galdata(cont)
+    if t == 0: # no T number
+        return cont
+    return group_pretty_and_nTj(n, t, True, cache=contcache())
+
+class ArtinStats(StatsDisplay):
+    table = db.artin_reps
+    baseurl_func = ".index"
+
+    stat_list = [
+        {"cols": ["Dim", "Conductor"],
+         "constraint": {"Hide": 0},
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+        {"cols": ["Dim", "NumBadPrimes"],
+         "constraint": {"Hide": 0},
+         "totaler": totaler(),
+         "proportioner": proportioners.per_row_total},
+        {"cols": ["Indicator", "Dim"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Is_Even", "Dim"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["GaloisLabel"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Proj_nTj"],
+         "constraint": {"Hide": 0}},
+        {"cols": ["Container"],
+         "constraint": {"Hide": 0}}
+    ]
+    knowls = {"Dim": "artin.dimension",
+              "Conductor": "artin.conductor",
+              "GaloisLabel": "artin.gg_quotient",
+              "Is_Even": "artin.parity",
+              "Proj_nTj": "artin.projective_image",
+              "NumBadPrimes": "artin.ramified_primes",
+              "Container": "artin.permutation_container",
+              "Indicator": "artin.frobenius_schur_indicator"}
+    top_titles = {"Indicator": "Frobenius-Schur indicators",
+                  "Container": "smallest permutation containers",
+                  "Is_Even": "parities"}
+    short_display = {"Dim": "dimension",
+                     "Conductor": "conductor",
+                     "GaloisLabel": "Galois group",
+                     "Is_Even": "parity",
+                     "Proj_nTj": "projective image",
+                     "Container": "container",
+                     "NumBadPrimes": "number of ramified primes",
+                     "Indicator": "indicator"}
+    sort_keys = {"GaloisLabel": galdata,
+                 "Proj_nTj": galdata,
+                 "Container": galdata}
+    formatters = {"Conductor": lambda N: scinot(range_formatter(N)),
+                  "Is_Even": lambda x: "even" if x in ["even", True] else "odd",
+                  "GaloisLabel": galformatter,
+                  "Container": contformatter,
+                  "Proj_nTj": projformatter}
+    query_formatters = {
+        "Dim": (lambda d: "dimension=%s" % range_formatter(d)),
+        "Conductor": (lambda N: "conductor=%s" % (unsci(range_formatter(N)))),
+        "NumBadPrimes": (lambda N: "num_ram=%s" % range_formatter(N)),
+        "GaloisLabel": (lambda gal: r"group=%s" % (galunformatter(gal))),
+        "Proj_nTj": (lambda proj: r"projective_image=%s" % (galunformatter(proj))),
+        "Container": (lambda cont: r"container=%s" % (galunformatter(cont))),
+        "Is_Even": (lambda x: r"parity=%s" % ("even" if x in ["even", True] else "odd")),
+        "Indicator": (lambda ind: r"frobenius_schur_indicator=%s" % ind),
+    }
+    buckets = {
+        "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
+        "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
+    }
+
+    def __init__(self):
+        hide = {"Hide": 0}
+        self.nreps = db.artin_reps.count(hide)
+        self.nfields = db.artin_reps.count_distinct("NFGal", hide)
+        self.ngroups = db.artin_reps.count_distinct("GaloisLabel", hide)
+        self.maxdim = db.artin_reps.max("Dim")
+        maxcond = ZZ(db.artin_reps.max("Conductor"))
+        self.maxcond = maxcond.factor()._latex_()
+        self.amaxcond = maxcond.n(digits=2)._latex_()
+
+    @property
+    def summary(self):
+        return r"The database currently contains {nreps} Galois conjugacy classes of {repknowl}, for a total of {nfields} {nfknowl} with {ngroups} {gpknowl}.  The largest {dimknowl} is ${mdim}$ and the largest {condknowl} is ${mcond} \approx {amcond}$.".format(
+            nreps=comma(self.nreps),
+            repknowl=display_knowl("artin", "Artin representations"),
+            nfields=comma(self.nfields),
+            nfknowl=display_knowl("artin.number_field", "number fields"),
+            ngroups=self.ngroups,
+            gpknowl=display_knowl("artin.gg_quotient", "Galois groups"),
+            dimknowl=display_knowl("artin.dimension", "dimension"),
+            mdim=self.maxdim,
+            condknowl=display_knowl("artin.conductor", "conductor"),
+            mcond=self.maxcond,
+            amcond=self.amaxcond)
+
+    @property
+    def short_summary(self):
+        return r'The database currently contains {nreps} Galois conjugacy classes of {repknowl}, for a total of {nfields} {nfknowl}.  Here are some <a href="{url}">further statistics</a>.'.format(
+            nreps=comma(self.nreps),
+            repknowl=display_knowl("artin", "Artin representations"),
+            nfields=comma(self.nfields),
+            nfknowl=display_knowl("artin.number_field", "number fields"),
+            url=url_for(".statistics"))

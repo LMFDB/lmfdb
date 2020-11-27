@@ -5,16 +5,15 @@
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
-    <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>${{info.minimum }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
+    <tr><td>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
+    <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>${{info.minimum }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>${{info.kissing }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 {% if info.dim == 1 %}
     $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
@@ -66,9 +65,9 @@
 
 {% else %}
     <table>
-    <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
     <tr><td>&nbsp;</td></tr>
-    <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
+    <tr><tdvalign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
     {% if info.dim == 1 %}
         $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
             {% for e in info.download_genus_reps %} 
