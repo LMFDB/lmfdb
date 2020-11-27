@@ -388,7 +388,6 @@ def render_newform_webpage(label):
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
-    print("HAHAHAHAH")
     newform.setup_cc_data(info)
     if errs:
         flash_error("%s", "<br>".join(errs))

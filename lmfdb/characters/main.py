@@ -311,8 +311,6 @@ def make_webchar(args):
     modulus = int(args['modulus'])
     if modulus < 10000:
         return WebDBDirichletCharacter(**args)
-    # elif modulus < 100000:
-    #     return WebDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
 
@@ -366,7 +364,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
         )
         return redirect(url_for(".render_DirichletNavigation"))
     args['number'] = number
-    # print("args = {}".format(args))
     webchar = make_webchar(args)
     info = webchar.to_dict()
     info['bread'] = bread(
@@ -377,7 +374,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
-    # print("info = {}".format(info))
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
