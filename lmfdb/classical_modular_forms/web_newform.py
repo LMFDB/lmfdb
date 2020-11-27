@@ -6,7 +6,7 @@ from collections import defaultdict
 import bisect, re
 
 from flask import url_for
-from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -541,14 +541,13 @@ class WebNewform(object):
                 self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
-                G = DirichletGroup_conrey(self.level)
-                chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
+                chars = [ConreyCharacter(self.level, char) for char in self.conrey_indexes]
                 for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
                         continue
                     for chi in chars:
-                        c = chi.logvalue(p) * self.char_order
+                        c = chi.conreyangle(p) * self.char_order
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))

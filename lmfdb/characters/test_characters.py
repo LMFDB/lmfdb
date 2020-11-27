@@ -72,14 +72,14 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletgroup(self):
         W = self.tc.get('/Character/Dirichlet/23', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
-        assert 'DirichletGroup_conrey(23)' in W.get_data(as_text=True)
+        assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
         assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'Properties' in W.get_data(as_text=True), "properties box"
-        assert 'DirichletGroup_conrey(91)' in W.get_data(as_text=True), "sage code example"
+        assert 'DirichletGroup(91)' in W.get_data(as_text=True), "sage code example"
         assert r'\chi_{91}(15,' in W.get_data(as_text=True) and r'\chi_{91}(66' in W.get_data(as_text=True), "generators"
         assert r'e\left(\frac{7}{12}\right)' in W.get_data(as_text=True), "contents table"
         assert '/Character/Dirichlet/91/6' in W.get_data(as_text=True), "link in contents table"

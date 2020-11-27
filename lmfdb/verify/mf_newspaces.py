@@ -1,5 +1,5 @@
 
-from dirichlet_conrey import DirichletGroup_conrey
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (
     Gamma0, floor, cached_function, dimension_new_cusp_forms,
     dimension_eis, dimension_cusp_forms, dimension_modular_forms)
@@ -318,7 +318,7 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+            dirchar = ConreyCharacter(rec['level'], rec['conrey_indexes'][0]).sage_character()
         return self._test_equality(rec['relative_dim'], dimension_new_cusp_forms(dirchar, rec['weight']), verbose)
 
     @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
@@ -330,7 +330,7 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+            dirchar = ConreyCharacter(rec['level'], rec['conrey_indexes'][0]).sage_character()
         k = rec['weight']
         m = rec['char_degree']
         for func, key in [(dimension_eis, 'eis_dim'), (dimension_cusp_forms, 'cusp_dim'), (dimension_modular_forms, 'mf_dim')]:

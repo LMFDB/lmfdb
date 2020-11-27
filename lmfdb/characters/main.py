@@ -12,7 +12,6 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
-        WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
@@ -312,6 +311,8 @@ def make_webchar(args):
     modulus = int(args['modulus'])
     if modulus < 10000:
         return WebDBDirichletCharacter(**args)
+    # elif modulus < 100000:
+    #     return WebDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
 
@@ -365,6 +366,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         )
         return redirect(url_for(".render_DirichletNavigation"))
     args['number'] = number
+    # print("args = {}".format(args))
     webchar = make_webchar(args)
     info = webchar.to_dict()
     info['bread'] = bread(
@@ -375,6 +377,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
+    # print("info = {}".format(info))
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
@@ -461,13 +464,13 @@ def dc_calc(calc, modulus, number):
         return abort(404)
     try:
         if calc == 'value':
-            return WebDirichletCharacter(**args).value(val)
+            return WebSmallDirichletCharacter(**args).value(val)
         if calc == 'gauss':
-            return WebDirichletCharacter(**args).gauss_sum(val)
+            return WebSmallDirichletCharacter(**args).gauss_sum(val)
         elif calc == 'jacobi':
-            return WebDirichletCharacter(**args).jacobi_sum(val)
+            return WebSmallDirichletCharacter(**args).jacobi_sum(val)
         elif calc == 'kloosterman':
-            return WebDirichletCharacter(**args).kloosterman_sum(val)
+            return WebSmallDirichletCharacter(**args).kloosterman_sum(val)
         else:
             return abort(404)
     except Warning as e:
