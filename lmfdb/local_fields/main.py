@@ -3,7 +3,8 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR, latex, cached_function
+from sage.all import (
+    PolynomialRing, QQ, RR, latex, cached_function, Primes, kronecker, ZZ)
 
 from lmfdb import db
 from lmfdb.app import app
@@ -346,16 +347,27 @@ def prettyname(ent):
         return printquad(ent['rf'], ent['p'])
     return ent['label']
 
+@cached_function
+def getu(p):
+    if p == 2:
+        return 5
+    P = Primes()
+    k = 2
+    while kronecker(k, p)==1:
+        k = P.next(ZZ(k))
+    return k
+
 def printquad(code, p):
     if code == [1, 0]:
         return(r'$\Q_{%s}$' % p)
+    u = getu(p)
     if code == [1, 1]:
-        return(r'$\Q_{%s}(\sqrt{*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{%s})$' % (p,u))
     if code == [-1, 1]:
-        return(r'$\Q_{%s}(\sqrt{-*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{-%s})$' % (p,u))
     s = code[0]
     if code[1] == 1:
-        s = str(s) + '*'
+        s = str(s) + r'\cdot '+str(u)
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
