@@ -4,7 +4,7 @@
 
 from flask import render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, QQ, RR, latex, cached_function, Primes, kronecker, ZZ)
+    PolynomialRing, QQ, RR, latex, cached_function, Integers)
 
 from lmfdb import db
 from lmfdb.app import app
@@ -351,11 +351,7 @@ def prettyname(ent):
 def getu(p):
     if p == 2:
         return 5
-    P = Primes()
-    k = 2
-    while kronecker(k, p)==1:
-        k = P.next(ZZ(k))
-    return k
+    return int(Integers(p).quadratic_nonresidue())
 
 def printquad(code, p):
     if code == [1, 0]:
