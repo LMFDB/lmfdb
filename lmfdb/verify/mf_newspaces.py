@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (
     Gamma0, floor, cached_function, dimension_new_cusp_forms,
@@ -8,9 +8,21 @@ from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker, check_analytic_conductor
 from .verification import overall, overall_long, fast, slow, accumulate_failures
 
+
 @cached_function
 def sturm_bound0(level, weight):
     return floor(weight * Gamma0(level).index()/12)
+
+
+def get_dirchar(char_mod, char_num, char_order):
+    """Helper method to compute Dirichlet Character on the fly"""
+    char_values_data = db.char_dir_values.lookup(
+    "{}.{}".format(char_mod, char_num)
+    )
+    char_valuepairs = char_values_data['values_gens']
+    char_genvalues = [int(v) for g, v in char_valuepairs]
+    return ConreyCharacter(char_mod, char_num).sage_character(char_order, char_genvalues)
+
 
 class mf_newspaces(MfChecker):
     table = db.mf_newspaces
@@ -73,7 +85,6 @@ class mf_newspaces(MfChecker):
                         'num_forms',
                         'hecke_orbit_dims'], self._box_query(box, {'dim':{'$gt':0}}))
                    for box in db.mf_boxes.search({'traces':True}))
-
 
     @overall
     def check_char_orbit(self):
@@ -308,7 +319,7 @@ class mf_newspaces(MfChecker):
         # TIME about 70s
         return self._test_equality(rec['sturm_bound'], sturm_bound0(rec['level'], rec['weight']), verbose, "Sturm bound failure: {0} != {1}")
 
-    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
+    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes', 'char_order'])
     def check_Skchi_dim_formula(self, rec, verbose=False):
         """
         for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
@@ -318,10 +329,10 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = ConreyCharacter(rec['level'], rec['conrey_indexes'][0]).sage_character()
+            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0], rec['char_order'])
         return self._test_equality(rec['relative_dim'], dimension_new_cusp_forms(dirchar, rec['weight']), verbose)
 
-    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
+    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'char_order', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
     def check_dims(self, rec, verbose=False):
         """
         for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
@@ -330,7 +341,7 @@ class mf_newspaces(MfChecker):
         if rec['level'] < 3:
             dirchar = rec['level']
         else:
-            dirchar = ConreyCharacter(rec['level'], rec['conrey_indexes'][0]).sage_character()
+            dirchar = get_dirchar(rec['level'], rec['conrey_indexes'][0], rec['char_order'])
         k = rec['weight']
         m = rec['char_degree']
         for func, key in [(dimension_eis, 'eis_dim'), (dimension_cusp_forms, 'cusp_dim'), (dimension_modular_forms, 'mf_dim')]:

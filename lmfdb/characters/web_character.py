@@ -1002,7 +1002,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         return {
             'sage': [
                 'from sage.modular.dirichlet import DirichletCharacter',
-                'H = DirichletGroup({})'.format(self.modulus),
+                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(self.modulus, self.order),
                 'M = H._module',
                 'chi = DirichletCharacter(H, M([{}]))'.format(
                     ','.join(str(val) for val in self._genvalues_for_code)
