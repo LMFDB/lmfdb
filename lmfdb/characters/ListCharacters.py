@@ -3,10 +3,10 @@
 from six.moves import range
 
 import re
-from sage.all import lcm, factor, divisors, Integers, inverse_mod
+from sage.all import lcm, factor, divisors, Integers
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
-from lmfdb.characters.web_character import WebDirichlet, WebSmallDirichletCharacter, logger, parity_string, bool_string
+from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error
 

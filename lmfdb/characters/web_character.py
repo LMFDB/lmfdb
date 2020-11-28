@@ -44,7 +44,7 @@ The design is the following:
 """
 
 from flask import url_for
-from sage.all import (gcd, Rational, Integers, cached_method, pari,
+from sage.all import (gcd, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.databases.cremona import cremona_letter_code
 from sage.misc.lazy_attribute import lazy_attribute
@@ -139,7 +139,7 @@ class WebDirichlet(WebCharObject):
 
     def _compute(self):
         if self.modlabel:
-            self.modulus = m = int(self.modlabel)
+            self.modulus = int(self.modlabel)
         self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
@@ -325,7 +325,7 @@ class WebDirichlet(WebCharObject):
         )
         chi_valuepairs = chi_values_data['values_gens']
         chi_genvalues = [int(v) for g, v in chi_valuepairs]
-        chi = self.chi.sage_character(chi_genvalues)
+        chi = self.chi.sage_character(self.order, chi_genvalues)
 
         psi = ConreyCharacter(self.modulus, val)
         psi_values_data = db.char_dir_values.lookup(
@@ -333,7 +333,7 @@ class WebDirichlet(WebCharObject):
         )
         psi_valuepairs = psi_values_data['values_gens']
         psi_genvalues = [int(v) for g, v in psi_valuepairs]
-        psi = psi.sage_character(psi_genvalues)
+        psi = psi.sage_character(self.order, psi_genvalues)
 
         jacobi_sum = chi.jacobi_sum(psi)
         chitex = self.char2tex(mod, num, tag=False)
@@ -366,7 +366,7 @@ class WebDirichlet(WebCharObject):
         )
         chi_valuepairs = chi_values_data['values_gens']
         chi_genvalues = [int(v) for g, v in chi_valuepairs]
-        chi = self.chi.sage_character(chi_genvalues)
+        chi = self.chi.sage_character(self.order, chi_genvalues)
 
         k = chi.kloosterman_sum_numerical(100, a, b)
         k = complex2str(k, 10)
@@ -1089,7 +1089,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
             return self.chi.indlabel
         else:
             # Calling conductor computes the indlabel
-            conductor = self.chi.conductor()
+            self.chi.conductor()
             return self.chi.indlabel
 
     @lazy_attribute

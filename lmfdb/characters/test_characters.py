@@ -107,6 +107,7 @@ class DirichletCharactersTest(LmfdbTest):
         """
         W = self.tc.get('/Character/Dirichlet/40487/5')
         assert '40486' in W.get_data(as_text=True), "order"
+        assert '12409' in W.get_data(as_text=True), "log on generator"
         assert '20243' in W.get_data(as_text=True), "field of values"
         W = self.tc.get('/Character/Dirichlet/40487.5', follow_redirects=True)
         assert '40486' in W.get_data(as_text=True), "order"
@@ -159,5 +160,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
+        assert 'e\left(\frac{881}{1818}\right)' in W.get_data(as_text=True), "value on a generator is wrong"
+        assert '\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
         assert '$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
         assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"

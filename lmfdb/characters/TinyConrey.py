@@ -1,4 +1,4 @@
-from sage.all import gcd, Mod, Integer, Integers, Rational, pari, Pari, DirichletGroup
+from sage.all import gcd, Mod, Integer, Integers, Rational, pari, Pari, DirichletGroup, CyclotomicField
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 
@@ -86,14 +86,15 @@ class ConreyCharacter(object):
     @cached_method
     def conductor(self):
         B = pari("znconreyconductor(%s,%s,&chi0)"%(self.G, self.chi_pari))
-        if len(B) == 1:
+        if B.type() == 't_INT':
             # means chi is primitive
             self.chi_0 = self.chi_pari
             self.indlabel = self.number
             return int(B)
         else:
             self.chi_0 = pari("chi0")
-            self.indlabel = int(pari("znconreyexp(%s,%s)"%(self.G,self.chi_0)))
+            G_0 = Pari("znstar({},1)".format(B))
+            self.indlabel = int(pari("znconreyexp(%s,%s)"%(G_0,self.chi_0)))
             return int(B[0])
 
     def is_primitive(self):
@@ -139,7 +140,7 @@ class ConreyCharacter(object):
     def gauss_sum_numerical(self, a):
         return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
 
-    def sage_character(self, genvalues):
-        H = DirichletGroup(self.modulus)
+    def sage_character(self, order, genvalues):
+        H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
         M = H._module
         return DirichletCharacter(H,M(genvalues))
