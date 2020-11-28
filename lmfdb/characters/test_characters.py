@@ -130,7 +130,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert '3.774980868' in W.get_data(as_text=True), "kloosterman"
 
         W = self.tc.get('Character/calc-jacobi/Dirichlet/91/3?val=37')
-        assert r'-11 \zeta_{12}^{2} + 5' in W.get_data(as_text=True)
+        assert r'-11 \zeta_{6} + 5' in W.get_data(as_text=True)
 
         W = self.tc.get('Character/calc-value/Dirichlet/107/7?val=32')
         assert 'frac{3}{106}' in W.get_data(as_text=True)
@@ -160,7 +160,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
-        assert 'e\left(\frac{881}{1818}\right)' in W.get_data(as_text=True), "value on a generator is wrong"
-        assert '\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
+        assert r'e\left(\frac{881}{1818}\right)' in W.get_data(as_text=True), "value on a generator is wrong"
+        assert r'\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
         assert '$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
         assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"
