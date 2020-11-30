@@ -10,7 +10,7 @@ text-align: center;
 }
 </style>
 
-<h2>Elliptic curves in class {{info.iso_label}}</h2>
+<h2>Elliptic curves in class {{info.class_label}}</h2>
 {{ place_code('curves') }}
 <table id = "isogeny_class_table">
 <tr>
@@ -53,8 +53,8 @@ curve {{info.optimal_label}}.{% endif %}
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
-{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].curve_label}} has
-{% else %} The elliptic curves in class {{info.iso_label}} have
+{% if info.class_size==1 %} The elliptic curve {{info.curves[0].curve_label}} has
+{% else %} The elliptic curves in class {{info.class_label}} have
 {% endif %}
 {{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>

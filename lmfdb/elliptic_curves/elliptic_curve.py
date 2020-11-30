@@ -124,7 +124,7 @@ def rational_elliptic_curves(err_args=None):
 def interesting():
     return interesting_knowls(
         "ec.q",
-        db.ec_curves,
+        db.ec_curvedata,
         url_for_label,
         label_col="lmfdb_label",
         title=r"Some interesting elliptic curves over $\Q$",
@@ -135,7 +135,7 @@ def interesting():
 
 @ec_page.route("/random")
 def random_curve():
-    label = db.ec_curves.random(projection=1)['lmfdb_label']
+    label = db.ec_curves.random()['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
     return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
@@ -158,9 +158,9 @@ class ECstats(StatsDisplay):
     """
 
     def __init__(self):
-        self.ncurves = db.ec_curves.count()
-        self.ncurves_c = comma(db.ec_curves.count())
-        self.max_N = db.ec_curves.max('conductor')
+        self.ncurves = db.ec_curvedata.count()
+        self.ncurves_c = comma(db.ec_curvedata.count())
+        self.max_N = db.ec_curvedata.max('conductor')
 
         # round up to nearest multiple of 1000
         self.max_N = 1000*int((self.max_N/1000)+1)
@@ -171,7 +171,7 @@ class ECstats(StatsDisplay):
         # 1000.
 
         self.max_N_c = comma(self.max_N)
-        self.max_rank = db.ec_curves.max('rank')
+        self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
         self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
         self.rank_knowl = display_knowl('ec.rank', title = "rank")
@@ -187,7 +187,7 @@ class ECstats(StatsDisplay):
         nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
         return 'The database currently contains the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s, all of which have %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c, self.rank_knowl, self.max_rank_c)
 
-    table = db.ec_curves
+    table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
@@ -212,7 +212,7 @@ class ECstats(StatsDisplay):
 
     @cached_method
     def isogeny_degrees(self):
-        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curves, UNNEST(isodeg) as elements"))
+        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curvedata, UNNEST(isogeny_degreed) as elements"))
         return cur.fetchone()[0]
 
 # NB the contex processor wants something callable and the summary is a *property*
@@ -287,7 +287,7 @@ def elliptic_curve_jump(info):
             E = EllipticCurve(labvec).minimal_model()
             # Now we do have a valid curve over Q, but it might
             # not be in the database.
-            lmfdb_label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+            lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
             if lmfdb_label is None:
                 info['conductor'] = E.conductor()
                 return elliptic_curve_jump_error(label, info, missing_curve=True)
@@ -323,7 +323,7 @@ def download_search(info):
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
-    res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
+    res = db.ec_curvedata.search(ast.literal_eval(info["query"]), 'ainvs')
     s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
     strIO = BytesIO()
@@ -340,7 +340,7 @@ def url_for_label(label):
     return url_for(".by_ec_label", label=label)
 
 @search_wrap(template="ec-search-results.html",
-             table=db.ec_curves,
+             table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
              per_page=50,
@@ -370,8 +370,7 @@ def elliptic_curve_search(info, query):
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
     parse_ints(info,query,field='cm_disc',qfield='cm')
-    parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=get_stats().isogeny_degrees)
-    #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+    parse_element_of(info,query,'isogeny_degrees',split_interval=1000,contained_in=get_stats().isogeny_degrees)
     parse_primes(info, query, 'surj_primes', name='maximal primes',
                  qfield='nonmax_primes', mode='exclude')
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
@@ -386,12 +385,6 @@ def elliptic_curve_search(info, query):
     # 'number' is 1.
     if 'optimal' in info and info['optimal'] == 'on':
         query.update({'number':1})
-
-        # Old behaviour was as follows:
-        # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
-        # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
-        # Instead, we use this more complicated query:
-        # query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
@@ -447,7 +440,7 @@ def by_ec_label(label):
         else:
             label_type = 'iso'
 
-        data = db.ec_curves.lucky({label_type: label}, projection=1)
+        data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
             return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
@@ -471,7 +464,7 @@ def by_weierstrass(eqn):
     except TypeError:
         return elliptic_curve_jump_error(eqn, {})
     E = EllipticCurve(ainvs).global_minimal_model()
-    label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)},'lmfdb_label')
+    label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)},'lmfdb_label')
     if label is None:
         N = E.conductor()
         return elliptic_curve_jump_error(eqn, {'conductor':N}, missing_curve=True)
@@ -508,7 +501,7 @@ def modular_form_display(label, number):
         number = 10
     if number > 1000:
         number = 1000
-    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+    ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -520,7 +513,7 @@ def modular_form_display(label, number):
 # base64-encoded pngs.
 @ec_page.route("/plot/<label>")
 def plot_ec(label):
-    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+    ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -574,7 +567,7 @@ def padic_data(label, p):
     except AttributeError:
         return abort(404)
     info = {'p': p}
-    if db.ec_curves.lookup(label, label_col='lmfdb_label', projection="rank") == 0:
+    if db.ec_curvedata.lookup(label, label_col='lmfdb_label', projection="rank") == 0:
         info['reg'] = 1
     elif number == '1':
         data = db.ec_padic.lucky({'lmfdb_iso': N + '.' + iso, 'p': p})
@@ -597,9 +590,9 @@ def download_EC_qexp(label, limit):
     except (ValueError,AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
-        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
+        ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     else:
-        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
+        ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_iso')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})        
     if limit > 100000:
@@ -610,6 +603,8 @@ def download_EC_qexp(label, limit):
     return response
 
 
+#TODO: get all the data from all the relevant tables, not just the search table.
+
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
     try:
@@ -617,12 +612,12 @@ def download_EC_all(label):
     except (ValueError,AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
-        data = db.ec_curves.lookup(label, label_col='lmfdb_label')
+        data = db.ec_curvedata.lookup(label, label_col='lmfdb_label')
         if data is None:
             return elliptic_curve_jump_error(label, {})
         data_list = [data]
     else:
-        data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
+        data_list = list(db.ec_curvedata.search({'lmfdb_iso': label}, sort=['number']))
         if not data_list:
             return elliptic_curve_jump_error(label, {})
 
