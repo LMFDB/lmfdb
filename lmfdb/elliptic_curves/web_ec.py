@@ -405,13 +405,18 @@ class WebEC(object):
                            ('%s' % num,' ')]
 
     def make_mwbsd(self):
-        dbdata = db.ec_mwbsd.lucky({'label': self.label})
-        mwbsd = self.mwbsd = {}
+        mwbsd = self.mwbsd = db.ec_mwbsd.lucky({'label': self.label})
+
+        # Some components are in the main table:
+        
         mwbsd['rank'] = r = self.rank
+        mwbsd['torsion'] = self.torsion
+        mwbsd['reg'] = self.regulator
+        mwbsd['sha'] = self.sha
 
         # Integral points
 
-        xintcoords = dbdata['xcoord_integral_points']
+        xintcoords = mwbsd['xcoord_integral_points']
         a1, _, a3, _, _ = ainvs = self.ainvs
         if a1 or a3:
             int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
@@ -421,22 +426,15 @@ class WebEC(object):
             mwbsd['int_points'] = ', '.join(pm_pt(P) for P in int_pts)
 
         # Generators (mod torsion) and heights:
-        if dbdata['ngens']:
-            mwbsd['generators'] = [web_latex(weighted_proj_to_affine_point(P)) for P in dbdata['gens']]
-            mwbsd['heights'] = dbdata['heights']
-        else:
-            mwbsd['generators'] = ''
-            mwbsd['heights'] = []
+        mwbsd['generators'] = [web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
 
-        # Torsion order, structure and generators:
-        mwbsd['tor_order'] = self.torsion
-        tor_struct = self.torsion_structure
-        if mwbsd['tor_order'] == 1:
+        # Torsion structure and generators:
+        if mwbsd['torsion'] == 1:
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
         else:
-            mwbsd['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in tor_struct])
-            mwbsd['tor_gens'] = ', '.join(web_latex(weighted_proj_to_affine_point(P)) for P in dbdata['torsion_generators'])
+            mwbsd['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in self.torsion_structure])
+            mwbsd['tor_gens'] = ', '.join(web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['torsion_generators'])
 
         # BSD invariants
         if r >= 2:
@@ -446,11 +444,6 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
-        mwbsd['reg'] = self.regulator
-        mwbsd['omega'] = dbdata['real_period']
-        mwbsd['sha'] = self.sha
-        mwbsd['lder'] = dbdata['special_value']
-
         tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
         cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
         cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
@@ -459,11 +452,9 @@ class WebEC(object):
 
     def make_twoadic_data(self):
         self.twoadicdata = twoadicdata = db.ec_2adic.lucky({'label': self.label})
-        twoadicdata['index'] = twoadicdata['2adic_index']
-        twoadicdata['log_level'] = twoadicdata['2adic_log_level']
         from sage.matrix.all import Matrix
-        twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['2adic_gens']])
-        twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['2adic_label'], ".html"])
+        twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
+        twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
         iw = self.iw = {}
@@ -522,23 +513,22 @@ class WebEC(object):
 
         # find all base changes of this curve in the database, if any:
         bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
-        print(bcs)
         # extract the fields from the labels of the base-change curves:
         bc_fields = [lab.split("-")[0] for lab in bcs]
-        print(bc_fields)
         bc_pols = [db.nf_fields.lucky({'label': lab}, projection='coeffs') for lab in bc_fields]
-        print(bc_pols)
-
+        tg['fields_missing'] = False
+        
         for tgdata in tgdata:
             tg1 = {}
             tg1['bc'] = "Not in database"
             tg1['d'] = tgdata['degree']
             F = tgdata['field']
             tg1['f'] = formatfield(F)
+            if "missing" in tg1['f']:
+                tg['fields_missing'] = True
             T = tgdata['torsion']
             tg1['t'] = r'\(' + r' \times '.join([r'\Z/{}\Z'.format(n) for n in T]) + r'\)'
             bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
-            print(F, bcc)
             if bcc:
                    from lmfdb.ecnf.main import split_full_label
                    F, NN, I, C = split_full_label(bcc)

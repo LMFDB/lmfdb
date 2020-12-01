@@ -20,6 +20,9 @@ text-align: center;
 <th>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
+{% if info.cm %}
+<th>{{ KNOWL('ec.complex_multiplication', title='CM discriminant') }}</th>
+{% endif %}
 </tr>
 {% for c in info.curves %}
 {% if c.optimal %}
@@ -40,6 +43,9 @@ text-align: center;
 {% else %}
 <td>&nbsp;</td>
 {% endif %}
+{% if info.cm %}
+<td>{{c.cm}}</td>
+{% endif %}
 </tr>
 {% endfor %}
 </table>
@@ -58,6 +64,12 @@ curve {{info.optimal_label}}.{% endif %}
 {% endif %}
 {{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>
+
+<h2>{{KNOWL('ec.complex_multiplication', title='Complex multiplication')}}</h2>
+{% if info.cm %}
+Each elliptic curve in class {{info.class_label}} has complex multiplication by an order in the imaginary quadratic field {{info.CMfield }}.
+{% else %} The elliptic curves in class {{info.class_label}} do not have complex multiplication.
+{% endif %}
 
 <h2>
 {{KNOWL('ec.q.modular_form', title='Modular form')}}

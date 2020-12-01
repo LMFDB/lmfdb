@@ -6,7 +6,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label,
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, matrix, PowerSeriesRing, QQ
+from sage.all import latex, matrix, PowerSeriesRing, QQ, ZZ
 
 class ECisog_class(object):
     """
@@ -131,8 +131,8 @@ class ECisog_class(object):
 
         if self.cm:
             # set CM field for Properties box.
-            D = (self.cm).squarefree_part()
-            coeffs = [(1-D)//4,1,1] if D%4==1 else [-D,0,1]
+            D = ZZ(self.cm).squarefree_part()
+            coeffs = [(1-D)//4,-1,1] if D%4==1 else [-D,0,1]
             lab = db.nf_fields.lucky({'coeffs': coeffs}, projection='label')
             self.CMfield = field_pretty(lab)
         else:

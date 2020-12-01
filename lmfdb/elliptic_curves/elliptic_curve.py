@@ -212,9 +212,12 @@ class ECstats(StatsDisplay):
 
     @cached_method
     def isogeny_degrees(self):
-        cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curvedata, UNNEST(isogeny_degreed) as elements"))
-        return cur.fetchone()[0]
-
+        # cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_curvedata, UNNEST(isogeny_degreed) as elements"))
+        # return cur.fetchone()[0]
+        #
+        # It's a theorem that the complete set of possible degrees is this:
+        return list(range(1,20)) + [21,25,27,37,43,67,163]
+        
 # NB the contex processor wants something callable and the summary is a *property*
 
 @app.context_processor
@@ -378,13 +381,13 @@ def elliptic_curve_search(info, query):
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     # The button which used to be labelled Optimal only no/yes"
-    # (default no) has been renamed "Curves per isogeny class all/one"
-    # (default one) but the only change in behavious is that we no
-    # longer treat class 990h (where the optial curve is #3 not #1) as
-    # special: the "one" option just restricts to curves whose
-    # 'number' is 1.
+    # (default: no) has been renamed "Curves per isogeny class
+    # all/one" (default: all).  When this option is "one" we only list
+    # one curve in each class, currently choosing the curve with
+    # minimal Faltings heights, which is conjecturally the
+    # Gamma_1(N)-optimal curve.
     if 'optimal' in info and info['optimal'] == 'on':
-        query.update({'number':1})
+        query.update({'faltings_index':0})
 
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
