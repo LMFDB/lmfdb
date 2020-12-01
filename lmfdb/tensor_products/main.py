@@ -135,7 +135,7 @@ def zeros(L):
 def galois_rep_from_path(p):
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        ainvs = db.ec_curves.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
+        ainvs = db.ec_curvedata.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 

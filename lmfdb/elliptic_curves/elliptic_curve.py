@@ -135,7 +135,7 @@ def interesting():
 
 @ec_page.route("/random")
 def random_curve():
-    label = db.ec_curves.random()['lmfdb_label']
+    label = db.ec_curvedata.random()['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
     return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
@@ -144,7 +144,7 @@ def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    label = db.ec_curves.lucky({'number': 1}, offset = n)
+    label = db.ec_curvedata.lucky({'number': 1}, offset = n)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
 

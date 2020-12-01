@@ -14,7 +14,7 @@ def isogeny_class_table(Nmin, Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    res = db.ec_curves.search(query, 'lmfdb_iso')
+    res = db.ec_curvedata.search(query, 'lmfdb_iso')
     iso_list = [iso.split('.') for iso in res]
 
     return iso_list
@@ -34,7 +34,7 @@ def genus2_isogeny_class_table(Nmin, Nmax):
     return iso_list
 
 def isogeny_class_cm(label):
-    return db.ec_curves.lucky({'lmfdb_iso':label}, projection='cm')
+    return db.ec_curvedata.lucky({'lmfdb_iso':label}, projection='cm')
 
 def EC_from_modform(level, iso):
     ''' The inverse to modform_from_EC
@@ -49,7 +49,7 @@ def EC_from_modform(level, iso):
 #     with given label.
 #    '''
 #    if field_label == "1.1.1.1":
-#        return db.ec_curves.count({'lmfdb_iso':long_isogeny_class_label})
+#        return db.ec_curvedata.count({'lmfdb_iso':long_isogeny_class_label})
 #    else:
 #        return db.ec_nfcurves.count({'class_label':field_label + "." + long_isogeny_class_label})
 #

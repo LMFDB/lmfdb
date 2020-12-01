@@ -34,7 +34,7 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 label = ".".join([N,iso])
-            data = db.ec_curves.lucky({"lmfdb_iso" : label, 'number':1})
+            data = db.ec_curvedata.lucky({"lmfdb_iso" : label, 'number':1})
             data['label_type'] = 'LMFDB'
             data['iso_label'] = iso
             data['class_label'] = label
