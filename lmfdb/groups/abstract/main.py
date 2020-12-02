@@ -132,7 +132,7 @@ def index():
 @abstract_page.route("/random")
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
-    return redirect(url_for(".by_label", label=label))
+    return redirect(url_for(".by_label", label=label), 307)
 
 
 
