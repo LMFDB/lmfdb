@@ -15,7 +15,7 @@ try:
     from sage.all import ceil
     try:
         from sage.rings.complex_mpfr import ComplexNumber
-    except ModuleNotFoundError:
+    except ImportError:
         from sage.rings.complex_number import ComplexNumber
     from sage.rings.complex_field import ComplexField
     from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
