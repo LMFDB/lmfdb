@@ -78,7 +78,7 @@ def rep_galois_modl_render_webpage():
 @rep_galois_modl_page.route("/random")
 def random_rep_galois_modl():
     label = db.modlgal_reps.random()
-    return redirect(url_for(".render_rep_galois_modl_webpage", label=label))
+    return redirect(url_for(".render_rep_galois_modl_webpage", label=label), 307)
 
 
 rep_galois_modl_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')

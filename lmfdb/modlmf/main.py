@@ -79,7 +79,7 @@ def modlmf_render_webpage():
 @modlmf_page.route("/random")
 def random_modlmf():
     label = db.modlmf_forms.random()
-    return redirect(url_for(".render_modlmf_webpage", label=label))
+    return redirect(url_for(".render_modlmf_webpage", label=label), 307)
 
 modlmf_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 

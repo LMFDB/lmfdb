@@ -58,7 +58,7 @@ def hecke_algebras_render_webpage():
 @hecke_algebras_page.route("/random")
 def random_hecke_algebra():
     label = db.hecke_algebras.random()
-    return redirect(url_for(".render_hecke_algebras_webpage", label=label))
+    return redirect(url_for(".render_hecke_algebras_webpage", label=label), 307)
 
 
 

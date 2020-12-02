@@ -60,7 +60,7 @@ def l_function_history():
 def random_l_function():
     url = db.lfunc_instances.random(projection="url")
     if url:
-        return redirect("/L/"+url, 302)
+        return redirect("/L/"+url, 307)
     else:
         return random_l_function()
 

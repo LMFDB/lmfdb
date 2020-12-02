@@ -53,7 +53,7 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    return hilbert_modular_form_by_label(db.hmf_forms.random())
+    return redirect(url_for_label(db.hmf_forms.random()), 307)
 
 @hmf_page.route("/interesting")
 def interesting():

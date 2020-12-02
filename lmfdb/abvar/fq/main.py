@@ -709,7 +709,7 @@ def by_label(label):
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
+    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso), 307)
 
 @abvarfq_page.route("/interesting")
 def interesting():

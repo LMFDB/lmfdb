@@ -50,4 +50,4 @@ def random_url():
 @app.route("/random")
 def go_random():
     url = random_url()
-    return redirect(url)
+    return redirect(url, 307)
