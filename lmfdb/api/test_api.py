@@ -49,7 +49,7 @@ class ApiTest(LmfdbTest):
                 ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
-            assert ("jinv: -65626385453056/656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
+            assert ("jinv:\n  - -65626385453056\n  - 656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
             assert not "Error:" in data
 
     def test_api_examples_json(self):
@@ -76,4 +76,4 @@ class ApiTest(LmfdbTest):
                 assert '"name": "E(8)=2[x]2[x]2"' in data
             if '11a1' in query:
                 assert '"lmfdb_label": "11.a2"' in data
-                assert '"jinv": "-122023936/161051"' in data
+                assert '"jinv": [\n        -122023936,\n        161051\n      ]' in data
