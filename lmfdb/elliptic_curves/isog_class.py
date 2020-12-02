@@ -6,7 +6,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label,
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, matrix, PowerSeriesRing, QQ, ZZ
+from sage.all import latex, PowerSeriesRing, QQ, ZZ
 
 class ECisog_class(object):
     """
@@ -101,18 +101,19 @@ class ECisog_class(object):
             c['short_label'] = "{}{}".format(c_iso,c_number)
             
         from sage.matrix.all import Matrix
+        M = classdata['isogeny_matrix']
         if self.label_type == 'Cremona':
             # permute rows/cols
             perm = lambda i: next(c for c in self.curves if c['number']==i+1)['lmfdb_number']-1
-            self.isogeny_matrix = [[classdata['isogeny_matrix'][perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
+            M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
-        self.isogeny_matrix = Matrix(self.isogeny_matrix)
+        M = Matrix(M)
 
-        self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
+        self.isogeny_matrix_str = latex(M)
 
         # Create isogeny graph with appropriate vertex labels:
         
-        self.graph = make_graph(self.isogeny_matrix, [c['short_label'] for c in self.curves])
+        self.graph = make_graph(M, [c['short_label'] for c in self.curves])
         P = self.graph.plot(edge_labels=True, vertex_size=1000)
         self.graph_img = encode_plot(P)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img

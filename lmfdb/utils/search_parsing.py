@@ -339,6 +339,14 @@ def parse_rational(inp, query, qfield):
     else:
         raise SearchParsingError("It needs to be a rational number.")
 
+@search_parser(clean_info=True, prep_plus=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_rational_to_list(inp, query, qfield):
+    if QQ_RE.match(inp):
+        qinp = QQ(inp)
+        query[qfield] = [qinp.numerator(), qinp.denominator()]
+    else:
+        raise SearchParsingError("It needs to be a rational number.")
+
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):

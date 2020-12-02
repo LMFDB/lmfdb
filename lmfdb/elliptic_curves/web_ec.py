@@ -9,7 +9,7 @@ from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, RR, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -83,8 +83,8 @@ def make_y_coords(ainvs,x):
     a1, a2, a3, a4, a6 = ainvs
     f = ((x + a2) * x + a4) * x + a6
     b = (a1*x + a3)
-    d = (RR(b*b + 4*f)).sqrt()
-    y = ZZ((-b+d)/2)
+    d = ZZ(b*b + 4*f).isqrt()
+    y = (-b+d)//2
     return [y, -b-y] if d else [y]
 
 def pm_pt(P):
@@ -108,14 +108,14 @@ def count_integral_points(c):
 
 def latex_equation(ainvs):
     a1,a2,a3,a4,a6 = [int(a) for a in ainvs]
-    return ''.join(['\(y^2',
+    return ''.join([r'\(y^2',
                     '+xy' if a1 else '',
                     '+y' if a3 else '',
                     '=x^3',
                     '+x^2' if a2==1 else '-x^2' if a2==-1 else '',
                     '{:+}x'.format(a4) if abs(a4)>1 else '+x' if a4==1 else '-x' if a4==-1 else '',
                     '{:+}'.format(a6) if a6 else '',
-                    '\)'])
+                    r'\)'])
 
 
 class WebEC(object):
@@ -211,13 +211,12 @@ class WebEC(object):
 
         # coefficients of modular form / L-series:
 
-        classdata = db.ec_classdata.lucky({'iso': self.iso})
+        classdata = db.ec_classdata.lookup(self.iso)
         data['an'] = classdata['anlist']
         data['ap'] = classdata['aplist']
         
         # mod-p Galois images:
         
-        data['non_maximal_primes'] = self.nonmax_primes
         data['galois_data'] = list(db.ec_galrep.search({'label': self.label}))
         for gd in data['galois_data']: # remove the prime prefix from each image code
             gd['image'] = trim_galois_image_code(gd['image'])
@@ -228,7 +227,7 @@ class WebEC(object):
         data['CM'] = "no"
         data['EndE'] = r"\(\Z\)"
         if self.cm:
-            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_maximal_primes]
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.nonmax_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
@@ -250,7 +249,6 @@ class WebEC(object):
         
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_deg  = classdata['class_deg']
-        self.class_size = classdata['class_size']
         self.one_deg = ZZ(self.class_deg).is_prime()
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
@@ -405,7 +403,7 @@ class WebEC(object):
                            ('%s' % num,' ')]
 
     def make_mwbsd(self):
-        mwbsd = self.mwbsd = db.ec_mwbsd.lucky({'label': self.label})
+        mwbsd = self.mwbsd = db.ec_mwbsd.lookup(self.label)
 
         # Some components are in the main table:
         
@@ -451,15 +449,16 @@ class WebEC(object):
         mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
 
     def make_twoadic_data(self):
-        self.twoadicdata = twoadicdata = db.ec_2adic.lucky({'label': self.label})
-        from sage.matrix.all import Matrix
-        twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
-        twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
+        if not self.cm:
+            self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.label)
+            from sage.matrix.all import Matrix
+            twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
+            twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
         iw = self.iw = {}
-        iwasawadata = db.ec_iwasawa.lucky({'label': self.label})
-        if not iwasawadata: # For curves with no Iwasawa data
+        iwasawadata = db.ec_iwasawa.lookup(self.label)
+        if not 'iwp0' in iwasawadata: # For curves with no Iwasawa data
             return
 
         iw['p0'] = iwasawadata['iwp0'] # could be None
@@ -502,7 +501,7 @@ class WebEC(object):
 
     def make_torsion_growth(self):
         # The torsion growth table has one row per extension field
-        tgdata = db.ec_torsion_growth.search({'label': self.label})
+        tgdata = list(db.ec_torsion_growth.search({'label': self.label}))
         if not tgdata: # we only have torsion growth data for some range of conductors
             self.torsion_growth_data_exists = False
             return
@@ -515,18 +514,18 @@ class WebEC(object):
         bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
         # extract the fields from the labels of the base-change curves:
         bc_fields = [lab.split("-")[0] for lab in bcs]
-        bc_pols = [db.nf_fields.lucky({'label': lab}, projection='coeffs') for lab in bc_fields]
+        bc_pols = [db.nf_fields.lookup(lab, projection='coeffs') for lab in bc_fields]
         tg['fields_missing'] = False
         
-        for tgdata in tgdata:
+        for tgd in tgdata:
             tg1 = {}
-            tg1['bc'] = "Not in database"
-            tg1['d'] = tgdata['degree']
-            F = tgdata['field']
+            tg1['bc_label'] = "Not in database"
+            tg1['d'] = tgd['degree']
+            F = tgd['field']
             tg1['f'] = formatfield(F)
             if "missing" in tg1['f']:
                 tg['fields_missing'] = True
-            T = tgdata['torsion']
+            T = tgd['torsion']
             tg1['t'] = r'\(' + r' \times '.join([r'\Z/{}\Z'.format(n) for n in T]) + r'\)'
             bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:

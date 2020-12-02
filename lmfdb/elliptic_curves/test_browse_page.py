@@ -58,7 +58,7 @@ class HomePageTest(LmfdbTest):
         Check that the link to a specific curve works.
         """
         self.check_args("/EllipticCurve/Q/?jump=11.a2",
-                        r'\( y^2 + y = x^{3} -  x^{2} - 10 x - 20  \)')
+                        r'\(y^2+y=x^3-x^2-10x-20\)')
         self.check_args("/EllipticCurve/Q/?jump=389.a",
                         'Elliptic curves in class 389.a')
         self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", '\\(\\Z^2\\)')
@@ -85,4 +85,4 @@ class HomePageTest(LmfdbTest):
                         '[1, -1, 0, -1575, 751869]')
 
         self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
-                        '990h1')
+                        '990h3')

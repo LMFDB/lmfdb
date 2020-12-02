@@ -15,7 +15,7 @@ from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl,
-    parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
+    parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
     StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap)
 from lmfdb.utils.interesting import interesting_knowls
@@ -24,7 +24,6 @@ from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
-from psycopg2.sql import SQL
 q = ZZ['x'].gen()
 the_ECstats = None
 
@@ -135,7 +134,7 @@ def interesting():
 
 @ec_page.route("/random")
 def random_curve():
-    label = db.ec_curvedata.random()['lmfdb_label']
+    label = db.ec_curvedata.random(projection = 'lmfdb_label')
     cond, iso, num = split_lmfdb_label(label)
     return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
@@ -355,7 +354,7 @@ def url_for_label(label):
              credit=ec_credit)
 
 def elliptic_curve_search(info, query):
-    parse_rational(info,query,'jinv','j-invariant')
+    parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
