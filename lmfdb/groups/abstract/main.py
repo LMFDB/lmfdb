@@ -2,7 +2,7 @@
 
 import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect, Markup #, send_file, abort
+from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
