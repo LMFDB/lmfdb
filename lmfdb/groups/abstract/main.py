@@ -132,7 +132,7 @@ def index():
 @abstract_page.route("/random")
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
-    response = make_reponse(redirect(url_for(".by_label", label=label), 307))
+    response = make_response(redirect(url_for(".by_label", label=label), 307))
     response.headers['Cache-Control'] = 'no-cache, no-store'
     return response
 
