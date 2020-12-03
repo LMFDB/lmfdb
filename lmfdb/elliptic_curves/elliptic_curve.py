@@ -21,7 +21,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 q = ZZ['x'].gen()
@@ -56,10 +56,6 @@ def get_stats():
     if the_ECstats is None:
         the_ECstats = ECstats()
     return the_ECstats
-
-def latex_sha(sha_order):
-    sha_order_sqrt = Integer(sha_order).sqrt()
-    return "$%s^2$" % sha_order_sqrt
 
 #########################
 #    Top level
@@ -360,8 +356,11 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_ints(info,query,'num_int_pts','num_int_pts')
+    parse_ints(info,query,'class_size','class_size')
+    parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
     parse_bool(info,query,'semistable','semistable')
+    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
     # speed up slow torsion_structure searches by also setting torsion
     #if 'torsion_structure' in query and not 'torsion' in query:
@@ -379,6 +378,8 @@ def elliptic_curve_search(info, query):
                  qfield='nonmax_primes',mode=info.get('surj_quantifier'), radical='nonmax_rad')
     parse_primes(info, query, 'bad_primes', name='bad primes',
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
+    parse_primes(info, query, 'sha_primes', name='sha primes',
+                 qfield='sha_primes',mode=info.get('sha_quantifier'))
     # The button which used to be labelled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
@@ -761,6 +762,16 @@ class ECSearchArray(SearchArray):
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
+        class_size = TextBox(
+            name="class_size",
+            label="Isogeny class size",
+            knowl="ec.isogeny",
+            example="4")
+        class_deg = TextBox(
+            name="class_deg",
+            label="Isogeny class degree",
+            knowl="ec.isogeny",
+            example="16")
         num_int_pts = TextBox(
             name="num_int_pts",
             label="Number of %s" % display_knowl("ec.q.integral_points", "integral points"),
@@ -791,7 +802,8 @@ class ECSearchArray(SearchArray):
             name="optimal",
             label="Curves per isogeny class",
             knowl="ec.isogeny_class",
-            options=[("", ""),
+            example="all, one",
+            options=[("", "all"),
                      ("on", "one")])
         surj_quant = SubsetNoExcludeBox(
             name="surj_quantifier")
@@ -810,6 +822,14 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
+        sha_quant = SubsetBox(
+            name="sha_quantifier")
+        sha_primes = TextBoxWithSelect(
+            name="sha_primes",
+            label="primes dividing |&#1064;|",
+            knowl="ec.analytic_sha_order",
+            example="3,5",
+            select_box=sha_quant)
         regulator = TextBox(
             name="regulator",
             label="Regulator",
@@ -820,6 +840,11 @@ class ECSearchArray(SearchArray):
             label="Semistable",
             example="Yes",
             knowl="ec.semistable")
+        potentially_good = YesNoBox(
+            name="potential_good_reduction",
+            label="Potential good reduction",
+            example="Yes",
+            knowl="ec.potential_good_reduction")
         cm_opts = [('', ''), ('-3', '-3'), ('-4', '-4'), ('-7', '-7'), ('-8', '-8'), ('-11', '-11'), ('-12', '-12'),
                         ('-16', '-16'), ('-19', '-19'), ('-27', '-27'), ('-28', '-28'), ('-43', '-43'), ('-67', '-67'),
                         ('-163', '-163'), ('-3,-12,-27', '-3,-12,-27'), ('-4,-16', '-4,-16'), ('-7,-28', '-7,-28')]
@@ -838,16 +863,18 @@ class ECSearchArray(SearchArray):
             [rank, regulator],
             [torsion, torsion_struct],
             [cm_disc, cm],
-            [sha, optimal],
+            [sha, sha_primes],
             [surj_primes, nonsurj_primes],
             [isodeg, bad_primes],
-            [num_int_pts, semistable],
+            [class_size, num_int_pts],
+            [class_deg, semistable],
+            [optimal, potentially_good],
             [count]
             ]
 
         self.refine_array = [
             [cond, jinv, rank, torsion, torsion_struct],
-            [sha, isodeg, surj_primes, nonsurj_primes, bad_primes],
+            [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
             [num_int_pts, regulator, cm, cm_disc, semistable],
-            [optimal]
+            [optimal, isodeg, class_size, class_deg, potentially_good]
             ]

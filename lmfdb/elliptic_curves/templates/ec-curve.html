@@ -260,6 +260,9 @@ white-space: pre in order to keep line breaks! #}
         <tr>
         <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
         <td>\({{data.mwbsd.sha }}\)
+	  {% if data.mwbsd.sha > 1 %}
+	  = {{data.mwbsd.sha2}}
+          {% endif %}
           {% if data.rank > 1 %}
           ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
           {% else %}

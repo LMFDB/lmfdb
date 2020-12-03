@@ -95,6 +95,10 @@ def count_integral_points(c):
     xcoords = c['xcoord_integral_points']
     return sum([len(make_y_coords(ainvs,x)) for x in xcoords])
 
+def latex_sha(sha_order):
+    sha_order_sqrt = ZZ(sha_order).sqrt()
+    return "$%s^2$" % sha_order_sqrt
+
 # Custom function to make a latex 'equation' string from a-invariants
 #
 # assume that [a1,a2,a3] are one of the 12 reduced triples with a1,a3
@@ -411,6 +415,7 @@ class WebEC(object):
         mwbsd['torsion'] = self.torsion
         mwbsd['reg'] = self.regulator
         mwbsd['sha'] = self.sha
+        mwbsd['sha2'] = latex_sha(self.sha)
 
         # Integral points
 
