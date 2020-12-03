@@ -757,7 +757,7 @@ class ECSearchArray(SearchArray):
             knowl="ec.maximal_galois_rep",
             example="2,3")
         isodeg = TextBox(
-            name="isodeg",
+            name="isogeny_degrees",
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")

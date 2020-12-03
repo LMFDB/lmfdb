@@ -85,3 +85,6 @@ class HomePageTest(LmfdbTest):
                         '[1, -1, 0, -1575, 751869]')
         self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
                         '990h3')
+        L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
+        assert '[0, 0, 1, -849658625, 9532675710156]' in  L.get_data(as_text=True)
+        assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)
