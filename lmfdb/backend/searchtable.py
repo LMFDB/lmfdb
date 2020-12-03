@@ -121,6 +121,9 @@ class PostgresSearchTable(PostgresTable):
         It is called from `_parse_special` and `_parse_dict`; see the documentation
         of those functions for inputs.
         """
+        if col_type == "smallint[]" and key in ["$contains", "$containedin"]:
+            # smallint[] requires a typecast to test containment
+            return "::int[]"
         if col_type.endswith("[]") and key in ["$eq", "$ne", "$contains", "$containedin"]:
             if isinstance(col, Identifier):
                 return "::" + col_type
