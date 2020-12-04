@@ -98,7 +98,7 @@ class WebCharObject(object):
         d = int(x.denom())
         n = int(x.numer())  % d
         if d == 1:
-            return '1'
+            s = '1'
         elif n == 1 and d == 2:
             s = "-1"
         elif n == 1 and d == 4:
@@ -203,7 +203,7 @@ class WebDirichlet(WebCharObject):
         if n > self.maxcols:
           self.coltruncate = True
 
-        return res
+        return [-1] + res
 
     @staticmethod
     def nextchar(m, n, onlyprimitive=False):
@@ -418,7 +418,7 @@ class WebChar(WebCharObject):
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def __init__(self, **args):
-        self.maxcols = 30
+        self.maxcols = 10
         self.coltruncate = False
         WebCharObject.__init__(self, **args)
 

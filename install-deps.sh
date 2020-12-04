@@ -67,7 +67,7 @@ then
     echo "SAGE_ROOT is" $SAGE_ROOT
     echo "SAGEVERSION is" $SAGEVERSION
 fi
-# Cut of any beta etc...
+# Cut off any beta etc...
 if [[ "$SAGEVERSION" =~ 'beta' ]]
 then
     TMP=${SAGEVERSION:i:-1}

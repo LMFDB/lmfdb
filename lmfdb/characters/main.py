@@ -309,7 +309,7 @@ def extent_page():
 
 def make_webchar(args):
     modulus = int(args['modulus'])
-    if modulus < 10000:
+    if modulus <= 10000:
         return WebDBDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
