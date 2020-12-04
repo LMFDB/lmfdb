@@ -169,20 +169,40 @@ class WebAbstractGroup(WebObj):
         #return [sub for sub in self.subgroups.values() if sub.normal and sub.split and not sub.direct]
         subs = self.subgroups.values()
         semis = []
+        pairs = []
         for sub in subs:
             if sub.normal and sub.split and not sub.direct:
+                pair = [sub.subgroup, sub.quotient]
+                # check if the subgroup and quotient have already appeared
                 new = True
-                for el in semis:
-                    if sub.subgroup == el.subgroup:
+                for el in pairs:
+                    if pair == el:
                         new = False
                 if new:
                     semis.append(sub)
+                    pairs.append(pair)
         return semis
 
     @lazy_attribute
     def nonsplit_products(self):
         # Need to pick an ordering
-        return [sub for sub in self.subgroups.values() if sub.normal and not sub.split]
+        #return list(set([sub for sub in self.subgroups.values() if sub.normal and not sub.split])) # eliminate redundancies
+        subs = self.subgroups.values()
+        nonsplit = []
+        pairs = []
+        for sub in subs:
+            if sub.normal and not sub.split:
+                pair = [sub.subgroup, sub.quotient]
+                # check if the subgroup and quotient have already appeared
+                new = True
+                for el in pairs:
+                    if pair == el:
+                        new = False
+                if new:
+                    nonsplit.append(sub)
+                    pairs.append(pair)
+        return nonsplit
+
 
     @lazy_attribute
     def subgroup_layers(self):

@@ -1,72 +1,18 @@
-{% extends 'homepage.html' %}
-{% block content %}
+{% extends 'character_refine_search.html' %}
+{% block show_results %}
 
-<h2>Refine search</h2>
-
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-{% include 'hidden_search_inputs.html' %}
-
-{# the front page doesn't have a way to control number of characters
-<input type='hidden' name='limit' value="{{args.limit}}"> #}
-<table border="0">
-<tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='modulus' placeholder="13" style="width:160px;" value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor' placeholder="5" style="width:160px;" value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order' placeholder="2" style="width:160px;" value="{{args.order}}"></td>
-<td align=left>
-<select name='parity' style="width:170px;">
-      <option value="">all</option>
-      <option value="even" {{ "selected" if args.parity == 'even'}}>even</option>
-      <option value="odd" {{ "selected" if args.parity == 'odd'}}>odd</option>
-</select>
-</td>
-<td align=left>
-<select name='primitive' style="width:170px;">
-      <option value="">all</option>
-      <option value="yes" {{ "selected" if args.primitive == 'yes'}}>yes</option>
-      <option value="no" {{ "selected" if args.primitive == 'no'}}>no</option>
-</select>
-</td>
-</tr>
-<tr>
-<td class="button"><button type='submit' width="170" style="width: 170px" onclick='resetStart()'>Search again</button>
-</td> </tr>
-</table>
-
-</form>
-
-{% if not err %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <style type="text/css">
-table td.center {
-  text-align: center;
-}
+    table td.center {
+        text-align: center;
+        padding : 4px;
+    }
 table td.params {
-  text-align: left;
-  font-family: monospace;
+    text-align: left;
+    font-family: monospace;
 }
-
 </style>
-
-{% if info.chars|count > 0 %}
-
-<h2> Results ({{info.report}})&nbsp;
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
-
 <table class=ntdata>
 <thead>
 <tr>
@@ -79,44 +25,28 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
 </thead>
-
-{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
+{% for char in info.results: %}
 <tr>
-<td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
-<td class="center">{{orbit_label}}</a></td>
-<td class="center">{{mod}}</td>
-<td class="center">{{cond}}</td>
-<td class="center">{{order}}</td>
-<td class="center">{{par}}</td>
-<td class="center">{{'&#x2713;'|safe if prim}}</td>
+<td class="center">
+  {% set n = char.galois_orbit | length %}
+  {% if n <= 5 %}
+    {% for num in char.galois_orbit %}<a href="{{char.modulus}}/{{num}}">\(\chi_{ {{char.modulus}} }({{num}}, \cdot)\)</a>{% endfor %}
+  {% else %}
+    <a href="{{char.modulus}}/{{char.galois_orbit[0]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[0]}}, \cdot)\)</a>
+    &nbsp;$\vdots$&nbsp;
+    <a href="{{char.modulus}}/{{char.galois_orbit[n-1]}}">\(\chi_{ {{char.modulus}} }({{char.galois_orbit[n-1]}}, \cdot)\)</a>
+  {% endif %}
+</td>
+<td class="center">{{char.label}}</a></td>
+<td class="center">${{char.modulus}}$</td>
+<td class="center">${{char.conductor}}$</td>
+<td class="center">${{char.order}}$</td>
+<td class="center">{{ 'even' if char.parity == 1 else 'odd' }}</td>
+<td class="center">{{'&#x2713;'|safe if char.is_primitive}}</td>
 </tr>
 {% endfor %}
 </table>
-
-<br>
-
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-
-{#
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="hidden" name="download" value="1"/>
-</form>
-#}
-
-{% else %}
-<h2> No matches found</h2>
-{% endif %}
-
+{% include 'forward_back.html' %}
 {% endif %}
 
 {% endblock %}

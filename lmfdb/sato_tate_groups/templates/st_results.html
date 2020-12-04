@@ -24,16 +24,16 @@
 {% for group in info.results: %}
 <tr>
     <td> <a href = "{{info.stgroup_url(group)}}"> {{group.label}} </a> </td>
-    <td align=right> {{group.weight}} </td>
-    <td align=right> {{group.degree}} </td>
-    <td align=right> {{group.real_dimension}} </td>
+    <td align=right> ${{group.weight}}$ </td>
+    <td align=right> ${{group.degree}}$ </td>
+    <td align=right> ${{group.real_dimension}}$ </td>
     <td> ${{group.identity_component}}$ </td>
     <td> ${{group.pretty}}$ </td>
     <td> ${{group.component_group}}$ </td>
-    <td align=right> {{group.components}} </td>
-    <td align=center> {{group.trace_zero_density}} </td>
+    <td align=right> ${{group.components}}$ </td>
+    <td align=center> ${{group.trace_zero_density}}$ </td>
     {% for m in group.trace_moments %}
-        <td align=right>{{m}}</td>
+        <td align=right>${{m}}$</td>
     {% endfor %}
 </tr>
 {% endfor %}

@@ -16,10 +16,10 @@ via optional command-line arguments.
 from __future__ import print_function
 
 import argparse
-import sys
 import os
 import random
 import string
+import __main__
 
 from lmfdb.backend.config import Configuration as _Configuration
 
@@ -50,7 +50,7 @@ def get_secret_key():
 
 
 class Configuration(_Configuration):
-    def __init__(self, writeargstofile=False):
+    def __init__(self, writeargstofile=False, readargs=False):
         default_config_file = abs_path_lmfdb("config.ini")
 
         # 1: parsing command-line arguments
@@ -230,8 +230,11 @@ class Configuration(_Configuration):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        writeargstofile = writeargstofile or os.path.split(sys.argv[0])[-1] == "start-lmfdb.py"
-        _Configuration.__init__(self, parser, writeargstofile=writeargstofile)
+        # if start-lmfdb.py was executed
+        startlmfdbQ =  getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
+        writeargstofile = writeargstofile or startlmfdbQ
+        readargs = readargs or startlmfdbQ
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
         opts = self.options
         extopts = self.extra_options
@@ -287,4 +290,4 @@ class Configuration(_Configuration):
 
 
 if __name__ == "__main__":
-    Configuration(writeargstofile=True)
+    Configuration(writeargstofile=True, readargs=True)

@@ -2,7 +2,7 @@
 
 import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect, Markup #, send_file, abort
+from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
@@ -123,6 +123,7 @@ def index():
     info['count']= 50
     info['order_list']= ['1-10', '20-100', '101-200']
     info['nilp_list']= range(1,5)
+    info['maxgrp']= db.gps_groups.max('order')
 
     return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
@@ -131,7 +132,9 @@ def index():
 @abstract_page.route("/random")
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
-    return redirect(url_for(".by_label", label=label))
+    response = make_response(redirect(url_for(".by_label", label=label), 307))
+    response.headers['Cache-Control'] = 'no-cache, no-store'
+    return response
 
 
 

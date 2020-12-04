@@ -1,5 +1,5 @@
 {# requires info to contain number (number of results), count (max number of results possible), start (where to start in the list of results) and exact_count (boolean, indicating whether the count is exact) #}
-
+    
 {% if info.err is defined %}
 <h2>Error</h2>
 <div>
@@ -14,21 +14,33 @@
 {% if info.number == 0 %}
 <h2> No matches </h2>
 {% else %}
-<h2> Results ({% if info.number==1 -%}
-    unique match)
+<br>
+<div>
+  <h2 style="display: inline; color: #1565C0; font-weight: bold; font-family: sans-serif; text-decoration: none; font-size: 120%; text-align: left;">
+    Results {% if info.number==1 -%}
+    (unique match)
   {% elif info.number==2 -%}
-    displaying both matches)
+    (displaying both matches)
   {% elif info.number=='infinity' -%}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }})
+    (matches {{ info.start + 1 }}-{{ upper_count }})
   {% elif info.number <= info.count and info.start == 0 -%}
-    displaying all {{ info.number }} matches)
+    ({{ info.number }} matches)
   {% elif info.exact_count -%}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }})
+    ({{ info.start + 1 }}-{{ upper_count }} of {{ info.number }} matches)
   {% else -%}
-    displaying matches {{ info.start + 1 }}-{{ upper_count }} of
-    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>)
-  {% endif %}
-{% include 'forward_back.html' %}
-</h2>
+    {% if 'download_limit' in info %}
+      {% set download_limit = info.download_limit %}
+    {% else %}
+      {% set download_limit = 100000 %}
+    {% endif %}
+    ({{ info.start + 1 }}-{{ upper_count }} of
+    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results({{ download_limit }}); return false;">at least {{ info.number }}</a></span>)
+    {% endif %}
+  </h2>
+  {% include 'forward_back.html' %}
+  {% if 'Newform' in title or 'Newspace' in title or 'lattice' == body_class or 'local_fields' == body_class or 'belyi' == body_class or 'maass' == body_class or 'higher_genus_w_automorphisms' == body_class or 'nf' == body_class or 'abvarfq' == body_class or 'g2c' == body_class or 'ec' == body_class or 'ecnf'==body_class or 'hecke_algebras'==body_class or 'rep_galois_modl' == body_class or 'modlmf' == body_class %}
+{% include 'download_search_results.html' %}
+{% endif %}
+</div>  
 {% endif %}
 {% endif %}

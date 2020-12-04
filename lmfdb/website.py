@@ -91,6 +91,8 @@ from . import groups
 assert groups
 from .groups import abstract
 assert groups.abstract
+from . import cluster_pictures
+assert cluster_pictures
 from . import inventory_app
 assert inventory_app
 from . import groups
@@ -103,12 +105,13 @@ from .groups import glnC
 assert groups.glnC
 from . import maass_forms
 assert maass_forms
+from .homepage import random
+assert random
 
 
 from .lmfdb_database import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
-
 
 def main():
     info("main: ...done.")
@@ -118,7 +121,7 @@ def main():
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
-        from werkzeug.contrib.profiler import ProfilerMiddleware
+        from werkzeug.middleware.profiler import ProfilerMiddleware
 
         app.wsgi_app = ProfilerMiddleware(
             app.wsgi_app, restrictions=[30], sort_by=("cumulative", "time", "calls")

@@ -19,8 +19,8 @@
 </thead>
 {% for mf in info.results: %}
 <tr>
-    <td align=right> {{ mf.level }} </td>
-    <td align=center> {{ mf.weight }} </td>
+    <td align=right> ${{ mf.level }}$ </td>
+    <td align=center> ${{ mf.weight }}$ </td>
     <td align=center> {{ mf.character_link | safe }} </td>
     <td> {{ mf.spectral_link | safe }} </td>
     <td align=center> {{ mf.symmetry_pretty }} </td>

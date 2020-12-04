@@ -7,17 +7,17 @@
 <h2> Family Information</h2>
 
   <table>
-    <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
-     <tr><td>  {{KNOWL('ag.curve.genus',title='Quotient genus')}}:  </td><td> {{ info.g0 }} </td></tr>
+    <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> ${{ info.genus }}$ </td></tr>
+     <tr><td>  {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient genus')}}:  </td><td> ${{ info.g0 }}$ </td></tr>
    {% if info.specialname %}
    <tr><td>{{KNOWL('group.small_group_label',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-  <tr><td>{{KNOWL('group.small_group_label',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
+  <tr><td>{{KNOWL('group.small_group_label',title='Group identifier')}}:</td> <td>${{info.gpid}}$</td></tr>
   <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
   </table>
     {% if info.passport_cc %}
   <table>
-    <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
+    <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>${{info.passport_cc}}$</td></tr>
   </table> {% endif %}
 
 
@@ -29,7 +29,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 {% if info.jacobian_decomp %}
   <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} {{KNOWL('curve.highergenus.aut.groupalgebradecomp', title='group algebra decomposition')}}:</td><td>${{info.jacobian_decomp}}$</td></tr>
-    <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> {{info.corrChar}}</td></tr>
+    <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> ${{info.corrChar}}$</td></tr>
   </table>
  {% endif %}
 

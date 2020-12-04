@@ -16,6 +16,7 @@ from lmfdb.utils import (
     Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect, CountBox, SubsetBox,
     StatsDisplay, formatters)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
@@ -46,6 +47,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End tensored with QQ
+end_alg_list = [ 'Q', 'RM', 'CM', 'Q x Q', 'M_2(Q)']
+end_alg_dict = { x:x for x in end_alg_list }
+
 # End_QQbar tensored with QQ
 geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
 geom_end_alg_dict = { x:x for x in geom_end_alg_list }
@@ -59,6 +64,14 @@ aut_grp_dict = {
         '[8,3]':'D4',
         '[12,4]':'D6'
         }
+aut_grp_dict_pretty = {
+        '[2,1]':'$C_2$',
+        '[4,1]':'$C_4$',
+        '[4,2]':'$C_2^2$',
+        '[6,2]':'$C_6$',
+        '[8,3]':'$D_4$',
+        '[12,4]':'$D_6$'
+        }
 
 geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
 geom_aut_grp_dict = {
@@ -69,6 +82,14 @@ geom_aut_grp_dict = {
         '[12,4]':'D6',
         '[24,8]':'C3:D4',
         '[48,29]':'GL(2,3)'}
+geom_aut_grp_dict_pretty = {
+        '[2,1]':'$C_2$',
+        '[4,2]':'$C_2^2$',
+        '[8,3]':'$D_4$',
+        '[10,2]':'$C_{10}$',
+        '[12,4]':'$D_6$',
+        '[24,8]':'$C_3:D_4$',
+        '[48,29]':'$\GL(2,3)$'}
 
 ###############################################################################
 # Routing for top level and random_curve
@@ -84,6 +105,11 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
+def get_bread(tail=[]):
+    base = [('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
 
 @g2c_page.route("/")
 def index():
@@ -96,20 +122,36 @@ def index_Q():
         return genus2_curve_search(info)
     info['stats'] = G2C_stats()
     info["stats_url"] = url_for(".statistics")
-    info["curve_url"] = lambda label: url_for_curve_label(label)
-    curve_labels = ('169.a.169.1', '277.a.277.1', '1116.a.214272.1','1369.a.50653.1', '11664.a.11664.1', '563011.a.563011.1')
-    info["curve_list"] = [{'label': label, 'url': url_for_curve_label(label)} for label in curve_labels]
-    info["conductor_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
-    info["discriminant_list"] = ('1-499', '500-999', '1000-99999', '100000-1000000')
+    info["conductor_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
+    info["discriminant_list"] = ('1-499', '500-999', '1000-9999', '10000-99999', '100000-1000000')
     info["equation_search"] = has_magma()
     title = r'Genus 2 curves over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', ' '))
-    return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template(
+        "g2c_browse.html",
+        info=info,
+        credit=credit_string,
+        title=title,
+        learnmore=learnmore_list(),
+        bread=get_bread()
+    )
 
 @g2c_page.route("/Q/random/")
 def random_curve():
     label = db.g2c_curves.random()
     return redirect(url_for_curve_label(label), 307)
+
+@g2c_page.route("/Q/interesting")
+def interesting():
+    return interesting_knowls(
+        "g2c",
+        db.g2c_curves,
+        url_for_curve_label,
+        regex=re.compile(r"\d+\.[a-z]+\.\d+\.\d+"),
+        title="Some interesting genus 2 curves",
+        credit=credit_string,
+        bread=get_bread("Interesting"),
+        learnmore=learnmore_list()
+    )
 
 ###############################################################################
 # Curve and isogeny class pages
@@ -128,11 +170,10 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     if not db.g2c_curves.exists({'class':clabel}):
         return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
     data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
-    data['bread'] = [('Genus 2 curves', url_for(".index")),
-        (r'$\Q$', url_for(".index_Q")),
+    data['bread'] = get_bread([
         ('%s' % cond, url_for(".by_conductor", cond=cond)),
         ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha)),
-        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))]
+        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))])
     if len(request.args) > 0:
         # if conductor or discriminant changed, fall back to a general search
         if ('cond' in request.args and request.args['cond'] != str(cond)) or \
@@ -153,7 +194,7 @@ def by_url_isogeny_class_label(cond, alpha):
 def by_conductor(cond):
     data = to_dict(request.args, search_array=G2CSearchArray())
     data['title'] = 'Genus 2 curves of conductor %s' % cond
-    data['bread'] = [('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
+    data['bread'] = get_bread([('%s' % cond, url_for(".by_conductor", cond=cond))])
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
@@ -317,11 +358,7 @@ class G2C_download(Downloader):
         "equation_formatted": lambda v: min_eqn_pretty(literal_eval(v.pop("eqn"))),
         "st_group_link": lambda v: st_link_by_name(1, 4, v.pop("st_group")),
     },
-    bread=lambda: [
-        ("Genus 2 curves", url_for(".index")),
-        (r"$\Q$", url_for(".index_Q")),
-        ("Search results", "."),
-    ],
+    bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
     credit=lambda: credit_string,
     url_for_label=lambda label: url_for(".by_label", label=label),
@@ -364,7 +401,7 @@ def genus2_curve_search(info, query):
         query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
     if 'class' in info:
         query['class'] = info['class']
-    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
+    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'end_alg', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
     parse_primes(info, query, 'bad_primes', name='bad primes',qfield='bad_primes',mode=info.get('bad_quantifier'))
     info["curve_url"] = lambda label: url_for_curve_label(label)
@@ -409,17 +446,17 @@ class G2C_stats(StatsDisplay):
               'real_geom_end_alg': 'g2c.st_group_identity_component',
               'st_group': 'g2c.st_group',
               'torsion_order': 'g2c.torsion_order'}
-    row_titles = {'num_rat_pts': 'rational points',
-                  'num_rat_wpts': 'Weierstrass points',
-                 'aut_grp_id': 'automorphism group',
-                  'geom_aut_grp_id': 'automorphism group',
-                  'two_selmer_rank': '2-Selmer rank',
-                  'analytic_sha': 'analytic order of &#1064;',
-                  'has_square_sha': 'has square &#1064;',
-                  'is_gl2_type': 'is of GL2-type',
-                  'real_geom_end_alg': 'identity component',
-                  'st_group': 'Sato-Tate group',
-                  'torsion_order': 'torsion order'}
+    short_display = {'num_rat_pts': 'rational points',
+                     'num_rat_wpts': 'Weierstrass points',
+                     'aut_grp_id': 'automorphism group',
+                     'geom_aut_grp_id': 'automorphism group',
+                     'two_selmer_rank': '2-Selmer rank',
+                     'analytic_sha': 'analytic order of &#1064;',
+                     'has_square_sha': 'has square &#1064;',
+                     'is_gl2_type': 'is of GL2-type',
+                     'real_geom_end_alg': 'identity component',
+                     'st_group': 'Sato-Tate group',
+                     'torsion_order': 'torsion order'}
     top_titles = {'num_rat_pts': 'rational points',
                   'num_rat_wpts': 'rational Weierstrass points',
                   'aut_grp_id': r'$\mathrm{Aut}(X)$',
@@ -431,8 +468,8 @@ class G2C_stats(StatsDisplay):
                   'real_geom_end_alg': 'Sato-Tate group identity components',
                   'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
-    formatters = {'aut_grp_id': lambda x: aut_grp_dict[x],
-                  'geom_aut_grp_id': lambda x: geom_aut_grp_dict[x],
+    formatters = {'aut_grp_id': lambda x: aut_grp_dict_pretty[x],
+                  'geom_aut_grp_id': lambda x: geom_aut_grp_dict_pretty[x],
                   'has_square_sha': formatters.boolean,
                   'is_gl2_type': formatters.boolean,
                   'real_geom_end_alg': lambda x: "\\("+st0_group_name(x)+"\\)",
@@ -462,7 +499,7 @@ class G2C_stats(StatsDisplay):
 @g2c_page.route("/Q/stats")
 def statistics():
     title = r'Genus 2 curves over $\Q$: Statistics'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index_Q")), ('Statistics', ' '))
+    bread = get_bread("Statistics")
     return render_template("display_stats.html", info=G2C_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 
@@ -470,31 +507,30 @@ def statistics():
 @g2c_page.route("/Q/Completeness")
 def completeness_page():
     t = r'Completeness of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Completeness',''))
+    bread = get_bread("Completeness")
     return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Q/Source")
 def source_page():
     t = r'Source of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Source',''))
+    bread = get_bread("Source")
     return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Reliability")
 def reliability_page():
     t = r'Reliability of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), (r'$\Q$', url_for(".index")),('Reliability',''))
+    bread = get_bread("Reliability")
     return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Q/Labels")
 def labels_page():
     t = r'Labels for genus 2 curves over $\Q$'
-    bread = (('Genus 2 curves', url_for(".index")), ('$\\Q$', url_for(".index")),('Labels',''))
+    bread = get_bread("Labels")
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
-
 
 
 class G2CSearchArray(SearchArray):
@@ -503,7 +539,7 @@ class G2CSearchArray(SearchArray):
     def __init__(self):
         geometric_invariants_type = SelectBox(
             name="geometric_invariants_type",
-            width=115,
+            min_width=115,
             options=[("", "Igusa-Clebsh"), ("igusa_inv", "Igusa"), ("g2_inv", "G2")],
         )
 
@@ -517,6 +553,21 @@ class G2CSearchArray(SearchArray):
             colspan=(1, 4, 1),
             example_span="",
         )  # the last 1 is irrelevant
+
+        bad_quantifier = SubsetBox(
+            name="bad_quantifier",
+            min_width=115,
+        )
+
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            knowl="g2c.good_reduction",
+            label="Bad primes",
+            short_label=r"Bad \(p\)",
+            example="5,13",
+            example_span="2 or 2,3,5",
+            select_box=bad_quantifier,
+        )
 
         conductor = TextBox(
             name="cond",
@@ -589,20 +640,6 @@ class G2CSearchArray(SearchArray):
             example="1",
         )
 
-        bad_quantifier = SubsetBox(
-            name="bad_quantifier",
-        )
-
-        bad_primes = TextBoxWithSelect(
-            name="bad_primes",
-            knowl="g2c.good_reduction",
-            label="Bad primes",
-            short_label=r"Bad \(p\)",
-            example="5,13",
-            example_span="",
-            select_box=bad_quantifier,
-        )
-
         is_gl2_type = YesNoBox(
             name="is_gl2_type",
             knowl="g2c.gl2type",
@@ -613,7 +650,7 @@ class G2CSearchArray(SearchArray):
             name="st_group",
             knowl="g2c.st_group",
             label="Sato-Tate group",
-            short_label=r"\(\mathrm{ST}\)",
+            short_label=r"\(\mathrm{ST}(X)\)",
             options=([("", "")] + [(elt, st_group_dict[elt]) for elt in st_group_list]),
         )
 
@@ -621,13 +658,9 @@ class G2CSearchArray(SearchArray):
             name="real_geom_end_alg",
             knowl="g2c.st_group_identity_component",
             label="Sate-Tate identity component",
-            short_label=r"\(\mathrm{ST}^0\)",
+            short_label=r"\(\mathrm{ST}^0(X)\)",
             options=(
-                [("", "")]
-                + [
-                    (elt, real_geom_end_alg_to_ST0_dict[elt])
-                    for elt in real_geom_end_alg_list
-                ]
+                [("", "")] + [(elt, real_geom_end_alg_to_ST0_dict[elt]) for elt in real_geom_end_alg_list]
             ),
         )
 
@@ -645,8 +678,17 @@ class G2CSearchArray(SearchArray):
             label=r"\(\overline{\Q}\)-automorphism group",
             short_label=r"\(\mathrm{Aut}(X_{\overline{\Q}})\)",
             options=(
-                [("", "")]
-                + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+                [("", "")] + [(elt, geom_aut_grp_dict[elt]) for elt in geom_aut_grp_list]
+            ),
+        )
+
+        Q_endomorphism = SelectBox(
+            name="end_alg",
+            knowl="g2c.end_alg",
+            label=r"\(\Q\)-endomorphism algebra",
+            short_label=r"\(\Q\)-end algebra",
+            options=(
+                [("", "")] + [(elt, end_alg_dict[elt]) for elt in end_alg_list]
             ),
         )
 
@@ -656,8 +698,7 @@ class G2CSearchArray(SearchArray):
             label=r"\(\overline{\Q}\)-endomorphism algebra",
             short_label=r"\(\overline{\Q}\)-end algebra",
             options=(
-                [("", "")]
-                + [(elt, geom_end_alg_dict[elt]) for elt in geom_end_alg_list]
+                [("", "")] + [(elt, geom_end_alg_dict[elt]) for elt in geom_end_alg_list]
             ),
         )
 
@@ -685,16 +726,17 @@ class G2CSearchArray(SearchArray):
 
         self.browse_array = [
             [geometric_invariants],
+            [bad_primes, geometrically_simple],
             [conductor, is_gl2_type],
             [discriminant, st_group],
             [rational_points, st_group_identity_component],
             [rational_weirstrass_points, Q_automorphism],
             [torsion_order, geometric_automorphism],
-            [torsion_structure, geometric_endomorphism],
-            [two_selmer_rank, locally_solvable],
+            [torsion_structure, Q_endomorphism],
+            [two_selmer_rank, geometric_endomorphism],
             [analytic_sha, has_square_sha],
-            [analytic_rank, geometrically_simple],
-            [count, bad_primes],
+            [analytic_rank, locally_solvable],
+            [count],
         ]
 
         self.refine_array = [
@@ -713,7 +755,7 @@ class G2CSearchArray(SearchArray):
                 torsion_structure,
             ],
             [
-                is_gl2_type,
+                Q_endomorphism,
                 st_group,
                 Q_automorphism,
                 has_square_sha,
@@ -724,12 +766,15 @@ class G2CSearchArray(SearchArray):
                 st_group_identity_component,
                 geometric_automorphism,
                 locally_solvable,
+                is_gl2_type,
             ],
         ]
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
         info["jump_egspan"] = "e.g. 169.a.169.1 or 169.a or 1088.b"
+        info["jump_knowl"] = "g2c.search_input"
+        info["jump_prompt"] = "Label"
         if info.get("equation_search"):
             info["jump_egspan"] += " or x^5 + 1"
         return SearchArray.jump_box(self, info)

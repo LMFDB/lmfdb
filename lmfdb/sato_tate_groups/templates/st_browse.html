@@ -1,49 +1,37 @@
 {% extends "homepage.html" %}
 {% block content %}
+
 <div>
-{{ KNOWL_INC('st_group.summary') }}
+{{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse {{ KNOWL('st_group.definition', title='Sato-Tate groups') }}</h2>
+<h2> Browse </h2>
 
-<p>
-By {{ KNOWL('st_group.weight', title='weight') }}
-{% for r in info.weight_list %}
-    <a href="?weight={{r}}">{{r}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('st_group.degree', title='degree') }}
-{% for r in info.degree_list %}
-    <a href="?degree={{r}}">{{r}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('st_group.identity_component', title='identity component') }}
-{% for r in info.st0_list %}
-    &nbsp;<a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>
-{% endfor %}
-</p>
-<p>
-Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') }}
-{% for r in info.group_list %}
-    &nbsp;<a href="?label={{r}}"> ${{info.group_dict[r]}}$ </a>
-{% endfor %}
-</p>
-<p>A <a href={{url_for('.random')}}>random Sato-Tate group</a> from the database.
-<br>
-</p>
-
-<h2> Find a specific {{ KNOWL('st_group.definition', title='Sato-Tate group') }} by {{KNOWL('st_group.label', title='label')}} or by {{KNOWL('st_group.name', title='name')}}</h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('st_group.weight', title='weight') }}:</td>
+    <td>{% for r in info.weight_list %} <a href="?weight={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('st_group.degree', title='degree') }}:</td>
+    <td>{% for r in info.degree_list %} <a href="?degree={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('st_group.identity_component', title='identity component') }}:</td>
+    <td>{% for r in info.st0_list %} <a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Sato-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {% endblock %}

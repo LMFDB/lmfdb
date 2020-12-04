@@ -2,53 +2,69 @@
 
 {% block content %}
 
-<style>
-table.number_table td
-{
-text-align:right;
-}
-</style>
-
 <div>
-  <p>
-    Currently the database contains all groups $G$ acting as automorphisms of
-    curves $X/\C$ of genus {{info.stats.genus.min}} to
-    {{info.stats.genus.max}} such that $X/G$ has genus 0, as well as genus 2 through 4  with quotient genus greater than 0. There are {{info.stats.refined_passports.distinct}}
-    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
-    Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
-  </p>
+  {{info.short_summary | safe}}
 </div>
 
+<h2>Browse</h2>
 
-      <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
-
-<p>
-By  {{KNOWL('ag.curve.genus',title='genus')}}:
-{% for gen in info.genus_list %}
-<a href="?genus={{gen}}">{{gen}}</a>
-{% endfor %}</p>
-
-<p>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:
-{% for gen in info.genus_list %}
-<a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
-{% endfor %}
-</p>
-
-
-<p>A <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
-
-
-<h2>Find specific automorphisms of higher genus curves by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}</h2>
-
-<form name="search" method = "get" action="{{url_for('.index')}}">
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
+<table class="browse">
+  {# <tr>
+    <td>By  {{KNOWL('curve.highergenus.aut.quotientgenus', 'quotient genus')}}:</td>
+    <td>{% for gen in range(3) %} <a href="?g0={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
+  </tr> #}
+  <tr>
+    <td>By {{KNOWL('ag.curve.genus', 'genus')}}:</td>
+    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}">{{gen}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{KNOWL('group', 'group')}}:</td>
+    <td>
+      <a href="?group=[2,1]">$C_2$</a>&nbsp;
+      <a href="?group=[3,1]">$C_3$</a>&nbsp;
+      <a href="?group=[4,1]">$C_4$</a>&nbsp;
+      <a href="?group=[4,2]">$C_2^2$</a>&nbsp;
+      <a href="?group=[5,1]">$C_5$</a>&nbsp;
+      <a href="?group=[6,1]">$S_3$</a>&nbsp;
+      <a href="?group=[6,2]">$C_6$</a>&nbsp;
+      <a href="?group=[7,1]">$C_7$</a>&nbsp;
+      <a href="?group=[8,1]">$C_8$</a>&nbsp;
+      <a href="?group=[8,2]">$C_2\times C_4$</a>&nbsp;
+      <a href="?group=[8,3]">$D_4$</a>&nbsp;
+      <a href="?group=[8,4]">$Q_8$</a>&nbsp;
+      <a href="?group=[8,5]">$C_2^3$</a>&nbsp;
+      <a href="?group=[9,1]">$C_9$</a>&nbsp;
+      <a href="?group=[9,2]">$C_3^2$</a>&nbsp;
+      <a href="?group=[10,1]">$D_5$</a>&nbsp;
+      <a href="?group=[10,2]">$C_{10}$</a>&nbsp;
+      <a href="?group=[11,1]">$C_{11}$</a>&nbsp;
+      <a href="?group=[12,1]">$C_3:C_4$</a>&nbsp;
+      <a href="?group=[12,2]">$C_{12}$</a>&nbsp;
+      <a href="?group=[12,3]">$A_4$</a>&nbsp;
+      <a href="?group=[12,4]">$D_6$</a>&nbsp;
+      <a href="?group=[12,5]">$C_2\times C_6$</a>&nbsp;
+      $\cdots$
+    </td>
+  </tr><tr>
+    <td>{{KNOWL('ag.hyperelliptic_curve', 'Hyperelliptic curves')}} by genus:</td>
+    <td>{% for gen in info.genus_list %} <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>{{KNOWL('ag.cyclic_trigonal', 'Cyclic trigonal curves')}} by genus:</td>
+    <td>{% for gen in [3,4,5,6,7,8,9,10,12,13,14] %} <a href="?genus={{gen}}&inc_cyc_trig=only">{{gen}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting families</a> or a <a href="{{url_for('.random_passport')}}">random refined passport</a></td>
+  </tr>
+</table>
 
 <h2>Search</h2>
+
 <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2>Find</h2>
+
+<form name="search" method = "get" action="{{url_for('.index')}}">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}
