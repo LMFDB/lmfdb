@@ -102,9 +102,13 @@ class ECisog_class(object):
             
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
-        if self.label_type == 'Cremona':
-            # permute rows/cols
-            perm = lambda i: next(c for c in self.curves if c['number']==i+1)['lmfdb_number']-1
+
+        # permute rows/cols to match labelling: the rows/cols in the
+        # ec_classdata table are with respect to Cremona ordering.
+        # NB Before December 2020 the old table ec_curves stored the
+        # matrix in LMFDB ordering.
+        if self.label_type == 'LMFDB':
+            perm = lambda i: next(c for c in self.curves if c['lmfdb_number']==i+1)['number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         M = Matrix(M)
