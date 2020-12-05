@@ -223,7 +223,7 @@ Click on a subgroup in the diagram to see information about it.
 <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}<td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
-   <td>${{ dispv(cond, val) }}$ 
+   <td style="text-align:right">${{ dispv(cond, val) }}$ 
   {% endfor %}
 {% endfor %}
 </table>
@@ -247,7 +247,7 @@ Click on a subgroup in the diagram to see information about it.
   <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}<td>
   {# for val in chtr['qvalues'] #}
   {% for c in rccs %}
-    <td>${{ chtr.qvalues[c.classes.0.counter -1] }}$
+    <td style="text-align:right">${{ chtr.qvalues[c.classes.0.counter -1] }}$
   {% endfor %}
 {% endfor %}
 </table>
