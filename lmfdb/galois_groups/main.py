@@ -254,7 +254,7 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
+        if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
