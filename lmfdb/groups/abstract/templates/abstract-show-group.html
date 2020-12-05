@@ -191,7 +191,7 @@ Click on a subgroup in the diagram to see information about it.
 <p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of ${{info.max_subs}}$</p>
 {% endif %}
 {% if gp.maximal_quotient_of %}
-<p> Maximal quotient of ${{info.max_quot}}$</p>
+<p> {{KNOWL('group.maximal_quotient', "Maximal quotient")}} of ${{info.max_quot}}$</p>
 {% endif %}
 
 <h2> Character Theory </h2>
@@ -202,7 +202,7 @@ Click on a subgroup in the diagram to see information about it.
 {% set chars = info.chardata %}
 {% set qchars = info.qchardata %}
 
-<h3>Complex character table</h3>
+<h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
 <p>
 <table>
 <tr><td><td>
@@ -228,7 +228,7 @@ Click on a subgroup in the diagram to see information about it.
 {% endfor %}
 </table>
 
-<h3>Rational character table</h3>
+<h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 <p>
 <table>
 <tr><td><td>
