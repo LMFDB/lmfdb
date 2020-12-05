@@ -1,4 +1,5 @@
-from sage.all import gcd, Mod, Integer, Integers, Rational, pari, Pari, DirichletGroup, CyclotomicField
+from sage.all import (gcd, Mod, Integer, Integers, Rational, pari, Pari,
+                      DirichletGroup, CyclotomicField, euler_phi)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 
@@ -46,6 +47,17 @@ def kronecker_symbol(m):
 ## Conrey character with no call to Jonathan's code
 ## in order to handle big moduli
 ##
+
+def get_sage_genvalues(modulus, order, genvalues, zeta_order):
+        """
+        Helper method for computing correct genvalues when constructing
+        the sage character
+        """
+        phi_mod = euler_phi(modulus)
+        exponent_factor = phi_mod / order
+        genvalues_exponent = [x * exponent_factor for x in genvalues]
+        return [x * zeta_order / phi_mod for x in genvalues_exponent]
+
 
 class PariConreyGroup(object):
 
@@ -140,7 +152,11 @@ class ConreyCharacter(object):
     def gauss_sum_numerical(self, a):
         return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
 
+    def sage_zeta_order(self, order):
+        return DirichletGroup(self.modulus, base_ring=CyclotomicField(order)).zeta_order()
+
     def sage_character(self, order, genvalues):
         H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
         M = H._module
-        return DirichletCharacter(H,M(genvalues))
+        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, H.zeta_order())
+        return DirichletCharacter(H,M(order_corrected_genvalues))

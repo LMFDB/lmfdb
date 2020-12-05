@@ -98,7 +98,6 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/13/2')
         assert  'Value field' in W.get_data(as_text=True)
 
-    #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
             for p = 40487, 5 generates Z/pZ but not Z/p^2Z
@@ -164,3 +163,22 @@ class DirichletCharactersTest(LmfdbTest):
         assert r'\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
         assert '$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
         assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"
+
+    def test_sage_code_gens(self):
+        """Test that the sage code stubs generate the correct character. This
+           is important because the same logic for generating the display code
+           is used to generate the character for computing gauss/kloosterman
+           sums etc. The three tests below have been chosen for issues
+           identified with previous versions of the sage generating code.
+        """
+        W = self.tc.get('/Character/Dirichlet/163/4')
+        assert 'H = DirichletGroup(163, base_ring=CyclotomicField(81))' in W.get_data(as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([2]))' in W.get_data(as_text=True), "sage code generator is wrong"
+
+        W = self.tc.get('/Character/Dirichlet/16/15')
+        assert 'H = DirichletGroup(16, base_ring=CyclotomicField(2))' in W.get_data(as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([1,0]))' in W.get_data(as_text=True), "sage code generator is wrong"
+
+        W = self.tc.get('/Character/Dirichlet/91/3')
+        assert 'H = DirichletGroup(91, base_ring=CyclotomicField(6))' in W.get_data(as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(as_text=True), "sage code generator is wrong"

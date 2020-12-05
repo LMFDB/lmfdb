@@ -53,7 +53,8 @@ from lmfdb.utils import prop_int_pretty
 from lmfdb.utils.utilities import num2letters
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
-from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator, PariConreyGroup
+from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
+                symbol_numerator, PariConreyGroup, get_sage_genvalues)
 from lmfdb.characters.utils import url_character, complex2str
 
 logger = make_logger("DC")
@@ -611,7 +612,7 @@ class WebDBDirichlet(WebDirichlet):
         else:
             gens = [int(g) for g, v in valuepairs]
             vals = [int(v) for g, v in valuepairs]
-            self._genvalues_for_code = vals
+            self._genvalues_for_code = get_sage_genvalues(self.modulus, self.order, vals, self.chi.sage_zeta_order(self.order))
             self.generators = self.textuple([str(g) for g in gens])
             self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
