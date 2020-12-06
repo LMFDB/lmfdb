@@ -155,7 +155,7 @@ def show_type(label):
         return 'Nilpotent - '+str(wag.nilpotency_class)
     if wag.solvable:
         return 'Solvable - '+str(wag.derived_length)
-    return 'General - ?'
+    return 'Non-Solvable - '+str(wag.composition_length)
 
 #### Searching
 def group_jump(info):
