@@ -112,7 +112,7 @@ def create_boolean_string(gp):
 def url_for_label(label):
     if label == "random":
         return url_for(".random_abstract_group")
-    return url_for(".by_label", label=label)
+    return url_for("abstract.by_label", label=label)
 
 @abstract_page.route("/")
 def index():
