@@ -36,7 +36,8 @@
 
 <table>
   <tr>
-    <td colspan="{{1+gp.most_product_expressions()}}">${{gp.presentation()}}$</td>
+    <td>{{KNOWL('group.presentation', 'Presentation:')}}</td>
+    <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
   {% if gp.direct_products %}
   <tr>
@@ -191,7 +192,7 @@ Click on a subgroup in the diagram to see information about it.
 <p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of ${{info.max_subs}}$</p>
 {% endif %}
 {% if gp.maximal_quotient_of %}
-<p> Maximal quotient of ${{info.max_quot}}$</p>
+<p> {{KNOWL('group.maximal_quotient', "Maximal quotient")}} of ${{info.max_quot}}$</p>
 {% endif %}
 
 <h2> Character Theory </h2>
@@ -202,7 +203,7 @@ Click on a subgroup in the diagram to see information about it.
 {% set chars = info.chardata %}
 {% set qchars = info.qchardata %}
 
-<h3>Complex character table</h3>
+<h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
 <p>
 <table>
 <tr><td><td>
@@ -223,12 +224,12 @@ Click on a subgroup in the diagram to see information about it.
 <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}<td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
-   <td>${{ dispv(cond, val) }}$ 
+   <td style="text-align:right">${{ dispv(cond, val) }}$ 
   {% endfor %}
 {% endfor %}
 </table>
 
-<h3>Rational character table</h3>
+<h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 <p>
 <table>
 <tr><td><td>
@@ -247,7 +248,7 @@ Click on a subgroup in the diagram to see information about it.
   <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}<td>
   {# for val in chtr['qvalues'] #}
   {% for c in rccs %}
-    <td>${{ chtr.qvalues[c.classes.0.counter -1] }}$
+    <td style="text-align:right">${{ chtr.qvalues[c.classes.0.counter -1] }}$
   {% endfor %}
 {% endfor %}
 </table>

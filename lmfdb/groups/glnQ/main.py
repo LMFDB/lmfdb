@@ -134,7 +134,7 @@ def render_glnQ_group(args):
 
         title = '$\GL('+str(info['dim'])+',\Q)$ subgroup '  + label
 
-        prop = [('Label', '%s' %  label), 
+        prop = [('Label', '%s' %  label),
                 ('Order', '\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
@@ -148,7 +148,7 @@ def render_glnQ_group(args):
                                properties=prop,
                                #friends=friends,
                                learnmore=learnmore_list(),
-                               #downloads=downloads, 
+                               #downloads=downloads,
                                credit=credit_string)
 
 def make_knowl(title, knowlid):

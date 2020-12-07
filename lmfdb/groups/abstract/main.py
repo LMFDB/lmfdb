@@ -2,7 +2,7 @@
 
 import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect, Markup #, send_file, abort
+from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
@@ -112,7 +112,7 @@ def create_boolean_string(gp):
 def url_for_label(label):
     if label == "random":
         return url_for(".random_abstract_group")
-    return url_for(".by_label", label=label)
+    return url_for("abstract.by_label", label=label)
 
 @abstract_page.route("/")
 def index():
@@ -132,7 +132,9 @@ def index():
 @abstract_page.route("/random")
 def random_abstract_group():
     label = db.gps_groups.random(projection='label')
-    return redirect(url_for(".by_label", label=label), 307)
+    response = make_response(redirect(url_for(".by_label", label=label), 307))
+    response.headers['Cache-Control'] = 'no-cache, no-store'
+    return response
 
 
 
@@ -153,7 +155,7 @@ def show_type(label):
         return 'Nilpotent - '+str(wag.nilpotency_class)
     if wag.solvable:
         return 'Solvable - '+str(wag.derived_length)
-    return 'General - ?'
+    return 'Non-Solvable - '+str(wag.composition_length)
 
 #### Searching
 def group_jump(info):
@@ -502,7 +504,10 @@ def rchar_data(label):
   ans += '<br>Schur index: {}'.format(mychar.schur_index)
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
-  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
+  if 'image' in mychar._data:
+      ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnQ.by_label', label=mychar.image), mychar.image)
+  else:
+      ans += '<br>Image: not computed'
   return Markup(ans)
 
 def cchar_data(label):
@@ -517,7 +522,10 @@ def cchar_data(label):
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
   ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
-  ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+  if 'image' in mychar._data:
+      ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+  else:
+      ans += '<br>Image: not computed'
   return Markup(ans)
 
 def sub_data(label):
