@@ -161,7 +161,22 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def direct_products(self):
         # Need to pick an ordering
-        return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
+        #return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
+        subs = self.subgroups.values()
+        prods = []
+        pairs = []
+        for sub in subs:
+            if sub.normal and sub.direct and (sub.subgroup_order != 1) and (sub.quotient_order != 1):
+                pair = {sub.subgroup, sub.quotient}
+                # check if the subgroup and quotient have already appeared
+                new = True
+                for el in pairs:
+                    if pair == el:
+                        new = False
+                if new:
+                    prods.append(sub)
+                    pairs.append(pair)
+        return prods 
 
     @lazy_attribute
     def semidirect_products(self):
