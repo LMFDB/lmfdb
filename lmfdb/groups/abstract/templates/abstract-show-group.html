@@ -36,7 +36,8 @@
 
 <table>
   <tr>
-    <td colspan="{{1+gp.most_product_expressions()}}">${{gp.presentation()}}$</td>
+    <td>{{KNOWL('group.presentation', 'Presentation:')}}</td>
+    <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
   {% if gp.direct_products %}
   <tr>

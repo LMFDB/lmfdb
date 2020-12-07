@@ -3,7 +3,7 @@ import re
 
 from lmfdb import db
 
-from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ
+from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
@@ -319,92 +319,55 @@ class WebAbstractGroup(WebObj):
     def presentation(self):
         # chr(97) = "a"
         if self.elt_rep_type == 0:
-            FP = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image()
-            F = FP.FreeGroupOfFpGroup()
-            Fgens = FP.FreeGeneratorsOfFpGroup()
-            used = self.gens_used
-            print("USED", used)
-            relator_lifts = FP.RelatorsOfFpGroup()
-            pure_powers = {}
-            rel_powers = {}
-            power_exp = {}
-            power_rhs = {}
-            conj = {}
-            for rel in relator_lifts:
-                m = rel.NumberSyllables()
-                a = ZZ(rel.GeneratorSyllable(1))
-                e = ZZ(rel.ExponentSyllable(1))
-                if m == 1:
-                    # pure power relation
-                    if a in power_exp:
-                        raise ValueError("Invalid internal pc presentation: two values for f%s^p" % g)
-                    power_exp[a] = e
-                    power_rhs[a] = F.One()
-                elif (m >= 4 and
-                      e == rel.ExponentSyllable(2) == -1 and
-                      rel.ExponentSyllable(3) == 1 and
-                      rel.GeneratorSyllable(3) == a):
-                    b = ZZ(rel.GeneratorSyllable(2))
-                    if not (m == 4 and rel.GeneratorSyllable(4) == b and rel.ExponentSyllable(4) == 1):
-                        # We omit pure commutator relations and explain below the presentation
-                        rhs = rel.SubSyllables(4, m)
-                        # started with a^-1 b^-1 a b X = 1, transformed to b^a = b X =: rhs
-                        if (b,a) in conj:
-                            raise ValueError("Invalid internal pc presentation: two values for f%s^f%s" % (b, a))
-                        conj[b,a] = rhs
-                else:
-                    # relative power relation
-                    if a in power_exp:
-                        raise ValueError("Invalid internal pc presentation: two values for f%s^p" % a)
-                    power_exp[a] = e
-                    power_rhs[a] = rel.SubSyllables(2,m)**-1
-                    if a+1 not in used and power_rhs[a] != Fgens[a]:
-                        raise ValueError("Invalid internal pc presentation: f%s^%s != f%s" % (a, e, a+1))
-            print("power_exp", power_exp)
-            print("power_rhs", power_rhs)
-            print("conj", conj)
-            rewrite = []
-            curpow = 1
-            curgen = 1
-            genenum = 0
-            genpow_rhs = []
-            genpow_exp = []
-            for i in sorted(power_exp):
-                # check that the values are contiguous
-                if not (i == 1 or i-1 in power_exp):
-                    raise ValueError("Invalid internal pc presentation: no value given for %s^p" % chr(96+i))
-                rewrite.append(Fgens[genenum]**curpow)
-                curpow *= power_exp[i]
-                if i == len(power_exp) or i+1 in used:
-                    genpow_rhs.append(power_rhs[i])
-                    genpow_exp.append(curpow)
-                    curgen = i+1
-                    genenum += 1
-                    curpow = 1
-            M = len(genpow_exp)
-            #if len(genpow_exp) != self.ngens:
-            #    raise ValueError("Invalid internal pc presentation: number of generators %s vs %s" % (len(genpow_exp), self.ngens))
-            hom = F.GroupHomomorphismByImagesNC(F, rewrite)
-            for i, (rhs, e) in enumerate(zip(genpow_rhs, genpow_exp)):
-                if rhs == F.One():
-                    pure_powers[i] = "%s^%s" % (chr(97+i), e)
-                else:
-                    rel_powers[i] = "%s^%s=%s" % (chr(97+i), e, hom.Image(rhs))
-            gens = ', '.join(chr(97+i) for i in range(M))
+            # We use knowledge of the form of the presentation to construct it manually.
+            gens = list(self.G.GeneratorsOfGroup())
+            pcgs = self.G.FamilyPcgs()
+            used = [u-1 for u in sorted(self.gens_used)] # gens_used is 1-indexed
+            rel_ords = [ZZ(p) for p in self.G.FamilyPcgs().RelativeOrders()]
+            pure_powers = []
+            rel_powers = []
+            comm = []
             relators = []
-            if pure_powers:
-                relators.append("=".join(pure_powers[g] for g in sorted(pure_powers)) + "=1")
-            for g in sorted(rel_powers):
-                relators.append(rel_powers[g])
-            for a,b in sorted(conj):
-                if a in used and b in used:
-                    relators.append("%s^%s=%s" % (chr(97+used.index(a)), chr(97+used.index(b)), hom.Image(conj[a,b])))
-            relators = ', '.join(relators)
-            for i in reversed(range(M)):
-                relators = relators.replace("f%s"%(i+1), chr(97+i))
-            relators = fix_exponent_re.sub(r"^{\1}", relators)
-            relators = relators.replace("*","")
-            return r"\langle %s \mid %s \rangle" % (gens, relators)
+            def print_elt(vec):
+                s = ""
+                e = 0
+                u = used[-1]
+                i = len(used) - 1
+                for j, (c, p) in reversed(list(enumerate(zip(vec, rel_ords)))):
+                    e *= p
+                    e += c
+                    if j == u:
+                        if e == 1:
+                            s = chr(97+i) + s
+                        elif e > 1:
+                            s = "%s^{%s}" % (chr(97+i), e) + s
+                        i -= 1
+                        u = used[i]
+                        e = 0
+                return s
+
+            ngens = len(used)
+            for i in range(ngens):
+                a = used[i]
+                e = prod(rel_ords[a:] if i == ngens-1 else rel_ords[a: used[i+1]])
+                ae = pcgs.ExponentsOfPcElement(gens[a]**e)
+                if all(x == 0 for x in ae):
+                    pure_powers.append("%s^{%s}" % (chr(97+i), e))
+                else:
+                    rel_powers.append("%s^{%s}=%s" % (chr(97+i), e, print_elt(ae)))
+                for j in range(i+1, ngens):
+                    b = used[j]
+                    if all(x == 0 for x in pcgs.ExponentsOfCommutator(b+1, a+1)): # back to 1-indexed
+                        if not self.abelian:
+                            comm.append("[%s,%s]" % (chr(97+i), chr(97+j)))
+                    else:
+                        v = pcgs.ExponentsOfConjugate(b+1, a+1) # back to 1-indexed
+                        relators.append("%s^{%s}=%s" % (chr(97+j), chr(97+i), print_elt(v)))
+            show_gens = ', '.join(chr(97+i) for i in range(len(used)))
+            if pure_powers or comm:
+                rel_powers = ["=".join(pure_powers + comm) + "=1"] + rel_powers
+            relators = ', '.join(rel_powers + relators)
+            return r"\langle %s \mid %s \rangle" % (show_gens, relators)
         elif self.elt_rep_type < 0:
             return r"\langle %s \rangle" % (", ".join(map(self.decode_as_perm, self.perm_gens)))
         else:
