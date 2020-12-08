@@ -36,22 +36,20 @@
 
 <table>
   <tr>
-    <td>{{KNOWL('group.presentation', 'Presentation:')}}</td>
+    <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
     <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
-  {% if gp.direct_products %}
+  {% if gp.direct_product %}
   <tr>
     <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
-    {% for sub in gp.direct_products %}
-    <td>$({{sub.subgroup_tex}})~\times~({{sub.quotient_tex}})$</td>
-    {% endfor %}
+    <td>${{ gp.display_direct_product }}$</td>
   </tr>
   {% endif %}
   {% if gp.semidirect_products %}
   <tr>
     <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
     {% for sub in gp.semidirect_products %}
-    <td>$({{sub.subgroup_tex}})~\rtimes~({{sub.quotient_tex}})$</td>
+    <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -59,7 +57,7 @@
   <tr>
     <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
     {% for sub in gp.nonsplit_products %}
-    <td>$({{sub.subgroup_tex}})~.~({{sub.quotient_tex}})$</td>
+    <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$</td>
     {% endfor %}
   </tr>
   {% endif %}

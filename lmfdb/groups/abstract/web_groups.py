@@ -5,6 +5,7 @@ from lmfdb import db
 
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
+from collections import Counter
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
@@ -156,27 +157,27 @@ class WebAbstractGroup(WebObj):
         return [WebAbstractSupergroup(self, 'quo', supdata['label'], supdata) for supdata in db.gps_subgroups.search({'quotient': self.label, 'minimal_normal':True}, sort=['ambient_order', 'ambient'])]
 
     def most_product_expressions(self):
-        return max(len(self.direct_products), len(self.semidirect_products), len(self.nonsplit_products))
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products))
 
     @lazy_attribute
-    def direct_products(self):
+    def display_direct_product(self):
         # Need to pick an ordering
         #return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
-        subs = self.subgroups.values()
-        prods = []
-        pairs = []
-        for sub in subs:
-            if sub.normal and sub.direct and (sub.subgroup_order != 1) and (sub.quotient_order != 1):
-                pair = {sub.subgroup, sub.quotient}
-                # check if the subgroup and quotient have already appeared
-                new = True
-                for el in pairs:
-                    if pair == el:
-                        new = False
-                if new:
-                    prods.append(sub)
-                    pairs.append(pair)
-        return prods 
+        C = Counter(self.direct_factorization)
+        print(C)
+        # We can use the list of subgroups to get the latex
+        latex_lookup = {}
+        for sub in self.subgroups.values():
+            slab = sub.subgroup
+            if slab in C:
+                print(slab)
+                latex_lookup[slab] = sub.subgroup_tex_parened
+                if len(latex_lookup) == len(C):
+                    break
+        print(latex_lookup)
+        s = r" \times ".join("%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "") for (label, e) in C.items())
+        print(s)
+        return s
 
     @lazy_attribute
     def semidirect_products(self):
@@ -458,7 +459,6 @@ class WebAbstractGroup(WebObj):
 
     def frattini_quot(self):
         return group_names_pretty(self._data['frattini_quotient'])
-    
 
 
 class WebAbstractSubgroup(WebObj):
@@ -466,16 +466,18 @@ class WebAbstractSubgroup(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
         self.ambient_gp = self.ambient # in case we still need it
-        self.subgroup_tex = group_names_pretty(self.subgroup) # temporary
+        self.subgroup_tex = s = group_names_pretty(self.subgroup) # temporary
+        self.subgroup_tex_parened = s if self._is_atomic(s) else "(%s)" % s
         if 'quotient' in self._data:
-            self.quotient_tex = group_names_pretty(self.quotient) # temporary
+            self.quotient_tex = s = group_names_pretty(self.quotient) # temporary
+            self.quotient_tex_parened = s if self._is_atomic(s) else "(%s)" % s
 
     @classmethod
     def from_label(cls, label):
         ambientlabel = re.sub(r'^(\d+\.[a-z0-9]+)\.\d+$', r'\1', label)
         ambient = WebAbstractGroup(ambientlabel)
         return cls(ambient, label)
-        
+
     def spanclass(self):
         s = "subgp"
         if self.characteristic:
@@ -485,8 +487,12 @@ class WebAbstractSubgroup(WebObj):
         return s
 
     def make_span(self):
-        return '<span class="{}" data-sgid="{}">${}$</span>'.format( 
+        return '<span class="{}" data-sgid="{}">${}$</span>'.format(
             self.spanclass(), self.label, self.subgroup_tex)
+
+    @staticmethod
+    def _is_atomic(s):
+        return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
