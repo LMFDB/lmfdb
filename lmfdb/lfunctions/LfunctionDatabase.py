@@ -2,10 +2,16 @@
 
 from lmfdb import db
 
+def get_lfunction_by_label(label, **kwargs):
+    Ldata = db.lfunc_lfunctions.lucky({'label': label}, **kwargs)
+    if Ldata is None:
+        raise KeyError("Label '%s' not found in Lfunction table" % (label,))
+    return Ldata
+
 def get_lfunction_by_Lhash(Lhash, **kwargs):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, **kwargs)
     if Ldata is None:
-        raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
+        raise KeyError("Lhash '%s' not found in Lfunction table" % (Lhash,))
     return Ldata
 
 def get_instances_by_Lhash(Lhash):

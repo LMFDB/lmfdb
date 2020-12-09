@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, QQ, latex, real_part, imag_part
+from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization
 
 import tempfile
 import os
@@ -31,8 +31,8 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty, round_to_half_int, display_complex,
-    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
-    SearchArray, TextBox, YesNoBox, CountBox)
+    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop, parse_primes,
+    SearchArray, TextBox, YesNoBox, CountBox, SubsetBox, TextBoxWithSelect)
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.app import is_debug_mode, _single_knowl
@@ -90,13 +90,26 @@ def process_search(res, info, query):
         else:
             L['analytic_normalization'] = QQ(L['motivic_weight'])/2
         mus = [L['analytic_normalization'] + string2number(mu) for mu in L['gamma_factors'][0]]
-        L['mus'] = ", ".join(latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus)
+        mus = [latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus]
+        if len(mus) > 4 and len(set(mus)) == 1: # >4 so this case only happens for imprimitive
+            mus = ["[%s]^{%s}" % (mus[0], len(mus))]
+        L['mus'] = ", ".join(mus)
         nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
-        L['nus'] = ", ".join(latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus)
+        nus = [latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus]
+        if len(nus) > 4 and len(set(nus)) == 1:
+            nus = ["[%s]^{%s}" % (nus[0], len(nus))]
+        L['nus'] = ", ".join(nus)
         L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
         L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
+        L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
+        L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
     return res
+
+@l_function_page.route("/<label>")
+def by_label(label):
+    args = {"label": label}
+    return render_single_Lfunction(Lfunction_from_db, args, request)
 
 @search_wrap(template="LfunctionSearchResults.html",
              table=db.lfunc_search,
@@ -118,6 +131,8 @@ def l_function_search(info, query):
     parse_ints(info,query,'order_of_vanishing')
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')
+    parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
+    info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
 
 class LFunctionSearchArray(SearchArray):
     def __init__(self):
@@ -133,6 +148,11 @@ class LFunctionSearchArray(SearchArray):
             label="Degree",
             example="2",
             example_span="2, 3-4")
+        analytic_conductor = TextBox(
+            name="analytic_conductor",
+            knowl="lfunction.analytic_conductor",
+            label="Analytic conductor",
+            example="0.1-0.3")
         conductor = TextBox(
             name="conductor",
             knowl="lfunction.conductor",
@@ -144,6 +164,15 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.central_character",
             label="Central character",
             example="37.1")
+        prime_quantifier = SubsetBox(
+            name="prime_quantifier",
+            min_width=110)
+        bad_primes = TextBoxWithSelect(
+            name="bad_primes",
+            knowl="lfunction.bad_primes",
+            label=r"Bad \(p\)",
+            example="2,3",
+            select_box=prime_quantifier)
         primitive = YesNoBox(
             name="primitive",
             knowl="lfunction.primitive",
@@ -177,7 +206,8 @@ class LFunctionSearchArray(SearchArray):
 
         self.browse_array = [
             [z1, degree],
-            [conductor, central_character],
+            [conductor, analytic_conductor],
+            [bad_primes, central_character],
             [analytic_rank, motivic_weight],
             [primitive, algebraic],
             [root_angle, self_dual],
@@ -185,8 +215,9 @@ class LFunctionSearchArray(SearchArray):
         ]
 
         self.refine_array = [
-            [degree, conductor, central_character, analytic_rank, motivic_weight],
-            [primitive, algebraic, self_dual, z1, root_angle]
+            [degree, conductor, analytic_conductor, analytic_rank, motivic_weight],
+            [primitive, algebraic, self_dual, z1, root_angle],
+            [bad_primes, central_character]
         ]
 
 @l_function_page.route("/history")

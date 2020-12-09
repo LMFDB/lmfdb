@@ -37,6 +37,7 @@ from .Lfunctionutilities import (
         compute_local_roots_SMF2_scalar_valued,)
 from .LfunctionComp import isogeny_class_cm
 from .LfunctionDatabase import (
+        get_lfunction_by_label,
         get_lfunction_by_Lhash,
         get_instances_by_Lhash,
         get_instances_by_Lhash_and_trace_hash,
@@ -108,6 +109,7 @@ def makeLfromdata(L):
 
     # Mandatory properties
     L.Lhash = data.get('Lhash')
+    L.label = data.get('label')
     L.algebraic = data.get('algebraic')
     L.degree = data.get('degree')
     L.level = int(data.get('conductor'))
@@ -553,7 +555,7 @@ class Lfunction_from_db(Lfunction):
     Class representing a general L-function, to be retrieved from the database
     based on its lhash.
 
-    Compulsory parameters: Lhash
+    Compulsory parameters: Lhash or label
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
@@ -563,9 +565,14 @@ class Lfunction_from_db(Lfunction):
         self.numcoeff = 30
 
         self.__dict__.update(kwargs)
-        if 'url' in kwargs and 'Lhash' not in kwargs:
+        if 'label' in kwargs and 'Lhash' in kwargs:
+            raise ValueError("Cannot specify both label and Lhash")
+        if 'url' in kwargs and 'Lhash' not in kwargs and 'label' not in kwargs:
             self.Lhash = self.get_Lhash_by_url(self.url)
-        self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
+        if 'label' in kwargs:
+            self.func_data = get_lfunction_by_label(self.label)
+        else:
+            self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         if 'url' not in kwargs:
             self.url = self.lfunc_data['origin']
         makeLfromdata(self)

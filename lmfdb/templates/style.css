@@ -739,6 +739,9 @@ table.ntdata th {
   padding-right: 7px;
   padding-left: 7px;
 }
+table.ntdata.centered th, table.ntdata.centered td {
+  text-align: center;
+}
 
 table.ntdata > tr.odd,
 table.ntdata > tbody > tr.odd,

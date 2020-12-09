@@ -361,7 +361,8 @@ def is_exact(x):
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
                              try_halfinteger=True,
-                             no_sci=None):
+                             no_sci=None,
+                             latex=False):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     # if small, try to display it as an exact or half integer
@@ -401,6 +402,8 @@ def display_float(x, digits, method = "truncate",
                 s = s[:digits+1]
             else:
                 s = s[:point]
+    if latex and "e" in s:
+        s = s.replace("e", r"\times 10^{") + "}"
     return s
 
 def display_complex(x, y, digits, method = "truncate",
