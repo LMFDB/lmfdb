@@ -99,7 +99,7 @@ def process_search(res, info, query):
     return res
 
 @search_wrap(template="LfunctionSearchResults.html",
-             table=db.lfunc_lfunctions, # switch to search table once available
+             table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
