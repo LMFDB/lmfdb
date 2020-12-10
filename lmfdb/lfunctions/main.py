@@ -104,12 +104,21 @@ def process_search(res, info, query):
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
-        L['url'] = url_for('.by_label', *L['label'].split('-'))
+        L['url'] = url_for_lfunction(L['label'])
     return res
+
+def url_for_lfunction(label):
+    try:
+        kwargs = dict(zip(('degree', 'conductor', 'character', 'gamma_real', 'gamma_imag', 'index'), 
+label.split('-')))
+        kwargs['degree'] = int(kwargs['degree'])
+    except Exception:
+        return render_lfunction_exception("There is no L-function with label '%s'" % label)
+    return url_for('.by_label', **kwargs)
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
-    return redirect(url_for('.by_label', *label.split('-')))
+    return redirect(url_for_lfunction(label))
 
 @l_function_page.route("/<int:degree>/<conductor>/<character>/<gamma_real>/<gamma_imag>/<index>")
 def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
