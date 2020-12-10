@@ -111,7 +111,7 @@ def process_search(res, info, query):
 def by_full_label(label):
     return redirect(url_for('.by_label', *label.split('-'))
 
-@l_function_page.route("/<degree:int>/<conductor>/<character>/gamma_real/gamma_imag/index")
+@l_function_page.route("/<degree:int>/<conductor>/<character>/<gamma_real>/<gamma_imag>/<index>")
 def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
