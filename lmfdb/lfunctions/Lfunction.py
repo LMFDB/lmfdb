@@ -637,6 +637,7 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def instances(self):
+        return [] # disable instances
         # we got here by tracehash or Lhash
         if self._Ltype == "general":
             linstances = []
