@@ -912,7 +912,10 @@ def pol_string_to_list(pol, deg=None, var=None):
         var = findvar(pol)
         if not var:
             var = 'a'
-    pol = PolynomialRing(QQ, var)(str(pol))
+    try:
+        pol = PolynomialRing(QQ, var)(str(pol))
+    except TypeError:
+        raise SearchParsingError("Input not recognized as a polynomial.")
     if deg is None:
         fill = 0
     else:
