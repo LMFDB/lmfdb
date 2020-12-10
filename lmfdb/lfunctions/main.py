@@ -757,7 +757,7 @@ def set_bread_and_friends(info, L, request):
         info['bread'] = get_bread(1, [(charname, request.path)])
 
     elif isinstance(L, Lfunction_from_db):
-        info['bread'] = L.bread + [(L.origin_label, request.path)]
+        info['bread'] = L.bread + [(L.lfun_label, request.path)]
         info['origins'] = L.origins
         info['friends'] = L.friends
         info['factors_origins'] = L.factors_origins
