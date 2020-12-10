@@ -580,6 +580,7 @@ class Lfunction_from_db(Lfunction):
         self._set_knowltype()
         self.info['title'] = "L-function " + self.lfun_label
         self.credit = ''
+        self.lfun_label = self.lfunc_data['label']
         self.label = ''
 
     @lazy_attribute
