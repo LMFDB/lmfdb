@@ -578,9 +578,9 @@ class Lfunction_from_db(Lfunction):
         makeLfromdata(self)
         self.info = self.general_webpagedata()
         self._set_knowltype()
-        self.info['title'] = "L-function " + self.lfun_label
         self.credit = ''
         self.lfun_label = self.lfunc_data['label']
+        self.info['title'] = "L-function " + self.lfun_label
         self.label = ''
 
     @lazy_attribute
