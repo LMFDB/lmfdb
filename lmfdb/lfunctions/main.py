@@ -109,7 +109,7 @@ def process_search(res, info, query):
 
 @l_function_page.route("/<label>")
 def by_full_label(label):
-    return redirect(url_for('.by_label', *label.split('-'))
+    return redirect(url_for('.by_label', *label.split('-')))
 
 @l_function_page.route("/<degree:int>/<conductor>/<character>/<gamma_real>/<gamma_imag>/<index>")
 def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
