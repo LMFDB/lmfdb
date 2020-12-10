@@ -576,12 +576,12 @@ class Lfunction_from_db(Lfunction):
         if 'url' not in kwargs:
             self.url = self.lfunc_data['origin']
         makeLfromdata(self)
-        self.info = self.general_webpagedata()
         self._set_knowltype()
         self.credit = ''
         self.lfun_label = self.lfunc_data['label']
-        self.info['title'] = "L-function " + self.lfun_label
         self.label = ''
+        self.info = self.general_webpagedata()
+        self.info['title'] = "L-function " + self.lfun_label
 
     @lazy_attribute
     def _Ltype(self):
