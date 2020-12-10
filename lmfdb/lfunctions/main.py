@@ -104,11 +104,17 @@ def process_search(res, info, query):
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
+        L['url'] = url_for(".by_label", label=L['label'])
     return res
 
 @l_function_page.route("/<label>")
 def by_label(label):
     args = {"label": label}
+    # Workaround until we have a label column in lfunc_lfunctions
+    Lhash = db.lfunc_search.lucky({"label":label}, "Lhash")
+    if Lhash is None:
+        return render_lfunction_exception("There is no L-function with label '%s'" % label)
+    args = {"Lhash": Lhash}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
 @search_wrap(template="LfunctionSearchResults.html",
@@ -116,7 +122,7 @@ def by_label(label):
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
-             #url_for_label=url_for_label,
+             url_for_label=lambda label: url_for(".by_label", label=label),
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
              credit=lambda: credit_string)
