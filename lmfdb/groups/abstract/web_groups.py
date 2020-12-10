@@ -163,7 +163,7 @@ class WebAbstractGroup(WebObj):
     def display_direct_product(self):
         # Need to pick an ordering
         #return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
-        C = Counter(self.direct_factorization)
+        C = dict(self.direct_factorization)
         print(C)
         # We can use the list of subgroups to get the latex
         latex_lookup = {}
