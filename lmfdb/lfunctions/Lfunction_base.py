@@ -218,6 +218,7 @@ class Lfunction(object):
 
     @lazy_attribute
     def lfun_label(self):
+        return ''
         data = {
                 'algebraic': self.algebraic,
                 'central_character': (self.charactermodulus, self.characternumber),

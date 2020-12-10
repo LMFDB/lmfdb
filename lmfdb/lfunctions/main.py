@@ -104,18 +104,18 @@ def process_search(res, info, query):
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
-        L['url'] = url_for(".by_label", label=L['label'])
+        L['url'] = url_for('.by_label', *L['label'].split('-'))
     return res
 
 @l_function_page.route("/<label>")
-def by_label(label):
-    args = {"label": label}
-    # Workaround until we have a label column in lfunc_lfunctions
-    Lhash = db.lfunc_search.lucky({"label":label}, "Lhash")
-    if Lhash is None:
-        return render_lfunction_exception("There is no L-function with label '%s'" % label)
-    args = {"Lhash": Lhash}
+def by_full_label(label):
+    return redirect(url_for('.by_label', *label.split('-'))
+
+@l_function_page.route("/<degree:int>/<conductor>/<character>/gamma_real/gamma_imag/index")
+def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
+    args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
+
 
 @search_wrap(template="LfunctionSearchResults.html",
              table=db.lfunc_search,
