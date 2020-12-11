@@ -24,7 +24,9 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'ot computed')
 
     def test_search_poly_mean2parser(self):
-        self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '148') # discriminant
+        self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '3.3.148.1') # label
+        self.check_args('/NumberField/?jump=z^3 - 4*z + 2', '3.3.148.1') # label
+
 
     def test_search_zeta(self):
         self.check_args('/NumberField/?jump=Qzeta23&search=Go', '[3]') # class group
