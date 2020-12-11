@@ -300,12 +300,9 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        # form.setup_cc_data({'m':'1-%s'%form.dim})
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
-        #if form.has_complex_qexp:
-        #    data['complex_embeddings'] = form.cc_data
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
