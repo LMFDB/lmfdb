@@ -559,7 +559,7 @@ class Lfunction_from_db(Lfunction):
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
-        if 'Lhash' not in kwargs and 'url' not in kwargs:
+        if 'Lhash' not in kwargs and 'url' not in kwargs and 'label' not in kwargs:
             raise KeyError('Unable to construct L-function from Lhash or url',
                                'Missing required parameters: Lhash or url')
         self.numcoeff = 30
