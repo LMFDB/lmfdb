@@ -164,60 +164,43 @@ class WebAbstractGroup(WebObj):
         # Need to pick an ordering
         #return [sub for sub in self.subgroups.values() if sub.normal and sub.direct and sub.subgroup_order != 1 and sub.quotient_order != 1]
         C = dict(self.direct_factorization)
-        print(C)
         # We can use the list of subgroups to get the latex
         latex_lookup = {}
+        sort_key = {}
         for sub in self.subgroups.values():
             slab = sub.subgroup
             if slab in C:
-                print(slab)
                 latex_lookup[slab] = sub.subgroup_tex_parened
+                sort_key[slab] = (not sub.abelian, sub.subgroup_order.is_prime_power(get_data=True)[0] if sub.abelian else sub.subgroup_order, sub.subgroup_order)
                 if len(latex_lookup) == len(C):
                     break
-        print(latex_lookup)
-        s = r" \times ".join("%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "") for (label, e) in C.items())
-        print(s)
+        df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
+        s = r" \times ".join("%s%s" % (latex_lookup[label], "^%s" % e if e > 1 else "") for (label, e) in df)
         return s
 
     @lazy_attribute
     def semidirect_products(self):
-        # Need to pick an ordering
-        #return [sub for sub in self.subgroups.values() if sub.normal and sub.split and not sub.direct]
-        subs = self.subgroups.values()
         semis = []
-        pairs = []
-        for sub in subs:
+        count = Counter()
+        for sub in self.subgroups.values():
             if sub.normal and sub.split and not sub.direct:
-                pair = [sub.subgroup, sub.quotient]
-                # check if the subgroup and quotient have already appeared
-                new = True
-                for el in pairs:
-                    if pair == el:
-                        new = False
-                if new:
+                pair = (sub.subgroup_label, sub.quotient_label)
+                if pair not in count:
                     semis.append(sub)
-                    pairs.append(pair)
-        return semis
+                count[pair] += 1
+        return semis, count
 
     @lazy_attribute
     def nonsplit_products(self):
-        # Need to pick an ordering
-        #return list(set([sub for sub in self.subgroups.values() if sub.normal and not sub.split])) # eliminate redundancies
-        subs = self.subgroups.values()
         nonsplit = []
-        pairs = []
-        for sub in subs:
+        count = Counter()
+        for sub in self.subgroups.values():
             if sub.normal and not sub.split:
-                pair = [sub.subgroup, sub.quotient]
-                # check if the subgroup and quotient have already appeared
-                new = True
-                for el in pairs:
-                    if pair == el:
-                        new = False
-                if new:
+                pair = (sub.subgroup_label, sub.quotient_label)
+                if pair not in count:
                     nonsplit.append(sub)
-                    pairs.append(pair)
-        return nonsplit
+                count[pair] += 1
+        return nonsplit, count
 
 
     @lazy_attribute
@@ -440,7 +423,6 @@ class WebAbstractGroup(WebObj):
 
     def central_quot(self):
         return group_names_pretty(self._data['central_quotient'])
-    
 
     def comm(self):
         return self.special_search('D')
