@@ -133,7 +133,7 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
-             url_for_label=lambda label: url_for(".by_label", label=label),
+             url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
              credit=lambda: credit_string)
