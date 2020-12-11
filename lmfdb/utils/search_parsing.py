@@ -14,6 +14,7 @@ from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
+from .utilities import coeff_to_poly
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -751,9 +752,8 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
-    if 'x' in F:
-        F1 = F.replace('^', '**')
-        # print F
+    if '^' in F:
+        F1 = coeff_to_poly(F)
         from lmfdb.number_fields.number_field import poly_to_field_label
         F1 = poly_to_field_label(F1)
         if F1:
