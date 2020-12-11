@@ -956,7 +956,8 @@ def generateLfunctionFromUrl(*args, **kwds):
     from the url. kwds contains possible arguments after a question mark.
     '''
     try:
-        deg = int(args[0]))
+        deg = int(args[0])
+        assert deg
         return Lfunction_from_db(label='-'.join(map(str, args)))
     except ValueError:
         pass
