@@ -568,11 +568,11 @@ class Lfunction_from_db(Lfunction):
 
         self.numcoeff = 30
         if 'label' in kwargs:
-            self.func_data = get_lfunction_by_label(kwargs['label'])
+            self.lfunc_data = get_lfunction_by_label(kwargs['label'])
         elif 'Lhash' in kwargs:
             self.lfunc_data = get_lfunction_by_Lhash(kwargs['Lhash'])
         else:
-            self.lfunc_data = self.get_Lhash_by_url(kwargs['url'])
+            self.lfunc_data = get_lfunction_by_Lhash(self.get_Lhash_by_url(kwargs['url']))
 
         makeLfromdata(self)
         self._set_knowltype()

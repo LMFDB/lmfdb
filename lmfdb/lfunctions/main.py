@@ -122,7 +122,7 @@ def by_full_label(label):
 
 @l_function_page.route("/<int:degree>/<conductor>/<character>/<gamma_real>/<gamma_imag>/<index>")
 def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
-    args = {'lfun_label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
+    args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
 
@@ -766,7 +766,7 @@ def set_bread_and_friends(info, L, request):
         info['bread'] = get_bread(1, [(charname, request.path)])
 
     elif isinstance(L, Lfunction_from_db):
-        info['bread'] = L.bread + [(L.lfun_label, request.path)]
+        info['bread'] = L.bread + [(L.label, request.path)]
         info['origins'] = L.origins
         info['friends'] = L.friends
         info['factors_origins'] = L.factors_origins
