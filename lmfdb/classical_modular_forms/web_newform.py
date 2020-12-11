@@ -238,7 +238,7 @@ class WebNewform(object):
                 # This is not enough, for some reason
                 #if (m != 0) and (not self.single_generator):
                 # This is the only thing I could make work:
-                if (m != 0) and (self.hecke_ring_numerators is not None):
+                if (m != 0) and self.field_poly_is_cyclotomic and (self.hecke_ring_numerators is not None):
                     self.convert_qexp_to_cyclotomic(m)
                     self.show_hecke_ring_basis = False
                 else:
