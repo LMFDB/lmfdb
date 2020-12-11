@@ -559,29 +559,27 @@ class Lfunction_from_db(Lfunction):
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
-        if 'Lhash' not in kwargs and 'url' not in kwargs and 'label' not in kwargs:
-            raise KeyError('Unable to construct L-function from Lhash or url',
-                               'Missing required parameters: Lhash or url')
-        self.numcoeff = 30
+        argkeys = ({'url', 'label', 'kwargs'}).intersection(set(kwargs))
+        if len(argkeys) == 0:
+            raise KeyError('Unable to construct L-function',
+                           'Missing required parameters: label, Lhash, or url')
+        if len(argkeys) > 1:
+            raise ValueError("Cannot specify more than one argument in (label, Lhash, url)")
 
-        self.__dict__.update(kwargs)
-        if 'label' in kwargs and 'Lhash' in kwargs:
-            raise ValueError("Cannot specify both label and Lhash")
-        if 'url' in kwargs and 'Lhash' not in kwargs and 'label' not in kwargs:
-            self.Lhash = self.get_Lhash_by_url(self.url)
+        self.numcoeff = 30
         if 'label' in kwargs:
             self.func_data = get_lfunction_by_label(kwargs['label'])
+        elif 'Lhash' in kwargs:
+            self.lfunc_data = get_lfunction_by_Lhash(kwargs['Lhash'])
         else:
-            self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
-        if 'url' not in kwargs:
-            self.url = self.lfunc_data['origin']
+            self.lfunc_data = self.get_Lhash_by_url(kwargs['url'])
+
         makeLfromdata(self)
         self._set_knowltype()
         self.credit = ''
-        self.lfun_label = self.lfunc_data['label']
-        self.label = ''
+        self.label = self.lfun_label = self.lfunc_data['label']
         self.info = self.general_webpagedata()
-        self.info['title'] = "L-function " + self.lfun_label
+        self.info['title'] = "L-function " + self.label
 
     @lazy_attribute
     def _Ltype(self):
@@ -681,10 +679,10 @@ class Lfunction_from_db(Lfunction):
                 Json.dumps(data),
                 filename + '.euler_factors',
                 lang = 'text',
-                title = 'Euler Factors of %s' % self.url)
+                title = 'Euler Factors of %s' % self.label)
 
     def download_zeros(self):
-        filename = self.url.replace('/','_')
+        filename = self.label
         data  = {}
         data['order_of_vanishing'] = self.order_of_vanishing
         data['positive_zeros'] = self.positive_zeros_raw
@@ -695,7 +693,7 @@ class Lfunction_from_db(Lfunction):
                 Json.dumps(data),
                 filename + '.zeros',
                 lang = 'text',
-                title = 'Zeros of %s' % self.url)
+                title = 'Zeros of %s' % self.label)
 
     def download_dirichlet_coeff(self):
         filename = self.url.replace('/','_')
