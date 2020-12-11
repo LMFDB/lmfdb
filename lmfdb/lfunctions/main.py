@@ -39,6 +39,8 @@ from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 from six import string_types
 
+
+
 credit_string = "Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Platt"
 
 def get_degree(degree_string):
@@ -953,9 +955,13 @@ def generateLfunctionFromUrl(*args, **kwds):
     ''' Returns the L-function object corresponding to the supplied argumnents
     from the url. kwds contains possible arguments after a question mark.
     '''
+    try:
+        deg = int(args[0]))
+        return Lfunction_from_db(label='-'.join(map(str, args)))
+    except ValueError:
+        pass
     if args[0] == 'Riemann':
         return RiemannZeta()
-
     elif args[0] == 'Character' and args[1] == 'Dirichlet':
         return Lfunction_Dirichlet(charactermodulus=args[2], characternumber=args[3])
 
