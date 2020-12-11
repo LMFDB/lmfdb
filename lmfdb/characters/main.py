@@ -314,15 +314,17 @@ def make_webchar(args):
     else:
         return WebSmallDirichletCharacter(**args)
 
-@characters_page.route("/Dirichlet/<modulus>")
-@characters_page.route("/Dirichlet/<modulus>/")
-@characters_page.route("/Dirichlet/<modulus>/<number>")
-def render_Dirichletwebpage(modulus=None, number=None):
+@characters_page.route("/Dirichlet/<int:modulus>")
+@characters_page.route("/Dirichlet/<int:modulus>/")
+@characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
+@characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
+@characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
+def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
 
-    modulus = modulus.replace(' ','')
-    if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
-        modulus, number = modulus.split('.')
-        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
+    # modulus = modulus.replace(' ','')
+    # if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
+    #     modulus, number = modulus.split('.')
+    #     return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
@@ -340,20 +342,24 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return redirect(url_for(".render_DirichletNavigation"))
 
     if number is None:
-        if modulus < 10000:
-            info = WebDBDirichletGroup(**args).to_dict()
-            info['show_orbit_label'] = True
+        if gal_orb_label is None:
+            if modulus < 10000:
+                info = WebDBDirichletGroup(**args).to_dict()
+                info['show_orbit_label'] = True
+            else:
+                info = WebSmallDirichletGroup(**args).to_dict()
+            info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
+            info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
+            info['learnmore'] = learn()
+            info['credit'] = credit()
+            info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+            info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+            if 'gens' in info:
+                info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
+            return render_template('CharGroup.html', **info)
         else:
-            info = WebSmallDirichletGroup(**args).to_dict()
-        info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-        info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
-        info['learnmore'] = learn()
-        info['credit'] = credit()
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        if 'gens' in info:
-            info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
-        return render_template('CharGroup.html', **info)
+            info = WebDBDirichletGroup(**args).to_dict()
+            return render_template('CharacterGaloisOrbit.html', **info)
     try:
         number = label_to_number(modulus, number)
     except ValueError:
