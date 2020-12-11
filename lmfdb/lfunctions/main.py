@@ -409,10 +409,23 @@ def l_function_riemann_page():
 def l_function_riemann_redirect():
     return redirect(url_for('.l_function_riemann_page'), code=301)
 
+from functools import wraps
+def label_redirect_wrapper(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        url = url_for('.' + f.__name__, **kwds)[3:].rstrip('/')
+        label = db.lfunc_instances.lucky({'url': url}, 'label')
+        if label:
+            return redirect(url_for_lfunction(label))
+        return f(*args, **kwds)
+    return wrapper
+
 
 # L-function of Dirichlet character ############################################
 @l_function_page.route("/Character/Dirichlet/<modulus>/<number>/")
+@label_redirect_wrapper
 def l_function_dirichlet_page(modulus, number):
+    print('-'*30)
     args = {'charactermodulus': modulus, 'characternumber': number}
     return render_single_Lfunction(Lfunction_Dirichlet, args, request)
 
@@ -420,6 +433,7 @@ def l_function_dirichlet_page(modulus, number):
 # L-function of Elliptic curve #################################################
 # Over QQ
 @l_function_page.route("/EllipticCurve/Q/<conductor_label>/<isogeny_class_label>/")
+@label_redirect_wrapper
 def l_function_ec_page(conductor_label, isogeny_class_label):
     #args = {'conductor': conductor, 'isogeny': isogeny}
     #return render_single_Lfunction(Lfunction_EC_Q, args, request)
@@ -427,6 +441,7 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
     return render_single_Lfunction(Lfunction_EC, args, request)
 
 @l_function_page.route("/EllipticCurve/Q/<label>/")
+@label_redirect_wrapper
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -438,6 +453,7 @@ def l_function_ec_page_label(label):
 
 # over a number field
 @l_function_page.route("/EllipticCurve/<field_label>/<conductor_label>/<isogeny_class_label>/")
+@label_redirect_wrapper
 def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
     args = {'field_label': field_label, 'conductor_label': conductor_label, 'isogeny_class_label': isogeny_class_label}
     return render_single_Lfunction(Lfunction_EC, args, request)
@@ -448,6 +464,7 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:character>/<int:number>/")
+@label_redirect_wrapper
 def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character, number):
     args = {'level': level, 'weight': weight, 'char_orbit_label': char_orbit_label, 'hecke_orbit': hecke_orbit,
             'character': character, 'number': number}
@@ -461,6 +478,7 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
                                   char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
+@label_redirect_wrapper
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
@@ -478,6 +496,7 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
+@label_redirect_wrapper
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
@@ -490,6 +509,7 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
                                     code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+@label_redirect_wrapper
 def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
     args = {'level': level,
             'weight': weight,
@@ -498,6 +518,7 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
     return render_single_Lfunction(Lfunction_CMF_orbit, args, request)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
+@label_redirect_wrapper
 def l_function_cmf_redirect_a1(level, weight, character):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
@@ -510,11 +531,13 @@ def l_function_cmf_redirect_a1(level, weight, character):
                                     code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
+@label_redirect_wrapper
 def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
+@label_redirect_wrapper
 def l_function_cmf_orbit_redirecit_aa(level, weight):
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
@@ -522,6 +545,7 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 
 # L-function of Bianchi modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>/")
+@label_redirect_wrapper
 def l_function_bmf_page(field,level,suffix):
     args = {'field': field, 'level': level, 'suffix': suffix}
     return render_single_Lfunction(Lfunction_BMF, args, request)
@@ -529,6 +553,7 @@ def l_function_bmf_page(field,level,suffix):
 
 # L-function of Hilbert modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/<number>/")
+@label_redirect_wrapper
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character, 'number': number}
     instance = db.lfunc_instances.lucky({'url': hmf_url(label, character, number)})
@@ -536,12 +561,14 @@ def l_function_hmf_page(field, label, character, number):
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
+@label_redirect_wrapper
 def l_function_hmf_redirect_1(field, label, character):
     return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
+@label_redirect_wrapper
 def l_function_hmf_redirect_2(field, label):
     return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
@@ -549,6 +576,7 @@ def l_function_hmf_redirect_2(field, label):
 
 # L-function of GL(2) Maass form ###############################################
 @l_function_page.route("/ModularForm/GL2/Q/Maass/<maass_id>/")
+@label_redirect_wrapper
 def l_function_maass_page(maass_id):
     args = {'maass_id': maass_id, 'fromDB': False}
     return render_single_Lfunction(Lfunction_Maass, args, request)
@@ -556,6 +584,7 @@ def l_function_maass_page(maass_id):
 
 # L-function of GL(n) Maass form (n>2) #########################################
 @l_function_page.route("/ModularForm/<group>/Q/Maass/<level>/<char>/<R>/<ap_id>/")
+@label_redirect_wrapper
 def l_function_maass_gln_page(group, level, char, R, ap_id):
     args = {'fromDB': True, 'group': group, 'level': level,
             'char': char, 'R': R, 'ap_id': ap_id}
@@ -564,10 +593,12 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 
 # L-function of Siegel modular form    #########################################
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
+@label_redirect_wrapper
 def l_function_siegel_specimen_page(weight, orbit, number):
     return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
+@label_redirect_wrapper
 def l_function_siegel_page(weight, orbit, number):
     args = {'weight': weight, 'orbit': orbit, 'number': number}
     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
@@ -575,6 +606,7 @@ def l_function_siegel_page(weight, orbit, number):
 
 # L-function of Number field    ################################################
 @l_function_page.route("/NumberField/<label>/")
+@label_redirect_wrapper
 def l_function_nf_page(label):
     args = {'label': label}
     return render_single_Lfunction(DedekindZeta, args, request)
@@ -582,6 +614,7 @@ def l_function_nf_page(label):
 
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
+@label_redirect_wrapper
 def l_function_artin_page(label):
     newlabel = parse_artin_label(label, safe=True)
     if newlabel != label:
@@ -596,18 +629,21 @@ def l_function_artin_page(label):
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
+@label_redirect_wrapper
 def l_function_hgm_page(label,t):
     args = {'label': label+'_'+t}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 # L-function of symmetric powers of Elliptic curve #############################
 @l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<int:conductor>/<isogeny>/")
+@label_redirect_wrapper
 def l_function_ec_sym_page(power, conductor, isogeny):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q',
             'conductor': conductor, 'isogeny': isogeny}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
 @l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<label>/")
+@label_redirect_wrapper
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -619,6 +655,7 @@ def l_function_ec_sym_page_label(power, label):
 
 # L-function of genus 2 curve/Q ########################################
 @l_function_page.route("/Genus2Curve/Q/<cond>/<x>/")
+@label_redirect_wrapper
 def l_function_genus2_page(cond,x):
     args = {'label': cond+'.'+x}
     return render_single_Lfunction(Lfunction_genus2_Q, args, request)
