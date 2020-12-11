@@ -570,7 +570,7 @@ class Lfunction_from_db(Lfunction):
         if 'url' in kwargs and 'Lhash' not in kwargs and 'label' not in kwargs:
             self.Lhash = self.get_Lhash_by_url(self.url)
         if 'label' in kwargs:
-            self.func_data = get_lfunction_by_label(self.label)
+            self.func_data = get_lfunction_by_label(kwargs['label'])
         else:
             self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         if 'url' not in kwargs:
