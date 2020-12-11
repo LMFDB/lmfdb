@@ -751,8 +751,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 raise SearchParsingError('%s is not in the database.' % F)
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
-    F = F.replace('X', 'x')
-    if '^' in F:
+    if '^' in F or '**' in F:
         F1 = coeff_to_poly(F)
         from lmfdb.number_fields.number_field import poly_to_field_label
         F1 = poly_to_field_label(F1)
