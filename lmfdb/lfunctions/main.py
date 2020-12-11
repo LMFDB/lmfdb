@@ -133,7 +133,7 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
-             url_for_label=lambda label: url_for(".by_label", label=label),
+             url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
              credit=lambda: credit_string)
@@ -245,11 +245,8 @@ def l_function_history():
 
 @l_function_page.route("/random")
 def random_l_function():
-    url = db.lfunc_instances.random(projection="url")
-    if url:
-        return redirect("/L/"+url, 302)
-    else:
-        return random_l_function()
+    label = db.lfunc_search.random(projection="label")
+    return redirect(url_for_lfunction(label), 307)
 
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
