@@ -670,7 +670,7 @@ class Lfunction_from_db(Lfunction):
         return request.path.replace('/L/', '/L/download/')
 
     def download_euler_factors(self):
-        filename = self.url.replace('/','_')
+        filename = self.label
         data  = {}
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
@@ -696,17 +696,17 @@ class Lfunction_from_db(Lfunction):
                 title = 'Zeros of %s' % self.label)
 
     def download_dirichlet_coeff(self):
-        filename = self.url.replace('/','_')
+        filename = self.label
         data  = {}
         data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
                 lang = 'text',
-                title = 'Dirichlet coefficients of %s' % self.url)
+                title = 'Dirichlet coefficients of %s' % self.label)
 
     def download(self):
-        filename = self.url.replace('/','_')
+        filename = self.label
         data  = dict(self.__dict__)
         for k in ['level_factored', 'dirichlet_coefficients']:
             if isinstance(data[k], list):
@@ -718,7 +718,7 @@ class Lfunction_from_db(Lfunction):
                 Json.dumps(data),
                 filename + '.lfunction',
                 lang = 'text',
-                title = 'The L-function object of %s' % self.url)
+                title = 'The L-function object of %s' % self.label)
 
 
     @lazy_attribute
