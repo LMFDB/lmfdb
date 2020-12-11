@@ -204,26 +204,26 @@ Click on a subgroup in the diagram to see information about it.
 
 <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
 <p>
-<table>
-<tr><td><td>
+<table class="nowrap">
+<tr><td></td><td></td>
 {% for c in ccs %}
-<td>{{ info.ccdisplayknowl(gp.label, c.label, "complex", c.label)|safe }}
+<td class="right">{{ info.ccdisplayknowl(gp.label, c.label, "complex", c.label)|safe }}</td>
 {% endfor %}
 {% for p in gp.factors_of_order %}
 {% set ploop = loop %}
-<tr><td><td>{{p}}P
+<tr><td></td><td class="right">{{p}}P</td>
 {% for c in ccs %}
-<td>{{ ccs[c['powers'][ploop.index-1]-1].label }}
+<td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
 {% endfor %}
 
 {% endfor %}
 
 {% set dispv = info.sparse_cyclotomic_to_latex %}
 {% for chtr in chars %}
-<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}<td>
+<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}</td><td></td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
-   <td style="text-align:right">${{ dispv(cond, val) }}$ 
+   <td class="right">${{ dispv(cond, val) }}$</td>
   {% endfor %}
 {% endfor %}
 </table>
@@ -231,23 +231,23 @@ Click on a subgroup in the diagram to see information about it.
 <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
 <p>
 <table>
-<tr><td><td>
+<tr><td></td><td></td>
 {% for c in info.ccdivisions %}
-  <td>{{ info.ccdisplayknowl(gp.label, c.label, "rational", c.label)|safe }}
+  <td>{{ info.ccdisplayknowl(gp.label, c.label, "rational", c.label)|safe }}</td>
 {% endfor %}
 {% for p in gp.factors_of_order %}
   {% set ploop = loop %}
-  <tr><td><td>{{p}}P
+  <tr><td></td><td>{{p}}P</td>
   {% for c in rccs %}
-    <td>{{ info.ctor[ccs[c['classes'][0]['powers'][ploop.index-1]-1].label] }}
+    <td>{{ info.ctor[ccs[c['classes'][0]['powers'][ploop.index-1]-1].label] }}</td>
   {% endfor %}
 {% endfor %}
 
 {% for chtr in qchars %}
-  <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}<td>
+  <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}</td><td></td>
   {# for val in chtr['qvalues'] #}
   {% for c in rccs %}
-    <td style="text-align:right">${{ chtr.qvalues[c.classes.0.counter -1] }}$
+    <td class="right">${{ chtr.qvalues[c.classes.0.counter -1] }}$</td>
   {% endfor %}
 {% endfor %}
 </table>

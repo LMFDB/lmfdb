@@ -2208,6 +2208,9 @@ div.table-scroll-wrapper thead > tr:last-child > th {
     position: sticky; left: 0; top: 0;
     z-index:3;
 }
+table.nowrap td {
+    white-space:nowrap;
+}
 td.nowrap {
     white-space:nowrap;
 }
