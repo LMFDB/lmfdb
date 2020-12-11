@@ -300,7 +300,7 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        form.setup_cc_data({'m':'1-%s'%form.dim})
+        # form.setup_cc_data({'m':'1-%s'%form.dim})
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
