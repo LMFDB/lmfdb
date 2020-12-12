@@ -707,6 +707,17 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+    # check if a polynomial was entered
+    try:
+        F1 = coeff_to_poly(F).list() # this is the only line that might raise an error
+        from lmfdb.number_fields.number_field import poly_to_field_label
+        F1 = poly_to_field_label(F1)
+        if F1:
+            return F1
+        raise SearchParsingError('%s does not define a number field in the database.'%F)
+    except (TypeError, ValueError):
+        pass
+
     if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
@@ -750,15 +761,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             else:
                 raise SearchParsingError('%s is not in the database.' % F)
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
-    # check if a polynomial was entered
-    if '^' in F or '**' in F:
-        F1 = coeff_to_poly(F).list()
-        from lmfdb.number_fields.number_field import poly_to_field_label
-        print(F1)
-        F1 = poly_to_field_label(F1)
-        if F1:
-            return F1
-        raise SearchParsingError('%s does not define a number field in the database.'%F)
+
     # Expand out factored labels, like 11.11.11e20.1
     if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
         raise SearchParsingError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
