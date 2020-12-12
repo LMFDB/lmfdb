@@ -710,7 +710,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     # check if a polynomial was entered
     try:
         F1 = coeff_to_poly(F).list()
-    except (TypeError, ValueError, SyntaxError):
+    except Exception:
         pass
     else:
         from lmfdb.number_fields.number_field import poly_to_field_label
