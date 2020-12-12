@@ -223,8 +223,10 @@ function get_all_embeddings(num_embeddings) {
 {{ newform.display_hecke_cutters() | safe }}
 {% endif %}
 
+{% if newform.display_hecke_char_polys() is not None %}
 <h2>{{KNOWL('cmf.heckecharpolys', title='Hecke characteristic polynomials')}}</h2>
 
 {{ newform.display_hecke_char_polys() | safe }}
+{% endif %}
 
 {% endblock %}
