@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import ast
-import os
 import re
 from six import BytesIO
-import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
