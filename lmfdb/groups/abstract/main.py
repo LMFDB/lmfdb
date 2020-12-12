@@ -500,7 +500,6 @@ def rchar_data(label):
   else:
     ans += '<br>Not faithful'
   ans += '<br>Multiplicity: {}'.format(mychar.multiplicity)
-  ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
   ans += '<br>Schur index: {}'.format(mychar.schur_index)
   nt = mychar.nt
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
@@ -520,6 +519,7 @@ def cchar_data(label):
     ker = WebAbstractSubgroup(mychar.kernel)
     ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker.label,"$"+ker.subgroup_tex+'$'))
   nt = mychar.nt
+  ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
   ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
   ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
   if 'image' in mychar._data:
