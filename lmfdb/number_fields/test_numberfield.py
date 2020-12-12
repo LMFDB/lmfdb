@@ -67,7 +67,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/FieldLabels', 'with the same signature and absolute value of the')
 
     def test_url_bad(self):
-        self.check_args('/NumberField/junk.5', 'Error') # error mesage
+        self.check_args('/NumberField/junk', 'Error') # error mesage
 
     def test_random_field(self):
         self.check_args('/NumberField/random', 'Discriminant')
