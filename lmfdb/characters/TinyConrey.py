@@ -153,7 +153,7 @@ class ConreyCharacter(object):
         return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
 
     def sage_zeta_order(self, order):
-        return DirichletGroup(self.modulus, base_ring=CyclotomicField(order)).zeta_order()
+        return 1 if self.modulus <= 2 else lcm(2,order)
 
     def sage_character(self, order, genvalues):
         H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
