@@ -452,7 +452,7 @@ class Lfunction_from_db(Lfunction):
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
-        argkeys = ({'url', 'label', 'kwargs'}).intersection(set(kwargs))
+        argkeys = ({'url', 'label', 'Lhash'}).intersection(set(kwargs))
         if len(argkeys) == 0:
             raise KeyError('Unable to construct L-function',
                            'Missing required parameters: label, Lhash, or url')
