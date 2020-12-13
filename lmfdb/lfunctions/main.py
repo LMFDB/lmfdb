@@ -607,7 +607,7 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
 def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
     # if it passed the label_redirect_wrapper, then the url is not in the database
     label = '-'.join(map(str, [field_label, conductor_label, isogeny_class_label]))
-    return abort(404, "L-function for elliptic curve with label %s not found" % label)
+    return abort(404, "L-function for elliptic curve isogeny class with label %s not found" % label)
 
 
 # L-function of Cusp form ############################################
@@ -658,7 +658,7 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
 @label_redirect_wrapper
 def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
     # if it passed the label_redirect_wrapper, then the url is not in the database
-    label = '-'.join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+    label = '.'.join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return abort(404, "L-function for classical modular form with label %s not found" % label)
 
 
@@ -700,9 +700,9 @@ def l_function_hmf_page(field, label, character, number):
     #FIXME this feels so wrong...
     if (not character and not number) or (character == '0' and number == '0'):
         url = "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
-        label = db.lfunc_instances.lucky({'url': url}, 'label')
-        if label:
-            return redirect(url_for_lfunction(label))
+        lfun_label = db.lfunc_instances.lucky({'url': url}, 'label')
+        if lfun_label:
+            return redirect(url_for_lfunction(lfun_label))
 
     args = {'field': field, 'label': label, 'character': character, 'number': number}
     return render_single_Lfunction(Lfunction_HMF, args, request)
@@ -735,7 +735,7 @@ def l_function_maass_page(maass_id):
 def l_function_maass_gln_page(group, level, char, R, ap_id):
     # if it passed the label_redirect_wrapper, then the url is not in the database
     maass_id = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (group, level, char, R, ap_id)
-    return abort(404, '"L-function for modular form with label %s not found' % maass_id)
+    return abort(404, '"L-function for modular form %s not found' % maass_id)
     #HERE
 
 

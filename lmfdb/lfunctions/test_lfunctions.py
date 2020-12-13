@@ -615,14 +615,18 @@ class LfunctionTest(LmfdbTest):
     def test_errorMessages(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/k/4/a/1/')
         assert 'The requested URL was not found on the server' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/Character/Dirichlet/9/10/')
-        assert 'should not exceed the modulus ' in L.get_data(as_text=True)
+        assert 'L-function for dirichlet character with label 9.10 not found' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/EllipticCurve/Q/11/b/')
-        assert 'No L-function instance data for' in L.get_data(as_text=True)
+        assert 'L-function for elliptic curve isogeny class with label 11.b not found' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/6/d/c/')
-        assert 'No L-function instance data for "ModularForm/GL2/Q/holomorphic/5/6/d/c" was found in the database.' in L.get_data(as_text=True)
+        assert 'L-function for classical modular form with label 5.6.d.c not found" was found in the database.' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/')
-        assert 'No L-function instance data for' in L.get_data(as_text=True)
+        assert 'L-function for modular form ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/ not found' in L.get_data(as_text=True)
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/2/0/')
         assert 'L-function of Hilbert form of non-trivial character not implemented yet' in L.get_data(as_text=True)
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.5-a/0/0/')
