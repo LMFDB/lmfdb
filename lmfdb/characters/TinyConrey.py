@@ -158,5 +158,5 @@ class ConreyCharacter(object):
     def sage_character(self, order, genvalues):
         H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
         M = H._module
-        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, H.zeta_order())
+        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))
