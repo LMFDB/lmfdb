@@ -304,15 +304,15 @@ class LfunctionTest(LmfdbTest):
 
 
     def test_Lhmf(self):
-        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/')
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/', follow_redirects=True)
         assert '0.3599289594' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/')
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/', follow_redirects=True)
         assert '3.67899147579' in L.get_data(as_text=True)
-        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/')
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
         assert '0.22396252' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/')
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
         assert '3.03882077536' in L.get_data(as_text=True)
-        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.24.1/holomorphic/2.2.24.1-1.1-a/0/0/')
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.24.1/holomorphic/2.2.24.1-1.1-a/0/0/', follow_redirects=True)
         assert '0.28781' in L.get_data(as_text=True)
 
     def test_Lgl2maass(self):
@@ -331,9 +331,9 @@ class LfunctionTest(LmfdbTest):
         assert '1 + 9.53369526135i' in L.get_data(as_text=True)
 
     def test_Lgl3maass(self):
-        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
+        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/', follow_redirects=True)
         assert '0.0742' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
+        L = self.tc.get('/L/Zeros/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/', follow_redirects=True)
         assert '0.9615558824' in L.get_data(as_text=True)
 
     def test_Lgl4maass(self):
@@ -452,69 +452,69 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.get_data(as_text=True)
 
     def test_Lgenus2(self):
-        L = self.tc.get('/L/Genus2Curve/Q/169/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert '0.0904903908' in L.get_data(as_text=True) and 'E_6' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/')
+        L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert '5.06823463541' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/15360/f/')
+        L = self.tc.get('/L/Genus2Curve/Q/15360/f/', follow_redirects=True)
         assert 'Isogeny class 15360.f' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/')
+        L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/', follow_redirects=True)
         assert '2.15654793578' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/2457/b/')
+        L = self.tc.get('/L/Genus2Curve/Q/2457/b/', follow_redirects=True)
         assert 'Isogeny class 2.0.3.1-273.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.3.1-273.4-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2457.b' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/363/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/363/a/', follow_redirects=True)
         assert 'Isogeny class 363.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Isogeny class 11.a' in L.get_data(as_text=True)
         assert 'Isogeny class 33.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/360/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/360/a/', follow_redirects=True)
         assert 'Isogeny class 360.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Isogeny class 15.a' in L.get_data(as_text=True)
         assert 'Isogeny class 24.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/336/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/336/a/', follow_redirects=True)
         assert 'Isogeny class 336.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Isogeny class 14.a' in L.get_data(as_text=True)
         assert 'Isogeny class 24.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/324/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/324/a/', follow_redirects=True)
         assert 'Isogeny class 324.a' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/294/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/294/a/', follow_redirects=True)
         assert 'Isogeny class 294.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Isogeny class 14.a' in L.get_data(as_text=True)
         assert 'Isogeny class 21.' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/256/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/256/a/', follow_redirects=True)
         assert 'Isogeny class 256.a' in L.get_data(as_text=True)
         assert 'Modular form 16.2.e.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/169/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert 'Isogeny class 169.a' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.4.1' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.10.1' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/196/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/196/a/', follow_redirects=True)
         assert 'Isogeny class 196.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Isogeny class 14.a' in L.get_data(as_text=True)
         assert 'Modular form 14.2.a.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/576/a/')
+        L = self.tc.get('/L/Genus2Curve/Q/576/a/', follow_redirects=True)
         assert 'Hilbert modular form 2.2.8.1-9.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.2.8.1-9.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 576.a' in L.get_data(as_text=True)
@@ -522,7 +522,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 24.2.d.a.13.1' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a.13.2' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Genus2Curve/Q/20736/i/')
+        L = self.tc.get('/L/Genus2Curve/Q/20736/i/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.8.1-324.3-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.24.1-36.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.8.1-324.3-a' in L.get_data(as_text=True)
