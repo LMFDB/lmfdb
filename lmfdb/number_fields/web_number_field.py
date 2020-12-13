@@ -255,8 +255,8 @@ def formatfield(coef, show_poly=False, missing_text=None):
       and either produce a number field knowl if the polynomial matches
       a number field in the database, otherwise produce a knowl which
       says say "Deg 15", which can be opened to show the degree 15
-      polynomial.  
-      
+      polynomial.
+
       If show_poly is set to true and the polynomial is not in the
       database, just display the polynomial (no knowl).
     """
@@ -852,11 +852,6 @@ class WebNumberField:
 
     def dirichlet_group(self):
         return self._data['dirichlet_group']
-
-    def full_dirichlet_group(self):
-        from dirichlet_conrey import DirichletGroup_conrey
-        f = self.conductor()
-        return DirichletGroup_conrey(f)
 
     # Helper for ramified algebras table
     def get_local_algebra(self, p):

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from dirichlet_conrey import DirichletGroup_conrey
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import prime_range, CC, gcd, ZZ
 
 from lmfdb.lmfdb_database import db
@@ -137,12 +137,12 @@ class mf_hecke_cc(MfChecker):
         """
         ls = rec['label'].split('.')
         level, weight, chi = map(int, [ls[0], ls[1], ls[-2]])
-        char = DirichletGroup_conrey(level, CC)[chi]
+        char = ConreyCharacter(level, chi)
         Z = rec['an_normalized']
         for p in prime_range(31+1):
             if level % p != 0:
                 # a_{p^2} = a_p^2 - chi(p)
-                charval = CC(2*char.logvalue(int(p)) * CC.pi()*CC.gens()[0]).exp()
+                charval = CC(2*char.conreyangle(int(p)) * CC.pi()*CC.gens()[0]).exp()
             else:
                 charval = 0
             if (CC(*Z[p**2 - 1]) - (CC(*Z[p-1])**2 - charval)).abs() > 1e-13:

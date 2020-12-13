@@ -1,6 +1,7 @@
-from sage.all import gcd, Mod, Integer
+from sage.all import (gcd, Mod, Integer, Integers, Rational, pari, Pari,
+                      DirichletGroup, CyclotomicField, euler_phi)
 from sage.misc.cachefunc import cached_method
-
+from sage.modular.dirichlet import DirichletCharacter
 
 def symbol_numerator(cond, parity):
     # Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007).
@@ -46,7 +47,32 @@ def kronecker_symbol(m):
 ## Conrey character with no call to Jonathan's code
 ## in order to handle big moduli
 ##
-class ConreyCharacter:
+
+def get_sage_genvalues(modulus, order, genvalues, zeta_order):
+        """
+        Helper method for computing correct genvalues when constructing
+        the sage character
+        """
+        phi_mod = euler_phi(modulus)
+        exponent_factor = phi_mod / order
+        genvalues_exponent = [x * exponent_factor for x in genvalues]
+        return [x * zeta_order / phi_mod for x in genvalues_exponent]
+
+
+class PariConreyGroup(object):
+
+    def __init__(self, modulus):
+        self.modulus = int(modulus)
+        self.G = Pari("znstar({},1)".format(modulus))
+
+    def gens(self):
+        return Integers(self.modulus).unit_gens()
+
+    def invariants(self):
+        return pari("znstar({},1).cyc".format(self.modulus))
+
+
+class ConreyCharacter(object):
     """
     tiny implementation on Conrey index only
     """
@@ -55,6 +81,10 @@ class ConreyCharacter:
         assert gcd(modulus, number)==1
         self.modulus = Integer(modulus)
         self.number = Integer(number)
+        self.G = Pari("znstar({},1)".format(modulus))
+        self.chi_pari = pari("znconreylog(%s,%d)"%(self.G,self.number))
+        self.chi_0 = None
+        self.indlabel = None
 
     @property
     def texname(self):
@@ -67,23 +97,17 @@ class ConreyCharacter:
 
     @cached_method
     def conductor(self):
-        cond = Integer(1);
-        number = self.number
-        for p,e in self.modfactor():
-            mp = Mod(number, p**e);
-            if mp == 1:
-                continue
-            if p == 2:
-                cond = 4
-                if number % 4 == 3:
-                    mp = -mp
-            else:
-                cond *= p
-                mp = mp**(p-1)
-            while mp != 1:
-                cond *= p
-                mp = mp**p
-        return cond
+        B = pari("znconreyconductor(%s,%s,&chi0)"%(self.G, self.chi_pari))
+        if B.type() == 't_INT':
+            # means chi is primitive
+            self.chi_0 = self.chi_pari
+            self.indlabel = self.number
+            return int(B)
+        else:
+            self.chi_0 = pari("chi0")
+            G_0 = Pari("znstar({},1)".format(B))
+            self.indlabel = int(pari("znconreyexp(%s,%s)"%(G_0,self.chi_0)))
+            return int(B[0])
 
     def is_primitive(self):
         return self.conductor() == self.modulus
@@ -91,7 +115,7 @@ class ConreyCharacter:
     @cached_method
     def parity(self):
         number = self.number
-        par = 0;
+        par = 0
         for p,e in self.modfactor():
             if p == 2:
                 if number % 4 == 3:
@@ -122,3 +146,17 @@ class ConreyCharacter:
         p = self.parity()
         return kronecker_symbol(symbol_numerator(c, p))
 
+    def conreyangle(self,x):
+        return Rational(pari("chareval(%s,znconreylog(%s,%d),%d)"%(self.G,self.G,self.number,x)))
+
+    def gauss_sum_numerical(self, a):
+        return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
+
+    def sage_zeta_order(self, order):
+        return DirichletGroup(self.modulus, base_ring=CyclotomicField(order)).zeta_order()
+
+    def sage_character(self, order, genvalues):
+        H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
+        M = H._module
+        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, H.zeta_order())
+        return DirichletCharacter(H,M(order_corrected_genvalues))
