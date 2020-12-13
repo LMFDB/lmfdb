@@ -1,5 +1,5 @@
 from sage.all import (gcd, Mod, Integer, Integers, Rational, pari, Pari,
-                      DirichletGroup, CyclotomicField, euler_phi)
+                      DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 
