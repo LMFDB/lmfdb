@@ -869,7 +869,7 @@ def set_gaga_properties(L):
     '''
     ans = []
     if hasattr(L, 'label'):
-        ans.append(('Label', L.lfun_label))
+        ans.append(('Label', L.label))
     ans.append(('Degree', prop_int_pretty(L.degree)))
 
     ans.append(('Conductor', prop_int_pretty(L.level)))
