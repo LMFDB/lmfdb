@@ -964,19 +964,11 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = get_bread(L.degree,
                                       [(L.maass_id.partition('/')[2], request.path)])
 
-    elif L.Ltype() == 'bianchimodularform':
-        friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Bianchi modular form ' + L.label, friendlink.rpartition('/')[0])]
-        if L.degree == 4:
-            info['bread'] = get_bread(4, [(L.label, request.path)])
-        else:
-            info['bread'] = [('L-functions', url_for('.index'))]
-
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Hilbert modular form ' + L.label, friendlink.rpartition('/')[0])]
+        info['friends'] = [('Hilbert modular form ' + L.origin_label, friendlink.rpartition('/')[0])]
         if L.degree == 4:
-            info['bread'] = get_bread(4, [(L.label, request.path)])
+            info['bread'] = get_bread(4, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -994,14 +986,14 @@ def set_bread_and_friends(info, L, request):
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number field', friendlink)]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
     elif L.Ltype() == "artin":
         info['friends'] = [('Artin representation', L.artin.url_for())]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -1012,7 +1004,7 @@ def set_bread_and_friends(info, L, request):
         friendlink = newlink[0]+'/t'+newlink[2]
         info['friends'] = [('Hypergeometric motive ', friendlink)]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -1031,19 +1023,19 @@ def set_bread_and_friends(info, L, request):
         if L.m == 2:
             info['bread'] = get_bread(3, [("Symmetric square of elliptic curve",
                                            url_for('.l_function_ec_sym2_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page_label',
-                                                            label=L.label,power=L.m))])
+                                          (L.origin_label, url_for('.l_function_ec_sym_page_label',
+                                                            label=L.origin_label,power=L.m))])
         elif L.m == 3:
             info['bread'] = get_bread(4, [("Symmetric cube of elliptic curve",
                                            url_for('.l_function_ec_sym3_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page_label',
-                                                            label=L.label,power=L.m))])
+                                          (L.origin_label, url_for('.l_function_ec_sym_page_label',
+                                                            label=L.origin_label,power=L.m))])
         else:
             info['bread'] = [('L-functions', url_for('.index')),
                              ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
-                              + str(L.label),
+                              + str(L.origin_label),
                               url_for('.l_function_ec_sym_page_label',
-                                      label=L.label,power=L.m))]
+                                      label=L.origin_label,power=L.m))]
 
         friendlink = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/')
         splitlink = friendlink.rpartition('/')
@@ -1053,7 +1045,7 @@ def set_bread_and_friends(info, L, request):
         splitlink = friendlink2.rpartition('/')
         friendlink2 = splitlink[0] + splitlink[2]
 
-        info['friends'] = [('Isogeny class ' + L.label, friendlink), ('Symmetric 1st Power', friendlink2)]
+        info['friends'] = [('Isogeny class ' + L.origin_label, friendlink), ('Symmetric 1st Power', friendlink2)]
         for j in range(2, L.m + 2):
             if j != L.m:
                 friendlink3 = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
