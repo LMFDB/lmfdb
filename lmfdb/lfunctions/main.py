@@ -868,7 +868,7 @@ def set_gaga_properties(L):
     upper right corner
     '''
     ans = []
-    if hasattr(L, 'lfun_label'):
+    if hasattr(L, 'label'):
         ans.append(('Label', L.lfun_label))
     ans.append(('Degree', prop_int_pretty(L.degree)))
 

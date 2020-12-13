@@ -561,14 +561,14 @@ class LfunctionTest(LmfdbTest):
         assert '/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1' in L.get_data(as_text=True)
 
     def test_tracehash(self):
-        L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')
+        L = self.tc.get('/L/tracehash/7200459463482029776252499748763/', follow_redirects=True)
         assert 'trace_hash = 7200459463482029776252499748763 not in [0, 2^61]' in L.get_data(as_text=True)
         L = self.tc.get('/L/tracehash/1938322253992393114/', follow_redirects = True)
         assert '324016' in L.get_data(as_text=True), "Missing data in /L/tracehash/1938322253992393114/"
         assert 'Dual L-function' not in L.get_data(as_text=True)
 
 
-        L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects = True)
+        L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects=True)
         assert 'Isogeny class 37.a' in L.get_data(as_text=True)
         assert 'Dual L-function' not in L.get_data(as_text=True)
 
@@ -582,7 +582,7 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LDirichletZeros(self):
-        L = self.tc.get('/L/Zeros/Character/Dirichlet/5/2/', follow_redirects=True)
+        L = self.tc.get('/L/Character/Dirichlet/5/2/', follow_redirects=True)
         assert '6.18357819' in L.get_data(as_text=True)
 
     def test_LecZeros(self):

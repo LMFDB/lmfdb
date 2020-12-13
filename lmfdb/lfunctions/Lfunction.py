@@ -422,7 +422,7 @@ class RiemannZeta(Lfunction):
         self.sign = 1
         self.selfdual = True
         self.dirichlet_coefficients = [1 for n in range(self.numcoeff)]
-        self.label = "zeta"
+        self.origin_label = "zeta"
         self.charactermodulus = self.characternumber = 1
         # Specific properties
         self.is_zeta = True
@@ -470,7 +470,7 @@ class Lfunction_from_db(Lfunction):
         makeLfromdata(self)
         self._set_knowltype()
         self.credit = ''
-        self.label = self.lfun_label = self.lfunc_data['label']
+        self.label = self.lfunc_data['label']
         self.info = self.general_webpagedata()
         self.info['title'] = "L-function " + self.label
 
@@ -786,7 +786,7 @@ class Lfunction_Maass(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.label = self.maass_id
+        self.origin_label = self.maass_id
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
@@ -823,17 +823,17 @@ class Lfunction_HMF(Lfunction):
         self._Ltype = "hilbertmodularform"
 
         # Put the arguments into the object dictionary
-        self.label = args['label']
+        self.origin_label = args['label']
         self.number = int(args['number'])
         self.character= int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
         # Load form (f) from database
-        (f, F_hmf) = getHmfData(self.label)
+        (f, F_hmf) = getHmfData(self.origin_label)
         if f is None:
             # NB raising an error is not a good way to handle this on website!
-            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
+            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.origin_label)
         try:
             self.weight = int(f['parallel_weight'])
         except KeyError:
@@ -1089,11 +1089,13 @@ class DedekindZeta(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.origin_label = self.label
+        self.label = None
 
         # Fetch the polynomial of the field from the database
-        wnf = WebNumberField(self.label)
+        wnf = WebNumberField(self.origin_label)
         if not wnf or wnf.is_null():
-            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.label)
+            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.origin_label)
         self.NF = wnf.K()
         self.h = wnf.class_number()
         self.R = wnf.regulator()
@@ -1187,7 +1189,7 @@ class DedekindZeta(Lfunction):
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "nf"
-        self.info['label'] = self.label
+        self.info['label'] = ''
         self.info['title'] = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
 
     def original_object(self):
@@ -1209,13 +1211,13 @@ class ArtinLfunction(Lfunction):
         self._Ltype = "artin"
 
         # Put the arguments into the object dictionary
-        self.label = args["label"]
+        self.origin_label = args["label"]
 
         # Create the Artin representation
         try:
-            self.artin = ArtinRepresentation(self.label)
+            self.artin = ArtinRepresentation(self.origin_label)
         except Exception as err:
-            raise KeyError('Error constructing Artin representation %s.'%self.label, *err.args)
+            raise KeyError('Error constructing Artin representation %s.'%self.origin_label, *err.args)
 
         # Mandatory properties
         self.fromDB = False
@@ -1270,7 +1272,7 @@ class ArtinLfunction(Lfunction):
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "artin"
-        self.info['title'] = ("L-function for Artin representation " + str(self.label))
+        self.info['title'] = ("L-function for Artin representation " + str(self.origin_label))
 
     def original_object(self):
         return self.artin
@@ -1296,12 +1298,12 @@ class HypergeometricMotiveLfunction(Lfunction):
         self._Ltype = "hgmQ"
 
         # Put the arguments into the object dictionary
-        self.label = args["label"]
+        self.origin_label = args["label"]
 
         # Get the motive from the database
-        self.motive = getHgmData(self.label)
+        self.motive = getHgmData(self.origin_label)
         if not self.motive:
-            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.label)
+            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.origin_label)
 
         # Mandatory properties
         self.fromDB = False
@@ -1353,7 +1355,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "hgm"
-        self.info['title'] = ("L-function for the hypergeometric motive with label "+self.label)
+        self.info['title'] = ("L-function for the hypergeometric motive with label "+self.origin_label)
 
     def original_object(self):
         return self.motive
@@ -1385,15 +1387,15 @@ class SymmetricPowerLfunction(Lfunction):
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.m = int(self.power)
-        self.label = str(self.conductor) + '.' + self.isogeny
+        self.origin_label = str(self.conductor) + '.' + self.isogeny
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented " +
                             "only for elliptic curves over Q.")
 
         # Create the elliptic curve
-        Edata = getEllipticCurveData(self.label + '1')
+        Edata = getEllipticCurveData(self.origin_label + '1')
         if Edata is None:
-            raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
+            raise KeyError('No elliptic curve with label %s exists in the database' % self.origin_label)
         else:
             self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
 
@@ -1460,7 +1462,7 @@ class SymmetricPowerLfunction(Lfunction):
                         " Power")
 
         self.info['title'] = (r"The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of elliptic curve isogeny class %s"
-                      % (ordinal(self.m), self.m, self.label))
+                      % (ordinal(self.m), self.m, self.origin_label))
 
 
     def original_object(self):
