@@ -120,6 +120,7 @@ class Lfunction(object):
             info['label'] = self.label
         except AttributeError:
             info['label'] = ""
+        print(info['label'])
 
         try:
             info['credit'] = self.credit

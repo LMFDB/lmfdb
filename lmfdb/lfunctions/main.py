@@ -563,6 +563,8 @@ def label_redirect_wrapper(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         url = url_for('.' + f.__name__, **kwds)[3:].rstrip('/')
+        if 'Maass' in url:
+            url += '/'
         label = db.lfunc_instances.lucky({'url': url}, 'label')
         if label:
             return redirect(url_for_lfunction(label))
