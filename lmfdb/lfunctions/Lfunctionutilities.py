@@ -567,6 +567,7 @@ def lfuncFEtex(L, fmt):
             ans += r"\quad (\text{with }\epsilon \text{ unknown})"
         ans += r"\end{aligned}"
     elif fmt == "selberg":
+        print(L.mu_fe, L.nu_fe)
         ans += "(" + str(int(L.degree)) + r",\ "
         if L.level >= 10 ** 8 and not is_prime(int(L.level)):
             ans += latex(L.level_factored)
@@ -579,7 +580,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if L._Ltype == "maass":
+            if  not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3
@@ -608,6 +609,7 @@ def lfuncFEtex(L, fmt):
         ans += r"),\ "
         ans += seriescoeff(L.sign, 0, "literal", "", 3)
         ans += ")"
+        print(ans)
 
     return ans
 
