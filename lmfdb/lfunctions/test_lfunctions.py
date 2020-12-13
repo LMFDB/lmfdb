@@ -627,18 +627,25 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/')
         assert 'L-function for modular form ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/ not found' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/2/0/')
         assert 'L-function of Hilbert form of non-trivial character not implemented yet' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.5-a/0/0/')
         assert 'No Hilbert modular form with label' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/Genus2Curve/Q/247/a/')
-        assert 'No L-function instance data for' in L.get_data(as_text=True)
+        assert 'L-function for genus 2 curve with label 247.a not found' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/NumberField/2.2.7.1/')
         assert 'No data for the number field' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ArtinRepresentation/3.231.4t5.a.a/')
         assert 'Error constructing Artin representation' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/37/d/')
         assert 'No elliptic curve with label ' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'This Elliptic curve has complex multiplication and the symmetric power of its L-function is then not primitive.' in L.get_data(as_text=True)
 

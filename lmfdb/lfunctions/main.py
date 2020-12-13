@@ -587,7 +587,7 @@ def l_function_dirichlet_page(modulus, number):
 def l_function_ec_page(conductor_label, isogeny_class_label):
     # if it passed the label_redirect_wrapper, then the url is not in the database
     label = '.'.join(map(str, [conductor_label, isogeny_class_label]))
-    return abort(404, "L-function for elliptic curve with label %s not found" % label)
+    return abort(404, "L-function for elliptic curve isogeny class with label %s not found" % label)
 
 
 ##FIXME, do we need to support this route?
