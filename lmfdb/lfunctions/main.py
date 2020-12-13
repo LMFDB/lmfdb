@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization
+from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, prime_pi, Integer, PolynomialRing, next_prime
 
 import tempfile
 import os
@@ -29,11 +29,15 @@ from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
+from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils import (
-    to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty, round_to_half_int, display_complex,
-    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop, parse_primes,
-    SearchArray, TextBox, YesNoBox, CountBox, SubsetBox, TextBoxWithSelect)
+    to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
+    prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
+    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
+    parse_primes, parse_equality_constraints,
+    SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
+    SubsetBox, TextBoxWithSelect, RowSpacer)
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.app import is_debug_mode, _single_knowl
@@ -71,7 +75,15 @@ def learnmore_list(path=None, remove=None):
 def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
-        return l_function_search(info)
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        if search_type in ['List', 'Random']:
+            return l_function_search(info)
+        elif search_type == 'Traces':
+            return trace_search(info)
+        elif search_type == 'Euler':
+            return euler_search(info)
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
         "LfunctionNavigate.html",
         info=info,
@@ -80,10 +92,17 @@ def index():
         learnmore=learnmore_list(),
         bread=get_bread())
 
-def process_search(res, info, query):
+def common_postprocess(res, info, query):
     origins = defaultdict(lambda: defaultdict(list))
     for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
         origins[rec["Lhash"]][rec["type"]].append(rec["url"])
+    for L in res:
+        L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
+        L['url'] = url_for_lfunction(L['label'])
+    return res
+
+def process_search(res, info, query):
+    res = common_postprocess(res, info, query)
     for L in res:
         if L.get('motivic_weight') is None:
             L['analytic_normalization'] = round_to_half_int(L.get('analytic_normalization'))
@@ -100,12 +119,25 @@ def process_search(res, info, query):
         if len(nus) > 4 and len(set(nus)) == 1:
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
-        L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
         L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
-        L['url'] = url_for_lfunction(L['label'])
+    return res
+
+def process_trace(res, info, query):
+    return common_postprocess(res, info, query)
+
+def process_euler(res, info, query):
+    res = common_postprocess(res, info, query)
+    R = PolynomialRing(ZZ, 'T')
+    for L in res:
+        L['euler_factor'] = {}
+        p = 2
+        for i, F in enumerate(L.get('euler_factors', [])):
+            print(p, F, latex(R(F)))
+            L['euler_factor'][p] = latex(R(F))
+            p = next_prime(p)
     return res
 
 def url_for_lfunction(label):
@@ -126,17 +158,7 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
-
-@search_wrap(template="LfunctionSearchResults.html",
-             table=db.lfunc_search,
-             postprocess=process_search,
-             title="L-function search results",
-             err_title="L-function search input error",
-             url_for_label=url_for_lfunction,
-             learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
-def l_function_search(info, query):
+def common_parse(info, query):
     info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
@@ -149,6 +171,63 @@ def l_function_search(info, query):
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
+    info['bigint_knowl'] = bigint_knowl
+
+@search_wrap(template="LfunctionSearchResults.html",
+             table=db.lfunc_search,
+             postprocess=process_search,
+             title="L-function search results",
+             err_title="L-function search input error",
+             url_for_label=url_for_lfunction,
+             learnmore=learnmore_list,
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             credit=lambda: credit_string)
+def l_function_search(info, query):
+    common_parse(info, query)
+
+@search_wrap(template="LfunctionTraceSearchResults.html",
+             table=db.lfunc_search,
+             title="L-function search results",
+             err_title="L-function search input error",
+             postprocess=process_trace,
+             learnmore=learnmore_list,
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             credit=lambda: credit_string)
+def trace_search(info, query):
+    set_Trn(info, query)
+    common_parse(info, query)
+    process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+
+@search_wrap(template="LfunctionEulerSearchResults.html",
+             table=db.lfunc_search,
+             title="L-function search results",
+             err_title="L-function search input error",
+             postprocess=process_euler,
+             learnmore=learnmore_list,
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             credit=lambda: credit_string)
+def euler_search(info, query):
+    if 'n' not in info:
+        info['n'] = '1-10'
+    set_Trn(info, query)
+    common_parse(info, query)
+    d = query.get("degree")
+    if not isinstance(d, (int, Integer)):
+        print(d)
+        raise RuntimeError("HELLO")
+        raise ValueError("To search on Euler factors, you must specify one degree")
+    def parse_poly(s):
+        poly = coeff_to_poly(s)
+        coeffs = list(poly)
+        if len(coeffs) > d+1:
+            raise ValueError("The degree of '%s' is larger than %s" % (s, d))
+        return coeffs + [0]*(d+1-len(coeffs))
+    def pi_wrap(p):
+        p = ZZ(p)
+        if not p.is_prime():
+            raise ValueError("Euler factors only defined for primes, not %s" % p)
+        return prime_pi(p)
+    parse_equality_constraints(info, query, 'euler_constraints', qfield="euler_factors", prefix='E', parse_singleton=parse_poly, nshift=pi_wrap)
 
 class LFunctionSearchArray(SearchArray):
     def __init__(self):
@@ -185,7 +264,7 @@ class LFunctionSearchArray(SearchArray):
             min_width=110)
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            knowl="lfunction.bad_primes",
+            knowl="lfunction.bad_prime",
             label=r"Bad \(p\)",
             example="2,3",
             select_box=prime_quantifier)
@@ -220,6 +299,47 @@ class LFunctionSearchArray(SearchArray):
             example="2")
         count = CountBox()
 
+        trace_coldisplay = TextBox(
+            name='n',
+            label='Columns to display',
+            example='1-40',
+            example_span='3,7,19, 40-90')
+
+        euler_coldisplay = TextBox(
+            name='n',
+            label='Columns to display',
+            example='2-11',
+            example_span='3,7,19')
+
+        trace_primality = SelectBox(
+            name='n_primality',
+            label='Show',
+            options=[('', 'primes only'),
+                     ('prime_powers', 'prime powers'),
+                     ('all', 'all')])
+
+        trace_an_constraints = TextBox(
+            name='an_constraints',
+            label='Trace constraints',
+            example='a3=2,a5=0',
+            example_span='a17=1, a8=0')
+
+        euler_constraints = TextBox(
+            name='euler_constraints',
+            label='Euler factor constraints',
+            example='E3=1-T,E5=1+T+5T^2')
+
+        trace_an_moduli = TextBox(
+            name='an_modulo',
+            label='Modulo',
+            example_span='5, 16')
+
+        trace_view = SelectBox(
+            name='view_modp',
+            label='View',
+            options=[('', 'integers'),
+                     ('reductions', 'reductions')])
+
         self.browse_array = [
             [z1, degree],
             [conductor, analytic_conductor],
@@ -235,6 +355,42 @@ class LFunctionSearchArray(SearchArray):
             [primitive, algebraic, self_dual, z1, root_angle],
             [bad_primes, central_character]
         ]
+
+        self.traces_array = [
+            RowSpacer(22),
+            [trace_coldisplay, trace_primality],
+            [trace_an_constraints, trace_an_moduli, trace_view]]
+
+        self.euler_array = [
+            RowSpacer(22),
+            [euler_coldisplay],
+            [euler_constraints]]
+
+    def search_types(self, info):
+        return self._search_again(
+            info,
+            [('', 'List of L-functions'),
+             ('Traces', 'Traces table'),
+             ('Euler', 'Euler factors'),
+             ('Random', 'Random form')])
+
+    def html(self, info=None):
+        # We need to override html to add the trace and euler factor inputs
+        layout = [self.hidden_inputs(info), self.main_table(info), self.buttons(info)]
+        st = self._st(info)
+        if st == "Traces":
+            trace_table = self._print_table(self.traces_array, info, layout_type="box")
+            layout.append(trace_table)
+        elif st == "Euler":
+            euler_table = self._print_table(self.euler_array, info, layout_type="box")
+            layout.append(euler_table)
+        return "\n".join(layout)
+
+@l_function_page.route("/history")
+def l_function_history():
+    t = "A Brief History of L-functions"
+    bc = get_bread(breads=[(t, url_for('.l_function_history'))])
+    return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=learnmore_list())
 
 @l_function_page.route("/random")
 def random_l_function():

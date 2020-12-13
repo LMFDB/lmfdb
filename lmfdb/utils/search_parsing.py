@@ -1003,7 +1003,7 @@ def parse_noop(inp, query, qfield, func=None):
     query[qfield] = inp
 
 @search_parser
-def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=int, shift=0): # Note that postgres -> index is one-based
+def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=int, nshift=None): # Note that postgres -> index is one-based
     for piece in inp.split(','):
         piece = piece.strip().split('=')
         if len(piece) != 2:
@@ -1012,7 +1012,9 @@ def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=i
         n = n.strip()
         if not n.startswith(prefix):
             raise SearchParsingError("%s does not start with %s"%(n, prefix))
-        n = int(n[len(prefix):]) + shift
+        n = int(n[len(prefix):])
+        if nshift is not None:
+            n = nshift(n)
         t = parse_singleton(t.strip())
         query[qfield + '.%s'%n] = t
 
