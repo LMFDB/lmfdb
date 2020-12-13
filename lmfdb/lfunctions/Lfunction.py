@@ -39,6 +39,7 @@ from .LfunctionComp import isogeny_class_cm
 from .LfunctionDatabase import (
         get_lfunction_by_label,
         get_lfunction_by_Lhash,
+        get_instances_by_label,
         get_instances_by_Lhash,
         get_instances_by_Lhash_and_trace_hash,
         get_factors_instances,
@@ -46,14 +47,6 @@ from .LfunctionDatabase import (
         get_instance_by_url, getHmfData, getHgmData,
         getEllipticCurveData, get_multiples_by_Lhash_and_trace_hash)
 
-def artin_url(label):
-    return "ArtinRepresentation/" + label
-
-def hmf_url(label, character, number):
-    if (not character and not number) or (character == '0' and number == '0'):
-        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
-    else:
-        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label + "/" + character + "/" + number
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -270,9 +263,10 @@ def makeLfromdata(L):
         L.negative_zeros_raw = L.positive_zeros_raw[:]
         L.dual_accuracy = L.accuracy
     else:
-        dual_L_label = data['conjugate']
-        dual_L_data = get_lfunction_by_Lhash(dual_L_label)
-        L.dual_link = '/L/' + dual_L_data['origin']
+        from .main import url_for_lfunction
+        dual_L_Lhash = data['conjugate']
+        dual_L_data = get_lfunction_by_Lhash(dual_L_Lhash)
+        L.dual_link = url_for_lfunction(dual_L_data['label'])
         L.dual_accuracy = dual_L_data.get('accuracy', None)
         L.negative_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in dual_L_data['positive_zeros']]
         if L.dual_accuracy is not None:
@@ -447,107 +441,6 @@ class RiemannZeta(Lfunction):
         self.info['knowltype'] = "riemann"
         self.info['title'] = "Riemann Zeta-function: $\\zeta(s)$"
 
-#############################################################################
-
-
-class Lfunction_Dirichlet(Lfunction):
-    """Class representing the L-function of a Dirichlet character
-
-    Compulsory parameters: charactermodulus
-                           characternumber
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        # Check for compulsory arguments
-        validate_required_args ('Unable to construct Dirichlet L-function.',
-                                args, 'charactermodulus', 'characternumber')
-        validate_integer_args ('Unable to construct Dirichlet L-function.',
-                               args, 'charactermodulus', 'characternumber')
-
-        self._Ltype = "dirichlet"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.numcoeff = 30
-
-        # Check that the arguments give a primitive Dirichlet character in the database
-        self.charactermodulus = int(self.charactermodulus)
-        self.characternumber = int(self.characternumber)
-        if self.charactermodulus > 10**20: # avoid trying to factor anything really big
-            raise ValueError('Unable to construct Dirichlet L-function.',
-                             'The specified modulus %d is too large.'%self.charactermodulus)
-        if self.characternumber > self.charactermodulus:
-            raise ValueError('Unable to construct Dirichlet L-function.',
-                             'The Conrey index %d should not exceed the modulus %d.'%(self.characternumber,self.charactermodulus))
-        if gcd(self.charactermodulus,self.characternumber) != 1:
-            raise ValueError('Unable to construct Dirichlet L-function.',
-                             'The specified Conrey index %d is not coprime to the modulus %d.'%(self.characternumber,self.charactermodulus))
-        # Use ConreyCharacter to check primitivity (it can handle a huge modulus
-        if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
-            raise ValueError('Unable to construct Dirichlet L-function,',
-                             r'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
-
-        # Load data from the database
-        self.label = str(self.charactermodulus) + "." + str(self.characternumber)
-        Lhash = "dirichlet_L_{0}.{1}".format(self.charactermodulus,
-                                                self.characternumber)
-        try:
-            self.lfunc_data = get_lfunction_by_Lhash(Lhash)
-        except:
-            raise KeyError(r'No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
-
-        # Extract the data
-        makeLfromdata(self)
-        self.fromDB = True
-
-       # Mandatory properties
-        self.coefficient_period = self.charactermodulus
-        if self.selfdual:
-            self.coefficient_type = 2
-            for n in range(0, self.numcoeff - 1):
-                self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
-        else:
-            self.coefficient_type = 3
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.quasidegree = self.degree
-
-        # Specific properties
-        if not self.selfdual:  #TODO: This should be done on a general level
-            modnumDual = self.lfunc_data['conjugate'].split('_')[2]
-            numDual = modnumDual.split('.')[1]
-            self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
-
-        # Text for the web page
-        self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
-        self.texname = "L(s,\\chi)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
-        self.texname_arithmetic = "L(\\chi,s)"
-        self.texnamecompleteds = "\\Lambda(s,\\chi)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
-            self.texnamecompleted1ms_arithmetic = r"\Lambda(\overline{\chi},1-s)"
-        title_end = ("where $\\chi$ is the Dirichlet character with label "
-                     + self.label)
-        self.credit = 'Sage'
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "character.dirichlet"
-        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" +
-                                 ", " + title_end)
-        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-
-#############################################################################
 
 
 class Lfunction_from_db(Lfunction):
@@ -611,8 +504,7 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def origins(self):
         # objects that arise the same identical L-function
-        instances = get_instances_by_Lhash_and_trace_hash(self.Lhash, self.degree, self.trace_hash)
-        return names_and_urls(instances)
+        return names_and_urls(get_instances_by_label(self.label))
 
     @property
     def friends(self):
@@ -774,258 +666,6 @@ class Lfunction_from_db(Lfunction):
 
 
 
-
-####################################################################################################
-
-class Lfunction_CMF(Lfunction_from_db):
-    """Class representing an classical modular form L-function
-
-    Compulsory parameters: weight
-                           level
-                           character
-                           hecke_orbit
-                           number
-    """
-
-    def __init__(self, **kwargs):
-        constructor_logger(self, kwargs)
-        validate_required_args('Unable to construct classical modular form L-function.',
-                               kwargs, 'weight','level','character','hecke_orbit','number')
-        validate_integer_args('Unable to construct classical modular form L-function.',
-                              kwargs, 'weight','level','character','number')
-        for key in ['weight','level','character','number']:
-            kwargs[key] = int(kwargs[key])
-        # self.level is the conductor
-        self.modform_level = kwargs['level']
-        self.kwargs = kwargs
-        # Put the arguments in the object dictionary
-        self.__dict__.update(kwargs)
-        self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit, self.character, self.number)
-        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/%d/%d" % self.label_args
-        self.orbit_url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args[:4]
-        Lfunction_from_db.__init__(self, url = self.url)
-
-        self.numcoeff = 30
-
-    @lazy_attribute
-    def _Ltype(self):
-        return  "classical modular form"
-
-    @lazy_attribute
-    def origin_label(self):
-        return ".".join(map(str, self.label_args))
-
-    @lazy_attribute
-    def bread(self):
-        return get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
-
-    @property
-    def friends(self):
-        """The 'related objects' to show on webpage."""
-        lfriends = Lfunction_from_db.friends.fget(self)
-        root_orbit_url = '/' + self.orbit_url
-        if not any(root_orbit_url == elt[1] for elt in lfriends):
-            lfriends += names_and_urls([self.orbit_url])
-        return lfriends
-
-
-
-#############################################################################
-
-class Lfunction_CMF_orbit(Lfunction_from_db):
-    """Class representing an classical modular form L-function
-
-    Compulsory parameters: weight
-                           level
-                           char_orbit_label
-                           hecke_orbit
-    """
-
-    def __init__(self, **kwargs):
-        constructor_logger(self, kwargs)
-        validate_required_args('Unable to construct classical modular form L-function.',
-                               kwargs, 'weight','level','char_orbit_label','hecke_orbit')
-        validate_integer_args('Unable to construct classical modular form L-function.',
-                              kwargs, 'weight','level')
-        for key in ['weight','level']:
-            kwargs[key] = int(kwargs[key])
-        # self.level is the conductor
-        self.modform_level = kwargs['level']
-        self.kwargs = kwargs
-        # Put the arguments in the object dictionary
-        self.__dict__.update(kwargs)
-        self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit)
-        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args
-        self.Lhash = self.get_Lhash_by_url(self.url)
-        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
-
-        self.numcoeff = 30
-
-    @lazy_attribute
-    def _Ltype(self):
-        return  "classical modular form orbit"
-
-    @lazy_attribute
-    def origin_label(self):
-        return ".".join(map(str, self.label_args))
-
-    @lazy_attribute
-    def bread(self):
-        return get_bread(self.degree, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
-
-
-
-#    def _set_title(self):
-#        conductor_str = "$ %s $" % latex(self.modform_level)
-#        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
-#            self.weight, conductor_str)
-#
-#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-#
-#################################################################################################
-
-
-class Lfunction_EC(Lfunction_from_db):
-    """
-    Class representing an elliptic curve L-function
-    over a number field, possibly QQ.
-    It should be called with a dictionary of the forms:
-
-    dict = { 'field_label': <field_label>, 'conductor_label': <conductor_label>,
-             'isogeny_class_label': <isogeny_class_label> }
-    """
-    def __init__(self, **kwargs):
-        constructor_logger(self, kwargs)
-        validate_required_args('Unable to construct elliptic curve L-function.',
-                               kwargs, 'field_label', 'conductor_label',
-                               'isogeny_class_label')
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(kwargs)
-
-        # Set field, conductor, isogeny information from labels
-        self._parse_labels()
-
-        self.url = "EllipticCurve/%s/%s/%s" % (self.field,
-                                                        self.conductor_label,
-                                                        self.isogeny_class_label)
-        Lfunction_from_db.__init__(self, url = self.url)
-
-        self.numcoeff = 30
-
-    @lazy_attribute
-    def _Ltype(self):
-        return "ellipticcurve"
-
-    @lazy_attribute
-    def base_field(self):
-        """base_field of the EC"""
-        return self.field_label
-
-    def _parse_labels(self):
-        """Set field, conductor, isogeny information from labels."""
-        (self.field_degree,
-            self.field_real_signature,
-            self.field_absdisc,
-            self.field_index) = list(map(int, self.field_label.split(".")))
-        #field_signature = [self.field_real_signature,
-        #        (self.field_degree - self.field_real_signature) // 2]
-        # number of actual Gamma functions
-        #self.quasidegree = sum( field_signature )
-        #self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
-        #self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
-        self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
-        return
-
-    @lazy_attribute
-    def bread(self):
-        """breadcrumbs for webpage"""
-        if self.base_field == '1.1.1.1': #i.e. QQ
-            lbread = get_bread(2,
-                    [
-                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                    ])
-        else:
-            lbread = get_bread(self.degree, [])
-        return lbread
-
-
-    @lazy_attribute
-    def field(self):
-        return "Q" if self.field_degree == 1 else self.field_label
-
-    @property
-    def friends(self):
-        """The 'friends' to show on webpage."""
-        lfriends = Lfunction_from_db.friends.fget(self)
-        if self.base_field == '1.1.1.1': #i.e. QQ
-            # only show symmetric powers for non-CM curves
-            if not isogeny_class_cm(self.origin_label):
-                lfriends.append(('Symmetric square L-function',
-                                url_for(".l_function_ec_sym_page_label",
-                                    power='2', label=self.origin_label)))
-                lfriends.append(('Symmetric cube L-function',
-                                url_for(".l_function_ec_sym_page_label",
-                                    power='3', label=self.origin_label)))
-        return lfriends
-
-
-    @lazy_attribute
-    def origin_label(self):
-        if self.field_degree == 1:
-            llabel = self.long_isogeny_class_label
-        else:
-            llabel = self.field_label + "-" + self.long_isogeny_class_label
-        return llabel
-    @lazy_attribute
-    def knowltype(self):
-        if self.field_degree == 1:
-            return "ec.q"
-        else:
-            return "ec.nf"
-
-#############################################################################
-
-class Lfunction_genus2_Q(Lfunction_from_db):
-    """Class representing the L-function of a genus 2 curve over Q
-
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        # Check for compulsory arguments
-        validate_required_args('Unabel to construct L-function of genus 2 curve.',
-                               args, 'label')
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-
-        # Load data from the database
-        self.url = "Genus2Curve/Q/" + self.label.replace(".","/")
-        self.isogeny_class_label = self.label
-        Lfunction_from_db.__init__(self, url = self.url)
-        self.numcoeff = 30
-
-    @lazy_attribute
-    def origin_label(self):
-        return  self.isogeny_class_label
-
-    @lazy_attribute
-    def _Ltype(self):
-        return "genus2curveQ"
-
-    @lazy_attribute
-    def knowltype(self):
-        return "g2c.q"
-
-
-    #def _set_title(self):
-    #    title = "L-function of the Jacobian of a genus 2 curve with label %s" %  (self.origin_label)
-    #    self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-
-
-
 #############################################################################
 
 class Lfunction_Maass(Lfunction):
@@ -1161,47 +801,6 @@ class Lfunction_Maass(Lfunction):
             self.info['title'] = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                       + "level %s" % (self.level)) + title_end
 
-#############################################################################
-
-class Lfunction_BMF(Lfunction_from_db):
-    """Class representing a Bianchi modular form L-function stored in the database
-
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        validate_required_args ('Unable to construct Bianchi modular form L-function.', args, 'field', 'level', 'suffix')
-
-        self.label = '-'.join([args["field"], args["level"], args["suffix"]])
-        self.origin_label = self.label
-        self._Ltype = "bianchimodularform"
-        self.url = "ModularForm/GL2/ImaginaryQuadratic/" + self.label.replace('-','/')
-
-        Lfunction_from_db.__init__(self, url = self.url)
-
-class Lfunction_HMFDB(Lfunction_from_db):
-    """Class representing a Hilbert modular form L-function stored in the database
-
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', args, 'label', 'number', 'character')
-        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
-                               args, 'character','number')
-
-        self.label = args['label']
-        self.origin_label = self.label
-        self._Ltype = "hilbertmodularform"
-        self.url = hmf_url(args['label'],args['character'],args['number'])
-        Lfunction_from_db.__init__(self, url = self.url)
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
@@ -1594,30 +1193,6 @@ class DedekindZeta(Lfunction):
     def original_object(self):
         return self.NF
 
-
-#############################################################################
-
-
-class ArtinLfunctionDB(Lfunction_from_db):
-    """Class representing an Artin representation L-function stored in the database
-
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        validate_required_args ('Unable to construct L-function.', args, 'label')
-        self.label = args['label']
-        self.origin_label = self.label
-        self._Ltype = "artin"
-        self.url = artin_url(self.label)
-        Lfunction_from_db.__init__(self, url = self.url)
-
-    @lazy_attribute
-    def bread(self):
-        return get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
 
 class ArtinLfunction(Lfunction):

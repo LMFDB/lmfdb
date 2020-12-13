@@ -10,72 +10,80 @@ class LfunctionTest(LmfdbTest):
     # Testing at least one example of each type of L-function page
     #------------------------------------------------------
 
-    def test_history(self):
-        L = self.tc.get('/L/history')
-        assert 'Anzahl der Primzahlen' in L.get_data(as_text=True)
 
     def test_riemann(self):
         L = self.tc.get('/L/Riemann/')
         assert 'Riemann Zeta-function' in L.get_data(as_text=True)
 
     def test_LDirichlet(self):
-        L = self.tc.get('/L/Character/Dirichlet/19/9/')
+        L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects = True)
         assert '0.4813597783' in L.get_data(as_text=True) and 'mu(9)' in L.get_data(as_text=True)
         assert '2.13818063440820276534' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Character/Dirichlet/6400/3/')
+        assert '1-19-19.9-r0-0-0' in L.get_data(as_text=True)
+
+        L = self.tc.get('/L/Character/Dirichlet/6400/3/', follow_redirects = True)
         assert '2.131285033' in L.get_data(as_text=True) in L.get_data(as_text=True) and 'mu(320)' in L.get_data(as_text=True)
         assert '3.1381043104275982' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Character/Dirichlet/17/16/')
+        assert '1-80e2-6400.3-r0-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Character/Dirichlet/17/16/', follow_redirects = True)
         assert '1.01608483' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Character/Dirichlet/6400/2/')
-        assert '2 is not coprime to the modulus 6400' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Character/Dirichlet/6400/6399/')
-        assert 'is imprimitive' in L.get_data(as_text=True)
-        L = self.tc.get('L/Character/Dirichlet/1000000000/3/')
-        assert 'No L-function data' in L.get_data(as_text=True) and 'found in the database' in L.get_data(as_text=True)
-        L = self.tc.get('L/Character/Dirichlet/1000000000000000000000/3/')
-        assert 'too large' in L.get_data(as_text=True)
+        assert '1-17-17.16-r0-0-0' in L.get_data(as_text=True)
+
+        # errors
+        for url in ['/L/Character/Dirichlet/6400/2/',
+                    '/L/Character/Dirichlet/6400/6399/',
+                    'L/Character/Dirichlet/1000000000/3/',
+                    'L/Character/Dirichlet/1000000000000000000000/3/']:
+            L = self.tc.get(url, follow_redirects = True)
+            assert 'not found' in L.get_data(as_text=True)
 
     def test_Lec(self):
-        L = self.tc.get('/L/EllipticCurve/Q/11/a/')
+        L = self.tc.get('/L/EllipticCurve/Q/11/a/', follow_redirects=True)
         assert '0.253841' in L.get_data(as_text=True)
         assert 'Isogeny class 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
+        assert '2-11-1.1-c1-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/11/1.1/c1/0/0')
         assert '6.362613894713' in L.get_data(as_text=True)
-        L = self.tc.get('/L/EllipticCurve/Q/27/a/')
+
+
+        L = self.tc.get('/L/EllipticCurve/Q/27/a/', follow_redirects=True)
         assert '0.5888795834' in L.get_data(as_text=True)
         assert 'Isogeny class 27.a'in L.get_data(as_text=True)
         assert 'Modular form 27.2.a.a' in L.get_data(as_text=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/27/a/')
+        assert '2-3e3-1.1-c1-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/3e3/1.1/c1/0/0')
         assert '4.043044013797' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/Q/379998/d/')
-        assert '9.364311197' in L.get_data(as_text=True) and 'Isogeny class 379998.d' in L.get_data(as_text=True) and '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/379998/d/')
+        L = self.tc.get('/L/EllipticCurve/Q/379998/d/', follow_redirects=True)
+        assert '9.364311197' in L.get_data(as_text=True)
+        assert 'Isogeny class 379998.d' in L.get_data(as_text=True)
+        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        assert '2-379998-1.1-c1-0-2' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/379998/1.1/c1/0/2')
         assert '0.8292065891985' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/')
+        L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/', follow_redirects=True)
         assert '0.3599289594' in L.get_data(as_text=True)
         assert 'Isogeny class 2.2.5.1-31.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.2.5.1-31.2-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.1-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.2-a' in L.get_data(as_text=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        assert '4-775-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/')
+        L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/', follow_redirects=True)
         assert '0.5945775518' in L.get_data(as_text=True)
         assert 'Isogeny class 2.2.5.1-80.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 20.a' in L.get_data(as_text=True)
         assert 'Isogeny class 100.a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-80.1-a' in L.get_data(as_text=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        assert '4-2000-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/')
+        L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/', follow_redirects=True)
         assert 'Isogeny class 2.0.11.1-256.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.11.1-256.1-b' in L.get_data(as_text=True)
         assert 'Isogeny class 2.2.44.1-16.1-a' in L.get_data(as_text=True)
@@ -85,13 +93,15 @@ class LfunctionTest(LmfdbTest):
         assert 'Bianchi modular form 2.0.11.1-256.1-a' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.11.1-256.1-b' in L.get_data(as_text=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        assert '4-176e2-1.1-c1e2-0-4' in L.get_data(as_text=True)
 
 
-        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/')
+        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
+        assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
+        L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
         assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '0.5352579714' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.get_data(as_text=True)
@@ -101,21 +111,26 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 80.b' in L.get_data(as_text=True)
         assert 'Modular form 20.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 80.2.a.b' in L.get_data(as_text=True)
+        assert '4-40e2-1.1-c1e2-0-1' in L.get_data(as_text=True)
         # check the zeros accross factors
         assert '2.76929890617261215013507568311' in L.get_data(as_text=True)
         assert '4.78130792717525308450176413839' in L.get_data(as_text=True)
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/20/2/a/a/')
+
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/20/2/a/a/', follow_redirects=True)
         assert '4.78130792717525308450176413839' in L.get_data(as_text=True)
-        L = self.tc.get('/L/EllipticCurve/Q/20/a/')
+
+        L = self.tc.get('/L/EllipticCurve/Q/20/a/', follow_redirects=True)
         assert '4.781307927175253' in L.get_data(as_text=True)
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/80/2/a/b/')
+
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/80/2/a/b/', follow_redirects=True)
         assert '2.76929890617261215013507568311' in L.get_data(as_text=True)
-        L = self.tc.get('/L/EllipticCurve/Q/80/b/')
+
+        L = self.tc.get('/L/EllipticCurve/Q/80/b/', follow_redirects=True)
         assert '2.769298906172612' in L.get_data(as_text=True)
 
 
 
-        L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/')
+        L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.3.1-75.1-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.3.1-75.1-a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
@@ -124,7 +139,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 15.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 45.2.a.a' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.8.1/2592.3/c/')
+        L = self.tc.get('/L/EllipticCurve/2.0.8.1/2592.3/c/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.8.1-2592.3-c' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.8.1-2592.1-f' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.8.1-2592.3-c' in L.get_data(as_text=True)
@@ -135,30 +150,28 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 288.2.a.a' in L.get_data(as_text=True)
 
 
+        # check we get same L-fcn across 2 instances
+        for url in ['EllipticCurve/2.0.11.1/11.1/a/', 'ModularForm/GL2/ImaginaryQuadratic/2.0.11.1/11.1/a/']:
+            L = self.tc.get('/L/' + url, follow_redirects=True)
+            assert '4-11e3-1.1-c1e2-0-0' in L.get_data(as_text=True)
+
+
 
 
 
     def test_Lcmf(self):
         # test old links
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/', follow_redirects = True)
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/', follow_redirects=True)
         assert "Modular form 11.2.a.a.1.1" in L.get_data(as_text=True)
 
-        # check the zeros agree across 3 instances
-        L = self.tc.get('/L/Zeros/EllipticCurve/2.0.11.1/11.1/a/')
-        assert '6.36261389471308870138602900888' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        assert '6.36261389471308870138602900888' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
-        assert '6.36261389471308' in L.get_data(as_text=True)
 
 
-
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/1/1/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/1/1/', follow_redirects=True)
         assert '4.84e4' in L.get_data(as_text=True) # a_7
         assert '71.7' in L.get_data(as_text=True) # a_2
         assert '1.51472556377341264746894823521' in L.get_data(as_text=True) # first zero
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/', follow_redirects=True)
         assert '1.51472556377341264746894823521' in L.get_data(as_text=True) # first zero
         assert 'Origins of factors' in L.get_data(as_text=True)
         for i in range(1,6):
@@ -167,12 +180,13 @@ class LfunctionTest(LmfdbTest):
         assert '2.54e3' in L.get_data(as_text=True) # a_13
 
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/', follow_redirects=True)
         assert '0.332981' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        assert '2-7-7.6-c2-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/7/7.6/c2/0/0')
         assert '7.21458918128718444354242474222' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/', follow_redirects=True)
         assert '1.34e12' in L.get_data(as_text=True) # a26
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
         assert '18.17341115038590061946085869072' in L.get_data(as_text=True)
@@ -568,23 +582,25 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LDirichletZeros(self):
-        L = self.tc.get('/L/Zeros/Character/Dirichlet/5/2/')
+        L = self.tc.get('/L/Zeros/Character/Dirichlet/5/2/', follow_redirects=True)
         assert '6.18357819' in L.get_data(as_text=True)
 
     def test_LecZeros(self):
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/56/a/')
+        # EC 56.a or MF 56.2.a.a
+        L = self.tc.get('/L/Zeros/2/56/1.1/c1/0/0')
         assert '2.791838' in L.get_data(as_text=True)
 
+    def test_LecPlot(self):
+        L = self.tc.get('/L/Plot/2/56/1.1/c1/0/0/')
+        assert 'OK' in str(L)
+
     def test_LcmfPlot(self):
-        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/a/a/')
+        # ModularForm/GL2/Q/holomorphic/14/6/a/a/
+        L = self.tc.get('/L/Plot/2/14/1.1/c5/0/0')
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2.68.4t3.b.a/')
-        assert 'OK' in str(L)
-
-    def test_LecPlot(self):
-        L = self.tc.get('/L/Plot/EllipticCurve/Q/56/a/')
         assert 'OK' in str(L)
 
     def test_LHGMZeros(self):

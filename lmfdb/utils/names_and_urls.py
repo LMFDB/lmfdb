@@ -130,6 +130,10 @@ def name_and_object_from_url(url, check_existence=False):
         else:
             name = 'Sato Tate group $%s$' % name
             obj_exists = True
+    else:
+        # FIXME
+        print("unknown url", url)
+
 
     return name, obj_exists
 
