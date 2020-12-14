@@ -12,12 +12,10 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.web_character import (
-        WebDirichletGroup,
-        WebSmallDirichletGroup,
-        WebDirichletCharacter,
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
+        WebSmallDirichletGroup
 )
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
@@ -311,10 +309,8 @@ def extent_page():
 
 def make_webchar(args):
     modulus = int(args['modulus'])
-    if modulus < 10000:
+    if modulus <= 10000:
         return WebDBDirichletCharacter(**args)
-    elif modulus < 100000:
-        return WebDirichletCharacter(**args)
     else:
         return WebSmallDirichletCharacter(**args)
 
@@ -343,14 +339,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
         flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_DirichletNavigation"))
 
-
-
     if number is None:
         if modulus < 10000:
             info = WebDBDirichletGroup(**args).to_dict()
             info['show_orbit_label'] = True
-        elif modulus < 100000:
-            info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
         info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
@@ -468,13 +460,13 @@ def dc_calc(calc, modulus, number):
         return abort(404)
     try:
         if calc == 'value':
-            return WebDirichletCharacter(**args).value(val)
+            return WebSmallDirichletCharacter(**args).value(val)
         if calc == 'gauss':
-            return WebDirichletCharacter(**args).gauss_sum(val)
+            return WebSmallDirichletCharacter(**args).gauss_sum(val)
         elif calc == 'jacobi':
-            return WebDirichletCharacter(**args).jacobi_sum(val)
+            return WebSmallDirichletCharacter(**args).jacobi_sum(val)
         elif calc == 'kloosterman':
-            return WebDirichletCharacter(**args).kloosterman_sum(val)
+            return WebSmallDirichletCharacter(**args).kloosterman_sum(val)
         else:
             return abort(404)
     except Warning as e:

@@ -210,7 +210,7 @@ function value_handler(evt) {
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
         {# render the output #}
         renderMathInElement($("#calc-gauss-output").get(0), katexOpts);
@@ -220,7 +220,7 @@ function gauss_handler(evt) {
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
-   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
        {# render the output #}
        renderMathInElement($("#calc-jacobi-output").get(0), katexOpts);
@@ -253,15 +253,12 @@ $(function() {
       $("#calc-gauss-input").keypress(function(e) {
           if (e.which == 13) gauss_handler(e);
           });
-      {#$("#calc-gauss-input").ready(function(e) {
-          gauss_handler(e);
-          });#}
       $("#calc-jacobi-input").keypress(function(e) {
           if (e.which == 13) jacobi_handler(e);
-      });
+          });
       $("#calc-kloosterman-input").keypress(function(e) {
           if (e.which == 13) kloosterman_handler(e);
-      });
+          });
 
   {% endif %}
 });
