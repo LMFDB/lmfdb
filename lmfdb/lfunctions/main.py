@@ -35,6 +35,7 @@ from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
+    list_to_factored_poly_otherorder, flash_error,
     parse_primes, parse_equality_constraints,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer)
@@ -136,7 +137,7 @@ def process_euler(res, info, query):
         p = 2
         for i, F in enumerate(L.get('euler_factors', [])):
             print(p, F, latex(R(F)))
-            L['euler_factor'][p] = latex(R(F))
+            L['euler_factor'][p] = list_to_factored_poly_otherorder(F)
             p = next_prime(p)
     return res
 
@@ -198,6 +199,8 @@ def trace_search(info, query):
     common_parse(info, query)
     process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
 
+
+
 @search_wrap(template="LfunctionEulerSearchResults.html",
              table=db.lfunc_search,
              title="L-function search results",
@@ -213,8 +216,8 @@ def euler_search(info, query):
     common_parse(info, query)
     d = query.get("degree")
     if not isinstance(d, (int, Integer)):
-        print(d)
-        raise RuntimeError("HELLO")
+        flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
+        info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     def parse_poly(s):
         poly = coeff_to_poly(s)
