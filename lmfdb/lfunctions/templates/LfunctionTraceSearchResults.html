@@ -1,0 +1,41 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('lfunction.label', 'Label') }}</th>
+      <th>{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <th class="right"> \(a_{ {{n}} }\) </th>
+      {% endif %}
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for L in info.results %}
+    <tr>
+      <td style="text-align: left;"> <a href="{{L.url}}"> {{L.label}} </a> </td>
+      <td class="mjx_basic border-right"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <td class="mjx_basic"> {{ info.bigint_knowl(L.dirichlet_coefficients[n]) | safe}} </td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
