@@ -80,7 +80,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 20.a' in L.get_data(as_text=True)
         assert 'Isogeny class 100.a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-80.1-a' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-2000-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/', follow_redirects=True)
