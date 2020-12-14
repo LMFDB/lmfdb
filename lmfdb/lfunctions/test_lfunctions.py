@@ -338,7 +338,8 @@ class LfunctionTest(LmfdbTest):
     def test_Lgl3maass(self):
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/', follow_redirects=True)
         assert '0.0742' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/', follow_redirects=True)
+        assert '3-1-1.1-r0e3-p14.07p20.39m34.46-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/3/1/1.1/r0e3/p14.07p20.39m34.46/0/', follow_redirects=True)
         assert '0.9615558824' in L.get_data(as_text=True)
 
     def test_Lgl4maass(self):
@@ -347,7 +348,8 @@ class LfunctionTest(LmfdbTest):
         assert '0.556' in L.get_data(as_text=True)
         assert 'Graph' in L.get_data(as_text=True)
         assert '16.89972715592' in L.get_data(as_text=True)
-        #L = self.tc.get('/L/Zeros/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')
+        assert '4-1-1.1-r0e4-p2.27m6.04m13.14p16.90-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/4/1/1.1/r0e4/p2.27m6.04m13.14p16.90/0/')
         assert '16.18901597' in L.get_data(as_text=True)
 
     def test_Lsym2EC(self):
