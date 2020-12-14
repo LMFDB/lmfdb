@@ -1090,7 +1090,7 @@ class DedekindZeta(Lfunction):
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.origin_label = self.label
-        self.label = None
+        self.__dict__.pop('label')
 
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.origin_label)
