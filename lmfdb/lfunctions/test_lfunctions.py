@@ -468,7 +468,7 @@ class LfunctionTest(LmfdbTest):
         #assert 'E_6' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Zeros/4/13e2/1.1/c1e2/0/0/')
-        assert '5.06823463541' in L.get_data(as_text=True)
+        assert '5.0682346354' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/15360/f/', follow_redirects=True)
         assert 'Isogeny class 15360.f' in L.get_data(as_text=True)
