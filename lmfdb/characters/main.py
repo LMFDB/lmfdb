@@ -321,6 +321,10 @@ def make_webchar(args):
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
 def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
 
+    print("modulus: {}".format(modulus))
+    print("gal_orb_label: {}".format(gal_orb_label))
+    print("number: {}".format(number))
+
     # modulus = modulus.replace(' ','')
     # if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
     #     modulus, number = modulus.split('.')
