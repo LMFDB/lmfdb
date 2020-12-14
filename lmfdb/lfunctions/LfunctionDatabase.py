@@ -8,6 +8,9 @@ def get_lfunction_by_label(label, **kwargs):
         raise KeyError("Label '%s' not found in Lfunction table" % (label,))
     return Ldata
 
+def get_instances_by_label(label):
+    return list(db.lfunc_instances.search({'label': label}, sort=[]))
+
 def get_lfunction_by_Lhash(Lhash, **kwargs):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, **kwargs)
     if Ldata is None:

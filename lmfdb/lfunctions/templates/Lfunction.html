@@ -48,8 +48,8 @@
 {% endif %}
 </center>
 
-{% if knowltype and label %}
-{% set KNOWL_ID = "lfunction.%s.%s"|format(knowltype,label) %}
+{% if label %}
+{% set KNOWL_ID = "lfunction.%s"|format(label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 {% endif %}
 
@@ -107,7 +107,7 @@
   </tr>
   {% endif %}
 
-  {% if st_group -%}
+  {% if st_group and False -%}
   <tr>
     <td> {{ KNOWL('g2c.st_group', title="Sato-Tate group") }}: </td>
     <td> {{ st_link | safe}}
@@ -256,7 +256,7 @@
 <div>Plot not available.</div>
 {% endif %}
 
-{% if knowltype and label %}
+{% if label %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom',title='') }}</h2>
 {% endif %}
 

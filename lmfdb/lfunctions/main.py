@@ -12,13 +12,14 @@ from collections import defaultdict
 
 from . import LfunctionPlot
 
-from .Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
-                       Lfunction_CMF, Lfunction_CMF_orbit,
-                       Lfunction_HMF, Lfunction_HMFDB, Lfunction_BMF,
-                       Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-                       RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
-                       SymmetricPowerLfunction, HypergeometricMotiveLfunction,
-                       Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
+from .Lfunction import (
+    Lfunction_from_db,
+    # on the fly L-functions
+    Lfunction_HMF, ArtinLfunction,
+    Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+    RiemannZeta, DedekindZeta,
+    SymmetricPowerLfunction, HypergeometricMotiveLfunction,
+)
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
@@ -60,8 +61,6 @@ def learnmore_list(path=None, remove=None):
         learnmore.extend([
             ('Source of the data', url_for('.source', prepath=prepath)),
             ('Reliability of the data', url_for('.reliability', prepath=prepath))])
-    else:
-        learnmore.append(('History of L-functions', url_for('.l_function_history')))
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -564,6 +563,8 @@ def label_redirect_wrapper(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         url = url_for('.' + f.__name__, **kwds)[3:].rstrip('/')
+        if 'Maass' in url:
+            url += '/'
         label = db.lfunc_instances.lucky({'url': url}, 'label')
         if label:
             return redirect(url_for_lfunction(label))
@@ -575,9 +576,8 @@ def label_redirect_wrapper(f):
 @l_function_page.route("/Character/Dirichlet/<modulus>/<number>/")
 @label_redirect_wrapper
 def l_function_dirichlet_page(modulus, number):
-    print('-'*30)
-    args = {'charactermodulus': modulus, 'characternumber': number}
-    return render_single_Lfunction(Lfunction_Dirichlet, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    return abort(404, "L-function for dirichlet character with label %s.%s not found" % (modulus,number))
 
 
 # L-function of Elliptic curve #################################################
@@ -585,13 +585,12 @@ def l_function_dirichlet_page(modulus, number):
 @l_function_page.route("/EllipticCurve/Q/<conductor_label>/<isogeny_class_label>/")
 @label_redirect_wrapper
 def l_function_ec_page(conductor_label, isogeny_class_label):
-    #args = {'conductor': conductor, 'isogeny': isogeny}
-    #return render_single_Lfunction(Lfunction_EC_Q, args, request)
-    args = {'field_label': "1.1.1.1", 'conductor_label': conductor_label, 'isogeny_class_label': isogeny_class_label}
-    return render_single_Lfunction(Lfunction_EC, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '.'.join(map(str, [conductor_label, isogeny_class_label]))
+    return abort(404, "L-function for elliptic curve isogeny class with label %s not found" % label)
+
 
 @l_function_page.route("/EllipticCurve/Q/<label>/")
-@label_redirect_wrapper
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -605,8 +604,9 @@ def l_function_ec_page_label(label):
 @l_function_page.route("/EllipticCurve/<field_label>/<conductor_label>/<isogeny_class_label>/")
 @label_redirect_wrapper
 def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
-    args = {'field_label': field_label, 'conductor_label': conductor_label, 'isogeny_class_label': isogeny_class_label}
-    return render_single_Lfunction(Lfunction_EC, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '-'.join(map(str, [field_label, conductor_label, isogeny_class_label]))
+    return abort(404, "L-function for elliptic curve isogeny class with label %s not found" % label)
 
 
 # L-function of Cusp form ############################################
@@ -616,19 +616,15 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:character>/<int:number>/")
 @label_redirect_wrapper
 def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character, number):
-    args = {'level': level, 'weight': weight, 'char_orbit_label': char_orbit_label, 'hecke_orbit': hecke_orbit,
-            'character': character, 'number': number}
-    try:
-        return render_single_Lfunction(Lfunction_CMF, args, request)
-    except KeyError:
-        conrey_index = '.'.join(map(str, [level, weight, character, hecke_orbit]))
-        newform_label = convert_newformlabel_from_conrey(conrey_index)
-        level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
-        return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
-                                  char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    # thus it must be an old label, and we redirect to the orbit
+    old_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
+    newform_label = convert_newformlabel_from_conrey(old_label)
+    level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
+    return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                              char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
-@label_redirect_wrapper
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
@@ -646,7 +642,6 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
-@label_redirect_wrapper
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
@@ -661,14 +656,12 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
 @label_redirect_wrapper
 def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
-    args = {'level': level,
-            'weight': weight,
-            'char_orbit_label': char_orbit_label,
-            'hecke_orbit': hecke_orbit}
-    return render_single_Lfunction(Lfunction_CMF_orbit, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '.'.join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+    return abort(404, "L-function for classical modular form with label %s not found" % label)
+
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
-@label_redirect_wrapper
 def l_function_cmf_redirect_a1(level, weight, character):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
@@ -681,13 +674,11 @@ def l_function_cmf_redirect_a1(level, weight, character):
                                     code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
-@label_redirect_wrapper
 def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
-@label_redirect_wrapper
 def l_function_cmf_orbit_redirecit_aa(level, weight):
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
@@ -696,22 +687,27 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 # L-function of Bianchi modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>/")
 @label_redirect_wrapper
-def l_function_bmf_page(field,level,suffix):
-    args = {'field': field, 'level': level, 'suffix': suffix}
-    return render_single_Lfunction(Lfunction_BMF, args, request)
+def l_function_bmf_page(field, level, suffix):
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '-'.join(map(str, [field, level, suffix]))
+    return abort(404, "L-function for Bianchi modular form with label %s not found" % label)
 
 
 # L-function of Hilbert modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/<number>/")
-@label_redirect_wrapper
 def l_function_hmf_page(field, label, character, number):
+    #FIXME this feels so wrong...
+    if (not character and not number) or (character == '0' and number == '0'):
+        url = "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+        lfun_label = db.lfunc_instances.lucky({'url': url}, 'label')
+        if lfun_label:
+            return redirect(url_for_lfunction(lfun_label))
+
     args = {'field': field, 'label': label, 'character': character, 'number': number}
-    instance = db.lfunc_instances.lucky({'url': hmf_url(label, character, number)})
-    return render_single_Lfunction(Lfunction_HMFDB if instance else Lfunction_HMF, args, request)
+    return render_single_Lfunction(Lfunction_HMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
-@label_redirect_wrapper
 def l_function_hmf_redirect_1(field, label, character):
     return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
@@ -720,13 +716,13 @@ def l_function_hmf_redirect_1(field, label, character):
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
 @label_redirect_wrapper
 def l_function_hmf_redirect_2(field, label):
+    # if it passed the label_redirect_wrapper, then the url is not in the database
     return redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
 
 
 # L-function of GL(2) Maass form ###############################################
 @l_function_page.route("/ModularForm/GL2/Q/Maass/<maass_id>/")
-@label_redirect_wrapper
 def l_function_maass_page(maass_id):
     args = {'maass_id': maass_id, 'fromDB': False}
     return render_single_Lfunction(Lfunction_Maass, args, request)
@@ -736,19 +732,18 @@ def l_function_maass_page(maass_id):
 @l_function_page.route("/ModularForm/<group>/Q/Maass/<level>/<char>/<R>/<ap_id>/")
 @label_redirect_wrapper
 def l_function_maass_gln_page(group, level, char, R, ap_id):
-    args = {'fromDB': True, 'group': group, 'level': level,
-            'char': char, 'R': R, 'ap_id': ap_id}
-    return render_single_Lfunction(Lfunction_Maass, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    maass_id = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (group, level, char, R, ap_id)
+    return abort(404, '"L-function for modular form %s not found' % maass_id)
+    #HERE
 
 
 # L-function of Siegel modular form    #########################################
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
-@label_redirect_wrapper
 def l_function_siegel_specimen_page(weight, orbit, number):
     return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
-@label_redirect_wrapper
 def l_function_siegel_page(weight, orbit, number):
     args = {'weight': weight, 'orbit': orbit, 'number': number}
     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
@@ -756,10 +751,8 @@ def l_function_siegel_page(weight, orbit, number):
 
 # L-function of Number field    ################################################
 @l_function_page.route("/NumberField/<label>/")
-@label_redirect_wrapper
 def l_function_nf_page(label):
-    args = {'label': label}
-    return render_single_Lfunction(DedekindZeta, args, request)
+    return render_single_Lfunction(DedekindZeta, {'label': label}, request)
 
 
 # L-function of Artin representation    ########################################
@@ -769,31 +762,23 @@ def l_function_artin_page(label):
     newlabel = parse_artin_label(label, safe=True)
     if newlabel != label:
         return redirect(url_for(".l_function_artin_page", label=newlabel), 301)
-    from lmfdb.artin_representations.main import both_labels
-    for elt in both_labels(label):
-        if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
-            label = elt
-            return render_single_Lfunction(ArtinLfunctionDB, {'label': label}, request)
-    else:
-        return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
-@label_redirect_wrapper
 def l_function_hgm_page(label,t):
     args = {'label': label+'_'+t}
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 # L-function of symmetric powers of Elliptic curve #############################
 @l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<int:conductor>/<isogeny>/")
-@label_redirect_wrapper
 def l_function_ec_sym_page(power, conductor, isogeny):
     args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q',
             'conductor': conductor, 'isogeny': isogeny}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
 
 @l_function_page.route("/SymmetricPower/<int:power>/EllipticCurve/Q/<label>/")
-@label_redirect_wrapper
 def l_function_ec_sym_page_label(power, label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
@@ -807,8 +792,9 @@ def l_function_ec_sym_page_label(power, label):
 @l_function_page.route("/Genus2Curve/Q/<cond>/<x>/")
 @label_redirect_wrapper
 def l_function_genus2_page(cond,x):
-    args = {'label': cond+'.'+x}
-    return render_single_Lfunction(Lfunction_genus2_Q, args, request)
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '.'.join(map(str, [cond, x]))
+    return abort(404, "L-function for genus 2 curve with label %s not found" % label)
 
 # L-function by hash ###########################################################
 @l_function_page.route("/lhash/<lhash>")
@@ -883,8 +869,8 @@ def set_gaga_properties(L):
     upper right corner
     '''
     ans = []
-    if hasattr(L, 'lfun_label'):
-        ans.append(('Label', L.lfun_label))
+    if hasattr(L, 'label'):
+        ans.append(('Label', L.label))
     ans.append(('Degree', prop_int_pretty(L.degree)))
 
     ans.append(('Conductor', prop_int_pretty(L.level)))
@@ -977,19 +963,11 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = get_bread(L.degree,
                                       [(L.maass_id.partition('/')[2], request.path)])
 
-    elif L.Ltype() == 'bianchimodularform':
-        friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Bianchi modular form ' + L.label, friendlink.rpartition('/')[0])]
-        if L.degree == 4:
-            info['bread'] = get_bread(4, [(L.label, request.path)])
-        else:
-            info['bread'] = [('L-functions', url_for('.index'))]
-
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Hilbert modular form ' + L.label, friendlink.rpartition('/')[0])]
+        info['friends'] = [('Hilbert modular form ' + L.origin_label, friendlink.rpartition('/')[0])]
         if L.degree == 4:
-            info['bread'] = get_bread(4, [(L.label, request.path)])
+            info['bread'] = get_bread(4, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -1007,14 +985,14 @@ def set_bread_and_friends(info, L, request):
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number field', friendlink)]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
     elif L.Ltype() == "artin":
         info['friends'] = [('Artin representation', L.artin.url_for())]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -1025,7 +1003,7 @@ def set_bread_and_friends(info, L, request):
         friendlink = newlink[0]+'/t'+newlink[2]
         info['friends'] = [('Hypergeometric motive ', friendlink)]
         if L.degree <= 4:
-            info['bread'] = get_bread(L.degree, [(L.label, request.path)])
+            info['bread'] = get_bread(L.degree, [(L.origin_label, request.path)])
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
@@ -1044,19 +1022,19 @@ def set_bread_and_friends(info, L, request):
         if L.m == 2:
             info['bread'] = get_bread(3, [("Symmetric square of elliptic curve",
                                            url_for('.l_function_ec_sym2_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page_label',
-                                                            label=L.label,power=L.m))])
+                                          (L.origin_label, url_for('.l_function_ec_sym_page_label',
+                                                            label=L.origin_label,power=L.m))])
         elif L.m == 3:
             info['bread'] = get_bread(4, [("Symmetric cube of elliptic curve",
                                            url_for('.l_function_ec_sym3_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page_label',
-                                                            label=L.label,power=L.m))])
+                                          (L.origin_label, url_for('.l_function_ec_sym_page_label',
+                                                            label=L.origin_label,power=L.m))])
         else:
             info['bread'] = [('L-functions', url_for('.index')),
                              ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
-                              + str(L.label),
+                              + str(L.origin_label),
                               url_for('.l_function_ec_sym_page_label',
-                                      label=L.label,power=L.m))]
+                                      label=L.origin_label,power=L.m))]
 
         friendlink = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/')
         splitlink = friendlink.rpartition('/')
@@ -1066,7 +1044,7 @@ def set_bread_and_friends(info, L, request):
         splitlink = friendlink2.rpartition('/')
         friendlink2 = splitlink[0] + splitlink[2]
 
-        info['friends'] = [('Isogeny class ' + L.label, friendlink), ('Symmetric 1st Power', friendlink2)]
+        info['friends'] = [('Isogeny class ' + L.origin_label, friendlink), ('Symmetric 1st Power', friendlink2)]
         for j in range(2, L.m + 2):
             if j != L.m:
                 friendlink3 = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
@@ -1145,29 +1123,12 @@ def generateLfunctionFromUrl(*args, **kwds):
         return Lfunction_from_db(label='-'.join(map(str, args)))
     except ValueError:
         pass
+
+    # we only need to consider on the fly L-functions
     if args[0] == 'Riemann':
         return RiemannZeta()
-    elif args[0] == 'Character' and args[1] == 'Dirichlet':
-        return Lfunction_Dirichlet(charactermodulus=args[2], characternumber=args[3])
-
-    elif args[0] == 'EllipticCurve' and args[1] == 'Q':
-        #return Lfunction_EC_Q(conductor=args[2], isogeny=args[3])
-        return Lfunction_EC(field_label="1.1.1.1", conductor_label=args[2], isogeny_class_label=args[3])
-    elif args[0] == 'EllipticCurve' and args[1] != 'Q':
-        return Lfunction_EC(field_label=args[1], conductor_label=args[2], isogeny_class_label=args[3])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'holomorphic':  # this has args: one for weight and one for level
-        if len(args) == 10:
-            return Lfunction_CMF(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7], character=args[8], number=args[9])
-        else:
-            return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
-
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
-        instance = db.lfunc_instances.lucky({'url': hmf_url(args[5], args[6], args[7])})
-        return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
-
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
-        return Lfunction_BMF(field=args[3], level=args[4], suffix=args[5])
+        return Lfunction_HMF(label=args[5], character=args[6], number=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
         maass_id = args[4]
@@ -1185,14 +1146,8 @@ def generateLfunctionFromUrl(*args, **kwds):
 
     elif args[0] == "ArtinRepresentation":
         label = args[1]
-        from lmfdb.artin_representations.main import both_labels
-        for elt in both_labels(label):
-            if db.lfunc_instances.lucky({'type':'Artin','url': artin_url(elt)}):
-                label = elt
-                return ArtinLfunctionDB(label=label)
-        else:
-            label = parse_artin_label(label, safe=True)
-            return ArtinLfunction(label=label)
+        label = parse_artin_label(label, safe=True)
+        return ArtinLfunction(label=label)
 
     elif args[0] == "SymmetricPower":
         return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
@@ -1203,11 +1158,6 @@ def generateLfunctionFromUrl(*args, **kwds):
             return HypergeometricMotiveLfunction(family = args[3], t = args[4])
         else:
             return HypergeometricMotiveLfunction(label = args[3])
-
-    elif args[0] == "Genus2Curve" and args[1] == "Q":
-        return Lfunction_genus2_Q(label=str(args[2])+'.'+str(args[3]))
-
-
     elif args[0] in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(args[1]))
 

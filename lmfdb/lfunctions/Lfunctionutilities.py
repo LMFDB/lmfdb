@@ -579,7 +579,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if L._Ltype == "maass":
+            if  not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3
