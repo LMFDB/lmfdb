@@ -42,7 +42,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.253841' in L.get_data(as_text=True)
         assert 'Isogeny class 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-11-1.1-c1-0-0' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/2/11/1.1/c1/0/0')
         assert '6.362613894713' in L.get_data(as_text=True)
@@ -52,7 +52,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.5888795834' in L.get_data(as_text=True)
         assert 'Isogeny class 27.a'in L.get_data(as_text=True)
         assert 'Modular form 27.2.a.a' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-3e3-1.1-c1-0-0' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/2/3e3/1.1/c1/0/0')
         assert '4.043044013797' in L.get_data(as_text=True)
@@ -60,7 +60,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/379998/d/', follow_redirects=True)
         assert '9.364311197' in L.get_data(as_text=True)
         assert 'Isogeny class 379998.d' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-379998-1.1-c1-0-2' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/2/379998/1.1/c1/0/2')
         assert '0.8292065891985' in L.get_data(as_text=True)
@@ -71,7 +71,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.2.5.1-31.2-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.1-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.2-a' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-775-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/', follow_redirects=True)
@@ -92,17 +92,17 @@ class LfunctionTest(LmfdbTest):
         assert 'Hilbert modular form 2.2.44.1-16.1-c' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.11.1-256.1-a' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.11.1-256.1-b' in L.get_data(as_text=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-176e2-1.1-c1e2-0-4' in L.get_data(as_text=True)
 
 
         L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
         assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
-        assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
+        #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '0.5352579714' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.get_data(as_text=True)
         assert 'Isogeny class 2.0.4.1-100.2-a' in L.get_data(as_text=True)
@@ -202,7 +202,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.253841' in L.get_data(as_text=True)
         assert 'Isogeny class 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
-        #FIXME merge with EC to get sato-tate
+        #FIXME fill ST info in origins = CMFs
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/')
@@ -211,7 +211,6 @@ class LfunctionTest(LmfdbTest):
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.4.1' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.10.1' in L.get_data(as_text=True)
-        #FIXME merge with G2C to get sato-tate
         #assert '/SatoTateGroup/1.4.E_6' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/')
@@ -220,7 +219,6 @@ class LfunctionTest(LmfdbTest):
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a.7.1' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a.13.1' in L.get_data(as_text=True)
-        #FIXME merge with G2C to get sato-tate
         #assert '/SatoTateGroup/1.4.E_3' in L.get_data(as_text=True)
 
 
@@ -590,7 +588,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_LecZeros(self):
         # EC 56.a or MF 56.2.a.a
-        L = self.tc.get('/L/Zeros/2/56/1.1/c1/0/0')
+        L = self.tc.get('/L/Zeros/2/56/1.1/c1/0/0/')
         assert '2.791838' in L.get_data(as_text=True)
 
     def test_LecPlot(self):

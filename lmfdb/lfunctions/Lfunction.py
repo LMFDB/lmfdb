@@ -161,8 +161,8 @@ def makeLfromdata(L):
             central_value = CC(data['plot_values'][0])
         else:
             central_value = data['plot_values'][0]/sqrt(L.sign)
-        # we should avoid displaying 10 digits as usual, as this is just a hack
-        central_value = display_complex(central_value.real(), central_value.imag(),6)
+            # we should avoid displaying 10 digits as usual, as this is just a hack
+            central_value = display_complex(central_value.real(), central_value.imag(),6)
     central_value = [0.5 + 0.5*L.motivic_weight, central_value]
     if 'values' not in data:
         L.values = [ central_value ]
