@@ -24,7 +24,7 @@
       <td style="text-align: left;"> <a href="{{L.url}}"> {{L.label}} </a> </td>
       <td class="mjx_basic border-right"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
       {% for n in info.Tr_n %}
-      {% if n >= 1 and n <= 1000 %}
+      {% if 'dirichlet_coefficients' in L %}
       <td class="mjx_basic"> {{ info.bigint_knowl(L.dirichlet_coefficients[n]) | safe}} </td>
       {% endif %}
       {% endfor %}

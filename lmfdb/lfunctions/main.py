@@ -159,13 +159,18 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
-def common_parse(info, query):
+def common_parse(info, query, force_rational=False):
     info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
-    parse_bool(info,query,'algebraic') # not the same as arithmetic....
+    parse_bool(info,query,'algebraic')
     parse_bool(info,query,'self_dual')
+    parse_bool(info,query,'rational')
+    if force_rational and not query.get('rational'):
+        flash_error("%s search only shows rational L-functions" % force_rational)
+        info["rational"] = "yes"
+        query["rational"] = True
     info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
     parse_ints(info,query,'order_of_vanishing')
     parse_noop(info,query,'central_character')
@@ -196,7 +201,7 @@ def l_function_search(info, query):
              credit=lambda: credit_string)
 def trace_search(info, query):
     set_Trn(info, query)
-    common_parse(info, query)
+    common_parse(info, query, force_rational="Trace")
     process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
 
 
@@ -213,7 +218,7 @@ def euler_search(info, query):
     if 'n' not in info:
         info['n'] = '1-10'
     set_Trn(info, query)
-    common_parse(info, query)
+    common_parse(info, query, force_rational="Euler factor")
     d = query.get("degree")
     if not isinstance(d, (int, Integer)):
         flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
@@ -279,11 +284,18 @@ class LFunctionSearchArray(SearchArray):
         algebraic = YesNoBox(
             name="algebraic",
             knowl="lfunction.arithmetic",
-            label="Arithmetic")
+            label="Arithmetic",
+            example_col=True)
         self_dual = YesNoBox(
             name="self_dual",
             knowl="lfunction.self-dual",
-            label="Self-dual")
+            label="Self-dual",
+            example_col=True)
+        rational = YesNoBox(
+            name="rational",
+            knowl="lfunction.rational",
+            label="Rational",
+            example_col=True)
         root_angle = TextBox(
             name="root_angle",
             knowl="lfunction.sign",
@@ -349,14 +361,14 @@ class LFunctionSearchArray(SearchArray):
             [bad_primes, central_character],
             [analytic_rank, motivic_weight],
             [primitive, algebraic],
-            [root_angle, self_dual],
-            [count]
+            [self_dual, rational],
+            [root_angle, count]
         ]
 
         self.refine_array = [
             [degree, conductor, analytic_conductor, analytic_rank, motivic_weight],
-            [primitive, algebraic, self_dual, z1, root_angle],
-            [bad_primes, central_character]
+            [primitive, algebraic, self_dual, rational, z1],
+            [root_angle, bad_primes, central_character]
         ]
 
         self.traces_array = [

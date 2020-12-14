@@ -834,7 +834,7 @@ def process_an_constraints(info, query, qfield='traces', nshift=None):
                                    parse_singleton=(lambda x: {'$mod':[int(x),q]}),
                                    nshift=nshift)
     else:
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
+        parse_equality_constraints(info, query, 'an_constraints', qfield=qfield)
         if info.get('view_modp') == 'reductions':
             msg = "Must set Modulo input in order to view reductions"
             flash_error(msg)
