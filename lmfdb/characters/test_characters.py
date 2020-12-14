@@ -172,7 +172,7 @@ class DirichletCharactersTest(LmfdbTest):
            identified with previous versions of the sage generating code.
         """
         W = self.tc.get('/Character/Dirichlet/163/4')
-        assert 'H = DirichletGroup(163, base_ring=CyclotomicField(81))' in W.get_data(as_text=True), "sage code group is wrong"
+        assert 'H = DirichletGroup(163, base_ring=CyclotomicField(162))' in W.get_data(as_text=True), "sage code group is wrong"
         assert 'chi = DirichletCharacter(H, M([2]))' in W.get_data(as_text=True), "sage code generator is wrong"
 
         W = self.tc.get('/Character/Dirichlet/16/15')
