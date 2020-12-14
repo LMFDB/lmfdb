@@ -1,5 +1,5 @@
 from sage.all import (gcd, Mod, Integer, Integers, Rational, pari, Pari,
-                      DirichletGroup, CyclotomicField, euler_phi)
+                      DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 
@@ -153,10 +153,10 @@ class ConreyCharacter(object):
         return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
 
     def sage_zeta_order(self, order):
-        return DirichletGroup(self.modulus, base_ring=CyclotomicField(order)).zeta_order()
+        return 1 if self.modulus <= 2 else lcm(2,order)
 
     def sage_character(self, order, genvalues):
         H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
         M = H._module
-        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, H.zeta_order())
+        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))
