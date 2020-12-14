@@ -340,7 +340,7 @@ white-space: pre in order to keep line breaks! #}
 
 	{% if not data.data.manin_known %}
 	The Manin constant is correct provided that {% if
-	data.data.number ==1 %} this curve {% else %} curve {{
+	data.data.Cnumber ==1 %} this curve {% else %} curve {{
 	data.data.optimal_label }} {% endif %} is optimal.{% endif %}
 
 	{% endif %}
@@ -375,7 +375,16 @@ text-align: center;
 }
 </style>
 
-<p>This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.</p>
+<p>
+  This elliptic curve is {{ '' if data.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.
+  There
+  {% if data.num_bad_primes==1 %}
+  is only one prime
+  {% else %}
+  are {{data.num_bad_primes }} primes
+  {% endif %}
+  of {{KNOWL('ec.q.reduction_type', title='bad reduction')}}:
+</p>
 
     {{ place_code('localdata') }}
 

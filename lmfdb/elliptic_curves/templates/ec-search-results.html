@@ -42,9 +42,9 @@ table td.params {
 {% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url_LMFDB(curve)}}">{{curve.lmfdb_label}}</a></td>
-<td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.label}}</a></td>
+<td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.Clabel}}</a></td>
 <td class="center"><a href="{{info.iso_url_LMFDB(curve)}}">{{curve.lmfdb_iso}}</a></td>
-<td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
+<td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.Ciso}}</a></td>
 <td class="params">${{info.curve_ainvs(curve)}}$</td>
 <td class="center">${{curve.rank}}$</td>
 <td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>

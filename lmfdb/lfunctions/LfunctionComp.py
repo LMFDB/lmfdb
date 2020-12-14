@@ -11,7 +11,7 @@ def isogeny_class_table(Nmin, Nmax):
     '''
     iso_list = []
 
-    query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
+    query = {'lmfdb_number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
     res = db.ec_curvedata.search(query, 'lmfdb_iso')

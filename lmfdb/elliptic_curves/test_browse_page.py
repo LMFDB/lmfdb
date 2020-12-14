@@ -82,9 +82,9 @@ class HomePageTest(LmfdbTest):
         self.check_args_with_timeout("/EllipticCurve/Q/?&surj_primes=&surj_quantifier=include&nonsurj_primes=2%2C3&count=100",
                         '[1, -1, 1, -24575, 1488935]')
         self.check_args_with_timeout("/EllipticCurve/Q/?&surj_primes=&surj_quantifier=exactly&nonsurj_primes=5&optimal=on&count=100",
-                        '[1, -1, 0, -1575, 751869]')
+                        '[0, 0, 1, -75, 256]')
         self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
-                        '990h3')
+                        '990h1')
         L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
         assert '[0, 0, 1, -849658625, 9532675710156]' in  L.get_data(as_text=True)
         assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)

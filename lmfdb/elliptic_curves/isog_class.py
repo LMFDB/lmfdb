@@ -34,7 +34,7 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 label = ".".join([N,iso])
-            data = db.ec_curvedata.lucky({"lmfdb_iso" : label, 'number':1})
+            data = db.ec_curvedata.lucky({"lmfdb_iso" : label, 'lmfdb_number':1})
             data['label_type'] = 'LMFDB'
             data['iso_label'] = iso
             data['class_label'] = label
@@ -43,7 +43,7 @@ class ECisog_class(object):
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
-                data = db.ec_curvedata.lucky({"iso" : label, 'number':1})
+                data = db.ec_curvedata.lucky({"Ciso" : label, 'Cnumber':1})
                 data['label_type'] = 'Cremona'
                 data['iso_label'] = iso
                 data['class_label'] = label
@@ -56,12 +56,12 @@ class ECisog_class(object):
 
     def make_class(self):
         # Extract the size of the isogeny class from the database
-        classdata = db.ec_classdata.lucky({'iso': self.iso})
+        classdata = db.ec_classdata.lucky({'lmfdb_iso': self.lmfdb_iso})
         self.class_size = ncurves = classdata['class_size']
         
         # Create a list of the curves in the class from the database
-        number_key = 'number' if self.label_type=='Cremona' else 'lmfdb_number'
-        self.curves = [db.ec_curvedata.lucky({'iso':self.iso, number_key: i+1})
+        number_key = 'Cnumber' if self.label_type=='Cremona' else 'lmfdb_number'
+        self.curves = [db.ec_curvedata.lucky({'lmfdb_iso':self.lmfdb_iso, number_key: i+1})
                           for i in range(ncurves)]
 
         # Set optimality flags.  The optimal curve is conditionally
@@ -76,12 +76,12 @@ class ECisog_class(object):
         # without changing the data.
 
         self.optimality_bound = OPTIMALITY_BOUND
-        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or (self.optimality==1) or (self.iso=='990h')
-        self.optimal_label = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or (self.optimality==1) or (self.Ciso=='990h')
+        self.optimal_label = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
 
         if self.conductor < OPTIMALITY_BOUND:
             for c in self.curves:
-                c['optimal'] = (c['number'] == (3 if self.iso=='990h' else 1))
+                c['optimal'] = (c['Cnumber'] == (3 if self.Ciso=='990h' else 1))
                 c['optimality_known'] = True
         else:
             for c in self.curves:
@@ -91,10 +91,10 @@ class ECisog_class(object):
         for c in self.curves:
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=self.conductor, iso_label=self.iso_label, number=c['lmfdb_number'])
-            c['curve_url_cremona'] = url_for(".by_ec_label", label=c['label'])
+            c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel'])
             if self.label_type == 'Cremona':
-                c['curve_label'] = c['label']
-                _, c_iso, c_number = split_cremona_label(c['label'])
+                c['curve_label'] = c['Clabel']
+                _, c_iso, c_number = split_cremona_label(c['Clabel'])
             else:
                 c['curve_label'] = c['lmfdb_label']
                 _, c_iso, c_number = split_lmfdb_label(c['lmfdb_label'])
@@ -107,8 +107,8 @@ class ECisog_class(object):
         # ec_classdata table are with respect to Cremona ordering.
         # NB Before December 2020 the old table ec_curves stored the
         # matrix in LMFDB ordering.
-        if self.label_type == 'LMFDB':
-            perm = lambda i: next(c for c in self.curves if c['lmfdb_number']==i+1)['number']-1
+        if self.label_type == 'Cremona':
+            perm = lambda i: next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         M = Matrix(M)
@@ -150,11 +150,11 @@ class ECisog_class(object):
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
         if self.label_type == 'Cremona':
-            self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.iso, self.lmfdb_iso)
+            self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.Ciso, self.lmfdb_iso)
         else:
-            self.title = "Elliptic curve isogeny class with LMFDB label {} (Cremona label {})".format(self.lmfdb_iso, self.iso)
+            self.title = "Elliptic curve isogeny class with LMFDB label {} (Cremona label {})".format(self.lmfdb_iso, self.Ciso)
 
-        self.properties = [('Label', self.iso if self.label_type=='Cremona' else self.lmfdb_iso),
+        self.properties = [('Label', self.Ciso if self.label_type=='Cremona' else self.lmfdb_iso),
                            ('Number of curves', prop_int_pretty(ncurves)),
                            ('Conductor', prop_int_pretty(self.conductor)),
                            ('CM', '%s' % self.CMfield),

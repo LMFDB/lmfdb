@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import re
 import os
+import re
 import yaml
 from flask import url_for
 from lmfdb import db
@@ -152,7 +152,7 @@ class WebEC(object):
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
-                data = db.ec_curvedata.lucky({"label" : label})
+                data = db.ec_curvedata.lucky({"Clabel" : label})
                 if not data:
                     return "Curve not found" # caller must catch this and raise an error
                 data['label_type'] = 'Cremona'
@@ -162,8 +162,8 @@ class WebEC(object):
 
     def make_curve(self):
         data = self.data = {}
-        label = self.label
-        
+        lmfdb_label = self.lmfdb_label
+
         # Some data fields of self are just those from the database.
         # These only need some reformatting.
 
@@ -177,7 +177,7 @@ class WebEC(object):
 
         # retrieve local reduction data from table ec_localdata:
 
-        self.local_data = local_data = list(db.ec_localdata.search({"label": label}))
+        self.local_data = local_data = list(db.ec_localdata.search({"lmfdb_label": lmfdb_label}))
         for ld in local_data:
             ld['kod'] = latex(KodairaSymbol(ld['kodaira_symbol']))
 
@@ -203,7 +203,7 @@ class WebEC(object):
 
         data['minq_D'] = minqD = self.min_quad_twist_disc
         data['minq_label'] = db.ec_curvedata.lucky({'ainvs': self.min_quad_twist_ainvs},
-                                                   projection = 'lmfdb_label' if self.label_type=='LMFDB' else 'label')
+                                                   projection = 'lmfdb_label' if self.label_type=='LMFDB' else 'Clabel')
         data['minq_info'] = '(itself)' if minqD==1 else '(by {})'.format(minqD)
 
         # modular degree:
@@ -215,13 +215,13 @@ class WebEC(object):
 
         # coefficients of modular form / L-series:
 
-        classdata = db.ec_classdata.lookup(self.iso)
+        classdata = db.ec_classdata.lookup(self.lmfdb_iso)
         data['an'] = classdata['anlist']
         data['ap'] = classdata['aplist']
         
         # mod-p Galois images:
         
-        data['galois_data'] = list(db.ec_galrep.search({'label': self.label}))
+        data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
         for gd in data['galois_data']: # remove the prime prefix from each image code
             gd['image'] = trim_galois_image_code(gd['image'])
         
@@ -251,7 +251,7 @@ class WebEC(object):
 
         # Isogeny degrees:
         
-        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
+        cond, iso, num = split_lmfdb_label(lmfdb_label)
         self.class_deg  = classdata['class_deg']
         self.one_deg = ZZ(self.class_deg).is_prime()
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
@@ -289,11 +289,11 @@ class WebEC(object):
 
         if N<OPTIMALITY_BOUND:
 
-            data['optimality_code'] = int(self.number == (3 if self.iso=='990h' else 1))
+            data['optimality_code'] = int(self.Cnumber == (3 if self.Ciso=='990h' else 1))
             data['optimality_known'] = True
             data['manin_known'] = True
             if self.label_type=='Cremona':
-                data['optimal_label'] = '990h3' if self.iso=='990h' else self.iso+'1'
+                data['optimal_label'] = '990h3' if self.Ciso=='990h' else self.Ciso+'1'
             else:
                 data['optimal_label'] = '990.i3' if self.lmfdb_iso=='990.i' else self.lmfdb_iso+'1'
 
@@ -304,17 +304,17 @@ class WebEC(object):
 
             if self.optimality==1:
                 data['manin_known'] = True
-                data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+                data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
             else:
-                if self.number==1:
+                if self.Cnumber==1:
                     data['manin_known'] = False
-                    data['optimal_label'] = self.label if self.label_type == 'Cremona' else self.lmfdb_label
+                    data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
                 else:
                     # find curve #1 in this class and its optimailty code:
-                    opt_curve = db.ec_curvedata.lucky({'iso': self.iso, 'number': 1},
-                                                   projection=['label','lmfdb_label','optimality'])
+                    opt_curve = db.ec_curvedata.lucky({'Ciso': self.Ciso, 'Cnumber': 1},
+                                                   projection=['Clabel','lmfdb_label','optimality'])
                     data['manin_known'] = (opt_curve['optimality']==1)
-                    data['optimal_label'] = opt_curve['label' if self.label_type == 'Cremona' else 'lmfdb_label']
+                    data['optimal_label'] = opt_curve['Clabel' if self.label_type == 'Cremona' else 'lmfdb_label']
 
         # p-adic data:
             
@@ -342,18 +342,18 @@ class WebEC(object):
         self._code = None
 
         if self.label_type == 'Cremona':
-            self.class_url = url_for(".by_ec_label", label=self.iso)
-            self.class_name = self.iso
+            self.class_url = url_for(".by_ec_label", label=self.Ciso)
+            self.class_name = self.Ciso
         else:
-            self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+            self.class_url = url_for(".by_ec_label", label=self.lmfdb_iso)
             self.class_name = self.lmfdb_iso
         data['class_name'] = self.class_name
-        data['number'] = self.number
+        data['Cnumber'] = self.Cnumber
         
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_ec_label", label=data['minq_label'])),
-            ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv))]
+            ('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant']))]
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
@@ -385,7 +385,7 @@ class WebEC(object):
 
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
-        self.properties = [('Label', self.label if self.label_type == 'Cremona' else self.lmfdb_label),
+        self.properties = [('Label', self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
                            ('Conductor', prop_int_pretty(data['conductor'])),
                            ('Discriminant', prop_int_pretty(data['disc'])),
@@ -396,9 +396,9 @@ class WebEC(object):
                            ]
 
         if self.label_type == 'Cremona':
-            self.title = "Elliptic curve with Cremona label {} (LMFDB label {})".format(self.label, self.lmfdb_label)
+            self.title = "Elliptic curve with Cremona label {} (LMFDB label {})".format(self.Clabel, self.lmfdb_label)
         else:
-            self.title = "Elliptic curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
+            self.title = "Elliptic curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.Clabel)
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                            (r'$\Q$', url_for(".rational_elliptic_curves")),
@@ -407,7 +407,7 @@ class WebEC(object):
                            ('%s' % num,' ')]
 
     def make_mwbsd(self):
-        mwbsd = self.mwbsd = db.ec_mwbsd.lookup(self.label)
+        mwbsd = self.mwbsd = db.ec_mwbsd.lookup(self.lmfdb_label)
 
         # Some components are in the main table:
         
@@ -455,14 +455,16 @@ class WebEC(object):
 
     def make_twoadic_data(self):
         if not self.cm:
-            self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.label)
+            self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.lmfdb_label)
             from sage.matrix.all import Matrix
             twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
             twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
         iw = self.iw = {}
-        iwasawadata = db.ec_iwasawa.lookup(self.label)
+        iwasawadata = db.ec_iwasawa.lookup(self.lmfdb_label)
+        if not iwasawadata: # For curves with no Iwasawa data
+            return
         if not 'iwp0' in iwasawadata: # For curves with no Iwasawa data
             return
 
@@ -506,7 +508,7 @@ class WebEC(object):
 
     def make_torsion_growth(self):
         # The torsion growth table has one row per extension field
-        tgdata = list(db.ec_torsion_growth.search({'label': self.label}))
+        tgdata = list(db.ec_torsion_growth.search({'lmfdb_label': self.lmfdb_label}))
         if not tgdata: # we only have torsion growth data for some range of conductors
             self.torsion_growth_data_exists = False
             return
@@ -571,7 +573,7 @@ class WebEC(object):
         # Fill in placeholders for this specific curve:
 
         for lang in ['sage', 'pari', 'magma']:
-            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.label)
+            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.lmfdb_label)
         return
         for k in self._code:
             if k != 'prompt':

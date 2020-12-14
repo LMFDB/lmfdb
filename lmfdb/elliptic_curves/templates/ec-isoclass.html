@@ -20,6 +20,9 @@ text-align: center;
 <th>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
+{#
+<th>{{ KNOWL('ec.q.faltings_ratio', title='Faltings ratio') }}</th>
+#}
 {% if info.cm %}
 <th>{{ KNOWL('ec.complex_multiplication', title='CM discriminant') }}</th>
 {% endif %}
@@ -31,18 +34,35 @@ text-align: center;
 <tr>
 {% endif %}
 <td class="center"><a href="{{c.curve_url_lmfdb}}">{{c.lmfdb_label}}</a></td>
-<td class="center"><a href="{{c.curve_url_cremona}}">{{c.label}}</a></td>
+<td class="center"><a href="{{c.curve_url_cremona}}">{{c.Clabel}}</a></td>
 <td class="center">{{c.ai}}</td>
 <td align="center">{{c.torsion_structure}}</td>
 <td align="center">
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
 </td>
-{% if c.optimal %}
-<td>\(\Gamma_0(N)\)-optimal{% if not info.optimality_known %}<sup>*</sup>{% endif %}
-</td>
+<td>
+  {% if c.optimal %}
+\(\Gamma_0(N)\)-optimal{% if not info.optimality_known %}<sup>*</sup>{% endif %}
+{#
+  {% if c.faltings_index==0 %}
+, \(\Gamma_1(N)\)-optimal{% if info.class_size>1 %}<sup>**</sup>{% endif %}
+  {% endif %}
+#}
 {% else %}
-<td>&nbsp;</td>
+{#
+{% if c.faltings_index==0 %}
+\(\Gamma_1(N)\)-optimal{% if info.class_size>1 %}<sup>**</sup>{% endif %}
+{% else %}
+#}
+&nbsp;
+{#
 {% endif %}
+#}
+{% endif %}
+</td>
+{#
+<td>{{c.faltings_ratio}}</td>
+#}
 {% if info.cm %}
 <td>{{c.cm}}</td>
 {% endif %}
@@ -51,10 +71,14 @@ text-align: center;
 </table>
 
 {% if not info.optimality_known %}<sup>*</sup>optimality has not been
-proved rigorously for conductors over {{ info.optimality_bound }}.  In
+determined rigorously for conductors over {{ info.optimality_bound }}.  In
 this case the optimal curve is certainly one of the {{
 info.curves[0].optimality }} curves highlighted, and conditionally
 curve {{info.optimal_label}}.{% endif %}
+
+{#
+{% if info.class_size>1 %}<sup>**</sup>conjecturally; proved in some cases.{% endif %}
+#}
 
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}

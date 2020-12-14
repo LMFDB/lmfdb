@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import ast
-import os
 import re
 from six import BytesIO
-import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
@@ -155,6 +153,7 @@ class ECstats(StatsDisplay):
     def __init__(self):
         self.ncurves = db.ec_curvedata.count()
         self.ncurves_c = comma(db.ec_curvedata.count())
+        self.max_N_Cremona = 500000
         self.max_N = db.ec_curvedata.max('conductor')
 
         # round up to nearest multiple of 1000
@@ -165,6 +164,7 @@ class ECstats(StatsDisplay):
         # are no elliptic curves whose conductor is a multiple of
         # 1000.
 
+        self.max_N_Cremona_c = comma(500000)
         self.max_N_c = comma(self.max_N)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
@@ -175,12 +175,12 @@ class ECstats(StatsDisplay):
     def short_summary(self):
         stats_url = url_for(".statistics")
         ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        return r'The database currently contains the complete Cremona database. This contains all %s %s defined over $\Q$ with %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
+        return r'The database currently includes the complete Cremona database of all %s %s defined over $\Q$ with %s up to %s.  Other collections of curves are in preparation.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
 
     @property
     def summary(self):
         nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
-        return 'The database currently contains the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s, all of which have %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c, self.rank_knowl, self.max_rank_c)
+        return 'The database currently includes the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -241,7 +241,7 @@ def by_conductor(conductor):
     return elliptic_curve_search(info)
 
 
-def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
+def elliptic_curve_jump_error(label, args, wellformed_label=False, missing_curve=False):
     err_args = {}
     for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
@@ -387,13 +387,13 @@ def elliptic_curve_search(info, query):
     # minimal Faltings heights, which is conjecturally the
     # Gamma_1(N)-optimal curve.
     if 'optimal' in info and info['optimal'] == 'on':
-        query.update({'faltings_index':0})
+        query.update({'lmfdb_number':1})
 
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
-    info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
-    info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['iso'])
+    info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Clabel'])
+    info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Ciso'])
 
 ##########################
 #  Specific curve pages
@@ -439,9 +439,9 @@ def by_ec_label(label):
                 return elliptic_curve_jump_error(label, {})
 
         if number: # it's a curve
-            label_type = 'label'
+            label_type = 'Clabel'
         else:
-            label_type = 'iso'
+            label_type = 'Ciso'
 
         data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
@@ -511,24 +511,6 @@ def modular_form_display(label, number):
     modform = E.q_eigenform(number)
     modform_string = web_latex(modform)
     return modform_string
-
-# This function is now redundant since we store plots as
-# base64-encoded pngs.
-@ec_page.route("/plot/<label>")
-def plot_ec(label):
-    ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
-    if ainvs is None:
-        return elliptic_curve_jump_error(label, {})
-    E = EllipticCurve(ainvs)
-    P = E.plot()
-    _, filename = tempfile.mkstemp('.png')
-    P.save(filename)
-    data = open(filename).read()
-    os.unlink(filename)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
 
 def render_curve_webpage_by_label(label):
     cpt0 = cputime()
