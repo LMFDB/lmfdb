@@ -24,7 +24,9 @@ class LfunctionTest(LmfdbTest):
         assert '1-19-19.9-r0-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Character/Dirichlet/6400/3/', follow_redirects = True)
-        assert '2.131285033' in L.get_data(as_text=True) in L.get_data(as_text=True) and 'mu(320)' in L.get_data(as_text=True)
+        assert '2.131285033' in L.get_data(as_text=True) in L.get_data(as_text=True)
+        #assert 'SatoTate' in L.get_data(as_text=True)
+        #assert 'mu(320)' in L.get_data(as_text=True)
         assert '3.1381043104275982' in L.get_data(as_text=True)
         assert '1-80e2-6400.3-r0-0-0' in L.get_data(as_text=True)
         L = self.tc.get('/L/Character/Dirichlet/17/16/', follow_redirects = True)
