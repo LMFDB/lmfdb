@@ -150,7 +150,15 @@ class ConreyCharacter(object):
         return Rational(pari("chareval(%s,znconreylog(%s,%d),%d)"%(self.G,self.G,self.number,x)))
 
     def gauss_sum_numerical(self, a):
-        return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
+        # There seems to be a bug in pari when a is a multiple of the modulus,
+        # so we deal with that separately
+        if self.modulus.divides(a):
+            if self.conductor() == 1:
+                return euler_phi(self.modulus)
+            else:
+                return Integer(0)
+        else:
+            return pari("znchargauss(%s,%s,a=%d)"%(self.G,self.chi_pari,a))
 
     def sage_zeta_order(self, order):
         return 1 if self.modulus <= 2 else lcm(2,order)
