@@ -14,7 +14,11 @@ from psycopg2.extras import Json as pgJson
 from psycopg2.extensions import adapt, ISQLQuote
 try:
     from sage.all import ceil
-    from sage.rings.complex_number import ComplexNumber
+    try:
+        # this fails on sage 9.3
+        from sage.rings.complex_mpfr import ComplexNumber
+    except ImportError:
+        from sage.rings.complex_number import ComplexNumber
     from sage.rings.complex_field import ComplexField
     from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
     from sage.rings.integer import Integer
