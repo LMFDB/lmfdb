@@ -457,7 +457,7 @@ class LfunctionTest(LmfdbTest):
         #assert 'SatoTate' in L.get_data(as_text=True)
         #assert 'E_6' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/', follow_redirects=True)
+        #L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert '5.06823463541' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/15360/f/', follow_redirects=True)
