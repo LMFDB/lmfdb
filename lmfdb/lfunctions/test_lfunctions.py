@@ -194,7 +194,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/2/1/1.1/c17/0/0/')
         assert '18.17341115038590061946085869072' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/', follow_redirects=True)
         assert '0.523757' in L.get_data(as_text=True) and '0.530517' in L.get_data(as_text=True)
         assert '(16 + 27.7<em>i</em>)' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
@@ -202,14 +202,14 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/2/13/13.3/c3/0/2/')
         assert '5.68016097036963500634962429051' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/', follow_redirects=True)
         assert '0.253841' in L.get_data(as_text=True)
         assert 'Isogeny class 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
         #FIXME fill ST info in origins = CMFs
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/', follow_redirects=True)
         assert 'Isogeny class 169.a' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
@@ -217,7 +217,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 13.2.e.a.10.1' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.4.E_6' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/', follow_redirects=True)
         assert 'Isogeny class 324.a' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
@@ -226,7 +226,7 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.4.E_3' in L.get_data(as_text=True)
 
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/', follow_redirects=True)
         assert 'Modular form 490.2.a.a' in L.get_data(as_text=True)
         assert 'Isogeny class 490.a' in L.get_data(as_text=True)
         assert '0.729971' in L.get_data(as_text=True)
@@ -234,13 +234,13 @@ class LfunctionTest(LmfdbTest):
         assert '0.940863335931152039286421559408' in L.get_data(as_text=True)
         assert '1 + 7 T + p T^{2}' in L.get_data(as_text=True)
         assert r'\chi_{490} (1, \cdot )' in L.get_data(as_text=True)
-        L = self.tc.get('/L/EllipticCurve/Q/490/a/')
+
+        L = self.tc.get('/L/EllipticCurve/Q/490/a/', follow_redirects=True)
         assert '0.9408633359311520' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/51/1/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/51/1/', follow_redirects=True)
         assert 'Modular form 350.2.e.k.51.1' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
-        assert '/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/151/1/'
         assert r'\chi_{350} (51, \cdot )' in L.get_data(as_text=True)
         assert r'(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.get_data(as_text=True)
         assert '2.00692' in L.get_data(as_text=True)
@@ -249,10 +249,9 @@ class LfunctionTest(LmfdbTest):
         assert '1.68486586956382681209348921118' in L.get_data(as_text=True)
         assert '3.10207045712088492456262227600' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/151/1/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/151/1/', follow_redirects=True)
         assert 'Modular form 350.2.e.k.151.1' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
-        assert '/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/51/1/'
         assert r'\chi_{350} (151, \cdot )' in L.get_data(as_text=True)
         assert r'(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.get_data(as_text=True)
         assert '2.00692' in L.get_data(as_text=True)
@@ -261,7 +260,7 @@ class LfunctionTest(LmfdbTest):
         assert '1.68486586956382681209348921118' in L.get_data(as_text=True)
         assert '3.10207045712088492456262227600' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/', follow_redirects=True)
         assert 'Modular form 350.2.e.k.151.1' in L.get_data(as_text=True)
         assert 'Modular form 350.2.e.k.51.1' in L.get_data(as_text=True)
         assert 'Modular form 350.2.e.k' in L.get_data(as_text=True)
@@ -272,7 +271,7 @@ class LfunctionTest(LmfdbTest):
         assert '( 1 + T + p T^{2} )( 1 + 7 T + p T^{2} )' in L.get_data(as_text=True)
         assert '( 1 - 2 T + p T^{2} )^{2}' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/129/2/a/d/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/129/2/a/d/', follow_redirects=True)
         assert 'Modular form 129.2.a.d' in L.get_data(as_text=True)
         for i in range(1,4):
             assert 'Modular form 129.2.a.d.1.%d' % i in L.get_data(as_text=True)
@@ -282,7 +281,7 @@ class LfunctionTest(LmfdbTest):
         assert '1.55341889806322957326786121161' in L.get_data(as_text=True)
         assert r'S_4\times C_2' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/60/2/i/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/60/2/i/a/', follow_redirects=True)
         assert 'Modular form 60.2.i.a' in L.get_data(as_text=True)
         for c in [17, 53]:
             for i in range(1,3):
@@ -292,7 +291,7 @@ class LfunctionTest(LmfdbTest):
         assert '1 - 2 T + 2 T^{2} - 2 p T^{3} + p^{2} T^{4}' in L.get_data(as_text=True)
         assert r'(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/', follow_redirects=True)
         for c in [55,64,73,82,100,118,127,154,163,190]:
             assert 'Modular form 207.2.i.b.%d.1' % c in L.get_data(as_text=True), 'Modular form 207.2.%d.d.1' % c
         assert '0.233961' in L.get_data(as_text=True)
