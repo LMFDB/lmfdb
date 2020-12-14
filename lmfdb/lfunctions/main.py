@@ -590,16 +590,15 @@ def l_function_ec_page(conductor_label, isogeny_class_label):
     return abort(404, "L-function for elliptic curve isogeny class with label %s not found" % label)
 
 
-##FIXME, do we need to support this route?
-#@l_function_page.route("/EllipticCurve/Q/<label>/")
-#def l_function_ec_page_label(label):
-#    conductor, isogeny = getConductorIsogenyFromLabel(label)
-#    if conductor and isogeny:
-#        return redirect(url_for('.l_function_ec_page', conductor_label = conductor,
-#                                      isogeny_class_label = isogeny), 301)
-#    else:
-#        errmsg = 'The string %s is not an admissible elliptic curve label' % label
-#        return render_lfunction_exception(errmsg)
+@l_function_page.route("/EllipticCurve/Q/<label>/")
+def l_function_ec_page_label(label):
+    conductor, isogeny = getConductorIsogenyFromLabel(label)
+    if conductor and isogeny:
+        return redirect(url_for('.l_function_ec_page', conductor_label = conductor,
+                                      isogeny_class_label = isogeny), 301)
+    else:
+        errmsg = 'The string %s is not an admissible elliptic curve label' % label
+        return render_lfunction_exception(errmsg)
 
 # over a number field
 @l_function_page.route("/EllipticCurve/<field_label>/<conductor_label>/<isogeny_class_label>/")
