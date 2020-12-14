@@ -17,7 +17,9 @@ class LfunctionTest(LmfdbTest):
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects = True)
-        assert '0.4813597783' in L.get_data(as_text=True) and 'mu(9)' in L.get_data(as_text=True)
+        assert '0.4813597783' in L.get_data(as_text=True)
+        #assert 'SatoTate' in L.get_data(as_text=True)
+        #assert 'mu(9)' in L.get_data(as_text=True)
         assert '2.13818063440820276534' in L.get_data(as_text=True)
         assert '1-19-19.9-r0-0-0' in L.get_data(as_text=True)
 
@@ -183,7 +185,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/', follow_redirects=True)
         assert '0.332981' in L.get_data(as_text=True)
         assert '2-7-7.6-c2-0-0' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/2/7/7.6/c2/0/0')
+        L = self.tc.get('/L/Zeros/2/7/7.6/c2/0/0/')
         assert '7.21458918128718444354242474222' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/', follow_redirects=True)
@@ -611,7 +613,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_LcmfPlot(self):
         # ModularForm/GL2/Q/holomorphic/14/6/a/a/
-        L = self.tc.get('/L/Plot/2/14/1.1/c5/0/0')
+        L = self.tc.get('/L/Plot/2/14/1.1/c5/0/0/')
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):
