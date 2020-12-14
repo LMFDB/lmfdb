@@ -15,11 +15,15 @@ text-align: center;
 <table id = "isogeny_class_table">
 <tr>
 <th>{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
+{% if info.conductor < info.cremona_bound %}
 <th>{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
+{% endif %}
 <th>{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
 <th>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
+{% if info.conductor < info.cremona_bound %}
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
+{% endif %}
 {#
 <th>{{ KNOWL('ec.q.faltings_ratio', title='Faltings ratio') }}</th>
 #}
@@ -34,12 +38,15 @@ text-align: center;
 <tr>
 {% endif %}
 <td class="center"><a href="{{c.curve_url_lmfdb}}">{{c.lmfdb_label}}</a></td>
+{% if info.conductor < info.cremona_bound %}
 <td class="center"><a href="{{c.curve_url_cremona}}">{{c.Clabel}}</a></td>
+{% endif %}
 <td class="center">{{c.ai}}</td>
 <td align="center">{{c.torsion_structure}}</td>
 <td align="center">
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
 </td>
+{% if info.conductor < info.cremona_bound %}
 <td>
   {% if c.optimal %}
 \(\Gamma_0(N)\)-optimal{% if not info.optimality_known %}<sup>*</sup>{% endif %}
@@ -60,6 +67,7 @@ text-align: center;
 #}
 {% endif %}
 </td>
+{% endif %}
 {#
 <td>{{c.faltings_ratio}}</td>
 #}
@@ -70,11 +78,13 @@ text-align: center;
 {% endfor %}
 </table>
 
+{% if info.conductor < info.cremona_bound %}
 {% if not info.optimality_known %}<sup>*</sup>optimality has not been
 determined rigorously for conductors over {{ info.optimality_bound }}.  In
 this case the optimal curve is certainly one of the {{
 info.curves[0].optimality }} curves highlighted, and conditionally
 curve {{info.optimal_label}}.{% endif %}
+{% endif %}
 
 {#
 {% if info.class_size>1 %}<sup>**</sup>conjecturally; proved in some cases.{% endif %}

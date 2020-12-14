@@ -319,6 +319,7 @@ white-space: pre in order to keep line breaks! #}
 	  {% endif %}
         </td>
         </tr>
+	{% if data.conductor < data.cremona_bound %}
         <tr>
         <td>{{ KNOWL('ec.q.optimal', title='\( \Gamma_0(N) \)-optimal') }}:</td>
         <td>
@@ -329,7 +330,10 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ KNOWL('ec.q.manin_constant', title='Manin constant') }}:</td>
 	<td>{{ data.data.manin_constant }} {% if not data.data.manin_known %} (conditional<sup>*</sup>){% endif %}</td>
         </tr>
+	{% endif %}
 	</table>
+
+	{% if data.conductor < data.cremona_bound %}
 
 	{% if not data.data.optimality_known or not data.data.manin_known %}
 	<sup>*</sup>
@@ -344,20 +348,9 @@ white-space: pre in order to keep line breaks! #}
 	data.data.optimal_label }} {% endif %} is optimal.{% endif %}
 
 	{% endif %}
+	{% endif %}
 	</p>
 
-	{#
-	{% if data.data.degree==0 %}
-	Not available
-	{% else %}
-	{{ data.data.degree }}
-	{% endif %}
-	. This curve is
-	{% if not data.data.Gamma0optimal %}
-	<i>not</i>
-	{% endif %}
-	\( \Gamma_0(N) \)-optimal.
-	#}
 
     <p>
       <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>

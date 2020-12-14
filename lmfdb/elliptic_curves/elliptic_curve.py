@@ -19,7 +19,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, CREMONA_BOUND
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 q = ZZ['x'].gen()
@@ -180,7 +180,7 @@ class ECstats(StatsDisplay):
     @property
     def summary(self):
         nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
-        return 'The database currently includes the Cremona database of all %s elliptic curves in %s isogeny classes, with %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c)
+        return 'The database currently includes %s elliptic curves in %s isogeny classes, with %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -202,7 +202,7 @@ class ECstats(StatsDisplay):
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
         {'cols': 'torsion_structure'},
-        {'cols': 'sha', 'totaler': {'avg': True}},
+        {'cols': 'sha', 'totaler': {'avg': False}},
     ]
 
     @cached_method
@@ -392,6 +392,7 @@ def elliptic_curve_search(info, query):
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
+    info['cremona_bound'] = CREMONA_BOUND
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Clabel'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Ciso'])
 

@@ -14,6 +14,7 @@ from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factoriz
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
+CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -285,7 +286,11 @@ class WebEC(object):
         # without changing the data.
 
         data['optimality_bound'] = OPTIMALITY_BOUND
-        data['manin_constant'] = self.manin_constant # (conditional on data['optimality_known'])
+        self.cremona_bound = CREMONA_BOUND
+        if N<CREMONA_BOUND:
+            data['manin_constant'] = self.manin_constant # (conditional on data['optimality_known'])
+        else:
+            data['manin_constant'] = 0 # (meaning not available)
 
         if N<OPTIMALITY_BOUND:
 
@@ -297,7 +302,7 @@ class WebEC(object):
             else:
                 data['optimal_label'] = '990.i3' if self.lmfdb_iso=='990.i' else self.lmfdb_iso+'1'
 
-        else:
+        elif N<CREMONA_BOUND:
 
             data['optimality_code'] = self.optimality
             data['optimality_known'] = (self.optimality < 2)
@@ -316,6 +321,12 @@ class WebEC(object):
                     data['manin_known'] = (opt_curve['optimality']==1)
                     data['optimal_label'] = opt_curve['Clabel' if self.label_type == 'Cremona' else 'lmfdb_label']
 
+        else:
+            data['optimality_code'] = None
+            data['optimality_known'] = False
+            data['manin_known'] = False
+            data['optimal_label'] = ''
+            
         # p-adic data:
             
         data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
@@ -348,7 +359,7 @@ class WebEC(object):
             self.class_url = url_for(".by_ec_label", label=self.lmfdb_iso)
             self.class_name = self.lmfdb_iso
         data['class_name'] = self.class_name
-        data['Cnumber'] = self.Cnumber
+        data['Cnumber'] = self.Cnumber if N<CREMONA_BOUND else None
         
         self.friends = [
             ('Isogeny class ' + self.class_name, self.class_url),
@@ -397,8 +408,10 @@ class WebEC(object):
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve with Cremona label {} (LMFDB label {})".format(self.Clabel, self.lmfdb_label)
-        else:
+        elif N<CREMONA_BOUND:
             self.title = "Elliptic curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.Clabel)
+        else:
+            self.title = "Elliptic curve with LMFDB label {}".format(self.lmfdb_label)
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                            (r'$\Q$', url_for(".rational_elliptic_curves")),

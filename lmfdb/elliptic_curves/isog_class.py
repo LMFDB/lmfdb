@@ -2,7 +2,7 @@
 from flask import url_for
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
 from lmfdb.elliptic_curves import ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
@@ -75,23 +75,28 @@ class ECisog_class(object):
         # changing one line in this file (defining OPTIMALITY_BOUND)
         # without changing the data.
 
+        self.cremona_bound    = CREMONA_BOUND
         self.optimality_bound = OPTIMALITY_BOUND
-        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or (self.optimality==1) or (self.Ciso=='990h')
+        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or ((self.conductor < CREMONA_BOUND) and ((self.optimality==1) or (self.Ciso=='990h')))
         self.optimal_label = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
 
         if self.conductor < OPTIMALITY_BOUND:
             for c in self.curves:
                 c['optimal'] = (c['Cnumber'] == (3 if self.Ciso=='990h' else 1))
                 c['optimality_known'] = True
-        else:
+        elif self.conductor < CREMONA_BOUND:
             for c in self.curves:
                 c['optimal'] = (c['optimality']>0) # this curve possibly optimal
                 c['optimality_known'] = (c['optimality']==1) # this curve certainly optimal
-
+        else:
+            for c in self.curves:
+                c['optimal'] = None
+                c['optimality_known'] = False
+                
         for c in self.curves:
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=self.conductor, iso_label=self.iso_label, number=c['lmfdb_number'])
-            c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel'])
+            c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel']) if self.conductor < CREMONA_BOUND else "N/A"
             if self.label_type == 'Cremona':
                 c['curve_label'] = c['Clabel']
                 _, c_iso, c_number = split_cremona_label(c['Clabel'])
@@ -151,8 +156,10 @@ class ECisog_class(object):
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.Ciso, self.lmfdb_iso)
-        else:
+        elif self.conductor < CREMONA_BOUND:
             self.title = "Elliptic curve isogeny class with LMFDB label {} (Cremona label {})".format(self.lmfdb_iso, self.Ciso)
+        else:
+            self.title = "Elliptic curve isogeny class with LMFDB label {}".format(self.lmfdb_iso)
 
         self.properties = [('Label', self.Ciso if self.label_type=='Cremona' else self.lmfdb_iso),
                            ('Number of curves', prop_int_pretty(ncurves)),
