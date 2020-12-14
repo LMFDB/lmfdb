@@ -44,7 +44,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-11-1.1-c1-0-0' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/2/11/1.1/c1/0/0')
+        L = self.tc.get('/L/Zeros/2/11/1.1/c1/0/0/')
         assert '6.362613894713' in L.get_data(as_text=True)
 
 
@@ -307,7 +307,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/', follow_redirects=True)
         assert '3.67899147579' in L.get_data(as_text=True)
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
-        assert '0.2239622' in L.get_data(as_text=True)
+        assert '0.22396252' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
         assert '3.03882077536' in L.get_data(as_text=True)
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.24.1/holomorphic/2.2.24.1-1.1-a/0/0/', follow_redirects=True)
@@ -453,7 +453,9 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lgenus2(self):
         L = self.tc.get('/L/Genus2Curve/Q/169/a/', follow_redirects=True)
-        assert '0.0904903908' in L.get_data(as_text=True) and 'E_6' in L.get_data(as_text=True)
+        assert '0.0904903908' in L.get_data(as_text=True)
+        #assert 'SatoTate' in L.get_data(as_text=True)
+        #assert 'E_6' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert '5.06823463541' in L.get_data(as_text=True)
