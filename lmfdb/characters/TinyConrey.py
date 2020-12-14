@@ -156,7 +156,7 @@ class ConreyCharacter(object):
         return 1 if self.modulus <= 2 else lcm(2,order)
 
     def sage_character(self, order, genvalues):
-        H = DirichletGroup(self.modulus, base_ring=CyclotomicField(order))
+        H = DirichletGroup(self.modulus, base_ring=CyclotomicField(self.sage_zeta_order(order)))
         M = H._module
         order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
         return DirichletCharacter(H,M(order_corrected_genvalues))

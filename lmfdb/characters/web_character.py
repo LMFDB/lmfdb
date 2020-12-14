@@ -498,7 +498,7 @@ class WebChar(WebCharObject):
     @lazy_attribute
     def kerfield(self):
         kerpoly = self.kernel_field_poly
-        if kerpoly:
+        if kerpoly and self.order <= 100:
             return formatfield(kerpoly, missing_text="Number field defined by a degree %d polynomial" % self.order)
         else:
             return "Number field defined by a degree %d polynomial (not computed)" % self.order
@@ -1003,7 +1003,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         return {
             'sage': [
                 'from sage.modular.dirichlet import DirichletCharacter',
-                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(self.modulus, self.order),
+                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(self.modulus, self.chi.sage_zeta_order(self.order)),
                 'M = H._module',
                 'chi = DirichletCharacter(H, M([{}]))'.format(
                     ','.join(str(val) for val in self._genvalues_for_code)
