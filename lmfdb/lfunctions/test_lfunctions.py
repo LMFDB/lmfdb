@@ -188,14 +188,16 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/', follow_redirects=True)
         assert '1.34e12' in L.get_data(as_text=True) # a26
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        assert '2-1-1.1-c17-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/1/1.1/c17/0/0/')
         assert '18.17341115038590061946085869072' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/')
         assert '0.523757' in L.get_data(as_text=True) and '0.530517' in L.get_data(as_text=True)
         assert '(16 + 27.7<em>i</em>)' in L.get_data(as_text=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1/')
+        assert '2-13-13.3-c3-0-2' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/2/13/13.3/c3/0/2/')
         assert '5.68016097036963500634962429051' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
@@ -454,16 +456,19 @@ class LfunctionTest(LmfdbTest):
     def test_Lgenus2(self):
         L = self.tc.get('/L/Genus2Curve/Q/169/a/', follow_redirects=True)
         assert '0.0904903908' in L.get_data(as_text=True)
+        assert '4-13e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
         #assert 'SatoTate' in L.get_data(as_text=True)
         #assert 'E_6' in L.get_data(as_text=True)
 
-        #L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/', follow_redirects=True)
+        L = self.tc.get('/L/Zeros/4/13e2/1.1/c1e2/0/0/')
         assert '5.06823463541' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/15360/f/', follow_redirects=True)
         assert 'Isogeny class 15360.f' in L.get_data(as_text=True)
+        assert '4-15360-1.1-c1e2-0-5' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/', follow_redirects=True)
+
+        L = self.tc.get('/L/Zeros/4/15360/1.1/c1e2/0/5/', follow_redirects=True)
         assert '2.15654793578' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/2457/b/', follow_redirects=True)
