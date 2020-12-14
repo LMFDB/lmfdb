@@ -54,7 +54,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 27.2.a.a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-3e3-1.1-c1-0-0' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/2/3e3/1.1/c1/0/0')
+        L = self.tc.get('/L/Zeros/2/3e3/1.1/c1/0/0/')
         assert '4.043044013797' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/Q/379998/d/', follow_redirects=True)
@@ -62,7 +62,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 379998.d' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-379998-1.1-c1-0-2' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/2/379998/1.1/c1/0/2')
+        L = self.tc.get('/L/Zeros/2/379998/1.1/c1/0/2/')
         assert '0.8292065891985' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/', follow_redirects=True)
@@ -306,14 +306,19 @@ class LfunctionTest(LmfdbTest):
     def test_Lhmf(self):
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/', follow_redirects=True)
         assert '0.3599289594' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/', follow_redirects=True)
+        assert '4-775-1.1-c1e2-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/4/775/1.1/c1e2/0/0/', follow_redirects=True)
         assert '3.67899147579' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
         assert '0.22396252' in L.get_data(as_text=True)
-        L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/', follow_redirects=True)
+        assert '4-24e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
+        L = self.tc.get('/L/Zeros/4/24e2/1.1/c1e2/0/0/', follow_redirects=True)
         assert '3.03882077536' in L.get_data(as_text=True)
+
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.24.1/holomorphic/2.2.24.1-1.1-a/0/0/', follow_redirects=True)
         assert '0.28781' in L.get_data(as_text=True)
+        assert '4-24e2-1.1-c1e2-0-1' in L.get_data(as_text=True)
 
     def test_Lgl2maass(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/')
