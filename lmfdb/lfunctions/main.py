@@ -251,6 +251,8 @@ def parse_euler(inp, query, qfield, p=None, d=None):
 def euler_search(info, query):
     if 'n' not in info:
         info['n'] = '1-10'
+    # Remove n_primality, which might be left over from a trace search
+    info.pop('n_primality', None)
     set_Trn(info, query)
     common_parse(info, query, force_rational="Euler factor")
     d = query.get("degree")
@@ -414,7 +416,7 @@ class LFunctionSearchArray(SearchArray):
     def search_types(self, info):
         return self._search_again(
             info,
-            [('', 'List of L-functions'),
+            [('List', 'List of L-functions'),
              ('Traces', 'Traces table'),
              ('Euler', 'Euler factors'),
              ('Random', 'Random L-function')])
