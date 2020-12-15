@@ -272,6 +272,9 @@ class WebAbstractGroup(WebObj):
         data[3][2].reverse()
         return data
 
+    def schur_multiplier_text(self):
+        return "trivial" if self.schur_multiplier == [] else self.schur_multiplier
+
     @lazy_attribute
     def G(self):
         # Reconstruct the group from the data stored above
