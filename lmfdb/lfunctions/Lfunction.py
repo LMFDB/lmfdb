@@ -104,6 +104,7 @@ def makeLfromdata(L):
     L.degree = data.get('degree')
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
+    L.analytic_conductor = data.get('analytic_conductor')
 
     central_character = data.get('central_character')
     L.charactermodulus, L.characternumber = map(int, central_character.split("."))

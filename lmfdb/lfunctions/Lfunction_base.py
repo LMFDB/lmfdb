@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
+from sage.misc.lazy_attribute import lazy_attribute
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                  specialValueTriple,scientific_notation_helper)
@@ -45,6 +46,10 @@ class Lfunction(object):
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
 
 
+    @lazyAttribute
+    def analytic_conductor(self):
+        #FIXME, check the motivic-lfunctions repo to compute this
+        return None
     ############################################################################
     ### other useful methods not implemented universally yet
     ############################################################################
@@ -132,6 +137,8 @@ class Lfunction(object):
                 info['conductor'] = latex(self.level_factored)
             else:
                 info['conductor_factored'] = latex(self.level_factored)
+
+        info['analytic_conductor'] = self.analytic_conductor
 
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
