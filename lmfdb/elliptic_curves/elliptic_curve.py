@@ -152,36 +152,38 @@ class ECstats(StatsDisplay):
 
     def __init__(self):
         self.ncurves = db.ec_curvedata.count()
-        self.ncurves_c = comma(db.ec_curvedata.count())
+        self.ncurves_c = comma(self.ncurves)
+        self.nclasses = db.ec_classdata.count()
+        self.nclasses_c = comma(self.nclasses)
         self.max_N_Cremona = 500000
-        self.max_N = db.ec_curvedata.max('conductor')
-
-        # round up to nearest multiple of 1000
-        self.max_N = 1000*int((self.max_N/1000)+1)
-        # NB while we only have the Cremona database, the upper bound
-        # will always be a multiple of 1000, but it looks funny to
-        # show the maximum condictor as something like 399998; there
-        # are no elliptic curves whose conductor is a multiple of
-        # 1000.
-
         self.max_N_Cremona_c = comma(500000)
+        self.max_N = db.ec_curvedata.max('conductor')
         self.max_N_c = comma(self.max_N)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
         self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
         self.rank_knowl = display_knowl('ec.rank', title = "rank")
+        self.ec_knowl = display_knowl('ec.q', title='elliptic curves')
+        self.cl_knowl = display_knowl('ec.isogeny', title = "isogeny classes")
 
     @property
     def short_summary(self):
         stats_url = url_for(".statistics")
-        ec_knowl = display_knowl('ec.q', title='elliptic curves')
-        return r'The database currently includes the complete Cremona database of all %s %s defined over $\Q$ with %s up to %s.  Other collections of curves are in preparation.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves_c, ec_knowl, self.cond_knowl, self.max_N_c, stats_url)
+        return r'The database currently includes %s %s defined over $\Q$, in %s %s, with %s at most %s.  Here are some further <a href="%s">statistics and completeness information</a>.' % (self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c, stats_url)
 
     @property
     def summary(self):
-        nclasses = comma(db.lfunc_instances.count({'type':'ECQ'}))
-        return 'The database currently includes %s elliptic curves in %s isogeny classes, with %s at most %s.' % (self.ncurves_c, nclasses, self.cond_knowl, self.max_N_c)
-
+        return "\n".join([
+            '<p>',
+            'The database currently includes {} {} in {} {}, with {} at most {},'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c),
+            'consisting of',
+            '<ul>',
+            '<li>all curves of conductor less than {};</li>'.format(self.max_N_Cremona),
+            '<li> all curves with $7$-smooth conductor.</li>',
+            '</ul>',
+            '</p>',
+        ])
+    
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
 
