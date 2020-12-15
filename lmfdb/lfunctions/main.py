@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, prime_pi, Integer, PolynomialRing, next_prime
+from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, PolynomialRing, next_prime, prime_range
 
 import tempfile
 import os
@@ -31,12 +31,14 @@ from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
+from lmfdb.utils.search_parsing import (
+    parse_bool, parse_ints, parse_floats, parse_noop, parse_primes,
+    search_parser)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
-    search_wrap, parse_bool, parse_ints, parse_floats, parse_noop,
-    list_to_factored_poly_otherorder, flash_error,
-    parse_primes, parse_equality_constraints,
+    search_wrap, list_to_factored_poly_otherorder, flash_error,
+    parse_primes, parse_equality_constraints, coeff_to_poly,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer)
 from lmfdb.utils.names_and_urls import names_and_urls
@@ -127,7 +129,13 @@ def process_search(res, info, query):
     return res
 
 def process_trace(res, info, query):
-    return common_postprocess(res, info, query)
+    res = common_postprocess(res, info, query)
+    if info.get('view_modp') == 'reductions':
+        q = int(info['an_modulo'])
+        for L in res:
+            for n in info['Tr_n']:
+                L['dirichlet_coefficients'][n] %= q
+    return res
 
 def process_euler(res, info, query):
     res = common_postprocess(res, info, query)
@@ -136,7 +144,6 @@ def process_euler(res, info, query):
         L['euler_factor'] = {}
         p = 2
         for i, F in enumerate(L.get('euler_factors', [])):
-            print(p, F, latex(R(F)))
             L['euler_factor'][p] = list_to_factored_poly_otherorder(F)
             p = next_prime(p)
     return res
@@ -204,7 +211,32 @@ def trace_search(info, query):
     common_parse(info, query, force_rational="Trace")
     process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
 
-
+@search_parser
+def parse_euler(inp, query, qfield, p=None, d=None):
+    seen = False
+    for piece in inp.split(','):
+        piece = piece.strip().split('=')
+        if len(piece) != 2:
+            raise SearchParsingError("It must be a comma separated list of expressions of the form Fp=F(T)")
+        n, t = piece
+        n = n.strip()
+        if not n.startswith("F"):
+            raise SearchParsingError("%s does not start with F"%(n))
+        n = int(n[1:])
+        if n > 100:
+            raise SearchParsingError("%s is too large; Euler factor not stored")
+        if not ZZ(n).is_prime():
+            raise SearchParsingError("%s is not prime")
+        if n != p:
+            continue
+        if seen:
+            raise SearchParsingError("%s repeated" % n)
+        seen = True
+        poly = coeff_to_poly(t).change_ring(ZZ)
+        coeffs = list(poly)
+        if len(coeffs) > d + 1:
+            raise ValueError("The degree of '%s' is larger than %s" % (t, d))
+        query[qfield] = coeffs + [0]*(d+1-len(coeffs))
 
 @search_wrap(template="LfunctionEulerSearchResults.html",
              table=db.lfunc_search,
@@ -224,18 +256,8 @@ def euler_search(info, query):
         flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
-    def parse_poly(s):
-        poly = coeff_to_poly(s)
-        coeffs = list(poly)
-        if len(coeffs) > d+1:
-            raise ValueError("The degree of '%s' is larger than %s" % (s, d))
-        return coeffs + [0]*(d+1-len(coeffs))
-    def pi_wrap(p):
-        p = ZZ(p)
-        if not p.is_prime():
-            raise ValueError("Euler factors only defined for primes, not %s" % p)
-        return prime_pi(p)
-    parse_equality_constraints(info, query, 'euler_constraints', qfield="euler_factors", prefix='E', parse_singleton=parse_poly, nshift=pi_wrap)
+    for p in prime_range(100):
+        parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
     def __init__(self):
@@ -342,7 +364,7 @@ class LFunctionSearchArray(SearchArray):
         euler_constraints = TextBox(
             name='euler_constraints',
             label='Euler factor constraints',
-            example='E3=1-T,E5=1+T+5T^2')
+            example='F3=1-T,F5=1+T+5T^2')
 
         trace_an_moduli = TextBox(
             name='an_modulo',

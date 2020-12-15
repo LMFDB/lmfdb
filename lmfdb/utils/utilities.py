@@ -39,12 +39,21 @@ def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
+    # Strip trailing zeros
+    if not s:
+        s = [0]
+    if s[-1] == 0:
+        j = len(s) - 1
+        while j > 0 and s[j] == 0:
+            j -= 1
+        s = s[:j+1]
     if len(s) == 1:
         if galois:
             return [str(s[0]), [[0,0]]]
         return str(s[0])
     ZZT = PolynomialRing(ZZ, vari)
-    sfacts = ZZT(s).factor()
+    f = ZZT(s)
+    sfacts = f.factor()
     sfacts_fc = [[g, e] for g, e in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
