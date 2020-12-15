@@ -105,6 +105,8 @@ def makeLfromdata(L):
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
     L.analytic_conductor = data.get('analytic_conductor')
+    # FIXME
+    #L.root_analytic_conductor = data.get('root_analytic_conductor')
 
     central_character = data.get('central_character')
     L.charactermodulus, L.characternumber = map(int, central_character.split("."))

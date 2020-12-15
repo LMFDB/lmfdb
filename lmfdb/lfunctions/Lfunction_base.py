@@ -5,6 +5,7 @@ from sage.misc.lazy_attribute import lazy_attribute
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                  specialValueTriple,scientific_notation_helper)
+from lmfdb.utils import display_float
 
 
 #############################################################################
@@ -50,6 +51,14 @@ class Lfunction(object):
     def analytic_conductor(self):
         #FIXME, check the motivic-lfunctions repo to compute this
         return None
+
+    @lazy_attribute
+    def root_analytic_conductor(self):
+        if self.analytic_conductor:
+            return self.analytic_conductor**(1.0/self.degree)
+        else:
+            return None
+
     ############################################################################
     ### other useful methods not implemented universally yet
     ############################################################################
@@ -137,8 +146,12 @@ class Lfunction(object):
                 info['conductor'] = latex(self.level_factored)
             else:
                 info['conductor_factored'] = latex(self.level_factored)
-
-        info['analytic_conductor'] = self.analytic_conductor
+        if self.analytic_conductor:
+            info['analytic_conductor'] = display_float(self.analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+            info['root_analytic_conductor'] = display_float(self.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+        else:
+            info['analytic_conductor'] = self.analytic_conductor
+            info['root_analytic_conductor'] = self.root_analytic_conductor
 
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"

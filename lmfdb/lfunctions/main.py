@@ -417,7 +417,7 @@ class LFunctionSearchArray(SearchArray):
             [('', 'List of L-functions'),
              ('Traces', 'Traces table'),
              ('Euler', 'Euler factors'),
-             ('Random', 'Random form')])
+             ('Random', 'Random L-function')])
 
     def html(self, info=None):
         # We need to override html to add the trace and euler factor inputs
