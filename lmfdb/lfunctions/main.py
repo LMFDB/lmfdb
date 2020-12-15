@@ -36,7 +36,7 @@ from lmfdb.utils.search_parsing import (
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
-    search_wrap, list_to_factored_poly_otherorder, flash_error,
+    search_wrap, list_to_factored_poly_otherorder, flash_error, flash_warning,
     parse_primes, coeff_to_poly,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer)
@@ -173,7 +173,7 @@ def common_parse(info, query, force_rational=False):
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
     if force_rational and not query.get('rational'):
-        flash_error("%s search only shows rational L-functions" % force_rational)
+        flash_warning("%s search only shows rational L-functions" % force_rational)
         info["rational"] = "yes"
         query["rational"] = True
     info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
@@ -362,6 +362,7 @@ class LFunctionSearchArray(SearchArray):
         euler_constraints = TextBox(
             name='euler_constraints',
             label='Euler factor constraints',
+            width=350,
             example='F3=1-T,F5=1+T+5T^2')
 
         trace_an_moduli = TextBox(
@@ -398,8 +399,7 @@ class LFunctionSearchArray(SearchArray):
 
         self.euler_array = [
             RowSpacer(22),
-            [euler_coldisplay],
-            [euler_constraints]]
+            [euler_coldisplay, euler_constraints]]
 
     def search_types(self, info):
         return self._search_again(
