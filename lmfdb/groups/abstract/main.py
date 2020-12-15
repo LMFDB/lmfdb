@@ -233,10 +233,13 @@ def render_abstract_group(args):
         totsubs = len(gp.subgroups)
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
 
-        factored_order = web_latex(gp.order_factor(),False)
-        aut_order = web_latex(gp.aut_order_factor(),False)
-        
-        info['sparse_cyclotomic_to_latex']=sparse_cyclotomic_to_latex
+        factored_order = web_latex(gp.order_factor(), False)
+        aut_order = web_latex(gp.aut_order_factor(), False)
+        out_order = web_latex(gp.out_order_factor(), False)
+        z_order = web_latex(gp.cent_order_factor(), False)
+        Gab_order = web_latex(gp.Gab_order_factor(), False)
+
+        info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
         info['ccdata'] = gp.conjugacy_classes
         info['chardata'] = gp.characters
         info['qchardata'] = gp.rational_characters
@@ -260,12 +263,15 @@ def render_abstract_group(args):
         info['max_quot'] = max_quot
 
 
-
-        
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
-        prop2 = [
-            ('Label', '$%s$' %  label), ('Order', '$%s$' % factored_order), ('#Aut(G)', '$%s$' % aut_order)
+        properties = [
+            ('Label', label),
+            ('Order', '$%s$' % factored_order),
+            #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
+            #('#$\operatorname{Out}(G)$', '$%s$' % out_order),
+            #('#$Z(G)$', '$%s$' % z_order),
+            #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
         ]
 
         bread = get_bread([(label, )])
@@ -275,7 +281,7 @@ def render_abstract_group(args):
 
         return render_template("abstract-show-group.html",
                                title=title, bread=bread, info=info,
-                               properties=prop2,
+                               properties=properties,
                                #friends=friends,
                                learnmore=learnmore_list(),
                                #downloads=downloads, 

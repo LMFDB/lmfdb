@@ -184,7 +184,7 @@ class WebAbstractGroup(WebObj):
         count = Counter()
         for sub in self.subgroups.values():
             if sub.normal and sub.split and not sub.direct:
-                pair = (sub.subgroup_label, sub.quotient_label)
+                pair = (sub.subgroup, sub.quotient)
                 if pair not in count:
                     semis.append(sub)
                 count[pair] += 1
@@ -196,7 +196,7 @@ class WebAbstractGroup(WebObj):
         count = Counter()
         for sub in self.subgroups.values():
             if sub.normal and not sub.split:
-                pair = (sub.subgroup_label, sub.quotient_label)
+                pair = (sub.subgroup, sub.quotient)
                 if pair not in count:
                     nonsplit.append(sub)
                 count[pair] += 1
@@ -413,7 +413,6 @@ class WebAbstractGroup(WebObj):
     def out_order_factor(self):
         return factor(int(self._data['outer_order']))
 
-
     ###special subgroups
     def cent(self):
         return self.special_search('Z')
@@ -424,6 +423,9 @@ class WebAbstractGroup(WebObj):
     def central_quot(self):
         return group_names_pretty(self._data['central_quotient'])
 
+    def cent_order_factor(self):
+        return (self.order // ZZ(self.comm().split('.')[2])).factor()
+
     def comm(self):
         return self.special_search('D')
 
@@ -432,6 +434,9 @@ class WebAbstractGroup(WebObj):
 
     def abelian_quot(self):
         return group_names_pretty(self._data['abelian_quotient'])
+
+    def Gab_order_factor(self):
+        return ZZ(self._data['abelian_quotient'].split('.')[0]).factor()
 
     def fratt(self):
         return self.special_search('Phi')
