@@ -412,6 +412,62 @@ def random_l_function():
     label = db.lfunc_search.random(projection="label")
     return redirect(url_for_lfunction(label), 307)
 
+@l_function_page.route("/<int:degree>/")
+def by_url_degree(degree):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['bread'] = [('L-functions', url_for('.index')),
+                 (str(degree), url_for('.by_url_degree', degree=degree))]
+    return l_function_search(info)
+
+def convert_conductor(conductor):
+    if 'e' in conductor:
+        a, b = conductor.split('e', 1)
+        try:
+            return ZZ(int(a)**int(b))
+        except ValueError:
+            pass
+    return conductor
+
+@l_function_page.route("/<int:degree>/<conductor>/")
+def by_url_degree_conductor(degree, conductor):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info and 'conductor' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['conductor'] = convert_conductor(conductor)
+        info['bread'] = [('L-functions', url_for('.index')),
+                         (str(degree), url_for('.by_url_degree', degree=degree)),
+                         (conductor, url_for('.by_url_degree_conductor',
+                                             degree=degree,
+                                             conductor=conductor))]
+        return l_function_search(info)
+
+@l_function_page.route("/<int:degree>/<conductor>/<character>/")
+def by_url_degree_conductor_character(degree, conductor, character):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info and 'conductor' in info and 'character' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['conductor'] = convert_conductor(conductor)
+        info['character'] = character
+        info['bread'] = [('L-functions', url_for('.index')),
+                         (str(degree), url_for('.by_url_degree', degree=degree)),
+                         (conductor, url_for('.by_url_degree_conductor',
+                                             degree=degree,
+                                             conductor=conductor)),
+                         (character, url_for('.by_url_degree_conductor_character',
+                                             degree=degree,
+                                             conductor=conductor,
+                                             character=character))]
+        return l_function_search(info)
+
+
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
 def l_function_dirichlet_browse_page():
@@ -953,7 +1009,7 @@ def set_bread_and_friends(info, L, request):
         info['bread'] = get_bread(1, [(charname, request.path)])
 
     elif isinstance(L, Lfunction_from_db):
-        info['bread'] = L.bread + [(L.label, request.path)]
+        info['bread'] = L.bread
         info['origins'] = L.origins
         info['friends'] = L.friends
         info['factors_origins'] = L.factors_origins

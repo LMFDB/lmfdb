@@ -486,7 +486,20 @@ class Lfunction_from_db(Lfunction):
         return True
     @lazy_attribute
     def bread(self):
-        return get_bread(self.degree)
+        from .main import url_for_lfunction
+        _, conductor, character, rest = self.label.split('-', 3)
+        degree = self.degree
+        bread = [('L-functions', url_for('.index')),
+                 (str(degree), url_for('.by_url_degree', degree=degree)),
+                 (conductor, url_for('.by_url_degree_conductor',
+                                     degree=degree,
+                                     conductor=conductor)),
+                 (character, url_for('.by_url_degree_conductor_character',
+                                     degree=degree,
+                                     conductor=conductor,
+                                     character=character)),
+                 (rest, url_for_lfunction(self.label))]
+        return bread
 
     @lazy_attribute
     def origin_label(self):
