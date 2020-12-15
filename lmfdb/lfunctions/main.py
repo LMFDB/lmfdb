@@ -56,13 +56,15 @@ def get_degree(degree_string):
     return int(degree_string[6:])
 
 def learnmore_list(path=None, remove=None):
-    learnmore = [('Completeness of the data', url_for('.completeness'))]
+    learnmore = [('Completeness of the data', url_for('.completeness')),
+                 ('L-function labels', url_for('.labels'))]
     if path:
         prepath = re.sub(r'^/L/', '', path)
         prepath = re.sub(r'/$', '', prepath)
         learnmore.extend([
             ('Source of the data', url_for('.source', prepath=prepath)),
-            ('Reliability of the data', url_for('.reliability', prepath=prepath))])
+            ('Reliability of the data', url_for('.reliability', prepath=prepath)),
+        ])
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -124,6 +126,7 @@ def process_search(res, info, query):
         L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
+        L['root_analytic_conductor'] = display_float(L['root_analytic_conductor'], 3)
         L['factored_conductor'] = latex(Factorization([(ZZ(p), L['conductor'].valuation(p)) for p in L['bad_primes']]))
     return res
 
@@ -182,6 +185,7 @@ def common_parse(info, query, force_rational=False):
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
+    info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
     info['bigint_knowl'] = bigint_knowl
 
 @search_wrap(template="LfunctionSearchResults.html",
@@ -282,6 +286,11 @@ class LFunctionSearchArray(SearchArray):
             label="Conductor",
             example="37",
             example_span="37, 10-20")
+        root_analytic_conductor = TextBox(
+            name="root_analytic_conductor",
+            knowl="lfunction.root_analytic_conductor",
+            label="Root analytic conductor",
+            example="0.1-0.3")
         central_character = TextBox(
             name="central_character",
             knowl="lfunction.central_character",
@@ -378,18 +387,19 @@ class LFunctionSearchArray(SearchArray):
 
         self.browse_array = [
             [z1, degree],
-            [conductor, analytic_conductor],
-            [bad_primes, central_character],
+            [conductor, bad_primes],
+            [analytic_conductor, root_analytic_conductor],
+            [central_character, root_angle],
             [analytic_rank, motivic_weight],
             [primitive, algebraic],
             [self_dual, rational],
-            [root_angle, count]
+            [count]
         ]
 
         self.refine_array = [
-            [degree, conductor, analytic_conductor, analytic_rank, motivic_weight],
+            [degree, conductor, bad_primes, analytic_conductor, root_analytic_conductor],
             [primitive, algebraic, self_dual, rational, z1],
-            [root_angle, bad_primes, central_character]
+            [root_angle, central_character, analytic_rank, motivic_weight]
         ]
 
         self.traces_array = [
@@ -1699,7 +1709,7 @@ def reliability(prepath):
 @l_function_page.route("/Completeness")
 def completeness():
     t = 'Completeness of L-function data'
-    bread = [('Completeness', ' ')]
+    bread = get_bread(breads=[('Completeness', ' ')])
     return render_template("single.html", kid='rcs.cande.lfunction', title=t, 
         bread=bread)
 
@@ -1729,3 +1739,8 @@ def source(prepath):
     return render_template("single.html", kid=knowl, title=t, bread=bread,
         learnmore=learnmore_list(prepath, remove='Source'))
 
+@l_function_page.route("/Labels")
+def labels():
+    t = 'L-function labels'
+    bread = get_bread(breads=[("Labels", " ")])
+    return render_template("single.html", kid="lfunction.label", title=t, bread=bread)

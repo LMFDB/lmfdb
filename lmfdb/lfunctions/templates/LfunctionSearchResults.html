@@ -10,25 +10,27 @@
 <thead>
 <tr>
   <th style="text-align: left;">{{ KNOWL('lfunction.label', title='Label') }}</th>
-  <th>{{ KNOWL('lfunction.analytic_conductor', 'A') }}</th>
-  <th>{{ KNOWL('lfunction.degree', title='d') }}</th>
-  <th>{{ KNOWL('lfunction.conductor', title='N') }}</th>
-  <th>{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
+  <th>{{ KNOWL('lfunction.root_analytic_conductor', '$\\alpha$') }}</th>
+  <th>{{ KNOWL('lfunction.analytic_conductor', '$A$') }}</th>
+  <th>{{ KNOWL('lfunction.degree', title='$d$') }}</th>
+  <th>{{ KNOWL('lfunction.conductor', title='$N') }}</th>
+  <th>{{ KNOWL('lfunction.central_character', title='$\\chi$') }}</th>
   <th>{{ KNOWL('lfunction.functional_equation', title='$\\mu$') }}</th>
   <th>{{ KNOWL('lfunction.functional_equation', title='$\\nu$') }}</th>
-  <th>{{ KNOWL('lfunction.motivic_weight', title='w') }}</th>
+  <th>{{ KNOWL('lfunction.motivic_weight', title='$w$') }}</th>
   <th>{{ KNOWL('lfunction.primitive', title='prim') }}</th>
   <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
   <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
-  <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\epsilon)$') }}</th>
-  <th>{{ KNOWL('lfunction.analytic_rank', title='r') }}</th>
-  <th>{{ KNOWL('lfunction.first_zero', title='First zero') }}</th>
+  <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\\epsilon)$') }}</th>
+  <th>{{ KNOWL('lfunction.analytic_rank', title='$r$') }}</th>
+  <th>{{ KNOWL('lfunction.zeros', title='First zero') }}</th>
   <th style="text-align: left;">{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
 </tr>
 </thead>
 {% for L in info.results: %}
 <tr>
   <td style="text-align: left;"> <a href="{{L.url}}"> {{L.label}} </a> </td>
+  <td> ${{L.root_analytic_conductor}}$ </td>
   <td> ${{L.analytic_conductor}}$ </td>
   <td> ${{L.degree}}$ </td>
   <td> ${{L.factored_conductor}}$ </td>

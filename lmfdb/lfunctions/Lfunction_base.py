@@ -46,7 +46,7 @@ class Lfunction(object):
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
 
 
-    @lazyAttribute
+    @lazy_attribute
     def analytic_conductor(self):
         #FIXME, check the motivic-lfunctions repo to compute this
         return None

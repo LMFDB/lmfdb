@@ -393,19 +393,23 @@ def parse_floats(inp, query, qfield, exact_prec=5, allow_singletons=False):
         A = parse_range2(inp, qfield, parse_singleton, parse_endpoint)
         collapse_ors(A, query)
         if allow_singletons:
-            def find_prec(a, b):
-                return 
+            def restring(c):
+                a, b = c.get("$gte", ""), c.get("$lte", "")
+                if a == "" or b == "":
+                    # possible if half empty interval such as "6-"
+                    return "%s-%s" % (a, b)
+                p = -((b - a) * RR(2/3)).log(10).round()
+                dispa = ("%.{}f".format(p+1) % a).rstrip("0")
+                dispb = ("%.{}f".format(p+1) % b).rstrip("0")
+                if b >= 0:
+                    return "%s-%s" % (dispa, dispb)
+                else:
+                    return "%s..%s" % (dispa, dispb)
             if A[0] == '$or':
                 clauses = [list(c.values())[0] for c in A[1]]
             else:
                 clauses = [A[1]]
-            clauses = [(c["$gte"], c["$lte"]) for c in clauses]
-            # The following still works for the range -0.001..0.001
-            precs = [-((b - a) * RR(2/3)).log(10).round() for a,b in clauses]
-            disps = [(("%.{}f".format(p+1) % a).rstrip("0"), ("%.{}f".format(p+1) % b).rstrip("0")) for (a, b), p in zip(clauses, precs)]
-            print(clauses, precs, disps)
-            clauses = ["%s-%s" % (a, b) if c[1] >= 0 else "%s..%s" % (a, b) for (a, b), c in zip(disps, clauses)]
-            return ", ".join(clauses)
+            return ", ".join(restring(c) for c in clauses)
     else:
         raise SearchParsingError(msg)
 
