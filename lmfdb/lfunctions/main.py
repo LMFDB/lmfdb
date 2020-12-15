@@ -416,7 +416,7 @@ class LFunctionSearchArray(SearchArray):
     def search_types(self, info):
         return self._search_again(
             info,
-            [('', 'List of L-functions'),
+            [('List', 'List of L-functions'),
              ('Traces', 'Traces table'),
              ('Euler', 'Euler factors'),
              ('Random', 'Random form')])
