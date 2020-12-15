@@ -12,7 +12,7 @@ import math, re
 from flask import url_for, request
 from sage.all import (
     ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
-    is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,
+    is_prime, factor,  log,  I, gcd, sqrt, prod, ceil,
     EllipticCurve, NumberField, RealNumber, PowerSeriesRing,
     CBF, RIF, primes_first_n, next_prime, lazy_attribute)
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -23,7 +23,6 @@ from lmfdb.utils import (
         display_complex, str_to_CBF,
         Downloader,
         names_and_urls)
-from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
@@ -33,15 +32,13 @@ import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from .Lfunctionutilities import (
-        string2number, get_bread,
+        string2number,
         compute_local_roots_SMF2_scalar_valued,)
-from .LfunctionComp import isogeny_class_cm
 from .LfunctionDatabase import (
         get_lfunction_by_label,
         get_lfunction_by_Lhash,
         get_instances_by_label,
         get_instances_by_Lhash,
-        get_instances_by_Lhash_and_trace_hash,
         get_factors_instances,
         get_lfunction_by_url,
         get_instance_by_url, getHmfData, getHgmData,

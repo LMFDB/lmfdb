@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
-from sage.misc.lazy_attribute import lazy_attribute
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                  specialValueTriple,scientific_notation_helper)
