@@ -9,10 +9,14 @@
 <table class="ntdata">
   <thead>
     <tr>
+      <th></th><th></th>
+      <th colspan="{{info.Tr_n | length}}">$L(s) = \prod_p F_p(p^{-s})^{-1}$</th>
+    </tr>
+    <tr>
       <th>{{ KNOWL('lfunction.label', 'Label') }}</th>
       <th>{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
       {% for n in info.Tr_n %}
-      <th class="right"> \(F_{ {{n}} }(T)\) </th>
+      <th> \(F_{ {{n}} }(T)\) </th>
       {% endfor %}
     </tr>
   </thead>
