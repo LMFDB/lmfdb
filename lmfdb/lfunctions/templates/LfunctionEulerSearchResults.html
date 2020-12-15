@@ -26,7 +26,7 @@
       <td style="text-align: left;"> <a href="{{L.url}}"> {{L.label}} </a> </td>
       <td class="mjx_basic border-right"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
       {% for n in info.Tr_n %}
-      <td class="mjx_basic"> ${{ L.euler_factor[n] }}$ </td>
+      <td class="mjx_basic left"> ${{ L.euler_factor[n] }}$ </td>
       {% endfor %}
     </tr>
     {% endfor %}

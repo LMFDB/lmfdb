@@ -7,7 +7,7 @@ from six import string_types
 import re
 from collections import Counter
 
-from lmfdb.utils.utilities import flash_error, display_float
+from lmfdb.utils.utilities import flash_error
 from sage.all import ZZ, QQ, RR, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul

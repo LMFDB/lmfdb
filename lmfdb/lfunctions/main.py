@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, PolynomialRing, next_prime, prime_range
+from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, next_prime, prime_range
 
 import tempfile
 import os
@@ -32,17 +32,16 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
-    parse_bool, parse_ints, parse_floats, parse_noop, parse_primes,
-    search_parser)
+    parse_bool, parse_ints, parse_floats, parse_noop, search_parser)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, list_to_factored_poly_otherorder, flash_error, flash_warning,
-    parse_primes, parse_equality_constraints, coeff_to_poly,
+    parse_primes, coeff_to_poly,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer)
 from lmfdb.utils.names_and_urls import names_and_urls
-from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 from six import string_types
@@ -139,7 +138,6 @@ def process_trace(res, info, query):
 
 def process_euler(res, info, query):
     res = common_postprocess(res, info, query)
-    R = PolynomialRing(ZZ, 'T')
     for L in res:
         L['euler_factor'] = {}
         p = 2
@@ -433,6 +431,62 @@ def l_function_history():
 def random_l_function():
     label = db.lfunc_search.random(projection="label")
     return redirect(url_for_lfunction(label), 307)
+
+@l_function_page.route("/<int:degree>/")
+def by_url_degree(degree):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['bread'] = [('L-functions', url_for('.index')),
+                 (str(degree), url_for('.by_url_degree', degree=degree))]
+    return l_function_search(info)
+
+def convert_conductor(conductor):
+    if 'e' in conductor:
+        a, b = conductor.split('e', 1)
+        try:
+            return ZZ(int(a)**int(b))
+        except ValueError:
+            pass
+    return conductor
+
+@l_function_page.route("/<int:degree>/<conductor>/")
+def by_url_degree_conductor(degree, conductor):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info and 'conductor' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['conductor'] = convert_conductor(conductor)
+        info['bread'] = [('L-functions', url_for('.index')),
+                         (str(degree), url_for('.by_url_degree', degree=degree)),
+                         (conductor, url_for('.by_url_degree_conductor',
+                                             degree=degree,
+                                             conductor=conductor))]
+        return l_function_search(info)
+
+@l_function_page.route("/<int:degree>/<conductor>/<character>/")
+def by_url_degree_conductor_character(degree, conductor, character):
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if 'degree' in info and 'conductor' in info and 'character' in info:
+        return redirect(url_for('.index', **request.args), code=307)
+    else:
+        info['degree'] = degree
+        info['conductor'] = convert_conductor(conductor)
+        info['character'] = character
+        info['bread'] = [('L-functions', url_for('.index')),
+                         (str(degree), url_for('.by_url_degree', degree=degree)),
+                         (conductor, url_for('.by_url_degree_conductor',
+                                             degree=degree,
+                                             conductor=conductor)),
+                         (character, url_for('.by_url_degree_conductor_character',
+                                             degree=degree,
+                                             conductor=conductor,
+                                             character=character))]
+        return l_function_search(info)
+
 
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
@@ -975,7 +1029,7 @@ def set_bread_and_friends(info, L, request):
         info['bread'] = get_bread(1, [(charname, request.path)])
 
     elif isinstance(L, Lfunction_from_db):
-        info['bread'] = L.bread + [(L.label, request.path)]
+        info['bread'] = L.bread
         info['origins'] = L.origins
         info['friends'] = L.friends
         info['factors_origins'] = L.factors_origins

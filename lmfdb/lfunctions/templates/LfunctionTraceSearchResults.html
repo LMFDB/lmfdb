@@ -25,7 +25,7 @@
       <td class="mjx_basic border-right"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
       {% for n in info.Tr_n %}
       {% if 'dirichlet_coefficients' in L %}
-      <td class="mjx_basic"> {{ info.bigint_knowl(L.dirichlet_coefficients[n-1]) | safe}} </td>
+      <td class="mjx_basic right"> {{ info.bigint_knowl(L.dirichlet_coefficients[n-1]) | safe}} </td>
       {% endif %}
       {% endfor %}
     </tr>
