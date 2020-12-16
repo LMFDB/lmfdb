@@ -980,8 +980,8 @@ def set_gaga_properties(L):
     ans.append(('Sign', "$%s$" % styleTheSign(L.sign) ))
 
     if L.analytic_conductor:
-        ans.append(('Analytic cond.', display_float(self.analytic_conductor, 3, extra_truncation_digits=40, latex=True)
-        ans.append(('Root an. cond.', display_float(self.root_analytic_conductor, 3, extra_truncation_digits=40, latex=True)
+        ans.append(('Analytic cond.', '$%s$' % display_float(L.analytic_conductor, 3, extra_truncation_digits=40, latex=True)))
+        ans.append(('Root an. cond.', '$%s$' % display_float(L.root_analytic_conductor, 3, extra_truncation_digits=40, latex=True)))
 
 
     if L.algebraic:
