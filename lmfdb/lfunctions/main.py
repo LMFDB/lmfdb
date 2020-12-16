@@ -979,6 +979,11 @@ def set_gaga_properties(L):
     ans.append(('Conductor', prop_int_pretty(L.level)))
     ans.append(('Sign', "$%s$" % styleTheSign(L.sign) ))
 
+    if L.analytic_conductor:
+        ans.append(('Analytic cond.', display_float(self.analytic_conductor, 3, extra_truncation_digits=40, latex=True)
+        ans.append(('Root an. cond.', display_float(self.root_analytic_conductor, 3, extra_truncation_digits=40, latex=True)
+
+
     if L.algebraic:
         ans.append(('Motivic weight', prop_int_pretty(L.motivic_weight)))
 
