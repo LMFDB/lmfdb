@@ -510,6 +510,13 @@ class WebAbstractCharacter(WebObj):
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
 
+    def type(self):
+        if self.indicator == 0:
+            return "C"
+        if self.indicator > 0:
+            return "R"
+        return "S"
+
 class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar
     def __init__(self, label, data=None):
