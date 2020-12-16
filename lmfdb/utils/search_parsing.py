@@ -8,7 +8,7 @@ import re
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, PolynomialRing, pari, sage_eval
+from sage.all import ZZ, QQ, prod, PolynomialRing, pari, gp
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
@@ -347,7 +347,7 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     elif MULT_PARSE.match(inp):
     	try:
-            inp=str(int(sage_eval(str(inp))))
+            inp=str(int(ZZ(gp(inp))))
             collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     	except:
             raise SearchParsingError("Sage is unable to evaluate that syntax.")
