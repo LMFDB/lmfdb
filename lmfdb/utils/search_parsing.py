@@ -8,7 +8,7 @@ import re
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, PolynomialRing, pari
+from sage.all import ZZ, QQ, prod, PolynomialRing, pari, sage_eval
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
@@ -27,6 +27,7 @@ QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 LIST_RAT_RE = re.compile(r'^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$')
+MULT_PARSE= re.compile(r'^[0-9()*^]*$') # to check if a string is comprised of just multiplication and exponentiation symbols
 SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 ## RE from number_field.py
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
@@ -82,7 +83,7 @@ class SearchParser(object):
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
-            raise
+            raise		
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
@@ -344,8 +345,14 @@ def parse_rational(inp, query, qfield):
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    elif MULT_PARSE.match(inp):
+    	try:
+            inp=str(int(sage_eval(str(inp))))
+            collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    	except:
+            raise SearchParsingError("Sage is unable to evaluate that syntax.")
     else:
-        raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise SearchParsingError("It needs to be an integer (such as 25), be a multiplicative expression that parses to an integer (such as 2^2*3), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, clean_spaces=False, prep_ranges=False) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints_raw(inp, query, qfield, names={}):
