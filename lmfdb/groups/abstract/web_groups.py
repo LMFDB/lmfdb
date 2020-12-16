@@ -255,6 +255,9 @@ class WebAbstractGroup(WebObj):
         data[3][2].reverse()
         return data
 
+    def schur_multiplier_text(self):
+        return "trivial" if self.schur_multiplier == [] else self.schur_multiplier
+
     @lazy_attribute
     def G(self):
         # Reconstruct the group from the data stored above
@@ -493,6 +496,13 @@ class WebAbstractCharacter(WebObj):
     table = db.gps_char
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
+
+    def type(self):
+        if self.indicator == 0:
+            return "C"
+        if self.indicator > 0:
+            return "R"
+        return "S"
 
 class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar

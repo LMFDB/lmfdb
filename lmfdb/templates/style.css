@@ -1040,6 +1040,9 @@ table.ntdata .right {
 td.right {
     text-align: right;
 }
+td.center {
+    text-align: center;
+}
 table.ntdata .middle {
     vertical-align: middle;
 }

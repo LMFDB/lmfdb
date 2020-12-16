@@ -24,7 +24,7 @@
     <tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
     <tr><td>Outer Automorphisms:</td><td>${{gp.show_outer_group()}}$</td></tr>
     <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
-    <tr><td>Schur multiplier</td><td>{{gp.schur_multiplier}}</td><tr>
+    <tr><td>Schur multiplier:</td><td>{{gp.schur_multiplier_text()}}</td><tr>
   </table>
 </p>
 
@@ -35,7 +35,7 @@
 
 <h2>Constructions</h2>
 
-<table>
+<table style="white-space: nowrap">
   <tr>
     <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
     <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
@@ -217,10 +217,12 @@ Click on a subgroup in the diagram to see information about it.
 {% endfor %}
 
 {% endfor %}
+<tr><td><td>{{KNOWL('group.representation.type', 'Type')}}</tr>
 
 {% set dispv = info.sparse_cyclotomic_to_latex %}
 {% for chtr in chars %}
-<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}</td><td></td>
+<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}</td>
+     <td class="center">{{chtr.type()}}</td>
   {% set cond = chtr.cyclotomic_n %}
   {% for val in chtr['values'] %}
    <td class="right">${{ dispv(cond, val) }}$</td>
