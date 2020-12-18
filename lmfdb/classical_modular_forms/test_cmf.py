@@ -14,7 +14,7 @@ class CmfTest(LmfdbTest):
 
     def test_expression_divides(self):
         # checks search of conductors dividing 1000 
-        page = self.check('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&search_type=List', '40.2.k.a')
+        page = self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&search_type=List', '40.2.k.a')
 
     def test_browse_page(self):
         r"""
