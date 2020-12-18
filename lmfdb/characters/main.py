@@ -15,7 +15,8 @@ from lmfdb.characters.web_character import (
         WebSmallDirichletCharacter,
         WebDBDirichletCharacter,
         WebDBDirichletGroup,
-        WebSmallDirichletGroup
+        WebSmallDirichletGroup,
+        WebDBDirichletOrbit
 )
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
@@ -325,10 +326,11 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     print("gal_orb_label: {}".format(gal_orb_label))
     print("number: {}".format(number))
 
-    # modulus = modulus.replace(' ','')
-    # if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
-    #     modulus, number = modulus.split('.')
-    #     return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
+    # if gal_orb_label is None:
+    #     # modulus = modulus.replace(' ','')
+    #     if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
+    #         modulus, number = modulus.split('.')
+    #         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
@@ -362,7 +364,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
                 info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
             return render_template('CharGroup.html', **info)
         else:
-            info = WebDBDirichletGroup(**args).to_dict()
+            info = WebDBDirichletOrbit(**args).to_dict()
             return render_template('CharacterGaloisOrbit.html', **info)
     try:
         number = label_to_number(modulus, number)

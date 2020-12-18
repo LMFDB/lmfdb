@@ -575,6 +575,7 @@ class WebDBDirichlet(WebDirichlet):
         self._populate_from_db()
 
     def _populate_from_db(self):
+        import pdb; pdb.set_trace()
         values_data = db.char_dir_values.lookup(
             "{}.{}".format(self.modulus, self.number)
         )
@@ -583,6 +584,7 @@ class WebDBDirichlet(WebDirichlet):
         # The -1 in the line below is because labels index at 1, while
         # the Cremona letter code indexes at 0
         self.orbit_label = cremona_letter_code(self.orbit_index - 1)
+        print("the self.orbit_label is {}".format(self.orbit_label))
         self.order = int(values_data['order'])
         self.indlabel = int(values_data['prim_label'].partition('.')[-1])
         self._set_values_and_groupelts(values_data)
@@ -1045,6 +1047,20 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
             ]
         }
+
+
+class WebDBDirichletOrbit(WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently, this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+
+    def __init__(self, **kwargs):
+        WebDBDirichlet.__init__(self, **kwargs)
+
+    @lazy_attribute
+    def title(self):
+        return "Dirichlet orbit {}".format(self.orbit_label)
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
