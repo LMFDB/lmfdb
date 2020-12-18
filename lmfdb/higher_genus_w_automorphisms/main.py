@@ -18,7 +18,7 @@ from lmfdb.utils import (
     flash_error, to_dict,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
-    search_wrap)
+    search_wrap, random_wrapper)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
@@ -188,9 +188,10 @@ def index():
 
 
 @higher_genus_w_automorphisms_page.route("/random")
+@random_wrapper
 def random_passport():
     label = db.hgcwa_passports.random(projection='passport_label')
-    return redirect(url_for(".by_passport_label", passport_label=label), 307)
+    return url_for(".by_passport_label", passport_label=label)
 
 @higher_genus_w_automorphisms_page.route("/interesting")
 def interesting():

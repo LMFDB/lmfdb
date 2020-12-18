@@ -1,5 +1,5 @@
 from lmfdb.app import is_beta, app
-from flask import redirect
+from lmfdb.utils import random_wrapper
 from sage.all import randint
 
 def random_url():
@@ -48,6 +48,6 @@ def random_url():
     return route
 
 @app.route("/random")
+@random_wrapper
 def go_random():
-    url = random_url()
-    return redirect(url, 307)
+    return random_url()

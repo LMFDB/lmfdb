@@ -2,11 +2,11 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for, redirect, abort
+from flask import render_template, request, url_for,  abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
-    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
+    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, random_wrapper)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
@@ -47,9 +47,10 @@ def index():
     return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
+@random_wrapper
 def random():
     label = db.maass_newforms.random()
-    return redirect(url_for('.by_label', label=label), 307)
+    return url_for('.by_label', label=label)
 
 @maass_page.route("/interesting")
 def interesting():

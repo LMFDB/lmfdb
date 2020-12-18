@@ -8,7 +8,7 @@ from lmfdb.utils import (
     parse_nf_string, parse_ints, parse_hmf_weight,
     teXify_pol, add_space_if_positive,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
-    search_wrap)
+    search_wrap, random_wrapper)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -52,8 +52,9 @@ def get_hmf_field(label):
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
 @hmf_page.route("/random")
+@random_wrapper
 def random_hmf():    # Random Hilbert modular form
-    return redirect(url_for_label(db.hmf_forms.random()), 307)
+    return url_for_label(db.hmf_forms.random())
 
 @hmf_page.route("/interesting")
 def interesting():

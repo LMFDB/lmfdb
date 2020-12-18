@@ -17,7 +17,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler)
+    StatsDisplay, proportioners, totaler,
+    random_wrapper)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
@@ -217,14 +218,16 @@ def index():
                            bread=get_bread())
 
 @cmf.route("/random/")
+@random_wrapper
 def random_form():
     label = db.mf_newforms.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/random_space/")
+@random_wrapper
 def random_space():
     label = db.mf_newspaces.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/interesting_newforms")
 def interesting_newforms():

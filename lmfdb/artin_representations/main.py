@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict, comma, prop_int_pretty)
+    display_knowl, search_wrap, to_dict, comma, prop_int_pretty, random_wrapper)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
@@ -418,11 +418,12 @@ def render_artin_representation_webpage(label):
     )
 
 @artin_representations_page.route("/random")
+@random_wrapper
 def random_representation():
     rep = db.artin_reps.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"."+num2letters(num+1)
-    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
+    return url_for(".render_artin_representation_webpage", label=label)
 
 @artin_representations_page.route("/interesting")
 def interesting():

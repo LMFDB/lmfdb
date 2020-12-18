@@ -27,7 +27,7 @@ from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.artin_representations.main import parse_artin_label
-from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty, random_wrapper
 from lmfdb.app import is_debug_mode
 from lmfdb import db
 from six import string_types
@@ -57,10 +57,11 @@ def l_function_history():
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=[('Completeness of the data', url_for('.completeness'))])
 
 @l_function_page.route("/random")
+@random_wrapper
 def random_l_function():
     url = db.lfunc_instances.random(projection="url")
     if url:
-        return redirect("/L/"+url, 307)
+        return "/L/"+url
     else:
         return random_l_function()
 
