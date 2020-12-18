@@ -17,7 +17,7 @@ from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.family import get_smf_family, get_smf_families
 from . import dimensions
 from . import sample
-from lmfdb.utils import random_wrapper
+from lmfdb.utils import redirect_no_cache
 
 ###############################################################################
 # Utility functions
@@ -56,7 +56,7 @@ def index():
     return render_main_page(bread)
 
 @smf_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_sample():
     return url_for('.by_label', label='.'.join(sample.random_sample_name()))
 

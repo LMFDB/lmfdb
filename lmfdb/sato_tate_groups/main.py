@@ -13,7 +13,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
     parse_ints, parse_rational, parse_bool, parse_count, parse_start,
-    parse_ints_to_list_flash, clean_input, random_wrapper)
+    parse_ints_to_list_flash, clean_input, redirect_no_cache)
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import smallgroup_cache, small_group_display_knowl
@@ -239,7 +239,7 @@ def index():
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=get_bread())
 
 @st_page.route('/random')
-@random_wrapper
+@redirect_no_cache
 def random():
     label = db.gps_sato_tate.random()
     return url_for('.by_label', label=label)

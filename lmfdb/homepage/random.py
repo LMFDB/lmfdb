@@ -1,5 +1,5 @@
 from lmfdb.app import is_beta, app
-from lmfdb.utils import random_wrapper
+from lmfdb.utils import redirect_no_cache
 from sage.all import randint
 
 def random_url():
@@ -48,6 +48,6 @@ def random_url():
     return route
 
 @app.route("/random")
-@random_wrapper
+@redirect_no_cache
 def go_random():
     return random_url()

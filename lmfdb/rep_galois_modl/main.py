@@ -9,7 +9,7 @@ from flask import make_response, send_file, request, render_template, redirect, 
 from sage.all import ZZ, conway_polynomial
 
 from lmfdb import db
-from lmfdb.utils import flash_error, parse_ints, parse_list, search_wrap, random_wrapper
+from lmfdb.utils import flash_error, parse_ints, parse_list, search_wrap, redirect_no_cache
 #should these functions be defined in lattices or somewhere else?
 from lmfdb.lattice.main import vect_to_sym, vect_to_matrix
 from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
@@ -76,7 +76,7 @@ def rep_galois_modl_render_webpage():
 
 # Random rep_galois_modl
 @rep_galois_modl_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_rep_galois_modl():
     label = db.modlgal_reps.random()
     return url_for(".render_rep_galois_modl_webpage", label=label)

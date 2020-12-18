@@ -42,7 +42,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'names_and_urls', 'name_and_object_from_url',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
-           'random_wrapper']
+           'redirect_no_cache']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -89,4 +89,4 @@ from .display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
 from .trace_hash import TraceHash, TraceHashClass
-from .random_wrap import random_wrapper
+from .random_wrap import redirect_no_cache

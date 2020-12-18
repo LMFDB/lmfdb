@@ -15,7 +15,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl,
     parse_rational, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, random_wrapper)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -132,14 +132,14 @@ def interesting():
     )
 
 @ec_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_curve():
     label = db.ec_curves.random(projection=1)['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
     return url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num)
 
 @ec_page.route("/curve_of_the_day")
-@random_wrapper # disables cache on todays curve
+@redirect_no_cache # disables cache on todays curve
 def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)

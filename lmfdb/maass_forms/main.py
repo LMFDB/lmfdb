@@ -6,7 +6,7 @@ from flask import render_template, request, url_for,  abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
-    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, random_wrapper)
+    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
@@ -47,7 +47,7 @@ def index():
     return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
-@random_wrapper
+@redirect_no_cache
 def random():
     label = db.maass_newforms.random()
     return url_for('.by_label', label=label)

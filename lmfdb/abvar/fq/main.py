@@ -22,7 +22,7 @@ from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
-from lmfdb.utils import random_wrapper
+from lmfdb.utils import redirect_no_cache
 
 logger = make_logger("abvarfq")
 
@@ -707,7 +707,7 @@ def by_label(label):
     return redirect(url_for_label(label))
 
 @abvarfq_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)

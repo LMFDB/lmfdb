@@ -16,7 +16,7 @@ from lmfdb.utils import (
     display_knowl,
     parse_ints,
     parse_bracketed_posints,
-    random_wrapper,
+    redirect_no_cache,
     search_wrap,
     Downloader,
     StatsDisplay,
@@ -93,7 +93,7 @@ def index():
 
 
 @belyi_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_belyi_galmap():
     label = db.belyi_galmaps.random()
     return url_for_belyi_galmap_label(label)

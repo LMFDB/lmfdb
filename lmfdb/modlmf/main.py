@@ -9,7 +9,7 @@ from flask import render_template, request, url_for, make_response, redirect, se
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
 from lmfdb import db
-from lmfdb.utils import web_latex, parse_ints, search_wrap, flash_error, random_wrapper
+from lmfdb.utils import web_latex, parse_ints, search_wrap, flash_error, redirect_no_cache
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 
@@ -77,7 +77,7 @@ def modlmf_render_webpage():
 
 # Random modlmf
 @modlmf_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_modlmf():
     label = db.modlmf_forms.random()
     return url_for(".render_modlmf_webpage", label=label)

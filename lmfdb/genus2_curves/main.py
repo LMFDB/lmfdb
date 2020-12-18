@@ -14,7 +14,7 @@ from lmfdb.utils import (
     parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
-    random_wrapper,
+    redirect_no_cache,
     SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect, CountBox, SubsetBox,
     StatsDisplay, formatters)
 from lmfdb.utils.interesting import interesting_knowls
@@ -137,7 +137,7 @@ def index_Q():
     )
 
 @g2c_page.route("/Q/random/")
-@random_wrapper
+@redirect_no_cache
 def random_curve():
     label = db.g2c_curves.random()
     return url_for_curve_label(label)

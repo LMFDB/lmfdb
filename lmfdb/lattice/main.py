@@ -12,7 +12,7 @@ from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
-    search_wrap, random_wrapper)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
@@ -90,7 +90,7 @@ def lattice_render_webpage():
 
 # Random Lattice
 @lattice_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_lattice():
     return url_for(".render_lattice_webpage", label=db.lat_lattices.random())
 

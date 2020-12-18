@@ -12,7 +12,7 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, random_wrapper)
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -371,7 +371,7 @@ def search_input_error(info, bread):
     return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
 
 @local_fields_page.route("/random")
-@random_wrapper
+@redirect_no_cache
 def random_field():
     label = db.lf_fields.random()
     return url_for(".by_label", label=label)
