@@ -42,11 +42,11 @@ import ast
 class PowMulNodeVisitor(ast.NodeTransformer):
     def visit_BinOp(self, node):
         if isinstance(node.op, ast.Pow):
-            if log2(self.visit(node.left)) * self.visit(node.right) > 100:
+            if log2(self.visit(node.left)) * self.visit(node.right) > 3000:
                 raise ValueError('output will be too large')
             return  self.visit(node.left) ** self.visit(node.right)
         elif isinstance(node.op, ast.Mult):
-            return  self.visit(node.left) * self.visit(node.right) 
+            return  self.visit(node.left) * self.visit(node.right)
     def visit_Constant(self, node):
         return ast.literal_eval(node)
 
