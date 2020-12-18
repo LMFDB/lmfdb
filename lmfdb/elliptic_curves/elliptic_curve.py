@@ -781,7 +781,7 @@ class ECSearchArray(SearchArray):
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Non-max. $p$",
-            short_label="Non-max. $p$",
+            short_label="Nonmax $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
