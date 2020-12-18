@@ -259,11 +259,11 @@ def show_ecnf1(nf):
         nf, cond_label, iso_label = split_class_label(nf)
         return redirect(url_for(".show_ecnf_isoclass", nf=nf, conductor_label=cond_label, class_label=iso_label), 301)
     if not FIELD_RE.fullmatch(nf):
-        abort(404)
+        return abort(404)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        abort(404)
+        return abort(404)
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
@@ -281,8 +281,7 @@ def show_ecnf1(nf):
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     if not FIELD_RE.fullmatch(nf):
-        flash_error("%s is not a valid number field label", nf)
-        return redirect(url_for(".index"))
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
@@ -308,8 +307,7 @@ def show_ecnf_conductor(nf, conductor_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not FIELD_RE.fullmatch(nf):
-        flash_error("%s is not a valid number field label", nf)
-        return redirect(url_for(".index"))
+        return abort(404)
     conductor_label = unquote(conductor_label)
     conductor_label = convert_IQF_label(nf,conductor_label)
     try:
