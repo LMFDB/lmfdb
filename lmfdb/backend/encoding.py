@@ -9,13 +9,13 @@ from six import integer_types as six_integers
 import binascii
 import json
 import datetime
-
 from psycopg2.extras import Json as pgJson
 from psycopg2.extensions import adapt, ISQLQuote
 try:
     from sage.all import ceil
     try:
         # this fails in sage 9.3
+
         from sage.rings.complex_mpfr import ComplexNumber
     except ImportError:
         from sage.rings.complex_number import ComplexNumber

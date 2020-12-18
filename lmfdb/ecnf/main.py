@@ -18,7 +18,8 @@ from lmfdb.utils import (
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
-    search_wrap, parse_rational
+    search_wrap, parse_rational,
+    redirect_no_cache
     )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
@@ -226,9 +227,10 @@ def index():
                            bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random/")
+@redirect_no_cache
 def random_curve():
     E = db.ec_nfcurves.random(projection=['field_label', 'conductor_label', 'iso_label', 'number'])
-    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
+    return url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number'])
 
 
 @ecnf_page.route("/interesting")
