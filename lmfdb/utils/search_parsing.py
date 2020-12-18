@@ -49,6 +49,9 @@ class PowMulNodeVisitor(ast.NodeTransformer):
             return  self.visit(node.left) * self.visit(node.right)
     def visit_Constant(self, node):
         return ast.literal_eval(node)
+    if sys.version_info < (3,8):
+        def visit_Num(self, node): # deprecated for python >= 3.8
+            return self.visit_Constant(node)
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
