@@ -465,8 +465,9 @@ def by_url_degree_conductor(degree, conductor):
     if 'degree' in info and 'conductor' in info:
         return redirect(url_for('.index', **request.args), code=307)
     else:
+        conductor = convert_conductor(conductor)
         info['degree'] = degree
-        info['conductor'] = convert_conductor(conductor)
+        info['conductor'] = conductor
         info['bread'] = [('L-functions', url_for('.index')),
                          (str(degree), url_for('.by_url_degree', degree=degree)),
                          (conductor, url_for('.by_url_degree_conductor',
@@ -480,8 +481,9 @@ def by_url_degree_conductor_character(degree, conductor, character):
     if 'degree' in info and 'conductor' in info and 'character' in info:
         return redirect(url_for('.index', **request.args), code=307)
     else:
+        conductor = convert_conductor(conductor)
         info['degree'] = degree
-        info['conductor'] = convert_conductor(conductor)
+        info['conductor'] = conductor
         info['character'] = character
         info['bread'] = [('L-functions', url_for('.index')),
                          (str(degree), url_for('.by_url_degree', degree=degree)),

@@ -489,6 +489,7 @@ class Lfunction_from_db(Lfunction):
         from .main import url_for_lfunction
         _, conductor, character, rest = self.label.split('-', 3)
         degree = self.degree
+        conductor  = conductor.replace('e', '^')
         bread = [('L-functions', url_for('.index')),
                  (str(degree), url_for('.by_url_degree', degree=degree)),
                  (conductor, url_for('.by_url_degree_conductor',
