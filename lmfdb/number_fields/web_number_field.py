@@ -365,7 +365,12 @@ class WebNumberField:
 
     @classmethod
     def from_polynomial(cls, pol):
-        pol = PolynomialRing(QQ, 'x')(str(pol))
+        try:
+            # try to cast to ring
+            pol = PolynomialRing(QQ, 'x')(pol)
+        except Exception:
+            # try again as a string
+            pol = PolynomialRing(QQ, 'x')(str(pol))
         pol *= pol.denominator()
         R = pol.parent()
         pol = R(pari(pol).polredbest().polredabs())
