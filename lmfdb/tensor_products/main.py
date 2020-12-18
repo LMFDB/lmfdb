@@ -5,17 +5,17 @@
 from __future__ import absolute_import
 from lmfdb import db
 from flask import render_template, request, url_for
-from lmfdb.tensor_products import tensor_products_page 
+from lmfdb.tensor_products import tensor_products_page
 
 from .galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
-from lmfdb.characters.web_character import WebDirichletCharacter
+from lmfdb.characters.web_character import WebSmallDirichletCharacter
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey, WebNewform
 from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
 from lmfdb.lfunctions.main import render_lfunction_exception
 
-# The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo  
+# The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo
 
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.index")),
@@ -46,7 +46,7 @@ def show():
 
     objPaths = []
     for k, v in objLinks.items():
-        objPaths.append(v.split('/')) 
+        objPaths.append(v.split('/'))
 
     galoisRepObjs = []
     for p in objPaths:
@@ -67,8 +67,8 @@ def show():
 
     # currently only implemented tp of two things
     if len(galoisRepObjs)==2:
- 
-        try: 
+
+        try:
             tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
             tp.lfunction()
 
@@ -87,16 +87,16 @@ def show():
                 info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
                 info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
             else:
-                info['zeroswarning'] = ''       
-                info['svwarning'] = '' 
-    
-            info['tpzeroslink'] = zeros(tp) 
+                info['zeroswarning'] = ''
+                info['svwarning'] = ''
+
+            info['tpzeroslink'] = zeros(tp)
             info['sv_edge'] = specialValueString(tp, 1, '1')
             info['sv_critical'] = specialValueString(tp, 0.5, '1/2')
 
 #            friends = []
 #            friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
-#            friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1]))) 
+#            friends.append(('L-function of second object', url_for('.show', obj2=objLinks[1])))
 #            info['friends'] = friends
 
             info['eulerproduct'] = r'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
@@ -141,9 +141,9 @@ def galois_rep_from_path(p):
 
     elif (p[0]=='Character' and p[1]=='Dirichlet'):
         dirichletArgs = {'type':'Dirichlet', 'modulus':int(p[2]), 'number':int(p[3])}
-        chi = WebDirichletCharacter(**dirichletArgs)
+        chi = WebSmallDirichletCharacter(**dirichletArgs)
         return GaloisRepresentation(chi)
- 
+
     elif (p[0]=='ModularForm'):
         level = int(p[4])
         weight = int(p[5])

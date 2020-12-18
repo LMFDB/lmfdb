@@ -1149,7 +1149,6 @@ class DedekindZeta(Lfunction):
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
-                # cond = wnf.conductor()
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
                 j = 0
@@ -1158,9 +1157,9 @@ class DedekindZeta(Lfunction):
                 dir_group.pop(j)
                 self.factorization = (r'\(\zeta_K(s) =\) ' +
                                       r'<a href="/L/Riemann/">\(\zeta(s)\)</a>')
-                fullchargroup = wnf.full_dirichlet_group()
+                cond = wnf.conductor()
                 for j in dir_group:
-                    chij = fullchargroup[j]
+                    chij = ConreyCharacter(cond, j)
                     mycond = chij.conductor()
                     myj = j % mycond
                     self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import ast
-import os
 import re
 from six import BytesIO
-import tempfile
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
@@ -516,24 +514,6 @@ def modular_form_display(label, number):
     modform_string = web_latex(modform)
     return modform_string
 
-# This function is now redundant since we store plots as
-# base64-encoded pngs.
-@ec_page.route("/plot/<label>")
-def plot_ec(label):
-    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
-    if ainvs is None:
-        return elliptic_curve_jump_error(label, {})
-    E = EllipticCurve(ainvs)
-    P = E.plot()
-    _, filename = tempfile.mkstemp('.png')
-    P.save(filename)
-    data = open(filename).read()
-    os.unlink(filename)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
-
 def render_curve_webpage_by_label(label):
     cpt0 = cputime()
     t0 = time.time()
@@ -800,8 +780,8 @@ class ECSearchArray(SearchArray):
             name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Non-max. $p$",
-            short_label="Non-max. $p$",
+            label="Nonmax $p$",
+            short_label="Nonmax $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)

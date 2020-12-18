@@ -931,4 +931,4 @@ class CmfTest(LmfdbTest):
         # Check large dimensions behave as we expect. The following is a form of dimension 108
 
         large_dimension_page_as_text = self.tc.get('/ModularForm/GL2/Q/holomorphic/671/2/i/a/', follow_redirects=True).get_data(as_text=True)
-        assert "There are no characteristic polynomials of Hecke operators in the database" in large_dimension_page_as_text
+        assert "Hecke characteristic polynomials" not in large_dimension_page_as_text

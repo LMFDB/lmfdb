@@ -14,6 +14,7 @@ from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
+from .utilities import coeff_to_poly
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -735,6 +736,19 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+    # check if a polynomial was entered
+    try:
+        F1 = coeff_to_poly(F)
+    except Exception:
+        pass
+    else:
+        if len(str(F1.parent().gen())) == 1: # we only support single-letter variable names
+            from lmfdb.number_fields.number_field import poly_to_field_label
+            F1 = poly_to_field_label(F1)
+            if F1:
+                return F1
+            raise SearchParsingError('%s does not define a number field in the database.' % F)
+
     if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
@@ -778,16 +792,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             else:
                 raise SearchParsingError('%s is not in the database.' % F)
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
-    # check if a polynomial was entered
-    F = F.replace('X', 'x')
-    if 'x' in F:
-        F1 = F.replace('^', '**')
-        # print F
-        from lmfdb.number_fields.number_field import poly_to_field_label
-        F1 = poly_to_field_label(F1)
-        if F1:
-            return F1
-        raise SearchParsingError('%s does not define a number field in the database.'%F)
+
     # Expand out factored labels, like 11.11.11e20.1
     if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
         raise SearchParsingError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")

@@ -120,7 +120,8 @@ def poly_to_field_label(pol):
     try:
         wnf = WebNumberField.from_polynomial(pol)
         return wnf.get_label()
-    except:
+    except Exception:
+        raise
         return None
 
 
@@ -746,7 +747,7 @@ def download_search(info):
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info,query,'jump',name="Label",qfield='label')
+        parse_nf_string(info, query, 'jump',name="Label", qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
