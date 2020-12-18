@@ -5,6 +5,7 @@ from six.moves import range
 from six import string_types
 
 import re
+import sys
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
