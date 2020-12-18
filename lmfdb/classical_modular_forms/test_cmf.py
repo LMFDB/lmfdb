@@ -7,9 +7,14 @@ from . import cmf_logger
 cmf_logger.setLevel(100)
 
 
+
 class CmfTest(LmfdbTest):
     def runTest():
         pass
+
+    def test_expression_divides(self):
+        # checks search of conductors dividing 1000 
+        page = self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&search_type=List', '40.2.k.a')
 
     def test_browse_page(self):
         r"""
@@ -660,6 +665,10 @@ class CmfTest(LmfdbTest):
         except socket.timeout as err:
             print("Connecting with magma.maths.usyd.edu.au timed out")
             print(err)
+
+    def test_expression_level(self):
+        # checks we can search on 2*7^2
+        self.check_args('/ModularForm/GL2/Q/holomorphic/?hst=List&level=2*7%5E2&search_type=List', '98.2.a.a')
 
     def test_download_search(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
