@@ -661,6 +661,10 @@ class CmfTest(LmfdbTest):
             print("Connecting with magma.maths.usyd.edu.au timed out")
             print(err)
 
+    def test_expression_level(self):
+        # checks we can search on 2*7^2
+        page = self.check('/ModularForm/GL2/Q/holomorphic/?hst=List&level=2*7%5E2&search_type=List', '98.2.a.a')
+
     def test_download_search(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
         assert '5.10.a.a' in page.get_data(as_text=True)

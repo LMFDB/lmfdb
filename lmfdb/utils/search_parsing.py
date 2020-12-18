@@ -15,6 +15,7 @@ from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
 from .utilities import coeff_to_poly
+from math import log2
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -35,6 +36,19 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
+
+
+import ast
+class PowMulNodeVisitor(ast.NodeTransformer):
+    def visit_BinOp(self, node):
+        if isinstance(node.op, ast.Pow):
+            if log2(self.visit(node.left)) * self.visit(node.right) > 100:
+                raise ValueError('output will be too large')
+            return  self.visit(node.left) ** self.visit(node.right)
+        elif isinstance(node.op, ast.Mult):
+            return  self.visit(node.left) * self.visit(node.right) 
+    def visit_Constant(self, node):
+        return ast.literal_eval(node)
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
@@ -346,11 +360,12 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     elif MULT_PARSE.match(inp):
-    	try:
-            inp=str(int(ZZ(gp(inp))))
+        try:
+            ast_expression = ast.parse(inp.replace('^', '**'), mode='eval')
+            inp = str(int(PowMulNodeVisitor().visit(ast_expression).body))
             collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
-    	except:
-            raise SearchParsingError("Sage is unable to evaluate that syntax.")
+        except (TypeError, ValueError):
+            raise SearchParsingError("Unable to evaluate expression.")
     else:
         raise SearchParsingError("It needs to be an integer (such as 25), be a multiplicative expression that parses to an integer (such as 2^2*3), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
