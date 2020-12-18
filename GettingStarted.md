@@ -12,8 +12,7 @@ Installation
 
    and follow these instructions.
 
- * Make sure you have a recent version of Sage installed (look in lmfdb/website.py for
-   LMFDB_SAGE_VERSION if you are concerned that your version is too old)
+ * Make sure you have a recent version of Sage installed (at least running on Python 3)
    and that `sage` is available from the commandline.  In particular see
    [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
    Also check that your version of Sage has ssl available by checking that
@@ -53,6 +52,10 @@ Installation
      ```
      sage -pip install -r requirements.txt --upgrade
      ```
+   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to insall gap_packages 
+     (see [this](https://ask.sagemath.org/question/54252/sage92-install-gap_packages-on-macos-1015-fails/) post for some documentation on
+     that). This problem does seem to be resolved for Sage 9.3beta, and it is currently 
+     unclear if the problem exists for Sage 9.0 or 9.1. 
 
    - In case the last step fails by is Mac OSX with the error
 
@@ -184,6 +187,9 @@ Code development and sharing your work
    already.
 
  * Login to github
+ 
+ * If you don't already have an SSH key, you must generate a new SSH key. Once you have an SSH key
+   you must add it to your GitHub account, if it isn't already added. [This documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) explains how to do that.
 
  * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper
    right corner.

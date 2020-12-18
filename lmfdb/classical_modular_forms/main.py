@@ -17,7 +17,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler)
+    StatsDisplay, proportioners, totaler,
+    redirect_no_cache)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
@@ -217,14 +218,16 @@ def index():
                            bread=get_bread())
 
 @cmf.route("/random/")
+@redirect_no_cache
 def random_form():
     label = db.mf_newforms.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/random_space/")
+@redirect_no_cache
 def random_space():
     label = db.mf_newspaces.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/interesting_newforms")
 def interesting_newforms():
@@ -701,7 +704,13 @@ def common_parse(info, query, na_check=False):
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        query['level_is_' + info['level_type']] = True
+        if info['level_type'] == 'divides':
+            if not isinstance(query.get('level'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['level'] = {'$in': ZZ(query['level']).divisors()}
+        else:
+            query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor", allow_singletons=True)
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
@@ -1320,7 +1329,8 @@ class CMFSearchArray(SearchArray):
                      ('prime', 'prime'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
-                     ('squarefree', 'squarefree')
+                     ('squarefree', 'squarefree'),
+                     ('divides','divides'),
                      ],
             min_width=110)
         level = TextBoxWithSelect(
