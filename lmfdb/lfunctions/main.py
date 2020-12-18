@@ -39,7 +39,7 @@ from lmfdb.utils import (
     search_wrap, list_to_factored_poly_otherorder, flash_error, flash_warning,
     parse_primes, coeff_to_poly,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
-    SubsetBox, TextBoxWithSelect, RowSpacer)
+    SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
@@ -440,9 +440,10 @@ def l_function_history():
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=learnmore_list())
 
 @l_function_page.route("/random")
+@redirect_no_cache
 def random_l_function():
     label = db.lfunc_search.random(projection="label")
-    return redirect(url_for_lfunction(label), 307)
+    return url_for_lfunction(label)
 
 @l_function_page.route("/<int:degree>/")
 def by_url_degree(degree):
@@ -456,13 +457,7 @@ def by_url_degree(degree):
     return l_function_search(info)
 
 def convert_conductor(conductor):
-    if 'e' in conductor:
-        a, b = conductor.split('e', 1)
-        try:
-            return ZZ(int(a)**int(b))
-        except ValueError:
-            pass
-    return conductor
+    return conductor.replace('e', '^')
 
 @l_function_page.route("/<int:degree>/<conductor>/")
 def by_url_degree_conductor(degree, conductor):
