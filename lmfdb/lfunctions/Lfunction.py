@@ -23,6 +23,7 @@ from lmfdb.utils import (
         display_complex, str_to_CBF,
         Downloader,
         names_and_urls)
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
