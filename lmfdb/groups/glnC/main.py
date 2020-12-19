@@ -7,7 +7,7 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl, SearchArray, TextBox, CountBox,
+    flash_error, display_knowl, SearchArray, TextBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
@@ -120,6 +120,7 @@ def group_search(info, query):
     info['getname'] = getname
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
+    parse_bool(info, query, 'irreducible', 'irreducible')
 
 def get_url(label):
     return url_for(".by_label", label=label)
@@ -254,11 +255,17 @@ class GLnCSearchArray(SearchArray):
             label="Dimension",
             example="2",
             example_span="4, or a range like 3..5")
+        irreducible = YesNoBox(
+            name="irreducible",
+            knowl="group.representation.irreducible",
+            label="Irreducible",
+        )
         count = CountBox()
 
         self.browse_array = [
              [order],
-             [dim]]
+             [dim],
+             [irreducible]]
         self.refine_array = [
-             [order, dim]]
+             [order, dim, irreducible]]
 
