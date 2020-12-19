@@ -254,7 +254,7 @@ def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=Fa
     elif missing_class:
         err_args['err_msg'] = "The isogeny class %s is not in the database"
     elif invalid_class:
-        err_args['err_msg'] = r"%s is not the label of an elliptic curve isogeny class over $\mathbb{Q}$"
+        err_args['err_msg'] = r"%s is not a valid label for an isogeny class of elliptic curves over $\mathbb{Q}$"
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
