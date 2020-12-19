@@ -408,11 +408,13 @@ def elliptic_curve_search(info, query):
 @ec_page.route("/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
     full_iso_label = class_lmfdb_label(conductor,iso_label)
+    print("full iso label %s"%full_iso_label)
     return render_isogeny_class(full_iso_label)
 
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
     full_label = curve_lmfdb_label(conductor,iso_label,number)
+    print("full label %s"%full_label)
     return render_curve_webpage_by_label(full_label)
 
 # The following function determines whether the given label is in
