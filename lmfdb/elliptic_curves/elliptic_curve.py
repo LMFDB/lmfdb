@@ -249,7 +249,6 @@ def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=Fa
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     err_args['label'] = label
-    print("label=%s, missing_curve=%s, missing_class=%s, invalid_class=%s"%(label,missing_curve,missing_class,invalid_class))
     if missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif missing_class:
@@ -409,13 +408,11 @@ def elliptic_curve_search(info, query):
 @ec_page.route("/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
     full_iso_label = class_lmfdb_label(conductor,iso_label)
-    print("full iso label %s"%full_iso_label)
     return render_isogeny_class(full_iso_label)
 
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
     full_label = curve_lmfdb_label(conductor,iso_label,number)
-    print("full label %s"%full_label)
     return render_curve_webpage_by_label(full_label)
 
 # The following function determines whether the given label is in
@@ -484,7 +481,6 @@ def by_weierstrass(eqn):
 
 def render_isogeny_class(iso_class):
     class_data = ECisog_class.by_label(iso_class)
-    print(class_data)
     if class_data == "Invalid label":
         return elliptic_curve_jump_error(iso_class, {}, invalid_class=True)
     if class_data == "Class not found":
