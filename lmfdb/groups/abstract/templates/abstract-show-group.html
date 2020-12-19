@@ -49,16 +49,16 @@
   {% if gp.semidirect_products %}
   <tr>
     <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
-    {% for sub in gp.semidirect_products %}
-    <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$</td>
+    {% for sub, count in gp.semidirect_products %}
+    <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
     {% endfor %}
   </tr>
   {% endif %}
   {% if gp.nonsplit_products %}
   <tr>
     <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
-    {% for sub in gp.nonsplit_products %}
-    <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$</td>
+    {% for sub, count in gp.nonsplit_products %}
+    <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
     {% endfor %}
   </tr>
   {% endif %}
@@ -72,39 +72,39 @@
 <table>
   <tr>
     <td>{{KNOWL('group.center',title='Center')}}:</td>
-    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.cent()}}">${{gp.cent_label()}}$</span></td>
-    <td>$G/Z = {{gp.central_quot()}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.cent()}}">$Z \simeq {{gp.cent_label()}}$</span></td>
+    <td>$G/Z \simeq {{gp.central_quot()}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
-    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.comm()}}">${{gp.comm_label()}}$</span>
+    <td><span class="subgp chargp" data-sgid="{{gp.comm()}}">$G' \simeq {{gp.comm_label()}}$</span>
  </td>
-    <td> $G/G' = {{gp.abelian_quot()}}$ </td>
+    <td> $G/G' \simeq {{gp.abelian_quot()}}$ </td>
   </tr>
     <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
-    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.fratt()}}">${{gp.fratt_label()}}$</span></td>
-    <td>$G/\Phi = {{gp.frattini_quot()}}$ </td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fratt()}}">$\Phi \simeq {{gp.fratt_label()}}$</span></td>
+    <td>$G/\Phi \simeq {{gp.frattini_quot()}}$ </td>
   </tr>
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
-    <td>$\operatorname{Fit} =$ <span class="subgp chargp" data-sgid="{{gp.fitting}}">${{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
-    <td>$G/\operatorname{Fit} = {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.fitting}}">$\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
+    <td>$G/\operatorname{Fit} \simeq {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
-    <td>$R =$ <span class="subgp chargp" data-sgid="{{gp.radical}}">${{gp.subgroups[gp.radical].subgroup_tex}}$</td>
-    <td>$G/R = {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.radical}}">$R \simeq {{gp.subgroups[gp.radical].subgroup_tex}}$</td>
+    <td>$G/R \simeq {{gp.subgroups[gp.radical].quotient_tex}}$</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
-    <td>$\operatorname{soc} =$ <span class="subgp chargp" data-sgid="{{gp.socle}}">${{gp.subgroups[gp.socle].subgroup_tex}}$</td>
-    <td>$G/\operatorname{soc} = {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+    <td><span class="subgp chargp" data-sgid="{{gp.socle}}">$\operatorname{soc} \simeq {{gp.subgroups[gp.socle].subgroup_tex}}$</td>
+    <td>$G/\operatorname{soc} \simeq {{gp.subgroups[gp.socle].quotient_tex}}$</td>
   </tr>
   {% for p, subgp in gp.sylow_subgroups() %}
   <tr>
     <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
-    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">${{subgp.subgroup_tex}}$</span></td>
+    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.label}}">$P_{{p}} \simeq {{subgp.subgroup_tex}}$</span></td>
   </tr>
   {% endfor %}
 </table>
@@ -123,7 +123,7 @@
 #}
 
 
-<h3>{{KNOWL('group.subgroup.diagram.lmfdb','Diagram')}}</h3>
+<h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}}</h3>
 <p>
 {% if info.wide %}
 <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">

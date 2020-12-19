@@ -188,7 +188,7 @@ class WebAbstractGroup(WebObj):
                 if pair not in count:
                     semis.append(sub)
                 count[pair] += 1
-        return semis, count
+        return [(sub, count[sub.subgroup, sub.quotient]) for sub in semis]
 
     @lazy_attribute
     def nonsplit_products(self):
@@ -200,7 +200,7 @@ class WebAbstractGroup(WebObj):
                 if pair not in count:
                     nonsplit.append(sub)
                 count[pair] += 1
-        return nonsplit, count
+        return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
 
     @lazy_attribute
