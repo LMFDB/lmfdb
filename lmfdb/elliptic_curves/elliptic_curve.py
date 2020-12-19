@@ -483,6 +483,7 @@ def by_weierstrass(eqn):
 
 def render_isogeny_class(iso_class):
     class_data = ECisog_class.by_label(iso_class)
+    print(class_data)
     if class_data == "Invalid label":
         return elliptic_curve_jump_error(iso_class, {}, invalid_class=True)
     if class_data == "Class not found":
