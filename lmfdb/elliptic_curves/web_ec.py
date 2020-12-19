@@ -44,19 +44,19 @@ def split_cremona_label(lab):
 
 def curve_lmfdb_label(conductor, iso_class, number):
     label = "%s.%s%s" % (conductor, iso_class, number)
-    return label if lmfdb_label_regex.fullmatch(label) else None
+    return label if lmfdb_label_regex.fullmatch(label) else ""
 
 def curve_cremona_label(conductor, iso_class, number):
     label = "%s%s%s" % (conductor, iso_class, number)
-    return label if cremona_label_regex.fullmatch(label) else None
+    return label if cremona_label_regex.fullmatch(label) else ""
 
 def class_lmfdb_label(conductor, iso_class):
     label = "%s.%s" % (conductor, iso_class)
-    return label if lmfdb_iso_label_regex.fullmatch(label) else None
+    return label if lmfdb_iso_label_regex.fullmatch(label) else ""
 
 def class_cremona_label(conductor, iso_class):
     label = "%s%s" % (conductor, iso_class)
-    return label if cremona_iso_label_regex.fullmatch(label) else None
+    return label if cremona_iso_label_regex.fullmatch(label) else ""
 
 logger = make_logger("ec")
 
