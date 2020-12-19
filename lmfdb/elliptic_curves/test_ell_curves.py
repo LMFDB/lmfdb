@@ -30,13 +30,13 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
         assert '13a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/13/a/1', follow_redirects=True)
-        assert '13a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+        assert '13.a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
 
     def test_missing_class(self):
         L = self.tc.get('/EllipticCurve/Q/11.b', follow_redirects=True)
         assert '11.b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/11b', follow_redirects=True)
-        assert '11.b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+        assert '11b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/11/b', follow_redirects=True)
         assert '11.b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
 
