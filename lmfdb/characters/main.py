@@ -335,6 +335,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     args={}
     args['type'] = 'Dirichlet'
     args['modulus'] = modulus
+    args['gal_orb_label'] = gal_orb_label
     args['number'] = number
     try:
         modulus = int(modulus)

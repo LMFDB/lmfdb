@@ -565,7 +565,7 @@ class WebDBDirichlet(WebDirichlet):
                 self.chi = ConreyCharacter(self.modulus, self.number)
         self.maxcols = 30
         self.codelangs = ('pari', 'sage')
-        self._compute()
+        # self._compute()
 
     @lazy_attribute
     def texname(self):
@@ -575,7 +575,7 @@ class WebDBDirichlet(WebDirichlet):
         self._populate_from_db()
 
     def _populate_from_db(self):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         values_data = db.char_dir_values.lookup(
             "{}.{}".format(self.modulus, self.number)
         )
@@ -1057,12 +1057,29 @@ class WebDBDirichletOrbit(WebDBDirichlet):
     characters with modulus up to 10000.
     """
 
+    _keys = [ 'title', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label', 'orbit_index', 'isminimal']
+
     def __init__(self, **kwargs):
+        self.orbit_label = kwargs.get('gal_orb_label', None)  # this is what the user inserted, so might be banana
         WebDBDirichlet.__init__(self, **kwargs)
 
     @lazy_attribute
     def title(self):
-        return "Dirichlet orbit {}".format(self.orbit_label)
+        return "Dirichlet orbit {}.{}".format(self.modulus, self.orbit_label)
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
