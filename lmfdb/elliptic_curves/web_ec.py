@@ -18,6 +18,7 @@ OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
+cremona_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
 lmfdb_iso_label_regex = re.compile(r'([a-z]+)\.(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
@@ -42,16 +43,20 @@ def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
 def curve_lmfdb_label(conductor, iso_class, number):
-    return "%s.%s%s" % (conductor, iso_class, number)
+    label = "%s.%s%s" % (conductor, iso_class, number)
+    return label if lmfdb_label_regex.fullmatch(label) else None
 
 def curve_cremona_label(conductor, iso_class, number):
-    return "%s%s%s" % (conductor, iso_class, number)
+    label = "%s%s%s" % (conductor, iso_class, number)
+    return label if cremona_label_regex.fullmatch(label) else None
 
 def class_lmfdb_label(conductor, iso_class):
-    return "%s.%s" % (conductor, iso_class)
+    label = "%s.%s" % (conductor, iso_class)
+    return label if lmfdb_iso_label_regex.fullmatch(label) else None
 
 def class_cremona_label(conductor, iso_class):
-    return "%s%s" % (conductor, iso_class)
+    label = "%s%s" % (conductor, iso_class)
+    return label if cremona_iso_label_regex.fullmatch(label) else None
 
 logger = make_logger("ec")
 
