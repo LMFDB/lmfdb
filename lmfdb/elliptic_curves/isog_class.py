@@ -32,7 +32,7 @@ class ECisog_class(object):
         try:
             N, iso, number = split_lmfdb_label(label)
             if number:
-                label = ".".join([N,iso])
+                return "Invalid label"
             data = db.ec_curves.lucky({"lmfdb_iso" : label, 'number':1})
             if data is None:
                 return "Class not found"

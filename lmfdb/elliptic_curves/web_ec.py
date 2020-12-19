@@ -18,45 +18,33 @@ OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-cremona_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
-lmfdb_iso_label_regex = re.compile(r'([a-z]+)\.(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
 
 def match_lmfdb_label(lab):
-    return lmfdb_label_regex.match(lab)
-
-def match_lmfdb_iso_label(lab):
-    return lmfdb_iso_label_regex.match(lab)
+    return lmfdb_label_regex.fullmatch(lab)
 
 def match_cremona_label(lab):
-    return cremona_label_regex.match(lab)
+    return cremona_label_regex.fullmatch(lab)
 
 def split_lmfdb_label(lab):
     return lmfdb_label_regex.match(lab).groups()
-
-def split_lmfdb_iso_label(lab):
-    return lmfdb_iso_label_regex.match(lab).groups()
 
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
 def curve_lmfdb_label(conductor, iso_class, number):
-    label = "%s.%s%s" % (conductor, iso_class, number)
-    return label if lmfdb_label_regex.fullmatch(label) else "invalid label"
+    return "%s.%s%s" % (conductor, iso_class, number)
 
 def curve_cremona_label(conductor, iso_class, number):
-    label = "%s%s%s" % (conductor, iso_class, number)
-    return label if cremona_label_regex.fullmatch(label) else "invalid label"
+    return "%s%s%s" % (conductor, iso_class, number)
 
 def class_lmfdb_label(conductor, iso_class):
-    label = "%s.%s" % (conductor, iso_class)
-    return label if lmfdb_iso_label_regex.fullmatch(label) else "invalid label"
+    return "%s.%s" % (conductor, iso_class)
 
 def class_cremona_label(conductor, iso_class):
-    label = "%s%s" % (conductor, iso_class)
-    return label if cremona_iso_label_regex.fullmatch(label) else "invalid label"
+    return "%s%s" % (conductor, iso_class)
 
 logger = make_logger("ec")
 
