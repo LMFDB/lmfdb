@@ -34,6 +34,8 @@ class ECisog_class(object):
             if number:
                 label = ".".join([N,iso])
             data = db.ec_curves.lucky({"lmfdb_iso" : label, 'number':1})
+            if data is None:
+                return "Class not found"
             data['label_type'] = 'LMFDB'
         except AttributeError:
             try:

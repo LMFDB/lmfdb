@@ -18,7 +18,7 @@ OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
+lmfdb_iso_label_regex = re.compile(r'([a-z]+)\.(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
