@@ -15,7 +15,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -127,19 +127,19 @@ def interesting():
     )
 
 @ec_page.route("/random")
+@redirect_no_cache
 def random_curve():
     label = db.ec_curvedata.random(projection = 'lmfdb_label')
     cond, iso, num = split_lmfdb_label(label)
-    return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
+    return url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num)
 
 @ec_page.route("/curve_of_the_day")
+@redirect_no_cache # disables cache on todays curve
 def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
     label = db.ec_curvedata.lucky({'number': 1}, offset = n)
-    return redirect(url_for(".by_ec_label", label=label), 307)
-
 
 ################################################################################
 # Statistics
@@ -794,8 +794,8 @@ class ECSearchArray(SearchArray):
             name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Non-max. $p$",
-            short_label="Non-max. $p$",
+            label="Nonmax $p$",
+            short_label="Nonmax $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
