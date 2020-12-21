@@ -11,7 +11,7 @@
 <table class="browse">
   <tr>
     <td>By {{ KNOWL('ec.q.conductor',title = "conductor")}}:</td>
-    <td>{% for rnge in info.conductor_list %} <a href="?conductor={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %}</td>
+    <td>{% for r,q in info.conductor_list.items() %} <a href="?conductor={{q}}">{{r}}</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('ec.rank', title="rank")}}:</td>
     <td>{% for r in info.rank_list: %} <a href="?rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
