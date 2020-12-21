@@ -139,7 +139,8 @@ def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    label = db.ec_curvedata.lucky({'number': 1}, offset = n)
+    label = db.ec_curvedata.lucky(projection='lmfdb_label', offset = n)
+    return url_for(".by_ec_label", label=label)
 
 ################################################################################
 # Statistics
