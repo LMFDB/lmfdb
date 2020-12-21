@@ -17,7 +17,7 @@ from .Lfunction import (
     # on the fly L-functions
     Lfunction_HMF, ArtinLfunction,
     Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-    RiemannZeta, DedekindZeta,
+    DedekindZeta,
     SymmetricPowerLfunction, HypergeometricMotiveLfunction,
 )
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
@@ -648,15 +648,8 @@ def l_function_browse_page(degree, gammasignature):
 # Riemann zeta function ########################################################
 @l_function_page.route("/Riemann/")
 def l_function_riemann_page():
-    args = {}
-    return render_single_Lfunction(RiemannZeta, args, request)
+    return redirect(url_for_lfunction('1-1-1.1-r0-0-0'))
 
-
-@l_function_page.route("/ArtinRepresentation/1.1.1t1.1c1")
-@l_function_page.route("/Character/Dirichlet/1/1/")
-@l_function_page.route("/NumberField/1.1.1.1/")
-def l_function_riemann_redirect():
-    return redirect(url_for('.l_function_riemann_page'), code=301)
 
 from functools import wraps
 def label_redirect_wrapper(f):
@@ -1230,9 +1223,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         pass
 
     # we only need to consider on the fly L-functions
-    if args[0] == 'Riemann':
-        return RiemannZeta()
-    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
+    if args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
         return Lfunction_HMF(label=args[5], character=args[6], number=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':

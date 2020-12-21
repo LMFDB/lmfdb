@@ -384,64 +384,6 @@ def generateSageLfunction(L):
 # The subclasses
 #############################################################################
 
-class RiemannZeta(Lfunction):
-    """Class representing the Riemann zeta fucntion
-
-    Possible parameters: numcoeff  (the number of coefficients when computing)
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        self._Ltype = "riemann"
-
-        # Initialize default values
-        self.numcoeff = 30  # set default to 30 coefficients
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.numcoeff = int(self.numcoeff)
-
-        # Mandatory properties
-        self.fromDB = False
-        self.coefficient_type = 1
-        self.coefficient_period = 0
-        self.poles = [0, 1]
-        self.residues = [-1, 1]
-        self.poles_L = [1]  # poles of L(s), used by createLcalcfile_ver2
-        self.residues_L = [1]  # residues of L(s) createLcalcfile_ver2
-        self.langlands = True
-        self.primitive = True
-        self.degree = 1
-        self.quasidegree = 1
-        self.level_factored = self.level = 1
-        self.mu_fe = [0]
-        self.nu_fe = []
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        self.algebraic = True
-        self.motivic_weight = 0
-        self.sign = 1
-        self.selfdual = True
-        self.dirichlet_coefficients = [1 for n in range(self.numcoeff)]
-        self.origin_label = "zeta"
-        self.charactermodulus = self.characternumber = 1
-        # Specific properties
-        self.is_zeta = True
-
-        # Text for the web page
-        self.texname = "\\zeta(s)"
-        self.texnamecompleteds = "\\xi(s)"
-        self.texnamecompleted1ms = "\\xi(1-s)"
-        self.credit = 'Sage'
-
-        # Generate a function to do computations
-        self.sageLfunction = lc.Lfunction_Zeta()
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "riemann"
-        self.info['title'] = "Riemann Zeta-function: $\\zeta(s)$"
-
 
 
 class Lfunction_from_db(Lfunction):
