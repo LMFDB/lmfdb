@@ -796,7 +796,7 @@ class ECSearchArray(SearchArray):
             name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Nonmax p",
+            label="Nonmax $p$",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
@@ -804,7 +804,7 @@ class ECSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad p",
+            label="Bad $p$",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -812,8 +812,8 @@ class ECSearchArray(SearchArray):
             name="sha_quantifier")
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
-            label="p dividing |&#1064;|",
-            short_label="p | |&#1064;|",
+            label="$p$ dividing |&#1064;|",
+            short_label="$p$ div |&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)
