@@ -410,7 +410,7 @@ class WebChar(WebCharObject):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
+              'inducing',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -565,7 +565,7 @@ class WebDBDirichlet(WebDirichlet):
                 self.chi = ConreyCharacter(self.modulus, self.number)
         self.maxcols = 30
         self.codelangs = ('pari', 'sage')
-        # self._compute()
+        self._compute()
 
     @lazy_attribute
     def texname(self):
@@ -914,7 +914,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
+              'inducing',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -1051,7 +1051,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         }
 
 
-class WebDBDirichletOrbit(WebDBDirichlet):
+class WebDBDirichletOrbit(WebChar, WebDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
     characters with modulus up to 10000.
@@ -1064,7 +1064,7 @@ class WebDBDirichletOrbit(WebDBDirichlet):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
+              'inducing',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -1074,12 +1074,65 @@ class WebDBDirichletOrbit(WebDBDirichlet):
               'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
+        self.type = "Dirichlet"
+        self.modulus = kwargs.get('modulus', None)
+        if self.modulus:
+            self.modulus = int(self.modulus)
+        self.modlabel = self.modulus
+        self.number = kwargs.get('number', None)
+        if self.number:
+            self.number = int(self.number)
+        self.numlabel = self.number
+        if self.modulus:
+            # Needed for Gauss sums, etc
+            self.H = PariConreyGroup(self.modulus)
+            if self.number:
+                self.chi = ConreyCharacter(self.modulus, self.number)
+        self.maxcols = 30
+        self.codelangs = ('pari', 'sage')
         self.orbit_label = kwargs.get('gal_orb_label', None)  # this is what the user inserted, so might be banana
-        WebDBDirichlet.__init__(self, **kwargs)
+        self.label = "{}.{}".format(self.modulus, self.orbit_label)
+        self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
+        self._set_galoisorbit(self.orbit_data)
+
 
     @lazy_attribute
     def title(self):
         return "Dirichlet orbit {}.{}".format(self.modulus, self.orbit_label)
+
+    def _set_galoisorbit(self, orbit_data):
+        if self.modulus == 1:
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
+            return
+        upper_limit = min(200, self.order + 1)
+        orbit = orbit_data['galois_orbit'][:upper_limit]
+        self.galoisorbit = list(
+            self._char_desc(num, prim=orbit_data['is_primitive']) for num in orbit
+        )
+
+    def get_orbit_data(self, orbit_label):
+        mod_and_label = "{}.{}".format(self.modulus, orbit_label)
+        orbit_data =  db.char_dir_orbits.lucky(
+            {'modulus': self.modulus, 'label': mod_and_label}
+        )
+        # Since we've got this, might as well set a bunch of stuff
+
+        self.conductor = orbit_data['conductor']
+        self.order = orbit_data['order']
+        self.isprimitive = bool_string(orbit_data['is_primitive'])
+        self.isminimal = bool_string(orbit_data['is_minimal'])
+        self.parity = parity_string(int(orbit_data['parity']))
+        self._set_kernel_field_poly(orbit_data)
+        self.ind_orbit_label = cremona_letter_code(int(orbit_data['prim_orbit_index']) - 1)
+        # print("self.indlabel = {}".format(self.indlabel))
+        self.inducing = "{}.{}".format(self.conductor, self.ind_orbit_label)
+        return orbit_data
+
+    def _set_kernel_field_poly(self, orbit_data):
+        if 'kernel_field_poly' in orbit_data.keys():
+            self.kernel_field_poly = orbit_data['kernel_field_poly']
+        else:
+            self.kernel_field_poly = None
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
