@@ -455,7 +455,7 @@ def by_ec_label(label):
         if data is None:
             return elliptic_curve_jump_error(label, {}, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-       if number:
+        if number:
             return render_curve_webpage_by_label(label)
         else:
             return render_isogeny_class(label)
