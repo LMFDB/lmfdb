@@ -18,25 +18,18 @@ CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clab
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-lmfdb_iso_label_regex = re.compile(r'([a-z]+)(\d*)')
 sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
 weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]')
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
 
 def match_lmfdb_label(lab):
-    return lmfdb_label_regex.match(lab)
-
-def match_lmfdb_iso_label(lab):
-    return lmfdb_iso_label_regex.match(lab)
+    return lmfdb_label_regex.fullmatch(lab)
 
 def match_cremona_label(lab):
-    return cremona_label_regex.match(lab)
+    return cremona_label_regex.fullmatch(lab)
 
 def split_lmfdb_label(lab):
     return lmfdb_label_regex.match(lab).groups()
-
-def split_lmfdb_iso_label(lab):
-    return lmfdb_iso_label_regex.match(lab).groups()
 
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()

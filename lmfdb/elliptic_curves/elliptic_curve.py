@@ -246,20 +246,22 @@ def by_conductor(conductor):
     return elliptic_curve_search(info)
 
 
-def elliptic_curve_jump_error(label, args, wellformed_label=False, missing_curve=False):
+def elliptic_curve_jump_error(label, args, missing_curve=False, missing_class=False, invalid_class=False):
     err_args = {}
     for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     err_args['label'] = label
-    if wellformed_label:
-        err_args['err_msg'] = "No curve or isogeny class in the database has label %s"
-    elif missing_curve:
+    if missing_curve:
         err_args['err_msg'] = "The elliptic curve %s is not in the database"
+    elif missing_class:
+        err_args['err_msg'] = "The isogeny class %s is not in the database"
+    elif invalid_class:
+        err_args['err_msg'] = r"%s is not a valid label for an isogeny class of elliptic curves over $\mathbb{Q}$"
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label %s"
     else:
-        err_args['err_msg'] = r"%s does not define a recognised elliptic curve over $\mathbb{Q}$"
+        err_args['err_msg'] = r"%s is not a valid label for an elliptic curve or isogeny class over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
@@ -269,14 +271,14 @@ def elliptic_curve_jump(info):
         try:
             return by_ec_label(label)
         except ValueError:
-            return elliptic_curve_jump_error(label, info, wellformed_label=True)
+            return elliptic_curve_jump_error(label, info, missing_curve=True)
     m = match_cremona_label(label)
     if m:
         try:
             return redirect(url_for(".by_ec_label", label=label))
             #return by_ec_label(label)
         except ValueError:
-            return elliptic_curve_jump_error(label, info, wellformed_label=True)
+            return elliptic_curve_jump_error(label, info, missing_curve=True)
 
     if label:
         # Try to parse a string like [1,0,3,2,4] as valid
@@ -451,7 +453,7 @@ def by_ec_label(label):
 
         data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
-            return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
+            return elliptic_curve_jump_error(label, {}, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         iso = data['lmfdb_iso'].split(".")[1]
         if number:
@@ -482,9 +484,9 @@ def by_weierstrass(eqn):
 def render_isogeny_class(iso_class):
     class_data = ECisog_class.by_label(iso_class)
     if class_data == "Invalid label":
-        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
+        return elliptic_curve_jump_error(iso_class, {}, invalid_class=True)
     if class_data == "Class not found":
-        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True, missing_curve=True)
+        return elliptic_curve_jump_error(iso_class, {}, missing_class=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
@@ -523,13 +525,13 @@ def render_curve_webpage_by_label(label):
     t0 = time.time()
     data = WebEC.by_label(label)
     if data == "Invalid label":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+        return elliptic_curve_jump_error(label, {})
     if data == "Curve not found":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
+        return elliptic_curve_jump_error(label, {}, missing_curve=True)
     try:
         lmfdb_label = data.lmfdb_label
     except AttributeError:
-        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+        return elliptic_curve_jump_error(label, {})
 
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
@@ -679,9 +681,9 @@ def ec_code(**args):
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
     if E == "Invalid label":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+        return elliptic_curve_jump_error(label, {})
     if E == "Curve not found":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
+        return elliptic_curve_jump_error(label, {}, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
