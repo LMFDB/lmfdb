@@ -111,9 +111,7 @@ class ECisog_class(object):
         M = classdata['isogeny_matrix']
 
         # permute rows/cols to match labelling: the rows/cols in the
-        # ec_classdata table are with respect to Cremona ordering.
-        # NB Before December 2020 the old table ec_curves stored the
-        # matrix in LMFDB ordering.
+        # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
             perm = lambda i: next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
