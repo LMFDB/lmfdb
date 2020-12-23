@@ -455,13 +455,10 @@ def by_ec_label(label):
         if data is None:
             return elliptic_curve_jump_error(label, {}, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-        iso = data['lmfdb_iso'].split(".")[1]
-        if number:
+       if number:
             return render_curve_webpage_by_label(label)
-            #return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
         else:
             return render_isogeny_class(label)
-            #return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
 
 def by_weierstrass(eqn):
@@ -799,8 +796,7 @@ class ECSearchArray(SearchArray):
             name="surj_quantifier")
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
-            label="Nonmax $p$",
-            short_label="Nonmax $p$",
+            label="Nonmax <i>p</i>",
             knowl="ec.maximal_galois_rep",
             example="2,3",
             select_box=surj_quant)
@@ -808,7 +804,7 @@ class ECSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="bad_primes",
-            label="Bad $p$",
+            label="Bad <i>p</i>",
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
@@ -816,7 +812,7 @@ class ECSearchArray(SearchArray):
             name="sha_quantifier")
         sha_primes = TextBoxWithSelect(
             name="sha_primes",
-            label="primes dividing |&#1064;|",
+            label="<i>p</i> dividing |&#1064;|",
             knowl="ec.analytic_sha_order",
             example="3,5",
             select_box=sha_quant)
