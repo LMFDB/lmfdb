@@ -740,6 +740,8 @@ class WebCharGroup(WebCharObject):
 
     @cached_method
     def first_chars(self):
+        if self.modulus == 1:
+            return [1]
         r = []
         for i,c in enumerate(Integers(self.modulus).list_of_elements_of_multiplicative_group()):
             r.append(c)
