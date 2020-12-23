@@ -153,7 +153,7 @@ class EllCurveTest(LmfdbTest):
           '<td align="center">[6]</td>',
           '<td align="center">',
           '1728</td>',
-          r'<td>\(\Gamma_0(N)\)-optimal</td>'
+          '<td>', r'  \(\Gamma_0(N)\)-optimal'
         ])
         self.assertTrue(row in L.get_data(as_text=True),
                         "990.i appears to have the wrong optimal curve.")
@@ -169,4 +169,4 @@ class EllCurveTest(LmfdbTest):
         Test that the dynamic completeness knowl displays OK.
         """
         L = self.tc.get('/EllipticCurve/Q/Completeness')
-        assert 'The database currently contains' in L.get_data(as_text=True)
+        assert 'The database currently includes' in L.get_data(as_text=True)
