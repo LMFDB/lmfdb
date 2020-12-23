@@ -52,7 +52,7 @@ def filter_sql_injection(clause, col, col_type, op, table):
     # * The only other allowed characters are +-*^/().
     # * We also prohibit --, /* and */ since these are comments in SQL
     clause = re.sub(r"\s+", "", clause)
-    # It's possible that some search columns include numbers (2adic_gens in ec_curves for example)
+    # It's possible that some search columns include numbers (dim1_factor in av_fq_isog for example)
     # However, we don't support columns that are entirely numbers (such as some in smf_dims)
     # since there's no way to distinguish them from integers
     # We also want to include periods as part of the word/number character set, since they can appear in floats

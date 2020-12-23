@@ -16,7 +16,7 @@ class ApiTest(LmfdbTest):
         dbs = ['mwfp_forms', 'lat_lattices', 'lfunc_lfunctions',
                'mwf_coeffs', 'sl2z_subgroups', 'av_fqisog',
                'artin_reps', 'bmf_forms', 'hgcwa_passports',
-               'ec_curves', 'g2c_curves', 'halfmf_forms',
+               'ec_curvedata', 'g2c_curves', 'halfmf_forms',
                'hgm_motives', 'hmf_forms', 'lf_fields',
                'modlmf_forms', 'modlgal_reps', 'nf_fields',
                'gps_sato_tate', 'smf_dims', 'gps_transitive',
@@ -32,9 +32,9 @@ class ApiTest(LmfdbTest):
 
         queries = [
                 'nf_fields/?r2=i5&degree=i12',
-                'ec_curves/?rank=i2&torsion=i5',
-                'ec_curves/?ainvs=li0;1;1;-840;39800&_delim=;',
-                'ec_curves/?_delim=%3B&torsion_structure=ls2%3B2',
+                'ec_curvedata/?rank=i2&torsion=i5',
+                'ec_curvedata/?ainvs=li0;1;1;-840;39800&_delim=;',
+                'ec_curvedata/?_delim=%3B&torsion_structure=ls2%3B2',
                 ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
@@ -45,11 +45,11 @@ class ApiTest(LmfdbTest):
         r"""
         Check that the sample queries on the top page all work (yaml output)
         """
-        queries = ['ec_curves/?ainvs=li0;1;1;-840;39800&_format=yaml&_delim=;',
+        queries = ['ec_curvedata/?ainvs=li0;1;1;-840;39800&_format=yaml&_delim=;',
                 ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
-            assert ("jinv: -65626385453056/656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
+            assert ("jinv:\n  - -65626385453056\n  - 656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
             assert not "Error:" in data
 
     def test_api_examples_json(self):
@@ -67,7 +67,7 @@ class ApiTest(LmfdbTest):
         """
         queries = ['gps_transitive?_format=json&label=1T1',
                    'gps_transitive?_format=json&label=8T3',
-                   'ec_curves?_format=json&label=11a1']
+                   'ec_curvedata?_format=json&label=11a1']
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             if '1T1' in query:
@@ -76,4 +76,4 @@ class ApiTest(LmfdbTest):
                 assert '"name": "E(8)=2[x]2[x]2"' in data
             if '11a1' in query:
                 assert '"lmfdb_label": "11.a2"' in data
-                assert '"jinv": "-122023936/161051"' in data
+                assert '"jinv": [\n        -122023936,\n        161051\n      ]' in data
