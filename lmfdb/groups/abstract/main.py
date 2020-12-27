@@ -260,7 +260,6 @@ def render_abstract_group(args):
         info['max_quot'] = max_quot
 
 
-
         
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 

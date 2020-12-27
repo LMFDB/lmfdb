@@ -115,6 +115,10 @@ class WebAbstractGroup(WebObj):
         return self.series_search('U')
 
     @lazy_attribute
+    def diagram_ok(self):
+        return self.number_subgroup_classes < 100
+
+    @lazy_attribute
     def conjugacy_classes(self):
         cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
         return sorted(cl, key=lambda x:x.counter)
