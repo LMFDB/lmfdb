@@ -412,7 +412,7 @@ Note that you need editor priviledges to add, delete or modify data.
 
 1. What is an `extra_table`?
 
-   A few large tables (e.g. `nf_fields` and `ec_curves`) have been
+   A few large tables (e.g. `nf_fields`) have been
    split in two.  The columns in the search table can be used in
    queries, while the columns in the extra table cannot.  Moreover,
    you should refrain from projecting onto columns in the extra table
