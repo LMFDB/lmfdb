@@ -607,7 +607,7 @@ def download_EC_all(label):
             return elliptic_curve_jump_error(label, {})
         data_list = [data]
     else:
-        data_list = list(db.ec_curvedata.search({'lmfdb_iso': label}, sort=['Cnumber']))
+        data_list = list(db.ec_curvedata.search({'lmfdb_iso': label}, sort=['lmfdb_number']))
         if not data_list:
             return elliptic_curve_jump_error(label, {})
 
