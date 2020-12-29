@@ -170,6 +170,10 @@ Click on a subgroup in the diagram to see information about it.
 {% endif %}
 {% else %}
 There are too many classes of subgroups to display.
+<p>
+{% for ordline in info.subgroup_profile %}
+Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+{% endfor %}
 {% endif %}
 
 <h3>Series</h3>

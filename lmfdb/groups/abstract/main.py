@@ -57,7 +57,7 @@ def get_bread(breads=[]):
     return bc
 
 #function to create string of group characteristics
-def create_boolean_string(gp):
+def create_boolean_string(gp, short_string=False):
     if gp.abelian:
         strng = display_knowl('group.abelian','Abelian')
         if gp.cyclic:
@@ -83,6 +83,9 @@ def create_boolean_string(gp):
 
     if gp.simple:
         strng += ", " +  display_knowl('group.simple', "Simple")
+
+    if short_string:
+        return strng
 
     if gp.almost_simple:
         strng += ", " +  display_knowl('group.almost_simple', "Almost Simple")
@@ -220,18 +223,23 @@ def render_abstract_group(args):
         info['gpc'] = gp
 
         # prepare for javascript call to make the diagram
-        layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
-        subs = gp.subgroups
-        orders = list(set(sub.subgroup_order for sub in subs.values()))
-        orders.sort()
+        if gp.diagram_ok:
+            layers = gp.subgroup_layers
+            ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+            subs = gp.subgroups
+            orders = list(set(sub.subgroup_order for sub in subs.values()))
+            orders.sort()
 
-        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ');'
-        #print info['dojs']
-        totsubs = len(gp.subgroups)
-        info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
+            info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
+            info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
+            info['dojs'] += ');'
+            #print info['dojs']
+            totsubs = len(gp.subgroups)
+            info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
+        else:
+            prof = list(gp.subgroup_profile.items())
+            info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
+            info['dojs'] = ''
 
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
@@ -365,7 +373,13 @@ def how_computed_page():
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
-
+def display_profile_line(data):
+    datad = dict(data)
+    l = []
+    for ky in sorted(datad, key=datad.get, reverse=True):
+        name = '$'+WebAbstractGroup(ky).tex_name+'$'
+        l.append(group_display_knowl(ky, name)+ (' x '+str(datad[ky]) if datad[ky]>1 else '' ))
+    return ', '.join(l)
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
@@ -437,6 +451,11 @@ def cc_display_knowl(gp, label, typ, name=None):
     if not name:
         name = 'Conjugacy class {}'.format(label)
     return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7C{}">{}</a>'.format(name, gp, label, typ, name)
+
+def group_display_knowl(label, name=None):
+    if not name:
+        name = 'Group {}'.format(label)
+    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=group_data">%s</a>' % (name, label, name)
 
 def sub_display_knowl(label, name=None):
     if not name:
@@ -533,6 +552,27 @@ def cchar_data(label):
 def sub_data(label):
   return Markup(shortsubinfo(label))
 
+def group_data(label):
+  gp = WebAbstractGroup(label)
+  ans = 'Group ${}$: '.format(gp.tex_name)
+  ans += create_boolean_string(gp, short_string=True)
+  ans += '<br />Order: {}<br />'.format(gp.order)
+  ans += 'Gap small group number: {}<br />'.format(gp.counter)
+  ans += 'Exponent: {}<br />'.format(gp.exponent)
+
+  ans += 'There are {} subgroups'.format(gp.number_subgroups)
+  if gp.number_normal_subgroups < gp.number_subgroups:
+    ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
+  else:
+    ans += ', all normal, '
+  if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+    ans += str(gp.number_characteristic_subgroups)
+  else:
+    ans += 'all'
+  ans += ' characteristic.<br />'
+  ans += '<div align="right"><a href="{}">{} home page</a></div>'.format(url_for('abstract.by_label',label=label), label)
+  return Markup(ans)
+
 def dyn_gen(f,args):
     r"""
     Called from the generic dynamic knowl.
@@ -549,5 +589,6 @@ def dyn_gen(f,args):
 flist= {'cc_data': cc_data,
         'sub_data': sub_data,
         'rchar_data': rchar_data,
-        'cchar_data': cchar_data}
+        'cchar_data': cchar_data,
+        'group_data': group_data}
 

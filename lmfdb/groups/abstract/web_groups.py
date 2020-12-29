@@ -11,6 +11,7 @@ fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
 #currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
+    #return db.gps_groups.lookup(label, 'tex_name')
     pretty = db.gps_small.lookup(label, 'pretty')
     if pretty:
         return pretty
@@ -117,6 +118,16 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def diagram_ok(self):
         return self.number_subgroup_classes < 100
+
+    @lazy_attribute
+    def subgroup_profile(self):
+        subs = db.gps_subgroups.search({'ambient': self.label})
+        by_order= {}
+        for s in subs:
+            cntr = by_order.get(s['subgroup_order'], Counter())
+            cntr.update({s['subgroup']:1})
+            by_order[s['subgroup_order']] = cntr
+        return by_order
 
     @lazy_attribute
     def conjugacy_classes(self):
