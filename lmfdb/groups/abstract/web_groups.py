@@ -11,7 +11,8 @@ fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
 #currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
-    #return db.gps_groups.lookup(label, 'tex_name')
+    return db.gps_groups.lookup(label, 'tex_name')
+    # Rest can be deleted if this now works
     pretty = db.gps_small.lookup(label, 'pretty')
     if pretty:
         return pretty
