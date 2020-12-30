@@ -74,7 +74,7 @@ class PostgresDatabase(PostgresBase):
     - ``conn`` -- the psycopg2 connection object
     - ``tablenames`` -- a list of tablenames in the database, as strings
 
-    Also, each tablename will be stored as an attribute, so that db.ec_curves works for example.
+    Also, each tablename will be stored as an attribute, so that db.ec_curvedata works for example.
 
     EXAMPLES::
 

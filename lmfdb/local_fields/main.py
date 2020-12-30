@@ -3,7 +3,8 @@
 # Author: John Jones
 
 from flask import render_template, request, url_for, redirect
-from sage.all import PolynomialRing, QQ, RR, latex, cached_function
+from sage.all import (
+    PolynomialRing, QQ, RR, latex, cached_function, Integers)
 
 from lmfdb import db
 from lmfdb.app import app
@@ -11,7 +12,7 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners)
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -346,16 +347,23 @@ def prettyname(ent):
         return printquad(ent['rf'], ent['p'])
     return ent['label']
 
+@cached_function
+def getu(p):
+    if p == 2:
+        return 5
+    return int(Integers(p).quadratic_nonresidue())
+
 def printquad(code, p):
     if code == [1, 0]:
         return(r'$\Q_{%s}$' % p)
+    u = getu(p)
     if code == [1, 1]:
-        return(r'$\Q_{%s}(\sqrt{*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{%s})$' % (p,u))
     if code == [-1, 1]:
-        return(r'$\Q_{%s}(\sqrt{-*})$' % p)
+        return(r'$\Q_{%s}(\sqrt{-%s})$' % (p,u))
     s = code[0]
     if code[1] == 1:
-        s = str(s) + '*'
+        s = str(s) + r'\cdot '+str(u)
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 
@@ -363,9 +371,10 @@ def search_input_error(info, bread):
     return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
 
 @local_fields_page.route("/random")
+@redirect_no_cache
 def random_field():
     label = db.lf_fields.random()
-    return redirect(url_for(".by_label", label=label), 307)
+    return url_for(".by_label", label=label)
 
 @local_fields_page.route("/interesting")
 def interesting():
