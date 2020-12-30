@@ -49,7 +49,7 @@ def index():
         return group_search(info)
     info['order_list']= ['1-10', '20-100', '101-200']
 
-    return render_template("glnC-index.html", title="Finite subgroups of $\GL(n,\C)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnC-index.html", title=r'Finite subgroups of $\GL(n,\C)$', bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
@@ -103,8 +103,8 @@ def url_for_label(label):
 
 @search_wrap(template="glnC-search.html",
              table=db.gps_crep,
-             title='$\GL(n,\C)$ subgroup search results',
-             err_title='$\GL(n,\C)$ subgroup search input error',
+             title=r'$\GL(n,\C)$ subgroup search results',
+             err_title=r'$\GL(n,\C)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','dim','group'],
@@ -134,10 +134,10 @@ def render_glnC_group(args):
         N=info['cyc_order_mat']
         info['dispmat'] = lambda z: dispmat(N,z)
 
-        title = '$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
+        title = r'$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
 
         prop = [('Label', '%s' %  label), 
-                ('Order', '\(%s\)' % info['order']),
+                ('Order', '$%s$' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
         bread = get_bread([(label, )])
@@ -201,7 +201,7 @@ def shortsubinfo(label):
 
 @glnC_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the $\GL(n,\C)$ subgroup data'
+    t = r'Completeness of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnC.extent',
                             title=t, bread=bread,
@@ -211,7 +211,7 @@ def completeness_page():
 
 @glnC_page.route("/Labels")
 def labels_page():
-    t = 'Labels for finite subgroups of $\GL(n,\C)$'
+    t = r'Labels for finite subgroups of $\GL(n,\C)$'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.glnC.label',
                            learnmore=learnmore_list_remove('label'), 
@@ -220,7 +220,7 @@ def labels_page():
 
 @glnC_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the $\GL(n,\C)$ subgroup data'
+    t = r'Reliability of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.glnC.reliability',
                            title=t, bread=bread, 
@@ -230,7 +230,7 @@ def reliability_page():
 
 @glnC_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the $\GL(n,\C)$ subgroup data'
+    t = r'Source of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.glnC.source',
                            title=t, bread=bread, 
