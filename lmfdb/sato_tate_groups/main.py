@@ -666,7 +666,7 @@ def render_by_label(label):
         info['moments'] += data['moments']
     if data['simplex']:
         if data['degree'] == 4:
-            info['simplex_header'] = ["\\mathrm{E}[a_1^0a_2^%d],\\ldots,\\mathrm{E}[a_1^%da_2^0]"%(d+1,2*(d+1)) for d in range(len(data['simplex']))]
+            info['simplex_header'] = ["\\mathrm{E}[a_1^{e_1}a_2^{e_2}]\text{ for }e_1+2e+2=%d\\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             t = [s[0:2]]
             m,n=2,3
@@ -674,7 +674,6 @@ def render_by_label(label):
                 t += [s[m:m+n]]
                 m += n
                 n += 1
-            print(t)
             info['simplex'] = t
     if data['counts']:
         c=data['counts']
