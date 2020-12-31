@@ -59,9 +59,9 @@
 {% if info['simplex'] %}
 <h4> {{ KNOWL('st_group.moment_simplex', title='Moment simplex') }} </h4>
 <table border=1>
-    {% for i in range(info['simplex']) %}
+    {% for i in range(info['simplex']|length) %}
         <tr>
-            <th align="left">${{info['simplex_header'][]}}$</th>
+            <th align="left">${{info['simplex_header'][i]}}$</th>
         {% for a in info['simplex'][i] %}
             <td align="right">${{a}}$</td>
         {% endfor %}
