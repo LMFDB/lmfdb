@@ -53,7 +53,7 @@ st0_dict = {
 ###############################################################################
 
 def boolean_name(value):
-    return '\\mathrm{True}' if value else '\\mathrm{False}'
+    return 'yes' if value else 'no'
 
 def comma_separated_list(list):
     return ', '.join(list)
@@ -497,7 +497,7 @@ def mu_info(n):
     rec['trace_moments'] = trace_moments(rec['moments'])
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    rec['probabilities'] = [[r'\mathrm{P}[a_1=%d]=\frac{1}{%d}'%(m,n)] for m in rational_traces]
+    rec['probabilities'] = [[r'\mathrm{Pr}[a_1=%d]=\frac{1}{%d}'%(m,n)] for m in rational_traces]
     return rec
 
 def mu_portrait(n):
@@ -655,14 +655,18 @@ def render_by_label(label):
     info['solvable']=boolean_name(G['solvable'])
     info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
-    info['subgroups'] = comma_separated_list([st_link(sub) for sub in data['subgroups']])
+    if data.get('subgroup_multiplicities'):
+        mults = [" x%d"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+    else:
+        mults = ["" for s in data['subgroups']]
+    info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
     info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
     if data['counts']:
         c=data['counts']
-        info['probabilities'] = [['\\mathrm{P}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
+        info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
 def render_st_group(info, portrait=None):
@@ -677,7 +681,7 @@ def render_st_group(info, portrait=None):
         ('Real dimension', prop_int_pretty(info['real_dimension'])),
         ('Components', prop_int_pretty(info['components'])),
         ('Contained in',r'\(%s\)'%info['ambient']),
-        ('Identity Component', r'\(%s\)'%info['identity_component']),
+        ('Identity component', r'\(%s\)'%info['identity_component']),
         ('Component group', r'\(%s\)'%info['component_group']),
     ]
     bread = get_bread([
@@ -685,7 +689,7 @@ def render_st_group(info, portrait=None):
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ])
-    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop2,
                            credit=credit_string,
@@ -767,7 +771,7 @@ class STSearchArray(SearchArray):
             name="trace_zero_density",
             label="Trace zero density",
             knowl="st_group.trace_zero_density",
-            short_label=r"$\mathrm{P}[a_1=0]$",
+            short_label=r"$\mathrm{Pr}[a_1=0]$",
             example="1/2",
             example_span="0, 1/2, or 3/8")
         second_trace_moment = TextBox(
