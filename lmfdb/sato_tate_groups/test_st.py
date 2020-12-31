@@ -86,7 +86,7 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
-            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.get_data(as_text=True)
+            assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
         assert 'unique match'  in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
 
