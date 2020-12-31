@@ -671,7 +671,7 @@ def render_by_label(label):
             t = [s[0:2]]
             m,n=2,3
             while m+n < len(s):
-                t += s[m:m+n]
+                t += [s[m:m+n]]
                 m += n
                 n += 1
             print(t)
