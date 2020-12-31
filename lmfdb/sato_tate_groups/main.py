@@ -664,6 +664,9 @@ def render_by_label(label):
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
+    if data['simplex']:
+        if data['degree'] == 4:
+            data['simplex_header'] = ["\\mathrm{E}[a_1^0a_2^%d],\\ldots,\\mathrm{E}[a_1^%da_2^0]"%(d+1,2*(d+1)) for d in range(data['simplex'])]
     if data['counts']:
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]

@@ -40,7 +40,7 @@
 {% endif %}
 
 {% if info['moments'] %}
-<h2> {{ KNOWL('st_group.moments', title='Moment statistics') }} </h2>
+<h2> {{ KNOWL('st_group.moments', title='Moment sequence') }} </h2>
 <table border=1>
     {% for m in info['moments'] %}
         <tr>
@@ -50,6 +50,20 @@
             {% else %}
                 <td align="right">${{a}}$</td>
             {% endif %}
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% if info['simplex'] %}
+<h4> {{ KNOWL('st_group.moment_simplex', title='Moment simplex') }} </h4>
+<table border=1>
+    {% for i in range(info['simplex']) %}
+        <tr>
+            <th align="left">${{info['simplex_header'][]}}$</th>
+        {% for a in info['simplex'][i] %}
+            <td align="right">${{a}}$</td>
         {% endfor %}
         </tr>
     {% endfor %}
