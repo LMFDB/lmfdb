@@ -79,8 +79,11 @@ def index():
 
 @bmf_page.route("/random")
 def random_bmf():    # Random Bianchi modular form
-    label = db.bmf_forms.random()
-    return bianchi_modular_form_by_label(label)
+    res = db.bmf_forms.random(projection=['field_label', 'level_label', 'label_suffix'])
+    return redirect(url_for(".render_bmf_webpage",
+                    field_label=res['field_label'],
+                    level_label=res['level_label'],
+                    label_suffix=res['label_suffix']), 307)
 
 @bmf_page.route("/interesting")
 def interesting():

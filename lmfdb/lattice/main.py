@@ -12,7 +12,7 @@ from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
@@ -24,7 +24,7 @@ lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and N
 
 from lmfdb import db
 
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -90,8 +90,9 @@ def lattice_render_webpage():
 
 # Random Lattice
 @lattice_page.route("/random")
+@redirect_no_cache
 def random_lattice():
-    return redirect(url_for(".render_lattice_webpage", label=db.lat_lattices.random()), 307)
+    return url_for(".render_lattice_webpage", label=db.lat_lattices.random())
 
 @lattice_page.route("/interesting")
 def interesting():

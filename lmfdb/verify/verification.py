@@ -143,7 +143,7 @@ class TableChecker(object):
         check = getattr(self.__class__, check)
         if not isinstance(check, speed_decorator):
             raise ValueError("Not a valid verification check")
-        return MethodType(check, self, self.__class__), check.__class__
+        return MethodType(check, self), check.__class__
 
     def get_total(self, check, ratio):
         if ratio is None: ratio=check.ratio

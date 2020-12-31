@@ -3,14 +3,11 @@
 from six.moves import range
 
 import re
-from sage.all import lcm, factor, divisors
+from sage.all import lcm, factor, divisors, Integers
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
-from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger, parity_string, bool_string
-try:
-    from dirichlet_conrey import DirichletGroup_conrey
-except:
-    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error
 
 # utility functions #
@@ -56,14 +53,18 @@ def parse_limit(arg):
     return limit
 
 def get_character_modulus(a, b, limit=7):
-    """ this function which is also used by lfunctions/LfunctionPlot.py """
+    """ this function is also used by lfunctions/LfunctionPlot.py """
     headers = list(range(1, limit))
     headers.append("more")
     entries = {}
     rows = list(range(a, b + 1))
     for row in rows:
-        G = DirichletGroup_conrey(row)
-        for chi in G:
+        if row != 1:
+            G = Integers(row).list_of_elements_of_multiplicative_group()
+        else:
+            G = [1]
+        for chi_n in G:
+            chi = ConreyCharacter(row, chi_n)
             multorder = chi.multiplicative_order()
             if multorder <= limit:
                 el = chi
@@ -71,69 +72,29 @@ def get_character_modulus(a, b, limit=7):
                 entry = entries.get((row, col), [])
                 entry.append(el)
                 entries[(row, col)] = entry
-
     entries2 = {}
-    out = lambda chi: (chi.number(), chi.is_primitive(),
+    out = lambda chi: (chi.number, chi.is_primitive(),
                        chi.multiplicative_order(), chi.is_even())
     for k, v in entries.items():
         l = []
-        v = sorted(v)
+        v = sorted(v, key=lambda x: x.number)
         while v:
             e1 = v.pop(0)
-            inv = ~e1
-            if e1 == inv:
+            e1_num = e1.number
+            inv_num = 1 if e1_num == 1 else e1_num.inverse_mod(e1.modulus)
+
+            inv = ConreyCharacter(e1.modulus, inv_num)
+
+            if e1_num == inv_num:
                 l.append((out(e1),))
             else:
                 l.append((out(e1), out(inv)))
-                v.remove(inv)
+                v = [x for x in v if (x.modulus, x.number) != (inv.modulus, inv.number)]
         if k[1] == "more":
             l = sorted(l, key=lambda e: e[0][2])
         entries2[k] = l
     cols = headers
     return headers, entries2, rows, cols
-
-
-def get_character_conductor(a, b, limit=7):
-    def line(N):
-        l = []
-        if N%4 == 2:
-            return l
-        count = 0
-        q = N
-        while count < limit:
-            if q % N == 0:
-                G = DirichletGroup_conrey(q)
-                for chi in G:
-                    j = chi.number()
-                    c = WebDirichletCharacter(modulus = q, number = j)
-                    if chi.conductor() == q:
-                        l.append((q, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
-                        count += 1
-                        if count == limit:
-                            break
-            q += N
-        return l
-    return [(_, line(_)) for _ in range(a, b)]
-
-def get_character_order(a, b, limit=7):
-    def line(n):
-        l = []
-        count = 0
-        q = n
-        while count < limit:
-            if modn_exponent(q) % n == 0:
-                G = DirichletGroup_conrey(q)
-                for chi in G:
-                    j = chi.number()
-                    c = WebDirichletCharacter(modulus = q, number = j)
-                    if chi.multiplicative_order() == n:
-                        l.append((q, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
-                        count += 1
-                        if count == limit:
-                            break
-            q += 1
-        return l
-    return [(_, line(_)) for _ in range(a, b)]
 
 
 def info_from_db_orbit(orbit):

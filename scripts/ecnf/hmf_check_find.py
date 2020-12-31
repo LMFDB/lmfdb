@@ -11,7 +11,6 @@ from lmfdb import db
 
 print("setting nfcurves")
 nfcurves = db.ec_nfcurves
-qcurves = db.ec_curves
 
 print("setting hmfs, forms, fields")
 forms = db.hmf_forms

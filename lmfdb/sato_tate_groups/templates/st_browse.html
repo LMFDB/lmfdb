@@ -18,7 +18,7 @@
     <td>By {{ KNOWL('st_group.identity_component', title='identity component') }}:</td>
     <td>{% for r in info.st0_list %} <a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>&nbsp;&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Sage-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a></td>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Sato-Tate groups</a> or a <a href="{{url_for('.random')}}">random Sato-Tate group</a></td>
   </tr>
 </table>
 

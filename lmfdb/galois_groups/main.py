@@ -14,7 +14,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -254,7 +254,7 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
+        if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
@@ -283,9 +283,10 @@ def search_input_error(info, bread):
     return render_template("gg-search.html", info=info, title='Galois group search input error', bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/random")
+@redirect_no_cache
 def random_group():
     label = db.gps_transitive.random()
-    return redirect(url_for(".by_label", label=label), 307)
+    return url_for(".by_label", label=label)
 
 @galois_groups_page.route("/interesting")
 def interesting():

@@ -16,7 +16,7 @@ def genus1_lookup_equation_QQ(rec):
     ainvs = hyperelliptic_polys_to_ainvs(f,h)
     E = EllipticCurve(ainvs)
     j = E.j_invariant()
-    for r in db.ec_curves.search({"jinv":str(j)}):
+    for r in db.ec_curvedata.search({"jinv":[j.numerator(), j.denominator()]}):
         ainvs2 = r['ainvs']
         E2 = EllipticCurve(ainvs2)
         if E.is_isomorphic(E2):
