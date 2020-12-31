@@ -661,10 +661,10 @@ def render_by_label(label):
         mults = ["" for s in data['subgroups']]
     info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
     info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
-    if data['moments']:
+    if data.get('moments'):
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
-    if data['simplex']:
+    if data.get('simplex'):
         if data['degree'] == 4:
             info['simplex_header'] = ["\\left(\\mathrm{E}[a_1^{e_1}a_2^{e_2}:\\sum ie_i=%d\\right)\\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
@@ -674,7 +674,7 @@ def render_by_label(label):
                 t += [s[m:m+n]]
                 m,n = m+n,n+1
             info['simplex'] = t
-    if data['counts']:
+    if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
     return render_st_group(info, portrait=data.get('trace_histogram'))
