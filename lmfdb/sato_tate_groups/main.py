@@ -656,7 +656,7 @@ def render_by_label(label):
     info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
     if data.get('subgroup_multiplicities'):
-        mults = [" x%d"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+        mults = ["${}^{\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
     else:
         mults = ["" for s in data['subgroups']]
     info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
