@@ -61,7 +61,7 @@
 <table border=1>
     {% for i in range(info['simplex']|length) %}
         <tr>
-           {% <th align="left">${{info['simplex_header'][i]}}$</th> %}
+           <!--<th align="left">${{info['simplex_header'][i]}}$</th> -->
         {% for a in info['simplex'][i] %}
             <td align="right">${{a}}$</td>
         {% endfor %}
