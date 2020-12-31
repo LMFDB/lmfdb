@@ -674,6 +674,7 @@ def render_by_label(label):
                 t += s[m:m+n]
                 m += n
                 n += 1
+            print(t)
             info['simplex'] = t
     if data['counts']:
         c=data['counts']
