@@ -164,10 +164,11 @@ def l_function_history():
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=learnmore_list())
 
 @l_function_page.route("/random")
+@redirect_no_cache
 def random_l_function():
     url = db.lfunc_instances.random(projection="url")
     if url:
-        return redirect("/L/"+url, 302)
+        return "/L/"+url
     else:
         return random_l_function()
 
@@ -403,6 +404,8 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    if char_orbit_label is None:
+        return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,

@@ -6,7 +6,7 @@ from collections import defaultdict
 import bisect, re
 
 from flask import url_for
-from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -120,65 +120,7 @@ def td_wrapr(val):
 def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
-def display_hecke_polys(form_label, num_disp = 5):
-    """
-    Display a table of the characteristic polynomials of the Hecke operators
-    for small primes. The number of primes presented by default is 5, although
-    there is a "show more" / "show less" button to display all primes up to 97.
-    The code for the table wrapping, scrolling etc. is common with many others
-    and should be eventually replaced by a call to a single class/function with
-    some parameters.
 
-    INPUT:
-
-    - ``form_label`` - a string, the label of the newform
-    - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
-    """
-
-    data = db.mf_newforms.lookup(form_label, ['hecke_orbit_code'])
-    orbit_code = data['hecke_orbit_code']
-    hecke_polys_orbits = {}
-    for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : orbit_code}):
-        coeffs = poly_item['charpoly_factorization']
-        F_p = list_factored_to_factored_poly_otherorder(coeffs)
-        F_p = make_bigint(r'\( %s \)' % F_p)
-        if (F_p != r"\( 1 \)") and (len(F_p) > 6):
-            hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
-        else:
-            hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
-    if not hecke_polys_orbits:
-        return "There are no characteristic polynomials of Hecke operators in the database"
-    polys = ['<div style="max-width: 100%; overflow-x: auto;">',
-             '<table class="ntdata">', '<thead>', '  <tr>',
-             th_wrap('p', '$p$'),
-             th_wrap('charpoly', '$F_p(T)$'),
-             '  </tr>', '</thead>', '<tbody>']
-    loop_count = 0
-    for p, charpoly in hecke_polys_orbits.items():
-        if charpoly.strip() == "":
-            charpoly = "1"
-        if loop_count < num_disp:
-            polys.append('  <tr>')
-        else:
-            polys.append('  <tr class="more nodisplay">')
-        polys.extend([td_wrapl('${}$'.format(p)), '<td>' + charpoly + '</td>'])
-        polys.append('  </tr>')
-        loop_count += 1
-    if loop_count > num_disp:
-        polys.append('''
-            <tr class="less toggle">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
-                </td>
-            </tr>
-            <tr class="more toggle nodisplay">
-                <td colspan="{{colspan}}">
-                  <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
-                </td>
-            </tr>
-            ''')
-        polys.extend(['</tbody>', '</table>', '</div>'])
-    return '\n'.join(polys)
 
 
 class WebNewform(object):
@@ -238,7 +180,7 @@ class WebNewform(object):
                 # This is not enough, for some reason
                 #if (m != 0) and (not self.single_generator):
                 # This is the only thing I could make work:
-                if (m != 0) and (self.hecke_ring_numerators is not None):
+                if (m != 0) and self.field_poly_is_cyclotomic and (self.hecke_ring_numerators is not None):
                     self.convert_qexp_to_cyclotomic(m)
                     self.show_hecke_ring_basis = False
                 else:
@@ -541,14 +483,13 @@ class WebNewform(object):
                 self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
-                G = DirichletGroup_conrey(self.level)
-                chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
+                chars = [ConreyCharacter(self.level, char) for char in self.conrey_indexes]
                 for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
                         continue
                     for chi in chars:
-                        c = chi.logvalue(p) * self.char_order
+                        c = chi.conreyangle(p) * self.char_order
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
@@ -1040,8 +981,63 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
+    @cached_method
     def display_hecke_char_polys(self, num_disp = 5):
-        return display_hecke_polys(self.label, num_disp)
+        """
+        Display a table of the characteristic polynomials of the Hecke operators
+        for small primes. The number of primes presented by default is 5, although
+        there is a "show more" / "show less" button to display all primes up to 97.
+        The code for the table wrapping, scrolling etc. is common with many others
+        and should be eventually replaced by a call to a single class/function with
+        some parameters.
+
+        INPUT:
+
+        - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
+        """
+
+        hecke_polys_orbits = {}
+        for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
+            coeffs = poly_item['charpoly_factorization']
+            F_p = list_factored_to_factored_poly_otherorder(coeffs)
+            F_p = make_bigint(r'\( %s \)' % F_p)
+            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
+            else:
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+        if not hecke_polys_orbits:
+            return None
+        polys = ['<div style="max-width: 100%; overflow-x: auto;">',
+                 '<table class="ntdata">', '<thead>', '  <tr>',
+                 th_wrap('p', '$p$'),
+                 th_wrap('charpoly', '$F_p(T)$'),
+                 '  </tr>', '</thead>', '<tbody>']
+        loop_count = 0
+        for p, charpoly in hecke_polys_orbits.items():
+            if charpoly.strip() == "":
+                charpoly = "1"
+            if loop_count < num_disp:
+                polys.append('  <tr>')
+            else:
+                polys.append('  <tr class="more nodisplay">')
+            polys.extend([td_wrapl('${}$'.format(p)), '<td>' + charpoly + '</td>'])
+            polys.append('  </tr>')
+            loop_count += 1
+        if loop_count > num_disp:
+            polys.append('''
+                <tr class="less toggle">
+                    <td colspan="{{colspan}}">
+                      <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+                    </td>
+                </tr>
+                <tr class="more toggle nodisplay">
+                    <td colspan="{{colspan}}">
+                      <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+                    </td>
+                </tr>
+                ''')
+            polys.extend(['</tbody>', '</table>', '</div>'])
+        return '\n'.join(polys)
 
     def display_twists(self):
         if not self.twists:

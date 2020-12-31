@@ -665,6 +665,10 @@ def sitemap():
 WhiteListedRoutes = [
     'ArtinRepresentation',
     'Character/Dirichlet',
+    'Character/calc-gauss/Dirichlet',
+    'Character/calc-jacobi/Dirichlet',
+    'Character/calc-kloosterman/Dirichlet',
+    'Character/calc-value/Dirichlet',
     'EllipticCurve',
     'Field',
     'GaloisGroup',

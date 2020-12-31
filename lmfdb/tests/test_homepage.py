@@ -28,7 +28,7 @@ class HomePageTest(LmfdbTest):
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '0.792122')
-        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2 + y = x^{3} - 7 x + 6')
+        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2+y=x^3-7x+6')
         self.check(homepage,"/L/EllipticCurve/Q/5077.a/", '5077')
 
     # Box 3
