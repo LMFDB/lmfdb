@@ -2,7 +2,7 @@
 
 from ast import literal_eval
 from lmfdb import db
-from lmfdb.utils import (key_for_numerically_sort, encode_plot,
+from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
                          display_knowl, web_latex_factored_integer)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
@@ -226,14 +226,27 @@ def real_geom_end_alg_name(name):
 def geom_end_alg_name(name):
     name_dict = {
         "Q":r"\Q",
-        "RM":r"\mathrm{RM}",
+        "RM":r"\mathsf{RM}",
         "Q x Q":r"\Q \times \Q",
-        "CM x Q":r"\mathrm{CM} \times \Q",
-        "CM":r"\mathrm{CM}",
-        "CM x CM":r"\mathrm{CM} \times \mathrm{CM}",
-        "QM":r"\mathrm{QM}",
+        "CM x Q":r"\mathsf{CM} \times \Q",
+        "CM":r"\mathsf{CM}",
+        "CM x CM":r"\mathsf{CM} \times \mathsf{CM}",
+        "QM":r"\mathsf{QM}",
         "M_2(Q)":r"\mathrm{M}_2(\Q)",
-        "M_2(CM)":r"\mathrm{M}_2(\mathrm{CM})"
+        "M_2(CM)":r"\mathrm{M}_2(\mathsf{CM})"
+        }
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
+
+def end_alg_name(name):
+    name_dict = {
+        "Q":r"\Q",
+        "RM":r"\mathsf{RM}",
+        "Q x Q":r"\Q \times \Q",
+        "CM":r"\mathsf{CM}",
+        "M_2(Q)":r"\mathrm{M}_2(\Q)",
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -784,6 +797,7 @@ class WebG2C(object):
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
+        data['end_alg_name'] = end_alg_name(curve['end_alg'])
 
         # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
         if is_curve:
@@ -817,15 +831,18 @@ class WebG2C(object):
 
             properties += [
                 (None, plot_link),
-                ('Conductor',str(data['cond'])),
-                ('Discriminant', str(data['disc'])),
+                ('Conductor', prop_int_pretty(data['cond'])),
+                ('Discriminant', prop_int_pretty(data['disc'])),
                 ]
             if data['mw_rank_proved']:
                 properties += [('Mordell-Weil group', data['mw_group'])]
+        else:
+            properties += [('Conductor', prop_int_pretty(data['cond']))]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \R\)', r'\(%s\)' % data['real_geom_end_alg_name']),
             (r'\(\End(J_{\overline{\Q}}) \otimes \Q\)', r'\(%s\)' % data['geom_end_alg_name']),
+            (r'\(\End(J) \otimes \Q\)', r'\(%s\)' % data['end_alg_name']),
             (r'\(\overline{\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             (r'\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]

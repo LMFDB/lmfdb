@@ -2,82 +2,37 @@
 
 {% block content %}
 
-{#
 <div>
-An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
-</div>
-#}
-<style type="text/css">
-.error_message {
-   padding: 4px;
-   color: {{color.red}};
-   font-size: 120%;
-   font-weight: bold;
-   margin: 20px;
-}
-</style>
-{% if err_msg %}
-<p class="error_message">
-{{err_msg}}
-</p>
-<p>
-  <input type=button value="Search again" onClick="history.go(-1)">
-</p>
-
-{% else %}
-<div>
-{{elliptic_curve_summary()| safe}}
-Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
+  {{info.stats.short_summary| safe}}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
+<h2> Browse </h2>
 
-<p>
-By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
-{% for rnge in info.conductor_list %}
-<a href="?conductor={{rnge}}">{{rnge}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('ec.rank', title="rank")}}:
-{% for r in info.rank_list: %}
-<a href="?rank={{r}}">{{r}}</a>
-{% endfor %}
-</p>
-<p>
-By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:
-{% for t in info.torsion_list: %}
-<a href="?torsion={{t}}">{{t}}</a>
-{% endfor %}
-</p>
-<p>
-{#
-<a href={{url_for('.todays_curve')}}>Elliptic curve of the day</a>
-<br>
-#}
-Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href="{{url_for('.random_curve')}}"}>random elliptic curve</a>
-</p>
-
-
-<h2> Find a specific curve or {{
-  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients,
-  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }}, or 
-  {{ KNOWL('ec.q.cremona_label',title="Cremona label") }} </h2>
-{% if err_msg %}
-<form action={{url_for('ec.rational_elliptic_curves')}}>
-{% else %}
-<form>
-{% endif %}
-  {{ info.search_array.jump_box(info) | safe }}
-</form>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('ec.q.conductor',title = "conductor")}}:</td>
+    <td>{% for r,q in info.conductor_list.items() %} <a href="?conductor={{q}}">{{r}}</a>&nbsp;&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('ec.rank', title="rank")}}:</td>
+    <td>{% for r in info.rank_list: %} <a href="?rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:</td>
+    <td>{% for t in info.torsion_list: %} <a href="?torsion={{t}}">{{t}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href="{{url_for('.random_curve')}}"}>random elliptic curve</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
-<p></p>
+
 <form id='search' onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
 
-{% endif %}
+<h2> Find </h2>
 
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

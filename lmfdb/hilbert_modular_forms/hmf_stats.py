@@ -36,22 +36,26 @@ class HMFstats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return "The database currently contains %s Hilbert modular forms over fields up to degree %s.  Here are some <a href='%s'>further statistics</a>." % (comma(self.nforms), self.counts()["maxdeg"], url_for(".statistics"))
+        return self.summary + "  Here are some <a href='%s'>further statistics</a>." % (url_for(".statistics"),)
 
     @property
     def summary(self):
-        return self.short_summary
+        hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
+        nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
+        deg_knowl = '<a knowl="nf.degree">degree</a>'
+        return "The database currently contains %s %s over %s %s of %s 2 to %s." % (comma(self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
         hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
         nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
+        deg_knowl = '<a knowl="nf.degree">degree</a>'
         level_knowl = '<a knowl="mf.hilbert.level_norm">level norm</a>'
         return ''.join([r'The database currently contains %s ' % stats['nforms'],
                         hmf_knowl,
                         r' defined over %s ' % stats['nfields'],
                         nf_knowl,
-                        r' of degree %s, with ' % d,
+                        r' of %s %s, with ' % (deg_knowl, d),
                         level_knowl,
                         r' up to %s.' % stats['maxnorm']])
 
@@ -93,7 +97,14 @@ class HMFstats(StatsDisplay):
                      "counts": {F: {"nforms": counts[F],
                                     "maxnorm": nstats[F]["max"],
                                     "field_knowl": nf_display_knowl(F, F),
-                                    "forms": url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)}
+                                    "forms": lambda label: url_for('hmf.hilbert_modular_form_render_webpage', field_label=label)}
                                 for F in C["fields_by_degree"][d]}}
                  for d in C["degrees"]}
         return stats
+
+    def setup(self, attributes=None, delete=False):
+        if attributes is None:
+            # Per-degree statistics aren't updated by the normal setup function
+            # The assert is for pyflakes
+            assert self.statistics()
+        super().setup(attributes, delete)

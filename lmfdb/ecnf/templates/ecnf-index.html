@@ -3,41 +3,22 @@
 {% block content %}
 
 <div>
-  {{ ecnf_summary()|safe}}
+  {{ info.stats.short_summary | safe}}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
-{# {{KNOWL('nf',title = "number fields")}} #}
-</h2>
+<h2> Browse </h2>
 
-<p>
-<ul>
+<table  class="browse">
 {% for types in info.fields %}
-<li>
-{{types[0] | safe}}:
-{% for label,f in types[1] %}
-{% if loop.index0 %},{% endif %}
- <a href="{{f[0]}}">{{f[1]}}</a>
+  <tr>
+    <td>{{types[0] | safe}}:</td>
+    <td>{% for label,f in types[1] %} <a href="{{f[0]}}">{{f[1]}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr>
 {% endfor %}
-</li>
-{% endfor %}
-<li><a href={{url_for('ecnf.browse')}}>All available fields</a>
-</ul>
-</p>
-<p>
-Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a>
-</p>
-
-<h2> Find a specific curve or {{ KNOWL('ec.isogeny_class',title="isogeny class") }} by {{ KNOWL('ec.curve_label',title='label')}}</h2>
-
-<form>
-  {{ info.search_array.jump_box(info) | safe }}
-  {% if err_msg %}
-  <br>
-  <span class="errmsg">{{err_msg}}</span>
-  {% endif %}
-</form>
-
+  <tr>
+    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a <a href={{url_for('.random_curve')}}>random elliptic curve</a></td>
+  </tr>
+</table>
 
 <h2> Search </h2>
 
@@ -46,6 +27,13 @@ Some <a href="{{url_for('.interesting')}}">interesting elliptic curves</a> or a 
   {{ info.search_array.html() | safe }}
 </form>
 
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+<p>&nbsp;&nbsp;*The rank is not known for all curves in the database; curves with unknown rank will not appear in searches specifying a rank.</p>
 
 {% if DEBUG %}
 <hr>

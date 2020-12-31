@@ -3,90 +3,35 @@
 
 {% block content %}
 
-{{ KNOWL_INC('dq.character.dirichlet.extent') }}
+<div>
+  {{ info.stats.short_summary | safe }}
+</div>
 
-<h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
-<p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
-{% endfor %}
-</p>
+<h2> Browse </h2>
 
-<p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
-{% endfor %}
-</p>
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:</td>
+    <td>{% for rnge in info.modulus_list %} <a href="?modbrowse={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:</td>
+    <td>{% for rnge in info.conductor_list %} <a href="?conductor={{rnge}}">{{rnge}}</a>&nbsp;&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
+    <td>{% for rnge in info.order_list %} <a href="?order={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+  <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
+  </tr>
+</table>
 
-<p>
-&nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-{% set step = 20 %}
-{% for c in range(1,101,step) %}
-&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
-{% endfor %}
-</p>
-
-<p>
-&nbsp;&nbsp;Some <a href="{{url_for('.interesting')}}">interesting Dirichlet characters</a> or a <a href="random">random Dirichlet character</a></td>
-</p>
-
-<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
-  {{KNOWL('character.dirichlet.conrey', title="label") }}, {{KNOWL('character.dirichlet.modulus', title="modulus") }}, or {{KNOWL('character.dirichlet.galois_orbit_label', title="orbit label") }} </h2>
-<form>
-    <input type='text' name='label' style="width:320px;" value="{{args.label}}" placeholder="13.2" required>
-    <button type='submit' name='lookup' value='1'> Find  </button>
-    <br>
-    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13, or 13.f for characters in that Galois orbit.</span>
+<h2 id='search_h2'> Search </h2>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
 </form>
 
-<h2> Search for characters </h2>
-
-<form id='search' onsubmit="cleanSubmit(this.id)">
-    <table>
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.modulus', title="Modulus") }}</td>
-            <td> <input type='text' name='modulus' value="{{args.modulus}}" style="width:160px;" placeholder="13"></td>
-            <td><span class="formexample"> e.g. 13 </span></td>
-        </tr>
-
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.conductor', title="Conductor") }} </td>
-            <td> <input type='text' name='conductor' value="{{args.conductor}}" style="width:160px;" placeholder="5"></td>
-            <td><span class="formexample"> e.g. 5 </span></td>
-        </tr>
-
-        <tr>
-            <td> {{ KNOWL('character.dirichlet.order', title="Order") }} </td>
-            <td> <input type='text' name='order' value="{{args.order}}" style="width:160px;" placeholder="2"></td>
-            <td><span class="formexample"> e.g. 2 </span></td>
-        </tr>
-        <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-            <td align=left>
-                <select name='parity', style="width: 170px">
-                      <option value="">any</option>
-                      <option value="even">even</option>
-                      <option value="odd">odd</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
-            <td align=left>
-                <select name='primitive', style="width: 170px">
-                      <option value="">any</option>
-                      <option value="yes">yes</option>
-                      <option value="no">no</option>
-                </select>
-                </select>
-            </td>
-        </tr>
-        <tr><td><button type='submit' > Search </button></td></tr>
-    </table>
+<h2> Find </h2>
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {#

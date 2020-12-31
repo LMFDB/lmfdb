@@ -6,7 +6,7 @@ from collections import defaultdict
 import bisect, re
 
 from flask import url_for
-from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -17,12 +17,13 @@ from lmfdb.utils import (
     web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
-    integer_options, names_and_urls, web_latex_factored_integer)
+    integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
+    list_factored_to_factored_poly_otherorder)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link, get_name
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, display_hecke_polys
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -119,6 +120,9 @@ def td_wrapr(val):
 def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
+
+
+
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
         #TODO validate data
@@ -176,7 +180,7 @@ class WebNewform(object):
                 # This is not enough, for some reason
                 #if (m != 0) and (not self.single_generator):
                 # This is the only thing I could make work:
-                if (m != 0) and (self.hecke_ring_numerators is not None):
+                if (m != 0) and self.field_poly_is_cyclotomic and (self.hecke_ring_numerators is not None):
                     self.convert_qexp_to_cyclotomic(m)
                     self.show_hecke_ring_basis = False
                 else:
@@ -221,8 +225,8 @@ class WebNewform(object):
         if self.plot is not None:
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
-        self.properties += [('Level', str(self.level)),
-                            ('Weight', str(self.weight))]
+        self.properties += [('Level', prop_int_pretty(self.level)),
+                            ('Weight', prop_int_pretty(self.weight))]
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
         else:
@@ -230,15 +234,15 @@ class WebNewform(object):
 
         if self.is_self_dual != 0:
             self.properties += [('Self dual', 'yes' if self.is_self_dual == 1 else 'no')]
-        self.properties += [('Analytic conductor', '%.3f'%(self.analytic_conductor))]
+        self.properties += [('Analytic conductor', '$%.3f$' % self.analytic_conductor)]
 
         if self.analytic_rank is not None:
-            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+            self.properties += [('Analytic rank', prop_int_pretty(self.analytic_rank))]
 
-        self.properties += [('Dimension', str(self.dim))]
+        self.properties += [('Dimension', prop_int_pretty(self.dim))]
 
         if self.projective_image:
-            self.properties += [('Projective image', r'\(%s\)' % self.projective_image_latex)]
+            self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
         # Artin data would make the property box scroll
         #if self.artin_degree: # artin_degree > 0
         #    self.properties += [('Artin image size', str(self.artin_degree))]
@@ -259,7 +263,7 @@ class WebNewform(object):
         else:
             self.properties += [('CM', 'no')]
         if self.inner_twist_count >= 1:
-            self.properties += [('Inner twists', str(self.inner_twist_count))]
+            self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
         self.title = "Newform orbit %s"%(self.label)
 
     # Breadcrumbs
@@ -373,9 +377,9 @@ class WebNewform(object):
             if self.has_exact_qexp:
                 downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=self.label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=self.label)))
-            if self.has_complex_qexp:
-                downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
-                downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
+            #if self.has_complex_qexp:
+            #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=self.label)))
+            #    downloads.append(('Satake angles to text', url_for('.download_satake_angles', label=self.label)))
             downloads.append(('All stored data to text', url_for('.download_newform', label=self.label)))
         else:
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
@@ -479,14 +483,13 @@ class WebNewform(object):
                 self.analytic_shift = {i: RR(i)**((ZZ(self.weight)-1)/2) for i in list(self.cc_data.values())[0]['an_normalized']}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
-                G = DirichletGroup_conrey(self.level)
-                chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
+                chars = [ConreyCharacter(self.level, char) for char in self.conrey_indexes]
                 for p in list(self.cc_data.values())[0]['angles']:
                     if p.divides(self.level):
                         self.character_values[p] = None
                         continue
                     for chi in chars:
-                        c = chi.logvalue(p) * self.char_order
+                        c = chi.conreyangle(p) * self.char_order
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
@@ -978,9 +981,64 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
+    @cached_method
     def display_hecke_char_polys(self, num_disp = 5):
-        return display_hecke_polys([self.label], num_disp)
-      
+        """
+        Display a table of the characteristic polynomials of the Hecke operators
+        for small primes. The number of primes presented by default is 5, although
+        there is a "show more" / "show less" button to display all primes up to 97.
+        The code for the table wrapping, scrolling etc. is common with many others
+        and should be eventually replaced by a call to a single class/function with
+        some parameters.
+
+        INPUT:
+
+        - ``num_disp`` - an integer, the number of characteristic polynomials to display by default.
+        """
+
+        hecke_polys_orbits = {}
+        for poly_item in db.mf_hecke_charpolys.search({'hecke_orbit_code' : self.hecke_orbit_code}):
+            coeffs = poly_item['charpoly_factorization']
+            F_p = list_factored_to_factored_poly_otherorder(coeffs)
+            F_p = make_bigint(r'\( %s \)' % F_p)
+            if (F_p != r"\( 1 \)") and (len(F_p) > 6):
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "") +  F_p
+            else:
+                hecke_polys_orbits[poly_item['p']] = hecke_polys_orbits.get(poly_item['p'], "")
+        if not hecke_polys_orbits:
+            return None
+        polys = ['<div style="max-width: 100%; overflow-x: auto;">',
+                 '<table class="ntdata">', '<thead>', '  <tr>',
+                 th_wrap('p', '$p$'),
+                 th_wrap('charpoly', '$F_p(T)$'),
+                 '  </tr>', '</thead>', '<tbody>']
+        loop_count = 0
+        for p, charpoly in hecke_polys_orbits.items():
+            if charpoly.strip() == "":
+                charpoly = "1"
+            if loop_count < num_disp:
+                polys.append('  <tr>')
+            else:
+                polys.append('  <tr class="more nodisplay">')
+            polys.extend([td_wrapl('${}$'.format(p)), '<td>' + charpoly + '</td>'])
+            polys.append('  </tr>')
+            loop_count += 1
+        if loop_count > num_disp:
+            polys.append('''
+                <tr class="less toggle">
+                    <td colspan="{{colspan}}">
+                      <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a>
+                    </td>
+                </tr>
+                <tr class="more toggle nodisplay">
+                    <td colspan="{{colspan}}">
+                      <a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a>
+                    </td>
+                </tr>
+                ''')
+            polys.extend(['</tbody>', '</table>', '</div>'])
+        return '\n'.join(polys)
+
     def display_twists(self):
         if not self.twists:
             return '<p>Twists of this newform have not been computed.</p>'

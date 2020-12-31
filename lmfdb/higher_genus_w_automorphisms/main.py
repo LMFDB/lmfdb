@@ -18,7 +18,7 @@ from lmfdb.utils import (
     flash_error, to_dict,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.sato_tate_groups.main import sg_pretty
@@ -84,9 +84,9 @@ def learnmore_list_remove(matchstring):
 
 def tfTOyn(bool):
     if bool:
-        return "Yes"
+        return "yes"
     else:
-        return "No"
+        return "no"
 
 # Convert [4,1] to 4.1, then  apply sg_pretty
 def group_display(strg):
@@ -177,7 +177,7 @@ def index():
     genus_list = list(range(2, genus_max + 1))
     info['count'] = 50
     info['genus_list'] = genus_list
-    info['stats'] = HGCWAstats().stats()
+    info['short_summary'] = HGCWAstats().short_summary
 
     return render_template("hgcwa-index.html",
                            title="Families of higher genus curves with automorphisms",
@@ -188,9 +188,10 @@ def index():
 
 
 @higher_genus_w_automorphisms_page.route("/random")
+@redirect_no_cache
 def random_passport():
     label = db.hgcwa_passports.random(projection='passport_label')
-    return redirect(url_for(".by_passport_label", passport_label=label))
+    return url_for(".by_passport_label", passport_label=label)
 
 @higher_genus_w_automorphisms_page.route("/interesting")
 def interesting():
@@ -207,44 +208,55 @@ def interesting():
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
-    info = {
-        'stats': HGCWAstats().stats(),
-    }
     title = 'Families of higher genus curves with automorphisms: Statistics'
     bread = get_bread('Statistics')
+    return render_template("hgcwa-stats.html", info=HGCWAstats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
-    return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
-@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
+@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<int:genus>")
 def groups_per_genus(genus):
-    group_stats = db.hgcwa_passports.stats.get_oldstat('bygenus/' + genus + '/group')
-
+    un_grps = db.hgcwa_unique_groups
     # Redirect to 404 if statistic is not found
-    if not group_stats:
+    if not un_grps.count({'genus':genus}):
         return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
 
-    # Groups are stored in sorted order
-    groups = group_stats['counts']
+    info = {}
+    gp_data = un_grps.search({'genus':genus},projection=['group','g0_is_gt0','g0_gt0_list','gen_vectors','topological','braid'],info=info)
 
-    # Create isomorphism classes
-    iso_classes = []
+    # Make list groups_0 where each entry is a list [ group, gen_vectors, tops, braids
+    groups_0 = []
+    # Make list groups_gt0 where each entry is a list [group, gen_vectors]
+    groups_gt0 = []
 
-    for group in groups:
-        iso_classes.append(sg_pretty(re.sub(hgcwa_group, r'\1.\2', group[0])))
+    complete_info = db.hgcwa_complete.lucky({'genus':genus})
+    show_top_braid = complete_info['top_braid_compute']
+    show_g0_gt0 = complete_info['g0_gt0_compute']
+
+    for dataz in gp_data:
+        group = dataz['group']
+        group_str = str(dataz['group'])
+        iso_class = sg_pretty("%s.%s" % tuple(group))
+        if dataz['g0_is_gt0']:
+            groups_gt0.append((iso_class, group_str, dataz['gen_vectors'], cc_display(dataz['g0_gt0_list'])))
+        elif not show_top_braid:
+            groups_0.append((iso_class, group_str, dataz['gen_vectors']))
+        else:
+            groups_0.append((iso_class, group_str, dataz['gen_vectors'], dataz['topological'], dataz['braid']))
 
     info = {
         'genus': genus,
-        'groups': groups,
-        'iso_classes': iso_classes
+        'groups_0': groups_0,
+        'groups_gt0': groups_gt0,
+        'show_top_braid' : show_top_braid,
+        'show_g0_gt0' : show_g0_gt0,
+        'group_display' : group_display
     }
 
-    title = ('Families of higher genus curves with automorphisms: Genus ' +
-             genus +
-             ' group statistics')
+    title = 'Families of higher genus curves with automorphisms: Genus %s group statistics' % genus
     bread = get_bread([('Statistics', url_for('.statistics')),
                        ('Groups per genus', url_for('.statistics')),
                        (str(genus), ' ')])
-       
+
     return render_template("hgcwa-stats-groups-per-genus.html",
                            info=info,
                            credit=credit,
@@ -684,8 +696,9 @@ def render_family(args):
         smallgroup="[" + str(gn) + "," +str(gt) + "]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
-             ('Quotient genus', r'\(%d\)' % g0),
+            ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
             ('Signature', r'\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -808,6 +821,7 @@ def render_passport(args):
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
+            ('Label', label),
             ('Genus', r'\(%d\)' % g),
             ('Quotient genus', r'\(%d\)' % g0),
             ('Group', r'\(%s\)' % pretty_group),
@@ -835,11 +849,11 @@ def render_passport(args):
             dat = dataz[i]
             x1 = dat['total_label']
             if 'full_auto' in dat:
-                x2 = 'No'
+                x2 = 'no'
                 if dat['full_label'] not in Lfriends:
                     Lfriends.append(dat['full_label'])
             else:
-                x2 = 'Yes'
+                x2 = 'yes'
 
             if 'hyperelliptic' in dat:
                 x3 = tfTOyn(dat['hyperelliptic'])
@@ -1225,6 +1239,8 @@ class HGCWASearchArray(SearchArray):
     plural_noun = "passports"
     jump_example = "2.12-4.0.2-2-2-3"
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
+    jump_knowl = "curve.highergenus.aut.search_input"
+    jump_prompt = "Label"
     def __init__(self):
         genus = TextBox(
             name="genus",
@@ -1246,7 +1262,7 @@ class HGCWASearchArray(SearchArray):
             example_span="[0,2,3,3,6] or [0;2,3,8]")
         group_order = TextBox(
             name="group_order",
-            label="Group order(s)",
+            label="Group order",
             knowl="group.order",
             example="2..5",
             example_span="12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)")
@@ -1263,11 +1279,11 @@ class HGCWASearchArray(SearchArray):
             example_span="1, or a range like 0..2")
         inc_hyper = ExcludeOnlyBox(
             name="inc_hyper",
-            label="Hyperelliptic curve(s)",
+            label="Hyperelliptic curves",
             knowl="ag.hyperelliptic_curve")
         inc_cyc_trig = ExcludeOnlyBox(
             name="inc_cyc_trig",
-            label="Cyclic trigonal curve(s)",
+            label="Cyclic trigonal curves",
             knowl="ag.cyclic_trigonal")
         inc_full = ExcludeOnlyBox(
             name="inc_full",

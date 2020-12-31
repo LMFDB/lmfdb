@@ -5,6 +5,7 @@ from six.moves import range
 from six import string_types
 
 import re
+import sys
 from collections import Counter
 
 from lmfdb.utils.utilities import flash_error
@@ -14,6 +15,8 @@ from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
 from sage.calculus.var import var
 from lmfdb.backend.utils import SearchParsingError
+from .utilities import coeff_to_poly
+from math import log2
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
@@ -26,6 +29,7 @@ QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 LIST_RAT_RE = re.compile(r'^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$')
+MULT_PARSE= re.compile(r'^[0-9()*^]*$') # to check if a string is comprised of just multiplication and exponentiation symbols
 SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 ## RE from number_field.py
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
@@ -33,6 +37,22 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
+
+
+import ast
+class PowMulNodeVisitor(ast.NodeTransformer):
+    def visit_BinOp(self, node):
+        if isinstance(node.op, ast.Pow):
+            if log2(self.visit(node.left)) * self.visit(node.right) > 3000:
+                raise ValueError('output will be too large')
+            return  self.visit(node.left) ** self.visit(node.right)
+        elif isinstance(node.op, ast.Mult):
+            return  self.visit(node.left) * self.visit(node.right)
+    def visit_Constant(self, node):
+        return ast.literal_eval(node)
+    if sys.version_info < (3,8):
+        def visit_Num(self, node): # deprecated for python >= 3.8
+            return self.visit_Constant(node)
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield, error_is_safe, clean_spaces):
@@ -75,13 +95,13 @@ class SearchParser(object):
                 self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
-        except (ValueError, AttributeError, TypeError) as err:
+        except ValueError as err:
             if self.error_is_safe:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. "+str(err)+".", inp, name)
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
-            raise
+            raise		
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
@@ -160,11 +180,11 @@ def parse_ints_to_list(arg):
     if '-' in s[1:]:
         i = s.index('-',1)
         min, max = s[:i], s[i+1:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     if '..' in s:
         i = s.index('..',1)
         min, max = s[:i], s[i+2:]
-        return range(int(min),int(max)+1)
+        return [m for m in range(int(min),int(max)+1)]
     return [int(s)]
 
 def parse_ints_to_list_flash(arg,name):
@@ -339,12 +359,27 @@ def parse_rational(inp, query, qfield):
     else:
         raise SearchParsingError("It needs to be a rational number.")
 
+@search_parser(clean_info=True, prep_plus=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_rational_to_list(inp, query, qfield):
+    if QQ_RE.match(inp):
+        qinp = QQ(inp)
+        query[qfield] = [qinp.numerator(), qinp.denominator()]
+    else:
+        raise SearchParsingError("It needs to be a rational number.")
+
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+    elif MULT_PARSE.match(inp):
+        try:
+            ast_expression = ast.parse(inp.replace('^', '**'), mode='eval')
+            inp = str(int(PowMulNodeVisitor().visit(ast_expression).body))
+            collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
+        except (TypeError, ValueError):
+            raise SearchParsingError("Unable to evaluate expression.")
     else:
-        raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise SearchParsingError("It needs to be an integer (such as 25), be a multiplicative expression that parses to an integer (such as 2^2*3), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, clean_spaces=False, prep_ranges=False) # see SearchParser.__call__ for actual arguments when calling
 def parse_ints_raw(inp, query, qfield, names={}):
@@ -706,6 +741,19 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+    # check if a polynomial was entered
+    try:
+        F1 = coeff_to_poly(F)
+    except Exception:
+        pass
+    else:
+        if len(str(F1.parent().gen())) == 1: # we only support single-letter variable names
+            from lmfdb.number_fields.number_field import poly_to_field_label
+            F1 = poly_to_field_label(F1)
+            if F1:
+                return F1
+            raise SearchParsingError('%s does not define a number field in the database.' % F)
+
     if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
@@ -749,16 +797,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             else:
                 raise SearchParsingError('%s is not in the database.' % F)
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
-    # check if a polynomial was entered
-    F = F.replace('X', 'x')
-    if 'x' in F:
-        F1 = F.replace('^', '**')
-        # print F
-        from lmfdb.number_fields.number_field import poly_to_field_label
-        F1 = poly_to_field_label(F1)
-        if F1:
-            return F1
-        raise SearchParsingError('%s does not define a number field in the database.'%F)
+
     # Expand out factored labels, like 11.11.11e20.1
     if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
         raise SearchParsingError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
@@ -807,7 +846,12 @@ def input_to_subfield(inp):
     if 'x' in F:
         F1 = F.replace('^', '**')
         R = PolynomialRing(ZZ, 'x')
-        pol = PolynomialRing(QQ,'x')(str(F1))
+        if ',' in F:
+            raise SearchParsingError("You may only specify one subfield.")
+        try:
+            pol = PolynomialRing(QQ,'x')(str(F1))
+        except:
+            raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():
             raise SearchParsingError("It is not an irreducible polynomial.")
@@ -882,7 +926,10 @@ def pol_string_to_list(pol, deg=None, var=None):
         var = findvar(pol)
         if not var:
             var = 'a'
-    pol = PolynomialRing(QQ, var)(str(pol))
+    try:
+        pol = PolynomialRing(QQ, var)(str(pol))
+    except TypeError:
+        raise SearchParsingError("Input not recognized as a polynomial.")
     if deg is None:
         fill = 0
     else:

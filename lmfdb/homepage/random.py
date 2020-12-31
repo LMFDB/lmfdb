@@ -1,9 +1,11 @@
 from lmfdb.app import is_beta, app
-from flask import redirect
+from lmfdb.utils import redirect_no_cache
 from sage.all import randint
 
 def random_url():
     routes = [
+            "L/",
+            "L/",
             "L/",
             "ModularForm/GL2/Q/holomorphic/",
             "ModularForm/GL2/Q/Maass/",
@@ -46,6 +48,6 @@ def random_url():
     return route
 
 @app.route("/random")
+@redirect_no_cache
 def go_random():
-    url = random_url()
-    return redirect(url)
+    return random_url()

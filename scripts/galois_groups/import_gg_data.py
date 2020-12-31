@@ -11,38 +11,33 @@ gr = db.gps_transitive
 
 # moddecompuniq and pretty are added later if known
 
-mykeys = ['ab', 'arith_equiv', 'auts', 'cyc', 'gapid', 'n', 'order', 'parity', 'prim', 'repns', 'resolve', 'solv', 'subs', 't', 'name']
+mykeys = ['ab', 'arith_equiv', 'auts', 'cyc', 'gapid', 'n', 'order', 'parity', 'prim', 'siblings', 'quotients', 'solv', 'subfields', 't', 'name', 'bound_siblings', 'bound_quotients', 'num_conj_classes', 'gens']
 
 myfile = open(sys.argv[1])
 
 outrecs=[]
 
 def dosubs(ent):
-    lis = ent['subs']
+    lis = ent['subfields']
     lis2 = [(j[0], j[1]) for j in lis]
     diflis = list(set(lis2))
     diflis.sort()
     ans = [[[j[0], j[1]], lis2.count(j)] for j in diflis]
     ent['subfields'] = ans
-    del ent['subs']
 
-    lis = ent['repns']
+    lis = ent['siblings']
     lis2 = [(j[0], j[1]) for j in lis]
     diflis = list(set(lis2))
     diflis.sort()
     ans = [[[j[0], j[1]], lis2.count(j)] for j in diflis]
     ent['siblings'] = ans
-    del ent['repns']
 
-    lis = ent['resolve']
+    lis = ent['quotients']
     lis2 = [(j[0], j[1][0], j[1][1]) for j in lis]
     diflis = list(set(lis2))
     diflis.sort()
     ans = [[j[0], [j[1], j[2]], lis2.count(j)] for j in diflis]
     ent['quotients'] = ans
-    ent['bound_quotients'] = 47
-    ent['bound_siblings'] = 47
-    del ent['resolve']
 
     return(ent)
 
@@ -58,7 +53,9 @@ for l in myfile:
       data['gapidfull'] = ""
       if data['gapid']>0:
           data['gapidfull'] = "[%d,%d]"%(data['order'],data['gapid'])
-      data = dosubs(data)
+      # no longer needed
+      # data = dosubs(data)
+      data['siblings'] = [[z[0],z[1][0]] for z in data['siblings']]
       outrecs.append(data)
 
 if len(outrecs)>0:

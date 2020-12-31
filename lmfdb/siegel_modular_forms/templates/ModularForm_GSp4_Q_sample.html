@@ -35,8 +35,8 @@
   <tr> <td>{{KNOWL('mf.siegel.space',title='Space')}}:</td> <td>{{ info.space_href|safe }}</td> </tr>
   <tr> <td>{{KNOWL('mf.siegel.form_type',title='Type')}}:</td> <td>{{ info.type }}</td> </tr>
   <tr> <td>{{KNOWL('mf.siegel.weight',title='Weight')}}:</td> <td>{{ info.weight }}</td> </tr>
-  <tr> <td>{{KNOWL('mf.siegel.eigenform',title='Hecke eigenform')}}:</td> <td>{{ info.is_eigenform }}</td> </tr>
-  <tr> <td>{{KNOWL('mf.siegel.integral_fc',title='Integral Fourier coefficients')}}:</td> <td>{% if info.is_integral is defined %}{{ info.is_integral }}{% else %} unknown {% endif %}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.eigenform',title='Hecke eigenform')}}:</td> <td>{{ "yes" if info.is_eigenform else "no" }}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.integral_fc',title='Integral Fourier coefficients')}}:</td> <td>{% if info.is_integral is defined %}{{ "yes" if info.is_integral else "no" }}{% else %} unknown {% endif %}</td> </tr>
 </table>
 
 <h2>{{KNOWL('mf.siegel.field',title='Coefficient field')}}</h2>

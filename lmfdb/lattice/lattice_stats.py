@@ -15,14 +15,14 @@ class Lattice_stats(StatsDisplay):
         self.kposdef = display_knowl('lattice.postive_definite', 'positive definite')
         self.kintegral = display_knowl('lattice.definition', 'integral lattices')
         self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
-        self.kcn = display_knowl('lattice.class_number', 'class_number')
+        self.kcn = display_knowl('lattice.class_number', 'class number')
         self.kdim = display_knowl('lattice.dimension', 'dimension')
-        self.kdet = display_knowl('lattice.determinant', 'dimension')
+        self.kdet = display_knowl('lattice.determinant', 'determinant')
         self.kpri = display_knowl('lattice.primitive', 'primitive')
 
     @property
     def short_summary(self):
-        return '<p>The database currently contains {} {} {}. It includes data from the {}.</p><p>The largest {} is {}, the largest {} is {}, and the largest {} is {}.</p><p>In the case of {} {} of {} one the database is complete.</p><p>Here are some <a href="{}">further statistics.</p>'.format(
+        return 'The database currently contains {} {} {}. It includes data from the {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>.'.format(
             self.nlats,
             self.kposdef,
             self.kintegral,
@@ -33,9 +33,6 @@ class Lattice_stats(StatsDisplay):
             self.max_dim,
             self.kdet,
             comma(self.max_det),
-            self.kpri,
-            self.kintegral,
-            self.kcn,
             url_for(".statistics"),
         )
 

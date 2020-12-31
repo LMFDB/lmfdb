@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from lmfdb.app import app
-from lmfdb.utils import comma, StatsDisplay
+from lmfdb.utils import comma, StatsDisplay, proportioners, totaler
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb import db
+from flask import url_for
 from psycopg2.sql import SQL
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 from collections import defaultdict
+from sage.all import prod
+import re
 
 def field_data(s):
     r"""
@@ -25,7 +28,58 @@ def sort_field(F):
 
 logger = make_logger("ecnf")
 
+def latex_tor(t):
+    if isinstance(t, str):
+        # This is used in formatting stats, and we need it to process the output.
+        return t
+    t = tuple(t)
+    if len(t) == 0:
+        return "trivial"
+    elif len(t) == 1:
+        return "$C_{%s}$" % t
+    else:
+        return r"$C_{%s} \times C_{%s}$" % t
+
+def tor_invs(t):
+    if isinstance(t, str):
+        return [int(x) for x in re.findall(r"\d+", t)]
+    else:
+        return t
+
+def tor_sort_key(t):
+    t = tor_invs(t)
+    return (prod(t), len(t))
+
 class ECNF_stats(StatsDisplay):
+    table = db.ec_nfcurves
+    baseurl_func = ".index"
+
+    stat_list = [
+        {'cols': ['degree', 'conductor_norm'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total},
+        {'cols': ['degree', 'rank'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total,
+         'intro': ['Only curves where the rank has been computed are shown.']},
+        {'cols': ['degree', 'torsion_structure'],
+         'totaler': totaler(),
+         'proportioner': proportioners.per_row_total},
+    ]
+
+    buckets = {'conductor_norm': ['1-100', '101-1000', '1001-10000', '10001-50000', '50001-100000', '100001-150000']}
+    formatters = {'torsion_structure': latex_tor}
+    query_formatters = {
+        'degree': (lambda x: 'bf_deg=%s' % x),
+        'torsion_structure': (lambda x: 'torsion_structure=%s' % (str(tor_invs(x)).replace(" ","")))
+    }
+    sort_keys = {'torsion_structure': tor_sort_key}
+
+    knowls = {'degree': 'nf.degree',
+              'conductor_norm': 'ec.conductor',
+              'rank': 'ec.rank',
+              'torsion_structure': 'ec.torsion_subgroup'}
+
     ec_knowls = '<a knowl="ec">elliptic curves</a>'
     ec_knowl = '<a knowl="ec">elliptic curve</a>'
     iso_knowls = '<a knowl="ec.isogeny_class">isogeny classes</a>'
@@ -119,6 +173,7 @@ class ECNF_stats(StatsDisplay):
             sigs.sort()
         return D
 
+    @property
     def summary(self):
         return ''.join([r'The database currently contains {} '.format(comma(self.ncurves)),
                         self.ec_knowls,
@@ -127,8 +182,12 @@ class ECNF_stats(StatsDisplay):
                         r', over {} '.format(len(self.field_counts)),
                         self.nf_knowls, ' of ',
                         self.deg_knowl,
-                        r' from 2 up to {}.'.format(self.maxdeg),
+                        r' 2 to {}.'.format(self.maxdeg),
                         r' Elliptic curves defined over $\mathbb{Q}$ are contained in a <a href="/EllipticCurve/Q/">separate database</a>.'])
+
+    @property
+    def short_summary(self):
+        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
 
     @cached_method
     def field_summary(self, field):
@@ -190,6 +249,16 @@ class ECNF_stats(StatsDisplay):
     def isogeny_degrees(self):
         cur = db._execute(SQL("SELECT UNIQ(SORT(ARRAY_AGG(elements ORDER BY elements))) FROM ec_nfcurves, UNNEST(isodeg) as elements"))
         return cur.fetchone()[0]
+
+    def setup(self, attributes=None, delete=False):
+        if attributes is None:
+            # The following statistics aren't updated by the normal setup function
+            # The assert is for pyflakes
+            assert self.field_normstats
+            assert self.sig_normstats
+            assert self.deg_normstats
+            assert self.torsion_counts
+        super().setup(attributes, delete)
 
 @app.context_processor
 def ctx_ecnf_summary():

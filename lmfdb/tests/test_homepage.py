@@ -13,7 +13,7 @@ class HomePageTest(LmfdbTest):
         homepage = self.tc.get("/").get_data(as_text=True)
         self.check(homepage, "/L/degree2/", '9.53369')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
-        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/10/0/10/')
+        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/15/0/15/')
         self.check(homepage, "/zeros", 'The zeros are accurate') # the interesting numbers are filled in dynamically
         self.check(homepage, "/NumberField/?degree=2", '"/NumberField/2.0.8.1">2.0.8.1')
 
@@ -28,7 +28,7 @@ class HomePageTest(LmfdbTest):
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '0.792122')
-        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2 + y = x^{3} - 7 x + 6')
+        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2+y=x^3-7x+6')
         self.check(homepage,"/L/EllipticCurve/Q/5077.a/", '5077')
 
     # Box 3
@@ -40,7 +40,7 @@ class HomePageTest(LmfdbTest):
         self.check(homepage, "/L/", 'Dirichlet')
         self.check(homepage, "/L/", 'Symmetric square')
         self.check(homepage, "/L/", 'Genus 2 curve')
-        self.check(homepage, "/EllipticCurve/Q/", 'by coefficients')
+        self.check(homepage, "/EllipticCurve/Q/", 'Label or coefficients')
         self.check(homepage, "/NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')
 
     # Box 4

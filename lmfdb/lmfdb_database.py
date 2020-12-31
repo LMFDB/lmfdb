@@ -9,6 +9,7 @@ import signal
 import datetime
 from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
+from lmfdb.backend.utils import DelayCommit
 from lmfdb.backend.database import PostgresDatabase
 from lmfdb.backend.searchtable import PostgresSearchTable
 from lmfdb.backend.statstable import PostgresStatsTable
@@ -347,5 +348,34 @@ class LMFDBDatabase(PostgresDatabase):
                 pipe.send_signal(signal.SIGTERM)
         else:
             return pipe
+
+    def reset_all_stats(self):
+        """
+        This function clears all stats and counts (extra=False) from tables where statistics have been added, then adds all relevant statistics.
+        """
+        from . import website # loads all the modules
+        assert website
+        from lmfdb.utils.display_stats import StatsDisplay
+        def find_subs(L):
+            # Assume no multiple inheritance
+            new_subs = sum([C.__subclasses__() for C in L], [])
+            if new_subs:
+                new_subs = find_subs(new_subs)
+            return L + new_subs
+        all_subs = find_subs([StatsDisplay])[1:]
+        with DelayCommit(self):
+            cleared_tables = set()
+            for disp in all_subs:
+                print("Resetting statistics for %s" % (disp.table.search_table))
+                tbls = set()
+                if disp.table not in cleared_tables:
+                    tbls.add(disp.table)
+                for attr in disp.stat_list:
+                    if "table" in attr and attr["table"] not in cleared_tables:
+                        tbls.add(attr["table"])
+                for tbl in tbls:
+                    tbl.stats._clear_stats_counts(extra=False)
+                cleared_tables.update(tbls)
+                disp().setup(delete=False)
 
 db = LMFDBDatabase()

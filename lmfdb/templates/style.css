@@ -584,6 +584,26 @@ a.like-button {
   padding: 6px 16px 3px 16px;
 }
 
+button.like-link {
+  background: none!important;
+  border: none!important;
+  padding: 0!important;
+  cursor: pointer;
+
+  color: {{color.col_link}};
+  text-decoration: none;
+  font-family: sans-serif;
+  min-width: 0px;
+  font-size: 15px;
+}
+button.like-link:visited {
+  color: {{color.a_text_visited}};
+}
+button.like-link:hover {
+  color: {{color.a_text_hover}};
+  background: {{color.a_background_hover}};
+}
+
 select {
    background: {{color.select_background}};
 }
@@ -649,6 +669,14 @@ table.newforms {
     clear: right;
 }
 
+table.browse td {
+  vertical-align: top;
+  padding: 7px 0px 7px 10px;
+}
+table.browse td:first-child {
+  white-space: nowrap;
+}
+
 table.ntdata .knowl-header a,
 table.ntdata .knowl-footer a,
 table.ntdata a.knowl-link,
@@ -692,7 +720,7 @@ table td.spacing {
 table.ntdata {
   width: auto;
   border: 3px;
-  margin-left: 7px;
+  margin-left: 5%;
   margin-top: 15px;
   margin-bottom: 15px;
 }
@@ -767,7 +795,13 @@ cellpadding:3px;
 }
 
 
-table.number_table {border-collapse:collapse;}
+table.number_table {
+  border-collapse:collapse;
+  border: 3px;
+  margin-left: 7px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
 
 table.number_table tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};

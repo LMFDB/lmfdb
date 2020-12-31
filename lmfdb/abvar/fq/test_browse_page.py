@@ -171,7 +171,7 @@ class AVHomeTest(LmfdbTest):
         # [3.5.ah_y_ach,*]
         self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_qb")
         self.check_args("/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1", "6.2.ag_p_aw_bh_acu_ey")
-        self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "all 5 matches")
+        self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "5 matches")
 
     def test_search_numberfield(self):
         r"""
@@ -196,7 +196,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no", "2.3.ae_i")
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ad_c_a_b")
+        self.check_args("/Variety/Abelian/Fq/?g=4&p_rank=4&jacobian=not_yes&polarizable=yes", "4.2.ag_t_abq_cr")
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no", "3.2.c_c_c")
 
     def test_search_princpol(self):

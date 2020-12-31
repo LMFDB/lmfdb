@@ -100,7 +100,6 @@ from .lmfdb_database import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
 
-
 def main():
     info("main: ...done.")
     from .utils.config import Configuration
@@ -109,7 +108,7 @@ def main():
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
-        from werkzeug.contrib.profiler import ProfilerMiddleware
+        from werkzeug.middleware.profiler import ProfilerMiddleware
 
         app.wsgi_app = ProfilerMiddleware(
             app.wsgi_app, restrictions=[30], sort_by=("cumulative", "time", "calls")

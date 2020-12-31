@@ -22,6 +22,7 @@ from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
+from lmfdb.utils import redirect_no_cache
 
 logger = make_logger("abvarfq")
 
@@ -180,8 +181,10 @@ def download_search(info):
 class AbvarSearchArray(SearchArray):
     jump_example = "2.16.am_cn"
     jump_egspan = "e.g. 2.16.am_cn or 1 - x + 2x^2 or x^2 - x + 2"
+    jump_knowl = "av.fq.search_input"
+    jump_prompt = "Label or polynomial"
     def __init__(self):
-        qshort = display_knowl("ag.base_field", "Base field")
+        qshort = display_knowl("ag.base_field", "base field")
         q = TextBox(
             "q",
             label="Cardinality of the %s" % (qshort),
@@ -283,7 +286,7 @@ class AbvarSearchArray(SearchArray):
             short_label=display_knowl("nf.galois_group", "Galois group"),
             example="4T3",
             example_span="C4, or 8T12, a list of "
-            + display_knowl("nf.galois_group.name", "group labels"),
+            + display_knowl("nf.galois_group.name", "group names"),
             colspan=(1, 3, 1),
             width=3*190 - 30,
             short_width=160,
@@ -317,7 +320,7 @@ class AbvarSearchArray(SearchArray):
         )
         hyp_cnt = TextBox(
             "hyp_cnt",
-            label="Number of Hyperelliptic Jacobians",
+            label="Number of hyperelliptic Jacobians",
             knowl="av.hyperelliptic_count",
             example="6",
             example_col=False,
@@ -560,14 +563,16 @@ def jump(info):
             if deg % 2 == 1:
                 raise ValueError
         except Exception:
-            raise ValueError("%s is not valid input.  Expected a label or Weil polynomial.")
+            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         g = deg//2
         lead = cdict[deg]
         if lead == 1: # accept monic normalization
             lead = cdict[0]
             cdict = {deg-exp : coeff for (exp, coeff) in cdict.items()}
         if cdict.get(0) != 1:
-            raise ValueError("%s is not valid input.  Polynomial must have constant or leading coefficient 1")
+            flash_error ("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         try:
             q = lead.nth_root(g)
             if not ZZ(q).is_prime_power():
@@ -576,7 +581,8 @@ def jump(info):
                 if cdict.get(2*g-i, 0) != q**(g-i) * cdict.get(i, 0):
                     raise ValueError
         except ValueError:
-            raise ValueError("%s is not valid input.  Polynomial must be a Weil polynomial")
+            flash_error ("%s is not valid input.  Expected a label or Weil polynomial.", jump_box)
+            return redirect(url_for(".abelian_varieties"))
         def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
@@ -646,7 +652,7 @@ def abelian_variety_count(info, query):
 
 def abelian_variety_browse(info):
     info["stats"] = AbvarFqStats()
-    info["q_ranges"] = ["2", "3", "4", "5", "7-16", "17-25", "27-211", "223-1024"]
+    info["q_ranges"] = ["2", "3", "4", "5", "7", "8", "9", "16", "17", "19", "23", "25", "27-211", "223-1024"]
     return render_template(
         "abvarfq-index.html",
         title="Isogeny classes of abelian varieties over finite fields",
@@ -701,10 +707,11 @@ def by_label(label):
     return redirect(url_for_label(label))
 
 @abvarfq_page.route("/random")
+@redirect_no_cache
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
+    return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
 
 @abvarfq_page.route("/interesting")
 def interesting():

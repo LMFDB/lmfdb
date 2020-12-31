@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import ast
 import re
@@ -9,9 +10,9 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, TextBox, CountBox,
+    SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
@@ -23,7 +24,7 @@ lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and N
 
 from lmfdb import db
 
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -70,10 +71,9 @@ def lattice_render_webpage():
     info = to_dict(request.args, search_array=LatSearchArray())
     if not request.args:
         stats = Lattice_stats()
-        dim_list = list(range(1, 11, 1))
-        max_class_number = 20
-        class_number_list = list(range(1, max_class_number + 1, 1))
-        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
+        dim_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 24]
+        class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
+        det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
@@ -90,8 +90,9 @@ def lattice_render_webpage():
 
 # Random Lattice
 @lattice_page.route("/random")
+@redirect_no_cache
 def random_lattice():
-    return redirect(url_for(".render_lattice_webpage", label=db.lat_lattices.random()), 307)
+    return url_for(".render_lattice_webpage", label=db.lat_lattices.random())
 
 @lattice_page.route("/interesting")
 def interesting():
@@ -312,13 +313,13 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
-        ('Dimension', '%s' %info['dim']),
-        ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level'])]
+        ('Dimension', prop_int_pretty(info['dim'])),
+        ('Determinant', prop_int_pretty(info['det'])),
+        ('Level', prop_int_pretty(info['level']))]
     if info['class_number'] == 0:
         info['properties']=[('Class number', 'not available')]+info['properties']
     else:
-        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
+        info['properties']=[('Class number', prop_int_pretty(info['class_number']))]+info['properties']
     info['properties']=[('Label', '%s' % info['label'])]+info['properties']
 
     if info['name'] != "" :

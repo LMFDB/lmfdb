@@ -182,7 +182,7 @@ def api_query(table, id = None):
 
     if offset > 10000:
         if format != "html":
-            abort(404)
+            return abort(404)
         else:
             flash_error("offset %s too large, please refine your query.", offset)
             return redirect(url_for(".api_query", table=table))
@@ -192,7 +192,7 @@ def api_query(table, id = None):
         coll = getattr(db, table)
     except AttributeError:
         if format != "html":
-            abort(404)
+            return abort(404)
         else:
             flash_error("table %s does not exist", table)
             return redirect(url_for(".index"))
@@ -265,6 +265,13 @@ def api_query(table, id = None):
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
+        # So as not to preserve backwards compatibility (see test_api_usage() test)
+        if table=='ec_curvedata':
+            for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
+                if oldkey in q:
+                    q[newkey] = q[oldkey]
+                    q.pop(oldkey)
+                api_logger.info("replacing old key {} with new key {} for query into table {}".format(oldkey, newkey, table))    
         api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
@@ -277,7 +284,7 @@ def api_query(table, id = None):
 
     if single_object and not data:
         if format != 'html':
-            abort(404)
+            return abort(404)
         else:
             flash_error("no document with id %s found in table %s.", id, table)
             return redirect(url_for(".api_query", table=table))

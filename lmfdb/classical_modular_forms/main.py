@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
+import os, yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
@@ -16,7 +17,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler)
+    StatsDisplay, proportioners, totaler,
+    redirect_no_cache)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
@@ -32,6 +34,11 @@ from lmfdb.classical_modular_forms.download import CMF_download
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
+
+
+_curdir = os.path.dirname(os.path.abspath(__file__))
+ETAQUOTIENTS = yaml.load(open(os.path.join(_curdir, "eta.yaml")),
+                         Loader=yaml.FullLoader)
 
 @cached_function
 def learnmore_list():
@@ -56,7 +63,7 @@ def credit():
     """
     Return the credit string
     """
-    return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
 
 @cached_function
@@ -211,14 +218,16 @@ def index():
                            bread=get_bread())
 
 @cmf.route("/random/")
+@redirect_no_cache
 def random_form():
     label = db.mf_newforms.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/random_space/")
+@redirect_no_cache
 def random_space():
     label = db.mf_newspaces.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/interesting_newforms")
 def interesting_newforms():
@@ -322,14 +331,63 @@ def parse_prec(info):
         return ["<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)"]
     return []
 
+
+def eta_quotient_texstring(etadata):
+    """
+    Returns a latex string representing an eta quotient.
+
+    etadata should be a dictionary as returned from parsing `eta.yaml`.
+
+    IMPLEMENTATION NOTE:
+      numerstr and denomstr together form a texstring of the form
+      \eta(Az)^B \eta(Cz)^D, potentially in fraction form.
+
+      str will be a string representing something like
+      q^A \prod_{n} (1 - q^{Bn})^C (1 - q^{Dn})^E
+    """
+    numerstr = ''
+    denomstr = ''
+    innerqstr = ''
+    qfirstexp = 0  # compute A in the qstr representation
+    for key, value in etadata.items():
+        _texstr = '\\eta({}z)'.format(key if key != 1 else '')
+        qfirstexp += key * value
+        if value > 0:
+            numerstr += _texstr
+            if value != 1:
+                numerstr += '^{%s}' % (value)
+        else:
+            denomstr += _texstr
+            if value != -1:
+                denomstr += '^{%s}' % (-value)
+        innerqstr += '(1 - q^{%sn})^{%s}' % (key if key != 1 else '',
+                                             value if value != 1 else '')
+    if denomstr == '':
+        etastr = numerstr
+    else:
+        etastr = '\\dfrac{%s}{%s}' % (numerstr, denomstr)
+
+    qfirstexp = qfirstexp // 24
+    etastr += '=q'
+    if qfirstexp != 1:
+        etastr += '^{%s}' % (qfirstexp)
+    etastr += '\\prod_{n=1}^\\infty' + innerqstr
+    return etastr
+
+
 def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
+
     info = to_dict(request.args)
     info['display_float'] = display_float
     info['format'] = info.get('format', 'embed')
+
+    if label in ETAQUOTIENTS:
+        info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
+
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
@@ -550,14 +608,6 @@ def download_qexp(label):
 def download_traces(label):
     return CMF_download().download_traces(label)
 
-@cmf.route("/download_cc_data/<label>")
-def download_cc_data(label):
-    return CMF_download().download_cc_data(label)
-
-@cmf.route("/download_satake_angles/<label>")
-def download_satake_angles(label):
-    return CMF_download().download_satake_angles(label)
-
 @cmf.route("/download_newform_to_magma/<label>")
 def download_newform_to_magma(label):
     return CMF_download().download_newform_to_magma(label)
@@ -654,7 +704,13 @@ def common_parse(info, query, na_check=False):
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        query['level_is_' + info['level_type']] = True
+        if info['level_type'] == 'divides':
+            if not isinstance(query.get('level'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['level'] = {'$in': ZZ(query['level']).divisors()}
+        else:
+            query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor", allow_singletons=True)
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
@@ -1263,6 +1319,8 @@ def dynamic_statistics():
 class CMFSearchArray(SearchArray):
     jump_example="3.6.a.a"
     jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
+    jump_knowl="cmf.search_input"
+    jump_prompt="Label"
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
@@ -1270,9 +1328,10 @@ class CMFSearchArray(SearchArray):
                      ('prime', 'prime'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
-                     ('squarefree', 'squarefree')
+                     ('squarefree', 'squarefree'),
+                     ('divides','divides'),
                      ],
-            width=115)
+            min_width=110)
         level = TextBoxWithSelect(
             name='level',
             label='Level',
@@ -1283,8 +1342,7 @@ class CMFSearchArray(SearchArray):
 
         weight_quantifier = ParityMod(
             name='weight_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width = 115)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         weight = TextBoxWithSelect(
             name='weight',
@@ -1296,8 +1354,7 @@ class CMFSearchArray(SearchArray):
 
         character_quantifier = ParityMod(
             name='char_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'],
-            width = 115)
+            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
 
         character = TextBoxWithSelect(
             name='char_label',
@@ -1310,7 +1367,7 @@ class CMFSearchArray(SearchArray):
 
         prime_quantifier = SubsetBox(
             name="prime_quantifier",
-            width = 115)
+            min_width=110)
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1335,7 +1392,7 @@ class CMFSearchArray(SearchArray):
         dim_quantifier = SelectBox(
             name='dim_type',
             options=[('', 'absolute'), ('rel', 'relative')],
-            width=115)
+            min_width=110)
 
         dim = TextBoxWithSelect(
             name='dim',
@@ -1592,13 +1649,3 @@ class CMFSearchArray(SearchArray):
             trace_table = self._print_table(self.traces_array, info, layout_type="box")
             layout.append(trace_table)
         return "\n".join(layout)
-
-
-
-
-
-
-
-
-
-

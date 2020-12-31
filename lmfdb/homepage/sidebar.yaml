@@ -6,8 +6,8 @@
   parts:
     - title: Overview
       url_for: "introduction"
-    - title: Features
-      url_for: "introduction_features"
+    - title: Random
+      url_for: "go_random"
     - title: Universe
       url_for: "universe"
     - title: Knowledge
@@ -64,10 +64,10 @@
       status: future
     - title: Noncongruence
       status: future
-    - title: mod &#8467; 
+    - title: mod &#8467;
       url_for: "modlmf.modlmf_render_webpage"
       status: future
-    - title: Hecke algebra 
+    - title: Hecke algebra
       url_for: "hecke_algebras.hecke_algebras_render_webpage"
       status: future
     - title: GL(3) Maass
@@ -166,7 +166,7 @@
     url_for: "representations"
   parts:
     - title: Dirichlet characters
-      url_for:  "characters.render_Dirichletwebpage"
+      url_for:  "characters.render_DirichletNavigation"
       colspan: onecolumn
     - title: Hecke characters
       url_for:  "characters.render_Heckewebpage"
