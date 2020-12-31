@@ -8,10 +8,10 @@
     <tr><td>{{ KNOWL('st_group.real_dimension', title='$\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.components', title='Components') }}:</td><td>${{info['components']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.ambient', title='Contained in') }}:</td><td>${{info['ambient']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.rational', title='Rational') }}:</td><td>${{info['rational']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.rational', title='Rational') }}:</td><td>{{info['rational']}}</td></tr>
 </table>
 
-<h2> {{ KNOWL('st_group.identity_component', title='Identity Component') }} </h2>
+<h2> {{ KNOWL('st_group.identity_component', title='Identity component') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.identity_component', title='Name') }}:</td><td>${{info['identity_component']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.index', title='Index') }}:</td><td>${{info['components']}}$</td></tr>
@@ -20,11 +20,11 @@
 </table>
 
 {% if info['components'] > 1 %}
-<h2> {{ KNOWL('st_group.component_group', title='Component Group') }} </h2>
+<h2> {{ KNOWL('st_group.component_group', title='Component group') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.component_group', title='Name') }}:</td><td>${{info['component_group']}}$</td></tr>
     <tr><td>{{ KNOWL('group.order', title='Order') }}:</td><td>${{info['components']}}$</td></tr>
-    <tr><td>{{ KNOWL('group.abelian', title='Abelian') }}:</td><td>${{info['abelian']}}$</td></tr>
+    <tr><td>{{ KNOWL('group.abelian', title='Abelian') }}:</td><td>{{info['abelian']}}</td></tr>
     {% if info['numgens'] > 0 %}
         <tr><td>{{ KNOWL('st_group.generators', title='Generators') }}:</td><td>${{info['gens']}}$</td></tr>
     {% endif %}
@@ -32,15 +32,15 @@
 {% endif %}
 
 {% if info['subgroups']|count or info['supgroups']|count %}
-<h2> {{ KNOWL('st_group.subsupgroups', title='Subgroups and Supergroups') }} </h2>
+<h2> {{ KNOWL('st_group.subsupgroups', title='Subgroups and supergroups') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
-    <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
 </table>
 {% endif %}
 
 {% if info['moments'] %}
-<h2> {{ KNOWL('st_group.moments', title='Moment Statistics') }} </h2>
+<h2> {{ KNOWL('st_group.moments', title='Moment sequences') }} </h2>
 <table border=1>
     {% for m in info['moments'] %}
         <tr>
@@ -56,8 +56,22 @@
 </table>
 {% endif %}
 
+{% if info['simplex'] %}
+<h2> {{ KNOWL('st_group.moment_simplex', title='Mixed moments') }} </h2>
+<table border=1>
+    {% for i in range(info['simplex']|length) %}
+        <tr>
+           <th align="left">${{info['simplex_header'][i]}}$</th>
+        {% for a in info['simplex'][i] %}
+            <td align="right">${{a}}$</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
 {% if info['probabilities'] %}
-<h2> {{ KNOWL('st_group.probabilities', title='Event Probabilities') }} </h2>
+<h2> {{ KNOWL('st_group.probabilities', title='Event probabilities') }} </h2>
 <table border=1>
     {% for m in info['probabilities'] %}
         <tr>
