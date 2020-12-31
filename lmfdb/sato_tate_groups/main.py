@@ -671,7 +671,7 @@ def render_by_label(label):
             t = [s[0:2]]
             m,n,w=2,3,2
             while m+n < len(s):
-                t += ["\\mathrm{E}[a_1^%da_2^%d]=%d"%(i,i//2,s[m:m+n][i//2]) for i in range(0,w+1,2)]
+                t += [["\\mathrm{E}[a_1^%da_2^%d]=%d"%(i,i//2,s[m:m+n][i//2]) for i in range(0,w+1,2)]]
                 m,n = m+n,n+1
             info['simplex'] = t
     if data['counts']:
