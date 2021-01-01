@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, 
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
@@ -26,6 +26,17 @@ credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran K
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
 
+ngroups = None
+max_order = None
+init_absgrp_flag = False
+
+def init_grp_count():
+    global ngroups, init_absgrp_flag, max_order
+    if not init_absgrp_flag:
+        ngroups = db.gps_groups.count()
+        max_order = db.gps_groups.max('order')
+        init_absgrp_flag = True
+
 # For dynamic knowls
 @app.context_processor
 def ctx_abstract_groups():
@@ -33,7 +44,12 @@ def ctx_abstract_groups():
             'sub_data': sub_data,
             'rchar_data': rchar_data,
             'cchar_data': cchar_data,
+            'abstract_group_summary': abstract_group_summary,
             'dyn_gen': dyn_gen}
+
+def abstract_group_summary():
+    init_grp_count()
+    return r'This database contains {} <a title="group" knowl="group">groups</a> of <a title="order" knowl="group.order">order</a> $n\leq {}$.  <p>This portion of the LMFDB is in alpha status.  The data is not claimed to be complete, and may grow or shrink at any time.'.format(comma(ngroups),max_order)
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
