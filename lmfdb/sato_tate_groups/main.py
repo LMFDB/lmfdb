@@ -478,7 +478,7 @@ def mu_info(n):
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = "trivial"
+    rec['st0_description'] = "$trivial$"
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
     rec['abelian'] = boolean_name(True)
