@@ -478,7 +478,7 @@ def mu_info(n):
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = r'\mathrm{trivial}'
+    rec['st0_description'] = "trivial"
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
     rec['abelian'] = boolean_name(True)
@@ -497,7 +497,7 @@ def mu_info(n):
     rec['trace_moments'] = trace_moments(rec['moments'])
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    rec['probabilities'] = [[r'\mathrm{Pr}[a_1=%d]=\frac{1}{%d}'%(m,n)] for m in rational_traces]
+    rec['probabilities'] = [[r'\mathrm{Pr}[a_1=%d]=\frac{1}{%d}'%(m,n) for m in rational_traces]]
     return rec
 
 def mu_portrait(n):
