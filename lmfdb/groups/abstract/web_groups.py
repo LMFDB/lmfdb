@@ -9,11 +9,11 @@ from collections import Counter
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
-#currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
-    return db.gps_groups.lookup(label, 'tex_name')
-    # Rest can be deleted if this now works
-    pretty = db.gps_small.lookup(label, 'pretty')
+    if isinstance(label, str):
+        pretty = db.gps_groups.lookup(label, 'tex_name')
+    else:
+        pretty = label.tex_name
     if pretty:
         return pretty
     else:
@@ -49,7 +49,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.tex_name = group_names_pretty(label) # remove once in database
+        #self.tex_name = group_names_pretty(label) # remove once in database
 
     @lazy_attribute
     def subgroups(self):

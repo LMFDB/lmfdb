@@ -377,8 +377,7 @@ def display_profile_line(data):
     datad = dict(data)
     l = []
     for ky in sorted(datad, key=datad.get, reverse=True):
-        name = '$'+WebAbstractGroup(ky).tex_name+'$'
-        l.append(group_display_knowl(ky, name)+ (' x '+str(datad[ky]) if datad[ky]>1 else '' ))
+        l.append(group_display_knowl(ky, pretty=True)+ (' x '+str(datad[ky]) if datad[ky]>1 else '' ))
     return ', '.join(l)
 
 class GroupsSearchArray(SearchArray):
@@ -452,7 +451,9 @@ def cc_display_knowl(gp, label, typ, name=None):
         name = 'Conjugacy class {}'.format(label)
     return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7C{}">{}</a>'.format(name, gp, label, typ, name)
 
-def group_display_knowl(label, name=None):
+def group_display_knowl(label, name=None, pretty=False):
+    if pretty:
+        name = '$'+group_names_pretty(label)+'$'
     if not name:
         name = 'Group {}'.format(label)
     return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=group_data">%s</a>' % (name, label, name)
