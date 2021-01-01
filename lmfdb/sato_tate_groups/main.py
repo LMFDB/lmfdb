@@ -666,7 +666,7 @@ def render_by_label(label):
         info['moments'] += data['moments']
     if data.get('simplex'):
         if data['degree'] == 4:
-            info['simplex_header'] = ["\\left(\\mathrm{E}[a_1^{e_1}a_2^{e_2}:\\sum ie_i=%d\\right)\\colon"%(2*d+2) for d in range(len(data['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             t = [s[0:2]]
             m,n=2,3
@@ -674,6 +674,10 @@ def render_by_label(label):
                 t += [s[m:m+n]]
                 m,n = m+n,n+1
             info['simplex'] = t
+    if data.get('character_matrix'):
+        A = data['character_matrix']
+        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A) 
+        info["character_matrix"] += r",\qquad\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[A[i][i] for i in range(len(A))]])
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
