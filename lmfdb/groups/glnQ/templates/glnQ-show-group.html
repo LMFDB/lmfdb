@@ -7,7 +7,8 @@
 <p>
   <table>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.order}} </td></tr>
-    <tr><td>Abstract group</td><td> {{info.group}} </td></tr>
+    <tr><td>Abstract group</td><td> {{info.groupknowl | safe}} </td></tr>
+    <tr><td>Group name</td><td> {{info.groupname}} </td></tr>
   </table>
 </p>
 
