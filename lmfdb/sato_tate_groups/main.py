@@ -666,7 +666,7 @@ def render_by_label(label):
         info['moments'] += data['moments']
     if data.get('simplex'):
         if data['degree'] == 4:
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             t = [s[0:2]]
             m,n=2,3
