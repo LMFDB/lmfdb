@@ -674,6 +674,8 @@ def render_by_label(label):
                 t += [s[m:m+n]]
                 m,n = m+n,n+1
             info['simplex'] = t
+    if data.get('character_matrix'):
+        info["character_matrix"] = string_matrix(data['character_matrix'])
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]

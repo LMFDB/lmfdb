@@ -57,7 +57,7 @@
 {% endif %}
 
 {% if info['simplex'] %}
-<h2> {{ KNOWL('st_group.moment_simplex', title='Mixed moments') }} </h2>
+<h2> {{ KNOWL('st_group.moment_simplex', title='Moment simplex') }} </h2>
 <table border=1>
     {% for i in range(info['simplex']|length) %}
         <tr>
@@ -68,6 +68,11 @@
         </tr>
     {% endfor %}
 </table>
+{% endif %}
+
+{% if info['matrix'] %}
+<h2> {{ KNOWL('st_group.moment_matrix', title='Moment matrix') }} </h2>
+<p>${{info['character_matrix']}}$</p>
 {% endif %}
 
 {% if info['probabilities'] %}
