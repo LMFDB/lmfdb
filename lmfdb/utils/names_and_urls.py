@@ -24,12 +24,12 @@ def name_and_object_from_url(url, check_existence=False):
                 # EllipticCurve/Q/341641/a
                 label_isogeny_class = ".".join(url_split[-2:])
                 if check_existence:
-                    obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
+                    obj_exists = db.ec_curvedata.exists({"lmfdb_iso" : label_isogeny_class})
             elif len(url_split) == 5: # curve
                 # EllipticCurve/Q/48/a/6
                 label_curve = ".".join(url_split[-3:-1]) + url_split[-1]
                 if check_existence:
-                    obj_exists = db.ec_curves.exists({"lmfdb_label" : label_curve})
+                    obj_exists = db.ec_curvedata.exists({"lmfdb_label" : label_curve})
             else:
                 raise NotImplementedError
         else:

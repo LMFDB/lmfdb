@@ -265,6 +265,13 @@ def api_query(table, id = None):
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
+        # So as not to preserve backwards compatibility (see test_api_usage() test)
+        if table=='ec_curvedata':
+            for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
+                if oldkey in q:
+                    q[newkey] = q[oldkey]
+                    q.pop(oldkey)
+                api_logger.info("replacing old key {} with new key {} for query into table {}".format(oldkey, newkey, table))    
         api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))

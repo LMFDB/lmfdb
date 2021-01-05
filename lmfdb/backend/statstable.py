@@ -42,12 +42,12 @@ class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
 
-    For each search table (e.g. ec_curves), there are two auxiliary tables supporting
-    statistics functionality.  The counts table (e.g. ec_curves_counts) records
+    For each search table (e.g. ec_curvedata), there are two auxiliary tables supporting
+    statistics functionality.  The counts table (e.g. ec_curvedata_counts) records
     the number of rows in the search table that satisfy a particular query.
     These counts are used by the website to display the number of matches on a
     search results page, and is also used on statistics pages and some browse pages.
-    The stats table (e.g. ec_curves_stats) is used to record minimum, maximum and
+    The stats table (e.g. ec_curvedata_stats) is used to record minimum, maximum and
     average values taken on by a numerical column (possibly over rows subject to some
     constraint).
 

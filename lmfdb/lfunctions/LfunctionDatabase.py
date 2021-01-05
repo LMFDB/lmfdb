@@ -131,10 +131,8 @@ def get_lfunction_by_url(url, **kwargs):
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
 
-
-
 def getEllipticCurveData(label):
-    return db.ec_curves.lucky({'lmfdb_label': label})
+    return db.ec_curvedata.lucky({'lmfdb_label': label})
 
 def getHmfData(label):
     from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field
