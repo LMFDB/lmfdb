@@ -32,7 +32,7 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
-    parse_bool, parse_ints, parse_floats, parse_noop, search_parser)
+    parse_bool, parse_ints, parse_floats, parse_noop, search_parser, parse_element_of)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
@@ -101,7 +101,7 @@ def common_postprocess(res, info, query):
     for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
         origins[rec["Lhash"]][rec["type"]].append(rec["url"])
     for L in res:
-        L['origins'] = names_and_urls([urls[0] for urls in origins[L["Lhash"]].values()])
+        L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
     return res
 
@@ -184,6 +184,7 @@ def common_parse(info, query, force_rational=False):
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
+    parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
     info['bigint_knowl'] = bigint_knowl
@@ -343,6 +344,25 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.motivic_weight",
             label="Motivic weight",
             example="2")
+        origin = SelectBox(
+            name="origin",
+            knowl="lfunction.underlying_object",
+            label="Origin",
+            example_col=True,
+            options=[('', ''),
+                     ('DIR', 'Dirichlet character'),
+                     #('NF', 'Dedekind zeta function'), # The only example currently is the Riemann zeta function
+                     ('Artin', 'Artin representation'),
+                     ('ECQ', 'Elliptic curve/Q'),
+                     ('ECNF', 'Elliptic curve/NF'),
+                     ('G2Q', 'Genus 2 curve/Q'),
+                     ('CMF', 'Classical modular form'),
+                     ('HMF', 'Hilbert modular form'),
+                     ('BMF', 'Bianchi modular form'),
+                     #('MaassGL2', 'GL2 Maass form'), # We seem to have no examples of this
+                     ('MaassGL3', 'GL3 Maass form'),
+                     ('MaassGL4', 'GL4 Maass form'),
+                     ('MaassGSp4', 'GSp4 Maass form')])
         count = CountBox()
 
         trace_coldisplay = TextBox(
@@ -395,13 +415,13 @@ class LFunctionSearchArray(SearchArray):
             [analytic_rank, motivic_weight],
             [primitive, algebraic],
             [self_dual, rational],
-            [count]
+            [origin, count]
         ]
 
         self.refine_array = [
             [degree, conductor, bad_primes, analytic_conductor, root_analytic_conductor],
-            [primitive, algebraic, self_dual, rational, z1],
-            [root_angle, central_character, analytic_rank, motivic_weight]
+            [primitive, algebraic, self_dual, rational, origin],
+            [root_angle, central_character, analytic_rank, motivic_weight, z1]
         ]
 
         self.traces_array = [
