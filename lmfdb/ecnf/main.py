@@ -17,6 +17,7 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
+    coeff_to_poly,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
     search_wrap, parse_rational,
     redirect_no_cache
@@ -702,26 +703,56 @@ code_names = {'field': 'Define the base number field',
               'localdata': 'Compute the local reduction data at primes of bad reduction'
 }
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    E = ECNF.by_label(label)
-    if not isinstance(E, ECNF):
-        return abort(404)
-    Ecode = E.code()
+
+    # Get the base field label and a-invariants:
+    
+    E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
+   
+    # Look up the defining polynomial of the base field:
+    
+    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
+
+    # read in code.yaml from current directory:
+
+    import os
+    import yaml
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    Ecode =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+    # Fill in placeholders for this specific curve and language:
     lang = args['download_type']
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     if lang=='gp':
         lang = 'pari'
     for k in sorted_code_names:
-        if lang in Ecode[k]:
+        Ecode[k] = Ecode[k][lang] if lang in Ecode[k] else None
+
+    # Fill in field polynomial coefficients:
+    Ecode['field'] = Ecode['field'] % str(poly.list())
+
+    # Fill in curve coefficients:
+    from sage.all import QQ
+    ainvs = [[QQ(c) for c in ai.split(",")] for ai in E['ainvs'].split(";")]
+    if lang=='magma':
+        ainvs = "[" + ",".join(["K!{}".format(ai) for ai in ainvs]) + "]"
+    elif lang=='sage':
+        ainvs = "[" + ",".join(["K({})".format(ai) for ai in ainvs]) + "]"
+    elif lang=='pari':
+        ainvs = "[" + ",".join(["Pol(Vecrev({}))".format(ai) for ai in ainvs]) + "], K"
+    Ecode['curve'] = Ecode['curve'] % ainvs
+
+    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
+    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    for k in sorted_code_names:
+        if Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
+            code += Ecode[k] + ('\n' if not '\n' in Ecode[k] else '')
     return code
 
 def disp_tor(t):
