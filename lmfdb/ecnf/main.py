@@ -17,7 +17,6 @@ from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    coeff_to_poly,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
     search_wrap, parse_rational,
     redirect_no_cache
@@ -377,7 +376,6 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            bread=bread,
                            ec=ec,
                            code = code,
-                           #        properties = ec.properties,
                            properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
@@ -680,73 +678,16 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
-                     'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
-
-code_names = {'field': 'Define the base number field',
-              'curve': 'Define the curve',
-              'is_min': 'Test whether it is a global minimal model',
-              'cond': 'Compute the conductor',
-              'cond_norm': 'Compute the norm of the conductor',
-              'disc': 'Compute the discriminant',
-              'disc_norm': 'Compute the norm of the discriminant',
-              'jinv': 'Compute the j-invariant',
-              'cm': 'Test for Complex Multiplication',
-              'rank': 'Compute the Mordell-Weil rank',
-              'ntors': 'Compute the order of the torsion subgroup',
-              'gens': 'Compute the generators (of infinite order)',
-              'heights': 'Compute the heights of the generators (of infinite order)',
-              'reg': 'Compute the regulator',
-              'tors': 'Compute the torsion subgroup',
-              'torgens': 'Compute the generators of the torsion subgroup',
-              'localdata': 'Compute the local reduction data at primes of bad reduction'
-}
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
-
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-
-    # Get the base field label and a-invariants:
-    
-    E = db.ec_nfcurves.lookup(label, projection = ['field_label', 'ainvs'])
-   
-    # Look up the defining polynomial of the base field:
-    
-    poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection = 'coeffs'))
-
-    # read in code.yaml from current directory:
-
-    import os
-    import yaml
-    _curdir = os.path.dirname(os.path.abspath(__file__))
-    Ecode =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-    # Fill in placeholders for this specific curve and language:
     lang = args['download_type']
     if lang=='gp':
         lang = 'pari'
-    for k in sorted_code_names:
-        Ecode[k] = Ecode[k][lang] if lang in Ecode[k] else None
 
-    # Fill in field polynomial coefficients:
-    Ecode['field'] = Ecode['field'] % str(poly.list())
-
-    # Fill in curve coefficients:
-    from sage.all import QQ
-    ainvs = [[QQ(c) for c in ai.split(",")] for ai in E['ainvs'].split(";")]
-    if lang=='magma':
-        ainvs = "[" + ",".join(["K!{}".format(ai) for ai in ainvs]) + "]"
-    elif lang=='sage':
-        ainvs = "[" + ",".join(["K({})".format(ai) for ai in ainvs]) + "]"
-    elif lang=='pari':
-        ainvs = "[" + ",".join(["Pol(Vecrev({}))".format(ai) for ai in ainvs]) + "], K"
-    Ecode['curve'] = Ecode['curve'] % ainvs
-
+    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
+    Ecode =  make_code(label, lang)
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     for k in sorted_code_names:
