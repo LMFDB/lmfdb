@@ -88,10 +88,6 @@ def index():
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
         if search_type in ['List', 'Random']:
             return l_function_search(info)
-        elif search_type == 'Traces':
-            return trace_search(info)
-        elif search_type == 'Euler':
-            return euler_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
@@ -104,7 +100,7 @@ def index():
 
 @l_function_page.route("/rational")
 def rational():
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
         if search_type in ['List', 'Random']:
@@ -206,7 +202,7 @@ def parse_sort(info, query):
     elif info.get('sort_order') == 'cond':
         query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
 
-def common_parse(info, query, force_rational=False):
+def common_parse(info, query):
     info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
@@ -214,10 +210,6 @@ def common_parse(info, query, force_rational=False):
     parse_bool(info,query,'algebraic')
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
-    if force_rational and not query.get('rational'):
-        flash_warning("%s search only shows rational L-functions" % force_rational)
-        info["rational"] = "yes"
-        query["rational"] = True
     info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
     parse_ints(info,query,'order_of_vanishing')
     parse_noop(info,query,'central_character')
@@ -251,7 +243,7 @@ def l_function_search(info, query):
              credit=lambda: credit_string)
 def trace_search(info, query):
     set_Trn(info, query)
-    common_parse(info, query, force_rational="Trace")
+    common_parse(info, query)
     process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
 
 @search_parser
@@ -295,7 +287,7 @@ def euler_search(info, query):
     # Remove n_primality, which might be left over from a trace search
     info.pop('n_primality', None)
     set_Trn(info, query)
-    common_parse(info, query, force_rational="Euler factor")
+    common_parse(info, query)
     d = query.get("degree")
     if not isinstance(d, (int, Integer)):
         flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
@@ -309,7 +301,7 @@ class LFunctionSearchArray(SearchArray):
     jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
     jump_knowl="lfunction.search_input"
     jump_prompt="Label"
-    def __init__(self):
+    def __init__(self, force_rational=False):
         z1 = TextBox(
             name="z1",
             knowl="lfunction.zeros",
@@ -367,11 +359,6 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.self-dual",
             label="Self-dual",
             example_col=True)
-        rational = YesNoBox(
-            name="rational",
-            knowl="lfunction.rational",
-            label="Rational",
-            example_col=True)
         root_angle = TextBox(
             name="root_angle",
             knowl="lfunction.sign",
@@ -409,48 +396,6 @@ class LFunctionSearchArray(SearchArray):
                      ('MaassGSp4', 'GSp4 Maass form')])
         count = CountBox()
 
-        trace_coldisplay = TextBox(
-            name='n',
-            label='Columns to display',
-            example='1-40',
-            example_span='3,7,19, 40-90')
-
-        euler_coldisplay = TextBox(
-            name='n',
-            label='Columns to display',
-            example='2-11',
-            example_span='3,7,19')
-
-        trace_primality = SelectBox(
-            name='n_primality',
-            label='Show',
-            options=[('', 'primes only'),
-                     ('prime_powers', 'prime powers'),
-                     ('all', 'all')])
-
-        trace_an_constraints = TextBox(
-            name='an_constraints',
-            label='Trace constraints',
-            example='a3=2,a5=0',
-            example_span='a17=1, a8=0')
-
-        euler_constraints = TextBox(
-            name='euler_constraints',
-            label='Euler factor constraints',
-            width=350,
-            example='F3=1-T,F5=1+T+5T^2')
-
-        trace_an_moduli = TextBox(
-            name='an_modulo',
-            label='Modulo',
-            example_span='5, 16')
-
-        trace_view = SelectBox(
-            name='view_modp',
-            label='View',
-            options=[('', 'integers'),
-                     ('reductions', 'reductions')])
-
         self.browse_array = [
             [z1, degree],
             [conductor, bad_primes],
@@ -458,32 +403,90 @@ class LFunctionSearchArray(SearchArray):
             [central_character, root_angle],
             [analytic_rank, motivic_weight],
             [primitive, algebraic],
-            [self_dual, rational],
-            [origin, count]
         ]
 
         self.refine_array = [
             [degree, conductor, bad_primes, analytic_conductor, root_analytic_conductor],
-            [primitive, algebraic, self_dual, rational, origin],
+            [primitive, algebraic, self_dual],
             [root_angle, central_character, analytic_rank, motivic_weight, z1]
         ]
 
-        self.traces_array = [
-            RowSpacer(22),
-            [trace_coldisplay, trace_primality],
-            [trace_an_constraints, trace_an_moduli, trace_view]]
+        self.force_rational = force_rational
+        if force_rational:
+            trace_coldisplay = TextBox(
+                name='n',
+                label='Columns to display',
+                example='1-40',
+                example_span='3,7,19, 40-90')
 
-        self.euler_array = [
-            RowSpacer(22),
-            [euler_coldisplay, euler_constraints]]
+            euler_coldisplay = TextBox(
+                name='n',
+                label='Columns to display',
+                example='2-11',
+                example_span='3,7,19')
+
+            trace_primality = SelectBox(
+                name='n_primality',
+                label='Show',
+                options=[('', 'primes only'),
+                         ('prime_powers', 'prime powers'),
+                         ('all', 'all')])
+
+            trace_an_constraints = TextBox(
+                name='an_constraints',
+                label='Trace constraints',
+                example='a3=2,a5=0',
+                example_span='a17=1, a8=0')
+
+            euler_constraints = TextBox(
+                name='euler_constraints',
+                label='Euler factor constraints',
+                width=350,
+                example='F3=1-T,F5=1+T+5T^2')
+
+            trace_an_moduli = TextBox(
+                name='an_modulo',
+                label='Modulo',
+                example_span='5, 16')
+
+            trace_view = SelectBox(
+                name='view_modp',
+                label='View',
+                options=[('', 'integers'),
+                         ('reductions', 'reductions')])
+
+            self.traces_array = [
+                RowSpacer(22),
+                [trace_coldisplay, trace_primality],
+                [trace_an_constraints, trace_an_moduli, trace_view]]
+
+            self.euler_array = [
+                RowSpacer(22),
+                [euler_coldisplay, euler_constraints]]
+
+            self.browse_array += [[self_dual, origin], [count]]
+            self.refine_array[1] += [origin],
+
+        else:
+            rational = YesNoBox(
+                name="rational",
+                knowl="lfunction.rational",
+                label="Rational",
+                example_col=True)
+
+            self.browse_array += [[self_dual, rational], [origin, count]]
+            self.refine_array[1] += [rational, origin],
 
     def search_types(self, info):
-        return self._search_again(
-            info,
-            [('List', 'List of L-functions'),
-             ('Traces', 'Traces table'),
-             ('Euler', 'Euler factors'),
-             ('Random', 'Random L-function')])
+        if self.force_rational:
+            L = [('List', 'List of L-functions'),
+                 ('Traces', 'Traces table'),
+                 ('Euler', 'Euler factors'),
+                 ('Random', 'Random L-function')]
+        else:
+            L = [('List', 'List of L-functions'),
+                 ('Random', 'Random L-function')]
+        return self._search_again(info, L)
 
     def html(self, info=None):
         # We need to override html to add the trace and euler factor inputs
