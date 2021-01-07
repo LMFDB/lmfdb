@@ -75,8 +75,35 @@ def learnmore_list(path=None, remove=None):
 
 # Top page #####################################################################
 
+@l_function_page.route("/contents")
+def contents():
+    return render_template(
+        "single.html",
+        kid="lfunction.about")
+
 @l_function_page.route("/")
 def index():
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    if request.args:
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        if search_type in ['List', 'Random']:
+            return l_function_search(info)
+        elif search_type == 'Traces':
+            return trace_search(info)
+        elif search_type == 'Euler':
+            return euler_search(info)
+        else:
+            flash_error("Invalid search type; if you did not enter it in the URL please report")
+    return render_template(
+        "LfunctionNavigate.html",
+        info=info,
+        credit=credit_string,
+        title="L-functions",
+        learnmore=learnmore_list(),
+        bread=get_bread())
+
+@l_function_page.route("/rational")
+def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
@@ -167,6 +194,18 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
+def parse_sort(info, query):
+    if info.get('sort_order') == '':
+        query['__sort__'] = ['root_analytic_conductor', 'label']
+    elif info.get('sort_order') == 'zero':
+        query['__sort__'] = [('z1', -1)]
+    elif info.get('sort_order') == 'izero':
+        query['__sort__'] = ['z1']
+    elif info.get('sort_order') == 'A':
+        query['__sort__'] = ['analytic_conductor', 'label']
+    elif info.get('sort_order') == 'cond':
+        query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
+
 def common_parse(info, query, force_rational=False):
     info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
@@ -187,6 +226,7 @@ def common_parse(info, query, force_rational=False):
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
+    parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
 @search_wrap(template="LfunctionSearchResults.html",
@@ -265,6 +305,10 @@ def euler_search(info, query):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s'%p, p=p, d=d)
 
 class LFunctionSearchArray(SearchArray):
+    jump_example="1-1-1.1-r0-0-0"
+    jump_egspan="e.g. 2-1-1.1-c11-0-0 or 4-1-1.1-r0e4-c4.72c12.47-0"
+    jump_knowl="lfunction.search_input"
+    jump_prompt="Label"
     def __init__(self):
         z1 = TextBox(
             name="z1",
@@ -452,6 +496,15 @@ class LFunctionSearchArray(SearchArray):
             euler_table = self._print_table(self.euler_array, info, layout_type="box")
             layout.append(euler_table)
         return "\n".join(layout)
+
+    def sort_order(self, info):
+        return [
+            ('', 'root analytic conductor'),
+            ('A', 'analytic conductor'),
+            ('zero', 'first zero (decreasing)'),
+            ('izero', 'first zero (increasing)'),
+            ('cond', 'conductor')
+        ]
 
 @l_function_page.route("/history")
 def l_function_history():
