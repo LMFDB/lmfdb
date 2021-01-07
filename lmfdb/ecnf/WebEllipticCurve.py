@@ -105,8 +105,10 @@ def ideal_from_string(K,s, IQF_format=False):
         return "wrong" ## caller must check
 
 def pretty_ideal(I):
-    easy = True#I.number_field().degree()==2 or I.norm()==1
+    easy = I.number_field().degree()<5 or I.norm()==1
     gens = I.gens_reduced() if easy else I.gens()
+    if len(gens)==2 and gens[0]==gens[1]: # yes this can happen!
+        gens = gens[:1]
     return r"\((" + ",".join([latex(g) for g in gens]) + r")\)"
 
 # HNF of an ideal I in a quadratic field
