@@ -115,7 +115,7 @@ def rational():
         "LfunctionNavigate.html",
         info=info,
         credit=credit_string,
-        title="L-functions",
+        title="Rational L-functions",
         learnmore=learnmore_list(),
         bread=get_bread())
 
@@ -231,11 +231,13 @@ def common_parse(info, query):
              bread=lambda: get_bread(breads=[("Search results", " ")]),
              credit=lambda: credit_string)
 def l_function_search(info, query):
+    if info.get("rational") == "yes":
+        info["title"] = "Rational L-function search results"
     common_parse(info, query)
 
 @search_wrap(template="LfunctionTraceSearchResults.html",
              table=db.lfunc_search,
-             title="L-function search results",
+             title="L-function trace search",
              err_title="L-function search input error",
              postprocess=process_trace,
              learnmore=learnmore_list,
@@ -275,7 +277,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
 
 @search_wrap(template="LfunctionEulerSearchResults.html",
              table=db.lfunc_search,
-             title="L-function search results",
+             title="L-function Euler product search",
              err_title="L-function search input error",
              postprocess=process_euler,
              learnmore=learnmore_list,
@@ -465,7 +467,7 @@ class LFunctionSearchArray(SearchArray):
                 [euler_coldisplay, euler_constraints]]
 
             self.browse_array += [[self_dual, origin], [count]]
-            self.refine_array[1] += [origin],
+            self.refine_array[1] += [origin]
 
         else:
             rational = YesNoBox(
@@ -475,7 +477,7 @@ class LFunctionSearchArray(SearchArray):
                 example_col=True)
 
             self.browse_array += [[self_dual, rational], [origin, count]]
-            self.refine_array[1] += [rational, origin],
+            self.refine_array[1] += [rational, origin]
 
     def search_types(self, info):
         if self.force_rational:
