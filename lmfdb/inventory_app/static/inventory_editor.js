@@ -29,7 +29,7 @@ function updateBlock(obj){
 }
 
 function resetEdits(blockid=null){
-  //Reset input fields to orginal values
+  //Reset input fields to original values
   //Changes blocklist and DOM fields
   //If block is provided, only that id is reset, otherwise all are
   var block;

@@ -293,7 +293,7 @@ def set_field(coll_id, name, data, type='auto'):
     db['inv_fields_'+type].update(rec_find, rec_set, restat=False)
 
 def create_field(coll_id, name, type='auto'):
-    """ Add a blank fields entry IFF it doesen't exist.
+    """ Add a blank fields entry IFF it does not exist.
 
     coll_id -- ID of collection field belongs to
     name -- The lmfdb key this describes

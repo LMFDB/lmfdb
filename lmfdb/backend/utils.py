@@ -85,7 +85,7 @@ def filter_sql_injection(clause, col, col_type, op, table):
 
 def IdentifierWrapper(name, convert=True):
     """
-    Returns a composable representing an SQL identifer.
+    Returns a composable representing an SQL identifier.
 
     This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
     and coverts them (if desired) from the Python format to SQL,

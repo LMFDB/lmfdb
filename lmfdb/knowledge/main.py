@@ -128,8 +128,8 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
         return ""
 
     previouschar = ""
-       # we need to keep track of the previous character becaause \{ does not
-       # count as a bracket
+    # we need to keep track of the previous character because \{ does not
+    # count as a bracket
 
     if depth == 0 and thetext[0] != lbrack:
         return "",thetext
@@ -817,7 +817,7 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searches by keyword or regex
     if search:
         types = list(knowl_type_code)
     try:
@@ -829,7 +829,7 @@ def index():
         if regex and "invalid regular expression" in str(e):
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
-            flash_error("Unexpected error %s occured during knowl search", str(e))
+            flash_error("Unexpected error %s occurred during knowl search", str(e))
     categories = Counter()
     if cur_cat:
         # Always include the current category
