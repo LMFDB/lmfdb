@@ -3,12 +3,11 @@ import os
 import yaml
 from flask import url_for
 from six.moves.urllib_parse import quote
-from six import PY3
 from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
-                         web_latex_split_on, web_latex_ideal_fact)
+                         web_latex_split_on)
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
@@ -77,67 +76,79 @@ from sage.misc.all import latex
 def web_point(P):
     return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
 
-def ideal_from_string(K,s, IQF_format=False):
-    r"""Returns the ideal of K defined by the string s.  If IQF_format is
-    True, this is "[N,c,d]" with N,c,d as in a label, while otherwise
-    it is of the form "[N,a,alpha]" where N is the norm, a the least
-    positive integer in the ideal and alpha a second generator so that
-    the ideal is (a,alpha).  alpha is a polynomial in the variable w
-    which represents the generator of K (but may actually be an
-    integer).  """
-    #print("ideal_from_string({}) over {}".format(s,K))
-    N, a, alpha = s[1:-1].split(",")
-    N = ZZ(N)
-    a = ZZ(a)
-    if IQF_format:
-        d = ZZ(alpha)
-        I = K.ideal(N//d, K([a, d]))
-    else:
-        # 'w' is used for the generator name for all fields for
-        # numbers stored in the database
-        if PY3:
-            alpha = alpha.replace('w',str(K.gen()))
-            I = K.ideal(a,K(alpha))
-        else:
-            alpha = alpha.encode().replace('w',str(K.gen()))
-            I = K.ideal(a,K(alpha.encode()))
-    if I.norm()==N:
-        return I
-    else:
-        return "wrong" ## caller must check
+def ideal_from_string(K,s):
+    r"""Returns the ideal of K defined by the string s.
 
-def pretty_ideal(I):
-    easy = True#I.number_field().degree()==2 or I.norm()==1
-    gens = I.gens_reduced() if easy else I.gens()
-    return r"\((" + ",".join([latex(g) for g in gens]) + r")\)"
+    Either: s has the form "[N,a,alpha]" where N is the norm, a the
+    least positive integer in the ideal and alpha a second generator
+    so that the ideal is (a,alpha).
 
-# HNF of an ideal I in a quadratic field
+    Or: s has the form "(g1)" or "(g1,g2)" or "(g1,g2,g3)", ... where
+    the gi are ideal generators.
 
-def ideal_HNF(I):
-    r"""
-    Returns an HNF triple defining the ideal I in a quadratic field
-    with integral basis [1,w].
+    alpha and the gi are polynomials in the variable 'w' which
+    represents the generator of K.
 
-    This is a list [a,b,d] such that [a,c+d*w] is a Z-basis of I, with
-    a,d>0; c>=0; N = a*d = Norm(I); d|a and d|c; 0 <=c < a.
     """
-    N = I.norm()
-    a, c, b, d = I.pari_hnf().python().list()
-    assert a > 0 and d > 0 and N == a * d and d.divides(a) and d.divides(b) and 0 <= c < a
-    return [a, c, d]
+    #print("ideal_from_string({}) over {}".format(s,K))
 
-def ideal_to_string(I,IQF_format=False):
-    K = I.number_field()
-    if IQF_format:
-        a, c, d = ideal_HNF(I)
-        return "[%s,%s,%s]" % (a * d, c, d)
-    N = I.norm()
-    a = I.smallest_integer()
-    gens = I.gens_reduced()
-    alpha = gens[-1]
-    assert I == K.ideal(a,alpha)
-    alpha = str(alpha).replace(str(K.gen()),'w')
-    return ("[%s,%s,%s]" % (N,a,alpha)).replace(" ","")
+    gens = s.replace('w',str(K.gen()))[1:-1].split(",")
+
+    if s[0] == "[":
+        N = ZZ(gens[0])
+        a = ZZ(gens[1])
+        alpha = K(gens[2])
+        I = K.ideal(a,alpha)
+        return I if I.norm()==N else "wrong" ## caller must check
+    return K.ideal([K(g) for g in gens])
+    
+def pretty_ideal_from_string(K, s, enclose=True, simplify=False):
+    r"""Returns the a latex string an ideal of K defined by the string s,
+    where Kgen is a strong representing the generator of K.  NB 'w' is
+    used for the generator name for all fields for numbers stored in
+    the database, and elements of K within the string s are
+    polynomials in 'w'.
+
+    Either: s has the form "[N,a,alpha]" where N is the norm, a the
+    least positive integer in the ideal and alpha a second generator
+    so that the ideal is (a,alpha).
+
+    Or: s has the form "(g1)" or "(g1,g2)" or "(g1,g2,g3)", ... where
+    the gi are ideal generators.
+
+    alpha and the gi are polynomials in the variable w which
+    represents the generator of K.
+
+    If enclose==True (default) then latex math delimiters are pre- and
+    appended.
+
+    If simplify=True then we construct the actual ideal and compute
+    its reduced_gens, so in particular principal ideals will be shown
+    with one generator; otherwise the given generators are used
+    without change (except that repeats are eliminated).  This is a
+    temporary measure until we change what is stored in the database
+    to always represent ideals in reduced form.
+    """
+    start = 1
+    if s[0]=="[":
+        start += s.find(",")
+        if ZZ(s[1:start-1])==1:
+            return r"\((1)\)" if enclose else "(1)"
+    s = s[start:-1].replace('w',str(K.gen()))
+    # remove repeats from the list of gens
+    gens = s.split(",")
+    if len(gens)>1 and gens[0]==gens[1]:
+        gens=gens[1:]
+    if simplify:
+        gens = [str(rg) for rg in K.ideal([K(g) for g in gens]).gens_reduced()]
+    gens = "(" + ",".join(gens) + ")"
+    gens = gens.replace("*","")
+    return r"\(" + gens + r"\)" if enclose else gens
+    
+def pretty_ideal(I, enclose=True, simplify=False):
+    gens = I.gens_reduced() if simplify else I.gens()
+    gens = "(" + ",".join([latex(g) for g in gens]) + r")"
+    return r"\(" + gens + r"\)" if enclose else gens
 
 def parse_point(K, s):
     r""" Returns a point in P^2(K) defined by the string s.  s has the form
@@ -266,102 +277,106 @@ class ECNF(object):
         #print("Creating ECNF object for {}".format(self.label))
         #sys.stdout.flush()
         K = self.field.K()
-
+        
+        # This flag controls whether ideals are reduced before display
+        # (conductor, discriminant/minimial discriminant, bad primes)
+        simplify_ideals = self.field.class_number()==1 or self.field.degree()<4
+        
         # a-invariants
         self.ainvs = parse_ainvs(K,self.ainvs)
         self.latex_ainvs = web_latex(self.ainvs)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        if self.conductor_norm==1:
-            N = K.ideal(1)
-        else:
-            N = ideal_from_string(K,self.conductor_ideal)
-        # The following can trigger expensive computations!
-        #self.cond = web_latex(N)
-        self.cond = pretty_ideal(N)
+
         self.cond_norm = web_latex(self.conductor_norm)
+
         local_data = self.local_data
 
-        # NB badprimes is a list of primes which divide the
-        # discriminant of this model.  At most one of these might
-        # actually be a prime of good reduction, if the curve has no
-        # global minimal model.
-        badprimes = [ideal_from_string(K,ld['p']) for ld in local_data]
+        badprimes = [pretty_ideal_from_string(K, ld['p'], enclose=False, simplify=simplify_ideals) for ld in local_data]
         badnorms = [ZZ(ld['normp']) for ld in local_data]
         mindisc_ords = [ld['ord_disc'] for ld in local_data]
+
+        if self.conductor_norm==1:
+            self.cond = r"\((1)\)"
+            self.fact_cond = self.cond
+            self.fact_cond_norm = '1'
+        else:
+            exponents = [ld['ord_cond'] for ld in local_data]
+            self.cond = pretty_ideal_from_string(K, self.conductor_ideal, simplify=simplify_ideals)
+            factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, exponents)]
+            factors = [f for f in factors if f] # there may be an exponent of 0
+            self.fact_cond = r"\({}\)".format("".join(factors))
+            Nnormfac = Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)])
+            self.fact_cond_norm = web_latex(Nnormfac)
 
         # Assumption: the curve models stored in the database are
         # either global minimal models or minimal at all but one
         # prime, so the list here has length 0 or 1:
 
         self.non_min_primes = [ideal_from_string(K,P) for P in self.non_min_p]
-        self.is_minimal = (len(self.non_min_primes) == 0)
+        self.is_minimal = (len(self.non_min_p) == 0)
         self.has_minimal_model = self.is_minimal
         disc_ords = [ld['ord_disc'] for ld in local_data]
+        Dnorm_factor = 1   # N(disc)/N(min-disc)
         if not self.is_minimal:
-            Pmin = self.non_min_primes[0]
-            P_index = badprimes.index(Pmin)
-            self.non_min_prime = pretty_ideal(Pmin)
-            disc_ords[P_index] += 12
+            self.non_min_prime = pretty_ideal_from_string(K, self.non_min_p[0], simplify=simplify_ideals)
+            ip = [ld['p'] for ld in local_data].index(self.non_min_p[0])
+            Dnorm_factor = local_data[ip]['normp']**12
+            disc_ords[ip] += 12
 
-        if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
-            self.fact_cond = self.cond
-            self.fact_cond_norm = '1'
+        self.mindisc = pretty_ideal_from_string(K, self.minD, simplify=simplify_ideals)
+        # We currently do not store the norm of the minimal
+        # discriminant ideal, but it is inside its string:
+        Dmin = None
+        if self.minD[0]=="[":
+            Dmin_norm = ZZ(self.minD[1:self.minD.find(",")])
         else:
-            Nfac = Factorization([(P,ld['ord_cond']) for P,ld in zip(badprimes,local_data)])
-            self.fact_cond = web_latex_ideal_fact(Nfac)
-            Nnormfac = Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)])
-            self.fact_cond_norm = web_latex(Nnormfac)
-
-        # D is the discriminant ideal of the model
-        D = prod([P**e for P,e in zip(badprimes,disc_ords)], K.ideal(1))
-        self.disc = pretty_ideal(D)
-        Dnorm = D.norm()
-        self.disc_norm = web_latex(Dnorm)
-        if Dnorm == 1:  # since the factorization of (1) displays as "1"
-            self.fact_disc = self.disc
-            self.fact_disc_norm = '1'
-        else:
-            Dfac = Factorization([(P,e) for P,e in zip(badprimes,disc_ords)])
-            self.fact_disc = web_latex_ideal_fact(Dfac)
-            Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
-            self.fact_disc_norm = web_latex(Dnormfac)
-
-        if not self.is_minimal:
             Dmin = ideal_from_string(K,self.minD)
-            self.mindisc = pretty_ideal(Dmin)
             Dmin_norm = Dmin.norm()
-            self.mindisc_norm = web_latex(Dmin_norm)
-            if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
-                self.fact_mindisc = self.mindisc
-                self.fact_mindisc_norm = self.mindisc_norm
+        self.mindisc_norm = web_latex(Dmin_norm)
+        if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
+            self.fact_mindisc = self.mindisc
+            self.fact_mindisc_norm = self.mindisc_norm
+        else:
+            factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, mindisc_ords)]
+            factors = [f for f in factors if f] # there may be an exponent of 0
+            self.fact_mindisc = r"\({}\)".format("".join(factors))
+            Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
+            self.fact_mindisc_norm = web_latex(Dminnormfac)
+
+        # D is the discriminant ideal of the model.  This is not
+        # currently stored so if different from the minimal
+        # discriminant ideal we need to compute it for display:
+        if self.is_minimal:
+            self.disc = self.mindisc
+            self.disc_norm = self.mindisc_norm
+            self.fact_disc = self.fact_mindisc
+            self.fact_disc_norm = self.fact_mindisc_norm
+        else:
+            # we may have already computed Dmin
+            if not Dmin:
+                Dmin = ideal_from_string(K,self.minD)
+            # The next three lines involve computation which we would
+            # like to avoid, and will be able to when we store the
+            # model discriminant in the database:
+            P = ideal_from_string(K, self.non_min_p[0])
+            D = Dmin * P**12
+            self.disc = pretty_ideal(D, simplify=simplify_ideals)
+            Dnorm = Dmin_norm * Dnorm_factor
+            self.disc_norm = web_latex(Dnorm)
+            if Dnorm == 1:  # since the factorization of (1) displays as "1"
+                self.fact_disc = self.disc
+                self.fact_disc_norm = '1'
             else:
-                Dminfac = Factorization(list(zip(badprimes,mindisc_ords)))
-                self.fact_mindisc = web_latex_ideal_fact(Dminfac)
-                Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
-                self.fact_mindisc_norm = web_latex(Dminnormfac)
+                factors = [r"{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, disc_ords)]
+                factors = [f for f in factors if f] # there may be an exponent of 0
+                self.fact_disc = r"\({}\)".format("".join(factors))
+                Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
+                self.fact_disc_norm = web_latex(Dnormfac)
 
         j = self.field.parse_NFelt(self.jinv)
-        # if j:
-        #     d = j.denominator()
-        #     n = d * j  # numerator exists for quadratic fields only!
-        #     g = GCD(list(n))
-        #     n1 = n / g
-        #     self.j = web_latex(n1)
-        #     if d != 1:
-        #         if n1 > 1:
-        #         # self.j = "("+self.j+")\(/\)"+web_latex(d)
-        #             self.j = web_latex(r"\frac{%s}{%s}" % (self.j, d))
-        #         else:
-        #             self.j = web_latex(d)
-        #         if g > 1:
-        #             if n1 > 1:
-        #                 self.j = web_latex(g) + self.j
-        #             else:
-        #                 self.j = web_latex(g)
         self.j = web_latex(j)
-
         self.fact_j = None
         # See issue 1258: some j factorizations work but take too long
         # (e.g. EllipticCurve/6.6.371293.1/1.1/a/1).  Note that we do
@@ -569,9 +584,9 @@ class ECNF(object):
             kod = kod.replace('\\(','').replace('\\)','')
             return kod
 
-        for P,ld in zip(badprimes,local_data):
-            ld['p'] = web_latex(P)
-            ld['norm'] = P.norm()
+        for P,NP,ld in zip(badprimes, badnorms, local_data):
+            ld['p'] = P
+            ld['norm'] = NP
             ld['kod'] = tidy_kod(ld['kod'])
 
         # URLs of self and related objects:
