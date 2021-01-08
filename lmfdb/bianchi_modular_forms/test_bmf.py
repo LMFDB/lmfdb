@@ -169,15 +169,12 @@ class BMFTest(LmfdbTest):
 
         # These tests take too long to use magma_free, so we run magma when it is installed
         from sage.all import magma
-        import sys
         for label, expected in [
                 ['2.0.4.1/100.2/a',
                  'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
                 ['2.0.11.1/933.1/a',
                  'ideal<ZF | {a + 30, 933}>;']
         ]:
-            sys.stdout.write("{}...".format(label))
-            sys.stdout.flush()
             page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
             assert expected in page
             assert  'make_newform'  in page
