@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-# the basic knowlege object, with database awareness, …
+# the basic knowledge object, with database awareness, …
 from __future__ import print_function
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import subprocess
-import os, sys
+import os
+import sys
 
 from lmfdb.backend.base import PostgresBase
 from lmfdb.backend import DelayCommit

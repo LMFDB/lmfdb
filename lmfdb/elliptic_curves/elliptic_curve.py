@@ -218,7 +218,7 @@ class ECstats(StatsDisplay):
         # It's a theorem that the complete set of possible degrees is this:
         return list(range(1,20)) + [21,25,27,37,43,67,163]
         
-# NB the contex processor wants something callable and the summary is a *property*
+# NB the context processor wants something callable and the summary is a *property*
 
 @app.context_processor
 def ctx_elliptic_curve_summary():

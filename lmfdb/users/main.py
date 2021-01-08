@@ -203,7 +203,7 @@ def knowl_reviewer_required(fn):
     def decorated_view(*args, **kwargs):
         logger.info("reviewer access attempt by %s" % current_user.get_id())
         if not current_user.is_knowl_reviewer():
-            return flask.abort(403)  # acess denied
+            return flask.abort(403)  # access denied
         return fn(*args, **kwargs)
     return decorated_view
 

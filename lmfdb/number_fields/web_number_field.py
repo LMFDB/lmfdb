@@ -482,7 +482,7 @@ class WebNumberField:
     def haskey(self, key):
         return self._data.get(key) is not None
 
-    # Warning, this produces our prefered integral basis
+    # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
     # they will be in terms of a different basis
     def zk(self):

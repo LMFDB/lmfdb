@@ -1934,7 +1934,7 @@ class PostgresTable(PostgresBase):
 
     def max_id(self, table=None):
         """
-        The largest id occuring in the given table.  Used in the random method.
+        The largest id occurring in the given table.  Used in the random method.
         """
         if table is None:
             table = self.search_table
@@ -1946,7 +1946,7 @@ class PostgresTable(PostgresBase):
     # A temporary hack for RANDOM FIXME
     def min_id(self, table=None):
         """
-        The smallest id occuring in the given table.  Used in the random method.
+        The smallest id occurring in the given table.  Used in the random method.
         """
         if table is None:
             table = self.search_table
