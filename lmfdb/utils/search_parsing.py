@@ -460,6 +460,12 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
     else:
         query[qfield] = {'$contains': [parse_singleton(inp)]}
 
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_not_element_of(inp, query, qfield, parse_singleton=int):
+    if qfield not in query:
+        query[qfield] = {}
+    query[qfield]["$notcontains"] = [parse_singleton(inp)]
+
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):

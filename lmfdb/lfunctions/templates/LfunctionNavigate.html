@@ -3,10 +3,68 @@
 
 <h2> Browse </h2>
 
+<h3> Degree 1 </h3>
+
 <table class="browse">
   <tr>
-    <td>By {{KNOWL('lfunction.degree', 'degree')}}:</td>
-    <td><a href="{{url_for('.l_function_dirichlet_browse_page')}}">1</a> {% for d in [2, 3, 4] %} <a href="{{url_for('.l_function_degree%s_browse_page'%d)}}">{{d}}</a>{% endfor %}</td>
+    <td>By origin:</td>
+    <td><a href="?degree=1&origin=DIR">Dirichlet character</a></td><td></td><td></td>
+  </tr>
+  <tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting', degree=1)}}">interesting L-functions</a> or a <a href="?degree=1&search_type=Random">random L-function</a> in degree 1</td>
+  </tr>
+  <tr>
+    <td colspan="4">A <a href="{{url_for('.l_function_degree1')}}">plot</a> by the conductor and order of the underlying Dirichlet character</td>
+  </tr>
+</table>
+
+<h3> Degree 2 </h3>
+
+<table class="browse">
+  <tr>
+    <td>By origin:</td>
+    <td><a href="?degree=2&origin=CMF">Classical modular form</a></td>
+    <td><a href="?degree=2&origin=ECQ">Elliptic curve over $\mathbb{Q}$</a></td>
+    <td><a href="?degree=2&origin=Artin">Artin representation</a></td>
+  </tr>
+  <tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting', degree=2)}}">interesting L-functions</a> or a <a href="?degree=2&search_type=Random">random L-function</a> in degree 2</td>
+  </tr>
+</table>
+
+<h3> Degree 3 </h3>
+
+<table class="browse">
+  <tr>
+    <td>By origin:</td>
+    <td><a href="?degree=3&origin=MaassGL3">$\operatorname{GL}_3$ Maass form</a></td>
+    </td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td></td><td></td>
+  </tr>
+  <tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting', degree=3)}}">interesting L-functions</a> or a <a href="?degree=3&search_type=Random">random L-function</a> in degree 3</td>
+  </tr>
+</table>
+
+<h3> Degree 4 </h3>
+
+<table class="browse">
+  <tr>
+    <td>By origin:</td>
+    <td><a href="?degree=4&origin=CMF">Classical modular form</a></td>
+    <td><a href="?degree=4&origin=BMF">Hilbert modular form</a></td>
+    <td><a href="?degree=4&origin=BMF">Bianchi modular form</a></td>
+  </tr>
+  <tr><td></td>
+    <td><a href="?degree=4&origin=ECQ">Elliptic curve over $\mathbb{Q}(\sqrt{d})$</a></td>
+    <td><a href="?degree=4&origin=G2Q">Genus 2 curve over $\mathbb{Q}$</a></td>
+    <td><a href="?degree=4&origin=Artin">Artin representation</a></td>
+  </tr>
+  <tr><td></td>
+    <td><a href="?degree=4&origin=MaassGL4">$\operatorname{GL}_4$ Maass form</a></td>
+    <td><a href="?degree=4&origin=MaassGSp4">$\operatorname{GSp}_4$ Maass form</a></td>
+  </tr>
+  <tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting', degree=4)}}">interesting L-functions</a> or a <a href="?degree=4&search_type=Random">random L-function</a> in degree 4</td>
   </tr>
 </table>
 

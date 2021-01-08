@@ -32,7 +32,8 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
-    parse_bool, parse_ints, parse_floats, parse_noop, search_parser, parse_element_of)
+    parse_bool, parse_ints, parse_floats, parse_noop, search_parser,
+    parse_element_of, parse_not_element_of)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
@@ -40,6 +41,7 @@ from lmfdb.utils import (
     parse_primes, coeff_to_poly,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
+from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
@@ -65,6 +67,8 @@ def learnmore_list(path=None, remove=None):
             ('Source of the data', url_for('.source', prepath=prepath)),
             ('Reliability of the data', url_for('.reliability', prepath=prepath)),
         ])
+    else:
+        learnmore.append(('$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -216,6 +220,7 @@ def common_parse(info, query):
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
+    parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
     parse_sort(info, query)
@@ -377,25 +382,32 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.motivic_weight",
             label="Motivic weight",
             example="2")
+        origins_list = [('', ''),
+                        ('DIR', 'Dirichlet character'),
+                        #('NF', 'Dedekind zeta function'), # The only example currently is the Riemann zeta function
+                        ('Artin', 'Artin representation'),
+                        ('ECQ', 'Elliptic curve/Q'),
+                        ('ECNF', 'Elliptic curve/NF'),
+                        ('G2Q', 'Genus 2 curve/Q'),
+                        ('CMF', 'Classical modular form'),
+                        ('HMF', 'Hilbert modular form'),
+                        ('BMF', 'Bianchi modular form'),
+                        #('MaassGL2', 'GL2 Maass form'), # We seem to have no examples of this
+                        ('MaassGL3', 'GL3 Maass form'),
+                        ('MaassGL4', 'GL4 Maass form'),
+                        ('MaassGSp4', 'GSp4 Maass form')]
         origin = SelectBox(
             name="origin",
             knowl="lfunction.underlying_object",
             label="Origin",
             example_col=True,
-            options=[('', ''),
-                     ('DIR', 'Dirichlet character'),
-                     #('NF', 'Dedekind zeta function'), # The only example currently is the Riemann zeta function
-                     ('Artin', 'Artin representation'),
-                     ('ECQ', 'Elliptic curve/Q'),
-                     ('ECNF', 'Elliptic curve/NF'),
-                     ('G2Q', 'Genus 2 curve/Q'),
-                     ('CMF', 'Classical modular form'),
-                     ('HMF', 'Hilbert modular form'),
-                     ('BMF', 'Bianchi modular form'),
-                     #('MaassGL2', 'GL2 Maass form'), # We seem to have no examples of this
-                     ('MaassGL3', 'GL3 Maass form'),
-                     ('MaassGL4', 'GL4 Maass form'),
-                     ('MaassGSp4', 'GSp4 Maass form')])
+            options=origins_list)
+        origin_exclude = SelectBox(
+            name="origin_exclude",
+            knowl="lfunction.underlying_object",
+            label="Exclude origin",
+            example_col=True,
+            options=origins_list)
         count = CountBox()
 
         self.browse_array = [
@@ -408,9 +420,9 @@ class LFunctionSearchArray(SearchArray):
         ]
 
         self.refine_array = [
-            [degree, conductor, bad_primes, analytic_conductor, root_analytic_conductor],
+            [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
             [primitive, algebraic, self_dual],
-            [root_angle, central_character, analytic_rank, motivic_weight, z1]
+            [root_angle, analytic_rank, motivic_weight, z1]
         ]
 
         self.force_rational = force_rational
@@ -466,8 +478,8 @@ class LFunctionSearchArray(SearchArray):
                 RowSpacer(22),
                 [euler_coldisplay, euler_constraints]]
 
-            self.browse_array += [[self_dual, origin], [count]]
-            self.refine_array[1] += [origin]
+            self.browse_array += [[self_dual], [origin, origin_exclude], [count]]
+            self.refine_array[1] += [origin, origin_exclude]
 
         else:
             rational = YesNoBox(
@@ -476,8 +488,8 @@ class LFunctionSearchArray(SearchArray):
                 label="Rational",
                 example_col=True)
 
-            self.browse_array += [[self_dual, rational], [origin, count]]
-            self.refine_array[1] += [rational, origin]
+            self.browse_array += [[self_dual, rational], [origin, origin_exclude], [count]]
+            self.refine_array[1] += [rational, origin, origin_exclude]
 
     def search_types(self, info):
         if self.force_rational:
@@ -510,6 +522,30 @@ class LFunctionSearchArray(SearchArray):
             ('izero', 'first zero (increasing)'),
             ('cond', 'conductor')
         ]
+
+@l_function_page.route("/interesting")
+def interesting():
+    info = to_dict(request.args)
+    degree = info.get("degree")
+    print("DegInt", degree)
+    breads = [("Interesting", url_for(".interesting"))]
+    if degree is None:
+        title = "Some interesting L-functions"
+        regex = None
+    else:
+        title = "Some interesting degree %s L-functions" % degree
+        breads.append([("Degree %s" % degree, " ")])
+        regex = re.compile(r"^%s\." % degree)
+    return interesting_knowls(
+        "lfunction",
+        db.lfunc_search,
+        url_for_lfunction,
+        regex=regex,
+        title=title,
+        credit=credit_string,
+        bread=get_bread(breads=breads),
+        learnmore=learnmore_list()
+    )
 
 @l_function_page.route("/history")
 def l_function_history():
@@ -575,9 +611,9 @@ def by_url_degree_conductor_character(degree, conductor, character):
         return l_function_search(info)
 
 
-# Degree 1 L-functions browsing page ##############################################
+# Degree 1 L-functions plot page ##############################################
 @l_function_page.route("/degree1/")
-def l_function_dirichlet_browse_page():
+def l_function_degree1():
     info = {"bread": get_bread(1)}
     info["minModDefault"] = 1
     info["maxModDefault"] = 20
@@ -610,16 +646,16 @@ def l_function_degree4_browse_page():
 
 
 # Degree browsing page #########################################################
-@l_function_page.route("/<degree>/")
-def l_function_degree_page(degree):
-    degree = get_degree(degree)
-    if degree < 0:
-        return abort(404)
-    info = {"degree": degree}
-    info["key"] = 777
-    info["bread"] = get_bread(degree)
-    info["learnmore"] = learnmore_list()
-    return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
+#@l_function_page.route("/<degree>/")
+#def l_function_degree_page(degree):
+#    degree = get_degree(degree)
+#    if degree < 0:
+#        return abort(404)
+#    info = {"degree": degree}
+#    info["key"] = 777
+#    info["bread"] = get_bread(degree)
+#    info["learnmore"] = learnmore_list()
+#    return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
 
 
 # L-function of holomorphic cusp form browsing page ##############################################
