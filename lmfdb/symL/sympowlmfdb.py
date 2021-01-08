@@ -51,7 +51,10 @@ import os
 
 from sage.structure.sage_object import SageObject
 from sage.all import pager, Integer, PolynomialRing, RationalField
-from sage.misc.verbose import verbose
+try:
+   from sage.misc.verbose import verbose
+except ModuleNotFoundError: # before sage 9.2
+   from sage.misc.misc import verbose
 
 class SympowLMFDB(SageObject):
     r"""
