@@ -33,7 +33,7 @@ from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
     parse_bool, parse_ints, parse_floats, parse_noop, search_parser,
-    parse_element_of, parse_not_element_of)
+    parse_element_of, parse_not_element_of, search_parser)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
@@ -206,6 +206,14 @@ def parse_sort(info, query):
     elif info.get('sort_order') == 'cond':
         query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
 
+SPECTRAL_RE = re.compile(r"([rc]\d+)+(e\d+)?-(0|([pmc]\d+(\.\d\d)?)+)")
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_spectral(inp, query, qfield):
+    # We should eventually fix
+    if not SPECTRAL_RE.match(inp):
+        raise ValueError("Invalid spectral parameters; see knowl for appropriate format")
+    query[qfield] = inp
+
 def common_parse(info, query):
     info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
     parse_ints(info,query,'degree')
@@ -219,6 +227,7 @@ def common_parse(info, query):
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
+    parse_spectral(info,query,'spectral',qfield="signature")
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
@@ -382,6 +391,13 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.motivic_weight",
             label="Motivic weight",
             example="2")
+        spectral = TextBox(
+            name="spectral",
+            knowl="lfunction.spectral_parameters",
+            label="Spectral parameters",
+            example="r0e2-0",
+            example_span="r0e4-c4.72c12.47")
+
         origins_list = [('', ''),
                         ('DIR', 'Dirichlet character'),
                         #('NF', 'Dedekind zeta function'), # The only example currently is the Riemann zeta function
@@ -416,13 +432,14 @@ class LFunctionSearchArray(SearchArray):
             [analytic_conductor, root_analytic_conductor],
             [central_character, root_angle],
             [analytic_rank, motivic_weight],
+            [spectral],
             [primitive, algebraic],
         ]
 
         self.refine_array = [
             [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
             [primitive, algebraic, self_dual],
-            [root_angle, analytic_rank, motivic_weight, z1]
+            [root_angle, analytic_rank, motivic_weight, z1, spectral]
         ]
 
         self.force_rational = force_rational
@@ -478,7 +495,7 @@ class LFunctionSearchArray(SearchArray):
                 RowSpacer(22),
                 [euler_coldisplay, euler_constraints]]
 
-            self.browse_array += [[self_dual], [origin, origin_exclude], [count]]
+            self.browse_array += [[origin, origin_exclude], [count]]
             self.refine_array[1] += [origin, origin_exclude]
 
         else:
@@ -527,7 +544,11 @@ class LFunctionSearchArray(SearchArray):
 def interesting():
     info = to_dict(request.args)
     degree = info.get("degree")
-    print("DegInt", degree)
+    rational = info.get("rational") == "yes"
+    if rational:
+        query = {"rational": True}
+    else:
+        query = {}
     breads = [("Interesting", url_for(".interesting"))]
     if degree is None:
         title = "Some interesting L-functions"
@@ -541,6 +562,7 @@ def interesting():
         db.lfunc_search,
         url_for_lfunction,
         regex=regex,
+        query=query,
         title=title,
         credit=credit_string,
         bread=get_bread(breads=breads),
