@@ -19,9 +19,13 @@
   <th>{{ KNOWL('lfunction.functional_equation', title='$\\nu$') }}</th>
   <th>{{ KNOWL('lfunction.motivic_weight', title='$w$') }}</th>
   <th>{{ KNOWL('lfunction.primitive', title='prim') }}</th>
+  {% if info.search_array.force_rational %}
+  <th>{{ KNOWL('lfunction.sign', title='$\\epsilon$') }}</th>
+  {% else %}
   <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
   <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
   <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\\epsilon)$') }}</th>
+  {% endif %}
   <th>{{ KNOWL('lfunction.analytic_rank', title='$r$') }}</th>
   <th>{{ KNOWL('lfunction.zeros', title='First zero') }}</th>
   <th style="text-align: left;">{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
@@ -39,9 +43,13 @@
   <td> ${{L.nus}}$ </td>
   <td> {% if L.algebraic %}${{L.motivic_weight}}${% endif %} </td>
   <td> {{('&#x2713;' if L.primitive else '')|safe}} </td>
+  {% if info.search_array.force_rational %}
+  <td> ${{L.root_number}}$ </td>
+  {% else %}
   <td> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
   <td> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
   <td> ${{L.root_angle}}$ </td>
+  {% endif %}
   <td> ${{L.order_of_vanishing}}$ </td>
   <td> ${{L.z1}}$ </td>
   <td style="text-align: left;"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>

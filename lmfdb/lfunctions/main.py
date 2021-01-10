@@ -82,8 +82,11 @@ def learnmore_list(path=None, remove=None):
 @l_function_page.route("/contents")
 def contents():
     return render_template(
-        "single.html",
-        kid="lfunction.about")
+        "LfunctionContents.html",
+        credit=credit_string,
+        title="L-functions",
+        learnmore=learnmore_list(),
+        bread=[("L-functions", " ")])
 
 @l_function_page.route("/")
 def index():
@@ -150,7 +153,11 @@ def process_search(res, info, query):
         if len(nus) > 4 and len(set(nus)) == 1:
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
-        L['root_angle'] = display_float(L['root_angle'], 3)
+        if info['search_array'].force_rational:
+            # root_angle is either 0 or 1
+            L['root_number'] = 1 - 2*int(L['root_angle'])
+        else:
+            L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
         L['analytic_conductor'] = display_float(L['analytic_conductor'], 3, extra_truncation_digits=40, latex=True)
         L['root_analytic_conductor'] = display_float(L['root_analytic_conductor'], 3)
@@ -222,7 +229,13 @@ def common_parse(info, query):
     parse_bool(info,query,'algebraic')
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
-    info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
+    # If searching on the rational page, there will be root_number; if on the all L-function page, root_angle
+    if info.get("root_number") == "1":
+        query['root_angle'] = 0
+    elif info.get("root_number") == "-1":
+        query['root_angle'] = 1
+    else:
+        info['root_angle'] = parse_floats(info,query,'root_angle', allow_singletons=True)
     parse_ints(info,query,'order_of_vanishing')
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')
@@ -375,12 +388,22 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.self-dual",
             label="Self-dual",
             example_col=True)
-        root_angle = TextBox(
-            name="root_angle",
-            knowl="lfunction.sign",
-            label="Root angle",
-            example="0.5",
-            example_span="0.5, -0.1-0.1")
+        if force_rational:
+            root_angle = SelectBox(
+                name="root_number",
+                knowl="lfunction.sign",
+                label="Root number",
+                example_col=True,
+                options=[('', ''),
+                         ('1', '1'),
+                         ('-1', '-1')])
+        else:
+            root_angle = TextBox(
+                name="root_angle",
+                knowl="lfunction.sign",
+                label="Root angle",
+                example="0.5",
+                example_span="0.5, -0.1-0.1")
         analytic_rank = TextBox(
             name="order_of_vanishing",
             knowl="lfunction.analytic_rank",
@@ -438,7 +461,7 @@ class LFunctionSearchArray(SearchArray):
 
         self.refine_array = [
             [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
-            [primitive, algebraic, self_dual],
+            [primitive, algebraic],
             [root_angle, analytic_rank, motivic_weight, z1, spectral]
         ]
 
@@ -506,7 +529,7 @@ class LFunctionSearchArray(SearchArray):
                 example_col=True)
 
             self.browse_array += [[self_dual, rational], [origin, origin_exclude], [count]]
-            self.refine_array[1] += [rational, origin, origin_exclude]
+            self.refine_array[1] += [self_dual, rational, origin, origin_exclude]
 
     def search_types(self, info):
         if self.force_rational:
