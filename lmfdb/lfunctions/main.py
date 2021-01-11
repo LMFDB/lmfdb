@@ -579,7 +579,7 @@ def interesting():
     else:
         title = "Some interesting degree %s L-functions" % degree
         breads.append([("Degree %s" % degree, " ")])
-        regex = re.compile(r"^%s\." % degree)
+        regex = re.compile(r"^%s-" % degree)
     return interesting_knowls(
         "lfunction",
         db.lfunc_search,
