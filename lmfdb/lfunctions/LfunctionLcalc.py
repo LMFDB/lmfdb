@@ -239,7 +239,7 @@ def createLcalcfile_ver2(L, url):
 
 # Lcalc Version 1 ###########################################################
 def parseLcalcfile_ver1(L, filecontents):
-    """ Extracts informtion from the lcalcfile, version 1
+    """ Extracts information from the lcalcfile, version 1
     """
 
     lines = filecontents.split('\n', 6)

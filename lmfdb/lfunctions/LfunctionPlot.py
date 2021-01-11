@@ -527,7 +527,7 @@ def paintSvgHoloNew(condmax):
     ans = svgBegin()
     ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
 
-    cfw = colorsForWeights(max_k) # pick our colour pallette we need colors for weights 1 (at some point) to max_k inclusive
+    cfw = colorsForWeights(max_k) # pick our colour palette we need colors for weights 1 (at some point) to max_k inclusive
 
 
     for p in points:
@@ -952,7 +952,7 @@ def paintCSChar(width, height, xMax, yMax, yMin, xfactor, yfactor, ticlength):
 
 def reindex_characters(min_mod, max_mod, order_limit=12):
     h, entries, rownrs, colnrs = get_character_modulus(min_mod, max_mod, order_limit)
-##    These entries used for debugging when Conrey char not availble.
+##    These entries used for debugging when Conrey char not available.
 ##    rownrs=range(1,21)
 ##    colnrs=range(1,12)
 ##    colnrs.append('more')
@@ -964,7 +964,7 @@ def reindex_characters(min_mod, max_mod, order_limit=12):
         for col in colnrs:
             entry = entries.get((modulus, col), [])
             for chi in entry:  # chi is either a real character or pair of complex conjugates
-                if chi[0][1]:  # Primitiv
+                if chi[0][1]:  # Primitive
                     order = chi[0][2]
                     nr = chi[0][0]
                     isEven = chi[0][3]

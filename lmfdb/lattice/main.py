@@ -309,7 +309,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
         t = "Integral lattice %s" % info['label']
     else:
         t = "Integral lattice "+info['label']+" ("+info['name']+")"
-#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
+#This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [

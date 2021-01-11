@@ -387,7 +387,7 @@ def display_float(x, digits, method = "truncate",
                 k2 = ZZ(2*x)
             except TypeError:
                 pass
-            # the second statment checks for overflow
+            # the second statement checks for overflow
             if k2 == 2*x and (2*x + 1) - k2 == 1:
                 if k2 % 2 == 0:
                     s = '%s' % (k2/2)
@@ -643,7 +643,7 @@ def web_latex_ideal_fact(x, enclose=True):
 def web_latex_split_on(x, on=['+', '-']):
     r"""
     Convert input into a latex string. A different latex surround `\(` `\)` is
-    used, with splits occuring at `on` (+ - by default).
+    used, with splits occurring at `on` (+ - by default).
 
     Example:
     >>> x = var('x')
@@ -721,7 +721,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
         c = re.compile(r)
         A = A.replace(r'+', r'\) \( {}+ ')
         A = A.replace(r'-', r'\) \( {}- ')
-#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\left(','\left( {}\\right.') # parentheses needs to be balanced
 #        A = A.replace('\\right)','\left.\\right)')
         A = A.replace(r'\left(',r'\bigl(')
         A = A.replace(r'\right)',r'\bigr)')

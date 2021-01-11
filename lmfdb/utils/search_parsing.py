@@ -127,7 +127,7 @@ def prep_raw(inp, names={}):
 
     INPUT:
 
-    - ``inp`` -- a string from the website.  Aleady split up by commas and .. range indicators
+    - ``inp`` -- a string from the website.  Already split up by commas and .. range indicators
     - ``names`` -- a dictionary providing a translation from user input to column names.  Only keys in the dictionary are accepted.
 
     OUTPUT:

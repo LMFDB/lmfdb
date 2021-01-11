@@ -915,9 +915,9 @@ class CmfTest(LmfdbTest):
         Fourier coefficients of each respective homepage."""
 
         test_data = {# Dimension 1
-                    '11/2/a/a' : {2: '\( 2 + T \)',
-                                 17: '\( 2 + T \)',
-                                 29: '\( T \)'},
+                    '11/2/a/a' : {2: r'\( 2 + T \)',
+                                 17: r'\( 2 + T \)',
+                                 29: r'\( T \)'},
 
                     # Dimension 2
                     '10/3/c/a' :  {5: r'\( 25 + T^{2} \)',

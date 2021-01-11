@@ -116,7 +116,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 20.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 80.2.a.b' in L.get_data(as_text=True)
         assert '4-40e2-1.1-c1e2-0-1' in L.get_data(as_text=True)
-        # check the zeros accross factors
+        # check the zeros across factors
         assert '2.76929890617261215013507568311' in L.get_data(as_text=True)
         assert '4.78130792717525308450176413839' in L.get_data(as_text=True)
 

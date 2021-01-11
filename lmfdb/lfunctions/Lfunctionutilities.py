@@ -45,7 +45,7 @@ def p2sage(s):
         return z
 
 def string2number(s):
-    # a start to replace p2sage (used for the paramters in the FE)
+    # a start to replace p2sage (used for the parameters in the FE)
     strs = str(s).replace(' ','')
     try:
         if 'e' in strs:
@@ -451,7 +451,7 @@ def lfuncEPhtml(L, fmt):
     return(ans)
 
 def lfuncEpSymPower(L):
-    """ Helper funtion for lfuncEPtex to do the symmetric power L-functions
+    """ Helper function for lfuncEPtex to do the symmetric power L-functions
     """
     ans = ''
     for p in L.S.bad_primes:
@@ -613,7 +613,7 @@ def lfuncFEtex(L, fmt):
 
 
 def specialValueString(L, s, sLatex, normalization="analytic"):
-    ''' Returns the LaTex to dislpay for L(s)
+    ''' Returns the LaTex to display for L(s)
         Will eventually be replaced by specialValueTriple.
     '''
     if normalization=="arithmetic":
@@ -808,7 +808,7 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
         at two points related by the Atkin-Lehner involution.
         If the absolute value of the result is more than tol from 1
         then it returns "Not able to compute" which indicates to few
-        (or wrong) coeffcients.
+        (or wrong) coefficients.
         The parameter num chooses the related points and shouldn't be 1.
     """
     sum1 = 0

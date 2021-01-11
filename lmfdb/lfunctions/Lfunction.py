@@ -384,8 +384,6 @@ def generateSageLfunction(L):
 # The subclasses
 #############################################################################
 
-
-
 class Lfunction_from_db(Lfunction):
     """
     Class representing a general L-function, to be retrieved from the database
@@ -1428,7 +1426,7 @@ class SymmetricPowerLfunction(Lfunction):
 #############################################################################
 
 # This class it not used anywhere and has not been touched since January 2014.  The key function TensorProduct is not defined anywhere, so it won't work
-# There is closely related code in lmfdb/tensor_products that perhaps is meant to supersed this?
+# There is closely related code in lmfdb/tensor_products that perhaps is meant to supersede this?
 # This should either be fully implemented or removed when #500 is addressed (Release 2.0)
 
 class TensorProductLfunction(Lfunction):

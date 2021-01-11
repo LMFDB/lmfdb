@@ -333,7 +333,7 @@ def parse_prec(info):
 
 
 def eta_quotient_texstring(etadata):
-    """
+    r"""
     Returns a latex string representing an eta quotient.
 
     etadata should be a dictionary as returned from parsing `eta.yaml`.
