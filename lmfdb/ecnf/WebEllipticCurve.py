@@ -133,7 +133,8 @@ def pretty_ideal_from_string(K, s, enclose=True, simplify=False):
     if s[0]=="[":
         start += s.find(",")
         if ZZ(s[1:start-1])==1:
-            return r"\((1)\)" if enclose else "(1)"
+            s = r"\left(1\right)"
+            return r"\(" + s + r"\)" if enclose else s
     s = s[start:-1].replace('w',str(K.gen()))
     # remove repeats from the list of gens
     gens = s.split(",")
@@ -141,14 +142,25 @@ def pretty_ideal_from_string(K, s, enclose=True, simplify=False):
         gens=gens[1:]
     if simplify:
         gens = [str(rg) for rg in K.ideal([K(g) for g in gens]).gens_reduced()]
-    gens = "(" + ",".join(gens) + ")"
+    gens = r"\left(" + ",".join(gens) + r"\right)"
     gens = gens.replace("*","")
     return r"\(" + gens + r"\)" if enclose else gens
     
 def pretty_ideal(I, enclose=True, simplify=False):
     gens = I.gens_reduced() if simplify else I.gens()
-    gens = "(" + ",".join([latex(g) for g in gens]) + r")"
+    gens = r"\left(" + ",".join([latex(g) for g in gens]) + r"\right)"
     return r"\(" + gens + r"\)" if enclose else gens
+
+def latex_factorization(plist, exponents):
+    """
+    plist is a list of strings representing prime ideals P in latex without math delimiters.
+    exponents is a list (of the same length) of non-negative integer exponents e, possibly  0.
+
+    output is a latex string for the product of the P^e
+    """
+    factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(plist, exponents)]
+    factors = [f for f in factors if f] # exclude any factors with exponent 0
+    return r"\({}\)".format(r"\cdot".join(factors))
 
 def parse_point(K, s):
     r""" Returns a point in P^2(K) defined by the string s.  s has the form
@@ -245,6 +257,19 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
 
+def ec_disc(ainvs):
+    """
+    Return disciminant of a Weierstrass equation from its list of a-invariants.
+    (Temporary function pending inclusion of model discriminant in database.)
+    """
+    a1, a2, a3, a4, a6 = ainvs
+    b2 = a1*a1 + 4*a2
+    b4 = a3*a1 + 2*a4
+    b6 = a3*a3 + 4*a6
+    c4 = b2*b2 - 24*b4
+    c6 = -b2*b2*b2 + 36*b2*b4 - 216*b6
+    return (c4*c4*c4 - c6*c6) / 1728
+
 class ECNF(object):
 
     """
@@ -295,6 +320,7 @@ class ECNF(object):
 
         badprimes = [pretty_ideal_from_string(K, ld['p'], enclose=False, simplify=simplify_ideals) for ld in local_data]
         badnorms = [ZZ(ld['normp']) for ld in local_data]
+        disc_ords = [ld['ord_disc'] for ld in local_data]
         mindisc_ords = [ld['ord_disc'] for ld in local_data]
 
         if self.conductor_norm==1:
@@ -302,13 +328,9 @@ class ECNF(object):
             self.fact_cond = self.cond
             self.fact_cond_norm = '1'
         else:
-            exponents = [ld['ord_cond'] for ld in local_data]
             self.cond = pretty_ideal_from_string(K, self.conductor_ideal, simplify=simplify_ideals)
-            factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, exponents)]
-            factors = [f for f in factors if f] # there may be an exponent of 0
-            self.fact_cond = r"\({}\)".format("".join(factors))
-            Nnormfac = Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)])
-            self.fact_cond_norm = web_latex(Nnormfac)
+            self.fact_cond = latex_factorization(badprimes, [ld['ord_cond'] for ld in local_data])
+            self.fact_cond_norm = web_latex(Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)]))
 
         # Assumption: the curve models stored in the database are
         # either global minimal models or minimal at all but one
@@ -317,63 +339,43 @@ class ECNF(object):
         self.non_min_primes = [ideal_from_string(K,P) for P in self.non_min_p]
         self.is_minimal = (len(self.non_min_p) == 0)
         self.has_minimal_model = self.is_minimal
-        disc_ords = [ld['ord_disc'] for ld in local_data]
-        Dnorm_factor = 1   # N(disc)/N(min-disc)
-        if not self.is_minimal:
-            self.non_min_prime = pretty_ideal_from_string(K, self.non_min_p[0], simplify=simplify_ideals)
-            ip = [ld['p'] for ld in local_data].index(self.non_min_p[0])
-            Dnorm_factor = local_data[ip]['normp']**12
-            disc_ords[ip] += 12
 
-        self.mindisc = pretty_ideal_from_string(K, self.minD, simplify=simplify_ideals)
-        # We currently do not store the norm of the minimal
-        # discriminant ideal, but it is inside its string:
-        Dmin = None
-        if self.minD[0]=="[":
-            Dmin_norm = ZZ(self.minD[1:self.minD.find(",")])
+        if not self.is_minimal:
+            non_min_p = self.non_min_p[0]
+            self.non_min_prime = pretty_ideal_from_string(K, non_min_p, simplify=simplify_ideals)
+            ip = [ld['p'] for ld in local_data].index(non_min_p)
+            disc_ords[ip] += 12
+            Dnorm_factor = local_data[ip]['normp']**12
+
+        self.disc = ec_disc(self.ainvs)
+        Dnorm = self.disc.norm()
+        if Dnorm == 1:  # cosmetic, e.g. we prefer (11) to (-11) and (1) to (unit)
+            self.disc = 1
+        elif self.disc[0] < 0:
+            self.disc = -self.disc
+        self.disc = r"\((" + web_latex(self.disc, enclose=False) + r")\)"
+        self.disc_norm = web_latex(Dnorm)
+        if Dnorm == 1:  # since the factorization of (1) displays as "1"
+            self.fact_disc = self.disc
+            self.fact_disc_norm = '1'
         else:
-            Dmin = ideal_from_string(K,self.minD)
-            Dmin_norm = Dmin.norm()
+            self.fact_disc = latex_factorization(badprimes, disc_ords)
+            self.fact_disc_norm = web_latex(Factorization([(q,e) for q,e in zip(badnorms,disc_ords)]))
+
+        if self.is_minimal:
+            Dmin_norm = Dnorm
+            self.mindisc = self.disc
+        else:
+            Dmin_norm = Dnorm // Dnorm_factor
+            self.mindisc = pretty_ideal_from_string(K, self.minD, simplify=simplify_ideals)
+
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
             self.fact_mindisc = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
-            factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, mindisc_ords)]
-            factors = [f for f in factors if f] # there may be an exponent of 0
-            self.fact_mindisc = r"\({}\)".format("".join(factors))
-            Dminnormfac = Factorization(list(zip(badnorms,mindisc_ords)))
-            self.fact_mindisc_norm = web_latex(Dminnormfac)
-
-        # D is the discriminant ideal of the model.  This is not
-        # currently stored so if different from the minimal
-        # discriminant ideal we need to compute it for display:
-        if self.is_minimal:
-            self.disc = self.mindisc
-            self.disc_norm = self.mindisc_norm
-            self.fact_disc = self.fact_mindisc
-            self.fact_disc_norm = self.fact_mindisc_norm
-        else:
-            # we may have already computed Dmin
-            if not Dmin:
-                Dmin = ideal_from_string(K,self.minD)
-            # The next three lines involve computation which we would
-            # like to avoid, and will be able to when we store the
-            # model discriminant in the database:
-            P = ideal_from_string(K, self.non_min_p[0])
-            D = Dmin * P**12
-            self.disc = pretty_ideal(D, simplify=simplify_ideals)
-            Dnorm = Dmin_norm * Dnorm_factor
-            self.disc_norm = web_latex(Dnorm)
-            if Dnorm == 1:  # since the factorization of (1) displays as "1"
-                self.fact_disc = self.disc
-                self.fact_disc_norm = '1'
-            else:
-                factors = [r"{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(badprimes, disc_ords)]
-                factors = [f for f in factors if f] # there may be an exponent of 0
-                self.fact_disc = r"\({}\)".format("".join(factors))
-                Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
-                self.fact_disc_norm = web_latex(Dnormfac)
+            self.fact_mindisc = latex_factorization(badprimes, mindisc_ords)
+            self.fact_mindisc_norm = web_latex(Factorization(list(zip(badnorms,mindisc_ords))))
 
         j = self.field.parse_NFelt(self.jinv)
         self.j = web_latex(j)
