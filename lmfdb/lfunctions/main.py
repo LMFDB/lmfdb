@@ -658,7 +658,7 @@ def by_url_degree_conductor_character(degree, conductor, character):
 
 # Degree 1 L-functions plot page ##############################################
 @l_function_page.route("/degree1/")
-def l_function_degree1():
+def l_function_dirichlet_browse_page():
     info = {"bread": get_bread(1)}
     info["minModDefault"] = 1
     info["maxModDefault"] = 20
