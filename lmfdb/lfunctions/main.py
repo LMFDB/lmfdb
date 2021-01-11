@@ -691,16 +691,16 @@ def l_function_degree4_browse_page():
 
 
 # Degree browsing page #########################################################
-#@l_function_page.route("/<degree>/")
-#def l_function_degree_page(degree):
-#    degree = get_degree(degree)
-#    if degree < 0:
-#        return abort(404)
-#    info = {"degree": degree}
-#    info["key"] = 777
-#    info["bread"] = get_bread(degree)
-#    info["learnmore"] = learnmore_list()
-#    return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
+@l_function_page.route("/<degree>/")
+def l_function_degree_page(degree):
+    degree = get_degree(degree)
+    if degree < 0:
+        return abort(404)
+    info = {"degree": degree}
+    info["key"] = 777
+    info["bread"] = get_bread(degree)
+    info["learnmore"] = learnmore_list()
+    return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
 
 
 # L-function of holomorphic cusp form browsing page ##############################################
