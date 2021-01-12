@@ -20,7 +20,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'debug', 'flash_error', 'flash_warning',
            'ajax_url',
            'image_callback', 'encode_plot',
-           'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_rational', 'parse_rational_to_list',
+           'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_mod1', 'parse_rational', 'parse_rational_to_list',
            'parse_rats', 'parse_bracketed_posints', 'parse_bracketed_rats', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of', 'parse_not_element_of',
            'parse_subset', 'parse_submultiset', 'parse_list',
@@ -67,7 +67,7 @@ from .utilities import (
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
-    parse_ints, parse_signed_ints, parse_floats, parse_rational, parse_rational_to_list, parse_rats,
+    parse_ints, parse_signed_ints, parse_floats, parse_mod1, parse_rational, parse_rational_to_list, parse_rats,
     parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
     parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
     parse_list_start, parse_string_start, parse_restricted, parse_noop,

@@ -857,15 +857,11 @@ def getConductorIsogenyFromLabel(label):
 
 
 
-def get_bread(degree=None, breads=[]):
+def get_bread(breads=[]):
     """
-    Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    Returns the top level of bread crumbs plus the ones supplied in breads.
     """
     bread = [('L-functions', url_for('.index'))]
-    if degree is not None:
-        bread.append(
-          ('Degree ' + str(degree),
-           url_for('.l_function_degree_page', degree='degree' + str(degree))))
     bread.extend(breads)
     return bread
 

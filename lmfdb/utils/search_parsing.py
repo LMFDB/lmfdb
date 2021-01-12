@@ -399,20 +399,57 @@ def parse_posints(inp, query, qfield, parse_singleton=int):
     else:
         raise SearchParsingError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
+def restring(c):
+    if not isinstance(c, dict):
+        return str(c)
+    a, b = c.get("$gte", ""), c.get("$lte", "")
+    if a == "" or b == "":
+        # possible if half empty interval such as "6-"
+        return "%s-%s" % (a, b)
+    p = -((b - a) * RR(2/3)).log(10).round()
+    dispa = ("%.{}f".format(p+1) % a).rstrip("0")
+    dispb = ("%.{}f".format(p+1) % b).rstrip("0")
+    if b >= 0:
+        return "%s-%s" % (dispa, dispb)
+    else:
+        return "%s..%s" % (dispa, dispb)
+
+PREC_RE = re.compile(r'^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$')
+def find_prec(x):
+    # The absolute precision of a floating point value,
+    # namely the number of digits after the decimal point specified.
+    # Can be negative if given in scientific notation
+    # Returns None if given a rational number a/b
+    if QQ_RE.match(x):
+        return
+    M = PREC_RE.match(x)
+    if M is None:
+        raise ValueError("Not valid float expression")
+    mantissa, exp = M.groups()
+    if exp is None:
+        exp = 0
+    else:
+        exp = int(exp)
+    if '.' in mantissa:
+        return len(mantissa) - mantissa.find('.') - 1 + exp
+    else:
+        return exp
+
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_floats(inp, query, qfield, exact_prec=5, allow_singletons=False):
+def parse_floats(inp, query, qfield, rat_prec=5, int_prec=1, allow_singletons=False):
     parse_endpoint = float
     if allow_singletons:
         msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         def parse_singleton(a):
             if isinstance(a, string_types) and '.' in a:
                 exact = False
-                prec = len(a) - a.find('.') - 1
+                prec = find_prec(a)
             else:
                 exact = True
-                prec = exact_prec
+                prec = int_prec
             if '/' in a:
                 a = QQ(a)
+                prec = rat_prec
             a = float(a)
             if exact or a == 0:
                 return {'$gte': a - 10**(-prec), '$lte': a + 10**(-prec)}
@@ -428,24 +465,76 @@ def parse_floats(inp, query, qfield, exact_prec=5, allow_singletons=False):
         A = parse_range2(inp, qfield, parse_singleton, parse_endpoint)
         collapse_ors(A, query)
         if allow_singletons:
-            def restring(c):
-                a, b = c.get("$gte", ""), c.get("$lte", "")
-                if a == "" or b == "":
-                    # possible if half empty interval such as "6-"
-                    return "%s-%s" % (a, b)
-                p = -((b - a) * RR(2/3)).log(10).round()
-                dispa = ("%.{}f".format(p+1) % a).rstrip("0")
-                dispb = ("%.{}f".format(p+1) % b).rstrip("0")
-                if b >= 0:
-                    return "%s-%s" % (dispa, dispb)
-                else:
-                    return "%s..%s" % (dispa, dispb)
             if A[0] == '$or':
                 clauses = [list(c.values())[0] for c in A[1]]
             else:
                 clauses = [A[1]]
             return ", ".join(restring(c) for c in clauses)
     else:
+        raise SearchParsingError(msg)
+
+def fix_endpoint(Dkey, Dval):
+    if isinstance(Dval, dict) and Dval.get('$gte', 0) > Dval.get('$lte', 0):
+        return [{Dkey: {'$gte': Dval['$gte']}}, {Dkey: {'$lte': Dval['$lte']}}]
+    elif not isinstance(Dval, dict):
+        if Dval.denominator().is_power_of(2):
+            return [{Dkey: float(Dval)}]
+        else:
+            return [{Dkey: {'$gte': float(Dval) - 10**(-rat_prec), '$lte': float(Dval) + 10**(-rat_prec)}}]
+    else:
+        return [{Dkey: Dval}]
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
+    def parse_endpoint(a):
+        a = float(a) % 1
+        if a > 0.5:
+            a -= 1
+        return a
+    def parse_singleton(a):
+        if '/' in a:
+            a = QQ(a)
+        elif '.' in a:
+            prec = find_prec(a)
+            if exact_den:
+                ad = float(a)*exact_den
+                if abs(ad - round(ad)) < 0.000001:
+                    a = QQ(ad) / exact_den
+        else:
+            # An integer or rational
+            a = QQ(a)
+        if isinstance(a, string_types):
+            a = parse_endpoint(a)
+            if a == 0:
+                return {'$gte': parse_endpoint(a - 10**(-prec)), '$lte': parse_endpoint(a + 10**(-prec))}
+            elif a > 0:
+                return {'$gte': parse_endpoint(a - 0.5 * 10**(-prec)), '$lte': parse_endpoint(a + 1 * 10**(-prec))}
+            elif a < 0:
+                return {'$gte': parse_endpoint(a - 1 * 10**(-prec)), '$lte': parse_endpoint(a + 0.5 * 10**(-prec))}
+        else:
+            # Rational.  Need to treat exact values differently in restring
+            return a
+    if LIST_FLOAT_RE.match(inp):
+        A = parse_range2(inp, qfield, parse_singleton, parse_endpoint)
+        # Deal with ranges that cross a boundary.  These can be detected by checking
+        # if the start is larger than the end
+        if A[0] == '$or':
+            clauses = [restring(list(c.values())[0]) for c in A[1]]
+            new_ors = []
+            for D in A[1]:
+                new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0]))
+            A[1] = new_ors
+        else:
+            clauses = [restring(A[1])]
+            L = fix_endpoint(A[0], A[1])
+            if len(L) == 1:
+                A[1] = L[0][A[0]]
+            else:
+                A = ['$or', L]
+        collapse_ors(A, query)
+        return ','.join(clauses)
+    else:
+        msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
         raise SearchParsingError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling

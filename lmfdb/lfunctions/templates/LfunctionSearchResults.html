@@ -23,6 +23,7 @@
   <th>{{ KNOWL('lfunction.sign', title='$\\epsilon$') }}</th>
   {% else %}
   <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
+  <th>{{ KNOWL('lfunction.rational', title='$\mathbb{Q}$') }}</th>
   <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
   <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\\epsilon)$') }}</th>
   {% endif %}
@@ -47,6 +48,7 @@
   <td> ${{L.root_number}}$ </td>
   {% else %}
   <td> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
+  <td> {{('&#x2713;' if L.rational else '')|safe}} </td>
   <td> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
   <td> ${{L.root_angle}}$ </td>
   {% endif %}
