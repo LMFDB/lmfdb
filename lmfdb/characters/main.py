@@ -366,10 +366,12 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
             return render_template('CharGroup.html', **info)
         else:
             info = WebDBDirichletOrbit(**args).to_dict()
+            info['show_orbit_label'] = True
             info['learnmore'] = learn()
             info['credit'] = credit()
             info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
             info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+            print("rowtrunc = {}".format(info['rowtruncate']))
             return render_template('CharacterGaloisOrbit.html', **info)
     try:
         number = label_to_number(modulus, number)
