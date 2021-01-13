@@ -376,7 +376,6 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            bread=bread,
                            ec=ec,
                            code = code,
-                           #        properties = ec.properties,
                            properties=ec.properties,
                            friends=ec.friends,
                            downloads=ec.downloads,
@@ -679,49 +678,22 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
-                     'disc', 'disc_norm', 'jinv', 'cm', 'rank',
-                     'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
-
-code_names = {'field': 'Define the base number field',
-              'curve': 'Define the curve',
-              'is_min': 'Test whether it is a global minimal model',
-              'cond': 'Compute the conductor',
-              'cond_norm': 'Compute the norm of the conductor',
-              'disc': 'Compute the discriminant',
-              'disc_norm': 'Compute the norm of the discriminant',
-              'jinv': 'Compute the j-invariant',
-              'cm': 'Test for Complex Multiplication',
-              'rank': 'Compute the Mordell-Weil rank',
-              'ntors': 'Compute the order of the torsion subgroup',
-              'gens': 'Compute the generators (of infinite order)',
-              'heights': 'Compute the heights of the generators (of infinite order)',
-              'reg': 'Compute the regulator',
-              'tors': 'Compute the torsion subgroup',
-              'torgens': 'Compute the generators of the torsion subgroup',
-              'localdata': 'Compute the local reduction data at primes of bad reduction'
-}
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
-
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
         return abort(404)
-    E = ECNF.by_label(label)
-    if not isinstance(E, ECNF):
-        return abort(404)
-    Ecode = E.code()
     lang = args['download_type']
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     if lang=='gp':
         lang = 'pari'
+
+    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
+    Ecode =  make_code(label, lang)
+    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
+    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     for k in sorted_code_names:
-        if lang in Ecode[k]:
+        if Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
+            code += Ecode[k] + ('\n' if not '\n' in Ecode[k] else '')
     return code
 
 def disp_tor(t):
