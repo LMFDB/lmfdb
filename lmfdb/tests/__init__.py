@@ -61,3 +61,23 @@ class LmfdbTest(unittest2.TestCase):
                 print(e)
                 print(e.errno)
                 raise
+
+    def assert_if_magma(self, expected, magma_code, mode='equal'):
+        """Helper method for running test_download_magma test. Checks
+        equality only if magma is installed; if it isn't, then the test
+        passes."""
+        from sage.all import magma
+        try:
+            if mode == 'equal':
+                print("I AM EQUAL")
+                assert expected == magma.eval(magma_code)
+            elif mode == 'in':
+                print("I AM IN")
+                assert expected in magma.eval(magma_code)
+            else:
+                raise ValueError("mode must be either 'equal' or 'in")
+        except RuntimeError as the_error:
+            if str(the_error).startswith("unable to start magma"):
+                pass
+            else:
+                raise
