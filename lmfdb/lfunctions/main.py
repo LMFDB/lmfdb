@@ -223,17 +223,21 @@ def parse_spectral(inp, query, qfield):
     if not M:
         raise ValueError("Invalid spectral label; see knowl for appropriate format")
     # We want to support either c0 or r0r1, and including or not including exponent notation
-    mu, e, nu = M.groups()
+    reals, e, imags = M.groups()
     e = 1 if e is None else int(e)
     def extract(t, x):
-        return Counter(re.findall(t+r'([0-9.]+)', x))
-    if nu == '0': # algebraic
-        GRcount = extract('r', mu)
-        GCcount = extract('c', mu)
-        shift = min(GRcount['0'], GRcount['1'])
-        GCcount['0'] += shift
-        GRcount['0'] -= shift
-        GRcount['1'] -= shift
+        return Counter(map(int, re.findall(t+r'([0-9.]+)', x)))
+    if imags == '0': # algebraic
+        GRcount = extract('r', reals)
+        # We store the real parts of nu doubled
+        GCcount = extract('c', reals)
+        for x in sorted(GRcount):
+            shift = min(GRcount[x], GRcount[x+1])
+            if shift:
+                # We store the real parts of nu doubled
+                GCcount[2*x] += shift
+                GRcount[x] -= shift
+                GRcount[x] -= shift
         ge = GCD(GCD(list(GRcount.values())), GCD(list(GCcount.values())))
         GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
         GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
@@ -265,7 +269,7 @@ def common_parse(info, query):
     parse_noop(info,query,'central_character')
     parse_ints(info,query,'motivic_weight')
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
-    parse_spectral(info,query,'spectral',qfield="signature")
+    parse_spectral(info,query,'spectral_label')
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
@@ -439,8 +443,8 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.motivic_weight",
             label="Motivic weight",
             example="2")
-        spectral = TextBox(
-            name="spectral",
+        spectral_label = TextBox(
+            name="spectral_label",
             knowl="lfunction.spectral_label",
             label="Spectral label",
             example="c1e2",
@@ -480,14 +484,14 @@ class LFunctionSearchArray(SearchArray):
             [analytic_conductor, root_analytic_conductor],
             [central_character, root_angle],
             [analytic_rank, motivic_weight],
-            [spectral],
+            [spectral_label],
             [primitive, algebraic],
         ]
 
         self.refine_array = [
             [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
             [primitive, algebraic],
-            [root_angle, analytic_rank, motivic_weight, z1, spectral]
+            [root_angle, analytic_rank, motivic_weight, z1, spectral_label]
         ]
 
         self.force_rational = force_rational
@@ -639,6 +643,10 @@ def by_url_degree(degree):
         info['bread'] = [('L-functions', url_for('.index')),
                  (str(degree), url_for('.by_url_degree', degree=degree))]
     return l_function_search(info)
+
+@l_function_page.route("/degree<degree>/")
+def by_old_degree(degree):
+    return redirect(url_for(".index", degree=degree))
 
 def convert_conductor(conductor):
     return conductor.replace('e', '^')
