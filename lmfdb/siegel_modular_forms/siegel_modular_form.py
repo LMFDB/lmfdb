@@ -283,7 +283,7 @@ def render_sample_page(family, sam, args, bread):
     info['evs_avail'] = [n for n in sam.available_eigenvalues()]
     info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
 
-    # Do not attempt to constuct a modulus ideal unless the field has a reasonably small discriminant
+    # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
     info['field'] = sam.field()
     if info['field_poly'].disc() < 10**80:

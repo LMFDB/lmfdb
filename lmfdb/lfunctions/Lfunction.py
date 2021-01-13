@@ -387,7 +387,7 @@ def generateSageLfunction(L):
 #############################################################################
 
 class RiemannZeta(Lfunction):
-    """Class representing the Riemann zeta fucntion
+    """Class representing the Riemann zeta function
 
     Possible parameters: numcoeff  (the number of coefficients when computing)
     """
@@ -1926,7 +1926,7 @@ class SymmetricPowerLfunction(Lfunction):
 #############################################################################
 
 # This class it not used anywhere and has not been touched since January 2014.  The key function TensorProduct is not defined anywhere, so it won't work
-# There is closely related code in lmfdb/tensor_products that perhaps is meant to supersed this?
+# There is closely related code in lmfdb/tensor_products that perhaps is meant to supersede this?
 # This should either be fully implemented or removed when #500 is addressed (Release 2.0)
 
 class TensorProductLfunction(Lfunction):
