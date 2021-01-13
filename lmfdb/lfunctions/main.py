@@ -258,7 +258,7 @@ def common_parse(info, query):
     if info.get("root_number") == "1":
         query['root_angle'] = 0
     elif info.get("root_number") == "-1":
-        query['root_angle'] = 1
+        query['root_angle'] = 0.5
     else:
         info['root_angle'] = parse_mod1(info,query,'root_angle')
     parse_ints(info,query,'order_of_vanishing')
