@@ -3,7 +3,7 @@ import os
 import yaml
 from flask import url_for
 from six.moves.urllib_parse import quote
-from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
+from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
@@ -76,6 +76,33 @@ from sage.misc.all import latex
 def web_point(P):
     return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
 
+def reduce_mod_units(a):
+    """
+    Return u*a for a unit u such that u*a is reduced.
+    """
+    K = a.parent()
+    if a.norm()==1:
+        return K(1)
+    r1, r2 = K.signature()
+    if r1 + r2 == 1:  # unit rank is 0
+        return a
+
+    prec = 1000  # lower precision works badly!
+    embs = K.places(prec=prec)
+    degs = [1]*r1 + [2]*r2
+    fu = K.units()
+    from sage.matrix.all import Matrix
+    U = Matrix([[e(u).abs().log()*d for d,e in zip(degs,embs)] for u in fu])
+    A = U*U.transpose()
+    Ainv = A.inverse()
+
+    aconjs = [e(a) for e in embs]
+    from sage.modules.all import vector
+    v = vector([aa.abs().log()*d for aa,d in zip(aconjs,degs)])
+    exponents = [e.round() for e in -Ainv*U*v]
+    u = prod([uj**ej for uj,ej in zip(fu,exponents)])
+    return u*a
+
 def ideal_from_string(K,s):
     r"""Returns the ideal of K defined by the string s.
 
@@ -128,22 +155,27 @@ def pretty_ideal_from_string(K, s, enclose=True, simplify=False):
     without change (except that repeats are eliminated).  This is a
     temporary measure until we change what is stored in the database
     to always represent ideals in reduced form.
+
+    NB K is only used when simplify is True
     """
     start = 1
     if s[0]=="[":
         start += s.find(",")
-        if ZZ(s[1:start-1])==1:
+        if ZZ(s[1:start-1])==1: # the norm is 1 so return (1)
             s = r"\left(1\right)"
             return r"\(" + s + r"\)" if enclose else s
-    s = s[start:-1].replace('w',str(K.gen()))
-    # remove repeats from the list of gens
+    Kgen = str(K.gen())
+    s = s[start:-1].replace('w', Kgen)
     gens = s.split(",")
+    # remove repeats from the list of gens
     if len(gens)>1 and gens[0]==gens[1]:
         gens=gens[1:]
     if simplify:
         gens = [str(rg) for rg in K.ideal([K(g) for g in gens]).gens_reduced()]
     gens = r"\left(" + ",".join(gens) + r"\right)"
     gens = gens.replace("*","")
+    if Kgen == 'phi':
+        gens = gens.replace(Kgen, r"\phi")
     return r"\(" + gens + r"\)" if enclose else gens
     
 def pretty_ideal(I, enclose=True, simplify=False):
@@ -270,6 +302,42 @@ def ec_disc(ainvs):
     c6 = -b2*b2*b2 + 36*b2*b4 - 216*b6
     return (c4*c4*c4 - c6*c6) / 1728
 
+def latex_equation(ainvs):
+    a1, a2, a3, a4, a6 = ainvs
+
+    def co(coeff):
+        pol = coeff.polynomial()
+        mons = pol.monomials()
+        n = len(mons)
+        if n==0:
+            return ""
+        if n>1:
+            return r"+\left({}\right)".format(latex(coeff))
+        # now we have a numerical coefficient times a power of the generator
+        if coeff == 1:
+            return "+"
+        if coeff == -1:
+            return "-"
+        co = pol.monomial_coefficient(mons[0])
+        s = "+" if co > 0 else ""
+        return "{}{}".format(s, latex(coeff))
+
+    def term(coeff, mon):
+        if not coeff:
+            return ""
+        if not mon:
+            return "+{}".format(latex(coeff)).replace("+-","-")
+        return "{}{}".format(co(coeff), mon)
+
+    return ''.join([r'y^2',
+                    term(a1,'xy'),
+                    term(a3,'y'),
+                    '=x^3',
+                    term(a2,'x^2'),
+                    term(a4,'x'),
+                    term(a6,''),
+                    r''])
+
 class ECNF(object):
 
     """
@@ -303,25 +371,47 @@ class ECNF(object):
         #sys.stdout.flush()
         K = self.field.K()
         
-        # This flag controls whether ideals are reduced before display
-        # (conductor, discriminant/minimial discriminant, bad primes)
-        simplify_ideals = self.field.class_number()==1 or self.field.degree()<4
-        
         # a-invariants
+        # NB Here we construct the ai as elements of K, which are used as follows:
+        # (1) to compute the model discriminant (if not stored)
+        # (2) to compute the latex equation (if not stored)
+        # (3) to compute the plots under real embeddings of K
+        # Of these, (2) is not needed and (1) will soon be obsolete;
+        #  for (3) it would be possible to rewrite the function EC_nf_plot() not to need this.
+        # Then we might also be able to avoid constructing the field K also.
+
         self.ainvs = parse_ainvs(K,self.ainvs)
-        self.latex_ainvs = web_latex(self.ainvs)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
 
         self.cond_norm = web_latex(self.conductor_norm)
 
-        local_data = self.local_data
+        # This flag controls whether ideals are reduced before display
+        # (conductor, discriminant/minimial discriminant, bad primes)
+        # It is reset to False when the table contains simplified
+        # ideals already (flagged by the existence of the columns
+        # disc, normdisc)
 
-        badprimes = [pretty_ideal_from_string(K, ld['p'], enclose=False, simplify=simplify_ideals) for ld in local_data]
-        badnorms = [ZZ(ld['normp']) for ld in local_data]
-        disc_ords = [ld['ord_disc'] for ld in local_data]
-        mindisc_ords = [ld['ord_disc'] for ld in local_data]
+        simplify_ideals = self.field.class_number()==1 or self.field.degree()<4
+
+        try:
+            Dnorm = self.normdisc
+            self.disc = r"\(" + self.disc + r"\)"
+            simplify_ideals = False
+        except AttributeError:
+            self.disc = reduce_mod_units(ec_disc(self.ainvs))
+            Dnorm = self.disc.norm().abs()
+            self.disc = r"\((" + web_latex(self.disc, enclose=False) + r")\)"
+
+        local_data = self.local_data
+        local_data.sort(key = lambda ld:ld['normp'])
+
+        badprimes    = [pretty_ideal_from_string(K, ld['p'], enclose=False, simplify=simplify_ideals) for ld in local_data]
+        badnorms     = [ld['normp']     for ld in local_data]
+        disc_ords    = [ld['ord_disc']  for ld in local_data]
+        mindisc_ords = [ld['ord_disc']  for ld in local_data]
+        cond_ords    = [ld['ord_cond']  for ld in local_data]
 
         if self.conductor_norm==1:
             self.cond = r"\((1)\)"
@@ -329,14 +419,13 @@ class ECNF(object):
             self.fact_cond_norm = '1'
         else:
             self.cond = pretty_ideal_from_string(K, self.conductor_ideal, simplify=simplify_ideals)
-            self.fact_cond = latex_factorization(badprimes, [ld['ord_cond'] for ld in local_data])
-            self.fact_cond_norm = web_latex(Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)]))
+            self.fact_cond      = latex_factorization(badprimes, cond_ords)
+            self.fact_cond_norm = latex_factorization(badnorms,  cond_ords)
 
         # Assumption: the curve models stored in the database are
         # either global minimal models or minimal at all but one
         # prime, so the list here has length 0 or 1:
 
-        self.non_min_primes = [ideal_from_string(K,P) for P in self.non_min_p]
         self.is_minimal = (len(self.non_min_p) == 0)
         self.has_minimal_model = self.is_minimal
 
@@ -347,20 +436,13 @@ class ECNF(object):
             disc_ords[ip] += 12
             Dnorm_factor = local_data[ip]['normp']**12
 
-        self.disc = ec_disc(self.ainvs)
-        Dnorm = self.disc.norm()
-        if Dnorm == 1:  # cosmetic, e.g. we prefer (11) to (-11) and (1) to (unit)
-            self.disc = 1
-        elif self.disc[0] < 0:
-            self.disc = -self.disc
-        self.disc = r"\((" + web_latex(self.disc, enclose=False) + r")\)"
         self.disc_norm = web_latex(Dnorm)
         if Dnorm == 1:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
             self.fact_disc_norm = '1'
         else:
-            self.fact_disc = latex_factorization(badprimes, disc_ords)
-            self.fact_disc_norm = web_latex(Factorization([(q,e) for q,e in zip(badnorms,disc_ords)]))
+            self.fact_disc      = latex_factorization(badprimes, disc_ords)
+            self.fact_disc_norm = latex_factorization(badnorms, disc_ords)
 
         if self.is_minimal:
             Dmin_norm = Dnorm
@@ -371,11 +453,11 @@ class ECNF(object):
 
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
-            self.fact_mindisc = self.mindisc
+            self.fact_mindisc      = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
-            self.fact_mindisc = latex_factorization(badprimes, mindisc_ords)
-            self.fact_mindisc_norm = web_latex(Factorization(list(zip(badnorms,mindisc_ords))))
+            self.fact_mindisc      = latex_factorization(badprimes, mindisc_ords)
+            self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords)
 
         j = self.field.parse_NFelt(self.jinv)
         self.j = web_latex(j)
@@ -385,11 +467,14 @@ class ECNF(object):
         # store the factorization of the denominator of j and display
         # that, which is the most interesting part.
 
-        # The equation is stored in the database as a latex string.
-        # Some of these have extraneous double quotes at beginning and
-        # end, shich we fix here.  We also strip out initial \( and \)
+        # When the equation is stored in the database as a latex string,
+        # it may have extraneous double quotes at beginning and
+        # end, which we fix here.  We also strip out initial \( and \)
         # (if present) which are added in the template.
-        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','')
+        try:
+            self.equation = self.equation.replace('"','').replace(r'\\(','').replace(r'\\)','')
+        except AttributeError:
+            self.equation = latex_equation(self.ainvs)
 
         # Images of Galois representations
 
@@ -552,7 +637,7 @@ class ECNF(object):
         try:
             r = int(self.analytic_rank)
             # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
-            self.Lvalue = "\\(" + str(self.Lvalue) + "\\)" 
+            self.Lvalue = "\\(" + str(self.Lvalue) + r"\\)"
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
             
@@ -580,10 +665,24 @@ class ECNF(object):
         # to put a single backslash into a python string you have to
         # use '\\' which will display as '\\' but only counts as one
         # character in the string.  which are added in the template.
+
+        # This also detects when the Kodaira symbol is an int, in
+        # which case it converts from pari encoding to latex (taking
+        # into account the bug for I_m^* when m has more than one
+        # digit).
+
         def tidy_kod(kod):
+            try:
+                kod = int(kod)
+                if kod <= -14: # Work around bug in Sage's latex
+                    return 'I_{%s}^{*}' % (-kod - 4)
+                return latex(KodairaSymbol(kod))
+            except ValueError:
+                pass
+            # now we already have a latex string
             while '\\\\' in kod:
                 kod = kod.replace('\\\\', '\\')
-            kod = kod.replace('\\(','').replace('\\)','')
+            kod = kod.replace(r'\\(','').replace(r'\\)','')
             return kod
 
         for P,NP,ld in zip(badprimes, badnorms, local_data):
