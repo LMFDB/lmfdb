@@ -51,7 +51,8 @@ import os
 
 from sage.structure.sage_object import SageObject
 from sage.all import pager, Integer, PolynomialRing, RationalField
-from sage.misc.verbose import verbose
+# The next line triggers a Deprecation Warning but the import from sage.misc.verbose only works in Sage >=9.2
+from sage.misc.all import verbose
 
 class SympowLMFDB(SageObject):
     r"""
