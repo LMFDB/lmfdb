@@ -69,10 +69,8 @@ class LmfdbTest(unittest2.TestCase):
         from sage.all import magma
         try:
             if mode == 'equal':
-                print("I AM EQUAL")
                 assert expected == magma.eval(magma_code)
             elif mode == 'in':
-                print("I AM IN")
                 assert expected in magma.eval(magma_code)
             else:
                 raise ValueError("mode must be either 'equal' or 'in")
