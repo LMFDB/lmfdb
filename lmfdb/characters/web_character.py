@@ -1132,6 +1132,50 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         else:
             self.kernel_field_poly = None
 
+    @lazy_attribute
+    def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character group", cglink) )
+        # if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
+        #     url = url_character(
+        #         type=self.type,
+        #         number_field=None,
+        #         modulus=self.modulus,
+        #         number=self.number
+        #     )
+        #     if get_lfunction_by_url(url[1:]):
+        #         friendlist.append( ('L-function', '/L'+ url) )
+        #     else:
+        #         if self.conductor == 1:
+        #             friendlist.append (('L-function', '/L/Riemann'))
+        #     friendlist.append(
+        #         ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+        #     )
+        # if len(self.vflabel) > 0:
+        #     friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
+        # if self.symbol_numerator():
+        #     if self.symbol_numerator() > 0:
+        #         assoclabel = '2.2.%d.1' % self.symbol_numerator()
+        #     else:
+        #         assoclabel = '2.0.%d.1' % -self.symbol_numerator()
+        #     friendlist.append(("Associated quadratic field", '/NumberField/' + assoclabel))
+
+        # label = "%s.%s"%(self.modulus, self.number)
+        # myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
+        # if not myrep is None:
+        #     j=myrep['Dets'].index(label)
+        #     artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
+        #     friendlist.append(('Artin representation '+artlabel,
+        #         url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
+
+        # if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
+        #     friendlist.append(('Primitive character '+self.inducing,
+        #         url_for('characters.render_Dirichletwebpage', modulus=self.conductor, number=self.indlabel)))
+
+        return friendlist
+
 
 class WebSmallDirichletGroup(WebDirichletGroup):
 
