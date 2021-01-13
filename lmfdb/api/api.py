@@ -225,9 +225,7 @@ def api_query(table, id = None):
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
-                    print(qval)
                     qval = [int(_) for _ in qval[2:].split(DELIM)]
-                    print(qval)
                 elif qval.startswith("lf"):
                     qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
@@ -271,8 +269,6 @@ def api_query(table, id = None):
                 if oldkey in q:
                     q[newkey] = q[oldkey]
                     q.pop(oldkey)
-                api_logger.info("replacing old key {} with new key {} for query into table {}".format(oldkey, newkey, table))    
-        api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:

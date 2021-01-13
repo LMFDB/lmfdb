@@ -76,7 +76,7 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
-            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.get_data(as_text=True)
+            assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.get_data(as_text=True)
         data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(4)}, projection='label'))
@@ -86,7 +86,7 @@ class SatoTateGroupTest(LmfdbTest):
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + label)
-            assert label in L.get_data(as_text=True) and 'Moment Statistics' in L.get_data(as_text=True)
+            assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?components=999999999&include_irrational=yes')
         assert 'unique match'  in L.get_data(as_text=True) and 'mu(999999999)' in L.get_data(as_text=True)
 
@@ -101,5 +101,5 @@ class SatoTateGroupTest(LmfdbTest):
     def test_favourites(self):
         for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
             L = self.tc.get('/SatoTateGroup/'+label)
-            assert "Moment Statistics" in L.get_data(as_text=True)
+            assert "Moment sequences" in L.get_data(as_text=True)
 

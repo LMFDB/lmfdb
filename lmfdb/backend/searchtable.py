@@ -493,7 +493,7 @@ class PostgresSearchTable(PostgresTable):
                 cur.close()
                 if (
                     cur.withhold # to assure that it is a buffered cursor
-                    and self._db._nocommit_stack == 0 # and there is nothing to commmit
+                    and self._db._nocommit_stack == 0 # and there is nothing to commit
                 ):
                     cur.connection.commit()
 
@@ -960,7 +960,7 @@ class PostgresSearchTable(PostgresTable):
                     # so we just get an unsorted list of labels
                     L = list(self.search(query, 0, sort=[]))
                 else:
-                    # An arbitary projection might be large, so we get ids
+                    # An arbitrary projection might be large, so we get ids
                     L = list(self.search(query, "id", sort=[]))
                 self.stats._record_count(query, len(L))
                 if len(L) == 0:

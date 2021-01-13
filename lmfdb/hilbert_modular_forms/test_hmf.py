@@ -145,7 +145,6 @@ class HMFTest(LmfdbTest):
 
         # These tests take too long to use magma_free, so we run magma when it is installed
         from sage.all import magma
-        import sys
         for field, label, expected in [
                 ['2.2.28.1', '2.2.28.1-531.1-m',
                  'heckeEigenvaluesArray := [e, -1, -1, e^7 - 1/2*e^6 - 10*e^5 + 11/2*e^4 + 27*e^3 - 15*e^2 - 15*e + 4'],
@@ -154,8 +153,6 @@ class HMFTest(LmfdbTest):
                 ['4.4.725.1', '4.4.725.1-31.1-a',
                  'heckeEigenvaluesArray := [4, -4, -7, -4, 4, 2, -2, -1, -8, 2, 10']
         ]:
-            sys.stdout.write("{}...".format(label))
-            sys.stdout.flush()
             page = self.tc.get('/ModularForm/GL2/TotallyReal/{}/holomorphic/{}/download/magma'.format(field, label)).get_data(as_text=True)
             assert expected in page
             assert  'make_newform'  in page

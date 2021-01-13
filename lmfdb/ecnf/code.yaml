@@ -17,24 +17,26 @@ not-implemented:
     // (not yet implemented)
 
 field:
-  sage:  x = polygen(QQ);  K.<a> = NumberField(%s)
-  pari:  K = nfinit(%s);
+  sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
+  pari:  K = nfinit(Pol(Vecrev(%s)));
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
 
 curve:
-  sage:  E = EllipticCurve(K, %s)
-  pari:  E = ellinit(%s,K)
-  magma: E := ChangeRing(EllipticCurve(%s),K);
+  sage:  E = EllipticCurve(%s)
+  pari:  E = ellinit(%s);
+  magma: E := EllipticCurve(%s);
 
 is_min:
   sage:  E.is_global_minimal_model()
 
 cond:
   sage:  E.conductor()
+  pari:  ellglobalred(E)[1]
   magma: Conductor(E);
 
 cond_norm:
   sage:  E.conductor().norm()
+  pari:  idealnorm(ellglobalred(E)[1])
   magma: Norm(Conductor(E));
 
 disc:
@@ -88,7 +90,7 @@ torgens:
 
 ntors:
   sage:  T.order()
-  pari:  T[3]
+  pari:  T[1]
   magma: Order(T);
 
 localdata:

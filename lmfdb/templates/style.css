@@ -2326,7 +2326,7 @@ input::placeholder {
   white-space: nowrap;
 }
 
-/* an horizonal list with bullet points */
+/* an horizontal list with bullet points */
 ul.horizontal-list {
   display:inline-block;
   padding:0;
