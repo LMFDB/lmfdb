@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from lmfdb.tests import LmfdbTest
-import unittest2, socket
+import unittest2
 
 from . import cmf_logger
 cmf_logger.setLevel(100)
