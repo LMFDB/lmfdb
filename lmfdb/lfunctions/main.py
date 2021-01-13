@@ -603,7 +603,7 @@ def interesting():
         regex = None
     else:
         title = "Some interesting degree %s L-functions" % degree
-        breads.append([("Degree %s" % degree, " ")])
+        breads.append(("Degree %s" % degree, " "))
         regex = re.compile(r"^%s-" % degree)
     return interesting_knowls(
         "lfunction",

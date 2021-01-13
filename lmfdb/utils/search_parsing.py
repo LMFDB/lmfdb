@@ -20,7 +20,7 @@ from math import log2
 
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
-FLOAT_STR = r'(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(\d+/\d+))'
+FLOAT_STR = r'(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
@@ -473,24 +473,26 @@ def parse_floats(inp, query, qfield, rat_prec=5, int_prec=1, allow_singletons=Fa
     else:
         raise SearchParsingError(msg)
 
-def fix_endpoint(Dkey, Dval):
+def mod1(a):
+    a = float(a) % 1
+    if a > 0.5:
+        a -= 1
+    return a
+
+def fix_endpoint(Dkey, Dval, rat_prec):
     if isinstance(Dval, dict) and Dval.get('$gte', 0) > Dval.get('$lte', 0):
         return [{Dkey: {'$gte': Dval['$gte']}}, {Dkey: {'$lte': Dval['$lte']}}]
     elif not isinstance(Dval, dict):
         if Dval.denominator().is_power_of(2):
-            return [{Dkey: float(Dval)}]
+            return [{Dkey: mod1(Dval)}]
         else:
-            return [{Dkey: {'$gte': float(Dval) - 10**(-rat_prec), '$lte': float(Dval) + 10**(-rat_prec)}}]
+            # Theoretically this could overlap 1/2, but that's pretty unlikely since rat_prec=10.
+            return [{Dkey: {'$gte': mod1(Dval) - 10**(-rat_prec), '$lte': mod1(Dval) + 10**(-rat_prec)}}]
     else:
         return [{Dkey: Dval}]
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
-    def parse_endpoint(a):
-        a = float(a) % 1
-        if a > 0.5:
-            a -= 1
-        return a
     def parse_singleton(a):
         if '/' in a:
             a = QQ(a)
@@ -504,29 +506,27 @@ def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
             # An integer or rational
             a = QQ(a)
         if isinstance(a, string_types):
-            a = parse_endpoint(a)
+            a = mod1(a)
             if a == 0:
-                return {'$gte': parse_endpoint(a - 10**(-prec)), '$lte': parse_endpoint(a + 10**(-prec))}
-            elif a > 0:
-                return {'$gte': parse_endpoint(a - 0.5 * 10**(-prec)), '$lte': parse_endpoint(a + 1 * 10**(-prec))}
-            elif a < 0:
-                return {'$gte': parse_endpoint(a - 1 * 10**(-prec)), '$lte': parse_endpoint(a + 0.5 * 10**(-prec))}
+                return {'$gte': mod1(a - 10**(-prec)), '$lte': mod1(a + 10**(-prec))}
+            else:
+                return {'$gte': mod1(a - 0.5 * 10**(-prec)), '$lte': mod1(a + 0.5 * 10**(-prec))}
         else:
             # Rational.  Need to treat exact values differently in restring
             return a
     if LIST_FLOAT_RE.match(inp):
-        A = parse_range2(inp, qfield, parse_singleton, parse_endpoint)
+        A = parse_range2(inp, qfield, parse_singleton, mod1)
         # Deal with ranges that cross a boundary.  These can be detected by checking
         # if the start is larger than the end
         if A[0] == '$or':
             clauses = [restring(list(c.values())[0]) for c in A[1]]
             new_ors = []
             for D in A[1]:
-                new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0]))
+                new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0], rat_prec))
             A[1] = new_ors
         else:
             clauses = [restring(A[1])]
-            L = fix_endpoint(A[0], A[1])
+            L = fix_endpoint(A[0], A[1], rat_prec)
             if len(L) == 1:
                 A[1] = L[0][A[0]]
             else:
