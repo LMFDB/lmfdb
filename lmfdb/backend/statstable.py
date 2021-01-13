@@ -732,7 +732,7 @@ class PostgresStatsTable(PostgresBase):
         A convenience function for adding statistics on a given set of columns,
         where rows are grouped into intervals by a bucketing dictionary.
 
-        See the ``add_stats`` mehtod for the actual statistics computed.
+        See the ``add_stats`` method for the actual statistics computed.
 
         INPUT:
 
@@ -1305,7 +1305,7 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``col`` -- a colum name
+        - ``col`` -- a column name
         - ``n`` -- an integer
         """
         if col not in self.table.search_cols:
@@ -1798,7 +1798,7 @@ ORDER BY v.ord LIMIT %s"""
 
     def get_oldstat(self, name):
         """
-        Temporary suppport for statistics created in Mongo.
+        Temporary support for statistics created in Mongo.
         """
         selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
         cur = self._execute(selecter, [name])

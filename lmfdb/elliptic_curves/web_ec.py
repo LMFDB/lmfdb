@@ -173,7 +173,11 @@ class WebEC(object):
 
         self.local_data = local_data = list(db.ec_localdata.search({"lmfdb_label": lmfdb_label}))
         for ld in local_data:
-            ld['kod'] = latex(KodairaSymbol(ld['kodaira_symbol']))
+            if ld['kodaira_symbol'] <= -14:
+                # Work around bug in Sage's latex
+                ld['kod'] = 'I_{%s}^{*}' % (-ld['kodaira_symbol'] - 4)
+            else:
+                ld['kod'] = latex(KodairaSymbol(ld['kodaira_symbol']))
 
         Nfac = Factorization([(ZZ(ld['prime']),ld['conductor_valuation']) for ld in local_data])
         Dfac = Factorization([(ZZ(ld['prime']),ld['discriminant_valuation']) for ld in local_data], unit=ZZ(self.signD))

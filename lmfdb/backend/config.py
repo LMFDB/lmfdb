@@ -22,7 +22,7 @@ class Configuration(object):
 
     If the configuration file does not exist, it can create it with values specified by the default command line arguments.  This allows a user to edit the configuration file to change the defaults.
 
-    Because of this dual approach, the types of all configuration values must be recoverable from their sting values.  Namely, each object x of type T must satisfy x == T(str(x)).  Strings, integers and floats all have this property.
+    Because of this dual approach, the types of all configuration values must be recoverable from their string values.  Namely, each object x of type T must satisfy x == T(str(x)).  Strings, integers and floats all have this property.
 
     INPUT:
 

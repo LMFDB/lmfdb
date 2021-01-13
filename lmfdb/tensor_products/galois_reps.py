@@ -374,7 +374,7 @@ class GaloisRepresentation( Lfunction):
                 raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
                                           "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
-        # check for the possibily of getting poles
+        # check for the possibility of getting poles
         if V.weight == W.weight and V.conductor == W.conductor :
             Vans = V.algebraic_coefficients(50)
             Wans = W.algebraic_coefficients(50)

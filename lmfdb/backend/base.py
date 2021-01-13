@@ -949,7 +949,7 @@ class PostgresBase(object):
         INPUT:
 
         - ``filename`` -- a string, the filename to load the table from
-        - ``name`` -- the name fo the table
+        - ``name`` -- the name of the table
         - ``sep`` -- the separator character, defaulting to tab
         - ``addid`` -- if true, also adds an id column to the created table
 

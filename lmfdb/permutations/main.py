@@ -19,7 +19,7 @@ def get_bread(breads=[]):
 def parse_and_redirect():
     r"""
     This gets called when the user submit some input in the data box of the
-    follwing page:
+    following page:
 
     http://127.0.0.1:37777/Permutations/
 
@@ -34,7 +34,7 @@ def parse_and_redirect():
 @permutations_page.route("/show", methods = ["GET"])
 def show():
     r"""
-    This gets called when an adress of that kind gets loaded:
+    This gets called when an address of that kind gets loaded:
 
     http://127.0.0.1:37777/Permutations/show?data=3.4.2.1
     """
@@ -53,11 +53,9 @@ def show():
 @permutations_page.route("/")
 def index():
     r"""
-    This gets called when this adress gets loaded:
+    This gets called when this address gets loaded:
 
     http://127.0.0.1:37777/Permutations/
     """
     bread = get_bread()
     return render_template("permutations-index.html", title="Permutations", bread=bread)
-
-

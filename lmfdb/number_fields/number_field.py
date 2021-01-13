@@ -518,7 +518,7 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
     if nf.can_class_number():
-        # hide ones that take a lond time to compute on the fly
+        # hide ones that take a long time to compute on the fly
         # note that the first degree 4 number field missed the zero of the zeta function
         if abs(D**n) < 50000000:
             info['friends'].append(('L-function', "/L/NumberField/%s" % label))

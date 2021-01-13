@@ -136,7 +136,7 @@ def st_pretty(st_name):
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
 
-# We want to support aliases like S3.  Ths following table is an analogue of the list of aliases in lmfdb/galois_groups/transitive_group.py, but with GAP ids as output.
+# We want to support aliases like S3.  The following table is an analogue of the list of aliases in lmfdb/galois_groups/transitive_group.py, but with GAP ids as output.
 aliases = {'C1': '1.1',
            'C2': '2.1',
            'C3': '3.1',
@@ -352,7 +352,7 @@ def search(info):
             return [x for x in condition if x in current]
         # The following are used to constraint which mu(n) will show up in search results
         components_list = None
-        ommitted = set()
+        omitted = set()
         if 'components' in query:
             components_list = parse_ints_to_list_flash(info.get('components'), 'components')
         parse_component_group(info,query)
@@ -385,7 +385,7 @@ def search(info):
                 if 0 not in E:
                     components_list = refine_components(components_list, ones)
                 if 1 not in E:
-                    ommitted.update(ones)
+                    omitted.update(ones)
         parse_ints(info,query,'first_a2_moment')
         parse_bool(info,query,'maximal')
         if "first_a2_moment" in query or query.get("maximal"):
@@ -403,11 +403,11 @@ def search(info):
         (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
         nres = None
         if components_list is None:
-            components_list = range(1, 3 if ratonly else (start + count + 1 + len(ommitted)))
+            components_list = range(1, 3 if ratonly else (start + count + 1 + len(omitted)))
             nres = None if ratonly else INFINITY
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
-        components_list = [n for n in components_list if n not in ommitted]
+        components_list = [n for n in components_list if n not in omitted]
         if nres is None:
             nres = len(components_list)
         if search_type == "Random" and nres > 0:
@@ -607,7 +607,7 @@ def nu1_mu_portrait(n):
     return encode_plot(plot)
 
 def render_by_label(label):
-    """ render html page for Sato-Tate group sepecified by label """
+    """ render html page for Sato-Tate group specified by label """
     if re.match(MU_LABEL_RE, label):
         n = ZZ(label.split('.')[2])
         if n > 10**20:
