@@ -2,8 +2,41 @@
 
 {% block subcontent %}
 
-<h2 style="margin-top:0px;">
-    {{ KNOWL('character.dirichlet.basic_properties', title="Page under construction") }}
-</h2>
+{% if contents %}
+{# Characters #}
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%}</h2>
+<p>
+Each row describes a character. When available, the columns show the
+{% if show_orbit_label %}
+{{KNOWL('character.dirichlet.galois_orbit_label', title='orbit label')}},
+{% endif %}
+{{KNOWL('character.dirichlet.order', title='order')}} of the character,
+whether the character is {{KNOWL('character.dirichlet.primitive', title='primitive')}},
+and several values of the character.
+</p>
+<table class="ntdata" id="chitable">
+  <thead class="space">
+    <tr>
+      {% for h in headers %} <th class="center">{{h}} </th> {% endfor %}
+      {% for v in groupelts %} <th class="center">\({{v}}\)</th> {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for char, values in contents %}
+    <tr>
+      <td class="left">
+        {% with mod,num,tex,prim = char %}
+        <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num) }}">
+          {{ tex }}
+        </a>
+        {% endwith %}
+      </td>
+      {% for value in values %} <td class="center">{{value}}</td> {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 
 {% endblock %}

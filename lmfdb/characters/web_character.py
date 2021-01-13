@@ -584,7 +584,6 @@ class WebDBDirichlet(WebDirichlet):
         # The -1 in the line below is because labels index at 1, while
         # the Cremona letter code indexes at 0
         self.orbit_label = cremona_letter_code(self.orbit_index - 1)
-        print("the self.orbit_label is {}".format(self.orbit_label))
         self.order = int(values_data['order'])
         self.indlabel = int(values_data['prim_label'].partition('.')[-1])
         self._set_values_and_groupelts(values_data)
@@ -1062,7 +1061,7 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing',
+              'inducing','rowtruncate',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -1072,6 +1071,7 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
               'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
+        self._contents = None
         self.type = "Dirichlet"
         self.modulus = kwargs.get('modulus', None)
         if self.modulus:
@@ -1086,13 +1086,15 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
             self.H = PariConreyGroup(self.modulus)
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
-        self.maxcols = 30
         self.codelangs = ('pari', 'sage')
         self.orbit_label = kwargs.get('gal_orb_label', None)  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
+        self.maxrows = 30
+        self.rowtruncate = False
         self._set_galoisorbit(self.orbit_data)
-
+        self.maxcols = 10
+        # import pdb; pdb.set_trace()
 
     @lazy_attribute
     def title(self):
@@ -1102,10 +1104,13 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         if self.modulus == 1:
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
-        upper_limit = min(200, self.order + 1)
-        orbit = orbit_data['galois_orbit'][:upper_limit]
+        upper_limit = min(self.maxrows, self.order + 1)
+        if self.maxrows < self.order + 1:
+            self.rowtruncate = True
+            print("HAHAHAHAH")
+        self.galorbnums = orbit_data['galois_orbit'][:upper_limit]
         self.galoisorbit = list(
-            self._char_desc(num, prim=orbit_data['is_primitive']) for num in orbit
+            self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
         )
 
     def get_orbit_data(self, orbit_label):
@@ -1122,7 +1127,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         self.parity = parity_string(int(orbit_data['parity']))
         self._set_kernel_field_poly(orbit_data)
         self.ind_orbit_label = cremona_letter_code(int(orbit_data['prim_orbit_index']) - 1)
-        # print("self.indlabel = {}".format(self.indlabel))
         self.inducing = "{}.{}".format(self.conductor, self.ind_orbit_label)
         return orbit_data
 
@@ -1175,6 +1179,90 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         #         url_for('characters.render_Dirichletwebpage', modulus=self.conductor, number=self.indlabel)))
 
         return friendlist
+
+    @lazy_attribute
+    def contents(self):
+        if self._contents is None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
+
+    def _fill_contents(self):
+        # import pdb; pdb.set_trace()
+        for c in self.galorbnums:
+            self.add_row(c)
+
+    def add_row(self, c):
+        """
+        Add a row to _contents for display on the webpage.
+        Each row of content takes the form
+            character_name, (header..data), (several..values)
+        where `header..data` is expected to be a tuple of length the same
+        size as `len(headers)`, and given in the same order as in `headers`,
+        and where `several..values` are the values of the character
+        on self.groupelts, in order.
+        """
+        mod = self.modulus
+        num = c
+        valuepairs = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num),
+            projection='values'
+        )
+        prim = self.isprimitive == bool_string(True)
+        # import pdb; pdb.set_trace()
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            self._determine_values(valuepairs, self.order)
+        ))
+
+    def _determine_values(self, valuepairs, order):
+        """
+        Translate the db's values into the actual values.
+        """
+        raw_values = [int(v) for g, v in valuepairs]
+        values = [
+            self._tex_value(v, order, texify=True) for v in raw_values
+        ]
+        return values
+
+    # def _char_desc(self, num, mod=None, prim=None):
+    #     return (mod, num, self.char2tex(mod, num), prim)
+
+    def _tex_value(self, numer, denom=None, texify=False):
+        r"""
+        Formats the number e**(2 pi i * numer / denom), detecting if this
+        simplifies to +- 1 or +- i.
+
+        Surround the output i MathJax `\(..\)` tags if `texify` is True.
+        `denom` defaults to self.order.
+        """
+        if not denom:
+            denom = self.order
+
+        g = gcd(numer, denom)
+        if g > 1:
+            numer = numer // g
+            denom = denom // g
+
+        # Reduce mod the denominator
+        numer = (numer % denom)
+
+        if denom == 1:
+            ret = '1'
+        elif (numer % denom) == 0:
+            ret = '1'
+        elif numer == 1 and denom == 2:
+            ret = '-1'
+        elif numer == 1 and denom == 4:
+            ret = 'i'
+        elif numer == 3 and denom == 4:
+            ret = '-i'
+        else:
+            ret = r"e\left(\frac{%s}{%s}\right)" % (numer, denom)
+        if texify:
+            return r"\({}\)".format(ret)
+        else:
+            return ret
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
