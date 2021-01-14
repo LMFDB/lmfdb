@@ -11,7 +11,6 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 1 work.
         """
         homepage = self.tc.get("/").get_data(as_text=True)
-        self.check(homepage, "/L/degree2/", '9.53369')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
         self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/15/0/15/')
         self.check(homepage, "/zeros", 'The zeros are accurate') # the interesting numbers are filled in dynamically

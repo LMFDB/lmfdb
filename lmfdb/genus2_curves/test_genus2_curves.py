@@ -253,7 +253,7 @@ class Genus2Test(LmfdbTest):
         assert '324.a.648.1' in L.get_data(as_text=True)
         assert '450.a.2700.1' in L.get_data(as_text=True)
         assert not('169.a.169.1' in L.get_data(as_text=True))
-                
+
     def test_related_objects(self):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
@@ -261,24 +261,25 @@ class Genus2Test(LmfdbTest):
                         'Isogeny class 20736.i',
                         'Elliptic curve 576.f3',
                         'Elliptic curve 36.a4',
-                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.0.8.1-324.3-a',
                         'Bianchi modular form 2.0.8.1-324.3-a',
                         'Hilbert modular form 2.2.24.1-36.1-a',
-                        'Isogeny class 2.2.24.1-36.1-a',
+                        'Elliptic curve 2.2.24.1-36.1-a',
                         'Twists',)
                     ),
                 ('/Genus2Curve/Q/20736/i/',
                     ('L-function',
                         'Isogeny class 576.f',
                         'Isogeny class 36.a',
-                        'Isogeny class 2.0.8.1-324.3-a',
                         'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.2.24.1-36.1-a',
                         'Hilbert modular form 2.2.24.1-36.1-a',
-                        'Isogeny class 2.2.24.1-36.1-a',)
+                     )
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
-                        'Isogeny class 2.2.8.1-9.1-a',
+                        'Elliptic curve 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
