@@ -129,7 +129,7 @@ def make_keys(K,p):
                 key_dict[P] = (P.norm(),e,i)
 
         # Lastly we add a field j to each key (n,e,i) -> (n,j,e,i)
-        # which is its index in the sublist withe same n-value.  This
+        # which is its index in the sublist with same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
         vals = list(key_dict.values())

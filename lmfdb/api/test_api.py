@@ -19,7 +19,7 @@ class ApiTest(LmfdbTest):
                'ec_curvedata', 'g2c_curves', 'halfmf_forms',
                'hgm_motives', 'hmf_forms', 'lf_fields',
                'modlmf_forms', 'modlgal_reps', 'nf_fields',
-               'gps_sato_tate', 'smf_dims', 'gps_transitive',
+               'gps_st', 'smf_dims', 'gps_transitive',
                'fq_fields', 'hecke_algebras', 'belyi_passports']
         for tbl in dbs:
             data = self.tc.get("/api/{}".format(tbl), follow_redirects=True).get_data(as_text=True)

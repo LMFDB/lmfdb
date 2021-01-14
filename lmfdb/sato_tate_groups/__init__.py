@@ -17,4 +17,4 @@ assert main # silence pyflakes
 app.register_blueprint(st_page, url_prefix="/SatoTateGroup")
 
 register_search_function("satotate", "Sato Tate Group",
-    "Search over Sato Tate Groups", auto_search='gps_sato_tate', inv=['gps','gps_sato_tate'])
+    "Search over Sato Tate Groups", auto_search='gps_st', inv=['gps','gps_st'])
