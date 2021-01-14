@@ -2162,8 +2162,9 @@ class PostgresTable(PostgresBase):
                 self.resort()
 
             # add an index for the default sort
-            if not any(index["columns"] == sort for index_name, index in self.list_indexes().items()):
-                self.create_index(sort)
+            sort_index = [x if isinstance(x, str) else x[0] for x in sort]
+            if not any(index["columns"] == sort_index for index_name, index in self.list_indexes().items()):
+                self.create_index(sort_index)
             self.log_db_change("set_sort", sort=sort)
 
     def set_label(self, label_col=None):
