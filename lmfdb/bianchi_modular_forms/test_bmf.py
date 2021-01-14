@@ -167,8 +167,7 @@ class BMFTest(LmfdbTest):
         page = self.tc.get('ModularForm/GL2/ImaginaryQuadratic/159.0.7.1/30.5/a/download/magma').get_data(as_text=True)
         assert 'Bianchi newform not found' in page
 
-        # These tests take too long to use magma_free, so we run magma when it is installed
-        from sage.all import magma
+        # We run magma when it is installed
         for label, expected in [
                 ['2.0.4.1/100.2/a',
                  'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
@@ -183,11 +182,4 @@ class BMFTest(LmfdbTest):
             magma_code += 'f, iso := Explode(make_newform());\n'
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
-
-            try:
-                assert 'success' in magma.eval(magma_code)
-            except RuntimeError as the_error:
-                if str(the_error).startswith("unable to start magma"):
-                    pass
-                else:
-                    raise
+            self.assert_if_magma('success', magma_code, mode='in')
