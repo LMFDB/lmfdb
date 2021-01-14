@@ -81,6 +81,7 @@ def convert_label(label):
 
 def get_name(label):
     label = convert_label(label)
+    print("converted stgroup label %s"%(label))
     if re.match(MU_LABEL_RE, label):
         name = r'\mu(%s)'%label.split('.')[2]
     elif re.match(NU1_MU_LABEL_RE, label):
