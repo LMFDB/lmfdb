@@ -69,7 +69,7 @@ class SatoTateGroupTest(LmfdbTest):
         import sys
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.get_data(as_text=True)
-        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(2)}, projection='label'))
+        data = list(db.gps_st.search({'weight':int(1),'degree':int(2)}, projection='label'))
         assert len(data) == 3
         print("")
         for label in data:
@@ -79,7 +79,7 @@ class SatoTateGroupTest(LmfdbTest):
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.get_data(as_text=True)
-        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(4)}, projection='label'))
+        data = list(db.gps_st.search({'weight':int(1),'degree':int(4)}, projection='label'))
         assert len(data) == 52
 
         for label in data:

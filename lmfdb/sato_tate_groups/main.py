@@ -25,19 +25,20 @@ from lmfdb.sato_tate_groups import st_page
 
 MU_LABEL_RE = r'^0\.1\.[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
-NU1_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
-SU2_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
-ST_LABEL_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
-ST_LABEL_SHORT_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+$'
-ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
+NU1_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.[1B]\.d[1-9][0-9]*$'
+SU2_MU_LABEL_RE = r'^[1-9][0-9]*\.2\.[3A]\.c[1-9][0-9]*$'
+ST_OLD_LABEL_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
+ST_OLD_LABEL_SHORT_RE = r'^\d+\.\d+\.\d+\.\d+\.\d+$'
+ST_LABEL_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+[a-z]+$'
+ST_LABEL_SHORT_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+$'
+ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-Z0-9\{\}\(\)\[\]\_\,]+'
 INFINITY = -1
 
 credit_string = 'Andrew Sutherland'
 
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
-st0_list = ( 'SO(1)', 'U(1)', 'SU(2)', 'U(1)_2', 'SU(2)_2','U(1)xU(1)', 'U(1)xSU(2)','SU(2)xSU(2)','USp(4)' )
+st0_list = ( 'U(1)', 'SU(2)', 'U(1)_2', 'SU(2)_2','U(1)xU(1)', 'U(1)xSU(2)','SU(2)xSU(2)','USp(4)' )
 st0_dict = {
-    'SO(1)':'\\mathrm{SO}(1)',
     'U(1)':'\\mathrm{U}(1)',
     'SU(2)':'\\mathrm{SU}(2)',
     'U(1)_2':'\\mathrm{U}(1)_2',
@@ -63,25 +64,41 @@ def string_matrix(m):
         return ''
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
+def convert_label(label):
+    d2A = {'3':'A','1':'B'}
+    d4A = {'10':'A','6':'B','4':'C','2':'D','3':'E','1':'F'}
+    a = label.split('.')
+    if a[0] == '0':
+        return label
+    if a[0] == '1':
+        if a[1] == '2' and a[2] in d2A:
+            a[2] = d2A[a[2]]
+            return a.join('.')
+        if a[1] == '4' and a[2] in d4A:
+            a[2] = d4A[a[2]]
+            return a.join('.')
+    return label
+
 def get_name(label):
+    label = convert_label(label)
     if re.match(MU_LABEL_RE, label):
         name = r'\mu(%s)'%label.split('.')[2]
     elif re.match(NU1_MU_LABEL_RE, label):
         if label.split('.')[3] == 'd1':
             if label.split('.')[0] == '1':
-                label = '1.2.1.2.1a'
+                label = '1.2.B.2.1a'
             name = r'N(\mathrm{U}(1))'
         else:
             name = r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:]
     elif re.match(SU2_MU_LABEL_RE, label):
         if label.split('.')[3] == 'c1':
             if label.split('.')[0] == '1':
-                label = '1.2.3.1.1a'
+                label = '1.2.A.1.1a'
             name = r'\mathrm{SU}(2)'
         else:
             name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
     else:
-        data = db.gps_sato_tate.lookup(label)
+        data = db.gps_st.lookup(label)
         if data:
             name = data['pretty']
         else:
@@ -228,7 +245,7 @@ def index():
     if request.args:
         return search(info)
     weight_list= [0, 1]
-    degree_list = list(range(1, 5, 1))
+    degree_list = list(range(1, 7, 1))
 
     for key, val in [('weight_list', weight_list),
                      ('degree_list', degree_list),
@@ -241,14 +258,14 @@ def index():
 @st_page.route('/random')
 @redirect_no_cache
 def random():
-    label = db.gps_sato_tate.random()
+    label = db.gps_st.random()
     return url_for('.by_label', label=label)
 
 @st_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "st_group",
-        db.gps_sato_tate,
+        db.gps_st,
         url_for_label=lambda label: url_for('.by_label', label=label),
         title=r"Some interesting Sato-Tate groups",
         bread=get_bread("Interesting"),
@@ -284,28 +301,32 @@ def search_by_label(label):
         return render_by_label(label)
     if re.match(ST_LABEL_SHORT_RE, label):
         return redirect(url_for('.by_label',label=label+'a'),301)
+    if re.match(ST_OLD_LABEL_RE, label):
+        return render_by_label(convert_label(label))
+    if re.match(ST_OLD_LABEL_SHORT_RE, label):
+        return redirect(url_for('.by_label',label=convert_label(label)+'a'),301)
     # check for labels of the form 0.1.n corresponding to mu(n)
     if re.match(MU_LABEL_RE, label):
         return render_by_label(label)
     # check for labels of the form w.2.1.dn corresponding to N(U(1)) x mu(n)
     if re.match(NU1_MU_LABEL_RE, label):
-        return render_by_label(label)
+        return render_by_label(convert_label(label))
     # check for labels of the form w.2.3.cn corresponding to SU(2) x mu(n)
     if re.match(SU2_MU_LABEL_RE, label):
-        return render_by_label(label)
+        return render_by_label(convert_label(label))
     # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
     if re.match(MU_LABEL_NAME_RE, label):
         return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
     # check for general labels of the form w.d.name
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
-        rlabel = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, "label")
+        rlabel = db.gps_st.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, "label")
         if not rlabel:
             flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
             return redirect(url_for(".index"))
         return redirect(url_for('.by_label', label=rlabel), 301)
     # check for a straight up name
-    rlabel = db.gps_sato_tate.lucky({'name':label}, "label")
+    rlabel = db.gps_st.lucky({'name':label}, "label")
     if not rlabel:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
@@ -412,7 +433,7 @@ def search(info):
             nres = len(components_list)
         if search_type == "Random" and nres > 0:
             # Need to return mu(1), mu(2) or mu(4) sometimes
-            otherlen = db.gps_sato_tate.count(query)
+            otherlen = db.gps_st.count(query)
             r = ZZ.random_element(nres + otherlen)
             if r < nres:
                 return redirect(url_for(".by_label", label="0.1.%d" % components_list[r]), 307)
@@ -422,10 +443,10 @@ def search(info):
         nres = 0
 
     if 'result_count' in info:
-        nres += db.gps_sato_tate.count(query)
+        nres += db.gps_st.count(query)
         return jsonify({"nres":str(nres)})
     if search_type == "Random":
-        label = db.gps_sato_tate.random(query, "label")
+        label = db.gps_st.random(query, "label")
         if label is not None:
             return redirect(url_for(".by_label", label=label), 307)
 
@@ -434,7 +455,7 @@ def search(info):
         start2 = start - nres if start > nres else 0
         proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','moments']
         try:
-            res = db.gps_sato_tate.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
+            res = db.gps_st.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
         except QueryCanceledError as err:
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
@@ -548,7 +569,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded line plot of SU(2) x mu(n) in the complex plane """
     if n == 1:
-        return db.gps_sato_tate.lookup('1.2.3.1.1a').get('trace_histogram')
+        return db.gps_st.lookup('1.2.3.1.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
@@ -596,7 +617,7 @@ def nu1_mu_info(w,n):
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n == 1:
-        return db.gps_sato_tate.lookup('1.2.1.2.1a').get('trace_histogram')
+        return db.gps_st.lookup('1.2.1.2.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
     else:
@@ -628,7 +649,7 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(su2_mu_info(w,n), portrait=su2_mu_portrait(n))
-    data = db.gps_sato_tate.lookup(label)
+    data = db.gps_st.lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -638,7 +659,7 @@ def render_by_label(label):
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     info['rational']=boolean_name(info.get('rational',True))
-    st0 = db.gps_sato_tate0.lucky({'name':data['identity_component']})
+    st0 = db.gps_st0.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
@@ -828,7 +849,7 @@ class STSearchArray(SearchArray):
 
 @cached_function
 def compcache():
-    return smallgroup_cache(db.gps_sato_tate.distinct("component_group"))
+    return smallgroup_cache(db.gps_st.distinct("component_group"))
 gapidre = re.compile(r"(\d+)\.(\d+)")
 def compdata(comp):
     return [int(x) for x in gapidre.findall(comp)[0]]
@@ -844,7 +865,7 @@ def idunformatter(grp):
     return grp.replace("$", "").replace(r"\operatorname", "").replace(r"\times", "x").replace("{", "").replace("}", "")
 
 class STStats(StatsDisplay):
-    table = db.gps_sato_tate
+    table = db.gps_st
     baseurl_func = ".index"
 
     stat_list = [
@@ -887,7 +908,7 @@ class STStats(StatsDisplay):
               "first_a2_moment": "st_group.moments"}
 
     def __init__(self):
-        self.ngroups = db.gps_sato_tate.count()
+        self.ngroups = db.gps_st.count()
 
     @property
     def summary(self):
