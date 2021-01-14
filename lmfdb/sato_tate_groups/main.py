@@ -81,7 +81,6 @@ def convert_label(label):
 
 def get_name(label):
     label = convert_label(label)
-    print("converted stgroup label %s"%(label))
     if re.match(MU_LABEL_RE, label):
         name = r'\mu(%s)'%label.split('.')[2]
     elif re.match(NU1_MU_LABEL_RE, label):
@@ -282,13 +281,13 @@ def statistics():
 
 @st_page.route('/<label>')
 def by_label(label):
-    clean_label = clean_input(label)
+    clean_label = converet_label(clean_input(label))
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
-    if label == '1.2.1.d1':
-        return redirect(url_for('.by_label', label='1.2.1.2.1a'), 301)
-    if label == '1.2.3.c1':
-        return redirect(url_for('.by_label', label='1.2.3.1.1a'), 301)
+    if label == '1.2.B.d1':
+        return redirect(url_for('.by_label', label='1.2.B.2.1a'), 301)
+    if label == '1.2.A.c1':
+        return redirect(url_for('.by_label', label='1.2.A.1.1a'), 301)
     return search_by_label(label)
 
 ###############################################################################
@@ -309,10 +308,10 @@ def search_by_label(label):
     # check for labels of the form 0.1.n corresponding to mu(n)
     if re.match(MU_LABEL_RE, label):
         return render_by_label(label)
-    # check for labels of the form w.2.1.dn corresponding to N(U(1)) x mu(n)
+    # check for labels of the form w.2.B.dn corresponding to N(U(1)) x mu(n)
     if re.match(NU1_MU_LABEL_RE, label):
         return render_by_label(convert_label(label))
-    # check for labels of the form w.2.3.cn corresponding to SU(2) x mu(n)
+    # check for labels of the form w.2.A.cn corresponding to SU(2) x mu(n)
     if re.match(SU2_MU_LABEL_RE, label):
         return render_by_label(convert_label(label))
     # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
@@ -538,7 +537,7 @@ def su2_mu_info(w,n):
     assert w > 0 and n > 0
     n = ZZ(n)
     rec = {}
-    rec['label'] = "%d.2.3.c%d"%(w,n)
+    rec['label'] = "%d.2.A.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
@@ -558,8 +557,8 @@ def su2_mu_info(w,n):
     rec['trace_zero_density']='0'
     rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
-    rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.A.c%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.A.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
     rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
@@ -570,7 +569,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded line plot of SU(2) x mu(n) in the complex plane """
     if n == 1:
-        return db.gps_st.lookup('1.2.3.1.1a').get('trace_histogram')
+        return db.gps_st.lookup('1.2.A.1.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
@@ -586,7 +585,7 @@ def nu1_mu_info(w,n):
     assert w > 0 and n > 0
     n = ZZ(n)
     rec = {}
-    rec['label'] = "%d.2.1.d%d"%(w,n)
+    rec['label'] = "%d.2.B.d%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
@@ -606,8 +605,8 @@ def nu1_mu_info(w,n):
     rec['trace_zero_density']='1/2'
     rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
     rec['numgens'] = 2
-    rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.B.d%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.B.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
     rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
@@ -618,7 +617,7 @@ def nu1_mu_info(w,n):
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n == 1:
-        return db.gps_st.lookup('1.2.1.2.1a').get('trace_histogram')
+        return db.gps_st.lookup('1.2.B.2.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
     else:
@@ -707,10 +706,10 @@ def render_by_label(label):
 
 def render_st_group(info, portrait=None):
     """ render html page for Sato-Tate group described by info """
-    prop2 = [('Label', '%s'%info['label'])]
+    prop = [('Label', '%s'%info['label'])]
     if portrait:
-        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
-    prop2 += [
+        prop += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
+    prop += [
         ('Name', r'\(%s\)'%info['pretty']),
         ('Weight', prop_int_pretty(info['weight'])),
         ('Degree', prop_int_pretty(info['degree'])),
@@ -727,7 +726,7 @@ def render_st_group(info, portrait=None):
     ])
     title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
     return render_template('st_display.html',
-                           properties=prop2,
+                           properties=prop,
                            credit=credit_string,
                            info=info,
                            bread=bread,
@@ -767,7 +766,7 @@ class STSearchArray(SearchArray):
     noun = "group"
     plural_noun = "groups"
     jump_example = "1.4.USp(4)"
-    jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.1.2.1a or N(U(1)), or 1.4.10.1.1a or 1.4.USp(4)"
+    jump_egspan = "e.g. 0.1.3 or 0.1.mu(3), or 1.2.B.2.1a or N(U(1)), or 1.4.A.1.1a or 1.4.USp(4)"
     jump_knowl = "st_group.search_input"
     jump_prompt = "Label or name"
     def __init__(self):
