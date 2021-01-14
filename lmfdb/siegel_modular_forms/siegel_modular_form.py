@@ -17,6 +17,7 @@ from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.family import get_smf_family, get_smf_families
 from . import dimensions
 from . import sample
+from lmfdb.utils import redirect_no_cache
 
 ###############################################################################
 # Utility functions
@@ -55,8 +56,9 @@ def index():
     return render_main_page(bread)
 
 @smf_page.route("/random")
+@redirect_no_cache
 def random_sample():
-    return redirect(url_for('.by_label', label='.'.join(sample.random_sample_name())), 307)
+    return url_for('.by_label', label='.'.join(sample.random_sample_name()))
 
 @smf_page.route('/<label>')
 @smf_page.route('/<label>/')
@@ -281,7 +283,7 @@ def render_sample_page(family, sam, args, bread):
     info['evs_avail'] = [n for n in sam.available_eigenvalues()]
     info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
 
-    # Do not attempt to constuct a modulus ideal unless the field has a reasonably small discriminant
+    # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
     info['field'] = sam.field()
     if info['field_poly'].disc() < 10**80:

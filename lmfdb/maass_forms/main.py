@@ -2,11 +2,11 @@
 
 import re
 from lmfdb import db
-from flask import render_template, request, url_for, redirect, abort
+from flask import render_template, request, url_for,  abort
 from lmfdb.maass_forms import maass_page #, logger
 from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
-    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error)
+    parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
@@ -47,9 +47,10 @@ def index():
     return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
+@redirect_no_cache
 def random():
     label = db.maass_newforms.random()
-    return redirect(url_for('.by_label', label=label), 307)
+    return url_for('.by_label', label=label)
 
 @maass_page.route("/interesting")
 def interesting():
@@ -148,7 +149,7 @@ class MaassSearchArray(SearchArray):
     plural_noun = "Maass forms"
     def __init__(self):       
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="997 or 1-10")
-        weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currenlty available)")
+        weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currently available)")
         character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.1 (only trivial character currently available)")
         symmetry = SelectBox(name="symmetry", label="Symmetry",  knowl="mf.maass.mwf.symmetry", options=[("", "any symmetry"), ("1", "even only"), ("-1", "odd only")])
         spectral_parameter = TextBox(name="spectral_parameter",

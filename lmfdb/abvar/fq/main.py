@@ -22,6 +22,7 @@ from . import abvarfq_page
 from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
+from lmfdb.utils import redirect_no_cache
 
 logger = make_logger("abvarfq")
 
@@ -706,10 +707,11 @@ def by_label(label):
     return redirect(url_for_label(label))
 
 @abvarfq_page.route("/random")
+@redirect_no_cache
 def random_class():
     label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
-    return redirect(url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
+    return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
 
 @abvarfq_page.route("/interesting")
 def interesting():

@@ -14,6 +14,7 @@ from lmfdb.utils import (
     parse_bool, parse_ints, parse_bracketed_posints, parse_bracketed_rats, parse_primes,
     search_wrap,
     Downloader,
+    redirect_no_cache,
     SearchArray, TextBox, SelectBox, YesNoBox, TextBoxWithSelect, CountBox, SubsetBox,
     StatsDisplay, formatters)
 from lmfdb.utils.interesting import interesting_knowls
@@ -89,7 +90,7 @@ geom_aut_grp_dict_pretty = {
         '[10,2]':'$C_{10}$',
         '[12,4]':'$D_6$',
         '[24,8]':'$C_3:D_4$',
-        '[48,29]':'$\GL(2,3)$'}
+        '[48,29]':r'$\GL(2,3)$'}
 
 ###############################################################################
 # Routing for top level and random_curve
@@ -136,9 +137,10 @@ def index_Q():
     )
 
 @g2c_page.route("/Q/random/")
+@redirect_no_cache
 def random_curve():
     label = db.g2c_curves.random()
-    return redirect(url_for_curve_label(label), 307)
+    return url_for_curve_label(label)
 
 @g2c_page.route("/Q/interesting")
 def interesting():

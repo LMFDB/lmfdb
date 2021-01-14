@@ -42,12 +42,12 @@ class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
 
-    For each search table (e.g. ec_curves), there are two auxiliary tables supporting
-    statistics functionality.  The counts table (e.g. ec_curves_counts) records
+    For each search table (e.g. ec_curvedata), there are two auxiliary tables supporting
+    statistics functionality.  The counts table (e.g. ec_curvedata_counts) records
     the number of rows in the search table that satisfy a particular query.
     These counts are used by the website to display the number of matches on a
     search results page, and is also used on statistics pages and some browse pages.
-    The stats table (e.g. ec_curves_stats) is used to record minimum, maximum and
+    The stats table (e.g. ec_curvedata_stats) is used to record minimum, maximum and
     average values taken on by a numerical column (possibly over rows subject to some
     constraint).
 
@@ -732,7 +732,7 @@ class PostgresStatsTable(PostgresBase):
         A convenience function for adding statistics on a given set of columns,
         where rows are grouped into intervals by a bucketing dictionary.
 
-        See the ``add_stats`` mehtod for the actual statistics computed.
+        See the ``add_stats`` method for the actual statistics computed.
 
         INPUT:
 
@@ -1305,7 +1305,7 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``col`` -- a colum name
+        - ``col`` -- a column name
         - ``n`` -- an integer
         """
         if col not in self.table.search_cols:
@@ -1798,7 +1798,7 @@ ORDER BY v.ord LIMIT %s"""
 
     def get_oldstat(self, name):
         """
-        Temporary suppport for statistics created in Mongo.
+        Temporary support for statistics created in Mongo.
         """
         selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
         cur = self._execute(selecter, [name])

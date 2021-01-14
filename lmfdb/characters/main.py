@@ -68,7 +68,7 @@ class DirichSearchArray(SearchArray):
     noun = "character"
     plural_noun = "characters"
     jump_example = "13.2"
-    jump_egspan = "e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
+    jump_egspan = r"e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,·)\),or 13.f for its Galois orbit."
     jump_knowl="character.dirichlet.search_input"
     jump_prompt="Label"
     def __init__(self):

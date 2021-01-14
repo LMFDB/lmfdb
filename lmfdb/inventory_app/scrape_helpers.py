@@ -91,7 +91,7 @@ def check_and_insert_scrape_record(db_id, coll_id, uid):
 
     time = datetime.datetime.now()
     record = {'db':db_id, 'coll':coll_id, 'uid':uid, 'time':time, 'running':False, 'complete':False}
-    #Db and collection ids. UID for scrape process. Time triggered. If this COLL is being scraped. If this coll hass been done
+    #Db and collection ids. UID for scrape process. Time triggered. If this COLL is being scraped. If this coll has been done
     try:
         insert_scrape_record({'isa':'scrape', 'content':record})
         result = {'err':False, 'inprog':False, 'ok':True}

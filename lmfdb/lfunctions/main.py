@@ -27,7 +27,7 @@ from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.artin_representations.main import parse_artin_label
-from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float, prop_int_pretty, redirect_no_cache
 from lmfdb.app import is_debug_mode
 from lmfdb import db
 from six import string_types
@@ -57,10 +57,11 @@ def l_function_history():
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=[('Completeness of the data', url_for('.completeness'))])
 
 @l_function_page.route("/random")
+@redirect_no_cache
 def random_l_function():
     url = db.lfunc_instances.random(projection="url")
     if url:
-        return redirect("/L/"+url, 302)
+        return "/L/"+url
     else:
         return random_l_function()
 
@@ -296,6 +297,8 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    if char_orbit_label is None:
+        return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,

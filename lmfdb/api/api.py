@@ -225,9 +225,7 @@ def api_query(table, id = None):
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
-                    print(qval)
                     qval = [int(_) for _ in qval[2:].split(DELIM)]
-                    print(qval)
                 elif qval.startswith("lf"):
                     qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
@@ -265,7 +263,12 @@ def api_query(table, id = None):
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
-        api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
+        # So as not to preserve backwards compatibility (see test_api_usage() test)
+        if table=='ec_curvedata':
+            for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
+                if oldkey in q:
+                    q[newkey] = q[oldkey]
+                    q.pop(oldkey)
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
