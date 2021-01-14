@@ -9,7 +9,7 @@ class SatoTateGroupTest(LmfdbTest):
     #
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
-        assert 'Browse' in L.get_data(as_text=True) and 'SO(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
+        assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/?label=1.4.A.1.1a', follow_redirects=True)
@@ -100,7 +100,7 @@ class SatoTateGroupTest(LmfdbTest):
         
     def test_favourites(self):
         for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
-            L = self.tc.get('/SatoTateGroup/'+label)
+            L = self.tc.get('/SatoTateGroup/'+label, follow_redirects=True)
             assert "Moment sequences" in L.get_data(as_text=True)
         for label in [ '1.2.B.2.1a','1.2.A.1.1a', '1.4.F.12.4d', '1.4.E.6.2a', '1.4.B.1.1a', '1.4.A.1.1a' ]:
             L = self.tc.get('/SatoTateGroup/'+label)
