@@ -38,12 +38,19 @@ credit_string = 'Andrew Sutherland'
 
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = (
+    'SO(1)', 'SO(2)', 'SO(3)', 'SO(4)', 'SO(5)', 'SO(6)',
     'U(1)', 'SU(2)',
     'U(1)_2', 'SU(2)_2', 'U(1)xU(1)', 'U(1)xSU(2)', 'SU(2)xSU(2)', 'USp(4)',
     'U(1)_3', 'SU(2)_3', 'U(1)xU(1)_2', 'SU(2)xU(1)_2', 'U(1)xSU(2)_2', 'SU(2)xSU(2)_2', 'U(1)^3',
     'U(1)^2xSU(2)', 'U(1)xSU(2)^2', 'SU(2)^3', 'U(1)xUSp(4)', 'SU(2)xUSp(4)', 'U(3)', 'USp(6)'
 )
 st0_dict = {
+    'SO(1)':'\\mathrm{SO}(1)',
+    'SO(2)':'\\mathrm{SO}(2)',
+    'SO(3)':'\\mathrm{SO}(3)',
+    'SO(4)':'\\mathrm{SO}(4)',
+    'SO(5)':'\\mathrm{SO}(5)',
+    'SO(6)':'\\mathrm{SO}(6)',
     'U(1)':'\\mathrm{U}(1)',
     'SU(2)':'\\mathrm{SU}(2)',
     'U(1)_2':'\\mathrm{U}(1)_2',
