@@ -44,7 +44,7 @@ class LfunctionTest(LmfdbTest):
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/', follow_redirects=True)
         assert '0.253841' in L.get_data(as_text=True)
-        assert 'Isogeny class 11.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-11-1.1-c1-0-0' in L.get_data(as_text=True)
@@ -54,7 +54,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/Q/27/a/', follow_redirects=True)
         assert '0.5888795834' in L.get_data(as_text=True)
-        assert 'Isogeny class 27.a'in L.get_data(as_text=True)
+        assert 'Elliptic curve 27.a'in L.get_data(as_text=True)
         assert 'Modular form 27.2.a.a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-3e3-1.1-c1-0-0' in L.get_data(as_text=True)
@@ -63,7 +63,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/Q/379998/d/', follow_redirects=True)
         assert '9.364311197' in L.get_data(as_text=True)
-        assert 'Isogeny class 379998.d' in L.get_data(as_text=True)
+        assert 'Elliptic curve 379998.d' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '2-379998-1.1-c1-0-2' in L.get_data(as_text=True)
         L = self.tc.get('/L/Zeros/2/379998/1.1/c1/0/2/')
@@ -71,8 +71,8 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/', follow_redirects=True)
         assert '0.3599289594' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.5.1-31.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.5.1-31.2-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.5.1-31.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.5.1-31.2-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.1-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-31.2-a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
@@ -80,18 +80,18 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/', follow_redirects=True)
         assert '0.5945775518' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.5.1-80.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 20.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 100.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.5.1-80.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 20.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 100.a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.5.1-80.1-a' in L.get_data(as_text=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-2000-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/', follow_redirects=True)
-        assert 'Isogeny class 2.0.11.1-256.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.11.1-256.1-b' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.44.1-16.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.44.1-16.1-c' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.11.1-256.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.11.1-256.1-b' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.44.1-16.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.44.1-16.1-c' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.44.1-16.1-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.44.1-16.1-c' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.11.1-256.1-a' in L.get_data(as_text=True)
@@ -102,17 +102,17 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
         assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '0.5352579714' in L.get_data(as_text=True)
         assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.4.1-100.2-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.4.1-100.2-a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 20.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 80.b' in L.get_data(as_text=True)
+        assert 'Elliptic curve 20.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 80.b' in L.get_data(as_text=True)
         assert 'Modular form 20.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 80.2.a.b' in L.get_data(as_text=True)
         assert '4-40e2-1.1-c1e2-0-1' in L.get_data(as_text=True)
@@ -136,21 +136,21 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.3.1-75.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.3.1-75.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.3.1-75.1-a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 15.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 45.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 15.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 45.a' in L.get_data(as_text=True)
         assert 'Modular form 15.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 45.2.a.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.8.1/2592.3/c/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.8.1-2592.3-c' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.8.1-2592.1-f' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.8.1-2592.3-c' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.8.1-2592.1-f' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.8.1-2592.3-c' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.8.1-2592.1-f' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 288.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 576.i' in L.get_data(as_text=True)
+        assert 'Elliptic curve 288.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 576.i' in L.get_data(as_text=True)
         assert 'Modular form 288.2.a.a' in L.get_data(as_text=True)
 
 
@@ -206,13 +206,13 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/', follow_redirects=True)
         assert '0.253841' in L.get_data(as_text=True)
-        assert 'Isogeny class 11.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 11.a' in L.get_data(as_text=True)
         assert 'Modular form 11.2.a.a' in L.get_data(as_text=True)
         #FIXME fill ST info in origins = CMFs
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/', follow_redirects=True)
-        assert 'Isogeny class 169.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 169.a' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.4.1' in L.get_data(as_text=True)
@@ -220,7 +220,7 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.4.E_6' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/', follow_redirects=True)
-        assert 'Isogeny class 324.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 324.a' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a.7.1' in L.get_data(as_text=True)
@@ -230,7 +230,7 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/', follow_redirects=True)
         assert 'Modular form 490.2.a.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 490.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 490.a' in L.get_data(as_text=True)
         assert '0.729971' in L.get_data(as_text=True)
         assert r'(2,\ 490,\ (\ :1/2),\ 1)' in L.get_data(as_text=True)
         assert '0.940863335931152039286421559408' in L.get_data(as_text=True)
@@ -418,46 +418,6 @@ class LfunctionTest(LmfdbTest):
         assert '1.73353' in L.get_data(as_text=True) and '/EllipticCurve/Q/234446/a' in L.get_data(as_text=True)
         assert '17.02494' in L.get_data(as_text=True) and '/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032' in L.get_data(as_text=True)
 
-    def test_Ldegree3(self):
-        L = self.tc.get('/L/degree3/')
-        assert '6.42223' in L.get_data(as_text=True) and '/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864' in L.get_data(as_text=True)
-
-    def test_Ldegree4(self):
-        L = self.tc.get('/L/degree4/')
-        assert '5.06823' in L.get_data(as_text=True) and '/Genus2Curve/Q/169/a/' in L.get_data(as_text=True)
-        assert '16.18901' in L.get_data(as_text=True) and '2.272' in L.get_data(as_text=True) and '/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019' in L.get_data(as_text=True)
-
-    def test_LdegreeLarge(self):
-        L = self.tc.get('L/degree1234567689/')
-        assert 'no L-function data available' in L.get_data(as_text=True)
-
-    def test_Ldegree2CuspForm(self):
-        L = self.tc.get('/L/degree2/CuspForm/')
-        assert 'trivial character' in L.get_data(as_text=True)
-
-    def test_Ldegree2MaassForm(self):
-        L = self.tc.get('/L/degree2/MaassForm/')
-        assert 'Maass' in L.get_data(as_text=True)
-
-    def test_Ldegree2EllipticCurve(self):
-        L = self.tc.get('/L/degree2/EllipticCurve/')
-        assert 'Elliptic' in L.get_data(as_text=True)
-
-    def test_Ldegree3MaassForm(self):
-        L = self.tc.get('/L/degree3/r0r0r0/')
-        assert 'equation' in L.get_data(as_text=True)
-
-    def test_Ldegree3EllipticCurve(self):
-        L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
-        assert 'Elliptic' in L.get_data(as_text=True)
-
-    def test_Ldegree4MaassForm(self):
-        L = self.tc.get('/L/degree4/r0r0r0r0/')
-        assert 'functional' in L.get_data(as_text=True)
-
-    def test_Ldegree4EllipticCurve(self):
-        L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
-        assert 'Elliptic' in L.get_data(as_text=True)
 
     def test_Lhgm(self):
         L = self.tc.get('/L/Motive/Hypergeometric/Q/A4_B2.1/t-1.1')
@@ -474,7 +434,7 @@ class LfunctionTest(LmfdbTest):
         assert '5.0682346354' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/15360/f/', follow_redirects=True)
-        assert 'Isogeny class 15360.f' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 15360.f' in L.get_data(as_text=True)
         assert '4-15360-1.1-c1e2-0-5' in L.get_data(as_text=True)
 
 
@@ -482,59 +442,59 @@ class LfunctionTest(LmfdbTest):
         assert '2.15654793578' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/2457/b/', follow_redirects=True)
-        assert 'Isogeny class 2.0.3.1-273.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.3.1-273.4-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2457.b' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.3.1-273.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.3.1-273.4-a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 2457.b' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/363/a/', follow_redirects=True)
-        assert 'Isogeny class 363.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 363.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 11.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 33.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 11.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 33.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/360/a/', follow_redirects=True)
-        assert 'Isogeny class 360.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 360.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 15.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 24.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 15.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 24.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/336/a/', follow_redirects=True)
-        assert 'Isogeny class 336.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 336.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 14.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 24.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 14.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 24.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/324/a/', follow_redirects=True)
-        assert 'Isogeny class 324.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 324.a' in L.get_data(as_text=True)
         assert 'Modular form 18.2.c.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/294/a/', follow_redirects=True)
-        assert 'Isogeny class 294.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 294.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 14.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 21.' in L.get_data(as_text=True)
+        assert 'Elliptic curve 14.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 21.' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/256/a/', follow_redirects=True)
-        assert 'Isogeny class 256.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 256.a' in L.get_data(as_text=True)
         assert 'Modular form 16.2.e.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/169/a/', follow_redirects=True)
-        assert 'Isogeny class 169.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 169.a' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.4.1' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.10.1' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/196/a/', follow_redirects=True)
-        assert 'Isogeny class 196.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 196.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 14.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 14.a' in L.get_data(as_text=True)
         assert 'Modular form 14.2.a.a' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/Genus2Curve/Q/576/a/', follow_redirects=True)
         assert 'Hilbert modular form 2.2.8.1-9.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.8.1-9.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 576.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.8.1-9.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 576.a' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a.13.1' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a.13.2' in L.get_data(as_text=True)
@@ -542,12 +502,12 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Genus2Curve/Q/20736/i/', follow_redirects=True)
         assert 'Bianchi modular form 2.0.8.1-324.3-a' in L.get_data(as_text=True)
         assert 'Hilbert modular form 2.2.24.1-36.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.0.8.1-324.3-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 2.2.24.1-36.1-a' in L.get_data(as_text=True)
-        assert 'Isogeny class 20736.i' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.8.1-324.3-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.2.24.1-36.1-a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 20736.i' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
-        assert 'Isogeny class 36.a' in L.get_data(as_text=True)
-        assert 'Isogeny class 576.f' in L.get_data(as_text=True)
+        assert 'Elliptic curve 36.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 576.f' in L.get_data(as_text=True)
         assert 'Modular form 36.2.a.a' in L.get_data(as_text=True)
         assert 'Modular form 36.2.a.a.1.1' in L.get_data(as_text=True)
         assert 'Modular form 576.2.a.f' in L.get_data(as_text=True)
@@ -563,7 +523,7 @@ class LfunctionTest(LmfdbTest):
         assert '324016' in L.get_data(as_text=True), "Missing data in /L/lhash/1938322253992393114/"
         assert 'Dual L-function' not in L.get_data(as_text=True)
         assert '2-324016-1.1-c1-0-6' in L.get_data(as_text=True)
-        assert 'Isogeny class 324016.h' in L.get_data(as_text=True)
+        assert 'Elliptic curve 324016.h' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.get_data(as_text=True), "Missing data in /L/lhash/dirichlet_L_6253.458/"
@@ -583,11 +543,11 @@ class LfunctionTest(LmfdbTest):
         assert '324016' in L.get_data(as_text=True), "Missing data in /L/tracehash/1938322253992393114/"
         assert 'Dual L-function' not in L.get_data(as_text=True)
         assert '2-324016-1.1-c1-0-6' in L.get_data(as_text=True)
-        assert 'Isogeny class 324016.h' in L.get_data(as_text=True)
+        assert 'Elliptic curve 324016.h' in L.get_data(as_text=True)
 
 
         L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects=True)
-        assert 'Isogeny class 37.a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 37.a' in L.get_data(as_text=True)
         assert 'Dual L-function' not in L.get_data(as_text=True)
 
 
