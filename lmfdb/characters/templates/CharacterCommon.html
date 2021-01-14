@@ -8,7 +8,7 @@
 {# Kronecker symbol #}
 
 {% if symbol %}
-  {% if (isprimitive == "Yes" or isprimitive == "yes") and indlabel %}
+  {% if (isprimitive == "Yes" or isprimitive == "yes") %}
     <h2 style="margin-top:0px;">
       {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
     </h2>
@@ -30,7 +30,7 @@
   <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> <td>{{place_code('cond')}}</td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.order',title='Order')}}:</td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.real',title='Real')}}:</td> <td> {{ isreal }} </td> </tr>
-  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, gal_orb_label=ind_orbit_label, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
 {% if type == 'Dirichlet' %}
   {% if isminimal %}
   <tr> <td>{{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td>{{ isminimal }}</td> </tr>
@@ -47,7 +47,7 @@
 {# Galois Orbits #}
 
 <h2>
-  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }} {{ modulus }}.{{ orbit_label }}
+  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }} <a href="{{ url_character(type=type, number_field=nflabel, modulus=modulus, gal_orb_label=orbit_label)}}">  {{ modulus }}.{{ orbit_label }} </a>
 </h2>
 <p>
 {% for mod,num,label,prim in galoisorbit %}
