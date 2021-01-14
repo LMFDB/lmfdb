@@ -21,7 +21,7 @@ class HMFTest(LmfdbTest):
         assert 'EllipticCurve/5.5.126032.1/82.1/b/' in L.get_data(as_text=True)
 
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
-        assert 'Isogeny class' in L.get_data(as_text=True)
+        assert 'Elliptic curve' in L.get_data(as_text=True)
         assert 'EllipticCurve/2.2.89.1/2.1/a' in L.get_data(as_text=True)
 
     def test_typo(self): #771
@@ -104,24 +104,24 @@ class HMFTest(LmfdbTest):
         for url, texts, notitself in [
                 ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a',
                     ('Hilbert modular form 2.2.5.1-31.2-a',
-                        'Isogeny class 2.2.5.1-31.1-a',
-                        'Isogeny class 2.2.5.1-31.2-a'),
+                        'Elliptic curve 2.2.5.1-31.1-a',
+                        'Elliptic curve 2.2.5.1-31.2-a'),
                     'Hilbert modular form 2.2.5.1-31.1-a'),
                 ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.2-a',
                     ('Hilbert modular form 2.2.5.1-31.1-a',
-                        'Isogeny class 2.2.5.1-31.1-a',
-                        'Isogeny class 2.2.5.1-31.2-a'),
+                        'Elliptic curve 2.2.5.1-31.1-a',
+                        'Elliptic curve 2.2.5.1-31.2-a'),
                     'Hilbert modular form 2.2.5.1-31.2-a'),
                 ('/ModularForm/GL2/TotallyReal/2.2.497.1/holomorphic/2.2.497.1-1.1-a',
-                    ('Isogeny class 2.0.7.1-5041.1-CMa',
-                        'Isogeny class 2.0.7.1-5041.3-CMa',
-                        'Isogeny class 2.2.497.1-1.1-a',
+                    ('Elliptic curve 2.0.7.1-5041.1-CMa',
+                        'Elliptic curve 2.0.7.1-5041.3-CMa',
+                        'Elliptic curve 2.2.497.1-1.1-a',
                         'Modular form 497.2.b.a'),
                     'Hilbert modular form 2.2.497.1-1.1-a'),
                 ('/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-32.1-a',
                     ('Bianchi modular form 2.0.8.1-32.1-a',
-                        'Isogeny class 2.0.8.1-32.1-a',
-                        'Isogeny class 2.2.8.1-32.1-a'),
+                        'Elliptic curve 2.0.8.1-32.1-a',
+                        'Elliptic curve 2.2.8.1-32.1-a'),
                     'Hilbert modular form 2.2.8.1-32.1-a')
                 ]:
             L = self.tc.get(url)

@@ -139,7 +139,7 @@ class BelyiTest(LmfdbTest):
                 ),
             ('/Belyi/6T6/6/6/3.3/a',
                 ('Passport',
-                    'Elliptic curve 1728.b.442368.1',)
+                    'Genus 2 curve 1728.b.442368.1',)
                 )
             ]:
             data = self.tc.get(url).get_data(as_text=True)
