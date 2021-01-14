@@ -700,7 +700,7 @@ def render_by_label(label):
             s = data['simplex']
             t = [s[0:2]]
             ns = [4,7,10,14,19,24,30]
-            k = 0
+            k,m,n = 0,2,3
             while m+n <= len(s):
                 t += [s[m:m+n]]
                 m,n = m+n,ns[k]
