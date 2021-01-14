@@ -3,7 +3,6 @@ from __future__ import print_function
 import math
 from flask import url_for
 from lmfdb import db
-from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
 from sage.arith.srange import srange
