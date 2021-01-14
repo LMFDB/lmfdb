@@ -9,15 +9,15 @@ class SatoTateGroupTest(LmfdbTest):
     #
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
-        assert 'Browse' in L.get_data(as_text=True) and 'SO(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
+        assert 'Browse' in L.get_data(as_text=True) and 'U(1)' in L.get_data(as_text=True) and 'U(1)_2' in L.get_data(as_text=True)  and 'SU(2)' in L.get_data(as_text=True) and 'Rational' in L.get_data(as_text=True)
         
     def test_by_label(self):
-        L = self.tc.get('/SatoTateGroup/?label=1.4.10.1.1a', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/?label=1.4.A.1.1a', follow_redirects=True)
         assert 'USp(4)' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)', follow_redirects=True)
-        assert '1.4.10.1.1a' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
+        assert '1.4.A.1.1a' in L.get_data(as_text=True) and '223412' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))', follow_redirects=True)
-        assert '1.2.1.2.1a' in L.get_data(as_text=True) and '462' in L.get_data(as_text=True)
+        assert '1.2.B.2.1a' in L.get_data(as_text=True) and '462' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=0.1.37', follow_redirects=True)
         assert '0.1.37' in L.get_data(as_text=True) and 'mu(185)' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
@@ -27,12 +27,12 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_direct_access(self):
         L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}', follow_redirects=True)
-        assert '1.4.6.1.1a' in L.get_data(as_text=True)
+        assert '1.4.B.1.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/G_{3,3}', follow_redirects=True)
-        assert '1.4.6.1.1a' in L.get_data(as_text=True)
+        assert '1.4.B.1.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/banana', follow_redirects=True)
         assert 'The database currently contains' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
+        L = self.tc.get('/SatoTateGroup/1.4.B.1.1a')
         assert 'G_{3,3}' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/0.1.mu(37)', follow_redirects=True)
         assert '0.1.37' in L.get_data(as_text=True)
@@ -54,22 +54,22 @@ class SatoTateGroupTest(LmfdbTest):
         assert '1-47' in L.get_data(as_text=True)
 
     def test_moments(self):
-        L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
+        L = self.tc.get('/SatoTateGroup/1.4.B.1.1a')
         assert '187348' in L.get_data(as_text=True)
 
     def test_subgroups(self):
-        L = self.tc.get('/SatoTateGroup/1.4.1.6.1a')
+        L = self.tc.get('/SatoTateGroup/1.4.F.6.1a')
         assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True) and 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
 
     def test_event_probabilities(self):
-        L = self.tc.get('/SatoTateGroup/1.4.1.48.48a')
+        L = self.tc.get('/SatoTateGroup/1.4.F.48.48a')
         assert '33' in L.get_data(as_text=True)
 
     def test_completeness(self):
         import sys
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.get_data(as_text=True)
-        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(2)}, projection='label'))
+        data = list(db.gps_st.search({'weight':int(1),'degree':int(2)}, projection='label'))
         assert len(data) == 3
         print("")
         for label in data:
@@ -79,7 +79,7 @@ class SatoTateGroupTest(LmfdbTest):
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.get_data(as_text=True)
-        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(4)}, projection='label'))
+        data = list(db.gps_st.search({'weight':int(1),'degree':int(4)}, projection='label'))
         assert len(data) == 52
 
         for label in data:
@@ -94,12 +94,15 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
         assert '0 matches'
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1/4')
-        assert '1.4.3.4.1a' in L.get_data(as_text=True)
+        assert '1.4.E.4.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=19/24')
-        assert '1.4.1.24.14a' in L.get_data(as_text=True)
+        assert '1.4.F.24.14a' in L.get_data(as_text=True)
         
     def test_favourites(self):
         for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
+            L = self.tc.get('/SatoTateGroup/'+label, follow_redirects=True)
+            assert "Moment sequences" in L.get_data(as_text=True)
+        for label in [ '1.2.B.2.1a','1.2.A.1.1a', '1.4.F.12.4d', '1.4.E.6.2a', '1.4.B.1.1a', '1.4.A.1.1a' ]:
             L = self.tc.get('/SatoTateGroup/'+label)
             assert "Moment sequences" in L.get_data(as_text=True)
 
