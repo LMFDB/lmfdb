@@ -51,20 +51,20 @@ st0_dict = {
     'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
     'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
     'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-    'USp(4)':'\\mathrm{USp}(4)'
+    'USp(4)':'\\mathrm{USp}(4)',
     'U(1)_3':'\\mathrm{U}(1)_3',
     'SU(2)_3':'\\mathrm{SU}(2)_3',
     'U(1)xU(1)_2':'\\mathrm{U}(1)\\times\\mathrm{U}(1)_2',
     'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
     'U(1)xSU(2)_2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)_2',
-    'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
+    'SU(2)xSU(2)_2':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
     'U(1)^3':'\\mathrm{U}(1)^3',
     'U(1)^2xSU(2)':'\\mathrm{U}(1)^2\\times\\mathrm{SU}(2)',
     'U(1)xSU(2)^2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)^2',
     'SU(2)^3':'\\mathrm{SU}(2)^3',
     'U(3)':'\\mathrm{U}(3)',
-    'U(1)xUSp(4)':'\\mathrm{U}(1)\\times\\mathrm{USp}(4)'
-    'SU(2)xUSp(4)':'\\mathrm{SU}(2)\\times\\mathrm{USp}(4)'
+    'U(1)xUSp(4)':'\\mathrm{U}(1)\\times\\mathrm{USp}(4)',
+    'SU(2)xUSp(4)':'\\mathrm{SU}(2)\\times\\mathrm{USp}(4)',
     'USp(6)':'\\mathrm{USp}(6)'
 }
 
