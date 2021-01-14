@@ -52,9 +52,9 @@ class EcnfIsogClassTest(LmfdbTest):
         assert 'Bianchi modular form 2.0.11.1-256.1-b' in L
         assert 'Hilbert modular form 2.2.44.1-16.1-a' in L
         assert 'Hilbert modular form 2.2.44.1-16.1-c' in L
-        assert 'Isogeny class 2.0.11.1-256.1-a' in L
-        assert 'Isogeny class 2.2.44.1-16.1-a' in L
-        assert 'Isogeny class 2.2.44.1-16.1-c' in L
+        assert 'Elliptic curve 2.0.11.1-256.1-a' in L
+        assert 'Elliptic curve 2.2.44.1-16.1-a' in L
+        assert 'Elliptic curve 2.2.44.1-16.1-c' in L
         assert 'L-function' in L
 
 
