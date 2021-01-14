@@ -1,0 +1,100 @@
+{% extends 'Charpage.html' %}
+{% set limit = 30 %}
+
+{% block content %}
+
+{{ place_code('init') }}
+
+{# Kronecker symbol #}
+
+{% if symbol %}
+  {% if (isprimitive == "Yes" or isprimitive == "yes") %}
+    <h2 style="margin-top:0px;">
+      {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
+    </h2>
+
+    {{ place_code('symbol') }}
+
+    <p> {{ symbol }} </p>
+  {% endif %}
+{% endif %}
+
+
+{# Basic properties #}
+<h2 style="margin-top:0px;">
+  {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
+</h2>
+<table>
+  <tbody>
+  <tr> <td>{{KNOWL('character.dirichlet.modulus',title='Modulus')}}:</td> <td>\({{ modulus }}\)</td> <td>{{place_code('modulus')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}:</td> <td>\({{ conductor }}\)</td> <td>{{place_code('cond')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.order',title='Order')}}:</td> <td>\({{ order }}\)</td> <td>{{place_code('order')}}</td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.real',title='Real')}}:</td> <td> {{ isreal }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.primitive',title='Primitive')}}:</td> <td> {{ isprimitive }}{{(', induced from <a href="' + url_for('characters.render_Dirichletwebpage', modulus=conductor, gal_orb_label=ind_orbit_label, number=indlabel) + '">' + inducing + '</a>') | safe if isprimitive == "no"  }}</td> <td> {{ place_code('isprimitive') }}</td> </tr>
+{% if type == 'Dirichlet' %}
+  {% if isminimal %}
+  <tr> <td>{{KNOWL('character.dirichlet.minimal',title='Minimal')}}: </td> <td>{{ isminimal }}</td> </tr>
+  {% endif %}
+  {% if parity %}
+  <tr> <td>{{KNOWL('character.dirichlet.parity',title='Parity')}}: </td> <td>{{ parity }}</td> <td>{{place_code('parity')}}</td> </tr>
+  {% endif %}
+{% endif %}
+ </tbody>
+</table>
+
+{% if galoisorbit %}
+
+{# Galois Orbits #}
+
+<h2>
+  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }} <a href="{{ url_character(type=type, number_field=nflabel, modulus=modulus, gal_orb_label=orbit_label)}}">  {{ modulus }}.{{ orbit_label }} </a>
+</h2>
+<p>
+{% for mod,num,label,prim in galoisorbit %}
+{% if loop.index > limit %} ... {% break %} {% endif %}
+<a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
+  {{label}}
+</a>
+{% endfor %}
+</p>
+{{ place_code('galoisorbit') }}
+{% endif %} {# galoisorbit #}
+
+{# Inducing character #}
+
+{% if isprimitive=="No" and indlabel %}
+  <h2>
+    {{KNOWL('character.dirichlet.induce',title='Inducing')}} {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
+  </h2>
+  {{ place_code('inducing') }}
+  <p>
+    <a href="{{ url_character(type = type, number_field = nflabel,
+      modulus = condlabel, number  = indlabel)}}"> {{inducing}} </a>
+    {% if symbol %}  = {{ symbol }} {% endif %}
+  </p>
+{% endif %}
+
+{# Fields #}
+<h2 style="margin-top:0px;">
+  {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
+</h2>
+<table>
+  {% if valuefield %}
+  <tr>
+    <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}}:</td>
+    <td> {{ valuefield | safe }} </td>
+  </tr>
+  {% endif %}
+  {% if kerfield %}
+  <tr>
+    <td>{{ KNOWL('character.dirichlet.field_cut_out',title='Fixed field') }}:</td>
+    <td> {{ kerfield | safe }}
+    </td>
+  </tr>
+  {% endif %}
+</table>
+
+{% block subcontent %}
+{% endblock %}
+
+{% endblock %}
