@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from .LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
+from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
@@ -676,12 +676,3 @@ class LfunctionTest(LmfdbTest):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
 
-    #FIXME
-    #def test_paintSVGholo(self):
-    #    svg = paintSvgHolo(4,6,4,6)
-    #    assert "L/ModularForm/GL2/Q/holomorphic/4/6/1/a/1/" in svg
-    assert paintSvgHolo # pyflakes
-
-    def test_paintSVGchar(self):
-        svg = paintSvgChar(1,20,1,12)
-        assert "/L/Character/Dirichlet/8/5" in svg
