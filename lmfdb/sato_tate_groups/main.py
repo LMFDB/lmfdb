@@ -281,7 +281,7 @@ def statistics():
 
 @st_page.route('/<label>')
 def by_label(label):
-    clean_label = converet_label(clean_input(label))
+    clean_label = convert_label(clean_input(label))
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
     if label == '1.2.B.d1':
