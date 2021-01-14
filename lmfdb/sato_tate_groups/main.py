@@ -699,11 +699,11 @@ def render_by_label(label):
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             t = [s[0:2]]
-            ns = [4,7,10,14,19,24,30]
-            k,m,n = 0,0,2
+            ns = [7,10,14,19,24,30]
+            k,m,n = 0,2,4
             while m+n <= len(s):
-                m,n,k = m+n,ns[k],k+1
                 t += [s[m:m+n]]
+                m,n,k = m+n,ns[k],k+1
             info['simplex'] = t
     if data.get('character_matrix'):
         A = data['character_matrix']
