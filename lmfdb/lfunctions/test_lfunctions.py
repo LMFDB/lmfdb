@@ -11,9 +11,6 @@ class LfunctionTest(LmfdbTest):
     #------------------------------------------------------
 
 
-    def test_riemann(self):
-        L = self.tc.get('/L/Riemann/')
-        assert 'Riemann Zeta-function' in L.get_data(as_text=True)
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects = True)
@@ -212,7 +209,7 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/', follow_redirects=True)
-        assert 'Elliptic curve 169.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 169.a' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a' in L.get_data(as_text=True)
         assert 'Origins of factors' in L.get_data(as_text=True)
         assert 'Modular form 13.2.e.a.4.1' in L.get_data(as_text=True)
@@ -405,19 +402,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/', follow_redirects=True)
         assert '3.50464340448' in L.get_data(as_text=True)
 
-    def test_Lmain(self):
-        #FIXME
-        pass
-
-    def test_Ldegree1(self):
-        L = self.tc.get('/L/degree1/')
-        assert 'Dirichlet L-function' in L.get_data(as_text=True) and 'Conductor range' in L.get_data(as_text=True) and 'Primitive Dirichlet character' in L.get_data(as_text=True)
-
-    def test_Ldegree2(self):
-        L = self.tc.get('/L/degree2/')
-        assert '1.73353' in L.get_data(as_text=True) and '/EllipticCurve/Q/234446/a' in L.get_data(as_text=True)
-        assert '17.02494' in L.get_data(as_text=True) and '/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032' in L.get_data(as_text=True)
-
 
     def test_Lhgm(self):
         L = self.tc.get('/L/Motive/Hypergeometric/Q/A4_B2.1/t-1.1')
@@ -494,7 +478,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Genus2Curve/Q/576/a/', follow_redirects=True)
         assert 'Hilbert modular form 2.2.8.1-9.1-a' in L.get_data(as_text=True)
         assert 'Elliptic curve 2.2.8.1-9.1-a' in L.get_data(as_text=True)
-        assert 'Elliptic curve 576.a' in L.get_data(as_text=True)
+        assert 'Genus 2 curve 576.a' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a.13.1' in L.get_data(as_text=True)
         assert 'Modular form 24.2.d.a.13.2' in L.get_data(as_text=True)
@@ -554,10 +538,6 @@ class LfunctionTest(LmfdbTest):
     #------------------------------------------------------
     # Testing plots and zeros of L-functions
     #------------------------------------------------------
-
-    def test_riemannPlot(self):
-        L = self.tc.get('/L/Plot/Riemann/')
-        assert 'OK' in str(L)
 
     def test_LDirichletZeros(self):
         L = self.tc.get('/L/Character/Dirichlet/5/2/', follow_redirects=True)
