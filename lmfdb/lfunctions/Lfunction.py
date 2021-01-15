@@ -429,19 +429,33 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def bread(self):
         from .main import url_for_lfunction
-        _, conductor, character, rest = self.label.split('-', 3)
+        _, conductor, character, cr, imag, index = self.label.split('-')
+        spectral_label = cr + '-' + imag
         degree = self.degree
         conductor  = conductor.replace('e', '^')
-        bread = [('L-functions', url_for('.index')),
-                 (str(degree), url_for('.by_url_degree', degree=degree)),
-                 (conductor, url_for('.by_url_degree_conductor',
-                                     degree=degree,
-                                     conductor=conductor)),
-                 (character, url_for('.by_url_degree_conductor_character',
+        bread = [('L-functions', url_for('.index'))]
+        if self.rational:
+            bread.append(('Rational', url_for('.rational')))
+            route = '.by_url_rational_degree_conductor_character_spectral'
+        else:
+            route = '.by_url_degree_conductor_character_spectral'
+
+        bread.extend([
+            (str(degree), url_for(route, degree=degree)),
+            (conductor, url_for(route,
+                                degree=degree,
+                                conductor=conductor)),
+            (character, url_for(route,
+                                degree=degree,
+                                conductor=conductor,
+                                character=character)),
+            (spectral_label, url_for(route,
                                      degree=degree,
                                      conductor=conductor,
-                                     character=character)),
-                 (rest, url_for_lfunction(self.label))]
+                                     character=character,
+                                     spectral_label=spectral_label)),
+            (index, url_for_lfunction(self.label))
+        ])
         return bread
 
     @lazy_attribute

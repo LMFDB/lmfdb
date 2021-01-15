@@ -242,8 +242,8 @@ def parse_spectral(inp, query, qfield):
         GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
         GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
         e *= ge
-        rs = ''.join(['r'+x for x in GR_real])
-        cs = ''.join(['c'+x for x in GC_real])
+        rs = ''.join(['r'+str(x) for x in GR_real])
+        cs = ''.join(['c'+str(x) for x in GC_real])
         out = rs + cs + ('' if e == 1 else 'e%d' % e) + '-0'
     else:
         # For now, we don't do any rewriting since we have to track the order of both real and imaginary parts, which is annoying
@@ -633,59 +633,93 @@ def random_l_function():
     label = db.lfunc_search.random(projection="label")
     return url_for_lfunction(label)
 
-@l_function_page.route("/<int:degree>/")
-def by_url_degree(degree):
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info:
-        return redirect(url_for('.index', **request.args), code=307)
-    else:
-        info['degree'] = degree
-        info['bread'] = [('L-functions', url_for('.index')),
-                 (str(degree), url_for('.by_url_degree', degree=degree))]
-    return l_function_search(info)
 
 @l_function_page.route("/degree<degree>/")
 def by_old_degree(degree):
-    return redirect(url_for(".index", degree=degree))
+    return redirect(url_for(".by_url_degree_conductor_character_spectral", degree=degree))
 
 def convert_conductor(conductor):
     return conductor.replace('e', '^')
 
-@l_function_page.route("/<int:degree>/<conductor>/")
-def by_url_degree_conductor(degree, conductor):
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info and 'conductor' in info:
-        return redirect(url_for('.index', **request.args), code=307)
-    else:
-        conductor = convert_conductor(conductor)
-        info['degree'] = degree
-        info['conductor'] = conductor
-        info['bread'] = [('L-functions', url_for('.index')),
-                         (str(degree), url_for('.by_url_degree', degree=degree)),
-                         (conductor, url_for('.by_url_degree_conductor',
-                                             degree=degree,
-                                             conductor=conductor))]
-        return l_function_search(info)
 
-@l_function_page.route("/<int:degree>/<conductor>/<character>/")
-def by_url_degree_conductor_character(degree, conductor, character):
+
+
+@l_function_page.route("/rational/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>", defaults={elt: None for elt in ['character', 'spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>/<character>", defaults={elt: None for elt in ['spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>/<character>/<spectral_label>")
+def by_url_rational_degree_conductor_character_spectral(degree,
+                                               conductor,
+                                               character,
+                                               spectral_label):
+    return by_url_bread(degree, conductor, character, spectral_label, True)
+
+@l_function_page.route("/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>", defaults={elt: None for elt in ['character', 'spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>/<character>", defaults={elt: None for elt in ['spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>/<character>/<spectral_label>")
+def by_url_degree_conductor_character_spectral(degree, conductor, character, spectral_label):
+    return by_url_bread(degree, conductor, character, spectral_label, False)
+
+def by_url_bread(degree, conductor, character, spectral_label, rational):
     info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info and 'conductor' in info and 'character' in info:
+    if (
+        'degree' in info or
+        (conductor and 'conductor' in info) or
+        (character and 'character' in info) or
+        (spectral_label and 'spectral_label' in info) or
+        (rational and 'rational' in info)
+    ):
         return redirect(url_for('.index', **request.args), code=307)
     else:
-        conductor = convert_conductor(conductor)
+        if conductor:
+            conductor = convert_conductor(conductor)
+
+        info['bread'] = [('L-functions', url_for('.index'))]
+        if rational:
+            info['bread'].append(('Rational', url_for('.rational')))
+            info['rational'] = 'yes'
+            info['search_array'] = LFunctionSearchArray(force_rational=True)
+
+        info['bread'].extend(
+            [(str(degree), url_for('.by_url_degree_conductor_character_spectral',
+                                   degree=degree,
+                                   rational=rational)),
+             (conductor, url_for('.by_url_degree_conductor_character_spectral',
+                                 degree=degree,
+                                 conductor=conductor,
+                                 rational=rational)),
+             (character, url_for('.by_url_degree_conductor_character_spectral',
+                                 degree=degree,
+                                 conductor=conductor,
+                                 character=character,
+                                 rational=rational)),
+             (spectral_label, url_for('.by_url_degree_conductor_character_spectral',
+                                 degree=degree,
+                                 conductor=conductor,
+                                 character=character,
+                                 spectral_label=spectral_label,
+                                 rational=rational))
+             ])
+
+        # degree is always there
         info['degree'] = degree
-        info['conductor'] = conductor
-        info['character'] = character
-        info['bread'] = [('L-functions', url_for('.index')),
-                         (str(degree), url_for('.by_url_degree', degree=degree)),
-                         (conductor, url_for('.by_url_degree_conductor',
-                                             degree=degree,
-                                             conductor=conductor)),
-                         (character, url_for('.by_url_degree_conductor_character',
-                                             degree=degree,
-                                             conductor=conductor,
-                                             character=character))]
+        if conductor:
+            info['conductor'] = conductor
+        else:
+            info['bread'] = info['bread'][:-3]
+            return l_function_search(info)
+        if character:
+            info['character'] = character
+        else:
+            info['bread'] = info['bread'][:-2]
+            return l_function_search(info)
+        if spectral_label:
+            info['spectral_label'] = spectral_label
+        else:
+            info['bread'] = info['bread'][:-1]
+            return l_function_search(info)
+
         return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
