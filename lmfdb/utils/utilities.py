@@ -287,6 +287,9 @@ def str_to_CBF(s):
     try:
         return CBF(s)
     except TypeError:
+        # Need to deal with scientific notation
+        # Replace e+ and e- with placeholders so that we can split on + and -
+        s = s.replace("e+", "P").replace("E+", "P").replace("e-", "M").replace("E-", "M")
         sign = 1
         s = s.lstrip('+')
         if '+' in s:
@@ -305,7 +308,9 @@ def str_to_CBF(s):
         if b == 'I':
             b = '1'
         else:
-            b = b.rstrip(' ').rstrip('I').rstrip('*')
+            b = b.rstrip().rstrip('I').rstrip('*')
+        a = a.replace("M", "e-").replace("P", "e+")
+        b = b.replace("M", "e-").replace("P", "e+")
 
         res = CBF(0)
         if a:
