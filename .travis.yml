@@ -105,8 +105,7 @@ script:
     # run pylint --py3k (with some temporary exceptions)
     - pylint --py3k --score=no -d W1618,W1619,W1633,W1653 lmfdb/ > pylintlog
     - if [[ $(wc -l < pylintlog) != 0 ]]; then echo "ERROR pylint failed!"; cat pylintlog; else echo "PASS pylint is happy!"; fi
-    # temporarily disable tests on travis (can be uncommented once devmirror.lmfdb.xyz is syncing properly again)
-    # - travis_wait 20 ${SAGE} -sh -c 'parallel -j ${jobs} --joblog joblog -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
+    - travis_wait 20 ${SAGE} -sh -c 'parallel -j ${jobs} --joblog joblog -a inputfile pytest --verbose -s' # to reenable coverage add --cov=lmfdb
 
 after_failure:
     # what is the load on the server
