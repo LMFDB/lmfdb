@@ -955,7 +955,7 @@ class STStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains all %s %s of %s 1 and %s up to 4, as well as all Sato-Tate groups of weight 0 and degree 1 with %s of order at most $10^{20}$.  Here are some <a href="%s">further statistics</a>.' % (
+        return r'The database currently contains all %s %s of %s 1 and %s up to 6, as well as all Sato-Tate groups of weight 0 and degree 1 with %s of order at most $10^{20}$.  Here are some <a href="%s">further statistics</a>.' % (
             display_knowl('st_group.rational', 'rational'),
             display_knowl('st_group.definition', 'Sato-Tate groups'),
             display_knowl('st_group.weight', 'weight'),
