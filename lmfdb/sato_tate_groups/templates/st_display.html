@@ -16,7 +16,13 @@
     <tr><td>{{ KNOWL('st_group.identity_component', 'Name') }}:</td><td>${{info['identity_component']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.index', 'Index') }}:</td><td>${{info['components']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.real_dimension', '$\\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.embedding','Description':</td><td>${{info['st0_description']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.embedding','Description') }}:</td><td>${{info['st0_description']}}$</td></tr>
+    {% if info['symplectic_form'] %}
+        <tr><td>{{ KNOWL('st_group.symplectic_form','Symplectic form') }}:</td><td>${{info['symplectic_form']}}$</td></tr>
+    {% endif %}
+    {% if info['hodge_circle'] %}
+        <tr><td>{{ KNOWL('st_group.hodge_cicle','Hodge circle') }}:</td><td>${{info['hodge_circle']}}$</td></tr>
+    {% endif %}
 </table>
 
 {% if info['components'] > 1 %}

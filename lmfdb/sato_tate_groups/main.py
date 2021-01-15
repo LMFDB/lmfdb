@@ -576,6 +576,8 @@ def su2_mu_info(w,n):
     rec['st0_name'] = 'SU(2)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&\beta\\-\bar\beta&\bar\alpha\end{bmatrix}:\alpha\bar\alpha+\beta\bar\beta = 1,\ \alpha,\beta\in\mathbb{C}\right\}'
+    rec['symplectic_form'] = r"\begin{bmatrix}0&1\\-1&0\end{bmatrix}"
+    rec['hodge_circle'] = r"u\mapsto \mathrm{diag}(u,u^{-1})"
     rec['component_group'] = 'C_{%d}'%n
     rec['abelian'] = boolean_name(True)
     rec['cyclic'] = boolean_name(True)
@@ -624,6 +626,8 @@ def nu1_mu_info(w,n):
     rec['st0_name'] = 'U(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&0\\0&\bar\alpha\end{bmatrix}:\alpha\bar\alpha = 1,\ \alpha\in\mathbb{C}\right\}'
+    rec['symplectic_form'] = r"\begin{bmatrix}0&1\\-1&0\end{bmatrix}"
+    rec['hodge_circle'] = r"u\mapsto \mathrm{diag}(u,u^{-1})"
     rec['component_group'] = 'D_{%d}'%n
     rec['abelian'] = boolean_name(n <= 2)
     rec['cyclic'] = boolean_name(n <= 1)
@@ -689,6 +693,8 @@ def render_by_label(label):
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
+    info['symplectic_form'] = st0.get('symplectic_form')
+    info['hodge_circle'] = st0.get('hodge_circle')
     info['st0_name']=st0['name']
     info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
