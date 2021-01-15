@@ -4,14 +4,7 @@
 
 {% if contents %}
 {# Characters #}
-<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}} in Galois orbit{%endif%}</h2>
-<p>
-The following table lists the Dirichlet Characters in this Galois orbit.
-{% if rowtruncate %}
-It has been truncated to show only the first {{contents|count}} of {{order}} characters in the orbit.
-{% endif %}
-Several character values are also shown.
-</p>
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%} in Galois orbit</h2>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr>
