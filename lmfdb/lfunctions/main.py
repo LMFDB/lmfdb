@@ -680,26 +680,25 @@ def by_url_bread(degree, conductor, character, spectral_label, rational):
             info['bread'].append(('Rational', url_for('.rational')))
             info['rational'] = 'yes'
             info['search_array'] = LFunctionSearchArray(force_rational=True)
+            route = '.by_url_rational_degree_conductor_character_spectral'
+        else:
+            route = '.by_url_degree_conductor_character_spectral'
 
         info['bread'].extend(
-            [(str(degree), url_for('.by_url_degree_conductor_character_spectral',
-                                   degree=degree,
-                                   rational=rational)),
-             (conductor, url_for('.by_url_degree_conductor_character_spectral',
+            [(str(degree), url_for(route,
+                                   degree=degree)),
+             (conductor, url_for(route,
+                                 degree=degree,
+                                 conductor=conductor)),
+             (character, url_for(route,
                                  degree=degree,
                                  conductor=conductor,
-                                 rational=rational)),
-             (character, url_for('.by_url_degree_conductor_character_spectral',
-                                 degree=degree,
-                                 conductor=conductor,
-                                 character=character,
-                                 rational=rational)),
-             (spectral_label, url_for('.by_url_degree_conductor_character_spectral',
+                                 character=character)),
+             (spectral_label, url_for(route,
                                  degree=degree,
                                  conductor=conductor,
                                  character=character,
-                                 spectral_label=spectral_label,
-                                 rational=rational))
+                                 spectral_label=spectral_label))
              ])
 
         # degree is always there
