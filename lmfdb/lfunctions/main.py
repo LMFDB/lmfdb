@@ -154,8 +154,8 @@ def process_search(res, info, query):
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
         if info['search_array'].force_rational:
-            # root_angle is either 0 or 1
-            L['root_number'] = 1 - 2*int(L['root_angle'])
+            # root_angle is either 0 or 0.5
+            L['root_number'] = 1 - int(4*L['root_angle'])
         else:
             L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
