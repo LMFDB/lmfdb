@@ -945,6 +945,9 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus, gal_orb_label = self.orbit_label)
+        friendlist.append( ("Character Galois orbit", gal_orb_link) )
+
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
                 type=self.type,
@@ -1104,7 +1107,7 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
 
     @lazy_attribute
     def title(self):
-        return "Dirichlet orbit {}.{}".format(self.modulus, self.orbit_label)
+        return "Dirichlet character Galois orbit {}.{}".format(self.modulus, self.orbit_label)
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
