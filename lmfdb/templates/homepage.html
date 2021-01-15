@@ -103,12 +103,7 @@
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
         </div>
-        {% if title_arithmetic -%}
-        <div id="title" class="arithmetic">{{ title_arithmetic|safe }}</div>
-        <div id="title" class="analytic nodisplay">{{ title_analytic|safe }}</div>
-        {% else %}
         <div id="title">{{ title|safe }}</div>
-        {% endif %}
 
     </div>
 </div>

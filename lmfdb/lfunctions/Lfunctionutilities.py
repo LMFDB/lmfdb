@@ -579,7 +579,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if L._Ltype == "maass":
+            if  not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3
@@ -857,16 +857,13 @@ def getConductorIsogenyFromLabel(label):
 
 
 
-def get_bread(degree, breads=[]):
+def get_bread(breads=[]):
     """
-    Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    Returns the top level of bread crumbs plus the ones supplied in breads.
     """
-    breadcrumb = [('L-functions', url_for('.l_function_top_page')),
-          ('Degree ' + str(degree),
-           url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        breadcrumb.append(b)
-    return breadcrumb
+    bread = [('L-functions', url_for('.index'))]
+    bread.extend(breads)
+    return bread
 
 # Convert  r0r0c1 to (0,0;1), for example
 def parse_codename(text):

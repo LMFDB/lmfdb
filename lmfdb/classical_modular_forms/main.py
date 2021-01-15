@@ -828,7 +828,7 @@ def trace_postprocess(res, info, query, spaces=False):
     return res
 def space_trace_postprocess(res, info, query):
     return trace_postprocess(res, info, query, True)
-def process_an_constraints(info, query):
+def process_an_constraints(info, query, qfield='traces', nshift=None):
     q = info.get('an_modulo','').strip()
     if q:
         try:
@@ -839,15 +839,16 @@ def process_an_constraints(info, query):
             msg = "Modulo must be a positive integer"
             flash_error(msg)
             raise ValueError(msg)
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
-                                   parse_singleton=(lambda x: {'$mod':[int(x),q]}))
+        parse_equality_constraints(info, query, 'an_constraints', qfield=qfield,
+                                   parse_singleton=(lambda x: {'$mod':[int(x),q]}),
+                                   nshift=nshift)
     else:
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
+        parse_equality_constraints(info, query, 'an_constraints', qfield=qfield)
         if info.get('view_modp') == 'reductions':
             msg = "Must set Modulo input in order to view reductions"
             flash_error(msg)
             raise ValueError(msg)
-def set_Trn(info, query):
+def set_Trn(info, query, limit=1000):
     ns = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
@@ -857,12 +858,12 @@ def set_Trn(info, query):
         Trn = [n for n in Trn if n > 1 and ZZ(n).is_prime_power()]
     else:
         Trn = [n for n in Trn if n > 1]
-    if any(n > 1000 for n in Trn):
+    if any(n > limit for n in Trn):
         msg = "Cannot display traces above 1000; more may be available by downloading individual forms"
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
-    info['download_limit'] = 1000
+    info['download_limit'] = limit
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,

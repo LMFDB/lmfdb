@@ -50,9 +50,11 @@ def name_and_object_from_url(url, check_existence=False):
                 if check_existence:
                     obj_exists = db.ec_nfcurves.exists({"label" : label_curve})
         if len(url_split) == 4: # isogeny class
-            name = 'Isogeny class ' + label_isogeny_class
+            #name = 'Isogeny class ' + label_isogeny_class
+            name = 'Elliptic curve ' + label_isogeny_class
         elif len(url_split) == 5: # curve
-            name = 'Curve ' + label_curve
+            #name = 'Curve ' + label_curve
+            name = 'Elliptic curve ' + label_curve
 
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
@@ -71,13 +73,15 @@ def name_and_object_from_url(url, check_existence=False):
             label_isogeny_class = ".".join(url_split[-2:])
             if check_existence:
                 obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
-            name = 'Isogeny class ' + label_isogeny_class
+            #name = 'Isogeny class ' + label_isogeny_class
+            name = 'Genus 2 curve ' + label_isogeny_class
         if len(url_split) == 6: # curve
             # Genus2Curve/Q/1728/b/442368/1
             label_curve = ".".join(url_split[-4:])
             if check_existence:
                 obj_exists = db.g2c_curves.exists({"label" : label_curve})
-            name = 'Curve ' + label_curve
+            #name = 'Curve ' + label_curve
+            name = 'Genus 2 curve ' + label_curve
 
 
     elif url_split[0] == "ModularForm":
@@ -121,6 +125,13 @@ def name_and_object_from_url(url, check_existence=False):
         obj_exists = True
         if check_existence:
             obj_exists = db.artin_reps.label_exists(label.split('c')[0])
+    elif url_split[0] == "NumberField":
+        from lmfdb.number_fields.web_number_field import field_pretty
+        label = url_split[1]
+        name = 'Number field ' + field_pretty(label)
+        obj_exists = True
+        if check_existence:
+            obj_exists = db.number_fields.label_exists(label)
     elif url_split[0] == "SatoTateGroup":
         from lmfdb.sato_tate_groups.main import get_name
         name, label = get_name(url_split[1])
@@ -130,6 +141,10 @@ def name_and_object_from_url(url, check_existence=False):
         else:
             name = 'Sato Tate group $%s$' % name
             obj_exists = True
+    else:
+        # FIXME
+        print("unknown url", url)
+
 
     return name, obj_exists
 
