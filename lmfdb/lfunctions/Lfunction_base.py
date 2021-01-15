@@ -49,7 +49,6 @@ class Lfunction(object):
 
     @lazy_attribute
     def analytic_conductor(self):
-        #FIXME, check the motivic-lfunctions repo to compute this
         return None
 
     @lazy_attribute
