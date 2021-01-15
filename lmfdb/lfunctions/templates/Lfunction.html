@@ -109,6 +109,16 @@
     <td> {{ motivic_weight }} </td>
   </tr>
   {% endif %}
+  {% if rational %}
+  <tr>
+    <td> {{ KNOWL('lfunction.rational', title="Rational") }}: </td>
+    <td> {{ rational }} </td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('lfunction.arithmetic', title="Arithmetic") }}: </td>
+    <td> {{ arithmetic }} </td>
+  </tr>
 
   {% if chi %}
   <tr>

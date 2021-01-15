@@ -106,6 +106,7 @@ def makeLfromdata(L):
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
     L.analytic_conductor = data.get('analytic_conductor')
+    L.rational =  data.get('rational')
     # FIXME
     #L.root_analytic_conductor = data.get('root_analytic_conductor')
 

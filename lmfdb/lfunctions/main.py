@@ -1117,8 +1117,11 @@ def set_gaga_properties(L):
         ans.append(('Root an. cond.', '$%s$' % display_float(L.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)))
 
 
-    if L.algebraic:
+    if L.algebraic: # always set
         ans.append(('Motivic weight', prop_int_pretty(L.motivic_weight)))
+    ans.append(('Arithmetic', 'yes' if L.arithmetic else 'no'))
+    if L.rational is not None:
+        ans.append(('Rational', 'yes' if L.rational else 'no'))
 
 
     primitive =  getattr(L, 'primitive', None)
