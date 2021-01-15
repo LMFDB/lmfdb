@@ -1,0 +1,69 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata centered">
+<thead>
+<tr>
+  <th style="text-align: left;">{{ KNOWL('lfunction.label', title='Label') }}</th>
+  <th>{{ KNOWL('lfunction.root_analytic_conductor', '$\\alpha$') }}</th>
+  <th>{{ KNOWL('lfunction.analytic_conductor', '$A$') }}</th>
+  <th>{{ KNOWL('lfunction.degree', title='$d$') }}</th>
+  <th>{{ KNOWL('lfunction.conductor', title='$N$') }}</th>
+  <th>{{ KNOWL('lfunction.central_character', title='$\\chi$') }}</th>
+  <th>{{ KNOWL('lfunction.functional_equation', title='$\\mu$') }}</th>
+  <th>{{ KNOWL('lfunction.functional_equation', title='$\\nu$') }}</th>
+  <th>{{ KNOWL('lfunction.motivic_weight', title='$w$') }}</th>
+  <th>{{ KNOWL('lfunction.primitive', title='prim') }}</th>
+  {% if info.search_array.force_rational %}
+  <th>{{ KNOWL('lfunction.sign', title='$\\epsilon$') }}</th>
+  {% else %}
+  <th>{{ KNOWL('lfunction.arithmetic', title='arith') }}</th>
+  <th>{{ KNOWL('lfunction.rational', title='$\mathbb{Q}$') }}</th>
+  <th>{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
+  <th>{{ KNOWL('lfunction.sign', title='$\operatorname{Arg}(\\epsilon)$') }}</th>
+  {% endif %}
+  <th>{{ KNOWL('lfunction.analytic_rank', title='$r$') }}</th>
+  <th>{{ KNOWL('lfunction.zeros', title='First zero') }}</th>
+  <th style="text-align: left;">{{ KNOWL('lfunction.underlying_object', title='Origin') }}</th>
+</tr>
+</thead>
+{% for L in info.results: %}
+<tr>
+  <td style="text-align: left;"> <a href="{{L.url}}"> {{L.label}} </a> </td>
+  <td> ${{L.root_analytic_conductor}}$ </td>
+  <td> ${{L.analytic_conductor}}$ </td>
+  <td> ${{L.degree}}$ </td>
+  <td> ${{L.factored_conductor}}$ </td>
+  <td> <a href="{{url_for('characters.render_Dirichletwebpage', modulus=L.central_character)}}">{{L.central_character}}</a> </td>
+  <td> ${{L.mus}}$ </td>
+  <td> ${{L.nus}}$ </td>
+  <td> {% if L.algebraic %}${{L.motivic_weight}}${% endif %} </td>
+  <td> {{('&#x2713;' if L.primitive else '')|safe}} </td>
+  {% if info.search_array.force_rational %}
+  <td> ${{L.root_number}}$ </td>
+  {% else %}
+  <td> {{('&#x2713;' if L.algebraic else '')|safe}} </td>
+  <td> {{('&#x2713;' if L.rational else '')|safe}} </td>
+  <td> {{('&#x2713;' if L.self_dual else '')|safe}} </td>
+  <td> ${{L.root_angle}}$ </td>
+  {% endif %}
+  <td> ${{L.order_of_vanishing}}$ </td>
+  <td> ${{L.z1}}$ </td>
+  <td style="text-align: left;"> {% for name, url in L.origins %} <a href="{{url}}">{{name}}</a> {% endfor %} </td>
+</tr>
+{% endfor %}
+</table>
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
+
+Drop: analytic_normalization, selfdual, sign_arg (after updating code)

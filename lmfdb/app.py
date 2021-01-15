@@ -378,21 +378,6 @@ def workshops():
 def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])
 
-@app.route('/L')
-@app.route('/L/')
-def l_functions():
-    t = 'L-functions'
-    b = [(t, url_for('l_functions'))]
-    lm = [('History of L-functions', '/L/history'),('Completeness of the data',url_for('l_functions.completeness'))]
-    return render_template('single.html', title=t, kid='lfunction.about', bread=b, learnmore=lm)
-
-@app.route("/L/history")
-def l_functions_history():
-    t = 'L-functions'
-    b = [(t, url_for('l_functions'))]
-    b.append(('History', url_for("l_functions_history")))
-    return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
-
 @app.route('/ModularForm')
 @app.route('/ModularForm/')
 def modular_forms():

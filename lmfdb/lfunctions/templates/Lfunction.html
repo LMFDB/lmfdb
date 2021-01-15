@@ -48,8 +48,8 @@
 {% endif %}
 </center>
 
-{% if knowltype and label %}
-{% set KNOWL_ID = "lfunction.%s.%s"|format(knowltype,label) %}
+{% if label %}
+{% set KNOWL_ID = "lfunction.%s"|format(label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 {% endif %}
 
@@ -72,7 +72,6 @@
 <h2 style="margin-top:-25px;"> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
 
 <table>
-
   <tr>
     <td> {{ KNOWL('lfunction.degree', title="Degree") }}: </td>
     <td> \({{ degree }}\) </td>
@@ -93,12 +92,33 @@
     </td>
   </tr>
 
+  {% if analytic_conductor %}
+  <tr>
+    <td> {{ KNOWL('lfunction.analytic_conductor', title="Analtyic conductor") }}: </td>
+    <td> \({{ analytic_conductor }}\) </td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.root_analytic_conductor', title="Root analtyic conductor") }}: </td>
+    <td> \({{ root_analytic_conductor }}\) </td>
+  </tr>
+  {% endif %}
+
   {% if motivic_weight %}
   <tr>
     <td> {{ KNOWL('lfunction.motivic_weight', title="Motivic weight") }}: </td>
     <td> {{ motivic_weight }} </td>
   </tr>
   {% endif %}
+  {% if rational %}
+  <tr>
+    <td> {{ KNOWL('lfunction.rational', title="Rational") }}: </td>
+    <td> {{ rational }} </td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('lfunction.arithmetic', title="Arithmetic") }}: </td>
+    <td> {{ arithmetic }} </td>
+  </tr>
 
   {% if chi %}
   <tr>
@@ -108,7 +128,7 @@
   </tr>
   {% endif %}
 
-  {% if st_group -%}
+  {% if st_group and False -%}
   <tr>
     <td> {{ KNOWL('g2c.st_group', title="Sato-Tate group") }}: </td>
     <td> {{ st_link | safe}}
@@ -257,7 +277,7 @@
 <div>Plot not available.</div>
 {% endif %}
 
-{% if knowltype and label %}
+{% if label %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom',title='') }}</h2>
 {% endif %}
 

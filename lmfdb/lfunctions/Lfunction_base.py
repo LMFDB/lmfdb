@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
+from sage.misc.lazy_attribute import lazy_attribute
 from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                  specialValueTriple,scientific_notation_helper)
+from lmfdb.utils import display_float
 
 
 #############################################################################
@@ -13,7 +15,8 @@ from .Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 #############################################################################
 
 class Lfunction(object):
-    """Class representing a general L-function
+    """
+    Class representing a general L-function
     """
 
     def Ltype(self):
@@ -42,6 +45,25 @@ class Lfunction(object):
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
+
+
+    @lazy_attribute
+    def analytic_conductor(self):
+        return None
+
+    @lazy_attribute
+    def root_analytic_conductor(self):
+        if self.analytic_conductor:
+            return self.analytic_conductor**(1.0/self.degree)
+        else:
+            return None
+    @lazy_attribute
+    def arithmetic(self):
+        return self.algebraic
+
+    @lazy_attribute
+    def rational(self):
+        return None
 
 
     ############################################################################
@@ -131,10 +153,19 @@ class Lfunction(object):
                 info['conductor'] = latex(self.level_factored)
             else:
                 info['conductor_factored'] = latex(self.level_factored)
+        if self.analytic_conductor:
+            info['analytic_conductor'] = display_float(self.analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+            info['root_analytic_conductor'] = display_float(self.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+        else:
+            info['analytic_conductor'] = self.analytic_conductor
+            info['root_analytic_conductor'] = self.root_analytic_conductor
+        if self.rational is not None:
+            info['rational'] = 'yes' if self.rational else 'no'
 
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
         info['algebraic'] = self.algebraic
+        info['arithmetic'] = 'yes' if self.arithmetic else 'no'
         if self.selfdual:
             info['selfdual'] = 'yes'
         else:
@@ -211,6 +242,4 @@ class Lfunction(object):
                 info['sv_edge'] = "L(1): not computed"
 
         return info
-
-
 
