@@ -502,7 +502,7 @@ class LFunctionSearchArray(SearchArray):
             [spectral_label, primitive],
             [origin, origin_exclude],
         ]
-        if force_rational:
+        if not force_rational:
             self.browse_array += [[algebraic, self_dual]]
         self.browse_array += [[count]]
 
@@ -511,7 +511,7 @@ class LFunctionSearchArray(SearchArray):
             [degree, bad_primes, root_analytic_conductor, motivic_weight, root_angle],
             [spectral_label, primitive, origin, origin_exclude],
         ]
-        if force_rational:
+        if not force_rational:
             self.refine_array[2] += [algebraic, self_dual]
 
         if force_rational:
