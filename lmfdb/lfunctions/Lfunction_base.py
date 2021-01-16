@@ -65,10 +65,6 @@ class Lfunction(object):
     def rational(self):
         return None
 
-    @lazy_attribute
-    def label(self):
-        return None
-
 
     ############################################################################
     ### other useful methods not implemented universally yet
