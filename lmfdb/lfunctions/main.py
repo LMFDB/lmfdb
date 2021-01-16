@@ -1077,8 +1077,11 @@ def l_function_genus2_page(cond,x):
 @l_function_page.route("/Lhash/<lhash>")
 @l_function_page.route("/Lhash/<lhash>/")
 def l_function_by_hash_page(lhash):
-    args = {'Lhash': lhash}
-    return render_single_Lfunction(Lfunction_from_db, args, request)
+    label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
+    if label is None:
+        errmsg = 'Did not find an L-function with Lhash = %s' % Lhash
+        return render_lfunction_exception(errmsg)
+    return redirect(url_for_lfunction(label), 301)
 
 #by trace_hash
 @l_function_page.route("/tracehash/<int:trace_hash>")
@@ -1088,11 +1091,11 @@ def l_function_by_trace_hash_page(trace_hash):
         errmsg = r'trace_hash = %s not in [0, 2^61]' % trace_hash
         return render_lfunction_exception(errmsg)
 
-    lhash = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash}, projection = "Lhash")
-    if lhash is None:
+    label = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash, 'label': {'$exists': True}}, projection = "label")
+    if label is None:
         errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
         return render_lfunction_exception(errmsg)
-    return redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
+    return redirect(url_for_lfunction(label), 301)
 
 
 ################################################################################
