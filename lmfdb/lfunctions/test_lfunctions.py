@@ -503,19 +503,19 @@ class LfunctionTest(LmfdbTest):
         Checking L/lhash/ pages
         """
         # The hash for /L/EllipticCurve/Q/324016/h
-        L = self.tc.get('/L/lhash/1938322253992393114/')
+        L = self.tc.get('/L/lhash/1938322253992393114/', follow_redirects=True)
         assert '324016' in L.get_data(as_text=True), "Missing data in /L/lhash/1938322253992393114/"
         assert 'Dual L-function' not in L.get_data(as_text=True)
         assert '2-324016-1.1-c1-0-6' in L.get_data(as_text=True)
         assert 'Elliptic curve 324016.h' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
+        L = self.tc.get('/L/lhash/dirichlet_L_6253.458/', follow_redirects=True)
         assert '1.0612' in L.get_data(as_text=True), "Missing data in /L/lhash/dirichlet_L_6253.458/"
         assert '1-6253-6253.458-r1-0-0' in L.get_data(as_text=True) 
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert 'Character/Dirichlet/6253/458' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
+        L = self.tc.get('/L/Lhash/7200459463482029776252499748763/', follow_redirects=True)
         assert 'Dual L-function' in L.get_data(as_text=True)
         assert 'Modular form 13.4.c.a.3.1' in L.get_data(as_text=True)
         assert 'ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1' in L.get_data(as_text=True)
