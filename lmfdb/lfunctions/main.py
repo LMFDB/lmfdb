@@ -255,6 +255,14 @@ def common_parse(info, query):
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
+    if info.get("algebraic") == "rational":
+        query['rational'] = True
+    elif info.get("algebraic") == "irrational":
+        query['rational'] = False
+    elif info.get("algebraic") == "algebraic":
+        query['algebraic'] = True
+    elif info.get("algebraic") == "transcendental":
+        query['algebraic'] = False
     parse_bool(info,query,'algebraic')
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
@@ -407,11 +415,16 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.primitive",
             label="Primitive",
             example_col=True)
-        algebraic = YesNoBox(
+        algebraic = SelectBox(
             name="algebraic",
             knowl="lfunction.arithmetic",
             label="Arithmetic",
-            example_col=True)
+            example_col=True,
+            options=[('', ''),
+                     ('rational', 'rational'),
+                     ('irrational', 'irrational'),
+                     ('algebraic', 'algebraic'),
+                     ('transcendental', 'transcendental')])
         self_dual = YesNoBox(
             name="self_dual",
             knowl="lfunction.self-dual",
@@ -478,23 +491,29 @@ class LFunctionSearchArray(SearchArray):
             options=origins_list)
         count = CountBox()
 
+        self.force_rational = force_rational
+
         self.browse_array = [
             [z1, degree],
             [conductor, bad_primes],
             [analytic_conductor, root_analytic_conductor],
-            [central_character, root_angle],
-            [analytic_rank, motivic_weight],
-            [spectral_label],
-            [primitive, algebraic],
+            [central_character, motivic_weight],
+            [analytic_rank, root_angle],
+            [spectral_label, primitive],
+            [origin, origin_exclude],
         ]
+        if force_rational:
+            self.browse_array += [[algebraic, self_dual]]
+        self.browse_array += [[count]]
 
         self.refine_array = [
-            [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
-            [primitive, algebraic],
-            [root_angle, analytic_rank, motivic_weight, z1, spectral_label]
+            [z1, conductor, analytic_conductor, central_character, analytic_rank],
+            [degree, bad_primes, root_analytic_conductor, motivic_weight, root_angle],
+            [spectral_label, primitive, origin, origin_exclude],
         ]
+        if force_rational:
+            self.refine_array[2] += [algebraic, self_dual]
 
-        self.force_rational = force_rational
         if force_rational:
             trace_coldisplay = TextBox(
                 name='n',
@@ -546,19 +565,6 @@ class LFunctionSearchArray(SearchArray):
             self.euler_array = [
                 RowSpacer(22),
                 [euler_coldisplay, euler_constraints]]
-
-            self.browse_array += [[origin, origin_exclude], [count]]
-            self.refine_array[1] += [origin, origin_exclude]
-
-        else:
-            rational = YesNoBox(
-                name="rational",
-                knowl="lfunction.rational",
-                label="Rational",
-                example_col=True)
-
-            self.browse_array += [[self_dual, rational], [origin, origin_exclude], [count]]
-            self.refine_array[1] += [self_dual, rational, origin, origin_exclude]
 
     def search_types(self, info):
         if self.force_rational:
