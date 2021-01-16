@@ -508,8 +508,8 @@ class LFunctionSearchArray(SearchArray):
 
         self.refine_array = [
             [z1, conductor, analytic_conductor, central_character, analytic_rank],
-            [degree, bad_primes, root_analytic_conductor, motivic_weight, root_angle],
-            [spectral_label, primitive, origin, origin_exclude],
+            [degree, bad_primes, root_analytic_conductor, motivic_weight, spectral_label],
+            [root_angle, primitive, origin, origin_exclude],
         ]
         if not force_rational:
             self.refine_array[2] += [self_dual]
