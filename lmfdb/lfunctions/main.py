@@ -226,7 +226,7 @@ def parse_spectral(inp, query, qfield):
     reals, e, imags = M.groups()
     e = 1 if e is None else int(e)
     def extract(t, x):
-        return Counter(map(int, re.findall(t+r'([0-9.]+)', x)))
+        return Counter(list(map(int, re.findall(t+r'([0-9.]+)', x))))
     if imags == '0': # algebraic
         GRcount = extract('r', reals)
         # We store the real parts of nu doubled

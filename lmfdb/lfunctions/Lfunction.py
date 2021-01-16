@@ -268,7 +268,10 @@ def makeLfromdata(L):
         from .main import url_for_lfunction
         dual_L_Lhash = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_Lhash)
-        L.dual_link = url_for_lfunction(dual_L_data['label'])
+        if dual_L_data.get('label'):
+            L.dual_link = url_for_lfunction(dual_L_data['label'])
+        elif dual_L_data.get('origin'):
+            L.dual_link = '/L/' + dual_L_data['origin']
         L.dual_accuracy = dual_L_data.get('accuracy', None)
         L.negative_zeros_raw = [display_float(z, 12, 'round') if isinstance(z, float) else z for z in dual_L_data['positive_zeros']]
         if L.dual_accuracy is not None:
