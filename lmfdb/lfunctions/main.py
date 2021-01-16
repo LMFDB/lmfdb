@@ -263,7 +263,6 @@ def common_parse(info, query):
         query['algebraic'] = True
     elif info.get("algebraic") == "transcendental":
         query['algebraic'] = False
-    parse_bool(info,query,'algebraic')
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
     # If searching on the rational page, there will be root_number; if on the all L-function page, root_angle
