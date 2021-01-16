@@ -503,7 +503,7 @@ class LFunctionSearchArray(SearchArray):
             [origin, origin_exclude],
         ]
         if not force_rational:
-            self.browse_array += [[algebraic, self_dual]]
+            self.browse_array += [[self_dual, algebraic]]
         self.browse_array += [[count]]
 
         self.refine_array = [
@@ -512,7 +512,8 @@ class LFunctionSearchArray(SearchArray):
             [spectral_label, primitive, origin, origin_exclude],
         ]
         if not force_rational:
-            self.refine_array[2] += [algebraic, self_dual]
+            self.refine_array[2] += [self_dual]
+            self.refine_array += [[algebraic]]
 
         if force_rational:
             trace_coldisplay = TextBox(
