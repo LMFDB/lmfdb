@@ -24,7 +24,11 @@ def group_pretty_image(label):
     img = db.gps_images.lookup(pretty, 'image')
     if img:
         return str(img)
-    else: # we don't have it, not sure what to do
+    # fallback which should always be in the database
+    img = db.gps_images.lookup('?', 'image')
+    if img:
+        return str(img)
+    else: # we should not get here
         return None
 
 class WebObj(object):
