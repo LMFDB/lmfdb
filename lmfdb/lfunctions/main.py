@@ -157,8 +157,8 @@ def process_search(res, info, query):
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
         if info['search_array'].force_rational:
-            # root_angle is either 0 or 1
-            L['root_number'] = 1 - 2*int(L['root_angle'])
+            # root_angle is either 0 or 0.5
+            L['root_number'] = 1 - int(4*L['root_angle'])
         else:
             L['root_angle'] = display_float(L['root_angle'], 3)
         L['z1'] = display_float(L['z1'], 6, no_sci=2, extra_truncation_digits=20)
@@ -245,7 +245,7 @@ def parse_spectral(inp, query, qfield):
     reals, e, imags = M.groups()
     e = 1 if e is None else int(e)
     def extract(t, x):
-        return Counter(map(int, re.findall(t+r'([0-9.]+)', x)))
+        return Counter(list(map(int, re.findall(t+r'([0-9.]+)', x))))
     if imags == '0': # algebraic
         GRcount = extract('r', reals)
         # We store the real parts of nu doubled
@@ -261,8 +261,8 @@ def parse_spectral(inp, query, qfield):
         GR_real = sum(([k]*(v//ge) for k, v in GRcount.items()), [])
         GC_real = sum(([k]*(v//ge) for k, v in GCcount.items()), [])
         e *= ge
-        rs = ''.join(['r'+x for x in GR_real])
-        cs = ''.join(['c'+x for x in GC_real])
+        rs = ''.join(['r'+str(x) for x in GR_real])
+        cs = ''.join(['c'+str(x) for x in GC_real])
         out = rs + cs + ('' if e == 1 else 'e%d' % e) + '-0'
     else:
         # For now, we don't do any rewriting since we have to track the order of both real and imaginary parts, which is annoying
@@ -274,7 +274,14 @@ def common_parse(info, query):
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
-    parse_bool(info,query,'algebraic')
+    if info.get("algebraic") == "rational":
+        query['rational'] = True
+    elif info.get("algebraic") == "irrational":
+        query['rational'] = False
+    elif info.get("algebraic") == "algebraic":
+        query['algebraic'] = True
+    elif info.get("algebraic") == "transcendental":
+        query['algebraic'] = False
     parse_bool(info,query,'self_dual')
     parse_bool(info,query,'rational')
     # If searching on the rational page, there will be root_number; if on the all L-function page, root_angle
@@ -429,11 +436,16 @@ class LFunctionSearchArray(SearchArray):
             knowl="lfunction.primitive",
             label="Primitive",
             example_col=True)
-        algebraic = YesNoBox(
+        algebraic = SelectBox(
             name="algebraic",
             knowl="lfunction.arithmetic",
             label="Arithmetic",
-            example_col=True)
+            example_col=True,
+            options=[('', ''),
+                     ('rational', 'rational'),
+                     ('irrational', 'irrational'),
+                     ('algebraic', 'algebraic'),
+                     ('transcendental', 'transcendental')])
         self_dual = YesNoBox(
             name="self_dual",
             knowl="lfunction.self-dual",
@@ -500,23 +512,30 @@ class LFunctionSearchArray(SearchArray):
             options=origins_list)
         count = CountBox()
 
+        self.force_rational = force_rational
+
         self.browse_array = [
             [z1, degree],
             [conductor, bad_primes],
             [analytic_conductor, root_analytic_conductor],
-            [central_character, root_angle],
-            [analytic_rank, motivic_weight],
-            [spectral_label],
-            [primitive, algebraic],
+            [central_character, motivic_weight],
+            [analytic_rank, root_angle],
+            [spectral_label, primitive],
+            [origin, origin_exclude],
         ]
+        if not force_rational:
+            self.browse_array += [[self_dual, algebraic]]
+        self.browse_array += [[count]]
 
         self.refine_array = [
-            [degree, conductor, bad_primes, central_character, analytic_conductor, root_analytic_conductor],
-            [primitive, algebraic],
-            [root_angle, analytic_rank, motivic_weight, z1, spectral_label]
+            [z1, conductor, analytic_conductor, central_character, analytic_rank],
+            [degree, bad_primes, root_analytic_conductor, motivic_weight, spectral_label],
+            [root_angle, primitive, origin, origin_exclude],
         ]
+        if not force_rational:
+            self.refine_array[2] += [self_dual]
+            self.refine_array += [[algebraic]]
 
-        self.force_rational = force_rational
         if force_rational:
             trace_coldisplay = TextBox(
                 name='n',
@@ -568,19 +587,6 @@ class LFunctionSearchArray(SearchArray):
             self.euler_array = [
                 RowSpacer(22),
                 [euler_coldisplay, euler_constraints]]
-
-            self.browse_array += [[origin, origin_exclude], [count]]
-            self.refine_array[1] += [origin, origin_exclude]
-
-        else:
-            rational = YesNoBox(
-                name="rational",
-                knowl="lfunction.rational",
-                label="Rational",
-                example_col=True)
-
-            self.browse_array += [[self_dual, rational], [origin, origin_exclude], [count]]
-            self.refine_array[1] += [self_dual, rational, origin, origin_exclude]
 
     def search_types(self, info):
         if self.force_rational:
@@ -655,59 +661,92 @@ def random_l_function():
     label = db.lfunc_search.random(projection="label")
     return url_for_lfunction(label)
 
-@l_function_page.route("/<int:degree>/")
-def by_url_degree(degree):
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info:
-        return redirect(url_for('.index', **request.args), code=307)
-    else:
-        info['degree'] = degree
-        info['bread'] = [('L-functions', url_for('.index')),
-                 (str(degree), url_for('.by_url_degree', degree=degree))]
-    return l_function_search(info)
 
 @l_function_page.route("/degree<degree>/")
 def by_old_degree(degree):
-    return redirect(url_for(".index", degree=degree))
+    return redirect(url_for(".by_url_degree_conductor_character_spectral", degree=degree))
 
 def convert_conductor(conductor):
     return conductor.replace('e', '^')
 
-@l_function_page.route("/<int:degree>/<conductor>/")
-def by_url_degree_conductor(degree, conductor):
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info and 'conductor' in info:
-        return redirect(url_for('.index', **request.args), code=307)
-    else:
-        conductor = convert_conductor(conductor)
-        info['degree'] = degree
-        info['conductor'] = conductor
-        info['bread'] = [('L-functions', url_for('.index')),
-                         (str(degree), url_for('.by_url_degree', degree=degree)),
-                         (conductor, url_for('.by_url_degree_conductor',
-                                             degree=degree,
-                                             conductor=conductor))]
-        return l_function_search(info)
 
-@l_function_page.route("/<int:degree>/<conductor>/<character>/")
-def by_url_degree_conductor_character(degree, conductor, character):
+
+
+@l_function_page.route("/rational/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>", defaults={elt: None for elt in ['character', 'spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>/<character>", defaults={elt: None for elt in ['spectral_label']})
+@l_function_page.route("/rational/<int:degree>/<conductor>/<character>/<spectral_label>")
+def by_url_rational_degree_conductor_character_spectral(degree,
+                                               conductor,
+                                               character,
+                                               spectral_label):
+    return by_url_bread(degree, conductor, character, spectral_label, True)
+
+@l_function_page.route("/<int:degree>", defaults={elt: None for elt in ['conductor', 'character', 'spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>", defaults={elt: None for elt in ['character', 'spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>/<character>", defaults={elt: None for elt in ['spectral_label']})
+@l_function_page.route("/<int:degree>/<conductor>/<character>/<spectral_label>")
+def by_url_degree_conductor_character_spectral(degree, conductor, character, spectral_label):
+    return by_url_bread(degree, conductor, character, spectral_label, False)
+
+def by_url_bread(degree, conductor, character, spectral_label, rational):
     info = to_dict(request.args, search_array=LFunctionSearchArray())
-    if 'degree' in info and 'conductor' in info and 'character' in info:
+    if (
+        'degree' in info or
+        (conductor and 'conductor' in info) or
+        (character and 'character' in info) or
+        (spectral_label and 'spectral_label' in info) or
+        (rational and 'rational' in info)
+    ):
         return redirect(url_for('.index', **request.args), code=307)
     else:
-        conductor = convert_conductor(conductor)
+        if conductor:
+            conductor = convert_conductor(conductor)
+
+        info['bread'] = [('L-functions', url_for('.index'))]
+        if rational:
+            info['bread'].append(('Rational', url_for('.rational')))
+            info['rational'] = 'yes'
+            info['search_array'] = LFunctionSearchArray(force_rational=True)
+            route = '.by_url_rational_degree_conductor_character_spectral'
+        else:
+            route = '.by_url_degree_conductor_character_spectral'
+
+        info['bread'].extend(
+            [(str(degree), url_for(route,
+                                   degree=degree)),
+             (conductor, url_for(route,
+                                 degree=degree,
+                                 conductor=conductor)),
+             (character, url_for(route,
+                                 degree=degree,
+                                 conductor=conductor,
+                                 character=character)),
+             (spectral_label, url_for(route,
+                                 degree=degree,
+                                 conductor=conductor,
+                                 character=character,
+                                 spectral_label=spectral_label))
+             ])
+
+        # degree is always there
         info['degree'] = degree
-        info['conductor'] = conductor
-        info['character'] = character
-        info['bread'] = [('L-functions', url_for('.index')),
-                         (str(degree), url_for('.by_url_degree', degree=degree)),
-                         (conductor, url_for('.by_url_degree_conductor',
-                                             degree=degree,
-                                             conductor=conductor)),
-                         (character, url_for('.by_url_degree_conductor_character',
-                                             degree=degree,
-                                             conductor=conductor,
-                                             character=character))]
+        if conductor:
+            info['conductor'] = conductor
+        else:
+            info['bread'] = info['bread'][:-3]
+            return l_function_search(info)
+        if character:
+            info['character'] = character
+        else:
+            info['bread'] = info['bread'][:-2]
+            return l_function_search(info)
+        if spectral_label:
+            info['spectral_label'] = spectral_label
+        else:
+            info['bread'] = info['bread'][:-1]
+            return l_function_search(info)
+
         return l_function_search(info)
 
 # L-function of holomorphic cusp form browsing page ##############################################
@@ -1060,8 +1099,11 @@ def l_function_genus2_page(cond,x):
 @l_function_page.route("/Lhash/<lhash>")
 @l_function_page.route("/Lhash/<lhash>/")
 def l_function_by_hash_page(lhash):
-    args = {'Lhash': lhash}
-    return render_single_Lfunction(Lfunction_from_db, args, request)
+    label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
+    if label is None:
+        errmsg = 'Did not find an L-function with Lhash = %s' % Lhash
+        return render_lfunction_exception(errmsg)
+    return redirect(url_for_lfunction(label), 301)
 
 #by trace_hash
 @l_function_page.route("/tracehash/<int:trace_hash>")
@@ -1071,11 +1113,11 @@ def l_function_by_trace_hash_page(trace_hash):
         errmsg = r'trace_hash = %s not in [0, 2^61]' % trace_hash
         return render_lfunction_exception(errmsg)
 
-    lhash = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash}, projection = "Lhash")
-    if lhash is None:
+    label = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash, 'label': {'$exists': True}}, projection = "label")
+    if label is None:
         errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
         return render_lfunction_exception(errmsg)
-    return redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
+    return redirect(url_for_lfunction(label), 301)
 
 
 ################################################################################
@@ -1139,8 +1181,11 @@ def set_gaga_properties(L):
         ans.append(('Root an. cond.', '$%s$' % display_float(L.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)))
 
 
-    if L.algebraic:
+    if L.algebraic: # always set
         ans.append(('Motivic weight', prop_int_pretty(L.motivic_weight)))
+    ans.append(('Arithmetic', 'yes' if L.arithmetic else 'no'))
+    if L.rational is not None:
+        ans.append(('Rational', 'yes' if L.rational else 'no'))
 
 
     primitive =  getattr(L, 'primitive', None)

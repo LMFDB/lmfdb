@@ -143,7 +143,8 @@ def name_and_object_from_url(url, check_existence=False):
             obj_exists = True
     else:
         # FIXME
-        print("unknown url", url)
+        #print("unknown url", url)
+        pass
 
 
     return name, obj_exists

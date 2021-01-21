@@ -49,7 +49,6 @@ class Lfunction(object):
 
     @lazy_attribute
     def analytic_conductor(self):
-        #FIXME, check the motivic-lfunctions repo to compute this
         return None
 
     @lazy_attribute
@@ -58,6 +57,14 @@ class Lfunction(object):
             return self.analytic_conductor**(1.0/self.degree)
         else:
             return None
+    @lazy_attribute
+    def arithmetic(self):
+        return self.algebraic
+
+    @lazy_attribute
+    def rational(self):
+        return None
+
 
     ############################################################################
     ### other useful methods not implemented universally yet
@@ -152,10 +159,13 @@ class Lfunction(object):
         else:
             info['analytic_conductor'] = self.analytic_conductor
             info['root_analytic_conductor'] = self.root_analytic_conductor
+        if self.rational is not None:
+            info['rational'] = 'yes' if self.rational else 'no'
 
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
         info['algebraic'] = self.algebraic
+        info['arithmetic'] = 'yes' if self.arithmetic else 'no'
         if self.selfdual:
             info['selfdual'] = 'yes'
         else:
