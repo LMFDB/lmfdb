@@ -1101,7 +1101,7 @@ def l_function_genus2_page(cond,x):
 def l_function_by_hash_page(lhash):
     label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
     if label is None:
-        errmsg = 'Did not find an L-function with Lhash = %s' % Lhash
+        errmsg = 'Did not find an L-function with Lhash = %s' % lhash
         return render_lfunction_exception(errmsg)
     return redirect(url_for_lfunction(label), 301)
 
