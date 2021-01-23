@@ -210,9 +210,9 @@ def jump_box(info):
     if M:
         d, N, Ne, chi, GR, GRe, GI, i = M.groups()
         if Ne is not None:
-            N += "e%d" % Ne
+            N += "e%s" % Ne
         if GRe is not None:
-            GR += "e%d" % GRe
+            GR += "e%s" % GRe
         args = {'label': jump}
         if db.lfunc_search.exists(args):
             return redirect(url_for(".by_label", degree=d, conductor=N, character=chi, gamma_real=GR, gamma_imag=GI, index=i))
