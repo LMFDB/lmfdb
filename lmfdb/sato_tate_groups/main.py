@@ -754,7 +754,7 @@ def render_by_label(label):
     if data.get("character_diagonal"):
         d = data["character_diagonal"]
         info["character_diagonal"] = r"\ \ \ \mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
-    n = data['component']
+    n = data['components']
     if data.get('zvector'):
         z = data['zvector']
         if data['degree'] == 4 and sum(z) > 0:
