@@ -739,9 +739,9 @@ def render_by_label(label):
         if data['degree'] == 6:
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
-            if len(s) >= 57:
+            if len(s) >= 56:
                 info['simplex_header'] += [""]
-                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:57]]
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:56]]
             elif len(s) >= 37:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
             elif len(s) >= 23:
