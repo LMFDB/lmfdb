@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from six.moves import range
-import itertools, re
+import itertools
+import re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError

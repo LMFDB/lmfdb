@@ -1,5 +1,6 @@
 import json
-import logging, logging.handlers
+import logging
+import logging.handlers
 from os import devnull
 #from lmfdb.base import getDBConnection
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
-import os, yaml
+import os
+import yaml
 from six import text_type
 
 from flask import url_for

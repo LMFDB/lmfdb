@@ -2,7 +2,8 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-import re, random
+import re
+import random
 
 from flask import render_template, request, url_for, redirect
 from sage.all import ZZ, cached_function
