@@ -39,7 +39,7 @@ The design is the following:
   which initialize some mathematical class or fetches data in
   the database
 
-- the object classe ancestor triggers the __init__ method
+- the object class ancestor triggers the __init__ method
 
 """
 

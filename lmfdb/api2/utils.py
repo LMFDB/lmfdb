@@ -279,7 +279,7 @@ def build_query_projection(field_list, exclude=False):
 
 def compare_db_strings(str1, str2):
     """
-    Compare two database strings for compatability. Same db and collection, not same field
+    Compare two database strings for compatibility. Same db and collection, not same field
     str1 -- First database string to compare
     str2 -- Second database string to compare
     """
