@@ -554,7 +554,7 @@ def mu_portrait(n):
     else:
         plot = circle((0,0),1,thickness=3)
     plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.set_aspect_ratio(12.0/7.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -603,7 +603,7 @@ def su2_mu_portrait(n):
     else:
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.set_aspect_ratio(12.0/7.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -653,7 +653,7 @@ def nu1_mu_portrait(n):
     else:
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
-    plot.set_aspect_ratio(4.0/3.0)
+    plot.set_aspect_ratio(12.0/7.0)
     plot.axes(False)
     return encode_plot(plot)
 
@@ -763,7 +763,7 @@ def render_st_group(info, portrait=None):
     """ render html page for Sato-Tate group described by info """
     prop = [('Label', '%s'%info['label'])]
     if portrait:
-        prop += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
+        prop += [(None, '&nbsp;&nbsp;<img src="%s" width="216" height="126"/>' % portrait)]
     prop += [
         ('Name', r'\(%s\)'%info['pretty']),
         ('Weight', prop_int_pretty(info['weight'])),
