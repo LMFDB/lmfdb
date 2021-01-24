@@ -722,7 +722,7 @@ def render_by_label(label):
             mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['supgroup_multiplicities']]
         else:
             mults = ["" for s in data['supgroups']]
-        info['subgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
+        info['supgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
     if data.get('moments'):
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
