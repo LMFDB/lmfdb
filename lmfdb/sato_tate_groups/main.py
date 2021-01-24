@@ -62,8 +62,8 @@ st0_dict = {
     'U(1)_3':'\\mathrm{U}(1)_3',
     'SU(2)_3':'\\mathrm{SU}(2)_3',
     'U(1)xU(1)_2':'\\mathrm{U}(1)\\times\\mathrm{U}(1)_2',
-    'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
     'U(1)xSU(2)_2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)_2',
+    'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
     'SU(2)xSU(2)_2':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
     'U(1)^3':'\\mathrm{U}(1)^3',
     'U(1)^2xSU(2)':'\\mathrm{U}(1)^2\\times\\mathrm{SU}(2)',
@@ -706,14 +706,21 @@ def render_by_label(label):
     info['cyclic']=boolean_name(G['cyclic'])
     info['abelian']=boolean_name(G['abelian'])
     info['solvable']=boolean_name(G['solvable'])
-    info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
+    if data.get('gens'):
+        info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
-    if data.get('subgroup_multiplicities'):
-        mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
-    else:
-        mults = ["" for s in data['subgroups']]
-    info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
-    info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
+    if data.get('subgroups'):
+        if data.get('subgroup_multiplicities') and len(data["subgroup_multiplicities"]) == len(data['subgroups']):
+            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+        else:
+            mults = ["" for s in data['subgroups']]
+        info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
+    if data.get('supgroups'):
+        if data.get('supgroup_multiplicities') and len(data["supgroup_multiplicities"]) == len(data['supgroups']):
+            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['supgroup_multiplicities']]
+        else:
+            mults = ["" for s in data['supgroups']]
+        info['subgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
     if data.get('moments'):
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
@@ -721,26 +728,28 @@ def render_by_label(label):
         if data['degree'] == 4:
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
-            t = [s[0:2]]
-            m,n=2,3
-            while m+n <= len(s):
-                t += [s[m:m+n]]
-                m,n = m+n,n+1
-            info['simplex'] = t
+            if len(s)>= 27:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20],s[20:27]]
+            elif len(s) >= 20:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
+            elif len(s) >= 14:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
         if data['degree'] == 6:
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
-            t = [s[0:2]]
-            ns = [7,10,14,19,24,30]
-            k,m,n = 0,2,4
-            while m+n <= len(s):
-                t += [s[m:m+n]]
-                m,n,k = m+n,ns[k],k+1
-            info['simplex'] = t
+            if len(s) >= 57:
+                info['simplex_header'] += [""]
+                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:57]]
+            elif len(s) >= 37:
+                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
+            elif len(s) >= 23:
+                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
     if data.get('character_matrix'):
         A = data['character_matrix']
-        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A) 
-        info["character_matrix"] += r",\qquad\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[A[i][i] for i in range(len(A))]])
+        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A)
+    if data.get("character_diagonal"):
+        d = data["character_diagonal"]
+        info["character_diagonal"] += r"\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
