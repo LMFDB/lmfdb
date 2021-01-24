@@ -763,23 +763,23 @@ def render_by_label(label):
                 s = r"<table><tr><td>$\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
             else:
                 s = "<table>"
-                s = "<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$" + "</th><th>".join(["$a_2=%s$" % (i) for i in range(-2,3)]) + "</th></tr>"
-                s += "<tr><th>$-$</th><td>$1$</td><td>$%s$" % (sum(z[1:6])/n) + "</td><td>".join(["$%s$" % (z[1+i]/n) for i in range(5)]) + "</td></tr>"
-                s += "<tr><th>$a_1=0$</th><th>$%s$</th><th>$%s$" % (z[0]/n,sum(z[6:11])/n) + "</td><td>".join(["$%s$" % (z[6+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>" + "</th><th>".join(["$a_2=%s$" % (i) for i in range(-2,3)]) + "</th></tr>"
+                s += "<tr><th>$-$</th><td>$1$</td><td>$%s$</td><td>" % (sum(z[1:6])/n) + "</td><td>".join(["$%s$" % (z[1+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th>$a_1=0$</td><td>$%s$</td><td>$%s$</td><td>" % (z[0]/n,sum(z[6:11])/n) + "</td><td>".join(["$%s$" % (z[6+i]/n) for i in range(5)]) + "</td></tr>"
                 s += "</table>"
             info['probabilities'] = s
         elif data['degree'] == 6 and sum(z) > 0:
             if sum(z[1:]) == 0:
                 s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
             elif sum(z[1:6]) == 0:
-                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$</td><td>$\\mathrm{Pr}[a_3=0]=%s$</td><td>$\\mathrm{Pr}[a_1=a_3=0]=%s$</td></tr></table>" % (z[0]/n,z[6]/n,z[12]/n)
+                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$,</td><td>$\\mathrm{Pr}[a_3=0]=%s$,</td><td>$\\mathrm{Pr}[a_1=a_3=0]=%s$</td></tr></table>" % (z[0]/n,z[6]/n,z[12]/n)
             else:
                 s = "<table>"
-                s = "<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$" + "</th><th>".join(["$a_2=%s$" % (i) for i in range(-1,4)]) + "</th></tr>"
-                s += "<tr><th>$-$</th><td>$1$</td><td>$%s$" % (sum(z[1:6])/n) + "</td><td>".join(["$%s$" % (z[1+i]/n) for i in range(5)]) + "</td></tr>"
-                s += "<tr><th>$a_1=0$</th><th>$%s$</th><th>$%s$" % (z[0]/n,sum(z[7:12])/n) + "</td><td>".join(["$%s$" % (z[7+i]/n) for i in range(5)]) + "</td></tr>"
-                s += "<tr><th>$a_3=0$</th><th>$%s$</th><th>$%s$" % (z[6]/n,sum(z[13:18])/n) + "</td><td>".join(["$%s$" % (z[13+i]/n) for i in range(5)]) + "</td></tr>"
-                s += "<tr><th>$a_1=a_3=0$</th><th>$%s$</th><th>$%s$" % (z[12]/n,sum(z[18:23])/n) + "</td><td>".join(["$%s$" % (z[18+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>" + "</th><th>".join(["$a_2=%s$" % (i) for i in range(-1,4)]) + "</th></tr>"
+                s += "<tr><th>$-$</th><td>$1$</td><td>$%s$</td><td>" % (sum(z[1:6])/n) + "</td><td>".join(["$%s$" % (z[1+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th>$a_1=0$</td><td>$%s$</td><td>$%s$</td><td>" % (z[0]/n,sum(z[7:12])/n) + "</td><td>".join(["$%s$" % (z[7+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th>$a_3=0$</td><td>$%s$</td><td>$%s$</td><td>" % (z[6]/n,sum(z[13:18])/n) + "</td><td>".join(["$%s$" % (z[13+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "<tr><th>$a_1=a_3=0$</td><td>$%s$</td><td>$%s$</td><td>" % (z[12]/n,sum(z[18:23])/n) + "</td><td>".join(["$%s$" % (z[18+i]/n) for i in range(5)]) + "</td></tr>"
                 s += "</table>"
             info['probabilities'] = s
     elif data.get('counts'):
