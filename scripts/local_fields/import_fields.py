@@ -83,8 +83,8 @@ for path in sys.argv[1:]:
         if re.match(r'\S',line):
             #print line
             l = json.loads(line)
-            chck = lf.lookup(str(l[11])) # by label
-            if chck is None: # we don't have it yet
+            check = lf.lookup(str(l[11])) # by label
+            if check is None: # we don't have it yet
                 ent = prep_ent(l)
                 outrecs.append(ent)
                 #print str(ent['label'])
