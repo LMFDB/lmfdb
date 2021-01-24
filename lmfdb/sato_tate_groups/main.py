@@ -756,7 +756,7 @@ def render_by_label(label):
         info["character_diagonal"] = r"\ \ \ \mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
     if data.get('counts'):
         c=data['counts']
-        info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
+        info['probabilities'] = [['\\mathrm{Pr}[%s=%s]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
 def render_st_group(info, portrait=None):
