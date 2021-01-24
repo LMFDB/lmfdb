@@ -2,7 +2,8 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-import re, random
+import re
+import random
 
 from flask import render_template, request, url_for, redirect
 from sage.all import ZZ, cached_function
@@ -117,7 +118,7 @@ def add_lfunction_friends(friends, label):
     for label in both_labels(label):
         rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
         if rec:
-            num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
+            num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF label based on artin label (rep or orbit)
             for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
                 s = r['url'].split('/')
                 if r['type'] == 'CMF' and len(s) == num:

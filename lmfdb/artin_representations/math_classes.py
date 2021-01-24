@@ -635,7 +635,7 @@ class ArtinRepresentation(object):
 class CharacterValues(list):
     def display(self):
         # The character values can be large, do not convert to int!
-        return "[" + ",".join([x.latex() for x in self]) + "]"
+        return "[" + ",".join(x.latex() for x in self) + "]"
 
 
 class ConjugacyClass(object):
@@ -929,7 +929,7 @@ class NumberFieldGaloisGroup(object):
             from lmfdb.number_fields.number_field import residue_field_degrees_function
             fn_with_pari_output = residue_field_degrees_function(self.nfinit())
             self._residue_field_degrees = lambda p: [Integer(k) for k in fn_with_pari_output(p)]
-            # This function is better, becuase its output has entries in Integer
+            # This function is better, because its output has entries in Integer
             return self._residue_field_degrees(p)
 
     def __str__(self):

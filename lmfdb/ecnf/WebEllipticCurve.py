@@ -386,7 +386,7 @@ class ECNF(object):
         self.cond_norm = web_latex(self.conductor_norm)
 
         # This flag controls whether ideals are reduced before display
-        # (conductor, discriminant/minimial discriminant, bad primes)
+        # (conductor, discriminant/minimal discriminant, bad primes)
         # It is reset to False when the table contains simplified
         # ideals already (flagged by the existence of the columns
         # disc, normdisc)
@@ -596,7 +596,7 @@ class ECNF(object):
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"
-        if self.analytic_rank != None:
+        if self.analytic_rank is not None:
             if self.rk_lb==self.rk_ub:
                 self.bsd_status = "unconditional"
             elif self.rk_lb==self.analytic_rank:

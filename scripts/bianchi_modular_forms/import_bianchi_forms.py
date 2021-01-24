@@ -212,7 +212,7 @@ def read_forms(filename_suffix, base_path=NEWFORM_DIR):
     (e.g. "newforms.1.1-10000") and only the suffix after "newforms."
     needs to be given.
 
-    Parsing of individual lines is handled by the functon parse_newforms_line().
+    Parsing of individual lines is handled by the function parse_newforms_line().
 
     Returns a dict with keys complete labels and values complete dicts
     with 20 keys one for each column in the table (excluding "id").

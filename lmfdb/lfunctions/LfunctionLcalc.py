@@ -146,7 +146,7 @@ def createLcalcfile_ver2(L, url):
     else:
         thefile += "periodic = False\n\n"
 
-    thefile += """\
+    thefile += r"""\
 ##########################################################################################################
 ### The default is to assume that the Dirichlet coefficients are provided
 ### normalized so that the functional equation is s <--> 1-s, i.e. `normalize_by'

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import
-import sys, re
+import sys
+import re
 from collections import defaultdict
 
 from psycopg2.sql import SQL, Identifier, Placeholder
