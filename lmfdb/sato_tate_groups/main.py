@@ -708,7 +708,9 @@ def render_by_label(label):
     info['solvable']=boolean_name(G['solvable'])
     if data.get('gens'):
         info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
-    info['numgens']=len(info['gens'])
+        info['numgens']=len(info['gens'])
+    else:
+        info['numgens'] = 0
     if data.get('subgroups'):
         if data.get('subgroup_multiplicities') and len(data["subgroup_multiplicities"]) == len(data['subgroups']):
             mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
