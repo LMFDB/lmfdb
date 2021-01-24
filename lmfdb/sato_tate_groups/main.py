@@ -757,6 +757,7 @@ def render_by_label(label):
     n = data['components']
     if data.get('zvector'):
         z = data['zvector']
+        print(z)
         if data['degree'] == 4 and sum(z) > 0:
             if sum(z[1:]) == 0:
                 s = r"<table><tr><td>$\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
@@ -780,6 +781,7 @@ def render_by_label(label):
                 s += "<tr><th>$a_3=0$</th><th>$%s$</th><th>$%s$" % (z[6]/n,sum(z[13:18])/n) + "</td><td>".join(["$%s$" % (z[13+i]/n) for i in range(5)]) + "</td></tr>"
                 s += "<tr><th>$a_1=a_3=0$</th><th>$%s$</th><th>$%s$" % (z[12]/n,sum(z[18:23])/n) + "</td><td>".join(["$%s$" % (z[18+i]/n) for i in range(5)]) + "</td></tr>"
                 s += "</table>"
+        print(info['probabilities'])
     elif data.get('counts'):
         c=data['counts']
         T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
