@@ -783,7 +783,7 @@ def render_by_label(label):
                 s += '</td><td align="center">'.join(["$%s$" % (z[7+i]/n) for i in range(5)]) + '</td></tr>'
                 s += '<tr><th>$a_3=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[6]/n,sum(z[13:18])/n)
                 s += '</td><td align="center">'.join(["$%s$" % (z[13+i]/n) for i in range(5)]) + '</td></tr>'
-                s += '<tr><th>$a_1=a_3=0$</td align="center"><td>$%s$</td><td align="center">$%s$</td><td>' % (z[12]/n,sum(z[18:23])/n)
+                s += '<tr><th>$a_1=a_3=0$</td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[12]/n,sum(z[18:23])/n)
                 s += '</td><td align="center">'.join(["$%s$" % (z[18+i]/n) for i in range(5)]) + '</td></tr>'
                 s += "</table>"
             info['probabilities'] = s
