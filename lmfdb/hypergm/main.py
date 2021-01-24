@@ -280,7 +280,8 @@ def hgm_family_circle_plot_data(AB):
     B = [int(n) for n in B[1:].split(".")]
     G = circle_image(A, B)
     P = G.plot()
-    import tempfile, os
+    import tempfile
+    import os
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
     with open(filename) as f:

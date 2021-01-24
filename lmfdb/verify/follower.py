@@ -1,5 +1,7 @@
 from __future__ import print_function
-import os, re, time
+import os
+import re
+import time
 from collections import defaultdict
 
 redline = re.compile(r"An exception in|Exception in|failed test|FAILED with")

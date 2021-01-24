@@ -2,7 +2,11 @@
 from __future__ import print_function
 from six import integer_types as six_integers
 from six import string_types
-import traceback, time, os, inspect, sys
+import traceback
+import time
+import os
+import inspect
+import sys
 from types import MethodType
 from datetime import datetime
 

@@ -71,7 +71,7 @@ def learnmore_list(path=None, remove=None):
             ('Reliability of the data', url_for('.reliability', prepath=prepath)),
         ])
     else:
-        learnmore.append(('$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
+        learnmore.append((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore

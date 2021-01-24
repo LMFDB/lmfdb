@@ -7,7 +7,8 @@
 # Lfunction_genus2_Q
 
 from __future__ import absolute_import
-import math, re
+import math
+import re
 
 from flask import url_for, request
 from sage.all import (

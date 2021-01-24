@@ -596,7 +596,7 @@ class ECNF(object):
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"
-        if self.analytic_rank != None:
+        if self.analytic_rank is not None:
             if self.rk_lb==self.rk_ub:
                 self.bsd_status = "unconditional"
             elif self.rk_lb==self.analytic_rank:
