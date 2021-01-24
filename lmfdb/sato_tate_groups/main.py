@@ -741,17 +741,19 @@ def render_by_label(label):
             s = data['simplex']
             if len(s) >= 57:
                 info['simplex_header'] += [""]
-                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:57]]
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:57]]
             elif len(s) >= 37:
-                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
             elif len(s) >= 23:
-                info['simple'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
     if data.get('character_matrix'):
         A = data['character_matrix']
         info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A)
     if data.get("character_diagonal"):
         d = data["character_diagonal"]
+        print(d)
         info["character_diagonal"] = r"\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
+        print(info['character_diagonal'])
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
