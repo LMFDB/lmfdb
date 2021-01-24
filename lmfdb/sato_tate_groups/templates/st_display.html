@@ -79,7 +79,7 @@
 
 {% if info['character_matrix'] %}
 <h2> {{ KNOWL('st_group.moment_matrix', 'Moment matrix') }} </h2>
-<p>${{info['character_matrix'] | safe}}$</p>
+<p>$${{info['character_matrix'] | safe}}$$</p>
 {% endif %}
 
 {% if info['probabilities'] %}
