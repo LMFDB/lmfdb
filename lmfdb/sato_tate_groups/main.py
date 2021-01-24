@@ -4,7 +4,7 @@ import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError
-from sage.all import ZZ, QQ, cos, sin, pi, gcd, list_plot, circle, line2d, cached_function
+from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
@@ -736,7 +736,7 @@ def render_by_label(label):
             elif len(s) >= 14:
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
-        if data['degree'] == 6:
+        elif data['degree'] == 6:
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             if len(s) >= 56:
@@ -754,9 +754,43 @@ def render_by_label(label):
     if data.get("character_diagonal"):
         d = data["character_diagonal"]
         info["character_diagonal"] = r"\ \ \ \mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
-    if data.get('counts'):
+    n = QQ(data['components'])
+    if data.get('zvector'):
+        z = data['zvector']
+        if data['degree'] == 4 and sum(z) > 0:
+            if sum(z[1:]) == 0:
+                s = r"<table><tr><td>$\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
+            else:
+                s = "<table>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-2,3)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:6])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td>$%s$</td><td>' % (z[0]/n,sum(z[6:11])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[6+i]/n) for i in range(5)]) + "</td></tr>"
+                s += "</table>"
+            info['probabilities'] = s
+        elif data['degree'] == 6 and sum(z) > 0:
+            if sum(z[1:]) == 0:
+                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
+            elif sum(z[1:6]) == 0:
+                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$,</td><td>$\\mathrm{Pr}[a_3=0]=%s$,</td><td>$\\mathrm{Pr}[a_1=a_3=0]=%s$</td></tr></table>" % (z[0]/n,z[6]/n,z[12]/n)
+            else:
+                s = "<table>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:6])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[7:12])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[7+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_3=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[6]/n,sum(z[13:18])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[13+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=a_3=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[12]/n,sum(z[18:23])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[18+i]/n) for i in range(5)]) + '</td></tr>'
+                s += "</table>"
+            info['probabilities'] = s
+    elif data.get('counts'):
         c=data['counts']
-        info['probabilities'] = [['\\mathrm{Pr}[%s=%s]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/gcd(data['components'],c[i][1][j][1]),data['components']/gcd(data['components'],c[i][1][j][1])) for j in range(len(c[i][1]))] for i in range(len(c))]
+        T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
+        info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
 def render_st_group(info, portrait=None):
