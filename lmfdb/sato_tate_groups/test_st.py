@@ -45,7 +45,7 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&include_irrational=yes&components=48')
         assert 'unique match' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?components=48&include_irrational=yes')
-        assert 'both matches' in L.get_data(as_text=True)
+        assert '27 matches' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25&include_irrational=yes')
         assert 'matches 1001-1025' in L.get_data(as_text=True)
         L = self.tc.get('SatoTateGroup/?degree=1')
@@ -59,7 +59,8 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_subgroups(self):
         L = self.tc.get('/SatoTateGroup/1.4.F.6.1a')
-        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True) and 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
+        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True)
+        assert 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
 
     def test_event_probabilities(self):
         L = self.tc.get('/SatoTateGroup/1.4.F.48.48a')

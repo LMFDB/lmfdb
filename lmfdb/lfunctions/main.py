@@ -48,7 +48,10 @@ from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
 from six import string_types
 
-
+SPECTRAL_STR = r"((?:[rc]\d+)+)(?:e(\d+))?-(0|(?:[pmc]\d+(?:\.\d\d)?)+)"
+SPECTRAL_RE = re.compile("^"+SPECTRAL_STR+"$")
+CRE = re.compile(r"c(\d+)")
+LFUNC_LABEL_RE = re.compile(r"^(\d+)-(\d+)(?:e(\d+))?-(\d+\.\d+)-"+SPECTRAL_STR+r"-(\d+)$")
 
 credit_string = "Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Platt"
 
@@ -201,6 +204,24 @@ def by_label(degree, conductor, character, gamma_real, gamma_imag, index):
     args = {'label': '-'.join(map(str, (degree, conductor, character, gamma_real, gamma_imag, index)))}
     return render_single_Lfunction(Lfunction_from_db, args, request)
 
+def jump_box(info):
+    jump = info.pop("jump").strip()
+    M = LFUNC_LABEL_RE.match(jump)
+    if M:
+        d, N, Ne, chi, GR, GRe, GI, i = M.groups()
+        if Ne is not None:
+            N += "e%s" % Ne
+        if GRe is not None:
+            GR += "e%s" % GRe
+        args = {'label': jump}
+        if db.lfunc_search.exists(args):
+            return redirect(url_for(".by_label", degree=d, conductor=N, character=chi, gamma_real=GR, gamma_imag=GI, index=i))
+        errmsg = "L-function %s not found"
+    else:
+        errmsg = "Malformed L-function label %s"
+    flash_error(errmsg, jump)
+    return redirect(url_for(".index"))
+
 def parse_sort(info, query):
     if info.get('sort_order') == '':
         query['__sort__'] = ['root_analytic_conductor', 'label']
@@ -213,8 +234,6 @@ def parse_sort(info, query):
     elif info.get('sort_order') == 'cond':
         query['__sort__'] = ['conductor', 'root_analytic_conductor', 'label']
 
-SPECTRAL_RE = re.compile(r"^((?:[rc]\d+)+)(?:e(\d+))?-(0|(?:[pmc]\d+(?:\.\d\d)?)+)$")
-CRE = re.compile(r"c(\d+)")
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_spectral(inp, query, qfield):
     if '-' not in inp:
@@ -289,6 +308,7 @@ def common_parse(info, query):
              postprocess=process_search,
              title="L-function search results",
              err_title="L-function search input error",
+             shortcuts={'jump':jump_box},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
@@ -302,6 +322,7 @@ def l_function_search(info, query):
              table=db.lfunc_search,
              title="L-function trace search",
              err_title="L-function search input error",
+             shortcuts={'jump':jump_box},
              postprocess=process_trace,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
@@ -342,6 +363,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              table=db.lfunc_search,
              title="L-function Euler product search",
              err_title="L-function search input error",
+             shortcuts={'jump':jump_box},
              postprocess=process_euler,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]),
@@ -1079,7 +1101,7 @@ def l_function_genus2_page(cond,x):
 def l_function_by_hash_page(lhash):
     label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
     if label is None:
-        errmsg = 'Did not find an L-function with Lhash = %s' % Lhash
+        errmsg = 'Did not find an L-function with Lhash = %s' % lhash
         return render_lfunction_exception(errmsg)
     return redirect(url_for_lfunction(label), 301)
 
@@ -1119,7 +1141,7 @@ def render_single_Lfunction(Lclass, args, request):
 def render_lfunction_exception(err):
     try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + "".join("<li>" + msg + "</li>" for msg in err.args) + "</ul>"
-    except:
+    except Exception:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.index')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
