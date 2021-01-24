@@ -59,7 +59,8 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_subgroups(self):
         L = self.tc.get('/SatoTateGroup/1.4.F.6.1a')
-        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True) and 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
+        assert 'C_2' in L.get_data(as_text=True) and 'C_3' in L.get_data(as_text=True)
+        assert 'D_{6,1}' in L.get_data(as_text=True) and 'D_6' in L.get_data(as_text=True) and 'J(D_3)' in L.get_data(as_text=True) and 'O' in L.get_data(as_text=True)
 
     def test_event_probabilities(self):
         L = self.tc.get('/SatoTateGroup/1.4.F.48.48a')
