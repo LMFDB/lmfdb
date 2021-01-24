@@ -84,15 +84,7 @@
 
 {% if info['probabilities'] %}
 <h2> {{ KNOWL('st_group.probabilities', 'Event probabilities') }} </h2>
-<table border=1>
-    {% for m in info['probabilities'] %}
-        <tr>
-        {% for a in m %}
-            <td align="right">${{a}}$</td>
-        {% endfor %}
-        </tr>
-    {% endfor %}
-</table>
+{{ info['probabilities'] | safe }}
 {% endif %}
 
 
