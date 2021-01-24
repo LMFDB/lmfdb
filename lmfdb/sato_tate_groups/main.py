@@ -748,10 +748,14 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
     if data.get('character_matrix'):
         A = data['character_matrix']
-        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A)
-    if data.get("character_diagonal"):
+        info["character_matrix"] = r"\begin{align}\mathrm{E}\left[\chi_i\chi_j\right] &= " + string_matrix(A)
+        if data.get("character_diagonal"):
+            d = data["character_diagonal"]
+            info["character_matrix"] += r"\n\mathrm{E}\left[\chi_i^2\right] &= " + string_matrix([[d[i] for i in range(len(d))]])
+        info["character_matrix"] += r"\\\end{align"
+    elif data.get("character_diagonal"):
         d = data["character_diagonal"]
-        info["character_diagonal"] = r"\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
+        info["character_matrix"] = r"\n\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
