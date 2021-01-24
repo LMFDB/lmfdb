@@ -789,7 +789,7 @@ def render_by_label(label):
             info['probabilities'] = s
     elif data.get('counts'):
         c=data['counts']
-        T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
+        T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
         info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
