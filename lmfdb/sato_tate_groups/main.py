@@ -4,7 +4,7 @@ import itertools, re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError
-from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle, line2d, cached_function
+from sage.all import ZZ, QQ, cos, sin, pi, gcd, list_plot, circle, line2d, cached_function
 
 from lmfdb import db
 from lmfdb.app import ctx_proc_userdata
@@ -756,7 +756,7 @@ def render_by_label(label):
         info["character_diagonal"] = r"\ \ \ \mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
     if data.get('counts'):
         c=data['counts']
-        info['probabilities'] = [['\\mathrm{Pr}[%s=%s]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
+        info['probabilities'] = [['\\mathrm{Pr}[%s=%s]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/gcd(data['components'],c[i][1][j][1]),data['components']/gcd(data['components'],c[i][1][j][1])) for j in range(len(c[i][1]))] for i in range(len(c))]
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
 def render_st_group(info, portrait=None):
