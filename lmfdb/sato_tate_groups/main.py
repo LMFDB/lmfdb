@@ -751,11 +751,11 @@ def render_by_label(label):
         info["character_matrix"] = r'<table><tr><td style="text-align:right">$\mathrm{E}\left[\chi_i\chi_j\right]$</td><td>$=$</td><td>$' + string_matrix(A) + "$</td></tr>"
         if data.get("character_diagonal"):
             d = data["character_diagonal"]
-            info["character_matrix"] += r'<tr><td style="text-align:right">$\mathrm{E}\left[\chi_i^2\right]$</td<td>$=$<td>$' + string_matrix([[d[i] for i in range(len(d))]]) + "$</td></tr>"
+            info["character_matrix"] += r'<tr><td style="text-align:right">$\mathrm{E}\left[\chi_i^2\right]$</td<td>$=$</td><td>$' + string_matrix([[d[i] for i in range(len(d))]]) + "$</td></tr>"
         info["character_matrix"] += "</table>"
     elif data.get("character_diagonal"):
         d = data["character_diagonal"]
-        info["character_matrix"] = r"<p>$\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]]) + "$</p>"
+        info["character_matrix"] = r"<p>$\mathrm{E}\left[\chi_i^2\right]= " + string_matrix([[d[i] for i in range(len(d))]]) + "$</p>"
     if data.get('counts'):
         c=data['counts']
         info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
