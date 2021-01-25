@@ -76,6 +76,18 @@ st0_dict = {
     'USp(6)':'\\mathrm{USp}(6)'
 }
 
+# convert changed degree 4 names to labels in a forward/backward compatible way
+st_name_to_label = {
+    'G_{3,3}': '1.4.B.1.1a',
+    'SU(2)xSU(2)': '1.4.B.1.1a',
+    'N(G_{3,3})': '1.4.B.2.1a',
+    'N(SU(2)xSU(2))': '1.4.B.2.1a',
+    'G_{1,3}': '1.4.C.1.1a',
+    'U(1)xSU(2)': '1.4.C.1.1a',
+    'N(G_{1,3})': '1.4.C.2.1a',
+    'N(U(1)xSU(2))': '1.4.C.2.1a',
+}
+
 ###############################################################################
 # Utility functions
 ###############################################################################
@@ -92,6 +104,8 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
+    if label in st_name_to_label:
+        return st_name_to_label[label]
     d2A = {'3':'A','1':'B'}
     d4A = {'10':'A','6':'B','4':'C','2':'D','3':'E','1':'F'}
     a = label.split('.')
@@ -758,23 +772,21 @@ def render_by_label(label):
     n = QQ(data['components'])
     if data.get('zvector'):
         z = data['zvector']
-        if data['degree'] == 4 and sum(z) > 0:
-            if sum(z[1:]) == 0:
-                s = r"<table><tr><td>$\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
+        if data['degree'] == 4:
+            if sum(z) == 0:
+                s = r"<p>The $a_i$ distributions are continuous on every componennt, so $\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
             else:
                 s = "<table>"
-                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-2,3)]) + '</th></tr>'
-                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:6])/n)
-                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(5)]) + '</td></tr>'
-                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td>$%s$</td><td>' % (z[0]/n,sum(z[6:11])/n)
-                s += '</td><td align="center">'.join(["$%s$" % (z[6+i]/n) for i in range(5)]) + "</td></tr>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,3)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:5])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(4)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[5:9])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[5+i]/n) for i in range(4)]) + "</td></tr>"
                 s += "</table>"
             info['probabilities'] = s
-        elif data['degree'] == 6 and sum(z) > 0:
-            if sum(z[1:]) == 0:
-                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$</td></tr></table>" % (z[0]/n)
-            elif sum(z[1:6]) == 0:
-                s = "<table><tr><td>$\\mathrm{Pr}[a_1=0]=%s$,</td><td>$\\mathrm{Pr}[a_3=0]=%s$,</td><td>$\\mathrm{Pr}[a_1=a_3=0]=%s$</td></tr></table>" % (z[0]/n,z[6]/n,z[12]/n)
+        elif data['degree'] == 6:
+            if sum(z) == 0:
+                s = r"<p>The $a_i$ distributions are continuous on every componennt, so $\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'
