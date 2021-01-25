@@ -119,6 +119,8 @@ def convert_label(label):
             a[2] = d4A[a[2]]
             return '.'.join(a)
         if a[1] == '4' and a[2] in st_name_to_label:
+            print(a[2])
+            print(st_name_to_label[a[2]])
             return st_name_to_label[a[2]]
     return label
 
