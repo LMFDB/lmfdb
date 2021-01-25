@@ -64,7 +64,7 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_event_probabilities(self):
         L = self.tc.get('/SatoTateGroup/1.4.F.48.48a')
-        assert '33' in L.get_data(as_text=True)
+        assert '23' in L.get_data(as_text=True)
 
     def test_completeness(self):
         import sys
