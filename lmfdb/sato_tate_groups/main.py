@@ -119,8 +119,6 @@ def convert_label(label):
             a[2] = d4A[a[2]]
             return '.'.join(a)
         if a[1] == '4' and a[2] in st_name_to_label:
-            print(a[2])
-            print(st_name_to_label[a[2]])
             return st_name_to_label[a[2]]
     return label
 
@@ -326,7 +324,9 @@ def statistics():
 
 @st_page.route('/<label>')
 def by_label(label):
+    print(label)
     clean_label = convert_label(clean_input(label))
+    print(clean_label)
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
     if label == '1.2.B.d1':
