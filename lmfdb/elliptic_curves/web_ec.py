@@ -586,7 +586,8 @@ class WebEC(object):
             if self.conductor < CREMONA_BOUND:
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.Clabel)
             else:
-                ecode = self._code['curve'][lang][:code.index(")")+1:]
+                ecode = self._code['curve'][lang]
+                ecode = ecode[:ecode.index(")")+1:]
                 self._code['curve'][lang] = ecode % (self.data['ainvs'])
         return
         for k in self._code:
