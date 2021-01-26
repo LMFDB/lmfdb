@@ -76,16 +76,35 @@ st0_dict = {
     'USp(6)':'\\mathrm{USp}(6)'
 }
 
-# convert changed degree 4 names to labels in a forward/backward compatible way
-st_name_to_label = {
+# common aliases, include the G_* names in case we decide to change them
+st_aliases = {
     'G_{3,3}': '1.4.B.1.1a',
     'SU(2)xSU(2)': '1.4.B.1.1a',
+    'SU(2)^2': '1.4.B.1.1a',
     'N(G_{3,3})': '1.4.B.2.1a',
     'N(SU(2)xSU(2))': '1.4.B.2.1a',
     'G_{1,3}': '1.4.C.1.1a',
     'U(1)xSU(2)': '1.4.C.1.1a',
     'N(G_{1,3})': '1.4.C.2.1a',
     'N(U(1)xSU(2))': '1.4.C.2.1a',
+    'U(1)xU(1)': '1.4.D.1.1a',
+    'U(1)^2': '1.4.D.1.1a',
+    'USp(4)xSU(2)': '1.6.C.1.1a',
+    'USp(4)xU(1)': '1.6.D.1.1a',
+    'SU(2)xSU(2)xSU(2)': '1.6.E.1.1a',
+    'U(1)xSU(2)xSU(2)': '1.6.F.1.1a',
+    'SU(2)xU(1)xSU(2)': '1.6.F.1.1a',
+    'SU(2)xSU(2)xU(1)': '1.6.F.1.1a',
+    'SU(2)^2xU(1)': '1.6.F.1.1a',
+    'U(1)xU(1)xSU(2)': '1.6.G.1.1a',
+    'U(1)xSU(2)xU(1)': '1.6.G.1.1a',
+    'SU(2)xU(1)xU(1)': '1.6.G.1.1a',
+    'SU(2)xU(1)^2': '1.6.G.1.1a',
+    'U(1)xU(1)xU(1)': '1.6.H.1.1a',
+    'SU(2)_2xSU(2)': '1.6.I.1.1a',
+    'SU(2)_2xU(1)': '1.6.J.1.1a',
+    'U(1)_2xSU(2)': '1.6.K.1.1a',
+    'U(1)_2xU(1)': '1.6.L.1.1a',
 }
 
 ###############################################################################
@@ -104,8 +123,8 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
-    if label in st_name_to_label:
-        return st_name_to_label[label]
+    if label in st_aliases:
+        return st_aliases[label]
     d2A = {'3':'A','1':'B'}
     d4A = {'10':'A','6':'B','4':'C','2':'D','3':'E','1':'F'}
     a = label.split('.')
@@ -118,8 +137,8 @@ def convert_label(label):
         if a[1] == '4' and a[2] in d4A:
             a[2] = d4A[a[2]]
             return '.'.join(a)
-        if a[1] == '4' and a[2] in st_name_to_label:
-            return st_name_to_label[a[2]]
+        if a[2] in st_aliases:
+            return st_aliases[a[2]]
     return label
 
 def get_name(label):
