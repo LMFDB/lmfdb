@@ -303,7 +303,13 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
-        <td> {{ ec.Lvalue }}</td>
+        <td>
+	  {% if ec.Lvalue=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.Lvalue }}
+	  {% endif %}
+	</td>
         </tr>
 
         <tr>
