@@ -571,24 +571,13 @@ class WebEC(object):
 
     def code(self):
         if self._code is None:
-            self.make_code_snippets()
+
+            # read in code.yaml from current directory:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+            # Fill in placeholders for this specific curve:
+            for lang in ['sage', 'pari', 'magma']:
+                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+
         return self._code
-
-    def make_code_snippets(self):
-        # read in code.yaml from current directory:
-
-        _curdir = os.path.dirname(os.path.abspath(__file__))
-        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-        # Fill in placeholders for this specific curve:
-
-        for lang in ['sage', 'pari', 'magma']:
-            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.lmfdb_label)
-        return
-        for k in self._code:
-            if k != 'prompt':
-                for lang in self._code[k]:
-                    self._code[k][lang] = self._code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self._code[k][lang][-1])==0:
-                        self._code[k][lang] = self._code[k][lang][:-1]

@@ -14,7 +14,6 @@
 <h2> {{ KNOWL('st_group.identity_component', 'Identity component') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.identity_component', 'Name') }}:</td><td>${{info['identity_component']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.index', 'Index') }}:</td><td>${{info['components']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.real_dimension', '$\\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.embedding','Description') }}:</td><td>${{info['st0_description']}}$</td>
     {% if info['symplectic_form'] %}
@@ -80,19 +79,12 @@
 {% if info['character_matrix'] %}
 <h2> {{ KNOWL('st_group.moment_matrix', 'Moment matrix') }} </h2>
 <p>${{info['character_matrix']}}$</p>
+<p>${{info['character_diagonal']}}$</p>
 {% endif %}
 
 {% if info['probabilities'] %}
 <h2> {{ KNOWL('st_group.probabilities', 'Event probabilities') }} </h2>
-<table border=1>
-    {% for m in info['probabilities'] %}
-        <tr>
-        {% for a in m %}
-            <td align="right">${{a}}$</td>
-        {% endfor %}
-        </tr>
-    {% endfor %}
-</table>
+{{ info['probabilities'] | safe }}
 {% endif %}
 
 

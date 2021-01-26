@@ -39,12 +39,21 @@ def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
+    # Strip trailing zeros
+    if not s:
+        s = [0]
+    if s[-1] == 0:
+        j = len(s) - 1
+        while j > 0 and s[j] == 0:
+            j -= 1
+        s = s[:j+1]
     if len(s) == 1:
         if galois:
             return [str(s[0]), [[0,0]]]
         return str(s[0])
     ZZT = PolynomialRing(ZZ, vari)
-    sfacts = ZZT(s).factor()
+    f = ZZT(s)
+    sfacts = f.factor()
     sfacts_fc = [[g, e] for g, e in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
@@ -278,6 +287,9 @@ def str_to_CBF(s):
     try:
         return CBF(s)
     except TypeError:
+        # Need to deal with scientific notation
+        # Replace e+ and e- with placeholders so that we can split on + and -
+        s = s.replace("e+", "P").replace("E+", "P").replace("e-", "M").replace("E-", "M")
         sign = 1
         s = s.lstrip('+')
         if '+' in s:
@@ -296,7 +308,9 @@ def str_to_CBF(s):
         if b == 'I':
             b = '1'
         else:
-            b = b.rstrip(' ').rstrip('I').rstrip('*')
+            b = b.rstrip().rstrip('I').rstrip('*')
+        a = a.replace("M", "e-").replace("P", "e+")
+        b = b.replace("M", "e-").replace("P", "e+")
 
         res = CBF(0)
         if a:
@@ -360,7 +374,9 @@ def is_exact(x):
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
-                             try_halfinteger=True):
+                             try_halfinteger=True,
+                             no_sci=None,
+                             latex=False):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     # if small, try to display it as an exact or half integer
@@ -387,7 +403,8 @@ def display_float(x, digits, method = "truncate",
         rnd = 'RNDZ'
     else:
         rnd = 'RNDN'
-    no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+    if no_sci is None:
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
         s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
@@ -399,6 +416,8 @@ def display_float(x, digits, method = "truncate",
                 s = s[:digits+1]
             else:
                 s = s[:point]
+    if latex and "e" in s:
+        s = s.replace("e", r"\times 10^{") + "}"
     return s
 
 def display_complex(x, y, digits, method = "truncate",
@@ -1088,6 +1107,8 @@ def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
+def flash_warning(errmsg, *args):
+    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "warning")
 
 
 ################################################################################

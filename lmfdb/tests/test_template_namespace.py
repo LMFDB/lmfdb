@@ -1,6 +1,9 @@
 from __future__ import print_function
 from lmfdb.tests import LmfdbTest
-import os, itertools, collections
+import os
+import itertools
+import collections
+
 
 class TemplateNamespaceCollisionTest(LmfdbTest):
 

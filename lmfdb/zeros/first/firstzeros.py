@@ -28,7 +28,7 @@ def firstzeros():
     # limit=limit, degree=degree, signature_r=signature_r,
     # signature_c=signature_c)
     title = "First zero search results"
-    bread = [("L-functions", url_for("l_functions.l_function_top_page")),
+    bread = [("L-functions", url_for("l_functions.index")),
              ("First zeros", " "), ("Search results", " "), ]
     return render_template("first_zeros.html",
                            start=start, end=end, limit=limit,

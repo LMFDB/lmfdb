@@ -3,7 +3,8 @@
 from __future__ import absolute_import
 from six import string_types
 from collections import defaultdict
-import bisect, re
+import bisect
+import re
 
 from flask import url_for
 from lmfdb.characters.TinyConrey import ConreyCharacter
