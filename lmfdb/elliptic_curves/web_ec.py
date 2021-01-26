@@ -583,7 +583,11 @@ class WebEC(object):
         # Fill in placeholders for this specific curve:
 
         for lang in ['sage', 'pari', 'magma']:
-            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.lmfdb_label)
+            if self.conductor < CREMONA_BOUND:
+                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.Clabel)
+            else:
+                ecode = self._code['curve'][lang][:code.index(")")+1:]
+                self._code['curve'][lang] = ecode % (self.data['ainvs'])
         return
         for k in self._code:
             if k != 'prompt':
