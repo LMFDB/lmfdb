@@ -635,7 +635,7 @@ class ECNF(object):
         try:
             r = int(self.analytic_rank)
             # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
-            self.Lvalue = "\\(" + str(self.Lvalue) + r"\\)"
+            self.Lvalue = web_latex(self.Lvalue)
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
             
