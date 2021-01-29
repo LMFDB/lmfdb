@@ -202,7 +202,7 @@ def st_pretty(st_name):
     if re.fullmatch(r'mu\([1-9][0-9]*\)', st_name):
         return "\\" + st_name
     if st_name in st0_dict:
-        return st0_dict.get[st_name]
+        return st0_dict[st_name]
     st_name.replace("x",r"\times")
     st_name.replace("USp(",r"\mathrm{USp}(")
     st_name.replace("SU(",r"\mathrm{SU}(")
