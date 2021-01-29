@@ -22,7 +22,7 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
         assert 'non-isogenous elliptic curves' in L.get_data(as_text=True) and '24.a5' in L.get_data(as_text=True) and '48.a5' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
-        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))' in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
+        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))" in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
 
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
