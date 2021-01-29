@@ -22,11 +22,11 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
         assert 'non-isogenous elliptic curves' in L.get_data(as_text=True) and '24.a5' in L.get_data(as_text=True) and '48.a5' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
-        assert 'N(U(1)xSU(2))' in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
+        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))' in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
 
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
-        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and 'SU(2)xSU(2)' in L.get_data(as_text=True)
+        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)' in L.get_data(as_text=True)
 
     def test_Lfunction_link(self):
         L = self.tc.get('/L/Genus2Curve/Q/1369/a',follow_redirects=True)
@@ -54,7 +54,7 @@ class Genus2Test(LmfdbTest):
         assert '32.a1' in L.get_data(as_text=True) and '34.a3' in L.get_data(as_text=True)
         # RM curve:
         L = self.tc.get('/Genus2Curve/Q/17689/e/866761/1')
-        assert ('simple' in L.get_data(as_text=True) or 'Simple' in L.get_data(as_text=True)) and 'SU(2)xSU(2)' in L.get_data(as_text=True)
+        assert ('simple' in L.get_data(as_text=True) or 'Simple' in L.get_data(as_text=True)) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)" in L.get_data(as_text=True)
         # QM curve:
         L = self.tc.get('Genus2Curve/Q/262144/d/524288/1')
         assert 'quaternion algebra' in L.get_data(as_text=True) and 'J(E_2)' in L.get_data(as_text=True)

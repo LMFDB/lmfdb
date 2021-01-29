@@ -30,7 +30,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '1.4.B.1.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/G_{3,3}', follow_redirects=True)
         assert '1.4.B.1.1a' in L.get_data(as_text=True)
-        L = self.tc.get('/SatoTateGroup/1.4.SU(2)XSU(2)', follow_redirects=True)
+        L = self.tc.get('/SatoTateGroup/1.4.SU(2)xSU(2)', follow_redirects=True)
         assert '1.4.B.1.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/SU(2)XSU(2)', follow_redirects=True)
         assert '1.4.B.1.1a' in L.get_data(as_text=True)
