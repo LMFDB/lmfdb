@@ -203,10 +203,10 @@ def st_pretty(st_name):
         return "\\" + st_name
     if st_name in st0_dict:
         return st0_dict[st_name]
-    st_name.replace("x",r"\times")
-    st_name.replace("USp(",r"\mathrm{USp}(")
-    st_name.replace("SU(",r"\mathrm{SU}(")
-    st_name.replace("U(",r"\mathrm{U}(")
+    st_name = st_name.replace("x",r"\times")
+    st_name = st_name.replace("USp(",r"\mathrm{USp}(")
+    st_name = st_name.replace("SU(",r"\mathrm{SU}(")
+    st_name = st_name.replace("U(",r"\mathrm{U}(")
     return st_name
 
 def st_link_by_name(weight,degree,name):
