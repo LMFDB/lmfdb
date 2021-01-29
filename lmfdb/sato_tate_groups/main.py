@@ -76,7 +76,7 @@ st0_dict = {
     'USp(6)':'\\mathrm{USp}(6)'
 }
 
-# common aliases, include the G_* names in case we decide to change them
+# common aliases
 st_aliases = {
     'G_{3,3}': '1.4.B.1.1a',
     'SU(2)xSU(2)': '1.4.B.1.1a',
