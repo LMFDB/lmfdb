@@ -160,15 +160,13 @@ def get_name(label):
         else:
             name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
     else:
-        data = db.gps_st.lookup(label)
-        if data:
-            name = data['pretty']
-        else:
-            name = None
+        data = db.gps_st.lookup(label,projection=["name","pretty"])
+        name = (data['pretty'] if data['pretty'] else data['name']) if data else None
     return name, label
 
 def st_link(label):
     name, label = get_name(label)
+    print(name)
     if name is None:
         return label
     else:
@@ -343,9 +341,7 @@ def statistics():
 
 @st_page.route('/<label>')
 def by_label(label):
-    print(label)
     clean_label = convert_label(clean_input(label))
-    print(clean_label)
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
     if label == '1.2.B.d1':
