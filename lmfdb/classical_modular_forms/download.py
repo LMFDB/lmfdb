@@ -556,7 +556,7 @@ class CMF_download(Downloader):
                 "end function;",
                 ]
 
-    def _magma_MakeNewformModFrm(self, newform, hecke_nf, prec):
+    def _magma_MakeNewformModFrm(self, newform, hecke_nf):
         """
         Given a WebNewform r from mf_newforms containing columns
            label,level,weight,char_orbit_label,char_values
@@ -573,8 +573,12 @@ class CMF_download(Downloader):
         return [
                 '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
                 '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
-                'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), prec),
-                '    prec := Min(prec, NextPrime(%d) - 1);' % hecke_nf['maxp'],
+                '// The precision argument determines how many Fourier coefficients to use.',
+                '// The Sturm bound for the newspace is not enough, since it is for a single character',
+                '// while the newspace is a sum over characters in a Galois orbit',
+                '// The default precision is the largest known a_n, but a smaller precision may also work',
+                'function MakeNewformModFrm_%s(:prec:=0)' % (newform.label.replace(".","_")),
+                '    if prec eq 0 then prec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
                 '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                 '    f_vec := qexpCoeffs();',
                 '    Kf := Universe(f_vec);',
@@ -587,6 +591,7 @@ class CMF_download(Downloader):
                 '    S := BaseChange(S, Kf);',
                 '    B := Basis(S, prec + 1);',
                 '    S_basismat := Matrix([AbsEltseq(g): g in B]);',
+                '    assert Rank(S_basismat) eq Min(NumberOfRows(S_basismat), NumberOfColumns(S_basismat));',
                 '    S_basismat := ChangeRing(S_basismat,Kf);',
                 '    f_lincom := Solution(S_basismat,f_vec);',
                 '    f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];',
@@ -609,8 +614,6 @@ class CMF_download(Downloader):
 
         out += self._magma_MakeCharacters(newform, hecke_nf) + newlines
 
-        if newform.hecke_cutters is not None and newform.weight > 1:
-            out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors
             # this line will never be ran if the data is correct
@@ -620,9 +623,11 @@ class CMF_download(Downloader):
             out += self._magma_qexpCoeffs(newform, hecke_nf) + newlines
 
 
-            # figure out prec
-            prec = db.mf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
-            out += self._magma_MakeNewformModFrm(newform, hecke_nf, prec)
+            # The Sturm bound is not enough precision; see Github issue 4354
+            # prec = db.mf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
+            out += self._magma_MakeNewformModFrm(newform, hecke_nf)
+        if newform.hecke_cutters is not None and newform.weight > 1:
+            out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
 
         outstr = "\n".join(out)
 
