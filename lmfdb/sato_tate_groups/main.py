@@ -46,35 +46,46 @@ st0_list = (
     'U(1)^2xSU(2)', 'U(1)xSU(2)^2', 'SU(2)^3', 'U(1)xUSp(4)', 'SU(2)xUSp(4)', 'U(3)', 'USp(6)'
 )
 st0_dict = {
-    'SO(1)':'\\mathrm{SO}(1)',
-    'SO(2)':'\\mathrm{SO}(2)',
-    'SO(3)':'\\mathrm{SO}(3)',
-    'SO(4)':'\\mathrm{SO}(4)',
-    'SO(5)':'\\mathrm{SO}(5)',
-    'SO(6)':'\\mathrm{SO}(6)',
-    'U(1)':'\\mathrm{U}(1)',
-    'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)_2':'\\mathrm{U}(1)_2',
-    'SU(2)_2':'\\mathrm{SU}(2)_2',
-    'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
-    'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
-    'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-    'USp(4)':'\\mathrm{USp}(4)',
-    'U(1)_3':'\\mathrm{U}(1)_3',
-    'SU(2)_3':'\\mathrm{SU}(2)_3',
-    'U(1)xU(1)_2':'\\mathrm{U}(1)\\times\\mathrm{U}(1)_2',
-    'U(1)xSU(2)_2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)_2',
-    'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
-    'SU(2)xSU(2)_2':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
-    'U(1)^3':'\\mathrm{U}(1)^3',
-    'U(1)^2xSU(2)':'\\mathrm{U}(1)^2\\times\\mathrm{SU}(2)',
-    'U(1)xSU(2)^2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)^2',
-    'SU(2)^3':'\\mathrm{SU}(2)^3',
-    'U(3)':'\\mathrm{U}(3)',
-    'U(1)xUSp(4)':'\\mathrm{U}(1)\\times\\mathrm{USp}(4)',
-    'SU(2)xUSp(4)':'\\mathrm{SU}(2)\\times\\mathrm{USp}(4)',
-    'USp(6)':'\\mathrm{USp}(6)'
+    'SO(1)': r"\mathrm{SO}(1)",
+    'SO(2)': r"\mathrm{SO}(2)",
+    'SO(3)': r"\mathrm{SO}(3)",
+    'SO(4)': r"\mathrm{SO}(4)",
+    'SO(5)': r"\mathrm{SO}(5)",
+    'SO(6)': r"\mathrm{SO}(6)",
+    'U(1)': r"\mathrm{U}(1)",
+    'U(2)': r"\mathrm{U}(2)",
+    'SU(2)': r"\mathrm{SU}(2)",
+    'U(1)_2': r"\mathrm{U}(1)_2",
+    'SU(2)_2': r"\mathrm{SU}(2)_2",
+    'U(1)xU(1)': r"\mathrm{U}(1)\times\mathrm{U}(1)",
+    'U(1)xSU(2)': r"\mathrm{U}(1)\times\mathrm{SU}(2)",
+    'SU(2)xSU(2)': r"\mathrm{SU}(2)\times\mathrm{SU}(2)",
+    'USp(4)': r"\mathrm{USp}(4)",
+    'U(1)_3': r"\mathrm{U}(1)_3",
+    'SU(2)_3': r"\\mathrm{SU}(2)_3",
+    'U(1)xU(1)_2': r"\mathrm{U}(1)\times\mathrm{U}(1)_2",
+    'U(1)xSU(2)_2': r"\mathrm{U}(1)\times\mathrm{SU}(2)_2",
+    'SU(2)xU(1)_2': r"\mathrm{SU}(2)\times\mathrm{U}(1)_2",
+    'SU(2)xSU(2)_2': r"\mathrm{SU}(2)\times\mathrm{SU}(2)_2",
+    'U(1)^3': r"\\mathrm{U}(1)^3",
+    'U(1)^2xSU(2)': r"\mathrm{U}(1)^2\times\mathrm{SU}(2)",
+    'U(1)xSU(2)^2': r"\mathrm{U}(1)\times\mathrm{SU}(2)^2",
+    'SU(2)^3': r"\mathrm{SU}(2)^3",
+    'U(3)': r"\mathrm{U}(3)",
+    'U(1)xUSp(4)': r"\mathrm{U}(1)\timesmathrm{USp}(4)",
+    'SU(2)xUSp(4)': r"\mathrm{SU}(2)\times\mathrm{USp}(4)",
+    'USp(6)': r"\mathrm{USp}(6)'
 }
+
+# don't duplicate names already in st0_dict
+st_pretty_dict = {
+    'N(U(1))':r'N(\mathrm{U}(1))'
+    'N(SU(2)xSU(2))':r'N(\mathrm{SU}(2)\times\mathrm{SU}(2))',
+    'N(U(1)xSU(2))':r'N(\mathrm{U}(1)\times\mathrm{SU}(2))',
+    'N(U(3))':r'N(\mathrm{U}(1)\times\mathrm{SU}(2))',
+    'N(U(1)xUSp(4))':r'N(\mathrm{U}(1)\times\mathrm{USp}(4))',
+}
+
 
 # common aliases
 st_aliases = {
@@ -165,8 +176,9 @@ def get_name(label):
     return name, label
 
 def st_link(label):
+    print("st_link(%s)"%label)
     name, label = get_name(label)
-    print(name)
+    print("%s, %s" % (label,name))
     if name is None:
         return label
     else:
@@ -182,11 +194,11 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    if re.match(r'SO\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'SO\(1\)\_\d+', st0_name):
         return r'\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'U\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'U\(1\)\_\d+', st0_name):
         return r'\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'SU\(2\)\_\d+', st0_name):
+    if re.fullmatch(r'SU\(2\)\_\d+', st0_name):
         return r'\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
@@ -196,19 +208,16 @@ def sg_pretty(sg_label):
         return data['pretty']
     return sg_label
 
-# dictionary for quick and dirty prettification that does not access the database
-st_pretty_dict = {
-    'USp(4)':r'\mathrm{USp}(4)',
-    'U(2)':r'\mathrm{U}(2)',
-    'SU(2)':r'\mathrm{SU}(2)',
-    'U(1)':r'\mathrm{U}(1)',
-    'N(U(1))':r'N(\mathrm{U}(1))'
-}
-
 def st_pretty(st_name):
-    if re.match(r'mu\([1-9][0-9]*\)', st_name):
-        return '\\' + st_name
-    return st_pretty_dict.get(st_name,st_name)
+    if re.fullmatch(r'mu\([1-9][0-9]*\)', st_name):
+        return r"\" + st_name
+    if st_name in st0_dict:
+        return st0_dict.get[st_name]
+    st_name.replace("x",r"\times")
+    st_name.replace("USp(",r"\mathrm{USp}(")
+    st_name.replace("SU(",r"\mathrm{SU}(")
+    st_name.replace("U(",r"\mathrm{U}(")
+    return st_name
 
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
