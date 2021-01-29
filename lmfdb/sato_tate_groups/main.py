@@ -74,18 +74,8 @@ st0_dict = {
     'U(3)': r"\mathrm{U}(3)",
     'U(1)xUSp(4)': r"\mathrm{U}(1)\timesmathrm{USp}(4)",
     'SU(2)xUSp(4)': r"\mathrm{SU}(2)\times\mathrm{USp}(4)",
-    'USp(6)': r"\mathrm{USp}(6)'
+    'USp(6)': r"\mathrm{USp}(6)",
 }
-
-# don't duplicate names already in st0_dict
-st_pretty_dict = {
-    'N(U(1))':r'N(\mathrm{U}(1))'
-    'N(SU(2)xSU(2))':r'N(\mathrm{SU}(2)\times\mathrm{SU}(2))',
-    'N(U(1)xSU(2))':r'N(\mathrm{U}(1)\times\mathrm{SU}(2))',
-    'N(U(3))':r'N(\mathrm{U}(1)\times\mathrm{SU}(2))',
-    'N(U(1)xUSp(4))':r'N(\mathrm{U}(1)\times\mathrm{USp}(4))',
-}
-
 
 # common aliases
 st_aliases = {
@@ -210,7 +200,7 @@ def sg_pretty(sg_label):
 
 def st_pretty(st_name):
     if re.fullmatch(r'mu\([1-9][0-9]*\)', st_name):
-        return r"\" + st_name
+        return "\\" + st_name
     if st_name in st0_dict:
         return st0_dict.get[st_name]
     st_name.replace("x",r"\times")
