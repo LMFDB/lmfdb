@@ -26,7 +26,7 @@ class Genus2Test(LmfdbTest):
 
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
-        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)' in L.get_data(as_text=True)
+        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)" in L.get_data(as_text=True)
 
     def test_Lfunction_link(self):
         L = self.tc.get('/L/Genus2Curve/Q/1369/a',follow_redirects=True)
