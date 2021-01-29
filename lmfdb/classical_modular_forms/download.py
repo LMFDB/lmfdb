@@ -573,29 +573,32 @@ class CMF_download(Downloader):
         return [
                 '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
                 '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
-                '// The precision argument determines how many Fourier coefficients to use.',
-                '// The Sturm bound for the newspace is not enough, since it is for a single character',
-                '// while the newspace is a sum over characters in a Galois orbit',
-                '// The default precision is the largest known a_n, but a smaller precision may also work',
-                'function MakeNewformModFrm_%s(:prec:=0)' % (newform.label.replace(".","_")),
-                '    if prec eq 0 then prec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
+                '// The precision argument determines an initial guess on how many Fourier coefficients to use.',
+                '// This guess is increased enough to uniquely determine the newform.',
+                'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), newform.dim),
                 '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                 '    f_vec := qexpCoeffs();',
                 '    Kf := Universe(f_vec);',
-                '    f_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);',
                 '    // SetVerbose("ModularForms", true);',
                 '    // SetVerbose("ModularSymbols", true);',
                 '    S := CuspidalSubspace(ModularForms(chi, %d));' % newform.weight,
+                '    S := BaseChange(S, Kf);',
+                '    maxprec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
+                '    while true do',
+                '        trunc_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);',
                 # weight 1 does not have NewSpace functionality, and anyway that
                 # would be an extra possibly expensive linear algebra step
-                '    S := BaseChange(S, Kf);',
-                '    B := Basis(S, prec + 1);',
-                '    S_basismat := Matrix([AbsEltseq(g): g in B]);',
-                '    assert Rank(S_basismat) eq Min(NumberOfRows(S_basismat), NumberOfColumns(S_basismat));',
-                '    S_basismat := ChangeRing(S_basismat,Kf);',
-                '    f_lincom := Solution(S_basismat,f_vec);',
-                '    f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];',
-                '    return f;',
+                '        B := Basis(S, prec + 1);',
+                '        S_basismat := Matrix([AbsEltseq(g): g in B]);',
+                '        if Rank(S_basismat) eq Min(NumberOfRows(S_basismat), NumberOfColumns(S_basismat)) then',
+                '            S_basismat := ChangeRing(S_basismat,Kf);',
+                '            f_lincom := Solution(S_basismat,trunc_vec);',
+                '            f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];',
+                '            return f;',
+                '        end if;',
+                '        error if prec eq maxprec, "Unable to distinguish newform within newspace";',
+                '        prec := Min(Ceiling(1.25 * prec), maxprec);',
+                '    end while;',
                 'end function;'
                 ]
 
@@ -625,9 +628,9 @@ class CMF_download(Downloader):
 
             # The Sturm bound is not enough precision; see Github issue 4354
             # prec = db.mf_newspaces.lucky({'label': newform.space_label}, 'sturm_bound')
-            out += self._magma_MakeNewformModFrm(newform, hecke_nf)
+            out += self._magma_MakeNewformModFrm(newform, hecke_nf) + newlines
         if newform.hecke_cutters is not None and newform.weight > 1:
-            out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
+            out += self._magma_MakeNewformModSym(newform, hecke_nf)
 
         outstr = "\n".join(out)
 
