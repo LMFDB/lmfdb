@@ -46,46 +46,117 @@ st0_list = (
     'U(1)^2xSU(2)', 'U(1)xSU(2)^2', 'SU(2)^3', 'U(1)xUSp(4)', 'SU(2)xUSp(4)', 'U(3)', 'USp(6)'
 )
 st0_dict = {
-    'SO(1)':'\\mathrm{SO}(1)',
-    'SO(2)':'\\mathrm{SO}(2)',
-    'SO(3)':'\\mathrm{SO}(3)',
-    'SO(4)':'\\mathrm{SO}(4)',
-    'SO(5)':'\\mathrm{SO}(5)',
-    'SO(6)':'\\mathrm{SO}(6)',
-    'U(1)':'\\mathrm{U}(1)',
-    'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)_2':'\\mathrm{U}(1)_2',
-    'SU(2)_2':'\\mathrm{SU}(2)_2',
-    'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
-    'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
-    'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-    'USp(4)':'\\mathrm{USp}(4)',
-    'U(1)_3':'\\mathrm{U}(1)_3',
-    'SU(2)_3':'\\mathrm{SU}(2)_3',
-    'U(1)xU(1)_2':'\\mathrm{U}(1)\\times\\mathrm{U}(1)_2',
-    'U(1)xSU(2)_2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)_2',
-    'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
-    'SU(2)xSU(2)_2':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
-    'U(1)^3':'\\mathrm{U}(1)^3',
-    'U(1)^2xSU(2)':'\\mathrm{U}(1)^2\\times\\mathrm{SU}(2)',
-    'U(1)xSU(2)^2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)^2',
-    'SU(2)^3':'\\mathrm{SU}(2)^3',
-    'U(3)':'\\mathrm{U}(3)',
-    'U(1)xUSp(4)':'\\mathrm{U}(1)\\times\\mathrm{USp}(4)',
-    'SU(2)xUSp(4)':'\\mathrm{SU}(2)\\times\\mathrm{USp}(4)',
-    'USp(6)':'\\mathrm{USp}(6)'
+    'SO(1)': r"\mathrm{SO}(1)",
+    'SO(2)': r"\mathrm{SO}(2)",
+    'SO(3)': r"\mathrm{SO}(3)",
+    'SO(4)': r"\mathrm{SO}(4)",
+    'SO(5)': r"\mathrm{SO}(5)",
+    'SO(6)': r"\mathrm{SO}(6)",
+    'U(1)': r"\mathrm{U}(1)",
+    'U(2)': r"\mathrm{U}(2)",
+    'SU(2)': r"\mathrm{SU}(2)",
+    'U(1)_2': r"\mathrm{U}(1)_2",
+    'SU(2)_2': r"\mathrm{SU}(2)_2",
+    'U(1)xU(1)': r"\mathrm{U}(1)\times\mathrm{U}(1)",
+    'U(1)xSU(2)': r"\mathrm{U}(1)\times\mathrm{SU}(2)",
+    'SU(2)xSU(2)': r"\mathrm{SU}(2)\times\mathrm{SU}(2)",
+    'USp(4)': r"\mathrm{USp}(4)",
+    'U(1)_3': r"\mathrm{U}(1)_3",
+    'SU(2)_3': r"\\mathrm{SU}(2)_3",
+    'U(1)xU(1)_2': r"\mathrm{U}(1)\times\mathrm{U}(1)_2",
+    'U(1)xSU(2)_2': r"\mathrm{U}(1)\times\mathrm{SU}(2)_2",
+    'SU(2)xU(1)_2': r"\mathrm{SU}(2)\times\mathrm{U}(1)_2",
+    'SU(2)xSU(2)_2': r"\mathrm{SU}(2)\times\mathrm{SU}(2)_2",
+    'U(1)^3': r"\\mathrm{U}(1)^3",
+    'U(1)^2xSU(2)': r"\mathrm{U}(1)^2\times\mathrm{SU}(2)",
+    'U(1)xSU(2)^2': r"\mathrm{U}(1)\times\mathrm{SU}(2)^2",
+    'SU(2)^3': r"\mathrm{SU}(2)^3",
+    'U(3)': r"\mathrm{U}(3)",
+    'U(1)xUSp(4)': r"\mathrm{U}(1)\timesmathrm{USp}(4)",
+    'SU(2)xUSp(4)': r"\mathrm{SU}(2)\times\mathrm{USp}(4)",
+    'USp(6)': r"\mathrm{USp}(6)",
 }
 
-# convert changed degree 4 names to labels in a forward/backward compatible way
-st_name_to_label = {
+# common aliases
+st_aliases = {
+    'SU(2)': '1.2.A.1.1a',
+    'U(1)': '1.2.B.1.1a',
+    'N(U(1))': '1.2.B.2.1a',
+    'USp(4)': '1.4.A.1.1a',
     'G_{3,3}': '1.4.B.1.1a',
     'SU(2)xSU(2)': '1.4.B.1.1a',
+    'SU(2)XSU(2)': '1.4.B.1.1a',
+    'SU(2)^2': '1.4.B.1.1a',
     'N(G_{3,3})': '1.4.B.2.1a',
     'N(SU(2)xSU(2))': '1.4.B.2.1a',
+    'N(SU(2)XSU(2))': '1.4.B.2.1a',
+    'N(SU(2)^2)': '1.4.B.2.1a',
     'G_{1,3}': '1.4.C.1.1a',
     'U(1)xSU(2)': '1.4.C.1.1a',
+    'SU(2)xU(1)': '1.4.C.1.1a',
     'N(G_{1,3})': '1.4.C.2.1a',
     'N(U(1)xSU(2))': '1.4.C.2.1a',
+    'N(SU(2)xU(1))': '1.4.C.2.1a',
+    'N(U(1)XSU(2))': '1.4.C.2.1a',
+    'N(SU(2)XU(1))': '1.4.C.2.1a',
+    'U(1)xU(1)': '1.4.D.1.1a',
+    'U(1)^2': '1.4.D.1.1a',
+    'SU(2)_2': '1.4.E.1.1a',
+    'U(1)_2': '1.4.F.1.1a',
+    'USp(6)': '1.6.A.1.1a',
+    'U(3)': '1.6.B.1.1a',
+    'N(U(3))': '1.6.B.2.1a',
+    'SU(2)xUSp(4)': '1.6.C.1.1a',
+    'SU(2)XUSp(4)': '1.6.C.1.1a',
+    'USp(4)xSU(2)': '1.6.C.1.1a',
+    'USp(4)XSU(2)': '1.6.C.1.1a',
+    'U(1)xUSp(4)': '1.6.D.1.1a',
+    'U(1)XUSp(4)': '1.6.D.1.1a',
+    'USp(4)xU(1)': '1.6.D.1.1a',
+    'SU(2)xSU(2)xSU(2)': '1.6.E.1.1a',
+    'SU(2)XSU(2)XSU(2)': '1.6.E.1.1a',
+    'SU(2)^3': '1.4.E.1.1a',
+    'U(1)xSU(2)xSU(2)': '1.6.F.1.1a',
+    'U(1)XSU(2)XSU(2)': '1.6.F.1.1a',
+    'SU(2)xU(1)xSU(2)': '1.6.F.1.1a',
+    'SU(2)XU(1)XSU(2)': '1.6.F.1.1a',
+    'SU(2)xSU(2)xU(1)': '1.6.F.1.1a',
+    'SU(2)XSU(2)XU(1)': '1.6.F.1.1a',
+    'U(1)xSU(2)^2': '1.6.F.1.1a',
+    'U(1)XSU(2)^2': '1.6.F.1.1a',
+    'SU(2)^2xU(1)': '1.6.F.1.1a',
+    'SU(2)^2XU(1)': '1.6.F.1.1a',
+    'U(1)xU(1)xSU(2)': '1.6.G.1.1a',
+    'U(1)XU(1)XSU(2)': '1.6.G.1.1a',
+    'U(1)xSU(2)xU(1)': '1.6.G.1.1a',
+    'U(1)XSU(2)XU(1)': '1.6.G.1.1a',
+    'SU(2)xU(1)xU(1)': '1.6.G.1.1a',
+    'SU(2)XU(1)XU(1)': '1.6.G.1.1a',
+    'U(1)^2xSU(2)': '1.6.G.1.1a',
+    'U(1)^2XSU(2)': '1.6.G.1.1a',
+    'SU(2)xU(1)^2': '1.6.G.1.1a',
+    'SU(2)XU(1)^2': '1.6.G.1.1a',
+    'U(1)xU(1)xU(1)': '1.6.H.1.1a',
+    'U(1)XU(1)XU(1)': '1.6.H.1.1a',
+    'U(1)^3': '1.6.H.1.1a',
+    'SU(2)_2xSU(2)': '1.6.I.1.1a',
+    'SU(2)_2XSU(2)': '1.6.I.1.1a',
+    'SU(2)xSU(2)_2': '1.6.I.1.1a',
+    'SU(2)XSU(2)_2': '1.6.I.1.1a',
+    'SU(2)_2xU(1)': '1.6.J.1.1a',
+    'SU(2)_2XU(1)': '1.6.J.1.1a',
+    'U(1)xSU(2)_2': '1.6.J.1.1a',
+    'U(1)XSU(2)_2': '1.6.J.1.1a',
+    'U(1)_2xSU(2)': '1.6.K.1.1a',
+    'U(1)_2XSU(2)': '1.6.K.1.1a',
+    'SU(2)xU(1)_2': '1.6.K.1.1a',
+    'SU(2)XU(1)_2': '1.6.K.1.1a',
+    'U(1)xU(1)_2': '1.6.L.1.1a',
+    'U(1)XU(1)_2': '1.6.L.1.1a',
+    'U(1)_2xU(1)': '1.6.L.1.1a',
+    'U(1)_2XU(1)': '1.6.L.1.1a',
+    'SU(2)_3': '1.6.M.1.1a',
+    'U(1)_3': '1.6.N.1.1a',
 }
 
 ###############################################################################
@@ -104,8 +175,8 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
-    if label in st_name_to_label:
-        return st_name_to_label[label]
+    if label in st_aliases:
+        return st_aliases[label]
     d2A = {'3':'A','1':'B'}
     d4A = {'10':'A','6':'B','4':'C','2':'D','3':'E','1':'F'}
     a = label.split('.')
@@ -118,6 +189,8 @@ def convert_label(label):
         if a[1] == '4' and a[2] in d4A:
             a[2] = d4A[a[2]]
             return '.'.join(a)
+        if a[2] in st_aliases:
+            return st_aliases[a[2]]
     return label
 
 def get_name(label):
@@ -139,11 +212,8 @@ def get_name(label):
         else:
             name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
     else:
-        data = db.gps_st.lookup(label)
-        if data:
-            name = data['pretty']
-        else:
-            name = None
+        data = db.gps_st.lookup(label,projection=["name","pretty"])
+        name = (data['pretty'] if data['pretty'] else data['name']) if data else None
     return name, label
 
 def st_link(label):
@@ -163,11 +233,11 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    if re.match(r'SO\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'SO\(1\)\_\d+', st0_name):
         return r'\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'U\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'U\(1\)\_\d+', st0_name):
         return r'\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'SU\(2\)\_\d+', st0_name):
+    if re.fullmatch(r'SU\(2\)\_\d+', st0_name):
         return r'\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
@@ -177,19 +247,16 @@ def sg_pretty(sg_label):
         return data['pretty']
     return sg_label
 
-# dictionary for quick and dirty prettification that does not access the database
-st_pretty_dict = {
-    'USp(4)':r'\mathrm{USp}(4)',
-    'U(2)':r'\mathrm{U}(2)',
-    'SU(2)':r'\mathrm{SU}(2)',
-    'U(1)':r'\mathrm{U}(1)',
-    'N(U(1))':r'N(\mathrm{U}(1))'
-}
-
 def st_pretty(st_name):
-    if re.match(r'mu\([1-9][0-9]*\)', st_name):
-        return '\\' + st_name
-    return st_pretty_dict.get(st_name,st_name)
+    if re.fullmatch(r'mu\([1-9][0-9]*\)', st_name):
+        return "\\" + st_name
+    if st_name in st0_dict:
+        return st0_dict[st_name]
+    st_name = st_name.replace("x",r"\times")
+    st_name = st_name.replace("USp(",r"\mathrm{USp}(")
+    st_name = st_name.replace("SU(",r"\mathrm{SU}(")
+    st_name = st_name.replace("U(",r"\mathrm{U}(")
+    return st_name
 
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))

@@ -34,7 +34,7 @@ st_group_list = ['J(C_2)', 'J(C_4)', 'J(C_6)', 'J(D_2)', 'J(D_3)', 'J(D_4)',
         'J(D_6)', 'J(T)', 'J(O)', 'C_{2,1}', 'C_{6,1}', 'D_{2,1}', 'D_{3,2}',
         'D_{4,1}', 'D_{4,2}', 'D_{6,1}', 'D_{6,2}', 'O_1', 'E_1', 'E_2', 'E_3',
         'E_4', 'E_6', 'J(E_1)', 'J(E_2)', 'J(E_3)', 'J(E_4)', 'J(E_6)',
-        'F_{a,b}', 'F_{ac}', 'N(G_{1,3})', 'G_{3,3}', 'N(G_{3,3})', 'USp(4)']
+        'F_{a,b}', 'F_{ac}', 'N(U(1)xSU(2))', 'SU(2)xSU(2)', 'N(SU(2)xSU(2))', 'USp(4)']
 st_group_dict = {a:a for a in st_group_list}
 
 # End_QQbar tensored with RR determines ST0 (which is the search parameter):
