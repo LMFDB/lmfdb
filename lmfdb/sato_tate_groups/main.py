@@ -67,12 +67,12 @@ st0_dict = {
     'U(1)xSU(2)_2': r"\mathrm{U}(1)\times\mathrm{SU}(2)_2",
     'SU(2)xU(1)_2': r"\mathrm{SU}(2)\times\mathrm{U}(1)_2",
     'SU(2)xSU(2)_2': r"\mathrm{SU}(2)\times\mathrm{SU}(2)_2",
-    'U(1)^3': r"\\mathrm{U}(1)^3",
+    'U(1)^3': r"\mathrm{U}(1)^3",
     'U(1)^2xSU(2)': r"\mathrm{U}(1)^2\times\mathrm{SU}(2)",
     'U(1)xSU(2)^2': r"\mathrm{U}(1)\times\mathrm{SU}(2)^2",
     'SU(2)^3': r"\mathrm{SU}(2)^3",
     'U(3)': r"\mathrm{U}(3)",
-    'U(1)xUSp(4)': r"\mathrm{U}(1)\timesmathrm{USp}(4)",
+    'U(1)xUSp(4)': r"\mathrm{U}(1)\times\mathrm{USp}(4)",
     'SU(2)xUSp(4)': r"\mathrm{SU}(2)\times\mathrm{USp}(4)",
     'USp(6)': r"\mathrm{USp}(6)",
 }
@@ -841,7 +841,7 @@ def render_by_label(label):
         z = data['zvector']
         if data['degree'] == 4:
             if sum(z) == 0:
-                s = r"<p>The $a_i$ distributions are continuous on every componennt, so $\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,3)]) + '</th></tr>'
@@ -853,7 +853,7 @@ def render_by_label(label):
             info['probabilities'] = s
         elif data['degree'] == 6:
             if sum(z) == 0:
-                s = r"<p>The $a_i$ distributions are continuous on every componennt, so $\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'
