@@ -372,7 +372,7 @@ def parse_rational_to_list(inp, query, qfield):
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
-    elif MULT_PARSE.match(inp):
+    elif MULT_PARSE.fullmatch(inp):
         try:
             ast_expression = ast.parse(inp.replace('^', '**'), mode='eval')
             inp = str(int(PowMulNodeVisitor().visit(ast_expression).body))
