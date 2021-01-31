@@ -172,8 +172,6 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
-    if type(m) == str:
-        return m
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
@@ -791,8 +789,8 @@ def render_by_label(label):
     info['abelian']=boolean_name(G['abelian'])
     info['solvable']=boolean_name(G['solvable'])
     if data.get('gens'):
-        info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
-        info['numgens']=len(info['gens'])
+        info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if type(data['gens']) == list else data['gens']
+        info['numgens'] = len(info['gens'])
     else:
         info['numgens'] = 0
     if data.get('subgroups'):
