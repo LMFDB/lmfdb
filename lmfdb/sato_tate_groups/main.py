@@ -172,6 +172,8 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
+    if type(m) == str:
+        return m
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
