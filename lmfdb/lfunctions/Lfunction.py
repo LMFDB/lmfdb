@@ -169,6 +169,7 @@ def makeLfromdata(L):
     if 'values' not in data:
         L.values = [ central_value ]
     else:
+        # only for Dirichlet L-functions
         #  convert to string in case it is in unicode string
         L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']] + [ central_value ]
 
