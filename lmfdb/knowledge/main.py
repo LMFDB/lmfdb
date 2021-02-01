@@ -16,6 +16,7 @@ import string
 import re
 import json
 import time
+from xml.etree import ElementTree
 from collections import Counter
 from lmfdb.app import app, is_beta
 from datetime import datetime
@@ -32,14 +33,6 @@ import markdown
 from lmfdb.knowledge import logger
 from lmfdb.utils import datetime_to_timestamp_in_ms,\
                         timestamp_in_ms_to_datetime, flash_error
-
-#ejust for those, who still use an older markdown
-try:
-    markdown.util.etree
-except:
-    logger.fatal("You need to update the markdown python utility:" +
-                 "sage -sh -> easy_install -U markdown flask-markdown")
-    exit()
 
 _cache_time = 120
 
@@ -77,7 +70,7 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
 
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-        el = markdown.util.etree.Element("a")
+        el = ElementTree.Element("a")
         el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
         el.text = '#' + m.group(2)
         return el
