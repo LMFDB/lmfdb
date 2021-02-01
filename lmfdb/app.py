@@ -676,17 +676,21 @@ WhiteListedRoutes = [
     'Group',
     'HigherGenus/C/Aut',
     'L/Completeness',
+    'L/CuspForms',
+    'L/Labels',
     'L/Lhash',
     'L/Plot',
     'L/Riemann',
     'L/SymmetricPower',
-    'L/Zeros',
-    'L/browseGraphChar',
+    'L/contents',
     'L/degree',
     'L/download',
     'L/history',
+    'L/interesting',
     'L/lhash',
+    'L/rational',
     'L/tracehash',
+    'L/download',
     'LocalNumberField',
     'ModularForm/GL2/ImaginaryQuadratic',
     'ModularForm/GL2/Q/Maass',
@@ -742,6 +746,7 @@ for elt in WhiteListedRoutes:
             bread = s
         WhiteListedBreads.add(bread)
 
+
 def white_listed(url):
     url = url.rstrip("/").lstrip("/")
     if not url:
@@ -754,7 +759,9 @@ def white_listed(url):
         return True
     # check if it starts with an L
     elif url[:2] == "L/":
-        return white_listed(url[1:])
+        # if the origin is allowed
+        # or if it is a L-function with a label
+        return white_listed(url[1:]) or url[3].isdigit()
     else:
         return False
 
