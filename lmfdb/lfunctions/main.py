@@ -1510,25 +1510,25 @@ def download_route_wrapper(f):
         return f(label=label, L=L)
     return wrapper
 
-@l_function_page.route("/download_euler/<label>")
+@l_function_page.route("/download_euler/<path:label>/")
 @download_route_wrapper
 def download_euler_factors(label, L=None): # the wrapper populates the L
     assert label
     return L.download_euler_factors()
 
-@l_function_page.route("/download_zeros/<label>")
+@l_function_page.route("/download_zeros/<path:label>/")
 @download_route_wrapper
 def download_zeros(label, L=None): # the wrapper populates the L
     assert label
     return L.download_zeros()
 
-@l_function_page.route("/download_dirichlet_coeff/<label>")
+@l_function_page.route("/download_dirichlet_coeff/<path:label>/")
 @download_route_wrapper
 def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
     assert label
     return L.download_dirichlet_coeff()
 
-@l_function_page.route("/download/<label>")
+@l_function_page.route("/download/<path:label>/")
 @download_route_wrapper
 def download(label, L=None): # the wrapper populates the L
     assert label
