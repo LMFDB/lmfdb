@@ -556,35 +556,17 @@ class ECNF(object):
         
         # Local data
 
-        # Fix for Kodaira symbols, which in the database start and end
-        # with \( and \) and may have multiple backslashes.  Note that
-        # to put a single backslash into a python string you have to
-        # use '\\' which will display as '\\' but only counts as one
-        # character in the string.  which are added in the template.
+        # The Kodaira symbol is stored as an int in pari encoding. The
+        # conversion to latex must take into account the bug (in Sage
+        # 9.2) for I_m^* when m has more than one digit.
 
-        # This also detects when the Kodaira symbol is an int, in
-        # which case it converts from pari encoding to latex (taking
-        # into account the bug for I_m^* when m has more than one
-        # digit).
-
-        def tidy_kod(kod):
-            try:
-                kod = int(kod)
-                if kod <= -14: # Work around bug in Sage's latex
-                    return 'I_{%s}^{*}' % (-kod - 4)
-                return latex(KodairaSymbol(kod))
-            except ValueError:
-                pass
-            # now we already have a latex string
-            while '\\\\' in kod:
-                kod = kod.replace('\\\\', '\\')
-            kod = kod.replace(r'\\(','').replace(r'\\)','')
-            return kod
+        def latex_kod(kod):
+            return latex(KodairaSymbol(kod)) if kod > -14 else 'I_{%s}^{*}' % (-kod - 4)
 
         for P,NP,ld in zip(badprimes, badnorms, local_data):
             ld['p'] = P
             ld['norm'] = NP
-            ld['kod'] = tidy_kod(ld['kod'])
+            ld['kod'] = latex_kod(ld['kod'])
 
         # URLs of self and related objects:
         self.urls = {}
