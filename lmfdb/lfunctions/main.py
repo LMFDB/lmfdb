@@ -867,6 +867,8 @@ def label_redirect_wrapper(f):
     return wrapper
 
 
+
+
 # L-function of Dirichlet character ############################################
 @l_function_page.route("/Character/Dirichlet/<modulus>/<number>/")
 @label_redirect_wrapper
@@ -1492,45 +1494,48 @@ def zerosLfunction(args):
     args = tuple(args.split('/'))
     return render_zerosLfunction(request, *args)
 
-@l_function_page.route("/download_euler/<path:args>/")
-def download_euler(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+
+
+def download_route_wrapper(f):
+    """
+    redirects to L/download*/label or creates L
+    """
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        label = kwds['label']
+        try:
+            L = Lfunction_from_db(label=label)
+        except Exception:
+            return render_lfunction_exception("There is no L-function in the database with label '%s'" % label)
+        return f(label=label, L=L)
+    return wrapper
+
+@l_function_page.route("/download_euler/<path:label>/")
+@download_route_wrapper
+def download_euler_factors(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_euler_factors()
 
-@l_function_page.route("/download_zeros/<path:args>/")
-def download_zeros(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download_zeros/<path:label>/")
+@download_route_wrapper
+def download_zeros(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_zeros()
 
-@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
-def download_dirichlet_coeff(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download_dirichlet_coeff/<path:label>/")
+@download_route_wrapper
+def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_dirichlet_coeff()
 
-@l_function_page.route("/download/<path:args>/")
-def download(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download/<path:label>/")
+@download_route_wrapper
+def download(label, L=None): # the wrapper populates the L
+    assert label
     return L.download()
+
+
+
 
 
 ################################################################################
