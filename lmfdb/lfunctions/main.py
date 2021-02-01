@@ -68,7 +68,7 @@ def learnmore_list(path=None, remove=None):
             ('Reliability of the data', url_for('.reliability', prepath=prepath)),
         ])
     else:
-        learnmore.append(('$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
+        learnmore.append((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -1476,11 +1476,11 @@ def zerosLfunction(args):
 
 def download_route_wrapper(f):
     """
-    redirects to L/dowload*/label or creates L
+    redirects to L/download*/label or creates L
     """
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        label = args[0]
+    def wrapper(*args, **kwds):
+        label = kwds['label']
         if '/' in label:
             # we must convert an url to a label
             url = label.rstrip('/')
@@ -1497,10 +1497,11 @@ def download_route_wrapper(f):
             except Exception:
                 return abort(404)
             f(label=label, L=L)
+    return wrapper
 
-@l_function_page.route("/download_euler/<path:args>/")
+@l_function_page.route("/download_euler/<path:label>/")
 @download_route_wrapper
-def download_euler(label, L=None): # the wrapper populates the L
+def download_euler_factors(label, L=None): # the wrapper populates the L
     assert label
     return L.download_euler_factors()
 

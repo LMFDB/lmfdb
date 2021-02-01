@@ -516,12 +516,12 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def downloads(self):
-        return [['Euler factors to text', self.download_euler_factor_url],
+        return [['Euler factors to text', self.download_euler_factors_url],
                 ['Zeros to text', self.download_zeros_url],
                 ['Dirichlet coefficients to text', self.download_dirichlet_coeff_url]]
 
     @lazy_attribute
-    def download_euler_factor_url(self):
+    def download_euler_factors_url(self):
         return url_for('.download_euler_factors', label=self.label)
 
     @lazy_attribute
