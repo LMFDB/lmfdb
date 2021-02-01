@@ -1481,22 +1481,11 @@ def download_route_wrapper(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         label = kwds['label']
-        if '/' in label:
-            # we must convert an url to a label
-            url = label.rstrip('/')
-            if 'Maass' in url:
-                url += '/'
-            label = db.lfunc_instances.lucky({'url': url}, 'label')
-            if label:
-                return redirect(url_for('.' + f.__name__, label=label))
-            else:
-                return render_lfunction_exception("There is no L-function in the database associated to the url '%s'" % url)
-        else:
-            try:
-                L = Lfunction_from_db(label=label)
-            except Exception:
-                return abort(404)
-            return f(label=label, L=L)
+        try:
+            L = Lfunction_from_db(label=label)
+        except Exception:
+            return render_lfunction_exception("There is no L-function in the database with label '%s'" % label)
+        return f(label=label, L=L)
     return wrapper
 
 @l_function_page.route("/download_euler/<path:label>/")
