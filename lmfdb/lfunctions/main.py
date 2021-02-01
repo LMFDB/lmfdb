@@ -1490,13 +1490,13 @@ def download_route_wrapper(f):
             if label:
                 return redirect(url_for('.' + f.__name__, label=label))
             else:
-                return render_lfunction_exception("There is no L-function associated to the url '%s'" % url)
+                return render_lfunction_exception("There is no L-function in the database associated to the url '%s'" % url)
         else:
             try:
                 L = Lfunction_from_db(label=label)
             except Exception:
                 return abort(404)
-            f(label=label, L=L)
+            return f(label=label, L=L)
     return wrapper
 
 @l_function_page.route("/download_euler/<path:label>/")
