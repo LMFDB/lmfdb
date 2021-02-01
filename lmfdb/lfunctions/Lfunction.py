@@ -9,7 +9,7 @@
 from __future__ import absolute_import
 import math, re
 
-from flask import url_for, request
+from flask import url_for
 from sage.all import (
     ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
     is_prime, factor,  log,  I, gcd, sqrt, prod, ceil,
@@ -522,18 +522,19 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def download_euler_factor_url(self):
-        return request.path.replace('/L/', '/L/download_euler/')
+        return url_for('.download_euler_factors', label=self.label)
 
     @lazy_attribute
     def download_zeros_url(self):
-        return request.path.replace('/L/', '/L/download_zeros/')
+        return url_for('.download_zeros', label=self.label)
+
     @lazy_attribute
     def download_dirichlet_coeff_url(self):
-        return request.path.replace('/L/', '/L/download_dirichlet_coeff/')
+        return url_for('.download_dirichlet_coeff', label=self.label)
 
     @lazy_attribute
     def download_url(self):
-        return request.path.replace('/L/', '/L/download/')
+        return url_for('.download', label=self.label)
 
     def download_euler_factors(self):
         filename = self.label

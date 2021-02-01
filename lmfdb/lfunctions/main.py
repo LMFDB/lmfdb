@@ -845,6 +845,8 @@ def label_redirect_wrapper(f):
     return wrapper
 
 
+
+
 # L-function of Dirichlet character ############################################
 @l_function_page.route("/Character/Dirichlet/<modulus>/<number>/")
 @label_redirect_wrapper
@@ -1079,7 +1081,7 @@ def l_function_genus2_page(cond,x):
 def l_function_by_hash_page(lhash):
     label = db.lfunc_lfunctions.lucky({'Lhash': lhash, 'label': {'$exists': True}}, projection = "label")
     if label is None:
-        errmsg = 'Did not find an L-function with Lhash = %s' % Lhash
+        errmsg = 'Did not find an L-function with Lhash = %s' % lhash
         return render_lfunction_exception(errmsg)
     return redirect(url_for_lfunction(label), 301)
 
@@ -1470,45 +1472,58 @@ def zerosLfunction(args):
     args = tuple(args.split('/'))
     return render_zerosLfunction(request, *args)
 
+
+
+def download_route_wrapper(f):
+    """
+    redirects to L/dowload*/label or creates L
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        label = args[0]
+        if '/' in label:
+            # we must convert an url to a label
+            url = label.rstrip('/')
+            if 'Maass' in url:
+                url += '/'
+            label = db.lfunc_instances.lucky({'url': url}, 'label')
+            if label:
+                return redirect(url_for('.' + f.__name__, label=label))
+            else:
+                return render_lfunction_exception("There is no L-function associated to the url '%s'" % url)
+        else:
+            try:
+                L = Lfunction_from_db(label=label)
+            except Exception:
+                return abort(404)
+            f(label=label, L=L)
+
 @l_function_page.route("/download_euler/<path:args>/")
-def download_euler(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@download_route_wrapper
+def download_euler(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_euler_factors()
 
-@l_function_page.route("/download_zeros/<path:args>/")
-def download_zeros(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download_zeros/<path:label>/")
+@download_route_wrapper
+def download_zeros(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_zeros()
 
-@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
-def download_dirichlet_coeff(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download_dirichlet_coeff/<path:label>/")
+@download_route_wrapper
+def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
+    assert label
     return L.download_dirichlet_coeff()
 
-@l_function_page.route("/download/<path:args>/")
-def download(args):
-    args = tuple(args.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
+@l_function_page.route("/download/<path:label>/")
+@download_route_wrapper
+def download(label, L=None): # the wrapper populates the L
+    assert label
     return L.download()
+
+
+
 
 
 ################################################################################
