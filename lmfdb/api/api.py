@@ -206,6 +206,8 @@ def api_query(table, id = None):
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
+        else:
+            return abort(404, "id '%s' must be an integer" % id)
         data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
@@ -276,6 +278,9 @@ def api_query(table, id = None):
             return redirect(url_for(".api_query", table=table))
         except KeyError as err:
             flash_error("No key %s in table %s", err, table)
+            return redirect(url_for(".api_query", table=table))
+        except ValueError as err:
+            flash_error(str(err))
             return redirect(url_for(".api_query", table=table))
 
     if single_object and not data:

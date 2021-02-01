@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 # Different helper functions.
 from six import string_types
-import math, re
+import math
+import re
 
 from flask import url_for
 from sage.all import (

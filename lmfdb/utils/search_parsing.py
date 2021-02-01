@@ -372,12 +372,12 @@ def parse_rational_to_list(inp, query, qfield):
 def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
-    elif MULT_PARSE.match(inp):
+    elif MULT_PARSE.fullmatch(inp):
         try:
             ast_expression = ast.parse(inp.replace('^', '**'), mode='eval')
             inp = str(int(PowMulNodeVisitor().visit(ast_expression).body))
             collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, SyntaxError):
             raise SearchParsingError("Unable to evaluate expression.")
     else:
         raise SearchParsingError("It needs to be an integer (such as 25), be a multiplicative expression that parses to an integer (such as 2^2*3), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")

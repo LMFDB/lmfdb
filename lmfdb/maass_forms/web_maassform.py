@@ -36,9 +36,8 @@ class WebMaassForm(object):
 
     @staticmethod
     def by_label(label):
-        try:
-            data = db.maass_newforms.lookup(label)
-        except AttributeError:
+        data = db.maass_newforms.lookup(label)
+        if data is None:
             raise KeyError("Maass newform %s not found in database."%(label))
         return WebMaassForm(data)
 

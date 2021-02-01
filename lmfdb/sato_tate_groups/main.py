@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from six.moves import range
-import itertools, re
+import itertools
+import re
 
 from flask import render_template, url_for, redirect, request, jsonify
 from psycopg2.extensions import QueryCanceledError
@@ -34,7 +35,7 @@ ST_LABEL_SHORT_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-Z0-9\{\}\(\)\[\]\_\,]+'
 INFINITY = -1
 
-credit_string = 'Andrew Sutherland'
+credit_string = 'Francesc Fité, Kiran Kedlaya, and Andrew Sutherland'
 
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = (
@@ -45,34 +46,117 @@ st0_list = (
     'U(1)^2xSU(2)', 'U(1)xSU(2)^2', 'SU(2)^3', 'U(1)xUSp(4)', 'SU(2)xUSp(4)', 'U(3)', 'USp(6)'
 )
 st0_dict = {
-    'SO(1)':'\\mathrm{SO}(1)',
-    'SO(2)':'\\mathrm{SO}(2)',
-    'SO(3)':'\\mathrm{SO}(3)',
-    'SO(4)':'\\mathrm{SO}(4)',
-    'SO(5)':'\\mathrm{SO}(5)',
-    'SO(6)':'\\mathrm{SO}(6)',
-    'U(1)':'\\mathrm{U}(1)',
-    'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)_2':'\\mathrm{U}(1)_2',
-    'SU(2)_2':'\\mathrm{SU}(2)_2',
-    'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
-    'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
-    'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-    'USp(4)':'\\mathrm{USp}(4)',
-    'U(1)_3':'\\mathrm{U}(1)_3',
-    'SU(2)_3':'\\mathrm{SU}(2)_3',
-    'U(1)xU(1)_2':'\\mathrm{U}(1)\\times\\mathrm{U}(1)_2',
-    'SU(2)xU(1)_2':'\\mathrm{SU}(2)\\times\\mathrm{U}(1)_2',
-    'U(1)xSU(2)_2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)_2',
-    'SU(2)xSU(2)_2':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)_2',
-    'U(1)^3':'\\mathrm{U}(1)^3',
-    'U(1)^2xSU(2)':'\\mathrm{U}(1)^2\\times\\mathrm{SU}(2)',
-    'U(1)xSU(2)^2':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)^2',
-    'SU(2)^3':'\\mathrm{SU}(2)^3',
-    'U(3)':'\\mathrm{U}(3)',
-    'U(1)xUSp(4)':'\\mathrm{U}(1)\\times\\mathrm{USp}(4)',
-    'SU(2)xUSp(4)':'\\mathrm{SU}(2)\\times\\mathrm{USp}(4)',
-    'USp(6)':'\\mathrm{USp}(6)'
+    'SO(1)': r"\mathrm{SO}(1)",
+    'SO(2)': r"\mathrm{SO}(2)",
+    'SO(3)': r"\mathrm{SO}(3)",
+    'SO(4)': r"\mathrm{SO}(4)",
+    'SO(5)': r"\mathrm{SO}(5)",
+    'SO(6)': r"\mathrm{SO}(6)",
+    'U(1)': r"\mathrm{U}(1)",
+    'U(2)': r"\mathrm{U}(2)",
+    'SU(2)': r"\mathrm{SU}(2)",
+    'U(1)_2': r"\mathrm{U}(1)_2",
+    'SU(2)_2': r"\mathrm{SU}(2)_2",
+    'U(1)xU(1)': r"\mathrm{U}(1)\times\mathrm{U}(1)",
+    'U(1)xSU(2)': r"\mathrm{U}(1)\times\mathrm{SU}(2)",
+    'SU(2)xSU(2)': r"\mathrm{SU}(2)\times\mathrm{SU}(2)",
+    'USp(4)': r"\mathrm{USp}(4)",
+    'U(1)_3': r"\mathrm{U}(1)_3",
+    'SU(2)_3': r"\\mathrm{SU}(2)_3",
+    'U(1)xU(1)_2': r"\mathrm{U}(1)\times\mathrm{U}(1)_2",
+    'U(1)xSU(2)_2': r"\mathrm{U}(1)\times\mathrm{SU}(2)_2",
+    'SU(2)xU(1)_2': r"\mathrm{SU}(2)\times\mathrm{U}(1)_2",
+    'SU(2)xSU(2)_2': r"\mathrm{SU}(2)\times\mathrm{SU}(2)_2",
+    'U(1)^3': r"\mathrm{U}(1)^3",
+    'U(1)^2xSU(2)': r"\mathrm{U}(1)^2\times\mathrm{SU}(2)",
+    'U(1)xSU(2)^2': r"\mathrm{U}(1)\times\mathrm{SU}(2)^2",
+    'SU(2)^3': r"\mathrm{SU}(2)^3",
+    'U(3)': r"\mathrm{U}(3)",
+    'U(1)xUSp(4)': r"\mathrm{U}(1)\times\mathrm{USp}(4)",
+    'SU(2)xUSp(4)': r"\mathrm{SU}(2)\times\mathrm{USp}(4)",
+    'USp(6)': r"\mathrm{USp}(6)",
+}
+
+# common aliases
+st_aliases = {
+    'SU(2)': '1.2.A.1.1a',
+    'U(1)': '1.2.B.1.1a',
+    'N(U(1))': '1.2.B.2.1a',
+    'USp(4)': '1.4.A.1.1a',
+    'G_{3,3}': '1.4.B.1.1a',
+    'SU(2)xSU(2)': '1.4.B.1.1a',
+    'SU(2)XSU(2)': '1.4.B.1.1a',
+    'SU(2)^2': '1.4.B.1.1a',
+    'N(G_{3,3})': '1.4.B.2.1a',
+    'N(SU(2)xSU(2))': '1.4.B.2.1a',
+    'N(SU(2)XSU(2))': '1.4.B.2.1a',
+    'N(SU(2)^2)': '1.4.B.2.1a',
+    'G_{1,3}': '1.4.C.1.1a',
+    'U(1)xSU(2)': '1.4.C.1.1a',
+    'SU(2)xU(1)': '1.4.C.1.1a',
+    'N(G_{1,3})': '1.4.C.2.1a',
+    'N(U(1)xSU(2))': '1.4.C.2.1a',
+    'N(SU(2)xU(1))': '1.4.C.2.1a',
+    'N(U(1)XSU(2))': '1.4.C.2.1a',
+    'N(SU(2)XU(1))': '1.4.C.2.1a',
+    'U(1)xU(1)': '1.4.D.1.1a',
+    'U(1)^2': '1.4.D.1.1a',
+    'SU(2)_2': '1.4.E.1.1a',
+    'U(1)_2': '1.4.F.1.1a',
+    'USp(6)': '1.6.A.1.1a',
+    'U(3)': '1.6.B.1.1a',
+    'N(U(3))': '1.6.B.2.1a',
+    'SU(2)xUSp(4)': '1.6.C.1.1a',
+    'SU(2)XUSp(4)': '1.6.C.1.1a',
+    'USp(4)xSU(2)': '1.6.C.1.1a',
+    'USp(4)XSU(2)': '1.6.C.1.1a',
+    'U(1)xUSp(4)': '1.6.D.1.1a',
+    'U(1)XUSp(4)': '1.6.D.1.1a',
+    'USp(4)xU(1)': '1.6.D.1.1a',
+    'SU(2)xSU(2)xSU(2)': '1.6.E.1.1a',
+    'SU(2)XSU(2)XSU(2)': '1.6.E.1.1a',
+    'SU(2)^3': '1.6.E.1.1a',
+    'U(1)xSU(2)xSU(2)': '1.6.F.1.1a',
+    'U(1)XSU(2)XSU(2)': '1.6.F.1.1a',
+    'SU(2)xU(1)xSU(2)': '1.6.F.1.1a',
+    'SU(2)XU(1)XSU(2)': '1.6.F.1.1a',
+    'SU(2)xSU(2)xU(1)': '1.6.F.1.1a',
+    'SU(2)XSU(2)XU(1)': '1.6.F.1.1a',
+    'U(1)xSU(2)^2': '1.6.F.1.1a',
+    'U(1)XSU(2)^2': '1.6.F.1.1a',
+    'SU(2)^2xU(1)': '1.6.F.1.1a',
+    'SU(2)^2XU(1)': '1.6.F.1.1a',
+    'U(1)xU(1)xSU(2)': '1.6.G.1.1a',
+    'U(1)XU(1)XSU(2)': '1.6.G.1.1a',
+    'U(1)xSU(2)xU(1)': '1.6.G.1.1a',
+    'U(1)XSU(2)XU(1)': '1.6.G.1.1a',
+    'SU(2)xU(1)xU(1)': '1.6.G.1.1a',
+    'SU(2)XU(1)XU(1)': '1.6.G.1.1a',
+    'U(1)^2xSU(2)': '1.6.G.1.1a',
+    'U(1)^2XSU(2)': '1.6.G.1.1a',
+    'SU(2)xU(1)^2': '1.6.G.1.1a',
+    'SU(2)XU(1)^2': '1.6.G.1.1a',
+    'U(1)xU(1)xU(1)': '1.6.H.1.1a',
+    'U(1)XU(1)XU(1)': '1.6.H.1.1a',
+    'U(1)^3': '1.6.H.1.1a',
+    'SU(2)_2xSU(2)': '1.6.I.1.1a',
+    'SU(2)_2XSU(2)': '1.6.I.1.1a',
+    'SU(2)xSU(2)_2': '1.6.I.1.1a',
+    'SU(2)XSU(2)_2': '1.6.I.1.1a',
+    'SU(2)_2xU(1)': '1.6.J.1.1a',
+    'SU(2)_2XU(1)': '1.6.J.1.1a',
+    'U(1)xSU(2)_2': '1.6.J.1.1a',
+    'U(1)XSU(2)_2': '1.6.J.1.1a',
+    'U(1)_2xSU(2)': '1.6.K.1.1a',
+    'U(1)_2XSU(2)': '1.6.K.1.1a',
+    'SU(2)xU(1)_2': '1.6.K.1.1a',
+    'SU(2)XU(1)_2': '1.6.K.1.1a',
+    'U(1)xU(1)_2': '1.6.L.1.1a',
+    'U(1)XU(1)_2': '1.6.L.1.1a',
+    'U(1)_2xU(1)': '1.6.L.1.1a',
+    'U(1)_2XU(1)': '1.6.L.1.1a',
+    'SU(2)_3': '1.6.M.1.1a',
+    'U(1)_3': '1.6.N.1.1a',
 }
 
 ###############################################################################
@@ -91,6 +175,8 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join('&'.join(map(str, m[i])) for i in range(len(m))) + '\\end{bmatrix}'
 
 def convert_label(label):
+    if label in st_aliases:
+        return st_aliases[label]
     d2A = {'3':'A','1':'B'}
     d4A = {'10':'A','6':'B','4':'C','2':'D','3':'E','1':'F'}
     a = label.split('.')
@@ -103,6 +189,8 @@ def convert_label(label):
         if a[1] == '4' and a[2] in d4A:
             a[2] = d4A[a[2]]
             return '.'.join(a)
+        if a[2] in st_aliases:
+            return st_aliases[a[2]]
     return label
 
 def get_name(label):
@@ -124,11 +212,8 @@ def get_name(label):
         else:
             name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
     else:
-        data = db.gps_st.lookup(label)
-        if data:
-            name = data['pretty']
-        else:
-            name = None
+        data = db.gps_st.lookup(label,projection=["name","pretty"])
+        name = (data['pretty'] if data['pretty'] else data['name']) if data else None
     return name, label
 
 def st_link(label):
@@ -148,11 +233,11 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    if re.match(r'SO\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'SO\(1\)\_\d+', st0_name):
         return r'\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'U\(1\)\_\d+', st0_name):
+    if re.fullmatch(r'U\(1\)\_\d+', st0_name):
         return r'\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
-    if re.match(r'SU\(2\)\_\d+', st0_name):
+    if re.fullmatch(r'SU\(2\)\_\d+', st0_name):
         return r'\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
@@ -162,19 +247,16 @@ def sg_pretty(sg_label):
         return data['pretty']
     return sg_label
 
-# dictionary for quick and dirty prettification that does not access the database
-st_pretty_dict = {
-    'USp(4)':r'\mathrm{USp}(4)',
-    'U(2)':r'\mathrm{U}(2)',
-    'SU(2)':r'\mathrm{SU}(2)',
-    'U(1)':r'\mathrm{U}(1)',
-    'N(U(1))':r'N(\mathrm{U}(1))'
-}
-
 def st_pretty(st_name):
-    if re.match(r'mu\([1-9][0-9]*\)', st_name):
-        return '\\' + st_name
-    return st_pretty_dict.get(st_name,st_name)
+    if re.fullmatch(r'mu\([1-9][0-9]*\)', st_name):
+        return "\\" + st_name
+    if st_name in st0_dict:
+        return st0_dict[st_name]
+    st_name = st_name.replace("x",r"\times")
+    st_name = st_name.replace("USp(",r"\mathrm{USp}(")
+    st_name = st_name.replace("SU(",r"\mathrm{SU}(")
+    st_name = st_name.replace("U(",r"\mathrm{U}(")
+    return st_name
 
 def st_link_by_name(weight,degree,name):
     return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
@@ -706,51 +788,96 @@ def render_by_label(label):
     info['cyclic']=boolean_name(G['cyclic'])
     info['abelian']=boolean_name(G['abelian'])
     info['solvable']=boolean_name(G['solvable'])
-    info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
-    info['numgens']=len(info['gens'])
-    if data.get('subgroup_multiplicities'):
-        mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+    if data.get('gens'):
+        info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if type(data['gens']) == list else data['gens']
+        info['numgens'] = len(info['gens'])
     else:
-        mults = ["" for s in data['subgroups']]
-    info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
-    info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
+        info['numgens'] = 0
+    if data.get('subgroups'):
+        if data.get('subgroup_multiplicities') and len(data["subgroup_multiplicities"]) == len(data['subgroups']):
+            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+        else:
+            mults = ["" for s in data['subgroups']]
+        info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
+    if data.get('supgroups'):
+        if data.get('supgroup_multiplicities') and len(data["supgroup_multiplicities"]) == len(data['supgroups']):
+            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['supgroup_multiplicities']]
+        else:
+            mults = ["" for s in data['supgroups']]
+        info['supgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
     if data.get('moments'):
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
     if data.get('simplex'):
         if data['degree'] == 4:
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
-            t = [s[0:2]]
-            m,n=2,3
-            while m+n <= len(s):
-                t += [s[m:m+n]]
-                m,n = m+n,n+1
-            info['simplex'] = t
-        if data['degree'] == 6:
+            if len(s)>= 27:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20],s[20:27]]
+            elif len(s) >= 20:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
+            elif len(s) >= 14:
+                info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+        elif data['degree'] == 6:
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
-            t = [s[0:2]]
-            ns = [7,10,14,19,24,30]
-            k,m,n = 0,2,4
-            while m+n <= len(s):
-                t += [s[m:m+n]]
-                m,n,k = m+n,ns[k],k+1
-            info['simplex'] = t
+            if len(s) >= 56:
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:56]]
+            elif len(s) >= 37:
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
+            elif len(s) >= 23:
+                info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+            if len(s) >= 56:
+                info['simplex_header'][-1] = ""
     if data.get('character_matrix'):
         A = data['character_matrix']
-        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A) 
-        info["character_matrix"] += r",\qquad\mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[A[i][i] for i in range(len(A))]])
-    if data.get('counts'):
+        info["character_matrix"] = r"\mathrm{E}\left[\chi_i\chi_j\right] = " + string_matrix(A)
+    if data.get("character_diagonal"):
+        d = data["character_diagonal"]
+        info["character_diagonal"] = r"\ \ \ \mathrm{E}\left[\chi_i^2\right] = " + string_matrix([[d[i] for i in range(len(d))]])
+    n = QQ(data['components'])
+    if data.get('zvector'):
+        z = data['zvector']
+        if data['degree'] == 4:
+            if sum(z) == 0:
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
+            else:
+                s = "<table>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,3)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:5])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(4)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[5:9])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[5+i]/n) for i in range(4)]) + "</td></tr>"
+                s += "</table>"
+            info['probabilities'] = s
+        elif data['degree'] == 6:
+            if sum(z) == 0:
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
+            else:
+                s = "<table>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:6])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[7:12])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[7+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_3=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[6]/n,sum(z[13:18])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[13+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=a_3=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[12]/n,sum(z[18:23])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[18+i]/n) for i in range(5)]) + '</td></tr>'
+                s += "</table>"
+            info['probabilities'] = s
+    elif data.get('counts'):
         c=data['counts']
-        info['probabilities'] = [['\\mathrm{Pr}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
+        T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
+        info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
 def render_st_group(info, portrait=None):
     """ render html page for Sato-Tate group described by info """
     prop = [('Label', '%s'%info['label'])]
     if portrait:
-        prop += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
+        prop += [(None, '&nbsp;&nbsp;<img src="%s" width="216" height="126"/>' % portrait)]
     prop += [
         ('Name', r'\(%s\)'%info['pretty']),
         ('Weight', prop_int_pretty(info['weight'])),

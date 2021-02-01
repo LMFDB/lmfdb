@@ -35,11 +35,8 @@ GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 
 # convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]
 def mult2mult(li):
-    ans = []
-    for j in range(len(li)):
-        if li[j]>0:
-            ans.append([j, li[j]])
-    return ans
+    return [[j, li_j] for j, li_j in enumerate(li) if li_j > 0]
+
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".cande")),
@@ -64,6 +61,7 @@ def int_reps_are_complete(intreps):
         if 'complete' in r:
             return r['complete']
     return -1
+
 
 def galois_module_data(n, t, index):
     return galois_module_knowl_guts(n, t, index)
@@ -237,7 +235,7 @@ def render_group_webpage(args):
         else:
             data['arith_equiv'] = r'Data on whether or not a number field with this Galois group has <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields has not been computed.'
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
-        if len(intreps) > 0:
+        if intreps:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
                 onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]

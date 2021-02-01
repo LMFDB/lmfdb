@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
-import os, yaml
+import os
+import yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\

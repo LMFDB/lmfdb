@@ -534,6 +534,11 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic curve 37.a' in L.get_data(as_text=True)
         assert 'Dual L-function' not in L.get_data(as_text=True)
 
+    def test_jump(self):
+        self.check_args('/L/?jump=4-167040-1.1-c1e2-0-7', 'Functional equation')
+        self.check_args('/L/?jump=3-1-1.1-r0e3-m9.92m29.99p39.92-0', 'Functional equation')
+        self.check_args('/L/?jump=2-1.2.1-r0e2-0-4', 'Malformed L-function label')
+        self.check_args('/L/?jump=2-1-2.1-r0e2-0-4', 'not found')
 
     #------------------------------------------------------
     # Testing plots and zeros of L-functions

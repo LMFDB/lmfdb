@@ -288,7 +288,7 @@ def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
 
 def fix_one_label(lab, reverse=False):
     r""" If lab has length 1 do nothing.  If it has length 2 increment the
-    first letter (a to b to c to ... to z).  The lenths must be at
+    first letter (a to b to c to ... to z).  The lengths must be at
     most 2 and if =2 it must start with 'a'..'y' (these are all which
     were required).  If reverse==True the inverse operation is carried
     out (z to y to ... to c to b to a).

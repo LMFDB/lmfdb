@@ -13,7 +13,7 @@ FINAL CHECKS:
 * Prove all analytic ranks (Drew)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
-* Lift projective reps for weight one forms to artin reps whereever possible (Drew)
+* Lift projective reps for weight one forms to artin reps wherever possible (Drew)
 * add L-functions instances for Artin rep (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
@@ -81,7 +81,7 @@ NOT CMF STUFF:
 * hidden != search clean hidden
 * add utf8 check to pyflakes
 * pick columns and sort order on search results
-* add UIs to pick random objects with contraints
+* add UIs to pick random objects with constraints
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 * fix hmf and bmf l-functions

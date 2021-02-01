@@ -121,7 +121,6 @@ def poly_to_field_label(pol):
         wnf = WebNumberField.from_polynomial(pol)
         return wnf.get_label()
     except Exception:
-        raise
         return None
 
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
-import os, yaml
+import os
+import yaml
 from six import text_type
 
 from flask import url_for
@@ -372,6 +373,9 @@ class WebNumberField:
             # try again as a string
             pol = PolynomialRing(QQ, 'x')(str(pol))
         pol *= pol.denominator()
+        # For some reason the error raised by Pari on a constant polynomial is not being caught
+        if pol.degree() < 1:
+            raise ValueError("Polynomial cannot be constant")
         R = pol.parent()
         pol = R(pari(pol).polredbest().polredabs())
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])

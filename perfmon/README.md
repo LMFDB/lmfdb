@@ -4,6 +4,6 @@ tcurl.sh reads from stdin and expects one URL per line.  It takes an optional nu
 
 Example usage:  $ ./tcursl.sh <ECQpages.txt
 
-The files XXXpages.txt are lists of URLs that are meant to be a representive set of pages associated to a particular part of the LMFDB.
+The files XXXpages.txt are lists of URLs that are meant to be a representative set of pages associated to a particular part of the LMFDB.
 
 Everyone is encouraged to add lists of pages that they think represent useful test cases
