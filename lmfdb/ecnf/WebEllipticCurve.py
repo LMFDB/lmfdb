@@ -74,113 +74,24 @@ from sage.misc.all import latex
 def web_point(P):
     return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
 
-def reduce_mod_units(a):
-    """
-    Return u*a for a unit u such that u*a is reduced.
-    """
-    K = a.parent()
-    if a.norm()==1:
-        return K(1)
-    r1, r2 = K.signature()
-    if r1 + r2 == 1:  # unit rank is 0
-        return a
-
-    prec = 1000  # lower precision works badly!
-    embs = K.places(prec=prec)
-    degs = [1]*r1 + [2]*r2
-    fu = K.units()
-    from sage.matrix.all import Matrix
-    U = Matrix([[e(u).abs().log()*d for d,e in zip(degs,embs)] for u in fu])
-    A = U*U.transpose()
-    Ainv = A.inverse()
-
-    aconjs = [e(a) for e in embs]
-    from sage.modules.all import vector
-    v = vector([aa.abs().log()*d for aa,d in zip(aconjs,degs)])
-    exponents = [e.round() for e in -Ainv*U*v]
-    u = prod([uj**ej for uj,ej in zip(fu,exponents)])
-    return u*a
-
-def ideal_from_string(K,s):
-    r"""Returns the ideal of K defined by the string s.
-
-    Either: s has the form "[N,a,alpha]" where N is the norm, a the
-    least positive integer in the ideal and alpha a second generator
-    so that the ideal is (a,alpha).
-
-    Or: s has the form "(g1)" or "(g1,g2)" or "(g1,g2,g3)", ... where
-    the gi are ideal generators.
-
-    alpha and the gi are polynomials in the variable 'w' which
-    represents the generator of K.
-
-    """
-    #print("ideal_from_string({}) over {}".format(s,K))
-
-    gens = s.replace('w',str(K.gen()))[1:-1].split(",")
-
-    if s[0] == "[":
-        N = ZZ(gens[0])
-        a = ZZ(gens[1])
-        alpha = K(gens[2])
-        I = K.ideal(a,alpha)
-        return I if I.norm()==N else "wrong" ## caller must check
-    return K.ideal([K(g) for g in gens])
-    
-def pretty_ideal_from_string(K, s, enclose=True, simplify=False):
+def pretty_ideal(Kgen, s, enclose=True):
     r"""Returns the a latex string an ideal of K defined by the string s,
     where Kgen is a strong representing the generator of K.  NB 'w' is
     used for the generator name for all fields for numbers stored in
     the database, and elements of K within the string s are
     polynomials in 'w'.
 
-    Either: s has the form "[N,a,alpha]" where N is the norm, a the
-    least positive integer in the ideal and alpha a second generator
-    so that the ideal is (a,alpha).
-
-    Or: s has the form "(g1)" or "(g1,g2)" or "(g1,g2,g3)", ... where
-    the gi are ideal generators.
-
-    alpha and the gi are polynomials in the variable w which
-    represents the generator of K.
+    s has the form "(g1)" or "(g1,g2)", ... where the gi are ideal
+    generators.
 
     If enclose==True (default) then latex math delimiters are pre- and
     appended.
-
-    If simplify=True then we construct the actual ideal and compute
-    its reduced_gens, so in particular principal ideals will be shown
-    with one generator; otherwise the given generators are used
-    without change (except that repeats are eliminated).  This is a
-    temporary measure until we change what is stored in the database
-    to always represent ideals in reduced form.
-
-    NB K is only used when simplify is True
     """
-    start = 1
-    if s[0]=="[":
-        start += s.find(",")
-        if ZZ(s[1:start-1])==1: # the norm is 1 so return (1)
-            s = r"\left(1\right)"
-            return r"\(" + s + r"\)" if enclose else s
-    Kgen = str(K.gen())
-    s = s[start:-1].replace('w', Kgen)
-    gens = s.split(",")
-    # remove repeats from the list of gens
-    if len(gens)>1 and gens[0]==gens[1]:
-        gens=gens[1:]
-    if simplify:
-        gens = [str(rg) for rg in K.ideal([K(g) for g in gens]).gens_reduced()]
-    gens = r"\left(" + ",".join(gens) + r"\right)"
-    gens = gens.replace("*","")
+    gens = s.replace('w', Kgen).replace("*","")
     if Kgen == 'phi':
         gens = gens.replace(Kgen, r"\phi")
     return r"\(" + gens + r"\)" if enclose else gens
     
-def pretty_ideal(I, enclose=True, simplify=False):
-    gens = I.gens_reduced() if simplify else I.gens()
-    gens = r"\left(" + ",".join([latex(g) for g in gens]) + r"\right)"
-    return r"\(" + gens + r"\)" if enclose else gens
-
 def latex_factorization(plist, exponents):
     """
     plist is a list of strings representing prime ideals P in latex without math delimiters.
@@ -368,6 +279,7 @@ class ECNF(object):
         #print("Creating ECNF object for {}".format(self.label))
         #sys.stdout.flush()
         K = self.field.K()
+        Kgen = str(K.gen())
         
         # a-invariants
         # NB Here we construct the ai as elements of K, which are used as follows:
@@ -385,27 +297,13 @@ class ECNF(object):
 
         self.cond_norm = web_latex(self.conductor_norm)
 
-        # This flag controls whether ideals are reduced before display
-        # (conductor, discriminant/minimal discriminant, bad primes)
-        # It is reset to False when the table contains simplified
-        # ideals already (flagged by the existence of the columns
-        # disc, normdisc)
-
-        simplify_ideals = self.field.class_number()==1 or self.field.degree()<4
-
-        try:
-            Dnorm = self.normdisc
-            self.disc = r"\(" + self.disc + r"\)"
-            simplify_ideals = False
-        except AttributeError:
-            self.disc = reduce_mod_units(ec_disc(self.ainvs))
-            Dnorm = self.disc.norm().abs()
-            self.disc = r"\((" + web_latex(self.disc, enclose=False) + r")\)"
+        Dnorm = self.normdisc
+        self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
         local_data.sort(key = lambda ld:ld['normp'])
 
-        badprimes    = [pretty_ideal_from_string(K, ld['p'], enclose=False, simplify=simplify_ideals) for ld in local_data]
+        badprimes    = [pretty_ideal(Kgen, ld['p'], enclose=False) for ld in local_data]
         badnorms     = [ld['normp']     for ld in local_data]
         disc_ords    = [ld['ord_disc']  for ld in local_data]
         mindisc_ords = [ld['ord_disc']  for ld in local_data]
@@ -416,7 +314,7 @@ class ECNF(object):
             self.fact_cond = self.cond
             self.fact_cond_norm = '1'
         else:
-            self.cond = pretty_ideal_from_string(K, self.conductor_ideal, simplify=simplify_ideals)
+            self.cond = pretty_ideal(Kgen, self.conductor_ideal)
             self.fact_cond      = latex_factorization(badprimes, cond_ords)
             self.fact_cond_norm = latex_factorization(badnorms,  cond_ords)
 
@@ -429,7 +327,7 @@ class ECNF(object):
 
         if not self.is_minimal:
             non_min_p = self.non_min_p[0]
-            self.non_min_prime = pretty_ideal_from_string(K, non_min_p, simplify=simplify_ideals)
+            self.non_min_prime = pretty_ideal(Kgen, non_min_p)
             ip = [ld['p'] for ld in local_data].index(non_min_p)
             disc_ords[ip] += 12
             Dnorm_factor = local_data[ip]['normp']**12
@@ -447,7 +345,7 @@ class ECNF(object):
             self.mindisc = self.disc
         else:
             Dmin_norm = Dnorm // Dnorm_factor
-            self.mindisc = pretty_ideal_from_string(K, self.minD, simplify=simplify_ideals)
+            self.mindisc = pretty_ideal(Kgen, self.minD)
 
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
