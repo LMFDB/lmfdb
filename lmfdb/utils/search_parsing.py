@@ -167,7 +167,7 @@ def split_list(s):
 # or an iterator (Python3 range) that matches the results of parse_ints below
 # useful when a module wants to iterate over key values being
 # passed into dictionary for postgres.  Input should be a string
-def parse_ints_to_list(arg):
+def parse_ints_to_list(arg, max_val=None):
     if arg is None:
         return []
     s = str(arg)
@@ -180,17 +180,31 @@ def parse_ints_to_list(arg):
         return [int(n) for n in s.split(',')]
     if '-' in s[1:]:
         i = s.index('-',1)
-        min, max = s[:i], s[i+1:]
-        return [m for m in range(int(min),int(max)+1)]
+        m, M = s[:i], s[i+1:]
+        if max_val is not None:
+            try:
+                M = int(M)
+            except ValueError:
+                M = max_val
+            else:
+                M = min(M, max_val)
+        return [k for k in range(int(m),int(M)+1)]
     if '..' in s:
         i = s.index('..',1)
-        min, max = s[:i], s[i+2:]
-        return [m for m in range(int(min),int(max)+1)]
+        m, M = s[:i], s[i+2:]
+        if max_val is not None:
+            try:
+                M = int(M)
+            except ValueError:
+                M = max_val
+            else:
+                M = min(M, max_val)
+        return [k for k in range(int(m),int(M)+1)]
     return [int(s)]
 
-def parse_ints_to_list_flash(arg,name):
+def parse_ints_to_list_flash(arg, name, max_val=None):
     try:
-        return parse_ints_to_list(arg)
+        return parse_ints_to_list(arg, max_val)
     except ValueError:
         flash_error("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).", arg, name)
         raise
