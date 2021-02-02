@@ -761,7 +761,7 @@ def white_listed(url):
     elif url[:2] == "L/":
         # if the origin is allowed
         # or if it is a L-function with a label
-        return white_listed(url[1:]) or url[3].isdigit()
+        return white_listed(url[1:]) or len(url) == 2 or url[2].isdigit()
     else:
         return False
 
