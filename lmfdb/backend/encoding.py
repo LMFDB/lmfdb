@@ -20,6 +20,7 @@ try:
     except ImportError:
         from sage.rings.complex_number import ComplexNumber
     from sage.rings.complex_field import ComplexField
+    from sage.rings.complex_double import ComplexDoubleElement
     from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
     from sage.rings.integer import Integer
     from sage.rings.rational import Rational
@@ -221,6 +222,8 @@ class Json(pgJson):
                 "prec": int(obj.prec()),
                 "data": [str(obj.real()), str(obj.imag())],
             }
+        elif SAGE_MODE and isinstance(obj, ComplexDoubleElement):
+            return [float(obj.real()), float(obj.imag())]
         elif SAGE_MODE and isinstance(obj, NumberFieldElement):
             return {
                 "__NFElt__": 0,  # encoding version
