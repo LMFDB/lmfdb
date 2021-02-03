@@ -575,7 +575,6 @@ class WebDBDirichlet(WebDirichlet):
         self._populate_from_db()
 
     def _populate_from_db(self):
-        # import pdb; pdb.set_trace()
         values_data = db.char_dir_values.lookup(
             "{}.{}".format(self.modulus, self.number)
         )
@@ -1053,7 +1052,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         }
 
 
-class WebDBDirichletOrbit(WebChar, WebDirichlet):
+class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
     characters with modulus up to 10000.
@@ -1102,8 +1101,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         self.maxcols = 10
         self._contents = None
         self._set_groupelts()
-        # self.symbol = self._symbol()
-        # self.codesymbol = self._codesymbol()
 
     @lazy_attribute
     def title(self):
@@ -1129,6 +1126,7 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
 
         if orbit_data is None:
             raise ValueError
+
         # Since we've got this, might as well set a bunch of stuff
 
         self.conductor = orbit_data['conductor']
@@ -1180,7 +1178,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
         return self._contents
 
     def _fill_contents(self):
-        # import pdb; pdb.set_trace()
         for c in self.galorbnums:
             self.add_row(c)
 
@@ -1201,7 +1198,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
             projection='values'
         )
         prim = self.isprimitive == bool_string(True)
-        # import pdb; pdb.set_trace()
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),
             self._determine_values(valuepairs, self.order)
@@ -1219,7 +1215,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
 
     @lazy_attribute
     def symbol(self):
-        # import pdb; pdb.set_trace()
         return kronecker_symbol(self.symbol_numerator())
 
     @lazy_attribute
@@ -1240,45 +1235,6 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
             self._tex_value(v, order, texify=True) for v in raw_values
         ]
         return values
-
-    # def _char_desc(self, num, mod=None, prim=None):
-    #     return (mod, num, self.char2tex(mod, num), prim)
-
-    def _tex_value(self, numer, denom=None, texify=False):
-        r"""
-        Formats the number e**(2 pi i * numer / denom), detecting if this
-        simplifies to +- 1 or +- i.
-
-        Surround the output i MathJax `\(..\)` tags if `texify` is True.
-        `denom` defaults to self.order.
-        """
-        if not denom:
-            denom = self.order
-
-        g = gcd(numer, denom)
-        if g > 1:
-            numer = numer // g
-            denom = denom // g
-
-        # Reduce mod the denominator
-        numer = (numer % denom)
-
-        if denom == 1:
-            ret = '1'
-        elif (numer % denom) == 0:
-            ret = '1'
-        elif numer == 1 and denom == 2:
-            ret = '-1'
-        elif numer == 1 and denom == 4:
-            ret = 'i'
-        elif numer == 3 and denom == 4:
-            ret = '-i'
-        else:
-            ret = r"e\left(\frac{%s}{%s}\right)" % (numer, denom)
-        if texify:
-            return r"\({}\)".format(ret)
-        else:
-            return ret
 
     def _set_groupelts(self):
         if self.modulus == 1:
@@ -1303,12 +1259,14 @@ class WebDBDirichletOrbit(WebChar, WebDirichlet):
 
         vals = [int(v) for g, v in values_gens]
         sage_zeta_order = self.exchi.sage_zeta_order(self.order)
-        self._genvalues_for_code = get_sage_genvalues(self.modulus, self.order, vals, sage_zeta_order)
+        self._genvalues_for_code = get_sage_genvalues(self.modulus,
+                                    self.order, vals, sage_zeta_order)
 
         return {
             'sage': [
                 'from sage.modular.dirichlet import DirichletCharacter',
-                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(self.modulus, sage_zeta_order),
+                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(
+                    self.modulus, sage_zeta_order),
                 'M = H._module',
                 'chi = DirichletCharacter(H, M([{}]))'.format(
                     ','.join(str(val) for val in self._genvalues_for_code)

@@ -47,6 +47,8 @@ def learn(current = None):
         r.append( ('Reliability of the data', url_for(".reliability")) )
     if current != 'labels':
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
+    if current != 'orbit_labels':
+        r.append( ('Dirichlet orbit labels', url_for(".orbit_labels_page")) )
     return r
 
 def credit():
@@ -278,7 +280,19 @@ def labels_page():
     info['bread'] = bread('Labels')
     info['learnmore'] = learn('labels')
     info['credit'] = credit()
-    return render_template("single.html", kid='character.dirichlet.conrey', **info)
+    return render_template("single.html", kid='character.dirichlet.conrey',
+                            **info)
+
+@characters_page.route("/Dirichlet/OrbitLabels")
+def orbit_labels_page():
+    info = {}
+    info['title'] = 'Dirichlet character Galois orbit labels'
+    info['bread'] = bread('Orbit Labels')
+    info['learnmore'] = learn('orbit_labels')
+    info['credit'] = credit()
+    return render_template("single.html",
+                            kid='character.dirichlet.conrey.orbit_label',
+                             **info)
 
 @characters_page.route("/Dirichlet/Source")
 def how_computed_page():
@@ -287,7 +301,8 @@ def how_computed_page():
     info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
     info['credit'] = credit()
-    return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
+    return render_template("single.html", kid='rcs.source.character.dirichlet',
+                            **info)
 
 @characters_page.route("/Dirichlet/Reliability")
 def reliability():
@@ -330,16 +345,6 @@ def make_webchar(args):
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
 def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
-
-    print("modulus: {}".format(modulus))
-    print("gal_orb_label: {}".format(gal_orb_label))
-    print("number: {}".format(number))
-
-    # if gal_orb_label is None:
-    #     # modulus = modulus.replace(' ','')
-    #     if number is None and re.match(r'^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
-    #         modulus, number = modulus.split('.')
-    #         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
@@ -422,15 +427,24 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
         if gal_orb_label is not None:
             if gal_orb_label != real_gal_orb_label:
                 flash_warning(
-            "The supplied Galois orbit label %s was wrong. But fear not, "
-            "we found the correct one!", gal_orb_label )
+            "The supplied Galois orbit label %s was wrong. "
+            "The correct one is %s. The URL has been duly corrected.",
+            gal_orb_label, real_gal_orb_label)
+                return redirect(url_for("characters.render_Dirichletwebpage",
+                        modulus=modulus,
+                        gal_orb_label=real_gal_orb_label,
+                        number=number))
         args['gal_orb_label'] = real_gal_orb_label
     else:
         if gal_orb_label is not None:
             flash_warning(
-            "You entered a Galois orbit label. But we ain't got any of those "
-            "at this modulus. Taking you to where you were "
-            "probably trying to get to.")
+            "You entered the Galois orbit label %s. However, such labels "
+            "have not been computed for this modulus. The supplied orbit "
+            "label has therefore been ignored and expunged from the URL.",
+            gal_orb_label)
+            return redirect(url_for("characters.render_Dirichletwebpage",
+                        modulus=modulus,
+                        number=number))
 
     args['number'] = number
     bread_crumbs, webchar = make_webchar(args)
@@ -441,7 +455,6 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
-    print("indlabel = {}".format(info['indlabel']))
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
