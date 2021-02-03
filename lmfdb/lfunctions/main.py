@@ -9,6 +9,7 @@ import tempfile
 import os
 import re
 from collections import defaultdict, Counter
+from markupsafe import escape
 
 from . import LfunctionPlot
 
@@ -342,12 +343,12 @@ def parse_euler(inp, query, qfield, p=None, d=None):
         n, t = piece
         n = n.strip()
         if not n.startswith("F"):
-            raise SearchParsingError("%s does not start with F"%(n))
+            raise SearchParsingError("%s does not start with F" % escape(n))
         n = int(n[1:])
         if n > 100:
-            raise SearchParsingError("%s is too large; Euler factor not stored")
+            raise SearchParsingError("%s is too large; Euler factor not stored" % n)
         if not ZZ(n).is_prime():
-            raise SearchParsingError("%s is not prime")
+            raise SearchParsingError("%s is not prime" % n)
         if n != p:
             continue
         if seen:
