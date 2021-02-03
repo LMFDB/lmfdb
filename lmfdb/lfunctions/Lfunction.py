@@ -402,7 +402,8 @@ def apply_coeff_info(L, coeff_info):
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
     # the localfactors of the Dirichlet L-function in the DB omit the bad factors
     for p, fac in L.bad_lfactors:
-        L.localfactors[prime_pi(p)-1] = fac
+        if prime_pi(p) <= len(L.localfactors):
+            L.localfactors[prime_pi(p)-1] = fac
     L.coefficient_field = "CDF"
 
 
