@@ -1,18 +1,29 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import
 from six.moves import input  # in python2, this is raw_input
+import datetime
+import inspect
 import os
 import shutil
-import subprocess
-import inspect
 import signal
-import datetime
+import subprocess
 from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
 from lmfdb.backend.utils import DelayCommit
 from lmfdb.backend.database import PostgresDatabase
 from lmfdb.backend.searchtable import PostgresSearchTable
 from lmfdb.backend.statstable import PostgresStatsTable
+
+def overrides(super_class):
+    def overrider(method):
+        super_method = getattr(super_class, method.__name__)
+        assert super_method
+        if not method.__doc__:
+                method.__doc__ = super_method.__doc__
+        method.__signature__ = inspect.signature(super_method)
+        return method
+    return overrider
+
 
 class LMFDBStatsTable(PostgresStatsTable):
     saving = True
@@ -377,5 +388,13 @@ class LMFDBDatabase(PostgresDatabase):
                     tbl.stats._clear_stats_counts(extra=False)
                 cleared_tables.update(tbls)
                 disp().setup(delete=False)
+
+    @overrides(PostgresDatabase)
+    def create_table(self, *args, **kwargs):
+        name = args[0]
+        if "_" not in name:
+            raise ValueError("Table name '%s' must contain an underscore; first part gives the LMFDB section" % name,)
+        return PostgresDatabase.create_table(*args, **kwargs)
+
 
 db = LMFDBDatabase()
