@@ -32,7 +32,7 @@ init_absgrp_flag = False
 
 def init_grp_count():
     global ngroups, init_absgrp_flag, max_order
-    if not init_absgrp_flag:
+    if not init_absgrp_flag and False: # Always recalculate for now
         ngroups = db.gps_groups.count()
         max_order = db.gps_groups.max('order')
         init_absgrp_flag = True
