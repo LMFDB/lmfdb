@@ -12,18 +12,47 @@ import re
 
 from flask import url_for
 from sage.all import (
-    ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
-    is_prime, factor,  log,  I, gcd, sqrt, prod, ceil,
-    EllipticCurve, NumberField, RealNumber, PowerSeriesRing,
-    CBF, RIF, primes_first_n, next_prime, lazy_attribute)
+    CBF,
+    CC,
+    CDF,
+    EllipticCurve,
+    I,
+    Integer,
+    NumberField,
+    PowerSeriesRing,
+    QQ,
+    RIF,
+    RR,
+    Rational,
+    RealNumber,
+    Reals,
+    ZZ,
+    ceil,
+    factor,
+    gcd,
+    is_prime,
+    lazy_attribute,
+    log,
+    next_prime,
+    nth_prime,
+    primes_first_n,
+    prime_pi,
+    prod,
+    sqrt,
+)
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-        web_latex, round_to_half_int, round_CBF_to_half_int, display_float,
-        display_complex, str_to_CBF,
-        Downloader,
-        names_and_urls)
+    Downloader,
+    display_complex,
+    display_float,
+    names_and_urls,
+    round_CBF_to_half_int,
+    round_to_half_int,
+    str_to_CBF,
+    web_latex,
+)
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
@@ -34,17 +63,21 @@ import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from .Lfunctionutilities import (
-        string2number,
-        compute_local_roots_SMF2_scalar_valued,)
+    string2number,
+    compute_local_roots_SMF2_scalar_valued,)
 from .LfunctionDatabase import (
-        get_lfunction_by_label,
-        get_lfunction_by_Lhash,
-        get_instances_by_label,
-        get_instances_by_Lhash,
-        get_factors_instances,
-        get_lfunction_by_url,
-        get_instance_by_url, getHmfData, getHgmData,
-        getEllipticCurveData, get_multiples_by_Lhash_and_trace_hash)
+    getEllipticCurveData,
+    getHgmData,
+    getHmfData,
+    get_factors_instances,
+    get_instance_by_url,
+    get_instances_by_Lhash,
+    get_instances_by_label,
+    get_lfunction_by_Lhash,
+    get_lfunction_by_label,
+    get_lfunction_by_url,
+    get_multiples_by_Lhash_and_trace_hash,
+)
 
 
 def validate_required_args(errmsg, args, *keys):
@@ -322,7 +355,7 @@ def makeLfromdata(L):
 
 
 def apply_coeff_info(L, coeff_info):
-    """ Converts the dirichlet L-function coefficients and euler factors from
+    """ Converts the Dirichlet L-function coefficients and euler factors from
         the format in the database to algebraic and analytic form
     """
 
@@ -333,7 +366,7 @@ def apply_coeff_info(L, coeff_info):
         """
 
         if not str(an).startswith('a'):
-            return an, an
+            res = an, an
         else:
             an_power = an[2:]
             an_power_int = int(an_power)
@@ -341,14 +374,14 @@ def apply_coeff_info(L, coeff_info):
             an_power_int /= this_gcd
             this_base_power_int = base_power_int/this_gcd
             if an_power_int == 0:
-                return 1, 1
+                res = 1, 1
             elif this_base_power_int == 2:
-                return -1, -1
+                res = -1, -1
             elif this_base_power_int == 4:
                 if an_power_int == 1:
-                    return I, I
+                    res = I, I
                 else:
-                    return -I, -I
+                    res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
                 arithmetic = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
@@ -356,7 +389,8 @@ def apply_coeff_info(L, coeff_info):
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
                 analytic = round_CBF_to_half_int(analytic)
-                return arithmetic, analytic
+                res = arithmetic, analytic
+        return res[0], CDF(res[1])
 
     base_power_int = int(coeff_info[0][2:-3])
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
@@ -366,6 +400,9 @@ def apply_coeff_info(L, coeff_info):
     L.bad_lfactors = [[p, convert_euler_Lpoly(poly)]
                       for p, poly in L.bad_lfactors]
     L.localfactors = [convert_euler_Lpoly(lf) for lf in L.localfactors]
+    # the localfactors of the Dirichlet L-function in the DB omit the bad factors
+    for p, fac in L.bad_lfactors:
+        L.localfactors[prime_pi(p)-1] = fac
     L.coefficient_field = "CDF"
 
 
