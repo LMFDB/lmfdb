@@ -15,6 +15,7 @@ from sage.all import (
     CBF,
     CC,
     CDF,
+    ComplexField,
     EllipticCurve,
     I,
     Integer,
@@ -239,6 +240,11 @@ def makeLfromdata(L):
         pairtoCC = lambda x: CC(*tuple(x))
         L.localfactors = [[pairtoCC(q) for q in x] for x in L.localfactors]
         L.bad_lfactors = [[p, [pairtoCC(q) for q in elt]]
+                          for p, elt in L.bad_lfactors]
+    elif 'Maass' in data.get('origin', ''):
+        R = ComplexField(ceil(data['precision']*log(10)/log(2)))
+        L.localfactors = [[R(q) for q in x] for x in L.localfactors]
+        L.bad_lfactors = [[p, [R(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
 
     # add missing bad factors
