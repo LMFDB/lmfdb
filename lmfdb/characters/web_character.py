@@ -1147,7 +1147,6 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def friends(self):
-        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
