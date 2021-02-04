@@ -243,8 +243,9 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
     elif 'Maass' in data.get('origin', ''):
         R = ComplexField(ceil(data['precision']*log(10)/log(2)))
-        L.localfactors = [[R(q) for q in x] for x in L.localfactors]
-        L.bad_lfactors = [[p, [R(q) for q in elt]]
+        stringtoR = lambda x: R(x) if x != '??' else R('NaN')
+        L.localfactors = [[stringtoR(q) for q in x] for x in L.localfactors]
+        L.bad_lfactors = [[p, [stringtoR(q) for q in elt]]
                           for p, elt in L.bad_lfactors]
 
     # add missing bad factors
@@ -390,7 +391,7 @@ def apply_coeff_info(L, coeff_info):
                     res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
-                arithmetic = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
+                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + r"}\right)$"
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
@@ -652,19 +653,19 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def texnamecompleted1ms(self):
         if self.selfdual:
-            return "\\Lambda(1-s)"
+            return r"\Lambda(1-s)"
         else:
-            return "\\overline{\\Lambda}(1-s)"
+            return r"\overline{\Lambda}(1-s)"
     @lazy_attribute
     def texnamecompleted1ms_arithmetic(self):
         if self.selfdual:
-            return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
+            return r"\Lambda(%d-s)" % (self.motivic_weight + 1)
         else:
-            return "\\overline{\\Lambda}(%d-s)" % (self.motivic_weight + 1)
+            return r"\overline{\Lambda}(%d-s)" % (self.motivic_weight + 1)
 
     @lazy_attribute
     def texnamecompleteds(self):
-        return  "\\Lambda(s)"
+        return  r"\Lambda(s)"
     @lazy_attribute
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds
@@ -800,12 +801,12 @@ class Lfunction_Maass(Lfunction):
 
         # Text for the web page
         self.texname = "L(s,f)"
-        self.texnamecompleteds = "\\Lambda(s,f)"
+        self.texnamecompleteds = r"\Lambda(s,f)"
 
         if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+            self.texnamecompleted1ms = r"\Lambda(1-s,f)"
         else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+            self.texnamecompleted1ms = r"\Lambda(1-s,\overline{f})"
         self.origin_label = self.maass_id
 
         # Initiate the dictionary info that contains the data for the webpage
@@ -956,11 +957,11 @@ class Lfunction_HMF(Lfunction):
 
         # Text for the web page
         self.texname = "L(s,f)"
-        self.texnamecompleteds = "\\Lambda(s,f)"
+        self.texnamecompleteds = r"\Lambda(s,f)"
         if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+            self.texnamecompleted1ms = r"\Lambda(1-s,f)"
         else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+            self.texnamecompleted1ms = r"\Lambda(1-s,\overline{f})"
         self.credit = ''
 
         # Generate a function to do computations
@@ -1072,11 +1073,11 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         # Text for the web page
         self.texname = "L(s,F)"
-        self.texnamecompleteds = "\\Lambda(s,F)"
+        self.texnamecompleteds = r"\Lambda(s,F)"
         if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,F)"
+            self.texnamecompleted1ms = r"\Lambda(1-s,F)"
         else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{F})"
+            self.texnamecompleted1ms = r"\Lambda(1-s,\overline{F})"
         self.credit = ''
 
         # Generate a function to do computations
@@ -1192,9 +1193,9 @@ class DedekindZeta(Lfunction):
                             self.factorization += right
 
         # Text for the web page
-        self.texname = "\\zeta_K(s)"
-        self.texnamecompleteds = "\\Lambda_K(s)"
-        self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        self.texname = r"\zeta_K(s)"
+        self.texnamecompleteds = r"\Lambda_K(s)"
+        self.texnamecompleted1ms = r"\Lambda_K(1-s)"
         self.credit = 'Sage'
 
         # Generate a function to do computations
@@ -1209,7 +1210,7 @@ class DedekindZeta(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "nf"
         self.info['label'] = ''
-        self.info['title'] = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
+        self.info['title'] = r"Dedekind zeta-function: $\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
 
     def original_object(self):
         return self.NF
@@ -1273,12 +1274,12 @@ class ArtinLfunction(Lfunction):
         self.selfdual = self.artin.selfdual()
 
         # Text for the web page
-        self.texname = "L(s,\\rho)"
-        self.texnamecompleteds = "\\Lambda(s)"
+        self.texname = r"L(s,\rho)"
+        self.texnamecompleteds = r"\Lambda(s)"
         if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s)"
+            self.texnamecompleted1ms = r"\Lambda(1-s)"
         else:
-            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+            self.texnamecompleted1ms = r"\overline{\Lambda(1-\overline{s})}"
         self.credit = ('Sage, lcalc, and data precomputed in ' +
                        'Magma by Tim Dokchitser')
 
@@ -1355,11 +1356,11 @@ class HypergeometricMotiveLfunction(Lfunction):
 
         # Text for the web page
         self.texname = "L(s)"
-        self.texnamecompleteds = "\\Lambda(s)"
+        self.texnamecompleteds = r"\Lambda(s)"
         if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s)"
+            self.texnamecompleted1ms = r"\Lambda(1-s)"
         else:
-            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+            self.texnamecompleted1ms = r"\overline{\Lambda(1-\overline{s})}"
         self.credit = 'Dave Roberts, using Magma'
 
         # Generate a function to do computations
@@ -1557,9 +1558,9 @@ class TensorProductLfunction(Lfunction):
             li[n] /= sqrt(float(n))
         self.dirichlet_coefficients = li
 
-        self.texname = "L(s,E,\\chi)"
-        self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
-        self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+        self.texname = r"L(s,E,\chi)"
+        self.texnamecompleteds = r"\Lambda(s,E,\chi)"
+        self.title = r"$L(s,E,\chi)$, where $E$ is the elliptic curve %s and $\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
         self.credit = 'Workshop in Besancon, 2014'
 
