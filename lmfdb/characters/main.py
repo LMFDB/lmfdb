@@ -339,13 +339,17 @@ def make_webchar(args):
                 ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
         return bread_crumbs, WebSmallDirichletCharacter(**args)
 
-@characters_page.route("/Dirichlet/<int:modulus>")
-@characters_page.route("/Dirichlet/<int:modulus>/")
+@characters_page.route("/Dirichlet/<modulus>")
+@characters_page.route("/Dirichlet/<modulus>/")
+#@characters_page.route("/Dirichlet/<int:modulus>.<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
-@characters_page.route("/Dirichlet/<int:modulus>.<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
 def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
+
+    if number is None and gal_orb_label is None and re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
+        modulus, number = modulus.split('.')
+        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
