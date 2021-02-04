@@ -342,6 +342,7 @@ def make_webchar(args):
 @characters_page.route("/Dirichlet/<int:modulus>")
 @characters_page.route("/Dirichlet/<int:modulus>/")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
+@characters_page.route("/Dirichlet/<int:modulus>.<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
 def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
