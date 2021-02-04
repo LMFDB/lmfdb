@@ -468,10 +468,10 @@ def search(info):
     try:
         parse_ints(info,query,'weight','weight')
         if 'weight' in query:
-            weight_list = parse_ints_to_list_flash(info.get('weight'),'weight')
+            weight_list = parse_ints_to_list_flash(info.get('weight'), 'weight', max_val=1)
         parse_ints(info,query,'degree','degree')
         if 'degree' in query:
-            degree_list = parse_ints_to_list_flash(info.get('degree'),'degree')
+            degree_list = parse_ints_to_list_flash(info.get('degree'), 'degree', max_val=1)
         if info.get('identity_component'):
             query['identity_component'] = info['identity_component']
         parse_ints(info,query,'components','components')
@@ -510,7 +510,7 @@ def search(info):
             if name in query:
                 # E(x^2) for mu(1) and mu(2) are 1; others are 0
                 # E(x^4) for mu(1), mu(2) and mu(4) are 1; others are 0
-                E = parse_ints_to_list_flash(info.get(name), name.replace("_", " "))
+                E = parse_ints_to_list_flash(info.get(name), name.replace("_", " "), max_val=1)
                 if 0 not in E:
                     components_list = refine_components(components_list, ones)
                 if 1 not in E:
