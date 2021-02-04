@@ -9,6 +9,7 @@ import tempfile
 import os
 import re
 from collections import defaultdict, Counter
+from markupsafe import escape
 
 from . import LfunctionPlot
 
@@ -342,12 +343,12 @@ def parse_euler(inp, query, qfield, p=None, d=None):
         n, t = piece
         n = n.strip()
         if not n.startswith("F"):
-            raise SearchParsingError("%s does not start with F"%(n))
+            raise SearchParsingError("%s does not start with F" % escape(n))
         n = int(n[1:])
         if n > 100:
-            raise SearchParsingError("%s is too large; Euler factor not stored")
+            raise SearchParsingError("%s is too large; Euler factor not stored" % n)
         if not ZZ(n).is_prime():
-            raise SearchParsingError("%s is not prime")
+            raise SearchParsingError("%s is not prime" % n)
         if n != p:
             continue
         if seen:
@@ -649,7 +650,7 @@ def interesting():
         learnmore=learnmore_list()
     )
 
-@l_function_page.route("/history")
+#@l_function_page.route("/history")
 def l_function_history():
     t = "A Brief History of L-functions"
     bc = get_bread(breads=[(t, url_for(' '))])
@@ -1503,26 +1504,25 @@ def download_route_wrapper(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         label = kwds['label']
-        try:
-            L = Lfunction_from_db(label=label)
-        except Exception:
+        if not db.lfunc_lfunctions.exists({'label': label}):
             return render_lfunction_exception("There is no L-function in the database with label '%s'" % label)
+        L = Lfunction_from_db(label=label)
         return f(label=label, L=L)
     return wrapper
 
-@l_function_page.route("/download_euler/<path:label>/")
+@l_function_page.route("/download_euler/<path:label>")
 @download_route_wrapper
 def download_euler_factors(label, L=None): # the wrapper populates the L
     assert label
     return L.download_euler_factors()
 
-@l_function_page.route("/download_zeros/<path:label>/")
+@l_function_page.route("/download_zeros/<path:label>")
 @download_route_wrapper
 def download_zeros(label, L=None): # the wrapper populates the L
     assert label
     return L.download_zeros()
 
-@l_function_page.route("/download_dirichlet_coeff/<path:label>/")
+@l_function_page.route("/download_dirichlet_coeff/<path:label>")
 @download_route_wrapper
 def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
     assert label
