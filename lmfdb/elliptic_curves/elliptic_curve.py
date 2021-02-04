@@ -159,9 +159,11 @@ class ECstats(StatsDisplay):
         self.nclasses = db.ec_classdata.count()
         self.nclasses_c = comma(self.nclasses)
         self.max_N_Cremona = 500000
-        self.max_N_Cremona_c = comma(500000)
+        self.max_N_Cremona_c = comma(self.max_N_Cremona)
         self.max_N = db.ec_curvedata.max('conductor')
         self.max_N_c = comma(self.max_N)
+        self.max_N_prime = 1000000
+        self.max_N_prime_c = comma(self.max_N_prime)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
         self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
@@ -181,8 +183,9 @@ class ECstats(StatsDisplay):
             'The database currently includes {} {} in {} {}, with {} at most {},'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c),
             'consisting of',
             '<ul>',
-            '<li>all curves of conductor less than {};</li>'.format(self.max_N_Cremona),
-            '<li> all curves with $7$-smooth conductor.</li>',
+            '<li>all curves of conductor less than {};</li>'.format(self.max_N_Cremona_c),
+            '<li>all curves with $7$-smooth conductor.</li>',
+            '<li>all curves of prime conductor less than {};</li>'.format(self.max_N_prime_c),
             '</ul>',
             '</p>',
         ])
