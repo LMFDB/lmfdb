@@ -178,17 +178,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return "\n".join([
-            '<p>',
-            'The database currently includes {} {} in {} {}, with {} at most {},'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c),
-            'consisting of',
-            '<ul>',
-            '<li>all curves of conductor less than {};</li>'.format(self.max_N_Cremona_c),
-            '<li>all curves with $7$-smooth conductor.</li>',
-            '<li>all curves of prime conductor less than {};</li>'.format(self.max_N_prime_c),
-            '</ul>',
-            '</p>',
-        ])
+        return r'Currently, the database includes {} {} in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
     
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
