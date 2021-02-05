@@ -1108,7 +1108,8 @@ def flash_error(errmsg, *args):
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 def flash_warning(errmsg, *args):
-    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "warning")
+    """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
+    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
 
 
 ################################################################################

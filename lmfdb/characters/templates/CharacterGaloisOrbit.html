@@ -1,0 +1,33 @@
+{% extends 'CharacterCommon.html' %}
+
+{% block subcontent %}
+
+{% if contents %}
+{# Characters #}
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%} in Galois orbit</h2>
+<table class="ntdata" id="chitable">
+  <thead class="space">
+    <tr>
+      {% for h in headers %} <th class="center">{{h}} </th> {% endfor %}
+      {% for v in groupelts %} <th class="center">\({{v}}\)</th> {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for char, values in contents %}
+    <tr>
+      <td class="left">
+        {% with mod,num,tex,prim = char %}
+        <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, gal_orb_label=orbit_label, number=num) }}">
+          {{ tex }}
+        </a>
+        {% endwith %}
+      </td>
+      {% for value in values %} <td class="center">{{value}}</td> {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% endblock %}
