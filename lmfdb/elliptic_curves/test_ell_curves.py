@@ -169,4 +169,4 @@ class EllCurveTest(LmfdbTest):
         Test that the dynamic completeness knowl displays OK.
         """
         L = self.tc.get('/EllipticCurve/Q/Completeness')
-        assert 'The database currently includes' in L.get_data(as_text=True)
+        assert 'Currently, the database includes' in L.get_data(as_text=True)

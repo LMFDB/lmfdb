@@ -90,6 +90,60 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'C_{333666}' in W.get_data(as_text=True), "structure"
         assert r'\chi_{999999999}(234567902,' in W.get_data(as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(as_text=True)
 
+    def test_dirichletgalorbs(self):
+        W = self.tc.get('/Character/Dirichlet/289/j')
+        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W.get_data(as_text=True)
+        table_row = (r'<td class="center">\(-1\)</td>  '
+                    r'<td class="center">\(1\)</td>  '
+                    r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{191}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{57}{68}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{219}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{33}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{229}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{35}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
+        assert table_row in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/7145/da')
+        assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
+        table_row = (r'<td class="center">\(-1\)</td>  '
+                    r'<td class="center">\(1\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{84}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{481}{714}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{42}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{1285}{1428}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{341}{357}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{28}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{124}{357}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{779}{1428}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{15}{119}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{115}{714}\right)\)</td>')
+        assert table_row in W.get_data(as_text=True)
+
+        # Tests for URL behaviour of characters
+
+        W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
+        #import pdb; pdb.set_trace()
+        assert bool_string(True) in W.get_data(as_text=True)
+        assert r"The supplied Galois orbit label <span style='color:red'>banana</span> was wrong. The correct one is <span style='color:red'>u</span>" in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
+        assert 'Error: The Galois orbit label' in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
+        wrng_msg = (r'Warning: You entered the Galois orbit label '
+                    r"<span style='color:red'>banana</span>. However, such "
+                    r'labels have not been computed for this modulus. '
+                    r'The supplied orbit label has therefore been ignored '
+                    r'and expunged from the URL.')
+        assert wrng_msg in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
+        assert 'Error: Galois orbits have only been computed for modulus up to 10,000' in W.get_data(as_text=True)
+
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.get_data(as_text=True)
