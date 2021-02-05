@@ -339,9 +339,9 @@ def make_webchar(args):
                 ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
         return bread_crumbs, WebSmallDirichletCharacter(**args)
 
+
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
-#@characters_page.route("/Dirichlet/<int:modulus>.<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
 @characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
