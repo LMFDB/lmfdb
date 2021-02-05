@@ -1110,7 +1110,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         if self.modulus == 1:
             self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
             return
-        upper_limit = min(self.maxrows, self.order + 1)
+        upper_limit = min(self.maxrows + 1, self.order + 1)
         if self.maxrows < self.order + 1:
             self.rowtruncate = True
         self.galorbnums = orbit_data['galois_orbit'][:upper_limit]
