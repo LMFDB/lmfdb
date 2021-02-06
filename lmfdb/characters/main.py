@@ -445,8 +445,8 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         if orbit_label is not None:
             if orbit_label != real_orbit_label:
                 flash_warning(
-            "The supplied character orbit label %d.%s was wrong. "
-            "The correct orbit label is %d.%s. The URL has been duly corrected.",
+            "The supplied character orbit label %s.%s was wrong. "
+            "The correct orbit label is %s.%s. The URL has been duly corrected.",
             modulus, orbit_label, modulus, real_orbit_label)
                 return redirect(url_for("characters.render_Dirichletwebpage",
                         modulus=modulus,
@@ -456,7 +456,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     else:
         if orbit_label is not None:
             flash_warning(
-            "You entered the character orbit label %d.%s. However, such labels "
+            "You entered the character orbit label %s.%s. However, such labels "
             "have not been computed for this modulus. The supplied orbit "
             "label has therefore been ignored and expunged from the URL.",
             modulus, orbit_label)
