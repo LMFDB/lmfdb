@@ -433,15 +433,9 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         return redirect(url_for(".render_DirichletNavigation"))
 
     if modulus <= 10000:
-        orbit_label = db.char_dir_values.lookup(
-                "{}.{}".format(modulus, number),
-                projection='orbit_label'
-            )
-        orbit_index = int(orbit_label.partition('.')[-1])
-        # The -1 in the line below is because labels index at 1, while
-        # the Cremona letter code indexes at 0
-        real_orbit_label = cremona_letter_code(orbit_index - 1)
-
+        db_orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
+        # The -1 in the line below is because labels index at 1, not 0
+        real_orbit_label = cremona_letter_code(int(db_orbit_label.partition('.')[-1]) - 1)
         if orbit_label is not None:
             if orbit_label != real_orbit_label:
                 flash_warning(
