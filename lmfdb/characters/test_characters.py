@@ -131,7 +131,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert r"The supplied character orbit label <span style='color:red'>banana</span> was wrong. The correct one is <span style='color:red'>u</span>" in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
-        assert 'Error: The Galois orbit label' in W.get_data(as_text=True)
+        assert 'Error: The character orbit label' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
         wrng_msg = (r'Warning: You entered the character orbit label '
