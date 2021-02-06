@@ -524,9 +524,11 @@ def _dir_knowl_data(label, orbit=False):
     return inf
 
 def dirichlet_character_data(label):
+    print("in dirichlet_character_data")
     return _dir_knowl_data(label, orbit=False)
 
 def dirichlet_orbit_data(label):
+    print("in dirichlet_orbit_data")
     return _dir_knowl_data(label, orbit=True)
 
 @app.context_processor
