@@ -505,6 +505,7 @@ def _dir_knowl_data(label, orbit=False):
         inf += '<div align="right">\n'
         inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
         inf += '</div>\n'
+    print(inf)
     return inf
 
 def dirichlet_character_data(label):
