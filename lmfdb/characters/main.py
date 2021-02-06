@@ -483,7 +483,13 @@ def _dir_knowl_data(label, orbit=False):
         numbers = None
     args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     print("creating web character")
-    _, webchar = make_webchar(args)
+    try:
+        _, webchar = make_webchar(args)
+    except Exception as err:
+        print("exception in make_webchar!")
+        print(err)
+        raise BaseException
+
     print("got it")
     if orbit and modulus <= 10000:
         inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
