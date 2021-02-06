@@ -463,6 +463,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
+    printf("in _dir_knowl_data")
     modulus, number = label.split('.')
     modulus = int(modulus)
     try:
@@ -481,7 +482,9 @@ def _dir_knowl_data(label, orbit=False):
         number = numbers
         numbers = None
     args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
+    print("creating web character")
     _, webchar = make_webchar(args)
+    print("got it")
     if orbit and modulus <= 10000:
         inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
     else:
