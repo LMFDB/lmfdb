@@ -134,12 +134,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
-        wrng_msg = (r'Warning: You entered the character orbit label '
-                    r"<span style='color:red'>banana</span>. However, such "
-                    r'labels have not been computed for this modulus. '
-                    r'The supplied orbit label has therefore been ignored '
-                    r'and expunged from the URL.')
-        assert wrng_msg in W.get_data(as_text=True)
+        assert r'labels have not been computed for this modulus' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
         assert 'Error: Galois orbits have only been computed for modulus up to 10,000' in W.get_data(as_text=True)
