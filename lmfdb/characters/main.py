@@ -31,8 +31,8 @@ def ctx_characters():
     return chardata
 
 def bread(tail=[]):
-    base = [('Characters',url_for("characters.render_characterNavigation")),
-            ('Dirichlet', url_for("characters.render_DirichletNavigation"))]
+    base = [('Characters',url_for(".render_characterNavigation")),
+            ('Dirichlet', url_for(".render_DirichletNavigation"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -323,30 +323,34 @@ def extent_page():
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
 
-def make_webchar(args):
+def make_webchar(args, get_bread=False):
     modulus = int(args['modulus'])
+    bread_crumbs = []
     if modulus <= 10000:
         if args.get('number') is None:
-            orbit_label = args['orbit_label']
-            bread_crumbs = bread(
-                    [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
-                    ('%s'%orbit_label, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
-            return bread_crumbs, WebDBDirichletOrbit(**args)
+            if get_bread:
+                orbit_label = args['orbit_label']
+                bread_crumbs = bread(
+                        [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+                        ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
+            return WebDBDirichletOrbit(**args), bread_crumbs
         number = int(args['number'])
         if args.get('orbit_label') is None:
             orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
             orbit_label = cremona_letter_code(int(orbit_label.partition('.')[-1]) - 1)
-        bread_crumbs = bread(
-                [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
-                ('%s'%orbit_label, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
-                ('%s'%number, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
-        return bread_crumbs, WebDBDirichletCharacter(**args)
+        if get_bread:
+            bread_crumbs = bread(
+                    [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+                    ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
+                    ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
+        return WebDBDirichletCharacter(**args), bread_crumbs
     else:
         number = int(args['number'])
-        bread_crumbs = bread(
-                [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
-                ('%s'%number, url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number))])
-        return bread_crumbs, WebSmallDirichletCharacter(**args)
+        if get_bread:
+            bread_crumbs = bread(
+                    [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+                    ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
+        return WebSmallDirichletCharacter(**args), bread_crumbs
 
 
 @characters_page.route("/Dirichlet/<modulus>")
@@ -461,7 +465,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                         number=number))
 
     args['number'] = number
-    bread_crumbs, webchar = make_webchar(args)
+    webchar, bread_crumbs = make_webchar(args, get_bread=True)
     info = webchar.to_dict()
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
@@ -492,7 +496,7 @@ def _dir_knowl_data(label, orbit=False):
     args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     print("creating web character")
     try:
-        _, webchar = make_webchar(args)
+        webchar = make_webchar(args)
     except Exception as err:
         print("exception in make_webchar!")
         print(err)
