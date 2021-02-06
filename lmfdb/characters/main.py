@@ -522,7 +522,6 @@ def _dir_knowl_data(label, orbit=False):
             inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
             inf += '</div>\n'
     except Exception as err: # yes we really want to catch everything here
-        print("Exception in _dir_knowl_data: %s", err)
         return "Unable to construct knowl for Dirichlet character label %s, please report this as a bug (include the URL of this page)." % label
     return inf
 
