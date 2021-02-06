@@ -48,7 +48,7 @@ def learn(current = None):
     if current != 'labels':
         r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     if current != 'orbit_labels':
-        r.append( ('Dirichlet orbit labels', url_for(".orbit_labels_page")) )
+        r.append( ('Dirichlet character orbit labels', url_for(".orbit_labels_page")) )
     return r
 
 def credit():
@@ -286,7 +286,7 @@ def labels_page():
 @characters_page.route("/Dirichlet/OrbitLabels")
 def orbit_labels_page():
     info = {}
-    info['title'] = 'Dirichlet character Galois orbit labels'
+    info['title'] = 'Dirichlet character orbit labels'
     info['bread'] = bread('Orbit Labels')
     info['learnmore'] = learn('orbit_labels')
     info['credit'] = credit()
@@ -391,7 +391,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
                     info = WebDBDirichletOrbit(**args).to_dict()
                 except ValueError:
                     flash_error(
-                    "The Galois orbit label %s is invalid.", gal_orb_label
+                    "The character orbit label %s is invalid.", gal_orb_label
                         )
                     return redirect(url_for(".render_DirichletNavigation"))
 
@@ -432,7 +432,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
         if gal_orb_label is not None:
             if gal_orb_label != real_gal_orb_label:
                 flash_warning(
-            "The supplied Galois orbit label %s was wrong. "
+            "The supplied character orbit label %s was wrong. "
             "The correct one is %s. The URL has been duly corrected.",
             gal_orb_label, real_gal_orb_label)
                 return redirect(url_for("characters.render_Dirichletwebpage",
@@ -443,7 +443,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     else:
         if gal_orb_label is not None:
             flash_warning(
-            "You entered the Galois orbit label %s. However, such labels "
+            "You entered the character orbit label %s. However, such labels "
             "have not been computed for this modulus. The supplied orbit "
             "label has therefore been ignored and expunged from the URL.",
             gal_orb_label)

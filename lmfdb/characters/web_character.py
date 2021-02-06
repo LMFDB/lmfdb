@@ -945,7 +945,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
         gal_orb_link = url_character(type=self.type, modulus=self.modulus, gal_orb_label = self.orbit_label)
-        friendlist.append( ("Character Galois orbit", gal_orb_link) )
+        friendlist.append( ("Character orbit", gal_orb_link) )
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
@@ -1074,10 +1074,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal']
+              'orbit_label', 'orbit_index', 'isminimal', 'isorbit']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
+        self.isorbit = True
         self.modulus = kwargs.get('modulus', None)
         if self.modulus:
             self.modulus = int(self.modulus)
