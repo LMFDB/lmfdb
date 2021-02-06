@@ -324,18 +324,17 @@ def extent_page():
                            **info)
 
 def make_webchar(args, get_bread=False):
-    print("webchar args = %s" % args)
     modulus = int(args['modulus'])
     number = int(args['number']) if 'number' in args else None
     orbit_label = args.get('orbit_label',None)
-    bread_crumbs = []
     if modulus <= 10000:
         if number is None:
             if get_bread:
                 bread_crumbs = bread(
                         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                         ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
-            return WebDBDirichletOrbit(**args), bread_crumbs
+                return WebDBDirichletOrbit(**args), bread_crumbs
+            return WebDBDirichletOrbit(**args)
         if args.get('orbit_label') is None:
             db_orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
             orbit_label = cremona_letter_code(int(db_orbit_label.partition('.')[-1]) - 1)
@@ -345,14 +344,15 @@ def make_webchar(args, get_bread=False):
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                     ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
-        print(args)
-        return WebDBDirichletCharacter(**args), bread_crumbs
+            return WebDBDirichletCharacter(**args), bread_crumbs
+        return WebDBDirichletCharacter(**args)
     else:
         if get_bread:
             bread_crumbs = bread(
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
-        return WebSmallDirichletCharacter(**args), bread_crumbs
+            return WebSmallDirichletCharacter(**args), bread_crumbs
+        return WebSmallDirichletCharacter(**args)
 
 
 @characters_page.route("/Dirichlet/<modulus>")
