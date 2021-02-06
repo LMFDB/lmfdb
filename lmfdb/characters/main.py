@@ -325,16 +325,16 @@ def extent_page():
 
 def make_webchar(args, get_bread=False):
     modulus = int(args['modulus'])
+    number = int(args['number']) if 'number' in args else None
+    orbit_label = args.get('orbit_label',None)
     bread_crumbs = []
     if modulus <= 10000:
-        if args.get('number') is None:
+        if number is None:
             if get_bread:
-                orbit_label = args['orbit_label']
                 bread_crumbs = bread(
                         [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                         ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
             return WebDBDirichletOrbit(**args), bread_crumbs
-        number = int(args['number'])
         if args.get('orbit_label') is None:
             orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
             orbit_label = cremona_letter_code(int(orbit_label.partition('.')[-1]) - 1)
@@ -345,7 +345,6 @@ def make_webchar(args, get_bread=False):
                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
         return WebDBDirichletCharacter(**args), bread_crumbs
     else:
-        number = int(args['number'])
         if get_bread:
             bread_crumbs = bread(
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
