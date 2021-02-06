@@ -573,8 +573,7 @@ class CmfTest(LmfdbTest):
             assert "make_data" in sage_code
             assert "aps_data" in sage_code
             sage_code += "\n\nout = str(make_data().list()[2:5])\n"
-            exec(sage_code, globals())
-            global out
+            out = self.check_sage_compiles_and_extract_var(sage_code, 'out')
             assert str(out) == exp
         for label in ['212.2.k.a', '887.2.a.b']:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
@@ -587,12 +586,16 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/23.10', follow_redirects=True)
         assert '[0, 187, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, 969023, -478731' in page.get_data(as_text=True)
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i', follow_redirects=True)
         assert '[0, 14, 0, 0, -2, 0, 0, 0, 0, 0, -2, 0, 0, 1, 0, 0, -10, 0, 0, 1, 0, 0' in page.get_data(as_text=True)
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i.maria.josefina', follow_redirects=True)
         assert 'Invalid label' in page.get_data(as_text=True)
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.mz', follow_redirects=True)
         assert 'Label not found:'
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.c', follow_redirects=True)
         assert 'We have not computed traces for' in page.get_data(as_text=True)
 

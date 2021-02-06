@@ -7,6 +7,7 @@ from six.moves.urllib.error import URLError
 import ssl
 import errno
 from lmfdb.app import app
+from sage.all import Integer, PolynomialRing, QQ, NumberField
 
 
 class LmfdbTest(unittest2.TestCase):
@@ -79,3 +80,18 @@ class LmfdbTest(unittest2.TestCase):
                 pass
             else:
                 raise
+
+    def check_sage_compiles_and_extract_var(self, sage_code, my_name):
+        """
+        Simulates a user downloading the sage code, and then loading it
+        into a sage session. This requires the sage import at the top of
+        the file. It returns a desired variable for further checks.
+
+        sage_code [Type: str] : the sage code to execute
+        my_name [Type: str] : name of the variable to extract from the
+                              sage code. This then allows the developer
+                              to implement subsequent checks.
+        """
+
+        exec(sage_code, globals())
+        return globals()[my_name]
