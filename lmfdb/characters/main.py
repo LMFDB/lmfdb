@@ -31,8 +31,8 @@ def ctx_characters():
     return chardata
 
 def bread(tail=[]):
-    base = [('Characters',url_for(".render_characterNavigation")),
-            ('Dirichlet', url_for(".render_DirichletNavigation"))]
+    base = [('Characters',url_for("characters.render_characterNavigation")),
+            ('Dirichlet', url_for("characters.render_DirichletNavigation"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
