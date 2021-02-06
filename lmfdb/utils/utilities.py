@@ -1322,3 +1322,11 @@ def add_space_if_positive(texified_pol):
     if texified_pol[0] == '-':
         return texified_pol
     return r"\phantom{-}" + texified_pol
+
+def typeset_raw(tset, raw):
+    r"""
+    Return a span with typeset material which will toggle to raw material when clicked on.
+    Element ids contain a random number so that they will (almost certainly) be distinct
+    on a page.
+    """
+    return '<span class="tset-raw" id="tset-raw-{}" raw="{}" onclick="rawtset(this.id)" israw="0">{}</span>'.format(random.randint(1,10**18), raw, tset)

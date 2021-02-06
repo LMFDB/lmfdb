@@ -10,7 +10,7 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, typeset_raw,
         display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
@@ -266,9 +266,10 @@ def formatfield(coef, show_poly=False, missing_text=None):
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
-        mypol = latex(coeff_to_poly(coef))
+        mypolraw = coeff_to_poly(coef)
+        mypol = latex(mypolraw)
         if show_poly:
-            return '$'+mypol+'$'
+            return typeset_raw('$'+mypol+'$', mypolraw)
 
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:

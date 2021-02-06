@@ -19,7 +19,7 @@ table.ntdata a {
   {% endif %}
 </h2>
 <p>{{ place_code('field') }}</p>
-<p>{{ info.polynomial }} {{ place_code('poly') }}</p>
+<p>{{ info.polynomial|safe }} {{ place_code('poly') }}</p>
 
 <h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
   <p>
@@ -62,7 +62,7 @@ table.ntdata a {
         <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.generator', title='field generator') }} \(a\))</h2>
 {% endif %}
         <p>
-            {{ info.integral_basis }}
+            {{ info.integral_basis | safe }}
             {{ place_code('integral_basis') }}
         </p>
 
