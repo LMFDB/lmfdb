@@ -1105,7 +1105,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def title(self):
-        return "Dirichlet character Galois orbit {}.{}".format(self.modulus, self.orbit_label)
+        return "Dirichlet character orbit {}.{}".format(self.modulus, self.orbit_label)
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
