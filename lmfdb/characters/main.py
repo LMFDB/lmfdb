@@ -478,20 +478,20 @@ def _dir_knowl_data(label, orbit=False):
         numbers = label_to_number(modulus, number, all=True)
     except ValueError:
         return "Invalid label for Dirichlet character: %s" % label
-    if isinstance(numbers, list):
-        number = numbers[0]
-        def conrey_link(i):
-            return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
-        if len(numbers) <= 2:
-            numbers = [conrey_link(k) for k in numbers]
-        else:
-            numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
-    else:
-        number = numbers
-        numbers = None
-    args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
-    print("creating web character")
     try:
+        if isinstance(numbers, list):
+            number = numbers[0]
+            def conrey_link(i):
+                return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
+            if len(numbers) <= 2:
+                numbers = [conrey_link(k) for k in numbers]
+            else:
+                numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
+        else:
+            number = numbers
+            numbers = None
+
+        args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
         webchar = make_webchar(args)
 
         if orbit and modulus <= 10000:
@@ -521,10 +521,9 @@ def _dir_knowl_data(label, orbit=False):
             inf += '<div align="right">\n'
             inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
             inf += '</div>\n'
-    except Exception as err:
-        print("exception in _dir_knowl_data!")
-        print(err)
-        raise BaseException
+    except Exception as err: # yes we really want to catch everything here
+        print("Exception in _dir_knowl_data: %s", err)
+        return "Unable to construct knowl for Dirichlet character label %s, please report this as a bug (include the URL of this page)." % label
     return inf
 
 def dirichlet_character_data(label):
