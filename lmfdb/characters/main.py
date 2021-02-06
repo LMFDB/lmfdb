@@ -337,8 +337,9 @@ def make_webchar(args, get_bread=False):
                         ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
             return WebDBDirichletOrbit(**args), bread_crumbs
         if args.get('orbit_label') is None:
-            orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
-            orbit_label = cremona_letter_code(int(orbit_label.partition('.')[-1]) - 1)
+            db_orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
+            orbit_label = cremona_letter_code(int(db_orbit_label.partition('.')[-1]) - 1)
+            print("orbit_label: %s" % orbit_label)
         if get_bread:
             bread_crumbs = bread(
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
