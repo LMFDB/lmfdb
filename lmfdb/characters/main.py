@@ -463,7 +463,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
-    printf("in _dir_knowl_data")
+    print("in _dir_knowl_data")
     modulus, number = label.split('.')
     modulus = int(modulus)
     try:
