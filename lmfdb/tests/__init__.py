@@ -7,7 +7,7 @@ from six.moves.urllib.error import URLError
 import ssl
 import errno
 from lmfdb.app import app
-from sage.all import Integer, PolynomialRing, QQ, NumberField
+from sage.all import PolynomialRing, QQ, NumberField
 
 
 class LmfdbTest(unittest2.TestCase):
