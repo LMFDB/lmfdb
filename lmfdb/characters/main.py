@@ -493,42 +493,40 @@ def _dir_knowl_data(label, orbit=False):
     print("creating web character")
     try:
         webchar = make_webchar(args)
+
+        if orbit and modulus <= 10000:
+            inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
+        else:
+            inf = r"Dirichlet character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
+        inf += "<div><table class='chardata'>\n"
+        def row_wrap(header, val):
+            return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
+        inf += row_wrap('Conductor', webchar.conductor)
+        inf += row_wrap('Order', webchar.order)
+        inf += row_wrap('Degree', euler_phi(webchar.order))
+        inf += row_wrap('Minimal', webchar.isminimal)
+        inf += row_wrap('Parity', webchar.parity)
+        if numbers:
+            inf += row_wrap('Characters', ",&nbsp;".join(numbers))
+        if modulus <= 10000:
+            if not orbit:
+                inf += row_wrap('Orbit label', '%d.%s' % (modulus, webchar.orbit_label))
+            inf += row_wrap('Orbit Index', webchar.orbit_index)
+        inf += '</table></div>\n'
+        if numbers is None:
+            inf += '<div align="right">\n'
+            inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
+            inf += '</div>\n'
     except Exception as err:
-        print("exception in make_webchar!")
+        print("exception in _dir_knowl_data!")
         print(err)
         raise BaseException
-
-    if orbit and modulus <= 10000:
-        inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
-    else:
-        inf = r"Dirichlet character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
-    inf += "<div><table class='chardata'>\n"
-    def row_wrap(header, val):
-        return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
-    inf += row_wrap('Conductor', webchar.conductor)
-    inf += row_wrap('Order', webchar.order)
-    inf += row_wrap('Degree', euler_phi(webchar.order))
-    inf += row_wrap('Minimal', webchar.isminimal)
-    inf += row_wrap('Parity', webchar.parity)
-    if numbers:
-        inf += row_wrap('Characters', ",&nbsp;".join(numbers))
-    if modulus <= 10000:
-        if not orbit:
-            inf += row_wrap('Orbit label', '%d.%s' % (modulus, webchar.orbit_label))
-        inf += row_wrap('Orbit Index', webchar.orbit_index)
-    inf += '</table></div>\n'
-    if numbers is None:
-        inf += '<div align="right">\n'
-        inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
-        inf += '</div>\n'
     return inf
 
 def dirichlet_character_data(label):
-    print("in dirichlet_character_data")
     return _dir_knowl_data(label, orbit=False)
 
 def dirichlet_orbit_data(label):
-    print("in dirichlet_orbit_data")
     return _dir_knowl_data(label, orbit=True)
 
 @app.context_processor
