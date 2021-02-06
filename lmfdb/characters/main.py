@@ -324,6 +324,7 @@ def extent_page():
                            **info)
 
 def make_webchar(args, get_bread=False):
+    print("webchar args = %s" % args)
     modulus = int(args['modulus'])
     number = int(args['number']) if 'number' in args else None
     orbit_label = args.get('orbit_label',None)
