@@ -128,7 +128,7 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
         #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
-        assert r"The supplied character orbit label <span style='color:red'>banana</span> was wrong. The correct one is <span style='color:red'>u</span>" in W.get_data(as_text=True)
+        assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
         assert 'Error: The character orbit label' in W.get_data(as_text=True)
