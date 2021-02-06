@@ -944,8 +944,8 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, gal_orb_label = self.orbit_label)
-        friendlist.append( ("Character Galois orbit", gal_orb_link) )
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
+        friendlist.append( ("Character orbit", gal_orb_link) )
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
@@ -1074,10 +1074,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal']
+              'orbit_label', 'orbit_index', 'isminimal', 'isorbit']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
+        self.isorbit = True
         self.modulus = kwargs.get('modulus', None)
         if self.modulus:
             self.modulus = int(self.modulus)
@@ -1092,7 +1093,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
         self.codelangs = ('pari', 'sage')
-        self.orbit_label = kwargs.get('gal_orb_label', None)  # this is what the user inserted, so might be banana
+        self.orbit_label = kwargs.get('orbit_label', None)  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
         self.maxrows = 30
@@ -1104,7 +1105,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def title(self):
-        return "Dirichlet character Galois orbit {}.{}".format(self.modulus, self.orbit_label)
+        return "Dirichlet character orbit {}.{}".format(self.modulus, self.orbit_label)
 
     def _set_galoisorbit(self, orbit_data):
         if self.modulus == 1:
@@ -1167,7 +1168,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
             friendlist.append(('Primitive orbit '+self.inducing,
-                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, gal_orb_label=self.ind_orbit_label)))
+                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, orbit_label=self.ind_orbit_label)))
 
         return friendlist
 

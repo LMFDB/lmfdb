@@ -18,7 +18,7 @@
       <td class="left">
         {% with mod,num,tex,prim = char %}
         <a class="{% if prim -%}primitive{%- else -%}imprimitive{%- endif %}"
-          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, gal_orb_label=orbit_label, number=num) }}">
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, orbit_label=orbit_label, number=num) }}">
           {{ tex }}
         </a>
         {% endwith %}
