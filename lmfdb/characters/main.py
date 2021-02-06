@@ -329,23 +329,23 @@ def make_webchar(args):
         if args.get('number') is None:
             orbit_label = args['orbit_label']
             bread_crumbs = bread(
-                    [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                    ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
+                    [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
+                    ('%s'%orbit_label, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
             return bread_crumbs, WebDBDirichletOrbit(**args)
         number = int(args['number'])
         if args.get('orbit_label') is None:
             orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
             orbit_label = cremona_letter_code(int(orbit_label.partition('.')[-1]) - 1)
         bread_crumbs = bread(
-                [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
-                ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
+                [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
+                ('%s'%orbit_label, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
+                ('%s'%number, url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
         return bread_crumbs, WebDBDirichletCharacter(**args)
     else:
         number = int(args['number'])
         bread_crumbs = bread(
-                [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
+                [('%s'%modulus, url_for("characters.render_Dirichletwebpage", modulus=modulus)),
+                ('%s'%number, url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number))])
         return bread_crumbs, WebSmallDirichletCharacter(**args)
 
 
