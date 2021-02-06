@@ -345,6 +345,7 @@ def make_webchar(args, get_bread=False):
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                     ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
+        print(args)
         return WebDBDirichletCharacter(**args), bread_crumbs
     else:
         if get_bread:
