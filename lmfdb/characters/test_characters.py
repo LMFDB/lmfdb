@@ -128,13 +128,13 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
         #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
-        assert r"The supplied Galois orbit label <span style='color:red'>banana</span> was wrong. The correct one is <span style='color:red'>u</span>" in W.get_data(as_text=True)
+        assert r"The supplied character orbit label <span style='color:red'>banana</span> was wrong. The correct one is <span style='color:red'>u</span>" in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
         assert 'Error: The Galois orbit label' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
-        wrng_msg = (r'Warning: You entered the Galois orbit label '
+        wrng_msg = (r'Warning: You entered the character orbit label '
                     r"<span style='color:red'>banana</span>. However, such "
                     r'labels have not been computed for this modulus. '
                     r'The supplied orbit label has therefore been ignored '
