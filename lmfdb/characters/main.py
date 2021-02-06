@@ -392,7 +392,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                 info = WebSmallDirichletGroup(**args).to_dict()
 
             info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
-            info['bread'] = bread([('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
+            info['bread'] = bread([('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
             info['learnmore'] = learn()
             info['credit'] = credit()
             info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
@@ -406,7 +406,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                     info = WebDBDirichletOrbit(**args).to_dict()
                 except ValueError:
                     flash_error(
-                    "No Galois orbit of Dirichlet characters with label %d.%s was found in the database.", modulus, orbit_label
+                    "No Galois orbit of Dirichlet characters with label %s.%s was found in the database.", modulus, orbit_label
                         )
                     return redirect(url_for(".render_DirichletNavigation"))
 
@@ -495,9 +495,9 @@ def _dir_knowl_data(label, orbit=False):
         webchar = make_webchar(args)
 
         if orbit and modulus <= 10000:
-            inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
+            inf = "Dirichlet character orbit %s.%s\n" % (modulus, webchar.orbit_label)
         else:
-            inf = r"Dirichlet character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
+            inf = r"Dirichlet character \(\chi_{%s}(%s, \cdot)\)" % (modulus, number) + "\n"
         inf += "<div><table class='chardata'>\n"
         def row_wrap(header, val):
             return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
@@ -510,7 +510,7 @@ def _dir_knowl_data(label, orbit=False):
             inf += row_wrap('Characters', ",&nbsp;".join(numbers))
         if modulus <= 10000:
             if not orbit:
-                inf += row_wrap('Orbit label', '%d.%s' % (modulus, webchar.orbit_label))
+                inf += row_wrap('Orbit label', '%s.%s' % (modulus, webchar.orbit_label))
             inf += row_wrap('Orbit Index', webchar.orbit_index)
         inf += '</table></div>\n'
         if orbit:
