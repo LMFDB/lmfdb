@@ -325,15 +325,24 @@ def extent_page():
 
 def make_webchar(args):
     modulus = int(args['modulus'])
-    number = int(args['number'])
     if modulus <= 10000:
-        gal_orb_label = args['gal_orb_label']
+        if args.get('number') is None:
+            orbit_label = args['orbit_label']
+            bread_crumbs = bread(
+                    [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+                    ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
+            return bread_crumbs, WebDBDirichletOrbit(**args)
+        number = int(args['number'])
+        if args.get('orbit_label') is None:
+            orbit_label = db.char_dir_values.lookup("{}.{}".format(modulus, number), projection='orbit_label')
+            orbit_label = cremona_letter_code(int(orbit_label.partition('.')[-1]) - 1)
         bread_crumbs = bread(
                 [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                ('%s'%gal_orb_label, url_for(".render_Dirichletwebpage", modulus=modulus, gal_orb_label=gal_orb_label)),
-                ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, gal_orb_label=gal_orb_label, number=number))])
+                ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label)),
+                ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label, number=number))])
         return bread_crumbs, WebDBDirichletCharacter(**args)
     else:
+        number = int(args['number'])
         bread_crumbs = bread(
                 [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                 ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number))])
@@ -343,18 +352,18 @@ def make_webchar(args):
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
-@characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>")
-@characters_page.route("/Dirichlet/<int:modulus>/<gal_orb_label>/<int:number>")
-def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
+@characters_page.route("/Dirichlet/<int:modulus>/<orbit_label>")  # orbit_label is a Cremona_letter_code identifying the orbit
+@characters_page.route("/Dirichlet/<int:modulus>/<orbit_label>/<int:number>")
+def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
-    if number is None and gal_orb_label is None and re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
+    if number is None and orbit_label is None and re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
     args['modulus'] = modulus
-    args['gal_orb_label'] = gal_orb_label
+    args['orbit_label'] = orbit_label
     args['number'] = number
     try:
         modulus = int(modulus)
@@ -368,7 +377,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
         return redirect(url_for(".render_DirichletNavigation"))
 
     if number is None:
-        if gal_orb_label is None:
+        if orbit_label is None:
 
             if modulus <= 10000:
                 info = WebDBDirichletGroup(**args).to_dict()
@@ -391,7 +400,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
                     info = WebDBDirichletOrbit(**args).to_dict()
                 except ValueError:
                     flash_error(
-                    "The character orbit label %s is invalid.", gal_orb_label
+                    "No Galois orbit of Dirichlet characters with label %d.%s was found in the database.", modulus, orbit_label
                         )
                     return redirect(url_for(".render_DirichletNavigation"))
 
@@ -402,7 +411,7 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
                 info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
                 info['bread'] = bread(
                     [('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
-                    ('%s'%gal_orb_label, url_for(".render_Dirichletwebpage", modulus=modulus, gal_orb_label=gal_orb_label))])
+                    ('%s'%orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
                 return render_template('CharacterGaloisOrbit.html', **info)
             else:
                 flash_error(
@@ -427,26 +436,26 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
         orbit_index = int(orbit_label.partition('.')[-1])
         # The -1 in the line below is because labels index at 1, while
         # the Cremona letter code indexes at 0
-        real_gal_orb_label = cremona_letter_code(orbit_index - 1)
+        real_orbit_label = cremona_letter_code(orbit_index - 1)
 
-        if gal_orb_label is not None:
-            if gal_orb_label != real_gal_orb_label:
+        if orbit_label is not None:
+            if orbit_label != real_orbit_label:
                 flash_warning(
-            "The supplied character orbit label %s was wrong. "
-            "The correct one is %s. The URL has been duly corrected.",
-            gal_orb_label, real_gal_orb_label)
+            "The supplied character orbit label %d.%s was wrong. "
+            "The correct orbit label is %d.%s. The URL has been duly corrected.",
+            modulus, orbit_label, modulus, real_orbit_label)
                 return redirect(url_for("characters.render_Dirichletwebpage",
                         modulus=modulus,
-                        gal_orb_label=real_gal_orb_label,
+                        orbit_label=real_orbit_label,
                         number=number))
-        args['gal_orb_label'] = real_gal_orb_label
+        args['orbit_label'] = real_orbit_label
     else:
-        if gal_orb_label is not None:
+        if orbit_label is not None:
             flash_warning(
-            "You entered the character orbit label %s. However, such labels "
+            "You entered the character orbit label %d.%s. However, such labels "
             "have not been computed for this modulus. The supplied orbit "
             "label has therefore been ignored and expunged from the URL.",
-            gal_orb_label)
+            modulus, orbit_label)
             return redirect(url_for("characters.render_Dirichletwebpage",
                         modulus=modulus,
                         number=number))
@@ -463,7 +472,6 @@ def render_Dirichletwebpage(modulus=None, gal_orb_label=None, number=None):
     return render_template('Character.html', **info)
 
 def _dir_knowl_data(label, orbit=False):
-    print("in _dir_knowl_data")
     modulus, number = label.split('.')
     modulus = int(modulus)
     try:
@@ -490,7 +498,6 @@ def _dir_knowl_data(label, orbit=False):
         print(err)
         raise BaseException
 
-    print("got it")
     if orbit and modulus <= 10000:
         inf = "Dirichlet character orbit %d.%s\n" % (modulus, webchar.orbit_label)
     else:
@@ -514,7 +521,6 @@ def _dir_knowl_data(label, orbit=False):
         inf += '<div align="right">\n'
         inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
         inf += '</div>\n'
-    print(inf)
     return inf
 
 def dirichlet_character_data(label):

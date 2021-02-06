@@ -944,7 +944,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
-        gal_orb_link = url_character(type=self.type, modulus=self.modulus, gal_orb_label = self.orbit_label)
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
         friendlist.append( ("Character orbit", gal_orb_link) )
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
@@ -1093,7 +1093,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
         self.codelangs = ('pari', 'sage')
-        self.orbit_label = kwargs.get('gal_orb_label', None)  # this is what the user inserted, so might be banana
+        self.orbit_label = kwargs.get('orbit_label', None)  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
         self.maxrows = 30
@@ -1168,7 +1168,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
         if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
             friendlist.append(('Primitive orbit '+self.inducing,
-                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, gal_orb_label=self.ind_orbit_label)))
+                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, orbit_label=self.ind_orbit_label)))
 
         return friendlist
 
