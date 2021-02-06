@@ -513,7 +513,11 @@ def _dir_knowl_data(label, orbit=False):
                 inf += row_wrap('Orbit label', '%d.%s' % (modulus, webchar.orbit_label))
             inf += row_wrap('Orbit Index', webchar.orbit_index)
         inf += '</table></div>\n'
-        if numbers is None:
+        if orbit:
+            inf += '<div align="right">\n'
+            inf += '<a href="%s">%s.%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, orbit_label=webchar.orbit_label)), modulus, webchar.orbit_label)
+            inf += '</div>\n'
+        elif numbers is None:
             inf += '<div align="right">\n'
             inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
             inf += '</div>\n'
