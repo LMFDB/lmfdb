@@ -7,7 +7,16 @@ from six.moves.urllib.error import URLError
 import ssl
 import errno
 from lmfdb.app import app
+
+# The following sage imports are used to check that various sage code
+# download pages actually compile in sage. Future tests requiring additional
+# imports should be declared here. The assertions following the imports
+# keep pyflakes happy.
+
 from sage.all import PolynomialRing, QQ, NumberField
+assert PolynomialRing
+assert QQ
+assert NumberField
 
 
 class LmfdbTest(unittest2.TestCase):
@@ -84,7 +93,7 @@ class LmfdbTest(unittest2.TestCase):
     def check_sage_compiles_and_extract_var(self, sage_code, my_name):
         """
         Simulates a user downloading the sage code, and then loading it
-        into a sage session. This requires the sage import at the top of
+        into a sage session. This requires the sage imports at the top of
         the file. It returns a desired variable for further checks.
 
         sage_code [Type: str] : the sage code to execute
