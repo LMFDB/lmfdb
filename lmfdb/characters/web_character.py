@@ -410,7 +410,7 @@ class WebChar(WebCharObject):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
+              'inducing',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -844,12 +844,12 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         mod = self.modulus
         num = c
         prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
-        formatted_orbit_label = "{}.{}".format(
-            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
-        )
+        letter = cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
+        formatted_orbit_label = "{}.{}".format(mod, letter)
         self._contents.append((
             self._char_desc(num, mod=mod, prim=prim),
-            (formatted_orbit_label, order, bool_string(prim)),
+            (mod, letter, formatted_orbit_label),
+            (order, bool_string(prim)),
             self._determine_values(valuepairs, order)
         ))
 
@@ -912,7 +912,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
+              'inducing',
               'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
               'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
@@ -944,6 +944,9 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         friendlist = []
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character group", cglink) )
+        gal_orb_link = url_character(type=self.type, modulus=self.modulus, orbit_label = self.orbit_label)
+        friendlist.append( ("Character orbit", gal_orb_link) )
+
         if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
             url = url_character(
                 type=self.type,
@@ -1047,6 +1050,252 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
             ]
         }
+
+
+class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently, this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+
+    headers = ['Character']
+
+    _keys = [ 'title', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol','headers',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing','rowtruncate','ind_orbit_label',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label', 'orbit_index', 'isminimal', 'isorbit']
+
+    def __init__(self, **kwargs):
+        self.type = "Dirichlet"
+        self.isorbit = True
+        self.modulus = kwargs.get('modulus', None)
+        if self.modulus:
+            self.modulus = int(self.modulus)
+        self.modlabel = self.modulus
+        self.number = kwargs.get('number', None)
+        if self.number:
+            self.number = int(self.number)
+        self.numlabel = self.number
+        if self.modulus:
+            # Needed for Gauss sums, etc
+            self.H = PariConreyGroup(self.modulus)
+            if self.number:
+                self.chi = ConreyCharacter(self.modulus, self.number)
+        self.codelangs = ('pari', 'sage')
+        self.orbit_label = kwargs.get('orbit_label', None)  # this is what the user inserted, so might be banana
+        self.label = "{}.{}".format(self.modulus, self.orbit_label)
+        self.orbit_data = self.get_orbit_data(self.orbit_label)  # this is the meat
+        self.maxrows = 30
+        self.rowtruncate = False
+        self._set_galoisorbit(self.orbit_data)
+        self.maxcols = 10
+        self._contents = None
+        self._set_groupelts()
+
+    @lazy_attribute
+    def title(self):
+        return "Dirichlet character orbit {}.{}".format(self.modulus, self.orbit_label)
+
+    def _set_galoisorbit(self, orbit_data):
+        if self.modulus == 1:
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
+            return
+
+        upper_limit = min(self.maxrows + 1, self.order + 1)
+
+        if self.maxrows < self.order + 1:
+            self.rowtruncate = True
+        self.galorbnums = orbit_data['galois_orbit'][:upper_limit]
+        self.galoisorbit = list(
+            self._char_desc(num, prim=orbit_data['is_primitive']) for num in self.galorbnums
+        )
+
+    def get_orbit_data(self, orbit_label):
+        mod_and_label = "{}.{}".format(self.modulus, orbit_label)
+        orbit_data =  db.char_dir_orbits.lucky(
+            {'modulus': self.modulus, 'label': mod_and_label}
+        )
+
+        if orbit_data is None:
+            raise ValueError
+
+        # Since we've got this, might as well set a bunch of stuff
+
+        self.conductor = orbit_data['conductor']
+        self.order = orbit_data['order']
+        self.isprimitive = bool_string(orbit_data['is_primitive'])
+        self.isminimal = bool_string(orbit_data['is_minimal'])
+        self.parity = parity_string(int(orbit_data['parity']))
+        self._set_kernel_field_poly(orbit_data)
+        self.ind_orbit_label = cremona_letter_code(int(orbit_data['prim_orbit_index']) - 1)
+        self.inducing = "{}.{}".format(self.conductor, self.ind_orbit_label)
+        return orbit_data
+
+    def _set_kernel_field_poly(self, orbit_data):
+        if 'kernel_field_poly' in orbit_data.keys():
+            self.kernel_field_poly = orbit_data['kernel_field_poly']
+        else:
+            self.kernel_field_poly = None
+
+    @lazy_attribute
+    def friends(self):
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character group", cglink) )
+        if self.type == "Dirichlet" and self.isprimitive == bool_string(True):
+            friendlist.append(
+                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+            )
+        if len(self.vflabel) > 0:
+            friendlist.append( ("Value field", '/NumberField/' + self.vflabel) )
+        if self.symbol_numerator():
+            if self.symbol_numerator() > 0:
+                assoclabel = '2.2.%d.1' % self.symbol_numerator()
+            else:
+                assoclabel = '2.0.%d.1' % -self.symbol_numerator()
+            friendlist.append(("Associated quadratic field", '/NumberField/' + assoclabel))
+
+        if self.type == "Dirichlet" and self.isprimitive == bool_string(False):
+            friendlist.append(('Primitive orbit '+self.inducing,
+                url_for('characters.render_Dirichletwebpage', modulus=self.conductor, orbit_label=self.ind_orbit_label)))
+
+        return friendlist
+
+    @lazy_attribute
+    def contents(self):
+        if self._contents is None:
+            self._contents = []
+            self._fill_contents()
+        return self._contents
+
+    def _fill_contents(self):
+        for c in self.galorbnums:
+            self.add_row(c)
+
+    def add_row(self, c):
+        """
+        Add a row to _contents for display on the webpage.
+        Each row of content takes the form
+            character_name, (header..data), (several..values)
+        where `header..data` is expected to be a tuple of length the same
+        size as `len(headers)`, and given in the same order as in `headers`,
+        and where `several..values` are the values of the character
+        on self.groupelts, in order.
+        """
+        mod = self.modulus
+        num = c
+        valuepairs = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num),
+            projection='values'
+        )
+        prim = self.isprimitive == bool_string(True)
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            self._determine_values(valuepairs, self.order)
+        ))
+
+    def symbol_numerator(self):
+        """
+        chi is equal to a kronecker symbol if and only if it is real
+        """
+        if self.order != 2:
+            return None
+        if self.parity == parity_string(-1):
+            return symbol_numerator(self.conductor, True)
+        return symbol_numerator(self.conductor, False)
+
+    @lazy_attribute
+    def symbol(self):
+        return kronecker_symbol(self.symbol_numerator())
+
+    @lazy_attribute
+    def codesymbol(self):
+        m = self.symbol_numerator()
+        if m:
+            return { 'sage': 'kronecker_character(%i)'%m,
+                     'pari': 'znchartokronecker(g,chi)'
+                     }
+        return None
+
+    def _determine_values(self, valuepairs, order):
+        """
+        Translate the db's values into the actual values.
+        """
+        raw_values = [int(v) for g, v in valuepairs]
+        values = [
+            self._tex_value(v, order, texify=True) for v in raw_values
+        ]
+        return values
+
+    def _set_groupelts(self):
+        if self.modulus == 1:
+            self.groupelts = [1]
+        else:
+            db_data = db.char_dir_values.lookup(
+                "{}.{}".format(self.modulus, 1)
+            )
+            valuepairs = db_data['values']
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+
+    @lazy_attribute
+    def codeinit(self):
+        self.exnum = self.galorbnums[0]
+        self.exchi = ConreyCharacter(self.modulus, self.exnum)
+
+        values_gens = db.char_dir_values.lookup(
+            "{}.{}".format(self.modulus, self.exnum),
+            projection='values_gens'
+        )
+
+        vals = [int(v) for g, v in values_gens]
+        sage_zeta_order = self.exchi.sage_zeta_order(self.order)
+        self._genvalues_for_code = get_sage_genvalues(self.modulus,
+                                    self.order, vals, sage_zeta_order)
+
+        return {
+            'sage': [
+                'from sage.modular.dirichlet import DirichletCharacter',
+                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(
+                    self.modulus, sage_zeta_order),
+                'M = H._module',
+                'chi = DirichletCharacter(H, M([{}]))'.format(
+                    ','.join(str(val) for val in self._genvalues_for_code)
+                ),
+                'chi.galois_orbit()'
+            ],
+            'pari': [
+                '[g,chi] = znchar(Mod(%i,%i))' % (self.exnum, self.modulus),
+                'order = charorder(g,chi)',
+                '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
+            ]
+        }
+
+    @lazy_attribute
+    def codeisprimitive(self):
+        return { 'sage': 'chi.is_primitive()',
+                 'pari': '#znconreyconductor(g,chi)==1' }
+
+    @lazy_attribute
+    def codecond(self):
+        return { 'sage': 'chi.conductor()',
+                 'pari': 'znconreyconductor(g,chi)' }
+
+    @lazy_attribute
+    def codeparity(self):
+        return { 'sage': 'chi.is_odd()',
+                 'pari': 'zncharisodd(g,chi)' }
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
