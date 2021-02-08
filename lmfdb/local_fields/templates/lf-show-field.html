@@ -7,7 +7,7 @@
 <p>
   <p>
     <table>
-      <tr><td> {{ info.polynomial }} </td></tr>
+      <tr><td> {{ info.polynomial|safe }} </td></tr>
     </table>
 </p>
 
@@ -50,7 +50,7 @@
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
       <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram}}</tr>
-      <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen}}</tr>
+      <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
     </table>
   </p>
   <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>

@@ -12,7 +12,8 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, redirect_no_cache)
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
+    redirect_no_cache, typeset_raw_icon)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -52,10 +53,11 @@ def format_coeffs(coeffs):
 def lf_formatfield(coef):
     coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
-    thepoly = '$%s$' % latex(coeff_to_poly(coef))
+    thepoly = coeff_to_poly(coef)
+    thepolylatex = '$%s$' % latex(coeff_to_poly(coef))
     if thefield._data is None:
-        return thepoly
-    return nf_display_knowl(thefield.get_label(),thepoly)
+        return typeset_raw_icon(thepolylatex, thepoly)
+    return nf_display_knowl(thefield.get_label(),thepolylatex)
 
 def local_algebra_data(labels):
     labs = labels.split(',')
@@ -256,14 +258,14 @@ def render_field_webpage(args):
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
-            eisenp = web_latex(eisenp)
+            eisenp = typeset_raw_icon(web_latex(eisenp), eisenp)
 
         else:
             unramp = data['unram'].replace('t','x')
             unramp = web_latex(Px(str(unramp)))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
-            eisenp = '$'+web_latex(eisenp, False)+'\\in'+Qp+'(t)[x]$'
+            eisenp = typeset_raw_icon(web_latex(eisenp), eisenp)+'$\\in'+Qp+'(t)[x]$'
 
 
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
@@ -282,7 +284,7 @@ def render_field_webpage(args):
 
 
         info.update({
-                    'polynomial': web_latex(polynomial),
+                    'polynomial': typeset_raw_icon(web_latex(polynomial), polynomial),
                     'n': data['n'],
                     'p': p,
                     'c': data['c'],

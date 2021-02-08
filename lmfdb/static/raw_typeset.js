@@ -16,7 +16,7 @@
 }
 
   function rawtset (clickidorig) {
-    clickid = "#"+clickidorig;
+    var clickid = "#"+clickidorig;
     if ($(clickid).attr("israw")=="0") {
       clearallraw();
       $(clickid).attr("israw","1");
@@ -29,3 +29,19 @@
       $(clickid).html($(clickid).attr("tset")); 
     }
  }
+
+function iconrawtset(idnum) {
+  var spanid = "tset-raw-"+idnum;
+  var iconid = "tset-raw-icon-"+idnum;
+  var iconsrc = $("#"+iconid)[0].src;
+  var iconRe = /^(.*)(.2.)\.png$/;
+  matcharray = iconsrc.match(iconRe);
+  if (matcharray[2] == "t2r") {
+    $("#"+iconid)[0].src = matcharray[1]+"r2t.png"
+    $("#"+spanid).attr("tset", $("#"+spanid).html());
+    $("#"+spanid).html($("#"+spanid).attr("raw"));
+  } else {
+    $("#"+iconid)[0].src = matcharray[1]+"t2r.png"
+    $("#"+spanid).html($("#"+spanid).attr("tset"));
+  }
+}

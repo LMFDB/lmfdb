@@ -1323,10 +1323,24 @@ def add_space_if_positive(texified_pol):
         return texified_pol
     return r"\phantom{-}" + texified_pol
 
+raw_count = 0
+
 def typeset_raw(tset, raw):
     r"""
-    Return a span with typeset material which will toggle to raw material when clicked on.
-    Element ids contain a random number so that they will (almost certainly) be distinct
-    on a page.
+    Return a span with typeset material which will toggle to raw material 
+    when clicked on.
     """
-    return '<span class="tset-raw" id="tset-raw-{}" raw="{}" onclick="rawtset(this.id)" israw="0">{}</span>'.format(random.randint(1,10**18), raw, tset)
+    global raw_count
+    raw_count += 1
+    return '<span class="tset-raw" id="tset-raw-{}" raw="{}" onclick="rawtset(this.id)" israw="0">{}</span>'.format(raw_count, raw, tset)
+
+def typeset_raw_icon(tset, raw):
+    r"""
+    Return a span with typeset material which will toggle to raw material 
+    when an icon is clicked on.
+    """
+    global raw_count
+    raw_count += 1
+    srcloc = url_for('static', filename='images/t2r.png') 
+    spanid = 'tset-raw-'+str(raw_count)
+    return '<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span>&nbsp;&nbsp;<span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0">{}</span>'.format(raw_count, srcloc, raw_count, raw_count, raw, tset)
