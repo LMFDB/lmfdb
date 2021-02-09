@@ -16,8 +16,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
+    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, 
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox,
     search_wrap, parse_rational,
     redirect_no_cache
     )
@@ -496,6 +496,8 @@ def elliptic_curve_search(info, query):
             t_o *= int(n)
         query['torsion_order'] = t_o
     parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=ECNF_stats().isogeny_degrees)
+    parse_bool(info,query,'semistable','semistable')
+    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':
@@ -788,6 +790,16 @@ class ECNFSearchArray(SearchArray):
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
+        semistable = YesNoBox(
+            name="semistable",
+            label="Semistable",
+            example="Yes",
+            knowl="ec.semistable")
+        potential_good_reduction = YesNoBox(
+            name="potential_good_reduction",
+            label="Potential good reduction",
+            example="Yes",
+            knowl="ec.potential_good_reduction")
         count = CountBox()
 
         self.browse_array = [
@@ -798,11 +810,12 @@ class ECNFSearchArray(SearchArray):
             [torsion, torsion_structure],
             [cm_disc, include_cm],
             [isodeg, one],
+            [semistable, potential_good_reduction],
             [count]
             ]
 
         self.refine_array = [
             [field, bf_deg, conductor_norm, jinv, include_base_change],
             [include_Q_curves, isodeg, rank, torsion, torsion_structure],
-            [include_cm, cm_disc, one]
+            [include_cm, cm_disc, one, semistable, potential_good_reduction]
             ]
