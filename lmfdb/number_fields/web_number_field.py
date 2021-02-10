@@ -9,11 +9,14 @@ from sage.all import (
     Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
+from six.moves.urllib_parse import quote_plus, unquote_plus
+
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, typeset_raw,
         display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -184,6 +187,9 @@ for n, label in list(rcyclolookup.items()):
 
 def na_text():
     return "not computed"
+
+def ctx_decode(s):
+    return unquote_plus(s)
 
 ## Turn a list into a string (without brackets)
 
