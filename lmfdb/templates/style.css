@@ -2360,3 +2360,11 @@ input.color_selecter {
 .advanced {
     display: none;
 }
+
+.tset-icon {
+  visibility: hidden;
+}
+
+.tset-container:hover .tset-icon {
+  visibility: visible;
+}

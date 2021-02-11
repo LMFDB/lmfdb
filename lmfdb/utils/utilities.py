@@ -1343,4 +1343,4 @@ def typeset_raw_icon(tset, raw):
     raw_count += 1
     srcloc = url_for('static', filename='images/t2r.png') 
     spanid = 'tset-raw-'+str(raw_count)
-    return '<span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0">{}</span>&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span>'.format(raw_count, raw, tset, raw_count, srcloc, raw_count)
+    return '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0">{}</span>&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, raw, tset, raw_count, srcloc, raw_count)
