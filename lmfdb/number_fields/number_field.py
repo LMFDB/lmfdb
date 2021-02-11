@@ -17,7 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, typeset_raw)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl, typeset_raw_icon)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -501,14 +501,14 @@ def render_field_webpage(args):
     if 'too long' in safe_units:
         myunits = safe_units
     else:
-        myunits = typeset_raw(safe_units, unlatex(safe_units))
+        myunits = typeset_raw_icon(safe_units, unlatex(safe_units))
 
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': typeset_raw(web_latex(nf.poly()), nf.poly()),
+        'polynomial': typeset_raw_icon(web_latex(nf.poly()), nf.poly()),
         'ram_primes': ram_primes,
-        'integral_basis': typeset_raw(zk,zkraw),
+        'integral_basis': typeset_raw_icon(zk,zkraw),
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
