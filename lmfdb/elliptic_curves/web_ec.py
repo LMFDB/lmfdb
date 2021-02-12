@@ -5,7 +5,8 @@ import yaml
 from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
+from lmfdb.number_fields.number_field import unlatex
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, typeset_raw
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
@@ -195,7 +196,8 @@ class WebEC(object):
 
         # latex equation:
 
-        data['equation'] = latex_equation(self.ainvs)
+        latexeqn = latex_equation(self.ainvs)
+        data['equation'] = typeset_raw(latexeqn, unlatex(latexeqn))
 
         # minimal quadratic twist:
 
@@ -343,7 +345,8 @@ class WebEC(object):
 
         # Newform
         
-        data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] =  typeset_raw(web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)), rawnewform)
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)

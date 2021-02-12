@@ -59,7 +59,7 @@ white-space: pre in order to keep line breaks! #}
 
     {{ place_code('curve') }}
 
-    <p> {{ data.data.equation }} </p>
+    <p> {{ data.data.equation | safe }} </p>
 
 
     <h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>

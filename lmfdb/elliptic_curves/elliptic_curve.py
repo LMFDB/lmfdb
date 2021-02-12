@@ -538,6 +538,7 @@ def render_curve_webpage_by_label(label):
                          downloads=data.downloads,
                          KNOWL_ID="ec.q.%s"%lmfdb_label,
                          BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
+                         HAVERAW=True,
                          learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))

@@ -1325,7 +1325,7 @@ def add_space_if_positive(texified_pol):
 
 raw_count = 0
 
-def typeset_raw_icon(tset, raw, extra=''):
+def typeset_raw(tset, raw, extra=''):
     r"""
     Return a span with typeset material which will toggle to raw material 
     when an icon is clicked on.
