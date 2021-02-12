@@ -3,17 +3,17 @@ from collections import Counter
 import os
 import yaml
 from six import text_type
+from six.moves.urllib_parse import quote_plus
 
 from flask import url_for
 from sage.all import (
     Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
-from six.moves.urllib_parse import quote_plus, unquote_plus
-
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, typeset_raw,
-        display_multiset, factor_base_factor, factor_base_factorization_latex)
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
+        typeset_raw_icon, display_multiset, factor_base_factor, 
+        factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
@@ -188,9 +188,6 @@ for n, label in list(rcyclolookup.items()):
 def na_text():
     return "not computed"
 
-def ctx_decode(s):
-    return unquote_plus(s)
-
 ## Turn a list into a string (without brackets)
 
 def list2string(li):
@@ -275,11 +272,12 @@ def formatfield(coef, show_poly=False, missing_text=None):
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
         if show_poly:
-            return typeset_raw('$'+mypol+'$', mypolraw)
+            return '$'+mypol+'$'
 
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+        mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
@@ -310,7 +308,7 @@ def nf_knowl_guts(label):
     out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += r"\(%s\)" % latex(wnf.poly())
+    out += typeset_raw_icon(r"\(%s\)" % latex(wnf.poly()), wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:

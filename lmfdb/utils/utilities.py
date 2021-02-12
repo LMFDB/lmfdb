@@ -1325,22 +1325,18 @@ def add_space_if_positive(texified_pol):
 
 raw_count = 0
 
-def typeset_raw(tset, raw):
-    r"""
-    Return a span with typeset material which will toggle to raw material 
-    when clicked on.
-    """
-    global raw_count
-    raw_count += 1
-    return '<span class="tset-raw" id="tset-raw-{}" raw="{}" onclick="rawtset(this.id)" israw="0">{}</span>'.format(raw_count, raw, tset)
-
-def typeset_raw_icon(tset, raw):
+def typeset_raw_icon(tset, raw, extra=''):
     r"""
     Return a span with typeset material which will toggle to raw material 
     when an icon is clicked on.
+    extra is material to go between the toggle and the icon.
     """
     global raw_count
     raw_count += 1
     srcloc = url_for('static', filename='images/t2r.png') 
     spanid = 'tset-raw-'+str(raw_count)
-    return '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0">{}</span>&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, raw, tset, raw_count, srcloc, raw_count)
+    out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0">{}</span>'.format(raw_count, raw, tset)
+    out += extra
+    out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
+    return out
+

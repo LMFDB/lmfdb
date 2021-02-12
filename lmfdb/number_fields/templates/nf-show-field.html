@@ -81,7 +81,7 @@ table.ntdata a {
           <table>
             <tr><td>{{ KNOWL('nf.rank', title='Rank')}}:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
             <td>{{ place_code('unit_rank') }}</tr>
-            <tr><td>{{ KNOWL('nf.torsion', title='Torsion generator') }}:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}
+            <tr><td>{{ KNOWL('nf.torsion', title='Torsion generator') }}:<td>&nbsp;&nbsp;<td>{{info.root_of_unity|safe}}
             <td>{{ place_code('unit_torsion_gen') }}</tr>
 {% if info.unit_rank==1 %}
             <tr><td>{{ KNOWL('nf.fundamental_units', title='Fundamental unit') }}:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}

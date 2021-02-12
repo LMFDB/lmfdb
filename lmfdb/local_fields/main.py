@@ -262,10 +262,11 @@ def render_field_webpage(args):
 
         else:
             unramp = data['unram'].replace('t','x')
-            unramp = web_latex(Px(str(unramp)))
+            unramplatex = web_latex(Px(str(unramp)))
+            unramp = typeset_raw_icon(unramplatex, unramp)
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
-            eisenp = typeset_raw_icon(web_latex(eisenp), eisenp)+'$\\in'+Qp+'(t)[x]$'
+            eisenp = typeset_raw_icon(web_latex(eisenp), str(eisenp), extra='$\ \\in'+Qp+'(t)[x]$')
 
 
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)

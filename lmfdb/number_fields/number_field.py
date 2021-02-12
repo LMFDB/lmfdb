@@ -4,6 +4,7 @@ import ast
 import os
 import re
 from six import BytesIO
+
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
@@ -94,8 +95,11 @@ def ctx_galois_groups():
 @app.context_processor
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
-            'global_numberfield_summary': global_numberfield_summary}
+            'global_numberfield_summary': global_numberfield_summary,
+            'typeset_raw_icon': typeset_raw_icon}
 
+def ez_typeset_raw(rawpol):
+    return typeset_raw_icon(latex(rawpol),rawpol)
 
 def global_numberfield_summary():
     init_nf_count()
@@ -496,7 +500,9 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    rootofunity = '%s (order $%d$)' % (nf.root_of_1_gen(),nf.root_of_1_order())
+    rootof1raw = unlatex(nf.root_of_1_gen())
+    rootofunity = typeset_raw_icon(nf.root_of_1_gen(), rootof1raw,
+        extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
     safe_units = nf.units_safe()
     if 'too long' in safe_units:
         myunits = safe_units
