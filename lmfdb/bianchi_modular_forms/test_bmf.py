@@ -115,23 +115,15 @@ class BMFTest(LmfdbTest):
             # but the goal is to test that itself doesn't show in the friends list
             assert notitself not in L.get_data(as_text=True)
 
-    def check_compile_and_get_level(self, download_data):
-        """Simulates a user downloading the sage code, and then loading it into
-        a sage session. This requires the sage import at the top"""
-
-        sage_code = download_data.get_data(as_text=True)
-        exec(sage_code, globals())
-        global NN
-        return NN
-
     def test_download_sage(self):
+
         # A dimension 1 example
-        L1 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage')
-        L1_level = self.check_compile_and_get_level(L1)
+        L1_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage').get_data(as_text=True)
+        L1_level = self.check_sage_compiles_and_extract_var(L1_sage_code, 'NN')
         assert L1_level.norm() == Integer(18333)
-        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1.get_data(as_text=True)
-        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1.get_data(as_text=True)
-        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1.get_data(as_text=True)
+        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1_sage_code
+        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1_sage_code
+        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1_sage_code
         """
         Observe that example 1 above checks equality of the level norm between
         the loaded sage code and what appears on the homepage, but then checks
@@ -143,8 +135,8 @@ class BMFTest(LmfdbTest):
         """
 
         # A dimension 2 example
-        L2 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage')
-        L2_level = self.check_compile_and_get_level(L2)
+        L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
+        L2_level = self.check_sage_compiles_and_extract_var(L2_sage_code, 'NN')
 
         P = PolynomialRing(QQ,'x')
         g = P([1, 0, 1])
@@ -155,8 +147,8 @@ class BMFTest(LmfdbTest):
         L2_level_actual = ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
         assert L2_level == L2_level_actual
         assert L2_level.norm() == 377
-        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2.get_data(as_text=True)
-        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2.get_data(as_text=True)
+        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2_sage_code
+        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2_sage_code
 
     def test_download_magma(self):
         # A dimension 1 example
