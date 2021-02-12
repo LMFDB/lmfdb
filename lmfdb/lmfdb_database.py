@@ -393,7 +393,7 @@ class LMFDBDatabase(PostgresDatabase):
     def create_table(self, name, *args, **kwargs):
         if "_" not in name:
             raise ValueError("Table name '%s' must contain an underscore; first part gives the LMFDB section" % name,)
-        return PostgresDatabase.create_table(name=name, *args, **kwargs)
+        return PostgresDatabase.create_table(name, *args, **kwargs)
 
 
 db = LMFDBDatabase()
