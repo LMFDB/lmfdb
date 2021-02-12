@@ -617,7 +617,7 @@ def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
         # allow for ; in signature
         info['signature'] = info['signature'].replace(';',',')
-        parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
+        parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True, allow0=True)
         if query.get('signature'):
             query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
     parse_gap_id(info,query,'group',qfield='group')
