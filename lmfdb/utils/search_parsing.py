@@ -23,6 +23,7 @@ LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 FLOAT_STR = r'(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))'
 LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[[1-9]\d*(,[1-9]\d*)*\]$')
+BRACKETED_NN_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 BRACKETED_RAT_RE = re.compile(r'^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -710,8 +711,9 @@ def parse_primes(inp, query, qfield, mode=None, radical=None):
     _parse_subset(primes, query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, check_divisibility=None, keepbrackets=False, extractor=None):
-    if (not BRACKETED_POSINT_RE.match(inp) or
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, check_divisibility=None, keepbrackets=False, extractor=None, allow0=False):
+    myregex = BRACKETED_NN_RE if allow0 else BRACKETED_POSINT_RE
+    if (not myregex.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
         (exactlength is not None and inp == '[]' and exactlength > 0)):
