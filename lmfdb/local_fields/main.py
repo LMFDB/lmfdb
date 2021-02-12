@@ -325,6 +325,7 @@ def render_field_webpage(args):
             properties=prop2,
             friends=friends,
             learnmore=learnmore_list(),
+            HAVERAW=True,
             KNOWL_ID="lf.%s" % label,
         )
 
