@@ -16,8 +16,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints,
-    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox,
+    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats,
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox,
     search_wrap, parse_rational,
     redirect_no_cache
     )
@@ -496,6 +496,12 @@ def elliptic_curve_search(info, query):
             t_o *= int(n)
         query['torsion_order'] = t_o
     parse_element_of(info,query,'isodeg',split_interval=1000,contained_in=ECNF_stats().isogeny_degrees)
+    parse_bool(info,query,'semistable','semistable')
+    parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
+    parse_ints(info,query,'class_size','class_size')
+    parse_ints(info,query,'class_deg','class_deg')
+    parse_ints(info,query,'sha','analytic order of &#1064;')
+    parse_floats(info,query,'reg','regulator')
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':
@@ -734,7 +740,8 @@ class ECNFSearchArray(SearchArray):
             name="one",
             label="Curves per isogeny class",
             knowl="ec.isogeny_class",
-            options=[("", ""),
+            example="all, one",
+            options=[("", "all"),
                      ("yes", "one")])
         include_cm = SelectBox(
             name="include_cm",
@@ -783,26 +790,60 @@ class ECNFSearchArray(SearchArray):
             label="Torsion structure",
             knowl="ec.torsion_subgroup",
             options=tor_opts)
+        sha = TextBox(
+            name="sha",
+            label="Analytic order* of &#1064;",
+            knowl="ec.analytic_sha_order",
+            example="4")
+        regulator = TextBox(
+            name="regulator",
+            label="Regulator*",
+            knowl="ec.regulator",
+            example="8.4-9.1")
         isodeg = TextBox(
             name="isodeg",
             label="Cyclic isogeny degree",
             knowl="ec.isogeny",
             example="16")
+        semistable = YesNoBox(
+            name="semistable",
+            label="Semistable",
+            example="Yes",
+            knowl="ec.semistable")
+        potential_good_reduction = YesNoBox(
+            name="potential_good_reduction",
+            label="Potential good reduction",
+            example="Yes",
+            knowl="ec.potential_good_reduction")
+        class_size = TextBox(
+            name="class_size",
+            label="Isogeny class size",
+            knowl="ec.isogeny",
+            example="4")
+        class_deg = TextBox(
+            name="class_deg",
+            label="Isogeny class degree",
+            knowl="ec.isogeny",
+            example="16")
         count = CountBox()
 
         self.browse_array = [
-            [jinv],
             [field, bf_deg],
             [conductor_norm, include_base_change],
             [rank, include_Q_curves],
             [torsion, torsion_structure],
             [cm_disc, include_cm],
+            [sha, regulator],
             [isodeg, one],
+            [class_size, class_deg],
+            [semistable, potential_good_reduction],
+            [jinv],
             [count]
             ]
 
         self.refine_array = [
-            [field, bf_deg, conductor_norm, jinv, include_base_change],
-            [include_Q_curves, isodeg, rank, torsion, torsion_structure],
-            [include_cm, cm_disc, one]
+            [field, conductor_norm, rank, torsion, cm_disc],
+            [bf_deg, include_base_change, include_Q_curves, torsion_structure, include_cm],
+            [sha, isodeg, class_size, semistable, jinv],
+            [regulator, one, class_deg, potential_good_reduction],
             ]

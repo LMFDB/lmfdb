@@ -14,7 +14,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
-    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
+    SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, bigint_knowl)
@@ -785,6 +785,7 @@ def number_field_search(info, query):
     parse_ints(info,query,'class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
+    parse_bool(info,query,'is_galois')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
@@ -1013,16 +1014,16 @@ class NFSearchArray(SearchArray):
             name="cm_field",
             label="CM field",
             knowl="nf.cm_field")
-        gal = TextBoxNoEg(
+        gal = TextBox(
             name="galois_group",
             label="Galois group",
-            knowl="nf.galois_group",
+            knowl="nf.galois_search",
             example="C5",
-            example_span_colspan=4,
-            example_span="%s, e.g. [8,3] or [16,7]; %s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
-                display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "group names"),
-                display_knowl("gg.label", "transitive group labels")))
+            example_span="[8,3], C5 or 7T2")
+        is_galois = YesNoBox(
+            name="is_galois",
+            label="Is Galois",
+            knowl="nf.galois_group")
         regulator = TextBox(
             name="regulator",
             label="Regulator",
@@ -1070,7 +1071,7 @@ class NFSearchArray(SearchArray):
         self.browse_array = [
             [degree, signature],
             [discriminant, rd],
-            [gal],
+            [gal, is_galois],
             [class_number, class_group],
             [num_ram, cm_field],
             [ram_primes, ur_primes],
@@ -1078,6 +1079,6 @@ class NFSearchArray(SearchArray):
             [count]]
 
         self.refine_array = [
-            [degree, signature, gal, class_number, class_group],
-            [regulator, num_ram, ram_primes, ur_primes, cm_field],
-            [discriminant, rd, subfield]]
+            [degree, signature, class_number, class_group, cm_field],
+            [num_ram, ram_primes, ur_primes, gal, is_galois],
+            [discriminant, rd, regulator, subfield]]
