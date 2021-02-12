@@ -778,7 +778,7 @@ def number_field_jump(info):
 def number_field_search(info, query):
     parse_ints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
-    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
+    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
     parse_floats(info, query, 'regulator')

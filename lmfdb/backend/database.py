@@ -613,8 +613,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if name in self.tablenames:
             raise ValueError("%s already exists" % name)
-        if "_" not in name:
-            raise ValueError("Table name must contain an underscore; first part gives LMFDB section")
         now = time.time()
         if id_ordered is None:
             id_ordered = sort is not None
