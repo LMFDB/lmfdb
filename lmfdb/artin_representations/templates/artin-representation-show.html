@@ -13,9 +13,13 @@
         {% if object.sign() %}
         <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
         {% endif %}
-        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>
+        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin field') }}: </td><td>
         {% if wnf %}
-        Galois closure of {{wnf.knowl()|safe}}
+          {% if wnf.is_galois() %}
+            {{wnf.knowl()|safe}}
+          {% else %}
+            Galois closure of {{wnf.knowl()|safe}}
+          {% endif %}
         {% else %}
         Splitting field of defining polynomial $f(x)$ over $\Q$</td></tr>
         {%endif%}

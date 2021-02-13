@@ -233,7 +233,11 @@ class ArtinRepresentation(object):
             return 'data not computed'
         if projfield == [0,1]:
             return formatfield(projfield)
-        return 'Galois closure of ' + formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
+        wnf = WebNumberField.from_coeffs(projfield)
+        ifgal = 'Galois closure of '
+        if wnf and wnf.is_galois():
+            ifgal = ''
+        return ifgal + formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
 
     def number_field_galois_group(self):
         try:
