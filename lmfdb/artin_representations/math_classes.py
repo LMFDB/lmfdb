@@ -415,12 +415,8 @@ class ArtinRepresentation(object):
         #return "odd"
 
     def field_knowl(self):
-        from lmfdb.number_fields.web_number_field import nf_display_knowl
         nfgg = self.number_field_galois_group()
-        if nfgg.url_for():
-            return nf_display_knowl(nfgg.label(), nfgg.polredabshtml())
-        else:
-            return nfgg.polredabshtml()
+        return formatfield(nfgg.polynomial())
 
     def group(self):
         n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
