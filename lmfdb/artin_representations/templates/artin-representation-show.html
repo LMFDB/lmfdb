@@ -13,15 +13,15 @@
         {% if object.sign() %}
         <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
         {% endif %}
-        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin field') }}: </td><td>
-        {% if wnf %}
-          {% if wnf.is_galois() %}
-            {{wnf.knowl()|safe}}
-          {% else %}
-            Galois closure of {{wnf.knowl()|safe}}
-          {% endif %}
+        {% if wnf and not wnf.is_galois() %}
+          <tr><td class="nowrap"> {{ KNOWL('artin.stem_field', title='Artin stem field') }}: </td><td>
         {% else %}
-        Splitting field of defining polynomial $f(x)$ over $\Q$</td></tr>
+          <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin field') }}: </td><td>
+        {% endif %}
+        {% if wnf %}
+          {{wnf.knowl()|safe}}
+        {% else %}
+          Splitting field of defining polynomial $f(x)$ over $\Q$</td></tr>
         {%endif%}
         <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
