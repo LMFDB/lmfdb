@@ -332,16 +332,17 @@ def render_artin_representation_webpage(label):
 
     friends = []
     wnf = None
+    proj_wnf = None
     nf_url = the_nf.url_for()
     if nf_url:
         friends.append(("Field {}".format(the_nf.label()), nf_url))
         wnf = the_nf.wnf()
-    proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
-    if proj_nf._data:
-        proj_coefs = [int(z) for z in proj_nf.coeffs()]
+    proj_wnf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
+    if proj_wnf._data:
+        proj_coefs = [int(z) for z in proj_wnf.coeffs()]
         if proj_coefs != the_nf.polynomial():
-            friends.append(("Field {}".format(proj_nf.get_label()), 
-                str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
+            friends.append(("Field {}".format(proj_wnf.get_label()), 
+                str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
         if cc is not None:
@@ -397,6 +398,7 @@ def render_artin_representation_webpage(label):
             object=the_rep,
             cycle_string=cycle_string,
             wnf=wnf,
+            proj_wnf=proj_wnf,
             properties=properties,
             info=info,
             learnmore=learnmore_list(),
@@ -414,6 +416,7 @@ def render_artin_representation_webpage(label):
         object=the_rep,
         cycle_string=cycle_string,
         wnf=wnf,
+        proj_wnf=proj_wnf,
         properties=properties,
         info=info,
         learnmore=learnmore_list(),
