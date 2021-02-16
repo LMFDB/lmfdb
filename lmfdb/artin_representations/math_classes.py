@@ -687,6 +687,7 @@ class NumberFieldGaloisGroup(object):
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
                 raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
+        self.lowered = False
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
@@ -779,13 +780,29 @@ class NumberFieldGaloisGroup(object):
             return tg.display_short()
         return self._data["G-Name"]
 
-    def computation_data(self):
-        return tuple([self._data[k] for k in ["QpRts-p", "QpRts-minpoly", "QpRts-prec", "QpRts"]])
-
     def residue_characteristic(self):
         return self._data["QpRts-p"]
 
+    # Display a smaller amount of precision on p-adic roots
+    def lower_precision(self):
+        if self.lowered:
+            return True
+        p = self._data["QpRts-p"]
+        newroots = [[ZZ(n) for n in rts] for rts in self._data["QpRts"]]
+        newprec = min(self._data["QpRts-prec"], 10)
+        while True:
+            nroots = [(z.mod(p**newprec) for z in rts) for rts in newroots]
+            if len(nroots) == len(set(nroots)):
+                break
+            newprec += 1
+            if newprec > self._data["QpRts-prec"]:
+                raise AssertionError("Data does not have enough p-adic precision")
+        self._data["QpRts"] = nroots
+        self._data["QpRts-prec"] = newprec
+        return True
+
     def computation_precision(self):
+        self.lowered = self.lower_precision()
         return self._data["QpRts-prec"]
 
     def computation_minimal_polynomial_latex(self):
@@ -798,6 +815,7 @@ class NumberFieldGaloisGroup(object):
     # We only need the latex of polynomials in a
     def computation_roots(self):
         # Write these as p-adic series.  Start with helper
+        self.lowered = self.lower_precision()
         def help_padic(n,p, prec):
             """
               Take an integer n, prime p, and precision prec, and return a 
