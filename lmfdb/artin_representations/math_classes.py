@@ -233,7 +233,6 @@ class ArtinRepresentation(object):
             return 'data not computed'
         if projfield == [0,1]:
             return formatfield(projfield)
-        wnf = WebNumberField.from_coeffs(projfield)
         return formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
 
     def number_field_galois_group(self):
