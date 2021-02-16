@@ -47,6 +47,22 @@ function rawtset (clickidorig) {
   }
 }
 
+function ondouble (clicknum) {
+  var clickid = "#tset-raw-"+clicknum;
+  var iconid = "#tset-raw-icon-"+clicknum;
+  var iconsrc = $(iconid)[0].src;
+  var iconRe = /^(.*)(.2.)\.png$/;
+  var matcharray = iconsrc.match(iconRe);
+  if ($(clickid).attr("israw")=="0") {
+    $(clickid).attr("israw","1");
+    $(clickid).attr("tset", $(clickid).html());
+    $(clickid).html($(clickid).attr("raw"));
+    $(iconid)[0].src = matcharray[1]+"r2t.png"
+  }
+  $(clickid).focus();
+  SelectText("tset-raw-"+clicknum);
+}
+
 function iconrawtset(idnum) {
   var spanid = "tset-raw-"+idnum;
   var iconid = "tset-raw-icon-"+idnum;
