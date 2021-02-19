@@ -206,10 +206,10 @@ class WebEC(object):
 
         # modular degree:
         
-        if self.degree is None:
+        try:
+            data['degree'] = ZZ(self.degree) # convert None to 0
+        except AttributeError: # if not computed, db has Null and the attribute is missing
             data['degree'] = 0 # invalid, but will be displayed nicely
-        else:
-            data['degree'] = self.degree
 
         # coefficients of modular form / L-series:
 
