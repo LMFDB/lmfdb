@@ -531,7 +531,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
         return ['$or', ret]
     elif 'g' in arg: # linear function of variable g (ax+b)
         if GENUS_RE.match(arg):
-            a = GENUS_RE.match(arg).groups()[0]    
+            a = GENUS_RE.match(arg).groups()[0]
             genus_list = db.hgcwa_passports.distinct('genus')
             genus_list.sort()
             min_genus = genus_list[0]
@@ -546,13 +546,13 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                     elif '-' in arg: #a(g-b)
                         group_order = int(a)*(g-b)
                 else:
-                    if '+' in arg: 
+                    if '+' in arg:
                         b = int(GENUS_RE.match(arg).groups()[4])
                         if a == '': #g+b
                             group_order = g+b
                         else: #ag+b
                             group_order = int(a)*g+b
-                    elif '-' in arg: 
+                    elif '-' in arg:
                         b = int(GENUS_RE.match(arg).groups()[4])
                         if a == '': #g-b
                             group_order = g-b
@@ -565,7 +565,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
 
                 queries.append((group_order, g))
 
-            if instance == 1: #If there is only one linear function 
+            if instance == 1: #If there is only one linear function
                 return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
             else:
                 return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
@@ -576,7 +576,7 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                     a linear function of variable g for genus \
                     (such as 84(g-1), 84g-84, 84g, or g-1), \
                     or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
-            
+
     elif '-' in arg and 'g' not in arg:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
@@ -772,7 +772,7 @@ def render_family(args):
                              (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
                              ('Code to Gap', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
-                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
+                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))]
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
@@ -963,7 +963,7 @@ def render_passport(args):
         if numb == 1 or braid_length == 0:
             downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                      ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
-            
+
         else:
             downloads = [('Code to Magma', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
@@ -981,15 +981,29 @@ def render_passport(args):
                                credit=credit)
 
 
-#Generate topological webpage
-@higher_genus_w_automorphisms_page.route("/<fam>/<cc>") 
+# Generate topological webpage
+@higher_genus_w_automorphisms_page.route("/<fam>/<cc>")
 def topological_action(fam, cc):
-    br_g, br_gp, br_sign = split_family_label(fam)
-    cc_list = cc_to_list(cc)
+
+    try:
+        br_g, br_gp, br_sign = split_family_label(fam)
+    except AttributeError:
+        flash_error("Invalid family label: %s", fam)
+        return redirect(url_for(".index"))
+
+    try:
+        cc_list = cc_to_list(cc)
+    except IndexError:
+        flash_error("Invalid topological action label: %s", cc)
+        return redirect(url_for(".index"))
+
     representative = fam + '.' + cc[2:]
 
-     #Get the equivalence class
+    # Get the equivalence class
     topo_class = list(db.hgcwa_passports.search({'label': fam, 'topological': cc_list}))
+    if not topo_class:
+        flash_error("No orbit in family with label %s and topological action %s was found in the database.", fam, cc)
+        return redirect(url_for(".index"))
 
     GG = ast.literal_eval(topo_class[0]['group'])
     gn = GG[0]
@@ -1190,7 +1204,7 @@ def hgcwa_code_download(**args):
 
     if args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
         stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
-    
+
     # extended formatting template for when signH is present
     signHfmt = stdfmt
     signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
