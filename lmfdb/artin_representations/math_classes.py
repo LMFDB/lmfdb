@@ -233,7 +233,7 @@ class ArtinRepresentation(object):
             return 'data not computed'
         if projfield == [0,1]:
             return formatfield(projfield)
-        return 'Galois closure of ' + formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
+        return formatfield(projfield, missing_text="Degree %s field"%(len(projfield)-1))
 
     def number_field_galois_group(self):
         try:
@@ -411,12 +411,8 @@ class ArtinRepresentation(object):
         #return "odd"
 
     def field_knowl(self):
-        from lmfdb.number_fields.web_number_field import nf_display_knowl
         nfgg = self.number_field_galois_group()
-        if nfgg.url_for():
-            return nf_display_knowl(nfgg.label(), nfgg.polredabshtml())
-        else:
-            return nfgg.polredabshtml()
+        return formatfield(nfgg.polynomial())
 
     def group(self):
         n,t = [int(z) for z in self._data['GaloisLabel'].split("T")]
