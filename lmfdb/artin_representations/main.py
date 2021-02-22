@@ -354,7 +354,7 @@ def render_artin_representation_webpage(label):
                 friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
             else:
                 detrep = the_rep.central_character_as_artin_rep()
-                friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
+                friends.append(("Determinant "+detrep.label(), detrep.url_for()))
         add_lfunction_friends(friends,label)
 
         # once the L-functions are in the database, the link can always be shown
