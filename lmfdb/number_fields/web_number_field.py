@@ -452,7 +452,7 @@ class WebNumberField:
         return self._data['gg']
 
     def is_galois(self):
-        return self.gg().order() == self.degree()
+        return self._data['is_galois']
 
     def is_abelian(self):
         return self.gg().is_abelian()

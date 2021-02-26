@@ -399,7 +399,7 @@ class WebEC(object):
                            ('Discriminant', prop_int_pretty(data['disc'])),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', prop_int_pretty(self.mwbsd['rank'])),
+                           ('Rank', 'unknown' if self.mwbsd['rank'] == '?' else prop_int_pretty(self.mwbsd['rank'])),
                            ('Torsion structure', (r'\(%s\)' % self.mwbsd['tor_struct']) if self.mwbsd['tor_struct'] else 'trivial'),
                            ]
 
@@ -421,11 +421,31 @@ class WebEC(object):
 
         # Some components are in the main table:
         
-        mwbsd['rank'] = r = self.rank
+        mwbsd['analytic_rank'] = r = self.analytic_rank
         mwbsd['torsion'] = self.torsion
-        mwbsd['reg'] = self.regulator
-        mwbsd['sha'] = self.sha
-        mwbsd['sha2'] = latex_sha(self.sha)
+        tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
+        mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
+        if mwbsd['tamagawa_product'] > 1:
+            cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
+            cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+            mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
+        else:
+            mwbsd['tamagawa_factors'] = None
+
+
+        try:
+            mwbsd['rank'] = self.rank
+            mwbsd['reg']  = self.regulator
+            mwbsd['sha']  = self.sha
+            mwbsd['sha2'] = latex_sha(self.sha)
+        except AttributeError:
+            mwbsd['rank'] = '?'
+            mwbsd['reg']  = '?'
+            mwbsd['sha']  = '?'
+            mwbsd['sha2'] = '?'
+            mwbsd['regsha'] = ( mwbsd['special_value'] * self.torsion**2 ) / ( mwbsd['tamagawa_product'] * mwbsd['real_period'] )
+            if r<=1:
+                mwbsd['rank'] = r
 
         # Integral points
 
@@ -457,11 +477,6 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
-        tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
-        cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
-        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
-        mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
-        mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
 
     def make_twoadic_data(self):
         if not self.cm:
