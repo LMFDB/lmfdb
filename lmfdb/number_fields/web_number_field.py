@@ -333,6 +333,8 @@ class WebNumberField:
         self.gen_name = gen_name
         if data is None:
             self._data = self._get_dbdata()
+            if self._data is None:
+              raise ValueError('Label not found')
         else:
             self._data = data
 
