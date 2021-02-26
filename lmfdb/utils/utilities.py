@@ -1325,7 +1325,7 @@ def add_space_if_positive(texified_pol):
 
 raw_count = 0
 
-def typeset_raw(tset, raw, extra=''):
+def raw_typeset(raw, tset='', extra=''):
     r"""
     Return a span with typeset material which will toggle to raw material 
     when an icon is clicked on.
@@ -1333,6 +1333,8 @@ def typeset_raw(tset, raw, extra=''):
     """
     global raw_count
     raw_count += 1
+    if not tset:
+        tset = r'\({}\)'.format(latex(raw))
     srcloc = url_for('static', filename='images/t2r.png') 
     spanid = 'tset-raw-'+str(raw_count)
     out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)

@@ -18,7 +18,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, typeset_raw)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -96,11 +96,11 @@ def ctx_galois_groups():
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
             'global_numberfield_summary': global_numberfield_summary,
-            'ez_typeset_raw': ez_typeset_raw,
-            'typeset_raw': typeset_raw}
+            'ez_raw_typeset': ez_raw_typeset,
+            'raw_typeset': raw_typeset}
 
-def ez_typeset_raw(rawpol):
-    return typeset_raw(latex(rawpol),rawpol)
+def ez_raw_typeset(rawpol):
+    return raw_typeset(rawpol)
 
 def global_numberfield_summary():
     init_nf_count()
@@ -502,20 +502,20 @@ def render_field_webpage(args):
 
     info.update(data)
     rootof1raw = unlatex(nf.root_of_1_gen())
-    rootofunity = typeset_raw(nf.root_of_1_gen(), rootof1raw,
+    rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
         extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
     safe_units = nf.units_safe()
     if 'too long' in safe_units:
         myunits = safe_units
     else:
-        myunits = typeset_raw(safe_units, unlatex(safe_units))
+        myunits = raw_typeset(unlatex(safe_units), safe_units)
 
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': typeset_raw(web_latex(nf.poly()), nf.poly()),
+        'polynomial': raw_typeset(nf.poly()),
         'ram_primes': ram_primes,
-        'integral_basis': typeset_raw(zk,zkraw),
+        'integral_basis': raw_typeset(zkraw, zk),
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,

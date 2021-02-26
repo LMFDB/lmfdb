@@ -13,7 +13,7 @@ from lmfdb.utils import (
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
-    redirect_no_cache, typeset_raw)
+    redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
@@ -56,7 +56,7 @@ def lf_formatfield(coef):
     thepoly = coeff_to_poly(coef)
     thepolylatex = '$%s$' % latex(coeff_to_poly(coef))
     if thefield._data is None:
-        return typeset_raw(thepolylatex, thepoly)
+        return raw_typeset(thepoly, thepolylatex)
     return nf_display_knowl(thefield.get_label(),thepolylatex)
 
 def local_algebra_data(labels):
@@ -258,15 +258,14 @@ def render_field_webpage(args):
         if data['f'] == 1:
             unramp = r'$%s$' % Qp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
-            eisenp = typeset_raw(web_latex(eisenp), eisenp)
+            eisenp = raw_typeset(eisenp, web_latex(eisenp))
 
         else:
             unramp = data['unram'].replace('t','x')
-            unramplatex = web_latex(Px(str(unramp)))
-            unramp = typeset_raw(unramplatex, unramp)
+            unramp = raw_typeset(unramp, web_latex(Px(str(unramp))))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
-            eisenp = typeset_raw(web_latex(eisenp), str(eisenp), extra='$\ \\in'+Qp+'(t)[x]$')
+            eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra='$\ \\in'+Qp+'(t)[x]$')
 
 
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
@@ -285,7 +284,7 @@ def render_field_webpage(args):
 
 
         info.update({
-                    'polynomial': typeset_raw(web_latex(polynomial), polynomial),
+                    'polynomial': raw_typeset(polynomial),
                     'n': data['n'],
                     'p': p,
                     'c': data['c'],
@@ -326,7 +325,6 @@ def render_field_webpage(args):
             properties=prop2,
             friends=friends,
             learnmore=learnmore_list(),
-            HAVERAW=True,
             KNOWL_ID="lf.%s" % label,
         )
 
