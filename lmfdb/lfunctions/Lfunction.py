@@ -1259,7 +1259,7 @@ class ArtinLfunction(Lfunction):
         self.motivic_weight = 0
         cc = self.artin.central_character()
         if not cc:
-            raise ValueError('Error constructing Artin representation %s, unable to compute central character.'%self.origin_label)
+            raise ValueError('Error constructing Artin representation %s, unable to compute central character, possibly because the modulus is too large.'%self.origin_label)
         self.charactermodulus, self.characternumber = cc.modulus, cc.number
 
         # Compute Dirichlet coefficients and period ########################
