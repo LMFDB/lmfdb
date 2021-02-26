@@ -1258,7 +1258,8 @@ class ArtinLfunction(Lfunction):
         self.algebraic = True
         self.motivic_weight = 0
         cc = self.artin.central_character()
-        self.charactermodulus, self.characternumber = cc.modulus, cc.number
+        if cc:
+            self.charactermodulus, self.characternumber = cc.modulus, cc.number
 
         # Compute Dirichlet coefficients and period ########################
         if self.degree == 1:
