@@ -333,9 +333,6 @@ class WebNumberField:
         self.gen_name = gen_name
         if data is None:
             self._data = self._get_dbdata()
-            if self._data is None:
-              self._data = {}
-              raise ValueError('Label not found')
         else:
             self._data = data
 
@@ -487,7 +484,7 @@ class WebNumberField:
         return coeff_to_poly(self._data['coeffs'])
 
     def haskey(self, key):
-        return self._data.get(key) is not None
+        return self._data and self._data.get(key) is not None
 
     # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
