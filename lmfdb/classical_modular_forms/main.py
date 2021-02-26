@@ -1604,14 +1604,13 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return self.browse_array
         search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
-            return self.refine_array
-        elif search_type in ['Spaces', 'SpaceTraces']:
+        if search_type in ['Spaces', 'SpaceTraces']:
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
         else:
-            raise ValueError
+            # search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
+            return self.refine_array
 
     def search_types(self, info):
         basic = [('List', 'List of forms'),
