@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
@@ -128,7 +128,7 @@ class ECisog_class(object):
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
 
-        self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
+        self.newform =  raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         if self.newform_exists_in_db:

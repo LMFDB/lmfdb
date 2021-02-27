@@ -12,7 +12,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
     StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
@@ -507,7 +507,7 @@ def modular_form_display(label, number):
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
-    modform_string = web_latex(modform)
+    modform_string = raw_typeset(modform)
     return modform_string
 
 def render_curve_webpage_by_label(label):
