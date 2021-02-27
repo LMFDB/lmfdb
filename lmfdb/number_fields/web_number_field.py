@@ -3,7 +3,6 @@ from collections import Counter
 import os
 import yaml
 from six import text_type
-from six.moves.urllib_parse import quote_plus
 
 from flask import url_for
 from sage.all import (
