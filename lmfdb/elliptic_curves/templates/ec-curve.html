@@ -125,7 +125,7 @@ white-space: pre in order to keep line breaks! #}
     {% if data.mwbsd.torsion!=1 %}
     <h2> {{ KNOWL('ec.torsion_subgroup', title='Torsion generators') }}</h2>
       {{ place_code('tors') }}
-    <p> {{ data.mwbsd.tor_gens }} </p>
+    <p> {{ data.mwbsd.tor_gens |safe }} </p>
     {%endif %}
 
 
@@ -134,7 +134,7 @@ white-space: pre in order to keep line breaks! #}
     {% if data.mwbsd.int_points %}
     <div class="ip">
       <p>
-      {{data.mwbsd.int_points}}
+      {{data.mwbsd.int_points | safe}}
       </p>
     </div>
     {%else %}
