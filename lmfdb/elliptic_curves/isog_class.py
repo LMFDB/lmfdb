@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
