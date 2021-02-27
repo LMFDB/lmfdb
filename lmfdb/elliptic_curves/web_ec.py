@@ -462,7 +462,7 @@ class WebEC(object):
             mwbsd['int_points'] = ', '.join(pm_pt(P) for P in int_pts)
 
         # Generators (mod torsion) and heights:
-        mwbsd['generators'] = [web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
 
         # Torsion structure and generators:
         if mwbsd['torsion'] == 1:

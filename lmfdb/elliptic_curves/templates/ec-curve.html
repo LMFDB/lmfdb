@@ -107,7 +107,7 @@ white-space: pre in order to keep line breaks! #}
       <div style='overflow:auto'><p>
       <table>
         <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
-          {% for pt in data.mwbsd.generators %}<td>{{pt}}</td>{% endfor %}
+          {% for pt in data.mwbsd.generators %}<td>{{pt|safe}}</td>{% endfor %}
           </tr>
         <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mwbsd.heights %}<td>${{ht}}$</td>{% endfor %}
