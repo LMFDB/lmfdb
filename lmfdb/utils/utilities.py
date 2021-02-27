@@ -1329,7 +1329,19 @@ def raw_typeset(raw, tset='', extra=''):
     r"""
     Return a span with typeset material which will toggle to raw material 
     when an icon is clicked on.
-    extra is material to go between the toggle and the icon.
+
+    The raw version can be a string, or a sage object which will stringify
+    properly.
+
+    If the typeset version can be gotten by just applying latex to the raw
+    version, the typeset version can be omitted.
+
+    If there is a string to appear between the toggled text and the icon,
+    it can be given in the argument extra
+
+    If one of these appear on a page, then the icon to toggle all of them
+    on the page will appear in the upper right corner of the body of the
+    page.
     """
     global raw_count
     raw_count += 1
