@@ -36,7 +36,7 @@
             <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: </td><td> {{ object.det_as_artin_display()|safe}} </td></tr>
         {% endif %}
             <tr><td class="nowrap"> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
-        {% if proj_wnf and not proj_wnf.is_galois() %}
+        {% if proj_wnf.is_in_db() and not proj_wnf.is_galois() %}
             <tr><td class="nowrap"> {{ KNOWL('artin.projective_stem_field', title='Projective stem field') }}:
         {% else %}
             <tr><td class="nowrap"> {{ KNOWL('artin.projective_field', title='Projective field') }}:
