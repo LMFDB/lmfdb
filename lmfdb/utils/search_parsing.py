@@ -329,6 +329,13 @@ def parse_range3(arg, split0 = False):
         return [ZZ(str(arg))]
 
 def integer_options(arg, max_opts=None, contained_in=None):
+    if not LIST_RE.match(arg) and MULT_PARSE.fullmatch(arg):
+        # Make input work using some arithmetic expressions
+        try:
+            ast_expression = ast.parse(arg.replace('^', '**'), mode='eval')
+            arg = str(int(PowMulNodeVisitor().visit(ast_expression).body))
+        except (TypeError, ValueError, SyntaxError):
+            raise SearchParsingError("Unable to evaluate expression.")
     intervals = parse_range3(arg)
     check = max_opts is not None and contained_in is None
     if check and len(intervals) > max_opts:

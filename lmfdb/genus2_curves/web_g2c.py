@@ -54,6 +54,26 @@ def simplify_hyperelliptic(fh):
     f = (n.squarefree_part() * f) / n
     return f.coefficients(sparse=False)
 
+def simplify_hyperelliptic_point(fh, pt):
+    xR = PolynomialRing(QQ,'x')
+    f = 4*xR(fh[0]) + xR(fh[1])**2
+    f1 = xR(fh[1])
+    n = gcd(f.coefficients())
+    xzR = PolynomialRing(QQ,['x','z'])
+    z = xzR('z')
+    f1 = (xzR(f1)*z**(4-len(fh[1]))).homogenize(z)
+    return [pt[0], (2*pt[1] + f1([pt[0],pt[2]])) / n, pt[2]]
+
+def comp_poly(fh):
+    xR = PolynomialRing(QQ,'x')
+    f = 4*xR(fh[0]) + xR(fh[1])**2
+    f1 = xR(fh[1])
+    n = gcd(f.coefficients())
+    xyzR = PolynomialRing(QQ,['x','y','z'])
+    y = xyzR('y')
+    z = xyzR('z')
+    f1 = (xyzR(f1)*z**(4-len(fh[1]))).homogenize(z)
+    return (2*y + f1) / n
 
 def min_eqns_pretty(fh):
     xR = PolynomialRing(QQ,'x')
@@ -509,7 +529,7 @@ def td_wrapcn(val):
 def point_string(P):
     return '(' + ' : '.join(map(str, P)) + ')'
 
-def mw_gens_table(invs,gens,hts,pts):
+def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
     def divisor_data(P):
         R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
         xP,yP = P[0],P[1]
@@ -518,6 +538,7 @@ def mw_gens_table(invs,gens,hts,pts):
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+        yD = comp(x, yD, z)
         return [make_bigint(elt, 10) for elt in [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]], xD, yD, yden
     if not invs:
         return ''
@@ -540,6 +561,10 @@ def mw_gens_table(invs,gens,hts,pts):
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
+    
+def mw_gens_simple_table(invs,gens,hts,pts,fh):
+    spts = [simplify_hyperelliptic_point(fh,pt) for pt in pts]
+    return mw_gens_table(invs,gens,hts,spts,comp=comp_poly(fh))
 
 def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
@@ -582,14 +607,14 @@ def ratpts_table(pts,pts_v):
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
-            return '<p>This curve has no %s.</p>' % display_knowl(kid, 'rational points')
+            return 'This curve has no %s.' % display_knowl(kid, 'rational points')
         else:
-            return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
+            return 'No %s for this curve.' % display_knowl(kid, 'rational points are known')
     spts = [point_string(P) for P in pts]
     caption = 'All points' if pts_v else 'Known points'
     tabcols = 6
     if len(pts) <= tabcols+1:
-        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(spts))
+        return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
     ptstab.extend(['<th></th>' for i in range(tabcols-1)])
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
@@ -601,6 +626,10 @@ def ratpts_table(pts,pts_v):
         ptstab.append('</tr>')
     ptstab.extend(['</tbody>', '</table>'])
     return '\n'.join(ptstab)
+    
+def ratpts_simpletable(pts,pts_v,fh):
+    spts = [simplify_hyperelliptic_point(fh, pt) for pt in pts]
+    return ratpts_table(spts,pts_v)
 
 
 ###############################################################################
@@ -742,6 +771,7 @@ class WebG2C(object):
             data['rat_pts'] = ratpts['rat_pts']
             data['rat_pts_v'] =  ratpts['rat_pts_v']
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
+            data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
 
             data['mw_gens_v'] = ratpts['mw_gens_v']
             lower = len([n for n in ratpts['mw_invs'] if n == 0])
@@ -753,6 +783,7 @@ class WebG2C(object):
                 data['mw_group'] = r'\(' + r' \times '.join([ (r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs]) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
             if curve['two_torsion_field'][0]:
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
@@ -930,7 +961,8 @@ class WebG2C(object):
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
         if ratpts:
-            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + '];' }
+            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + ']; // minimal model'}
+            code['rat_pts_simp'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in [simplify_hyperelliptic_point(data['min_eqn'], pt) for pt in ratpts['rat_pts']]]) + ']; // simplified model'}
         code['mw_group'] = {'magma':'MordellWeilGroupGenus2(Jacobian(C));'}
         code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
