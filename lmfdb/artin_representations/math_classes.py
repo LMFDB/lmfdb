@@ -2,8 +2,8 @@
 from __future__ import absolute_import
 from six import string_types
 from lmfdb import db
-from lmfdb.utils import url_for, pol_to_html
-from lmfdb.utils.utilities import web_latex, coeff_to_poly, letters2num, num2letters
+from lmfdb.utils import (url_for, pol_to_html,
+    web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset)
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing, ZZ
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_short, small_group_display_knowl)
@@ -701,6 +701,9 @@ class NumberFieldGaloisGroup(object):
     def polynomial(self):
         return self._data["Polynomial"]
 
+    def polynomial_raw_typeset(self):
+        return raw_typeset(coeff_to_poly(self.polynomial()))
+
     def polynomial_latex(self):
         return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
 
@@ -801,6 +804,10 @@ class NumberFieldGaloisGroup(object):
         self.lowered = self.lower_precision()
         return self._data["QpRts-prec"]
 
+    def computation_minimal_polynomial_raw_typeset(self):
+        pol = coeff_to_poly(self._data["QpRts-minpoly"])
+        return raw_typeset(pol)
+
     def computation_minimal_polynomial_latex(self):
         pol = coeff_to_poly(self._data["QpRts-minpoly"])
         return web_latex(pol, enclose=False)
@@ -832,20 +839,26 @@ class NumberFieldGaloisGroup(object):
             return 0
         myroots = self._data["QpRts"]
         p = self._data['QpRts-p']
-        myroots = [[help_padic(z, p, self._data['QpRts-prec']) for z in t] for t in myroots]
+        prec = self._data['QpRts-prec']
+        myroots = [[help_padic(z, p, prec) for z in t] for t in myroots]
         myroots = [[[getel(root[j], r) 
             for j in range(len(self._data['QpRts-minpoly'])-1)]
-            for r in range(self._data['QpRts-prec'])]
+            for r in range(prec)]
             for root in myroots]
         myroots = [[coeff_to_poly(x, var='a')
             for x in root] for root in myroots]
         # Use power series so degrees increase
         # Use formal p so we can make a power series
         PR = PowerSeriesRing(PolynomialRing(QQ, 'a'), 'p')
-        myroots = [web_latex(PR(x), enclose=False) for x in myroots]
+        rawrts = [str(PR(x))+r'+O(p^{})'.format(prec) for x in myroots]
+        rawrts = [z.replace('p', str(p)) for z in rawrts]
+        myroots = [web_latex(PR(x),enclose=False)+r'+O(p^{'+str(prec)+r'})' for x in myroots]
         # change p into its value
+        myroots = [r'\({}\)'.format(z) for z in myroots]
         myroots = [re.sub(r'([a)\d]) *p', r'\1\\cdot '+str(p), z) for z in myroots]
-        return [z.replace('p',str(p)) for z in myroots]
+        typesetrts = [z.replace('p',str(p)) for z in myroots]
+        return [raw_typeset(z[0],z[1]) for z in zip(rawrts, typesetrts)]
+        #return [z.replace('p',str(p)) for z in myroots]
 
     def index_complex_conjugation(self):
         # This is an index starting at 1

@@ -59,7 +59,7 @@ white-space: pre in order to keep line breaks! #}
 
     {{ place_code('curve') }}
 
-    <p> {{ data.data.equation }} </p>
+    <p> {{ data.data.equation | safe }} </p>
 
 
     <h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>
@@ -107,7 +107,7 @@ white-space: pre in order to keep line breaks! #}
       <div style='overflow:auto'><p>
       <table>
         <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
-          {% for pt in data.mwbsd.generators %}<td>{{pt}}</td>{% endfor %}
+          {% for pt in data.mwbsd.generators %}<td>{{pt|safe}}</td>{% endfor %}
           </tr>
         <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mwbsd.heights %}<td>${{ht}}$</td>{% endfor %}
@@ -125,7 +125,7 @@ white-space: pre in order to keep line breaks! #}
     {% if data.mwbsd.torsion!=1 %}
     <h2> {{ KNOWL('ec.torsion_subgroup', title='Torsion generators') }}</h2>
       {{ place_code('tors') }}
-    <p> {{ data.mwbsd.tor_gens }} </p>
+    <p> {{ data.mwbsd.tor_gens |safe }} </p>
     {%endif %}
 
 
@@ -134,7 +134,7 @@ white-space: pre in order to keep line breaks! #}
     {% if data.mwbsd.int_points %}
     <div class="ip">
       <p>
-      {{data.mwbsd.int_points}}
+      {{data.mwbsd.int_points | safe}}
       </p>
     </div>
     {%else %}
