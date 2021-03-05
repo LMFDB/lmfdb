@@ -1344,7 +1344,6 @@ def raw_typeset(raw, tset='', extra='', text_area_threshold=150):
     page.
     """
     global raw_count
-    from html import escape
     raw_count += 1
     if not tset:
         tset = r'\({}\)'.format(latex(raw))
