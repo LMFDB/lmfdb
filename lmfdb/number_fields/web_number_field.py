@@ -399,6 +399,9 @@ class WebNumberField:
     def _get_dbdata(self):
         return db.nf_fields.lookup(self.label)
 
+    def is_in_db(self):
+        return self._data is not None
+
     def get_label(self):
         if self.label == 'a':
             return None
