@@ -1344,12 +1344,13 @@ def raw_typeset(raw, tset='', extra='', text_area_threshold=150):
     page.
     """
     global raw_count
+    from html import escape
     raw_count += 1
     if not tset:
         tset = r'\({}\)'.format(latex(raw))
     srcloc = url_for('static', filename='images/t2r.png')
     if len(str(raw)) > text_area_threshold:
-        raw = '<textarea readonly="" rows="1" cols="60" style="line-height: 1; height 18px"; >{}</textarea>'.format(raw)
+        raw = escape('<textarea readonly="" rows="1" cols="60" style="line-height: 1; height 18px"; >{}</textarea>'.format(raw))
     out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)
     out += extra
     out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
