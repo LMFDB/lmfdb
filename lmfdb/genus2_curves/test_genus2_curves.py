@@ -282,7 +282,7 @@ class Genus2Test(LmfdbTest):
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
-                        'Elliptic curve isogeny class 2.2.8.1-9.1-a',
+                        'Elliptic curve 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
