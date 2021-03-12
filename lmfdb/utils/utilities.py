@@ -982,7 +982,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
         res =  r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
     else:
         res = r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
-    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, text_area_threshold=1000000000000)
+    return raw_typeset(PolynomialRing(ZZ, var.lstrip("\\"))(coeffs), res, text_area_threshold=100)
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
