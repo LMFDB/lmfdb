@@ -19,7 +19,7 @@ from lmfdb.utils import (
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
-    list_factored_to_factored_poly_otherorder)
+    list_factored_to_factored_poly_otherorder, raw_typeset)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -680,7 +680,7 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.field_poly:
-            return web_latex_poly(self.field_poly, superscript=True)
+            return raw_typeset(web_latex_poly(self.field_poly, superscript=True))
         return None
 
     def Qnu(self):
