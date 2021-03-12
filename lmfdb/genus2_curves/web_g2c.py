@@ -881,7 +881,7 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Genus 2 isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
         # first deal with ECs and MFs
         ecs = []
@@ -891,7 +891,7 @@ class WebG2C(object):
                 if is_curve:
                     ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    ecs.append(("Elliptic curve isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                    ecs.append(("Elliptic curve " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
                 try:
                     cond, iso = ec_label_class(friend_label).split(".")
                     newform_label = ".".join([cond, str(2), 'a', iso])

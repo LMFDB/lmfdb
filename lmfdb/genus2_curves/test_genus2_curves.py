@@ -257,7 +257,7 @@ class Genus2Test(LmfdbTest):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
                     ('L-function',
-                        'Genus 2 isogeny class 20736.i',
+                        'Genus 2 curve 20736.i',
                         'Elliptic curve 576.f3',
                         'Elliptic curve 36.a4',
                         'Elliptic curve 2.0.8.1-324.3-a',
@@ -270,8 +270,8 @@ class Genus2Test(LmfdbTest):
                     ),
                 ('/Genus2Curve/Q/20736/i/',
                     ('L-function',
-                        'Elliptic curve isogeny class 576.f',
-                        'Elliptic curve isogeny class 36.a',
+                        'Elliptic curve 576.f',
+                        'Elliptic curve 36.a',
                         'Modular form 36.2.a.a',
                         'Modular form 576.2.a.f',
                         'Bianchi modular form 2.0.8.1-324.3-a',
@@ -282,7 +282,7 @@ class Genus2Test(LmfdbTest):
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
-                        'Elliptic curve isogeny class 2.2.8.1-9.1-a',
+                        'Elliptic curve 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
