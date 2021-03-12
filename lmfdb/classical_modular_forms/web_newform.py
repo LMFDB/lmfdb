@@ -558,7 +558,7 @@ class WebNewform(object):
         """
         This function is used to display the polynomial defining the coefficient field.
         """
-        return raw_typeset(web_latex_poly(self.field_poly))
+        return raw_typeset(self.field_poly, web_latex_poly(self.field_poly))
 
     @property
     def artin_field_display(self):
