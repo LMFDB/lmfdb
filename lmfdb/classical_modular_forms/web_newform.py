@@ -19,7 +19,7 @@ from lmfdb.utils import (
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
-    list_factored_to_factored_poly_otherorder, raw_typeset)
+    list_factored_to_factored_poly_otherorder)
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
@@ -558,7 +558,7 @@ class WebNewform(object):
         """
         This function is used to display the polynomial defining the coefficient field.
         """
-        return raw_typeset(self.field_poly, web_latex_poly(self.field_poly))
+        return web_latex_poly(self.field_poly)
 
     @property
     def artin_field_display(self):

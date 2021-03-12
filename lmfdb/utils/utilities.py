@@ -929,6 +929,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_
     - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
     - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
+    return raw_typeset(PolynomialRing(ZZ, var)(coeffs))
     plus = r" + "
     minus = r" - "
     m = len(coeffs)
