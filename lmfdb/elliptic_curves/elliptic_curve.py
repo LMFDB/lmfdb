@@ -15,7 +15,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -352,6 +352,7 @@ def url_for_label(label):
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
+    parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
@@ -717,6 +718,12 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.conductor",
             example="389",
             example_span="389 or 100-200")
+        disc = TextBox(
+            name="discriminant",
+            label="Discriminant",
+            knowl="ec.discriminant",
+            example="389",
+            example_span="389 or 100-200")
         rank = TextBox(
             name="rank",
             label="Rank",
@@ -840,6 +847,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
+            [disc],
             [rank, regulator],
             [torsion, torsion_struct],
             [cm_disc, cm],
@@ -853,7 +861,7 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, jinv, rank, torsion, torsion_struct],
+            [cond, disc, rank, torsion, torsion_struct, jinv],
             [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
             [num_int_pts, regulator, cm, cm_disc, semistable],
             [optimal, isodeg, class_size, class_deg, potentially_good]
