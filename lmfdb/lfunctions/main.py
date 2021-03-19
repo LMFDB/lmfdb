@@ -131,9 +131,6 @@ def rational():
         bread=get_bread([("Rational", " ")]))
 
 def common_postprocess(res, info, query):
-    origins = defaultdict(lambda: defaultdict(list))
-    for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
-        origins[rec["Lhash"]][rec["type"]].append(rec["url"])
     for L in res:
         L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
