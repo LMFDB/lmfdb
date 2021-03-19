@@ -462,14 +462,14 @@ def split_field_statement(is_simple_geom, field_label, poly):
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
-        statement = "Decomposes up to isogeny as the square of the elliptic curve:"
+        statement = "Decomposes up to isogeny as the square of the elliptic curve isogeny class:"
     else:
-        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"
+        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curve isogeny classes:"
     for n in range(len(coeffs)):
         # Use labels when possible:
         label = labels[n] if labels else ''
         if label:
-            statement += "<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>" % (url_for_ec(label), label)
+            statement += "<br>&nbsp;&nbsp;Elliptic curve isogeny class <a href=%s>%s</a>" % (url_for_ec_class(label), ec_label_class(label))
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
