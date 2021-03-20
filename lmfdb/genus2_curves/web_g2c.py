@@ -286,14 +286,14 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-        
+
 def plot_from_label(label):
     curve = db.g2c_curves.lookup(label)
     ratpts = db.g2c_ratpts.lookup(curve['label'])
     min_eqn = literal_eval(curve['eqn'])
     plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
     return plot
-    
+
 ###############################################################################
 # Statement functions for displaying formatted endomorphism data
 ###############################################################################
@@ -462,14 +462,14 @@ def split_field_statement(is_simple_geom, field_label, poly):
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
-        statement = "Decomposes up to isogeny as the square of the elliptic curve:"
+        statement = "Decomposes up to isogeny as the square of the elliptic curve isogeny class:"
     else:
-        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"
+        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curve isogeny classes:"
     for n in range(len(coeffs)):
         # Use labels when possible:
         label = labels[n] if labels else ''
         if label:
-            statement += "<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>" % (url_for_ec(label), label)
+            statement += "<br>&nbsp;&nbsp;Elliptic curve isogeny class <a href=%s>%s</a>" % (url_for_ec_class(label), ec_label_class(label))
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
@@ -561,7 +561,7 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
-    
+
 def mw_gens_simple_table(invs,gens,hts,pts,fh):
     spts = [simplify_hyperelliptic_point(fh,pt) for pt in pts]
     return mw_gens_table(invs,gens,hts,spts,comp=comp_poly(fh))
@@ -626,7 +626,7 @@ def ratpts_table(pts,pts_v):
         ptstab.append('</tr>')
     ptstab.extend(['</tbody>', '</table>'])
     return '\n'.join(ptstab)
-    
+
 def ratpts_simpletable(pts,pts_v,fh):
     spts = [simplify_hyperelliptic_point(fh, pt) for pt in pts]
     return ratpts_table(spts,pts_v)
@@ -763,7 +763,7 @@ class WebG2C(object):
             data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
             if data['mw_rank'] == 0 and data['mw_rank_proved']:
                 data['regulator'] = '1' # display an exact 1 when we know this
-                
+
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
@@ -818,7 +818,7 @@ class WebG2C(object):
         data['end_field_label'] = endo['fod_label']
         data['end_field_poly'] = intlist_to_poly(endo['fod_coeffs'])
         data['end_field_statement'] = end_field_statement(data['end_field_label'], data['end_field_poly'])
-        
+
         # Endomorphism data over QQbar:
         data['factorsQQ_geom'] = endo['factorsQQ_geom']
         data['factorsRR_geom'] = endo['factorsRR_geom']
@@ -881,18 +881,28 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
-        # first deal with EC
+        # first deal with ECs and MFs
         ecs = []
+        mfs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
                     ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                    ecs.append(("Elliptic curve " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                try:
+                    cond, iso = ec_label_class(friend_label).split(".")
+                    newform_label = ".".join([cond, str(2), 'a', iso])
+                    mfs.append(("Modular form " + newform_label, url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)))
+                except ValueError:
+                    # means the friend isn't an elliptic curve over Q; adding Hilbert/Bianchi modular forms
+                    # is dealt with via the L-functions instances below
+                    pass
 
         ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
+        mfs.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
         # then again EC from lfun
         instances = []
@@ -907,10 +917,11 @@ class WebG2C(object):
                                                   int(data["Lhash"])
                                                   )
             ])
+
         exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
                    if elt[1]}
         exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
-        for elt in ecs + names_and_urls(instances, exclude=exclude):
+        for elt in ecs + mfs + names_and_urls(instances, exclude=exclude):
             # because of the splitting we must use G2C specific code
             add_friend(friends, elt)
         if is_curve:

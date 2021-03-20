@@ -561,7 +561,7 @@ def search(info):
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
         start2 = start - nres if start > nres else 0
-        proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','moments']
+        proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','second_trace_moment', 'fourth_trace_moment', 'first_a2_moment']
         try:
             res = db.gps_st.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
         except QueryCanceledError as err:
@@ -574,7 +574,6 @@ def search(info):
             for v in res:
                 v['identity_component'] = st0_pretty(v['identity_component'])
                 v['component_group'] = sg_pretty(v['component_group'])
-                v['trace_moments'] = trace_moments(v['moments'])
                 results.append(v)
     else:
         info['number'] = 'infinity'
@@ -624,9 +623,15 @@ def mu_info(n):
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
+    rec['second_trace_moment'] = 1 if n <= 2 else 0
+    rec['fourth_trace_moment'] = 1 if n <= 2 else 0
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    rec['probabilities'] = [[r'\mathrm{Pr}[a_1=%d]=\frac{1}{%d}'%(m,n) for m in rational_traces]]
+    if n > 1:
+        T = [['$\\mathrm{Pr}[a_1=%s]=\\frac{1}{%s}$'%(m,n) for m in rational_traces]]
+    else:
+        T = [['$\\mathrm{Pr}[a_1=1]=1$']]
+    rec['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return rec
 
 def mu_portrait(n):
@@ -981,17 +986,17 @@ class STSearchArray(SearchArray):
         second_trace_moment = TextBox(
             name="second_trace_moment",
             label="Second trace moment",
-            knowl="st_group.moments",
+            knowl="st_group.second_trace_moment",
             example="8")
         fourth_trace_moment = TextBox(
             name="fourth_trace_moment",
             label="Fourth trace moment",
-            knowl="st_group.moments",
+            knowl="st_group.fourth_trace_moment",
             example="96")
         first_a2_moment = TextBox(
             name="first_a2_moment",
             label="First $a_2$ moment",
-            knowl="st_group.moments",
+            knowl="st_group.first_a2_moment",
             example="4")
         maximal = YesNoBox(
             name="maximal",

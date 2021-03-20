@@ -20,9 +20,9 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/169.a.169.1',follow_redirects=True)
         assert 'square of' in L.get_data(as_text=True) and 'E_6' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
-        assert 'non-isogenous elliptic curves' in L.get_data(as_text=True) and '24.a5' in L.get_data(as_text=True) and '48.a5' in L.get_data(as_text=True)
+        assert 'non-isogenous elliptic curve' in L.get_data(as_text=True) and '24.a' in L.get_data(as_text=True) and '48.a' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
-        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))" in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
+        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))" in L.get_data(as_text=True) and '480.b' in L.get_data(as_text=True) and '32.a' in L.get_data(as_text=True)
 
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
@@ -257,10 +257,12 @@ class Genus2Test(LmfdbTest):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
                     ('L-function',
-                        'Isogeny class 20736.i',
+                        'Genus 2 curve 20736.i',
                         'Elliptic curve 576.f3',
                         'Elliptic curve 36.a4',
                         'Elliptic curve 2.0.8.1-324.3-a',
+                        'Modular form 36.2.a.a',
+                        'Modular form 576.2.a.f',
                         'Bianchi modular form 2.0.8.1-324.3-a',
                         'Hilbert modular form 2.2.24.1-36.1-a',
                         'Elliptic curve 2.2.24.1-36.1-a',
@@ -268,8 +270,10 @@ class Genus2Test(LmfdbTest):
                     ),
                 ('/Genus2Curve/Q/20736/i/',
                     ('L-function',
-                        'Isogeny class 576.f',
-                        'Isogeny class 36.a',
+                        'Elliptic curve 576.f',
+                        'Elliptic curve 36.a',
+                        'Modular form 36.2.a.a',
+                        'Modular form 576.2.a.f',
                         'Bianchi modular form 2.0.8.1-324.3-a',
                         'Elliptic curve 2.0.8.1-324.3-a',
                         'Elliptic curve 2.2.24.1-36.1-a',
@@ -278,7 +282,7 @@ class Genus2Test(LmfdbTest):
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
-                        'Isogeny class 2.2.8.1-9.1-a',
+                        'Elliptic curve 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
