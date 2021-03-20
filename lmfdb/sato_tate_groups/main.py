@@ -627,7 +627,10 @@ def mu_info(n):
     rec['fourth_trace_moment'] = 1 if n <= 2 else 0
     rational_traces = [1] if n%2 else [1,-1]
     rec['counts'] = [['a_1', [[t,1] for t in rational_traces]]]
-    T = [['$\\mathrm{Pr}[a_1=%s]=\\frac{1}{%s}$'%(m,n) for m in rational_traces]]
+    if n > 1:
+        T = [['$\\mathrm{Pr}[a_1=%s]=\\frac{1}{%s}$'%(m,n) for m in rational_traces]]
+    else:
+        T = [['$\\mathrm{Pr}[a_1=1]=1$']]
     rec['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return rec
 
