@@ -40,6 +40,9 @@ _cache_time = 120
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        return knowldb.knowl_exists(main_knowl)
     if ID.endswith('top') or ID.endswith('bottom'):
         if ID.startswith('belyi'):
             extras = "[],T"
