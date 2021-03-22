@@ -21,6 +21,7 @@ text-align: center;
 <th>{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
 <th>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
+<th>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}</th>
 {% if info.conductor < info.cremona_bound %}
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
 {% endif %}
@@ -45,6 +46,9 @@ text-align: center;
 <td align="center">{{c.torsion_structure}}</td>
 <td align="center">
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
+</td>
+<td align="center">
+{{c.faltings_height}}
 </td>
 {% if info.conductor < info.cremona_bound %}
 <td>

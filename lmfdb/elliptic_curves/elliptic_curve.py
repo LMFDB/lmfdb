@@ -360,6 +360,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_size','class_size')
     parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
+    parse_floats(info, query, 'faltings_height', 'faltings_height')
     parse_bool(info,query,'semistable','semistable')
     parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
@@ -822,6 +823,11 @@ class ECSearchArray(SearchArray):
             label="Regulator",
             knowl="ec.q.regulator",
             example="8.4-9.1")
+        faltings_height = TextBox(
+            name="faltings_height",
+            label="Faltings height",
+            knowl="ec.q.faltings_height",
+            example="-1-2")
         semistable = YesNoBox(
             name="semistable",
             label="Semistable",
@@ -847,7 +853,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
-            [disc],
+            [disc, faltings_height],
             [rank, regulator],
             [torsion, torsion_struct],
             [cm_disc, cm],
@@ -861,8 +867,9 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, disc, rank, torsion, torsion_struct, jinv],
+            [cond, disc, jinv, faltings_height],
+            [rank, regulator, torsion, torsion_struct],
             [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, cm_disc, semistable],
-            [optimal, isodeg, class_size, class_deg, potentially_good]
+            [num_int_pts, cm, cm_disc, semistable, potentially_good],
+            [optimal, isodeg, class_size, class_deg]
             ]
