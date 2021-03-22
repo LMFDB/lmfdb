@@ -149,11 +149,16 @@ class EllCurveTest(LmfdbTest):
         # has a different Gamma-optimal curve in its labelling than all others.
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
-          '<td class="center">[1, -1, 1, -1568, -4669]</td>',
-          '<td align="center">[6]</td>',
-          '<td align="center">',
-          '1728</td>',
-          '<td>', r'  \(\Gamma_0(N)\)-optimal'
+            '<td class="center"><a href="/EllipticCurve/Q/990h3/">990h3</a></td>',
+            '<td class="center">[1, -1, 1, -1568, -4669]</td>',
+            '<td align="center">[6]</td>',
+            '<td align="center">',
+            '1728</td>',
+            '<td align="center">',
+            '0.87259626080619371842071691451',
+            '</td>',
+            '<td>',
+            r'  \(\Gamma_0(N)\)-optimal</td>'
         ])
         self.assertTrue(row in L.get_data(as_text=True),
                         "990.i appears to have the wrong optimal curve.")
