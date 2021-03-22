@@ -1119,6 +1119,23 @@ class PostgresSearchTable(PostgresTable):
         """
         return self.stats.max(col, constraint)
 
+    def min(self, col, constraint={}):
+        """
+        The minimum value attained by the given column.
+
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``constraint`` -- a query dictionary constraining which rows are considered
+
+        EXAMPLES::
+
+            sage: from lmfdb import db
+            sage: db.ec_mwbsd.min('area')
+            0.00000013296713869846309987200099760
+        """
+        return self.stats.min(col, constraint)
+
     def distinct(self, col, query={}):
         """
         Returns a list of the distinct values taken on by a given column.
