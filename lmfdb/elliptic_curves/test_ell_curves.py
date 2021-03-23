@@ -150,12 +150,14 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
             '<td class="center"><a href="/EllipticCurve/Q/990h3/">990h3</a></td>',
-            '<td class="center">[1, -1, 1, -1568, -4669]</td>',
-            '<td align="center">[6]</td>',
+            '<td class="center">\([1, -1, 1, -1568, -4669]\)</td>',
+            '<td class="center">\(15781142246787/8722841600\)</td>',
+            '<td class="center">\(235516723200\)</td>',
+            '<td align="center">\([6]\)</td>',
             '<td align="center">',
-            '1728</td>',
+            '\(1728\)</td>',
             '<td align="center">',
-            '0.87259626080619371842071691451',
+            '\(0.87260\)',
             '</td>',
             '<td>',
             r'  \(\Gamma_0(N)\)-optimal</td>'

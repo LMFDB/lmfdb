@@ -5,7 +5,7 @@ from six import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
@@ -397,6 +397,7 @@ def elliptic_curve_search(info, query):
     info['cremona_bound'] = CREMONA_BOUND
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Clabel'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Ciso'])
+    info['FH'] = lambda dbc: RealField(20)(dbc['faltings_height'])
 
 ##########################
 #  Specific curve pages

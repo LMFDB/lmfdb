@@ -29,7 +29,12 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
+{% if info.discriminant  %}
   <th class="center">{{ KNOWL('ec.discriminant',  title='Discriminant') }}</th>
+{% endif %}
+{% if info.faltings_height  %}
+  <th class="center">{{ KNOWL('ec.q.faltings_height',  title='Faltings height') }}</th>
+{% endif %}
   <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
@@ -59,7 +64,12 @@ table td.params {
   {% endif %}
 </td>
 <td class="params">${{info.curve_ainvs(curve)}}$</td>
+{% if info.discriminant  %}
 <td class="center">${% if curve.signD==1 %}+{% else %}-{% endif %}{{curve.absD}}$</td>
+{% endif %}
+{% if info.faltings_height  %}
+<td class="center">${{info.FH(curve)}}$</td>
+{% endif %}
 <td class="center">${{curve.rank}}$</td>
 <td class="center">{% if (curve.torsion_structure|length) == 0 %}trivial{% else %}${{curve.torsion_structure}}${% endif %}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
