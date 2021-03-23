@@ -4,6 +4,7 @@ import ast
 import os
 import re
 from six import BytesIO
+
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
@@ -17,7 +18,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -94,8 +95,12 @@ def ctx_galois_groups():
 @app.context_processor
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
-            'global_numberfield_summary': global_numberfield_summary}
+            'global_numberfield_summary': global_numberfield_summary,
+            'ez_raw_typeset': ez_raw_typeset,
+            'raw_typeset': raw_typeset}
 
+def ez_raw_typeset(rawpol):
+    return raw_typeset(rawpol)
 
 def global_numberfield_summary():
     init_nf_count()
@@ -479,11 +484,12 @@ def render_field_webpage(args):
     if not ram_primes:
         ram_primes = r'\textrm{None}'
     data['phrase'] = group_phrase(n, t)
-    zk = nf.zk()
+    zkraw = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
-    zk = [latex(Ra(x)) for x in zk]
+    zk = [latex(Ra(x)) for x in zkraw]
     zk = ['$%s$' % x for x in zk]
     zk = ', '.join(zk)
+    zkraw = ', '.join(zkraw)
     grh_label = '<small>(<a title="assuming GRH" knowl="nf.assuming_grh">assuming GRH</a>)</small>' if nf.used_grh() else ''
     # Short version for properties
     grh_lab = nf.short_grh_string()
@@ -495,18 +501,25 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    rootofunity = '%s (order $%d$)' % (nf.root_of_1_gen(),nf.root_of_1_order())
+    rootof1raw = unlatex(nf.root_of_1_gen())
+    rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
+        extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
+    safe_units = nf.units_safe()
+    if 'too long' in safe_units:
+        myunits = safe_units
+    else:
+        myunits = raw_typeset(unlatex(safe_units), safe_units)
 
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex(nf.poly()),
+        'polynomial': raw_typeset(nf.poly()),
         'ram_primes': ram_primes,
-        'integral_basis': zk,
+        'integral_basis': raw_typeset(zkraw, zk),
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
-        'fund_units': nf.units_safe(),
+        'fund_units': myunits,
         'cnf': nf.cnf(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
@@ -880,12 +893,13 @@ def frobs(nf):
 # utility for downloading data
 def unlatex(s):
     s = re.sub(r'\\+', r'\\',s)
+    s = s.replace(r'&nbsp;', r' ')
     s = s.replace('\\(', '')
     s = s.replace('\\)', '')
     s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
     s = s.replace(r'{',r'(')
     s = s.replace(r'}',r')')
-    s = re.sub(r'([^\s+-])\s*a', r'\1*a',s)
+    s = re.sub(r'([^\s+-,])\s*a', r'\1*a',s)
     return s
 
 

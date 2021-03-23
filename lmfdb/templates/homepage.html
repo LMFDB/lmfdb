@@ -229,6 +229,17 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    <div align="right" id="rawtseticonspot">
+    </div>
+    {# Need to run after page has otherwise loaded #}
+    <script>
+    $().ready( function(){
+        if ($(".tset-container").length>0) {
+            imgsrc = "{{url_for("static", filename="images/t2r.png") }}";
+            $("#rawtseticonspot").html('<span onclick="iconrawtsetall()"><img alt="Toggle raw display" src="'+imgsrc+'" id="tset-raw-icon-all" style="position:relative;top: 2px"></span>');
+    } });
+    </script>
     {% if KNOWL_ID %}
     {% if BACKUP_KNOWL_ID %}
     {{ KNOWL_INC(KNOWL_ID+'.top', title='', backupid=BACKUP_KNOWL_ID+'.top') }}

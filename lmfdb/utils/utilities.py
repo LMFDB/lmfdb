@@ -1322,3 +1322,34 @@ def add_space_if_positive(texified_pol):
     if texified_pol[0] == '-':
         return texified_pol
     return r"\phantom{-}" + texified_pol
+
+raw_count = 0
+
+def raw_typeset(raw, tset='', extra=''):
+    r"""
+    Return a span with typeset material which will toggle to raw material 
+    when an icon is clicked on.
+
+    The raw version can be a string, or a sage object which will stringify
+    properly.
+
+    If the typeset version can be gotten by just applying latex to the raw
+    version, the typeset version can be omitted.
+
+    If there is a string to appear between the toggled text and the icon,
+    it can be given in the argument extra
+
+    If one of these appear on a page, then the icon to toggle all of them
+    on the page will appear in the upper right corner of the body of the
+    page.
+    """
+    global raw_count
+    raw_count += 1
+    if not tset:
+        tset = r'\({}\)'.format(latex(raw))
+    srcloc = url_for('static', filename='images/t2r.png') 
+    out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)
+    out += extra
+    out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
+    return out
+

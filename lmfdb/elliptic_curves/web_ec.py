@@ -5,7 +5,8 @@ import yaml
 from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
+from lmfdb.number_fields.number_field import unlatex
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
@@ -195,7 +196,8 @@ class WebEC(object):
 
         # latex equation:
 
-        data['equation'] = latex_equation(self.ainvs)
+        latexeqn = latex_equation(self.ainvs)
+        data['equation'] = raw_typeset(unlatex(latexeqn), latexeqn)
 
         # minimal quadratic twist:
 
@@ -343,7 +345,8 @@ class WebEC(object):
 
         # Newform
         
-        data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
@@ -453,13 +456,15 @@ class WebEC(object):
         a1, _, a3, _, _ = ainvs = self.ainvs
         if a1 or a3:
             int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
-            mwbsd['int_points'] = ', '.join(web_latex(P) for P in int_pts)
+            mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
         else:
             int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
-            mwbsd['int_points'] = ', '.join(pm_pt(P) for P in int_pts)
+            raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
+            raw_form = ', '.join(str(P) for P in raw_form)
+            mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
 
         # Generators (mod torsion) and heights:
-        mwbsd['generators'] = [web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
 
         # Torsion structure and generators:
         if mwbsd['torsion'] == 1:
@@ -467,7 +472,9 @@ class WebEC(object):
             mwbsd['tor_gens'] = ''
         else:
             mwbsd['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in self.torsion_structure])
-            mwbsd['tor_gens'] = ', '.join(web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['torsion_generators'])
+            tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
+            mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp), 
+                ', '.join(web_latex(P) for P in tor_gens_tmp))
 
         # BSD invariants
         if r >= 2:

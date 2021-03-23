@@ -338,7 +338,7 @@ def render_artin_representation_webpage(label):
         friends.append(("Field {}".format(the_nf.label()), nf_url))
         wnf = the_nf.wnf()
     proj_wnf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
-    if proj_wnf._data:
+    if proj_wnf.is_in_db():
         proj_coefs = [int(z) for z in proj_wnf.coeffs()]
         if proj_coefs != the_nf.polynomial():
             friends.append(("Field {}".format(proj_wnf.get_label()), 

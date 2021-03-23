@@ -212,8 +212,8 @@ def render_search_results_page(args, bread):
     info = { 'args': to_dict(args) }
     query = {}
     try:
-        parse_ints (info['args'], query, 'deg', 'degree')
-        parse_ints (info['args'], query, 'wt', '$k$')
+        parse_ints (info['args'], query, 'deg', 'degree', qfield="degree")
+        parse_ints (info['args'], query, 'wt', '$k$', qfield="weight")
         parse_ints (info['args'], query, 'fdeg', 'field degree')
     except ValueError:
         info['error'] = True

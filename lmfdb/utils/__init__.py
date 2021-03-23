@@ -42,7 +42,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'names_and_urls', 'name_and_object_from_url',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
-           'redirect_no_cache']
+           'redirect_no_cache', 'nums2letters', 'letters2num', 'num2letters',
+           'raw_typeset']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -63,7 +64,7 @@ from .utilities import (
     Pagination,
     debug, flash_error, flash_warning,
     ajax_url,  # try to eliminate?
-    image_callback, encode_plot,
+    image_callback, encode_plot, raw_typeset, letters2num, num2letters,
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (

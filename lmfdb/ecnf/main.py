@@ -101,8 +101,8 @@ def get_nf_info(lab):
     try:
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
-    except ValueError:
-        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % escape(lab)))
+    except ValueError as err:
+        raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
     return label, pretty
 
 

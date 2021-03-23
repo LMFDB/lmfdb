@@ -131,9 +131,6 @@ def rational():
         bread=get_bread([("Rational", " ")]))
 
 def common_postprocess(res, info, query):
-    origins = defaultdict(lambda: defaultdict(list))
-    for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
-        origins[rec["Lhash"]][rec["type"]].append(rec["url"])
     for L in res:
         L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
@@ -147,16 +144,18 @@ def process_search(res, info, query):
             L['motivic_weight'] = ''
         else:
             L['analytic_normalization'] = QQ(L['motivic_weight'])/2
-        mus = [L['analytic_normalization'] + string2number(mu) for mu in L['gamma_factors'][0]]
-        mus = [latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus]
+        mus = [latex(mu_real + L['analytic_normalization']) if mu_imag == 0 else
+               display_complex(mu_real + L['analytic_normalization'], mu_imag, 3)
+               for mu_real, mu_imag in zip(L['mu_real'], L['mu_imag'])]
+        nus = [latex(nu_real_doubled*0.5 + L['analytic_normalization']) if nu_imag == 0 else
+               display_complex(nu_real_doubled*0.5 + L['analytic_normalization'], nu_imag, 3)
+               for nu_real_doubled, nu_imag in zip(L['nu_real_doubled'], L['nu_imag'])]
         if len(mus) > 4 and len(set(mus)) == 1: # >4 so this case only happens for imprimitive
             mus = ["[%s]^{%s}" % (mus[0], len(mus))]
-        L['mus'] = ", ".join(mus)
-        nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
-        nus = [latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus]
         if len(nus) > 4 and len(set(nus)) == 1:
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
+        L['mus'] = ", ".join(mus)
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             L['root_number'] = 1 - int(4*L['root_angle'])
