@@ -6,7 +6,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label,
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
 class ECisog_class(object):
     """
@@ -106,6 +106,9 @@ class ECisog_class(object):
                 c['curve_label'] = c['lmfdb_label']
                 _, c_iso, c_number = split_lmfdb_label(c['lmfdb_label'])
             c['short_label'] = "{}{}".format(c_iso,c_number)
+            c['FH'] = RealField(20)(c['faltings_height'])
+            c['j_inv'] = QQ(tuple(c['jinv'])) # convert [num,den] to rational for display
+            c['disc'] = c['signD'] * c['absD']
             
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
