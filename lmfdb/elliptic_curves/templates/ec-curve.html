@@ -207,6 +207,16 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ data.data.ST|safe }}</td>
         </tr>
 
+        <tr>
+        <td>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}:</td>
+        <td>\({{ data.faltings_height }}\dots\)</td>
+        </tr>
+
+        <tr>
+        <td>{{ KNOWL('ec.q.faltings_height', title='Stable Faltings height') }}:</td>
+        <td>\({{ data.stable_faltings_height }}\dots\)</td>
+        </tr>
+
        </table>
 
     <h2> {{ KNOWL('ec.q.bsdconjecture', title='BSD') }} invariants</h2>
@@ -239,7 +249,7 @@ white-space: pre in order to keep line breaks! #}
         {% if data.rank==0 %}
         <td> \(1\)</td>
         {% else %}
-        <td> \({{ data.mwbsd.reg }}\)</td>
+        <td> \({{ data.mwbsd.reg }}\dots\)</td>
         {% endif %}
         {% endif %}
         </tr>
@@ -251,7 +261,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
         <tr>
         <td>{{ KNOWL('ec.q.real_period', title='Real period') }}:</td>
-        <td> \({{ data.mwbsd.real_period }}\)</td>
+        <td> \({{ data.mwbsd.real_period }}\dots\)</td>
         </tr>
 
         <tr>
