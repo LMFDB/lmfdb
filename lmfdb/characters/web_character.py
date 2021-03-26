@@ -1074,7 +1074,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal', 'isorbit']
+              'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
@@ -1134,6 +1134,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
         self.conductor = orbit_data['conductor']
         self.order = orbit_data['order']
+        self.degree = orbit_data['char_degree']
         self.isprimitive = bool_string(orbit_data['is_primitive'])
         self.isminimal = bool_string(orbit_data['is_minimal'])
         self.parity = parity_string(int(orbit_data['parity']))
