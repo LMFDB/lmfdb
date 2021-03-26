@@ -5,7 +5,7 @@ from six import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
@@ -15,7 +15,7 @@ from lmfdb.utils import (
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -352,6 +352,7 @@ def url_for_label(label):
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
+    parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
@@ -359,6 +360,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_size','class_size')
     parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
+    parse_floats(info, query, 'faltings_height', 'faltings_height')
     parse_bool(info,query,'semistable','semistable')
     parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
@@ -395,6 +397,7 @@ def elliptic_curve_search(info, query):
     info['cremona_bound'] = CREMONA_BOUND
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Clabel'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Ciso'])
+    info['FH'] = lambda dbc: RealField(20)(dbc['faltings_height'])
 
 ##########################
 #  Specific curve pages
@@ -717,6 +720,12 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.conductor",
             example="389",
             example_span="389 or 100-200")
+        disc = TextBox(
+            name="discriminant",
+            label="Discriminant",
+            knowl="ec.discriminant",
+            example="389",
+            example_span="389 or 100-200")
         rank = TextBox(
             name="rank",
             label="Rank",
@@ -815,6 +824,11 @@ class ECSearchArray(SearchArray):
             label="Regulator",
             knowl="ec.q.regulator",
             example="8.4-9.1")
+        faltings_height = TextBox(
+            name="faltings_height",
+            label="Faltings height",
+            knowl="ec.q.faltings_height",
+            example="-1-2")
         semistable = YesNoBox(
             name="semistable",
             label="Semistable",
@@ -840,6 +854,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
+            [disc, faltings_height],
             [rank, regulator],
             [torsion, torsion_struct],
             [cm_disc, cm],
@@ -853,8 +868,9 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, jinv, rank, torsion, torsion_struct],
+            [cond, disc, jinv, faltings_height],
+            [rank, regulator, torsion, torsion_struct],
             [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, cm_disc, semistable],
-            [optimal, isodeg, class_size, class_deg, potentially_good]
+            [num_int_pts, cm, cm_disc, semistable, potentially_good],
+            [optimal, isodeg, class_size, class_deg]
             ]
