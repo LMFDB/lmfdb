@@ -3,12 +3,12 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, next_prime, prime_range, GCD
+from sage.all import srange, spline, line, ZZ, QQ, latex, Factorization, Integer, next_prime, prime_range, GCD
 
 import tempfile
 import os
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 from markupsafe import escape
 
 from . import LfunctionPlot
@@ -24,7 +24,7 @@ from .Lfunction import (
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
-    getConductorIsogenyFromLabel, string2number)
+    getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page

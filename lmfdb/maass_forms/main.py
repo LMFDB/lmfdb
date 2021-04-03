@@ -176,8 +176,8 @@ def parse_character(inp, query, qfield):
     level_field, conrey_index_field ='level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
-    if conrey_index >= level:
-        raise ValueError("Character labels q.n must have Conrey index n less than the modulus q.")
+    if conrey_index > level:
+        raise ValueError("Character labels q.n must have Conrey index n no greater than the modulus q.")
     if gcd(level,conrey_index) != 1:
         raise ValueError("Character labels q.n must have Conrey index coprime to the modulus q.")
     def contains_level(D):
