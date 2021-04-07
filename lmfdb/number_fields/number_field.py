@@ -134,7 +134,7 @@ def source():
     learnmore = learnmore_list_remove('Source')
     t = 'Source of number field data'
     bread = bread_prefix() + [('Source', ' ')]
-    return render_template("single.html", kid='rcs.source.nf',
+    return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 
