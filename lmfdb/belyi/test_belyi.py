@@ -61,6 +61,9 @@ class BelyiTest(LmfdbTest):
     def test_count_search(self):
         self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
 
+    def test_field_search(self):
+        self.check_args("Belyi/?field=Qsqrt-3", "3T1-3_3_3-a")
+
     # downloads
 
     def test_download(self):
