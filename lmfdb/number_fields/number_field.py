@@ -34,7 +34,6 @@ assert nf_logger
 
 bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
 
-NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
 
@@ -135,7 +134,7 @@ def source():
     t = 'Source of number field data'
     bread = bread_prefix() + [('Source', ' ')]
     return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/Reliability")
@@ -144,7 +143,7 @@ def reliability():
     t = 'Reliability of number field data'
     bread = bread_prefix() + [('Reliability', ' ')]
     return render_template("single.html", kid='rcs.rigor.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/GaloisGroups")
@@ -153,7 +152,7 @@ def render_groups_page():
     learnmore = learnmore_list_remove('Galois group')
     t = 'Galois group labels'
     bread = bread_prefix() + [('Galois group labels', ' ')]
-    return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+    return render_template("galois_groups.html", al=group_alias_table(), info=info, title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/FieldLabels")
@@ -162,7 +161,7 @@ def render_labels_page():
     learnmore = learnmore_list_remove('number field labels')
     t = 'Labels for number fields'
     bread = bread_prefix() + [('Labels', '')]
-    return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
+    return render_template("single.html", info=info, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/Completeness")
@@ -171,7 +170,7 @@ def render_discriminants_page():
     t = 'Completeness of number field data'
     bread = [('Number fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='rcs.cande.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/QuadraticImaginaryClassGroups")
@@ -212,12 +211,12 @@ def render_class_group_data():
             info['message'] = 'Invalid congruence requested'
             return class_group_request_error(info, bread)
 
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=learnmore)
+    return render_template("class_group_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
 
 
 def class_group_request_error(info, bread):
     t = 'Class groups of quadratic imaginary fields'
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
+    return render_template("class_group_data.html", info=info, title=t, bread=bread)
 
 
 # Helper for stats page
@@ -334,7 +333,6 @@ def statistics():
             'maxdeg': max_deg}
     return render_template("nf-statistics.html",
                            info=info,
-                           credit=NF_credit,
                            title=title,
                            bread=bread)
 
@@ -359,7 +357,7 @@ def number_field_render_webpage():
         info['discriminant_list'] = discriminant_list
         t = 'Number fields'
         bread = bread_prefix()
-        return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
+        return render_template("nf-index.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(info)
 
@@ -636,7 +634,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, formatfield=formatfield, KNOWL_ID="nf.%s"%label)
+    return render_template("nf-show-field.html", properties=properties, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, formatfield=formatfield, KNOWL_ID="nf.%s"%label)
 
 
 def format_coeffs2(coeffs):
@@ -682,7 +680,6 @@ def interesting():
         url_for_label,
         title=r"Some interesting number fields",
         bread=bread_prefix() + [("Interesting", " ")],
-        credit=NF_credit,
         learnmore=learnmore_list(),
     )
 
