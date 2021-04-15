@@ -33,7 +33,7 @@ def get_bread(breads=[]):
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+            ('Source and acknowledgments', url_for(".source")),
             ('Reliability of the data', url_for(".reliability")),
             ('Local field labels', url_for(".labels_page"))]
 
@@ -174,7 +174,7 @@ class LF_download(Downloader):
     title = '$p$-adic fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
-    data_description = 'defining the local field over Qp by adjoining a root of f(x).'
+    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
     function_body = {'magma':['Prec := 100; // Default precision of 100',
                               'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
                      'sage':['Prec = 100 # Default precision of 100',
@@ -411,8 +411,8 @@ def labels_page():
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of $p$-adic field data'
-    ttag = 'Source of p-adic field data'
+    t = 'Source and acknowledgments for $p$-adic field pages'
+    ttag = 'Source and acknowledgments for p-adic field pages'
     bread = get_bread([("Source", '')])
     return render_template("double.html", kid='rcs.source.lf',
                            kid2='rcs.ack.lf', title=t,
