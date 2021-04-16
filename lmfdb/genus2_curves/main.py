@@ -22,8 +22,6 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
 
-credit_string = "Andrew Booker, Edgar Costa, Jeroen Sijsling, Michael Stoll, Andrew Sutherland, John Voight, Raymond van Bommel, Dan Yasaki"
-
 ###############################################################################
 # List and dictionaries needed routing and searching
 ###############################################################################
@@ -98,7 +96,7 @@ geom_aut_grp_dict_pretty = {
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".source_page")),
+            ('Source and acknowledgments', url_for(".source_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Genus 2 curve labels', url_for(".labels_page"))]
 
@@ -130,7 +128,6 @@ def index_Q():
     return render_template(
         "g2c_browse.html",
         info=info,
-        credit=credit_string,
         title=title,
         learnmore=learnmore_list(),
         bread=get_bread()
@@ -150,7 +147,6 @@ def interesting():
         url_for_curve_label,
         regex=re.compile(r"\d+\.[a-z]+\.\d+\.\d+"),
         title="Some interesting genus 2 curves",
-        credit=credit_string,
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
@@ -218,7 +214,6 @@ def render_curve_webpage(label):
         return abort(404,err.args)
     return render_template("g2c_curve.html",
                            properties=g2c.properties,
-                           credit=credit_string,
                            info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
                            data=g2c.data,
                            code=g2c.code,
@@ -235,7 +230,6 @@ def render_isogeny_class_webpage(label):
         return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
                            properties=g2c.properties,
-                           credit=credit_string,
                            data=g2c.data,
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
@@ -362,7 +356,6 @@ class G2C_download(Downloader):
     },
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
-    credit=lambda: credit_string,
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def genus2_curve_search(info, query):
@@ -502,7 +495,7 @@ class G2C_stats(StatsDisplay):
 def statistics():
     title = r'Genus 2 curves over $\Q$: Statistics'
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=G2C_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=G2C_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
 
@@ -511,28 +504,28 @@ def completeness_page():
     t = r'Completeness of genus 2 curve data over $\Q$'
     bread = get_bread("Completeness")
     return render_template("single.html", kid='rcs.cande.g2c',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Q/Source")
 def source_page():
-    t = r'Source of genus 2 curve data over $\Q$'
+    t = r'Source and acknowledgments for genus 2 curve data over $\Q$'
     bread = get_bread("Source")
-    return render_template("single.html", kid='rcs.source.g2c',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("double.html", kid='rcs.source.g2c',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Reliability")
 def reliability_page():
     t = r'Reliability of genus 2 curve data over $\Q$'
     bread = get_bread("Reliability")
     return render_template("single.html", kid='rcs.rigor.g2c',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Q/Labels")
 def labels_page():
     t = r'Labels for genus 2 curves over $\Q$'
     bread = get_bread("Labels")
     return render_template("single.html", kid='g2c.label',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 
 class G2CSearchArray(SearchArray):
