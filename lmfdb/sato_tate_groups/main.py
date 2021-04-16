@@ -324,7 +324,7 @@ def parse_component_group(inp, query, qfield):
 
 def learnmore_list():
     return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.source_page')),
+            ('Source and acknowledgments', url_for('.source_page')),
             ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
@@ -912,7 +912,7 @@ def completeness_page():
 
 @st_page.route('/Source')
 def source_page():
-    t = 'Source and acknowledgements for Sato-Tate group data'
+    t = 'Source and acknowledgments for Sato-Tate group data'
     bread = get_bread("Source")
     return render_template('double.html', kid='rcs.source.st_group',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
