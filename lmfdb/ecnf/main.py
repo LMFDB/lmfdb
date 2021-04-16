@@ -16,8 +16,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats,
-    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox,
+    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
+    SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
     search_wrap, parse_rational,
     redirect_no_cache
     )
@@ -546,6 +546,8 @@ def elliptic_curve_search(info, query):
             query['cm'] = 0
 
     parse_ints(info,query,field='cm_disc',qfield='cm')
+    parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
+             qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
     parse_ints(info,query,'bf_deg',name='Base field degree',qfield='degree')
@@ -800,6 +802,14 @@ class ECNFSearchArray(SearchArray):
             label="Regulator*",
             knowl="ec.regulator",
             example="8.4-9.1")
+        bad_quant = SubsetBox(
+            name="bad_quantifier")
+        bad_primes = TextBoxWithSelect(
+            name="conductor_norm_factors",
+            label="Primes dividing conductor",
+            knowl="ec.conductor",
+            example="5,13",
+            select_box=bad_quant)
         isodeg = TextBox(
             name="isodeg",
             label="Cyclic isogeny degree",
@@ -838,12 +848,12 @@ class ECNFSearchArray(SearchArray):
             [class_size, class_deg],
             [semistable, potential_good_reduction],
             [jinv],
-            [count]
+            [count, bad_primes]
             ]
 
         self.refine_array = [
             [field, conductor_norm, rank, torsion, cm_disc],
             [bf_deg, include_base_change, include_Q_curves, torsion_structure, include_cm],
             [sha, isodeg, class_size, semistable, jinv],
-            [regulator, one, class_deg, potential_good_reduction],
+            [regulator, one, class_deg, potential_good_reduction, bad_primes],
             ]
