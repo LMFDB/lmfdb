@@ -613,6 +613,7 @@ def belyi_search(info, query):
     parse_ints(info, query, "g", "g")
     parse_ints(info, query, "deg", "deg")
     parse_ints(info, query, "orbit_size", "orbit_size")
+    parse_ints(info, query, "pass_size", "pass_size")
     # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
     for fld in ["geomtype", "group"]:
         if info.get(fld):
@@ -753,6 +754,12 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.genus",
             example="1",
             example_span="1, 0-2")
+        pass_size = TextBox(
+            name="pass_size",
+            label="Passport size",
+            knowl="belyi.passport",
+            example="2",
+            example_span="2, 5-6")
         orbit_size = TextBox(
             name="orbit_size",
             label="Orbit size",
@@ -766,6 +773,6 @@ class BelyiSearchArray(SearchArray):
             options=[("", "")] + list(geometry_types_dict.items()))
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [pass_size], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype, pass_size]]
