@@ -35,8 +35,6 @@ ST_LABEL_SHORT_RE = r'^\d+\.\d+\.[A-Z]+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-Z0-9\{\}\(\)\[\]\_\,]+'
 INFINITY = -1
 
-credit_string = 'Francesc Fité, Kiran Kedlaya, and Andrew Sutherland'
-
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = (
     'SO(1)', 'SO(2)', 'SO(3)', 'SO(4)', 'SO(5)', 'SO(6)',
@@ -326,7 +324,7 @@ def parse_component_group(inp, query, qfield):
 
 def learnmore_list():
     return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.source_page')),
+            ('Source and acknowledgments', url_for('.source_page')),
             ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
@@ -361,7 +359,7 @@ def index():
                      ('st0_dict', st0_dict)]:
         info[key] = val
     title = 'Sato-Tate groups'
-    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=get_bread())
+    return render_template('st_browse.html', info=info, title=title, learnmore=learnmore_list(), bread=get_bread())
 
 @st_page.route('/random')
 @redirect_no_cache
@@ -377,7 +375,6 @@ def interesting():
         url_for_label=lambda label: url_for('.by_label', label=label),
         title=r"Some interesting Sato-Tate groups",
         bread=get_bread("Interesting"),
-        credit=credit_string,
         learnmore=learnmore_list()
     )
 
@@ -385,7 +382,7 @@ def interesting():
 def statistics():
     title = "Sato-Tate groups: statistics"
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=STStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=STStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -450,7 +447,6 @@ def search(info):
         return redirect(url_for('.by_label', label=info['label']), 301)
     search_type = info.get("search_type", info.get("hst", "List"))
     template_kwds = {'bread':get_bread("Search results"),
-                     'credit':credit_string,
                      'learnmore':learnmore_list()}
     title = 'Sato-Tate group search results'
     err_title = 'Sato-Tate group search input error'
@@ -901,7 +897,6 @@ def render_st_group(info, portrait=None):
     title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
     return render_template('st_display.html',
                            properties=prop,
-                           credit=credit_string,
                            info=info,
                            bread=bread,
                            learnmore=learnmore_list(),
@@ -913,28 +908,28 @@ def completeness_page():
     t = 'Completeness of Sato-Tate group data'
     bread = get_bread("Completeness")
     return render_template('single.html', kid='rcs.cande.st_group',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def source_page():
-    t = 'Source of Sato-Tate group data'
+    t = 'Source and acknowledgments for Sato-Tate group data'
     bread = get_bread("Source")
-    return render_template('single.html', kid='rcs.source.st_group',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template('double.html', kid='rcs.source.st_group',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Sato-Tate group data'
     bread = get_bread("Reliability")
     return render_template('single.html', kid='rcs.rigor.st_group',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
 def labels_page():
     t = 'Labels for Sato-Tate groups'
     bread = get_bread("Labels")
     return render_template('single.html', kid='st_group.label',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 class STSearchArray(SearchArray):
     noun = "group"

@@ -112,11 +112,11 @@ $(function() {
   {%- endif %}
 </table>
 
-<table id="knowl-index" class="ntdata" style="margin-top: 30px; white-space: normal;">
+<table id="knowl-index" class="ntdata" style="margin-top: 30px;">
   {% for c, ks in knowls -%}
    <tr>
     <td>{{ c }}</td>
-    <td>
+    <td style='white-space: normal;'>
       {% for k in ks %}
         <div title="{{k.title|striptags}} [{{k.id}}]" kid="{{k.id}}">
           <span>{{ k.id }}</span>
