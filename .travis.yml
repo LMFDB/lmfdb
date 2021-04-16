@@ -73,7 +73,7 @@ install:
     # what is the load on the server
     - uptime
     # travis_wait extends the default 10 minute timeout to 40 minutes
-    - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar -C ${HOME}
 
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log
