@@ -88,7 +88,7 @@ h2.link > a {
     margin-top: 40px;
     background-color: {{color.footer_background}};
     border-top: 2px solid {{ color.footer_border }};
-    padding: 25px 10px;
+    padding: 5px 10px;
     text-align: center;
     font-size: 75%;
     color: {{color.footer_text}};
@@ -185,7 +185,7 @@ a:hover {
 
 #header {
   background: {{color.header_background}};
-  box-shadow: 0px 5px 5px {{color.header_shadow}};
+  box-shadow: 0px 3px 3px {{color.header_shadow}};
 }
 
 body.knowl #header {
