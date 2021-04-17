@@ -13,7 +13,6 @@ img { border: 0; }
 body {
     margin: 0px;
     padding: 0px;
-    padding-bottom: 40px;
     font-family: sans-serif;
     color: {{color.body_text}};
     background-color: {{color.body_background}};
@@ -27,7 +26,7 @@ h2.link > a {
 .katex {
     font-size: 1em !important;
 }
-
+/* TODO: where is content?*/
 #content > h1
 {
     font-size: 130%;
@@ -87,11 +86,11 @@ h2.link > a {
 
 #footer {
     clear: both;
-    position: absolute;
+    position: fixed;
     width: 100%;
-    bottom: 0;
-    left: 0;
+    margin-top: 40px;
     background-color: {{color.footer_background}};
+    /* border-top: 2px solid {{ color.footer_border }}; */
     padding: 8px;
     text-align: center;
     font-size: 75%;
