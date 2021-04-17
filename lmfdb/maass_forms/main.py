@@ -24,8 +24,8 @@ bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', ur
 ###############################################################################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.source_page')),
+    return [('Source and acknowledgments', url_for('.source_page')),
+            ('Completeness of the data', url_for('.completeness_page')),
             ('Reliability of the data', url_for('.reliability_page'))]
 
 def learnmore_list_remove(matchstring):
