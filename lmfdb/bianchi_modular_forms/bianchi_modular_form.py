@@ -18,13 +18,10 @@ from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 
-
-bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
-
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
 
 def learnmore_list():
-    return [('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Bianchi modular form labels', url_for(".labels_page"))]
@@ -69,11 +66,10 @@ def index():
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
 
-        credit = bianchi_credit
         t = 'Bianchi modular forms'
         bread = get_bread()
         info['learnmore'] = []
-        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+        return render_template("bmf-browse.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return bianchi_modular_form_search(info)
 
@@ -92,7 +88,6 @@ def interesting():
         db.bmf_forms,
         url_for_label=url_for_label,
         title="Some interesting Bianchi modular forms",
-        credit=bianchi_credit,
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
@@ -101,7 +96,7 @@ def interesting():
 def statistics():
     title = "Bianchi modular forms: statistics"
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=BianchiStats(), credit=bianchi_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=BianchiStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 def bianchi_modular_form_jump(info):
     label = info['jump'].strip()
@@ -281,7 +276,6 @@ def bmf_field_dim_table(**args):
 def render_bmf_space_webpage(field_label, level_label):
     info = {}
     t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
-    credit = bianchi_credit
     bread = get_bread([
         (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
         (level_label, '')])
@@ -343,7 +337,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
-    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
+    return render_template("bmf-space.html", info=info, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
@@ -551,7 +545,6 @@ def download_bmf_sage(**args):
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
     label = "-".join([field_label, level_label, label_suffix])
-    credit = "John Cremona"
     info = {}
     title = "Bianchi cusp forms"
     data = None
@@ -586,7 +579,6 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         "bmf-newform.html",
         downloads=info["downloads"],
         title=title,
-        credit=credit,
         bread=bread,
         data=data,
         properties=properties,
@@ -619,33 +611,29 @@ def bianchi_modular_form_by_label(lab):
 def how_computed_page():
     t = 'Source of Bianchi modular form data'
     bread = get_bread("Source")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("double.html", kid='rcs.source.bianchi', kid2='rcs.ack.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @bmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Bianchi modular form data'
     bread = get_bread("Completeness")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    return render_template("single.html", kid='rcs.cande.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @bmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Bianchi modular form data'
     bread = get_bread("Reliability")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.reliability',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @bmf_page.route("/Labels")
 def labels_page():
     t = 'Labels for Bianchi newforms'
     bread = get_bread("Labels")
-    credit = 'John Cremona'
     return render_template("single.html", kid='mf.bianchi.labels',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 
 class BMFSearchArray(SearchArray):

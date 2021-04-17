@@ -323,8 +323,8 @@ def parse_component_group(inp, query, qfield):
 ###############################################################################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source and acknowledgments', url_for('.source_page')),
+    return [('Source and acknowledgments', url_for('.source_page')),
+            ('Completeness of the data', url_for('.completeness_page')),
             ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
@@ -903,19 +903,19 @@ def render_st_group(info, portrait=None):
                            title=title,
                            KNOWL_ID='st_group.%s'%(info['label']))
 
+@st_page.route('/Source')
+def source_page():
+    t = 'Source and acknowledgments for Sato-Tate group data'
+    bread = get_bread("Source")
+    return render_template('double.html', kid='rcs.source.st_group', kid2='rcs.ack.st_group',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 @st_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Sato-Tate group data'
     bread = get_bread("Completeness")
     return render_template('single.html', kid='rcs.cande.st_group',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@st_page.route('/Source')
-def source_page():
-    t = 'Source and acknowledgments for Sato-Tate group data'
-    bread = get_bread("Source")
-    return render_template('double.html', kid='rcs.source.st_group',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
