@@ -49,8 +49,8 @@ h2.link > a {
     text-align: left;
     font-weight: bold;
     color: {{color.a_text}};
-    padding: 5px 0 5px 0;
-    margin: 15px 0 10px 0;
+    padding: 5px 0;
+    margin: 10px 0;
 }
 #content > h3, td.table_h2 {
     font-family: sans-serif;
