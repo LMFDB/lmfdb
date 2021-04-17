@@ -517,20 +517,20 @@ def render_hmf_webpage(**args):
 def how_computed_page():
     t = 'Source and acknowledgments for Hilbert modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.hilbert', kid2='rcs.ack.hilbert',
+    return render_template("double.html", kid='rcs.source.mf.hilbert', kid2='rcs.ack.mf.hilbert',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @hmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Hilbert modular form data'
     bread = get_bread("Completeness")
-    return render_template("single.html", kid='dq.mf.hilbert.extent',
+    return render_template("single.html", kid='rcs.cande.mf.hilbert',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 @hmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Hilbert modular form data'
     bread = get_bread("Reliability")
-    return render_template("single.html", kid='rcs.cande.hilbert',
+    return render_template("single.html", kid='rcs.rigor.mf.hilbert',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @hmf_page.route("/Labels")

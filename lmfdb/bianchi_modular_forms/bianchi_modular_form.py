@@ -611,21 +611,21 @@ def bianchi_modular_form_by_label(lab):
 def how_computed_page():
     t = 'Source of Bianchi modular form data'
     bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.bianchi', kid2='rcs.ack.bianchi',
+    return render_template("double.html", kid='rcs.source.mf.bianchi', kid2='rcs.ack.mf.bianchi',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @bmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Bianchi modular form data'
     bread = get_bread("Completeness")
-    return render_template("single.html", kid='rcs.cande.bianchi',
+    return render_template("single.html", kid='rcs.cande.mf.bianchi',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @bmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Bianchi modular form data'
     bread = get_bread("Reliability")
-    return render_template("single.html", kid='rcs.rigor.bianchi',
+    return render_template("single.html", kid='rcs.rigor.mf.bianchi',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @bmf_page.route("/Labels")
