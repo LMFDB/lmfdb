@@ -86,9 +86,10 @@ h2.link > a {
 
 #footer {
     clear: both;
-    margin-top: 40px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
     background-color: {{color.footer_background}};
-    /* border-top: 2px solid {{ color.footer_border }}; */
     padding: 8px;
     text-align: center;
     font-size: 75%;
