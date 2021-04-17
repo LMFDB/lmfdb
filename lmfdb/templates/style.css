@@ -213,7 +213,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    padding-bottom: 3px;
+    padding-bottom: 2px;
     color: {{color.header_text_title}};
 }
 
@@ -419,7 +419,7 @@ body > .debug {
 }
 
 #content {
-  margin-top: 20px;
+  margin-top: 10px;
   font-size: 95%;
   line-height: 135%;
   padding-right: 10px;
