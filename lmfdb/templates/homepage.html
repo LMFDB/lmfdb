@@ -203,6 +203,7 @@
         {%- endfor %}
       </div>
     {%- endwith %}
+    <div align="right" style="float: right; padding-left:5px;" id="rawtseticonspot"></div>
     {% if code %}
         <script>
         var cur_lang = null;
@@ -230,7 +231,6 @@
         </div>
     {% endif %}
 
-    <div align="right" style="float: right" id="rawtseticonspot"></div>
     {# Need to run after page has otherwise loaded #}
     <script>
     $().ready( function(){
