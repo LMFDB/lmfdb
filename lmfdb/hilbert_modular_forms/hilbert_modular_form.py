@@ -5,9 +5,9 @@ from flask import render_template, url_for, request, redirect, make_response
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, to_dict,
-    parse_nf_string, parse_ints, parse_hmf_weight,
+    parse_nf_string, parse_ints, parse_hmf_weight, parse_primes,
     teXify_pol, add_space_if_positive,
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.number_field import field_pretty
@@ -151,6 +151,10 @@ def hilbert_modular_form_search(info, query):
     parse_ints(info,query,'dimension')
     parse_ints(info,query,'level_norm', name="Level norm")
     parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
+    parse_primes(info, query, 'field_bad_primes', name='field bad primes',
+         qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
+    parse_primes(info, query, 'level_bad_primes', name='level bad primes',
+         qfield='level_bad_primes',mode=info.get('level_bad_quantifier'))
     if 'cm' in info:
         if info['cm'] == 'exclude':
             query['is_CM'] = 'no'
@@ -660,6 +664,22 @@ class HMFSearchArray(SearchArray):
             label='CM',
             knowl='mf.cm',
         )
+        field_bad_quant = SubsetBox(
+            name="field_bad_quantifier")
+        field_bad_primes = TextBoxWithSelect(
+            name="field_bad_primes",
+            label="Field bad primes",
+            knowl="nf.ramified_primes",
+            example="5,13",
+            select_box=field_bad_quant)
+        level_bad_quant = SubsetBox(
+            name="level_bad_quantifier")
+        level_bad_primes = TextBoxWithSelect(
+            name="level_bad_primes",
+            label="Level bad primes",
+            knowl="mf.hilbert.level_norm",
+            example="5,13",
+            select_box=level_bad_quant)
         count = CountBox()
 
         self.browse_array = [
@@ -667,9 +687,10 @@ class HMFSearchArray(SearchArray):
             [degree, discriminant],
             [level, weight],
             [dimension, base_change],
-            [count, CM]
+            [count, CM],
+            [field_bad_primes, level_bad_primes]
         ]
         self.refine_array = [
-            [field, degree, discriminant, CM],
-            [weight, level, dimension, base_change],
+            [field, degree, discriminant, CM, field_bad_primes],
+            [weight, level, dimension, base_change, level_bad_primes],
         ]
