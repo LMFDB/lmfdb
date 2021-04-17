@@ -413,7 +413,7 @@ body > .debug {
   width: 20px;
   height: 17px;
   position: absolute;
-  top:   12px;
+  top:   2px;
   right: 3px;
   {{ BORDER_RADIUS(20) }}
 }
