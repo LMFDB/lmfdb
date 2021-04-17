@@ -306,8 +306,8 @@ body.knowl #header {
 }
 
 body > .debug {
-    left: 184px;
     margin: 20px;
+    margin-left: 200px;
     padding: 2px;
 }
 
