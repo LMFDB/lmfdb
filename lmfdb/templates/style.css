@@ -26,7 +26,12 @@ h2.link > a {
 .katex {
     font-size: 1em !important;
 }
-/* TODO: where is content?*/
+
+#content
+{
+    padding-bottom: 40px;
+}
+
 #content > h1
 {
     font-size: 130%;
@@ -86,9 +91,10 @@ h2.link > a {
 
 #footer {
     clear: both;
-    position: fixed;
+    position: absolute;
     width: 100%;
     bottom: 0;
+    left: 0;
     background-color: {{color.footer_background}};
     padding: 8px;
     text-align: center;
