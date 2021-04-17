@@ -13,6 +13,7 @@ img { border: 0; }
 body {
     margin: 0px;
     padding: 0px;
+    padding-bottom: 40px;
     font-family: sans-serif;
     color: {{color.body_text}};
     background-color: {{color.body_background}};
@@ -25,11 +26,6 @@ h2.link > a {
 }
 .katex {
     font-size: 1em !important;
-}
-
-#content
-{
-    padding-bottom: 40px;
 }
 
 #content > h1
