@@ -393,7 +393,6 @@ body > .debug {
 .properties-header {
   border-top-left-radius: 10px;
   margin: 0;
-  margin-top: 5px;
   padding: 5px 9px;
   color: {{ color.properties_header_text }};
   background: {{ color.properties_header_background }};
@@ -401,8 +400,8 @@ body > .debug {
   cursor: pointer;
   padding-right: 30px;
 }
-.properties-header:first-child {
-  margin-top: 0;
+.properties-header ~ .properties-header {
+  margin-top: 5px;
 }
 #properties-collapser {
   cursor: pointer;
