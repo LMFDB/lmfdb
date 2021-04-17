@@ -39,6 +39,7 @@ h2.link > a {
 #content > h1:first-child,
 #content > h2:first-child {
     margin-top: 0px;
+    padding-top: 0px;
 }
 
 #content > h2
