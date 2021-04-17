@@ -95,8 +95,8 @@ geom_aut_grp_dict_pretty = {
 ###############################################################################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source and acknowledgments', url_for(".source_page")),
+    return [('Source and acknowledgments', url_for(".source_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Genus 2 curve labels', url_for(".labels_page"))]
 
@@ -498,6 +498,12 @@ def statistics():
     return render_template("display_stats.html", info=G2C_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
+@g2c_page.route("/Q/Source")
+def source_page():
+    t = r'Source and acknowledgments for genus 2 curve data over $\Q$'
+    bread = get_bread("Source")
+    return render_template("double.html", kid='rcs.source.g2c', kid2='rcs.ack.g2c',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Completeness")
 def completeness_page():
@@ -505,13 +511,6 @@ def completeness_page():
     bread = get_bread("Completeness")
     return render_template("single.html", kid='rcs.cande.g2c',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@g2c_page.route("/Q/Source")
-def source_page():
-    t = r'Source and acknowledgments for genus 2 curve data over $\Q$'
-    bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.g2c',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Q/Reliability")
 def reliability_page():

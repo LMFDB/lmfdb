@@ -39,10 +39,10 @@ def bread(tail=[]):
 
 def learn(current = None):
     r = []
-    if current != 'extent':
-        r.append( ('Completeness of the data', url_for(".extent_page")) )
     if current != 'source':
         r.append( ('Source and acknowledgments', url_for(".how_computed_page")) )
+    if current != 'extent':
+        r.append( ('Completeness of the data', url_for(".extent_page")) )
     if current != 'reliability':
         r.append( ('Reliability of the data', url_for(".reliability")) )
     if current != 'labels':
@@ -292,7 +292,7 @@ def how_computed_page():
     info['title'] = 'Source and acknowledgments for Dirichlet character data'
     info['bread'] = bread('Source')
     info['learnmore'] = learn('source')
-    return render_template("double.html", kid='rcs.source.character.dirichlet',
+    return render_template("double.html", kid='rcs.source.character.dirichlet', kid2='rcs.ack.character.dirichlet',
                             **info)
 
 @characters_page.route("/Dirichlet/Reliability")
@@ -309,7 +309,7 @@ def extent_page():
     info['title'] = 'Completeness of Dirichlet character data'
     info['bread'] = bread('Extent')
     info['learnmore'] = learn('extent')
-    return render_template("single.html", kid='dq.character.dirichlet.extent',
+    return render_template("single.html", kid='rcs.cande.character.dirichlet',
                            **info)
 
 def make_webchar(args, get_bread=False):
