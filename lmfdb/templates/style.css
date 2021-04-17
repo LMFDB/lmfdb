@@ -86,7 +86,7 @@ h2.link > a {
 
 #footer {
     clear: both;
-    margin-top: 40px;
+    margin-top: 20px;
     background-color: {{color.footer_background}};
     padding: 8px;
     text-align: center;
@@ -433,12 +433,11 @@ body > .debug {
 #sidebar {
   float: left;
   width: 184px;
-  margin: 10px 0px 0px 0px;
+  margin: 10px 0px;
   font-family: sans-serif;
   font-size: 85%;
   color: {{color.sidebar_text}};
   background: {{color.sidebar_background}};
-  margin-bottom: 100px;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
 }
