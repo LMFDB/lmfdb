@@ -306,6 +306,7 @@ body.knowl #header {
 }
 
 body > .debug {
+    left: 184px;
     margin: 20px;
     padding: 2px;
 }
@@ -474,7 +475,8 @@ body > .debug {
   border-top-right-radius: 10px;
 }
 #sidebar ul:last-child li:last-child,
-#sidebar ul:last-child li:last-child a {
+#sidebar ul:last-child li:last-child a,
+#sidebar h2:last-child {
   border-bottom-right-radius: 10px;
 }
 #sidebar ul {
