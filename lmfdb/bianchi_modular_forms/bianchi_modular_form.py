@@ -8,8 +8,8 @@ from sage.all import latex, QQ, PolynomialRing
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
-    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
-    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
+    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
+    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     teXify_pol, search_wrap)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
@@ -152,6 +152,10 @@ def bianchi_modular_form_search(info, query):
     parse_noop(info, query, 'label')
     parse_ints(info, query, 'dimension')
     parse_ints(info, query, 'level_norm')
+    parse_primes(info, query, 'field_bad_primes', name='field bad primes',
+         qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
+    parse_primes(info, query, 'level_bad_primes', name='level bad primes',
+         qfield='level_bad_primes',mode=info.get('level_bad_quantifier'))
     if not 'sfe' in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
@@ -693,17 +697,34 @@ class BMFSearchArray(SearchArray):
             label='CM',
             knowl='mf.bianchi.cm'
         )
+        field_bad_quant = SubsetBox(
+            name="field_bad_quantifier")
+        field_bad_primes = TextBoxWithSelect(
+            name="field_bad_primes",
+            label="Field bad primes",
+            knowl="nf.ramified_primes",
+            example="5,13",
+            select_box=field_bad_quant)
+        level_bad_quant = SubsetBox(
+            name="level_bad_quantifier")
+        level_bad_primes = TextBoxWithSelect(
+            name="level_bad_primes",
+            label="Level bad primes",
+            knowl="mf.bianchi.level",
+            example="5,13",
+            select_box=level_bad_quant)
         count = CountBox()
 
         self.browse_array = [
             [field],
             [level, sign],
             [dimension, base_change],
-            [count, CM]
+            [count, CM],
+            [field_bad_primes, level_bad_primes]
         ]
         self.refine_array = [
-            [field, level, dimension],
-            [sign, base_change, CM]
+            [field, level, dimension, field_bad_primes],
+            [sign, base_change, CM, level_bad_primes]
         ]
 
 label_finder = re.compile(r"label=([0-9.]+)")
