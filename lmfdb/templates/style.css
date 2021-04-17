@@ -88,7 +88,7 @@ h2.link > a {
     clear: both;
     position: fixed;
     width: 100%;
-    margin-top: 40px;
+    bottom: 0;
     background-color: {{color.footer_background}};
     /* border-top: 2px solid {{ color.footer_border }}; */
     padding: 8px;
