@@ -806,8 +806,8 @@ class ECNFSearchArray(SearchArray):
             name="bad_quantifier")
         bad_primes = TextBoxWithSelect(
             name="conductor_norm_factors",
-            label="Primes dividing conductor",
-            knowl="ec.conductor",
+            label="Bad primes",
+            knowl="ec.reduction_type",
             example="5,13",
             select_box=bad_quant)
         isodeg = TextBox(
