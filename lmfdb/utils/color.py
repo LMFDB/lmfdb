@@ -229,7 +229,7 @@ class ColorScheme(object):
         'chi_table_background': 'col_main_ld', # This was specified twice in color.css; could also be col_main_ll
         'chi_table_border': 'col_main_dl',
 
-        # acknowledgements
+        # acknowledgments
         'text_affil': '#333',
         'text_notes': '#555',
         'text_trad_hyperlink': c.black,

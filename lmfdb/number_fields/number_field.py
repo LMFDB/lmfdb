@@ -107,8 +107,8 @@ def global_numberfield_summary():
 
 
 def learnmore_list():
-    return [(Completename, url_for(".render_discriminants_page")),
-            ('Source and acknowledgments', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            (Completename, url_for(".render_discriminants_page")),
             ('Reliability of the data', url_for(".reliability")),
             ('Number field labels', url_for(".render_labels_page")),
             ('Galois group labels', url_for(".render_groups_page")),

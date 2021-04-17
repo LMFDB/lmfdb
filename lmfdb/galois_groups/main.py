@@ -37,8 +37,8 @@ def mult2mult(li):
 
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source and acknowledgments', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Galois group labels', url_for(".labels_page"))]
 

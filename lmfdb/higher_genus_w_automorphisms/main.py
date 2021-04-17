@@ -59,10 +59,6 @@ def split_passport_label(lab):
 def split_vector_label(lab):
     return vector_label_regex.match(lab).groups()
 
-
-credit = 'Jen Paulhus, using group and signature data originally computed by Thomas Breuer'
-
-
 def get_bread(tail=[]):
     base = [("Higher genus", url_for(".index")),
             ("C", url_for(".index")),
@@ -72,8 +68,8 @@ def get_bread(tail=[]):
     return base + tail
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Labeling convention', url_for(".labels_page"))]
 
@@ -182,7 +178,6 @@ def index():
     return render_template("hgcwa-index.html",
                            title="Families of higher genus curves with automorphisms",
                            bread=bread,
-                           credit=credit,
                            info=info,
                            learnmore=learnmore_list())
 
@@ -202,7 +197,6 @@ def interesting():
         label_col="label",
         title=r"Some interesting higher genus families",
         bread=get_bread("Interesting"),
-        credit=credit,
         learnmore=learnmore_list()
     )
 
@@ -210,7 +204,7 @@ def interesting():
 def statistics():
     title = 'Families of higher genus curves with automorphisms: Statistics'
     bread = get_bread('Statistics')
-    return render_template("hgcwa-stats.html", info=HGCWAstats(), credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template("hgcwa-stats.html", info=HGCWAstats(), title=title, learnmore=learnmore_list(), bread=bread)
 
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<int:genus>")
@@ -259,7 +253,6 @@ def groups_per_genus(genus):
 
     return render_template("hgcwa-stats-groups-per-genus.html",
                            info=info,
-                           credit=credit,
                            title=title,
                            learnmore=learnmore_list(),
                            bread=bread)
@@ -611,8 +604,7 @@ def parse_group_order(inp, query, qfield, parse_singleton=int):
             'download': hgcwa_code_download_search },
         cleaners={'signature': lambda field: ast.literal_eval(field['signature'])},
         bread=lambda: get_bread("Search results"),
-        learnmore=learnmore_list,
-        credit=lambda: credit)
+        learnmore=learnmore_list)
 def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
         # allow for ; in signature
@@ -778,7 +770,7 @@ def render_family(args):
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                KNOWL_ID="curve.highergenus.aut.%s" % label,
-                               learnmore=learnmore_list(), downloads=downloads, credit=credit)
+                               learnmore=learnmore_list(), downloads=downloads)
 
 
 def render_passport(args):
@@ -977,8 +969,7 @@ def render_passport(args):
                                title=title, bread=bread, info=info,
                                properties=prop2, friends=friends,
                                learnmore=learnmore_list(), downloads=downloads,
-                               KNOWL_ID="curve.highergenus.aut.%s" % label,
-                               credit=credit)
+                               KNOWL_ID="curve.highergenus.aut.%s" % label)
 
 
 # Generate topological webpage
@@ -1050,11 +1041,11 @@ def topological_action(fam, cc):
 
     info = {'topological_class': sorted_braid, 'representative': representative, 'braid_num': len(Lbraid)}
 
-    return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread, downloads=downloads)
+    return render_template("hgcwa-topological-action.html", info=info, title=title, bread=bread, downloads=downloads)
 
 
 def search_input_error(info, bread):
-    return render_template("hgcwa-search.html", info=info, title='Family of higher genus curves with automorphisms search input error', learnmore=learnmore_list(),bread=bread, credit=credit)
+    return render_template("hgcwa-search.html", info=info, title='Family of higher genus curves with automorphisms search input error', learnmore=learnmore_list(),bread=bread)
 
 
 
@@ -1062,11 +1053,10 @@ def search_input_error(info, bread):
 def completeness_page():
     t = 'Completeness of higher genus curve with automorphisms data'
     bread = get_bread("Completeness")
-    return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
+    return render_template("single.html", kid='rcs.cande.curve.highergenus.aut',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore_list_remove('Completeness'),
-                           credit=credit)
+                           learnmore=learnmore_list_remove('Completeness'))
 
 
 @higher_genus_w_automorphisms_page.route("/Labels")
@@ -1076,8 +1066,7 @@ def labels_page():
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
                            learnmore=learnmore_list_remove('Label'),
                            title=t,
-                           bread=bread,
-                           credit=credit)
+                           bread=bread)
 
 
 @higher_genus_w_automorphisms_page.route("/Reliability")
@@ -1085,23 +1074,22 @@ def reliability_page():
     t = 'Reliability of higher genus curve with automorphisms data'
     bread = get_bread("Reliability")
     return render_template("single.html",
-                           kid='dq.curve.highergenus.aut.reliability',
+                           kid='rcs.rigor.curve.highergenus.aut',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore_list_remove('Reliability'),
-                           credit=credit)
+                           learnmore=learnmore_list_remove('Reliability'))
 
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
     t = 'Source of higher genus curve with automorphisms data'
     bread = get_bread("Source")
-    return render_template("single.html",
-                           kid='dq.curve.highergenus.aut.source',
+    return render_template("double.html",
+                           kid='rcs.source.curve.highergenus.aut',
+                           kid2='rcs.ack.curve.highergenus.aut',
                            title=t,
                            bread=bread,
-                           learnmore=learnmore_list_remove('Source'),
-                           credit=credit)
+                           learnmore=learnmore_list_remove('Source'))
 
 
 
