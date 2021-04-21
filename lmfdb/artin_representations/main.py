@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
-# Author: Paul-Olivier Dehaye, John Jones
+# Authors: Paul-Olivier Dehaye, John Jones
 
 import re
 import random
@@ -48,8 +48,8 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Artin representations labels', url_for(".labels_page"))]
 
@@ -264,10 +264,6 @@ def by_partial_data(dim, conductor):
     return artin_representation_search({'dimension': dim, 'conductor': conductor, 'search_array': ArtinSearchArray()})
 
 
-# credit information should be moved to the databases themselves, not at the display level. that's too late.
-tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
-support_credit = "Support by Paul-Olivier Dehaye."
-
 @artin_representations_page.route("/<label>/")
 @artin_representations_page.route("/<label>")
 def render_artin_representation_webpage(label):
@@ -390,8 +386,6 @@ def render_artin_representation_webpage(label):
     if case == 'rep':
         return render_template(
             "artin-representation-show.html",
-            credit=tim_credit,
-            support=support_credit,
             title=title,
             bread=bread,
             friends=friends,
@@ -407,8 +401,6 @@ def render_artin_representation_webpage(label):
     # else we have an orbit
     return render_template(
         "artin-representation-galois-orbit.html",
-        credit=tim_credit,
-        support=support_credit,
         title=title,
         bread=bread,
         allchars=allchars,
@@ -440,7 +432,6 @@ def interesting():
         label_col="Baselabel",
         title=r"Some interesting Artin representations",
         bread=get_bread([("Interesting", " ")]),
-        credit=tim_credit,
         learnmore=learnmore_list(),
     )
 
@@ -448,22 +439,23 @@ def interesting():
 def statistics():
     title = "Artin representations: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=ArtinStats(), credit=tim_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=ArtinStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
-    return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
+    return render_template("single.html", kid='artin.label',learnmore=learnmore, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin representation data'
+    t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("single.html", kid='rcs.source.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+    return render_template("double.html", kid='rcs.source.artin',
+                           kid2='rcs.ack.artin',
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -472,7 +464,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -481,7 +473,7 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):

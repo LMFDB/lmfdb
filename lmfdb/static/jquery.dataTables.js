@@ -7869,7 +7869,7 @@
 		 * table has already been initialised, this parameter will cause DataTables
 		 * to simply return the object that has already been set up - it will not take
 		 * account of any changes you might have made to the initialisation object
-		 * passed to DataTables (setting this parameter to true is an acknowledgement
+		 * passed to DataTables (setting this parameter to true is an acknowledgment
 		 * that you understand this). bDestroy can be used to reinitialise a table if
 		 * you need.
 		 *  @type boolean

@@ -55,6 +55,9 @@ class BelyiTest(LmfdbTest):
     def test_orbit_size_search(self):
         self.check_args("/Belyi/?orbit_size=20-", "7T7-6.1_5.2_4.2.1-a")
 
+    def test_pass_size_search(self):
+        self.check_args("/Belyi/?pass_size=6", "7T6-4.2.1_4.2.1_3.2.2-a")
+
     def test_geom_type_search(self):
         self.check_args("/Belyi/?geomtype=H", "6T8-4.1.1_4.1.1_3.3-a")
 

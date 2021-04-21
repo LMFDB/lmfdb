@@ -3,12 +3,12 @@ from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
-from sage.all import srange, spline, line, ZZ, QQ, latex, real_part, imag_part, Factorization, Integer, next_prime, prime_range, GCD
+from sage.all import srange, spline, line, ZZ, QQ, latex, Factorization, Integer, next_prime, prime_range, GCD
 
 import tempfile
 import os
 import re
-from collections import defaultdict, Counter
+from collections import Counter
 from markupsafe import escape
 
 from . import LfunctionPlot
@@ -24,7 +24,7 @@ from .Lfunction import (
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
-    getConductorIsogenyFromLabel, string2number)
+    getConductorIsogenyFromLabel)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -54,25 +54,25 @@ SPECTRAL_RE = re.compile("^"+SPECTRAL_STR+"$")
 CRE = re.compile(r"c(\d+)")
 LFUNC_LABEL_RE = re.compile(r"^(\d+)-(\d+)(?:e(\d+))?-(\d+\.\d+)-"+SPECTRAL_STR+r"-(\d+)$")
 
-credit_string = "Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Platt"
-
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
         return -1
     return int(degree_string[6:])
 
 def learnmore_list(path=None, remove=None):
-    learnmore = [('Completeness of the data', url_for('.completeness')),
-                 ('L-function labels', url_for('.labels'))]
     if path:
         prepath = re.sub(r'^/L/', '', path)
         prepath = re.sub(r'/$', '', prepath)
-        learnmore.extend([
-            ('Source of the data', url_for('.source', prepath=prepath)),
-            ('Reliability of the data', url_for('.reliability', prepath=prepath)),
-        ])
+        learnmore = [('Source and acknowledgments', url_for('.source', prepath=prepath)),
+                     ('Completeness of the data', url_for('.completeness', prepath=prepath)),
+                     ('Reliability of the data', url_for('.reliability', prepath=prepath)),
+                     ('L-function labels', url_for('.labels'))]
     else:
-        learnmore.append((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))
+        learnmore = [('Source and acknowledgments', url_for('.generic_source')),
+                     ('Completeness of the data', url_for('.generic_completeness')),
+                     ('Reliability of the data', url_for('.generic_reliability')),
+                     ('L-function labels', url_for('.labels')),
+                     ((r'$\zeta$ zeros', url_for("zeta zeros.zetazeros")))]
     if remove:
         return [t for t in learnmore if t[0].find(remove) < 0]
     return learnmore
@@ -87,7 +87,6 @@ def learnmore_list(path=None, remove=None):
 def contents():
     return render_template(
         "LfunctionContents.html",
-        credit=credit_string,
         title="L-functions",
         learnmore=learnmore_list(),
         bread=[("L-functions", " ")])
@@ -104,7 +103,6 @@ def index():
     return render_template(
         "LfunctionNavigate.html",
         info=info,
-        credit=credit_string,
         title="L-functions",
         learnmore=learnmore_list(),
         bread=get_bread())
@@ -125,15 +123,11 @@ def rational():
     return render_template(
         "LfunctionNavigate.html",
         info=info,
-        credit=credit_string,
         title="Rational L-functions",
         learnmore=learnmore_list(),
         bread=get_bread([("Rational", " ")]))
 
 def common_postprocess(res, info, query):
-    origins = defaultdict(lambda: defaultdict(list))
-    for rec in db.lfunc_instances.search({'Lhash': {"$in": [L['Lhash'] for L in res]}}):
-        origins[rec["Lhash"]][rec["type"]].append(rec["url"])
     for L in res:
         L['origins'] = names_and_urls(L['instance_urls'])
         L['url'] = url_for_lfunction(L['label'])
@@ -147,16 +141,18 @@ def process_search(res, info, query):
             L['motivic_weight'] = ''
         else:
             L['analytic_normalization'] = QQ(L['motivic_weight'])/2
-        mus = [L['analytic_normalization'] + string2number(mu) for mu in L['gamma_factors'][0]]
-        mus = [latex(mu) if imag_part(mu) == 0 else display_complex(real_part(mu), imag_part(mu), 3) for mu in mus]
+        mus = [latex(mu_real + L['analytic_normalization']) if mu_imag == 0 else
+               display_complex(mu_real + L['analytic_normalization'], mu_imag, 3)
+               for mu_real, mu_imag in zip(L['mu_real'], L['mu_imag'])]
+        nus = [latex(nu_real_doubled*0.5 + L['analytic_normalization']) if nu_imag == 0 else
+               display_complex(nu_real_doubled*0.5 + L['analytic_normalization'], nu_imag, 3)
+               for nu_real_doubled, nu_imag in zip(L['nu_real_doubled'], L['nu_imag'])]
         if len(mus) > 4 and len(set(mus)) == 1: # >4 so this case only happens for imprimitive
             mus = ["[%s]^{%s}" % (mus[0], len(mus))]
-        L['mus'] = ", ".join(mus)
-        nus = [L['analytic_normalization'] + string2number(nu) for nu in L['gamma_factors'][1]]
-        nus = [latex(nu) if imag_part(nu) == 0 else display_complex(real_part(nu), imag_part(nu), 3) for nu in nus]
         if len(nus) > 4 and len(set(nus)) == 1:
             nus = ["[%s]^{%s}" % (nus[0], len(nus))]
         L['nus'] = ", ".join(nus)
+        L['mus'] = ", ".join(mus)
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             L['root_number'] = 1 - int(4*L['root_angle'])
@@ -312,8 +308,7 @@ def common_parse(info, query):
              shortcuts={'jump':jump_box},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
 def l_function_search(info, query):
     if info.get("rational") == "yes":
         info["title"] = "Rational L-function search results"
@@ -326,8 +321,8 @@ def l_function_search(info, query):
              shortcuts={'jump':jump_box},
              postprocess=process_trace,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
+
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
@@ -367,8 +362,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              shortcuts={'jump':jump_box},
              postprocess=process_euler,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]),
-             credit=lambda: credit_string)
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
 def euler_search(info, query):
     if 'n' not in info:
         info['n'] = '1-10'
@@ -645,7 +639,6 @@ def interesting():
         regex=regex,
         query=query,
         title=title,
-        credit=credit_string,
         bread=get_bread(breads=breads),
         learnmore=learnmore_list()
     )
@@ -1876,38 +1869,25 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
-@l_function_page.route("/<path:prepath>/Reliability")
-def reliability(prepath):
-    t = 'Reliability of L-function data'
-    args = tuple(prepath.split('/'))
-    try:
-        L = generateLfunctionFromUrl(*args)
-        assert L
-    except:
-        return abort(404)
-    info={'bread': ()}
-    set_bread_and_friends(info, L, request)
-    if L.fromDB:
-        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
-        if 'load_key' in Ldb:
-            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
-        else:
-            knowl = 'rcs.rigor.lfunction.lcalc'
-    else:
-        knowl = 'rcs.rigor.lfunction.lcalc'
-    bread = info['bread']
-    target = bread.pop()
-    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
-    bread.append(('Reliability', ' '))
-    return render_template("single.html", kid=knowl, title=t, bread=bread,
-        learnmore=learnmore_list(prepath, remove='Reliability'))
+
+@l_function_page.route("/Source")
+def generic_source():
+    t = 'Source and acknowledgments for L-function data'
+    bread = get_bread(breads=[('Source', ' ')])
+    return render_template("double.html", kid='rcs.source.lfunction', kid2='rcs.ack.lfunction', title=t, 
+        bread=bread)
 
 @l_function_page.route("/Completeness")
-def completeness():
+def generic_completeness():
     t = 'Completeness of L-function data'
     bread = get_bread(breads=[('Completeness', ' ')])
-    return render_template("single.html", kid='rcs.cande.lfunction', title=t, 
-        bread=bread)
+    return render_template("single.html", kid='rcs.cande.lfunction', title=t, bread=bread)
+
+@l_function_page.route("/Reliability")
+def generic_reliability():
+    t = 'Reliabililty of L-function data'
+    bread = get_bread(breads=[('Reliabillity', ' ')])
+    return render_template("single.html", kid='rcs.rigor.lfunction', title=t, bread=bread)
 
 @l_function_page.route("/<path:prepath>/Source")
 def source(prepath):
@@ -1920,20 +1900,77 @@ def source(prepath):
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
+    knowl = ''
     if L.fromDB:
         Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
         if 'load_key' in Ldb:
-            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['source'])['source']
-        else:
-            knowl = 'rcs.source.lfunction.lcalc'
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='source')
+            knowl2 = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='acknowledgments')
     else:
         knowl = 'rcs.source.lfunction.lcalc'
+        knowl2 = 'rcs.ack.lfunction.lcalc'
+    if not knowl:
+        return generic_source()
     bread = info['bread']
     target = bread.pop()
     bread.append((target[0], re.sub(r'/Source$','',target[1])))
     bread.append(('Source', ' '))
-    return render_template("single.html", kid=knowl, title=t, bread=bread,
+    return render_template("double.html", kid=knowl, kid2=knowl2, title=t, bread=bread,
         learnmore=learnmore_list(prepath, remove='Source'))
+
+@l_function_page.route("/<path:prepath>/Completeness")
+def completeness(prepath):
+    t = 'Completeness of L-function data'
+    args = tuple(prepath.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    knowl = ''
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection='completeness')
+    else:
+        knowl = 'rcs.source.lfunction.lcalc'
+    if not knowl:
+        return generic_completeness()
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Source$','',target[1])))
+    bread.append(('Completeness', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Completeness'))
+
+@l_function_page.route("/<path:prepath>/Reliability")
+def reliability(prepath):
+    t = 'Reliability of L-function data'
+    args = tuple(prepath.split('/'))
+    try:
+        L = generateLfunctionFromUrl(*args)
+        assert L
+    except:
+        return abort(404)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    knowl = ''
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
+    else:
+        knowl = 'rcs.rigor.lfunction.lcalc'
+    if not knowl:
+        return generic_reliability()
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
+    bread.append(('Reliability', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Reliability'))
 
 @l_function_page.route("/Labels")
 def labels():

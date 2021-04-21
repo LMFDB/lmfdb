@@ -25,8 +25,6 @@ from lmfdb.number_fields.web_number_field import (
 
 import re
 
-LF_credit = 'J. Jones and D. Roberts'
-
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
     for b in breads:
@@ -34,8 +32,8 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Local field labels', url_for(".labels_page"))]
 
@@ -153,7 +151,7 @@ def index():
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
     if len(request.args) != 0:
         return local_field_search(info)
-    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
+    return render_template("lf-index.html", title="$p$-adic fields", titletag="p-adic fields", bread=bread, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -176,7 +174,7 @@ class LF_download(Downloader):
     title = '$p$-adic fields'
     columns = ['p', 'coeffs']
     data_format = ['p', '[coeffs]']
-    data_description = 'defining the local field over Qp by adjoining a root of f(x).'
+    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
     function_body = {'magma':['Prec := 100; // Default precision of 100',
                               'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
                      'sage':['Prec = 100 # Default precision of 100',
@@ -193,8 +191,7 @@ class LF_download(Downloader):
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
-             url_for_label=url_for_label,
-             credit=lambda:LF_credit)
+             url_for_label=url_for_label)
 def local_field_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
@@ -317,7 +314,6 @@ def render_field_webpage(args):
         bread = get_bread([(label, ' ')])
         return render_template(
             "lf-show-field.html",
-            credit=LF_credit,
             title=title,
             titletag=titletag,
             bread=bread,
@@ -386,7 +382,6 @@ def interesting():
         url_for_label,
         title=r"Some interesting $p$-adic fields",
         bread=get_bread([("Interesting", " ")]),
-        credit=LF_credit,
         learnmore=learnmore_list()
     )
 
@@ -394,7 +389,7 @@ def interesting():
 def statistics():
     title = "Local fields: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=LFStats(), credit=LF_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=LFStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @local_fields_page.route("/Completeness")
 def cande():
@@ -402,7 +397,7 @@ def cande():
     tt = 'Completeness of p-adic field data'
     bread = get_bread([("Completeness", )])
     return render_template("single.html", kid='rcs.cande.lf',
-                           credit=LF_credit, title=t, titletag=tt, bread=bread,
+                           title=t, titletag=tt, bread=bread,
                            learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
@@ -412,15 +407,16 @@ def labels_page():
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='lf.field.label',
                   learnmore=learnmore_list_remove('label'),
-                  credit=LF_credit, title=t, titletag=tt, bread=bread)
+                  title=t, titletag=tt, bread=bread)
 
 @local_fields_page.route("/Source")
 def source():
-    t = 'Source of $p$-adic field data'
-    ttag = 'Source of p-adic field data'
+    t = 'Source and acknowledgments for $p$-adic field pages'
+    ttag = 'Source and acknowledgments for p-adic field pages'
     bread = get_bread([("Source", '')])
-    return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
+    return render_template("double.html", kid='rcs.source.lf',
+                           kid2='rcs.ack.lf', title=t,
+                           titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
 @local_fields_page.route("/Reliability")
@@ -429,7 +425,7 @@ def reliability():
     ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.source.lf',
-                           credit=LF_credit, title=t, titletag=ttag, bread=bread,
+                           title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
 class LFSearchArray(SearchArray):

@@ -755,6 +755,12 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.genus",
             example="1",
             example_span="1, 0-2")
+        pass_size = TextBox(
+            name="pass_size",
+            label="Passport size",
+            knowl="belyi.passport",
+            example="2",
+            example_span="2, 5-6")
         orbit_size = TextBox(
             name="orbit_size",
             label="Orbit size",
@@ -774,6 +780,6 @@ class BelyiSearchArray(SearchArray):
             example_span="2.2.5.1 or Qsqrt5")
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [field], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [geomtype], [field], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype, field]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype]]
