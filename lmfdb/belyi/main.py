@@ -758,7 +758,7 @@ class BelyiSearchArray(SearchArray):
         pass_size = TextBox(
             name="pass_size",
             label="Passport size",
-            knowl="belyi.passport",
+            knowl="belyi.pass_size",
             example="2",
             example_span="2, 5-6")
         orbit_size = TextBox(
@@ -775,7 +775,7 @@ class BelyiSearchArray(SearchArray):
         field = TextBox(
             name="field",
             label="Moduli field",
-            knowl="ag.base_field",
+            knowl="belyi.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
         count = CountBox()
