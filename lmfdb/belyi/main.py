@@ -774,7 +774,7 @@ class BelyiSearchArray(SearchArray):
             options=[("", "")] + list(geometry_types_dict.items()))
         field = TextBox(
             name="field",
-            label="Moduli field",
+            label="Base field",
             knowl="belyi.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
