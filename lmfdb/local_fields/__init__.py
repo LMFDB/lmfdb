@@ -27,6 +27,7 @@ def redirect_local():
 
 
 app.register_blueprint(local_fields_page, url_prefix="/padicField")
+app.register_blueprint(local_fields_page, url_prefix="/LocalNumberField")
 
 register_search_function(
     "$p$-adic_fields",
