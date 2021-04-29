@@ -421,13 +421,22 @@ def parse_posints(inp, query, qfield, parse_singleton=int):
     else:
         raise SearchParsingError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def restring(c):
+def restring(c, mod1=False):
     if not isinstance(c, dict):
         return str(c)
     a, b = c.get("$gte", ""), c.get("$lte", "")
     if a == "" or b == "":
+        if mod1:
+            if a == "":
+                a = "-0.5"
+            else:
+                b = "0.5"
         # possible if half empty interval such as "6-"
         return "%s-%s" % (a, b)
+    if a == b:
+        return str(a)
+    if b < a:
+        raise ValueError("Left endpoint is larger than right endpoint.")
     p = -((b - a) * RR(2/3)).log(10).round()
     dispa = ("%.{}f".format(p+1) % a).rstrip("0")
     dispb = ("%.{}f".format(p+1) % b).rstrip("0")
@@ -496,6 +505,8 @@ def parse_floats(inp, query, qfield, rat_prec=5, int_prec=1, allow_singletons=Fa
         raise SearchParsingError(msg)
 
 def mod1(a):
+    if isinstance(a, string_types) and '/' in a:
+        a = QQ(a)
     a = float(a) % 1
     if a > 0.5:
         a -= 1
@@ -538,21 +549,27 @@ def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
             return a
     if LIST_FLOAT_RE.match(inp):
         A = parse_range2(inp, qfield, parse_singleton, mod1)
+        print("A", A)
         # Deal with ranges that cross a boundary.  These can be detected by checking
         # if the start is larger than the end
         if A[0] == '$or':
-            clauses = [restring(list(c.values())[0]) for c in A[1]]
             new_ors = []
             for D in A[1]:
+                print("D", D, list(D)[0], list(D.values())[0])
                 new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0], rat_prec))
+            print("new_ors", new_ors)
             A[1] = new_ors
         else:
-            clauses = [restring(A[1])]
             L = fix_endpoint(A[0], A[1], rat_prec)
+            print("L", L)
             if len(L) == 1:
                 A[1] = L[0][A[0]]
             else:
                 A = ['$or', L]
+        if A[0] == '$or':
+            clauses = [restring(list(c.values())[0], mod1=True) for c in A[1]]
+        else:
+            clauses = [restring(A[1], mod1=True)]
         collapse_ors(A, query)
         return ','.join(clauses)
     else:
