@@ -69,7 +69,7 @@ def local_algebra_data(labels):
     fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
-        ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
+        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
         galnt = [int(z) for z in f['galois_label'].split('T')]
@@ -246,7 +246,7 @@ def render_field_webpage(args):
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = "/LocalNumberField/%s" % unramlabel
+            unramfriend = url_for_label(unramlabel)
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
@@ -270,7 +270,7 @@ def render_field_webpage(args):
             logger.fatal("Cannot find discriminant root field!")
             rffriend = ''
         else:
-            rffriend = "/LocalNumberField/%s" % rflabel
+            rffriend = url_for_label(rflabel)
         gsm = data['gsm']
         if gsm == [0]:
             gsm = 'Not computed'
