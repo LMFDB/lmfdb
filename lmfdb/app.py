@@ -720,6 +720,7 @@ WhiteListedRoutes = [
     'inventory',
     'knowledge',
     'management',
+    'padicField',
     'news',
     'not_yet_implemented',
     'random',
