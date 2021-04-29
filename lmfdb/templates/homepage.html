@@ -190,7 +190,7 @@
    {{ rightnavig("Origins of factors", factors_origins) }}
    {{ neighbors("Nearby objects", navi) }}
    {{ rightnavig("Downloads", downloads) }}
-   {{ rightnavig("Learn more about", learnmore) }}
+   {{ rightnavig("Learn more", learnmore) }}
     </div>
     {%- endif %}
 
@@ -203,6 +203,7 @@
         {%- endfor %}
       </div>
     {%- endwith %}
+    <div align="right" style="float: right; padding-left:10px;" id="rawtseticonspot"></div>
     {% if code %}
         <script>
         var cur_lang = null;
@@ -219,7 +220,7 @@
             }
         }
         </script>
-        <div align="right">
+        <div align="right" style="float: right">
             Show commands for:
             {% set slash = joiner("/ ") %}
             {% for lang in code['show'] %}
@@ -230,8 +231,6 @@
         </div>
     {% endif %}
 
-    <div align="right" id="rawtseticonspot">
-    </div>
     {# Need to run after page has otherwise loaded #}
     <script>
     $().ready( function(){
@@ -281,7 +280,7 @@ The function which was called for this page is: {{calling_function}}
     {% if support -%}
       {{ support|safe }}<br/>
     {%- endif %}
-    <h4>{{shortthanks|safe}}</h4>
+    <h4 style="margin:5px;">{{shortthanks|safe}}</h4>
     <div>
       <a href="{{ url_for('contact') }}">Contact</a>
       &middot;
@@ -293,8 +292,8 @@ The function which was called for this page is: {{calling_function}}
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
       {{ current_source|safe }}
-      &middot;
-      {{ latest_changeset|safe }}
+      {# &middot;
+      {{ latest_changeset|safe }} #}
       &middot;
       {{ sage_version|safe }}
       &middot;

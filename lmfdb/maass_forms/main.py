@@ -24,8 +24,8 @@ bread_prefix = lambda: [('Modular forms', url_for('modular_forms')),('Maass', ur
 ###############################################################################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.source_page')),
+    return [('Source and acknowledgments', url_for('.source_page')),
+            ('Completeness of the data', url_for('.completeness_page')),
             ('Reliability of the data', url_for('.reliability_page'))]
 
 def learnmore_list_remove(matchstring):
@@ -35,8 +35,6 @@ def learnmore_list_remove(matchstring):
 # Pages
 ###############################################################################
 
-credit_string = "David Farmer, Stefan Lemurell, Fredrik Stromberg, and Holger Then"
-
 @maass_page.route('/')
 def index():
     info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
@@ -44,7 +42,7 @@ def index():
         return search(info)
     title = 'Maass forms'
     bread = bread_prefix()
-    return render_template('maass_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
+    return render_template('maass_browse.html', info=info, title=title, learnmore=learnmore_list(), bread=bread, dbcount=db.maass_newforms.count())
 
 @maass_page.route('/random')
 @redirect_no_cache
@@ -60,7 +58,6 @@ def interesting():
         label_col="maass_id",
         url_for_label=lambda label: url_for(".by_label", label=label),
         title="Some interesting Maass forms",
-        credit=credit_string,
         bread=bread_prefix() + [("Interesting", " ")],
         learnmore=learnmore_list()
     )
@@ -69,7 +66,7 @@ def interesting():
 def statistics():
     title = "Maass forms: statistics"
     bread = bread_prefix() + [("Statistics", " ")]
-    return render_template("display_stats.html", info=MaassStats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=MaassStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @maass_page.route('/<label>')
 def by_label(label):
@@ -123,26 +120,26 @@ def download(label):
 def download_coefficients(label):
     return MaassFormDownloader().download_coefficients(label)
 
+@maass_page.route('/Source')
+def source_page():
+    t = 'Source of Maass form data'
+    bread = bread_prefix() + [('Source','')]
+    return render_template('double.html', kid='rcs.source.maass',kid2='rcs.ack.maass',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 @maass_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
     bread = bread_prefix() + [('Completeness','')]
     return render_template('single.html', kid='rcs.cande.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@maass_page.route('/Source')
-def source_page():
-    t = 'Source of Maass form data'
-    bread = bread_prefix() + [('Source','')]
-    return render_template('single.html', kid='rcs.source.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @maass_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
     bread = bread_prefix() + [('Reliability','')]
     return render_template('single.html', kid='rcs.rigor.maass',
-                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 class MaassSearchArray(SearchArray):
     noun = "Maass form"
@@ -223,7 +220,6 @@ def parse_character(inp, query, qfield):
     },
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
-    credit=lambda: credit_string,
     url_for_label=lambda label: url_for(".by_label", label=label),
 )
 def search(info, query):
@@ -258,7 +254,6 @@ def search_by_label(label):
                            mf=mf,
                            properties=mf.properties,
                            downloads=mf.downloads,
-                           credit=credit_string,
                            bread=mf.bread,
                            learnmore=learnmore_list(),
                            title=mf.title,

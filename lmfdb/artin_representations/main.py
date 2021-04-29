@@ -48,8 +48,8 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Artin representations labels', url_for(".labels_page"))]
 
@@ -450,7 +450,7 @@ def labels_page():
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin representation data'
+    t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
     return render_template("double.html", kid='rcs.source.artin',

@@ -107,8 +107,8 @@ def global_numberfield_summary():
 
 
 def learnmore_list():
-    return [(Completename, url_for(".render_discriminants_page")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            (Completename, url_for(".render_discriminants_page")),
             ('Reliability of the data', url_for(".reliability")),
             ('Number field labels', url_for(".render_labels_page")),
             ('Galois group labels', url_for(".render_groups_page")),
@@ -131,7 +131,7 @@ def poly_to_field_label(pol):
 @nf_page.route("/Source")
 def source():
     learnmore = learnmore_list_remove('Source')
-    t = 'Source of number field data'
+    t = 'Source and acknowledgments for number field pages'
     bread = bread_prefix() + [('Source', ' ')]
     return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
         title=t, bread=bread, learnmore=learnmore)
