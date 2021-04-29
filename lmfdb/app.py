@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
-# acknowledgement page, reads info from CONTRIBUTORS.yaml
+# acknowledgment page, reads info from CONTRIBUTORS.yaml
 
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
@@ -720,6 +720,7 @@ WhiteListedRoutes = [
     'inventory',
     'knowledge',
     'management',
+    'padicField',
     'news',
     'not_yet_implemented',
     'random',

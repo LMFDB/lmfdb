@@ -23,7 +23,7 @@
 
 {% for field in info.results: %}
 <tr>
-<td><a href="/LocalNumberField/{{field.label}}"> {{field.label}} </a></td>
+<td><a href="{{url_for('local_fields.by_label', label=field.label)}}"> {{field.label}} </a></td>
 <td align='left'>{{info.display_poly(field.coeffs)|safe}}</td>
 <td>${{field.p}}$</td>
 <td>${{field.e}}$</td>

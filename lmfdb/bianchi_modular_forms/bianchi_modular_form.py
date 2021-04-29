@@ -8,8 +8,8 @@ from sage.all import latex, QQ, PolynomialRing
 from lmfdb import db
 from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
-    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
-    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox,
+    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
+    SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     teXify_pol, search_wrap)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
@@ -18,13 +18,10 @@ from lmfdb.nfutils.psort import ideal_from_label, primes_iter
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 
-
-bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
-
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
 
 def learnmore_list():
-    return [('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Bianchi modular form labels', url_for(".labels_page"))]
@@ -69,11 +66,10 @@ def index():
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
 
-        credit = bianchi_credit
         t = 'Bianchi modular forms'
         bread = get_bread()
         info['learnmore'] = []
-        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+        return render_template("bmf-browse.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return bianchi_modular_form_search(info)
 
@@ -92,7 +88,6 @@ def interesting():
         db.bmf_forms,
         url_for_label=url_for_label,
         title="Some interesting Bianchi modular forms",
-        credit=bianchi_credit,
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
@@ -101,7 +96,7 @@ def interesting():
 def statistics():
     title = "Bianchi modular forms: statistics"
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=BianchiStats(), credit=bianchi_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=BianchiStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 def bianchi_modular_form_jump(info):
     label = info['jump'].strip()
@@ -152,6 +147,10 @@ def bianchi_modular_form_search(info, query):
     parse_noop(info, query, 'label')
     parse_ints(info, query, 'dimension')
     parse_ints(info, query, 'level_norm')
+    parse_primes(info, query, 'field_bad_primes', name='field bad primes',
+         qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
+    parse_primes(info, query, 'level_bad_primes', name='level bad primes',
+         qfield='level_bad_primes',mode=info.get('level_bad_quantifier'))
     if not 'sfe' in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
@@ -281,7 +280,6 @@ def bmf_field_dim_table(**args):
 def render_bmf_space_webpage(field_label, level_label):
     info = {}
     t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
-    credit = bianchi_credit
     bread = get_bread([
         (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
         (level_label, '')])
@@ -343,7 +341,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
-    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
+    return render_template("bmf-space.html", info=info, title=t, bread=bread, properties=properties, friends=friends, learnmore=learnmore_list())
 
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/download/<download_type>')
@@ -551,7 +549,6 @@ def download_bmf_sage(**args):
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
     label = "-".join([field_label, level_label, label_suffix])
-    credit = "John Cremona"
     info = {}
     title = "Bianchi cusp forms"
     data = None
@@ -586,7 +583,6 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         "bmf-newform.html",
         downloads=info["downloads"],
         title=title,
-        credit=credit,
         bread=bread,
         data=data,
         properties=properties,
@@ -619,33 +615,29 @@ def bianchi_modular_form_by_label(lab):
 def how_computed_page():
     t = 'Source of Bianchi modular form data'
     bread = get_bread("Source")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("double.html", kid='rcs.source.mf.bianchi', kid2='rcs.ack.mf.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @bmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Bianchi modular form data'
     bread = get_bread("Completeness")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    return render_template("single.html", kid='rcs.cande.mf.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @bmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Bianchi modular form data'
     bread = get_bread("Reliability")
-    credit = 'John Cremona'
-    return render_template("single.html", kid='dq.mf.bianchi.reliability',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.mf.bianchi',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @bmf_page.route("/Labels")
 def labels_page():
     t = 'Labels for Bianchi newforms'
     bread = get_bread("Labels")
-    credit = 'John Cremona'
     return render_template("single.html", kid='mf.bianchi.labels',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 
 class BMFSearchArray(SearchArray):
@@ -693,17 +685,34 @@ class BMFSearchArray(SearchArray):
             label='CM',
             knowl='mf.bianchi.cm'
         )
+        field_bad_quant = SubsetBox(
+            name="field_bad_quantifier")
+        field_bad_primes = TextBoxWithSelect(
+            name="field_bad_primes",
+            label="Field bad primes",
+            knowl="nf.ramified_primes",
+            example="5,13",
+            select_box=field_bad_quant)
+        level_bad_quant = SubsetBox(
+            name="level_bad_quantifier")
+        level_bad_primes = TextBoxWithSelect(
+            name="level_bad_primes",
+            label="Level bad primes",
+            knowl="mf.bianchi.level",
+            example="5,13",
+            select_box=level_bad_quant)
         count = CountBox()
 
         self.browse_array = [
             [field],
             [level, sign],
             [dimension, base_change],
-            [count, CM]
+            [count, CM],
+            [field_bad_primes, level_bad_primes]
         ]
         self.refine_array = [
-            [field, level, dimension],
-            [sign, base_change, CM]
+            [field, level, dimension, field_bad_primes],
+            [sign, base_change, CM, level_bad_primes]
         ]
 
 label_finder = re.compile(r"label=([0-9.]+)")

@@ -25,12 +25,6 @@ from lmfdb.ecnf.ecnf_stats import latex_tor
 q = ZZ['x'].gen()
 the_ECstats = None
 
-#########################
-#   Data credit
-#########################
-
-def ec_credit():
-    return 'John Cremona, Enrique  Gonz&aacute;lez Jim&eacute;nez, Robert Pollack, Jeremy Rouse, Andrew Sutherland and others: see <a href={}>here</a> for details'.format(url_for(".how_computed_page"))
 
 #########################
 #   Utility functions
@@ -60,8 +54,8 @@ def get_stats():
 #########################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page"))]
 
@@ -108,7 +102,6 @@ def rational_elliptic_curves(err_args=None):
         return redirect(url_for(".rational_elliptic_curves"))
     return render_template("ec-index.html",
                            info=info,
-                           credit=ec_credit(),
                            title=t,
                            bread=get_bread(),
                            learnmore=learnmore_list(),
@@ -124,7 +117,6 @@ def interesting():
         label_col="lmfdb_label",
         title=r"Some interesting elliptic curves over $\Q$",
         bread=get_bread("Interesting"),
-        credit=ec_credit(),
         learnmore=learnmore_list()
     )
 
@@ -178,7 +170,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'Currently, the database includes {} {} in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
+        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
     
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -221,7 +213,7 @@ def ctx_elliptic_curve_summary():
 def statistics():
     title = r'Elliptic curves over $\Q$: Statistics'
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=ECstats(), credit=ec_credit(), title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=ECstats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -346,8 +338,7 @@ def url_for_label(label):
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
-             bread=lambda:get_bread('Search results'),
-             credit=ec_credit)
+             bread=lambda:get_bread('Search results'))
 
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
@@ -487,7 +478,6 @@ def render_isogeny_class(iso_class):
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
-                           credit=ec_credit(),
                            title=class_data.title,
                            friends=class_data.friends,
                            KNOWL_ID="ec.q.%s"%iso_class,
@@ -532,7 +522,6 @@ def render_curve_webpage_by_label(label):
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
                          properties=data.properties,
-                         credit=ec_credit(),
                          data=data,
                          # set default show names but actually code snippets are filled in only when needed
                          code=code,
@@ -611,34 +600,33 @@ def download_EC_all(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@ec_page.route("/Source")
+def how_computed_page():
+    t = r'Source and acknowledgments for elliptic curve data over $\Q$'
+    bread = get_bread('Source')
+    return render_template("double.html", kid='rcs.source.ec.q', kid2='rcs.ack.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of Elliptic curve data over $\Q$'
+    t = r'Completeness of elliptic curve data over $\Q$'
     bread = get_bread('Completeness')
-    return render_template("single.html", kid='dq.ec.extent',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@ec_page.route("/Source")
-def how_computed_page():
-    t = r'Source of Elliptic curve data over $\Q$'
-    bread = get_bread('Source')
-    return render_template("single.html", kid='dq.ec.source',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("single.html", kid='rcs.cande.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Reliability")
 def reliability_page():
-    t = r'Reliability of Elliptic curve data over $\Q$'
+    t = r'Reliability of elliptic curve data over $\Q$'
     bread = get_bread('Reliability')
-    return render_template("single.html", kid='dq.ec.reliability',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
-    t = r'Labels for Elliptic curves over $\Q$'
+    t = r'Labels for elliptic curves over $\Q$'
     bread = get_bread('Labels')
     return render_template("single.html", kid='ec.q.lmfdb_label',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
 def ec_code_download(**args):

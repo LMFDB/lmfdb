@@ -16,6 +16,7 @@ from lmfdb.utils import (
     display_knowl,
     parse_ints,
     parse_bracketed_posints,
+    parse_nf_string,
     redirect_no_cache,
     search_wrap,
     Downloader,
@@ -613,6 +614,8 @@ def belyi_search(info, query):
     parse_ints(info, query, "g", "g")
     parse_ints(info, query, "deg", "deg")
     parse_ints(info, query, "orbit_size", "orbit_size")
+    parse_ints(info, query, "pass_size", "pass_size")
+    parse_nf_string(info,query,'field',name="base number field",qfield='moduli_field_label')
     # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
     for fld in ["geomtype", "group"]:
         if info.get(fld):
@@ -753,6 +756,12 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.genus",
             example="1",
             example_span="1, 0-2")
+        pass_size = TextBox(
+            name="pass_size",
+            label="Passport size",
+            knowl="belyi.pass_size",
+            example="2",
+            example_span="2, 5-6")
         orbit_size = TextBox(
             name="orbit_size",
             label="Orbit size",
@@ -764,8 +773,14 @@ class BelyiSearchArray(SearchArray):
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
+        field = TextBox(
+            name="field",
+            label="Base field",
+            knowl="belyi.base_field",
+            example="2.2.5.1",
+            example_span="2.2.5.1 or Qsqrt5")
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [geomtype], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [geomtype], [field], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, geomtype]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype]]

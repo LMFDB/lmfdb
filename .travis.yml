@@ -68,12 +68,12 @@ install:
     - export MAKE='make -j4'
     # what is the load on the server
     - uptime
-      #- wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    - wget --progress=dot:giga https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+      #- wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar
+    - wget --progress=dot:giga https://math.mit.edu/~edgarc/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar
     # what is the load on the server
     - uptime
     # travis_wait extends the default 10 minute timeout to 40 minutes
-    - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar -C ${HOME}
 
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log

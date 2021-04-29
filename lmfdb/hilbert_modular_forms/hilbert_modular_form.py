@@ -5,9 +5,9 @@ from flask import render_template, url_for, request, redirect, make_response
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, to_dict,
-    parse_nf_string, parse_ints, parse_hmf_weight,
+    parse_nf_string, parse_ints, parse_hmf_weight, parse_primes,
     teXify_pol, add_space_if_positive,
-    SearchArray, TextBox, ExcludeOnlyBox, CountBox,
+    SearchArray, TextBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache)
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.number_fields.number_field import field_pretty
@@ -49,8 +49,6 @@ def get_hmf_field(label):
     """
     return db.hmf_fields.lookup(label)
 
-hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
-
 @hmf_page.route("/random")
 @redirect_no_cache
 def random_hmf():    # Random Hilbert modular form
@@ -63,7 +61,6 @@ def interesting():
         db.hmf_forms,
         url_for_label,
         title="Some interesting Hilbert modular forms",
-        credit=hmf_credit,
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
@@ -75,7 +72,7 @@ def hilbert_modular_form_render_webpage():
         t = 'Hilbert modular forms'
         info['stats'] = HMFstats()
         info['counts'] = HMFstats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=get_bread(), learnmore=learnmore_list())
+        return render_template("hilbert_modular_form_all.html", info=info, title=t, bread=get_bread(), learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(info)
 
@@ -112,8 +109,8 @@ def hilbert_modular_form_by_label(lab):
 # Learn more box
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Hilbert modular form labels', url_for(".labels_page"))]
 
@@ -142,7 +139,6 @@ def hilbert_modular_form_jump(info):
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             credit=lambda: hmf_credit,
              properties=lambda: [])
 def hilbert_modular_form_search(info, query):
     parse_nf_string(info,query,'field_label',name="Field")
@@ -151,6 +147,10 @@ def hilbert_modular_form_search(info, query):
     parse_ints(info,query,'dimension')
     parse_ints(info,query,'level_norm', name="Level norm")
     parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
+    parse_primes(info, query, 'field_bad_primes', name='field bad primes',
+         qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
+    parse_primes(info, query, 'level_bad_primes', name='level bad primes',
+         qfield='level_bad_primes',mode=info.get('level_bad_quantifier'))
     if 'cm' in info:
         if info['cm'] == 'exclude':
             query['is_CM'] = 'no'
@@ -509,7 +509,6 @@ def render_hmf_webpage(**args):
         downloads=info["downloads"],
         info=info,
         properties=properties,
-        credit=hmf_credit,
         title=t,
         bread=bread,
         friends=info['friends'],
@@ -518,46 +517,44 @@ def render_hmf_webpage(**args):
     )
 
 #data quality pages
+@hmf_page.route("/Source")
+def how_computed_page():
+    t = 'Source and acknowledgments for Hilbert modular form data'
+    bread = get_bread("Source")
+    return render_template("double.html", kid='rcs.source.mf.hilbert', kid2='rcs.ack.mf.hilbert',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 @hmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Hilbert modular form data'
     bread = get_bread("Completeness")
-    return render_template("single.html", kid='dq.mf.hilbert.extent',
-                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@hmf_page.route("/Source")
-def how_computed_page():
-    t = 'Source of Hilbert modular form data'
-    bread = get_bread("Source")
-    return render_template("single.html", kid='dq.mf.hilbert.source',
-                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
-
+    return render_template("single.html", kid='rcs.cande.mf.hilbert',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 @hmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Hilbert modular form data'
     bread = get_bread("Reliability")
-    return render_template("single.html", kid='dq.mf.hilbert.reliability',
-                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.mf.hilbert',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @hmf_page.route("/Labels")
 def labels_page():
     t = 'Labels for Hilbert Modular forms'
     bread = get_bread("Labels")
     return render_template("single.html", kid='mf.hilbert.label',
-                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @hmf_page.route("/browse/")
 def browse():
-    credit = 'John Voight'
     t = 'Hilbert modular forms'
     bread = get_bread("Browse")
-    return render_template("hmf_stats.html", info=HMFstats(), credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("hmf_stats.html", info=HMFstats(), title=t, bread=bread, learnmore=learnmore_list())
 
 @hmf_page.route("/stats")
 def statistics():
     title = r'Hilbert modular forms: statistics'
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=HMFstats(), credit=hmf_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=HMFstats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @hmf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
@@ -575,7 +572,6 @@ def statistics_by_degree(d):
         info['degree'] = d
         info['stats'] = HMFstats().statistics(d)
 
-    credit = 'John Cremona'
     if d==2:
         t = 'Hilbert modular forms over real quadratic number fields'
     elif d==3:
@@ -595,7 +591,7 @@ def statistics_by_degree(d):
         t = 'Hilbert modular forms'
         bread = bread[:-1]
 
-    return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    return render_template("hmf_by_degree.html", info=info, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
 class HMFSearchArray(SearchArray):
@@ -660,6 +656,22 @@ class HMFSearchArray(SearchArray):
             label='CM',
             knowl='mf.cm',
         )
+        field_bad_quant = SubsetBox(
+            name="field_bad_quantifier")
+        field_bad_primes = TextBoxWithSelect(
+            name="field_bad_primes",
+            label="Field bad primes",
+            knowl="nf.ramified_primes",
+            example="5,13",
+            select_box=field_bad_quant)
+        level_bad_quant = SubsetBox(
+            name="level_bad_quantifier")
+        level_bad_primes = TextBoxWithSelect(
+            name="level_bad_primes",
+            label="Level bad primes",
+            knowl="mf.hilbert.level_norm",
+            example="5,13",
+            select_box=level_bad_quant)
         count = CountBox()
 
         self.browse_array = [
@@ -667,9 +679,10 @@ class HMFSearchArray(SearchArray):
             [degree, discriminant],
             [level, weight],
             [dimension, base_change],
-            [count, CM]
+            [count, CM],
+            [field_bad_primes, level_bad_primes]
         ]
         self.refine_array = [
-            [field, degree, discriminant, CM],
-            [weight, level, dimension, base_change],
+            [field, degree, discriminant, CM, field_bad_primes],
+            [weight, level, dimension, base_change, level_bad_primes],
         ]
