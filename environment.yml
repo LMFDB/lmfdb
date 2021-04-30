@@ -15,3 +15,5 @@ dependencies:
   - setuptools
   - tox
   - pip
+  - pyflakes
+  - pylint

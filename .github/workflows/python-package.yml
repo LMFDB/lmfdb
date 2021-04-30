@@ -23,8 +23,8 @@ jobs:
           - "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py" #6
 
     steps:
-    - uses: actions/checkout@latest
-    - uses: goanpeca/setup-miniconda@latest
+    - uses: actions/checkout@v2
+    - uses: goanpeca/setup-miniconda@v2
       with:
         auto-update-conda: true
         activate-environment: lmfdb
@@ -35,6 +35,10 @@ jobs:
     - name: Show conda info
       shell: bash -l {0}
       run: conda list
+    - name: pip stuff
+      shell: bash -l {0}
+      run:
+        - sage -pip install -r requirements.txt
     - name: Run Tox
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
