@@ -53,10 +53,9 @@ jobs:
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
-        CACHE_NUMBER: 4
+        CACHE_NUMBER: 5
       with:
         path: |
-          ~/conda_pkgs_dir
           /usr/share/miniconda/envs/lmfdb
         key:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
