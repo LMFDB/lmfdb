@@ -96,6 +96,10 @@ class AbvarFq_isoclass(object):
         self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+        if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
+            self.expanded_polynomial = ''
+        else:
+            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
