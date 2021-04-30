@@ -671,19 +671,6 @@ def statistics():
         learnmore=learnmore_list(),
     )
 
-
-@belyi_page.route("/Completeness")
-def completeness_page():
-    t = "Completeness of Belyi map data"
-    bread = get_bread("Completeness")
-    return render_template(
-        "single.html",
-        kid="rcs.cande.belyi",
-        title=t,
-        bread=bread,
-        learnmore=learnmore_list_remove("Completeness"),
-    )
-
 @belyi_page.route("/Source")
 def how_computed_page():
     t = "Source and acknowledgments for Belyi map data"
@@ -697,6 +684,18 @@ def how_computed_page():
         learnmore=learnmore_list_remove("Source"),
     )
 
+@belyi_page.route("/Completeness")
+def completeness_page():
+    t = "Completeness of Belyi map data"
+    bread = get_bread("Completeness")
+    return render_template(
+        "single.html",
+        kid="rcs.cande.belyi",
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list_remove("Completeness"),
+    )
+
 @belyi_page.route("/Reliability")
 def reliability_page():
     t = "Reliability of Belyi map data"
@@ -708,7 +707,6 @@ def reliability_page():
         bread=bread,
         learnmore=learnmore_list_remove("Reliability"),
     )
-
 
 @belyi_page.route("/Labels")
 def labels_page():
