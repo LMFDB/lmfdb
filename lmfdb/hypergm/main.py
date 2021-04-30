@@ -607,8 +607,8 @@ def completeness_page():
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
 
-@hypergm_page.route("/Completeness")
-def completeness_page():
+@hypergm_page.route("/Reliability")
+def reliability_page():
     t = r'Reliability of hypergeometric motive data over $\Q$'
     bread = get_bread(('Reliability', ''))
     return render_template("single.html", kid='rcs.rigor.hgm',
