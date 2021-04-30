@@ -513,16 +513,20 @@ def mod1(a):
     return a
 
 def fix_endpoint(Dkey, Dval, rat_prec):
-    if isinstance(Dval, dict) and Dval.get('$gte', 0) > Dval.get('$lte', 0):
-        return [{Dkey: {'$gte': Dval['$gte']}}, {Dkey: {'$lte': Dval['$lte']}}]
-    elif not isinstance(Dval, dict):
+    # Need to make sure that we don't add a spurious 0.5 when the lower endpoint is -0.5
+    if isinstance(Dval, dict):
+        if Dval.get("$gte", 0.5) == 0.5:
+            return [{Dkey: {"$lte": Dval.get("$lte", 0.5)}}]
+        elif Dval.get('$gte', -0.5) > Dval.get('$lte', 0.5):
+            return [{Dkey: {'$gte': Dval['$gte']}}, {Dkey: {'$lte': Dval['$lte']}}]
+        else:
+            return [{Dkey: Dval}]
+    else:
         if Dval.denominator().is_power_of(2):
             return [{Dkey: mod1(Dval)}]
         else:
             # Theoretically this could overlap 1/2, but that's pretty unlikely since rat_prec=10.
             return [{Dkey: {'$gte': mod1(Dval) - 10**(-rat_prec), '$lte': mod1(Dval) + 10**(-rat_prec)}}]
-    else:
-        return [{Dkey: Dval}]
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
@@ -549,19 +553,17 @@ def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
             return a
     if LIST_FLOAT_RE.match(inp):
         A = parse_range2(inp, qfield, parse_singleton, mod1)
-        print("A", A)
         # Deal with ranges that cross a boundary.  These can be detected by checking
         # if the start is larger than the end
         if A[0] == '$or':
             new_ors = []
             for D in A[1]:
                 print("D", D, list(D)[0], list(D.values())[0])
+                # D is a dictionary with one entry
                 new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0], rat_prec))
-            print("new_ors", new_ors)
             A[1] = new_ors
         else:
             L = fix_endpoint(A[0], A[1], rat_prec)
-            print("L", L)
             if len(L) == 1:
                 A[1] = L[0][A[0]]
             else:
