@@ -484,14 +484,14 @@ class LFSearchArray(SearchArray):
             label='Unramified degree',
             knowl='lf.unramified_degree',
             example='3',
-            example_span='e.g. 3, or a range like 2..6'
+            example_span='4, or a range like 1..4'
             )
         t = TextBox(
             name='t',
             label='Tame degree',
             knowl='lf.tame_degree',
             example='3',
-            example_span='e.g. 3, or a range like 2..6'
+            example_span='2, or a range like 2..3'
             )
         results = CountBox()
 
