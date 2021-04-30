@@ -38,33 +38,28 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Remove envs directory if exists to prevent cache restore errors. Github runner already has bundled conda.
-    - name: Remove envs directory
-      run: rm -Rf /usr/share/miniconda/envs
-
     - name: Cache conda
       uses: actions/cache@v2
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
-        CACHE_NUMBER: 3
+        CACHE_NUMBER: 4
       with:
         path: |
           ~/conda_pkgs_dir
-          /usr/share/miniconda/envs
+          /usr/share/miniconda/envs/lmfdb
         key:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
           hashFiles('.environment.yml') }}
     - uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: lmfdb
+        auto-activate-base: false
         # environment-file: .environment.yml
         condarc-file: .condarc.yml
         channel-priority: strict
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
         use-only-tar-bz2: true
-        # IMPORTANT: so we can run cache *after*, so we also restore the environment
-        auto-activate-base: false
 
     - name: Run install script
       # Only need to run install when deps has been changed
@@ -73,7 +68,9 @@ jobs:
 
     - name: Show conda info
       shell: bash -l {0}
-      run: conda list
+      run: |
+        conda info
+        conda list
 
     - name: Cache pip
       uses: actions/cache@v2
