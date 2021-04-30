@@ -55,7 +55,8 @@ jobs:
         condarc-file: .condarc.yml
         auto-activate-base: false
         channel-priority: strict
-        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+        # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
+        use-only-tar-bz2: true
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
