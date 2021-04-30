@@ -35,8 +35,6 @@ from .web_belyi import (
 from .web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
 from lmfdb.classical_modular_forms.web_newform import field_display_gen
 
-credit_string = "Michael Musty, Sam Schiavone, and John Voight"
-
 ###############################################################################
 # List and dictionaries needed routing and searching
 ###############################################################################
@@ -52,8 +50,9 @@ geometry_types_list = list(geometry_types_dict)
 
 def learnmore_list():
     return [
+        ("Source and acknowledgments", url_for(".how_computed_page")),
         ("Completeness of the data", url_for(".completeness_page")),
-        ("Source of the data", url_for(".how_computed_page")),
+        ("Reliability of the data", url_for(".reliability_page")),
         ("Belyi labels", url_for(".labels_page")),
     ]
 
@@ -86,7 +85,6 @@ def index():
     return render_template(
         "belyi_browse.html",
         info=info,
-        credit=credit_string,
         title=title,
         learnmore=learnmore_list(),
         bread=bread,
@@ -107,7 +105,6 @@ def interesting():
         url_for_label,
         title=r"Some interesting Belyi maps and passports",
         bread=get_bread("Interesting"),
-        credit=credit_string,
         learnmore=learnmore_list()
     )
 
@@ -215,7 +212,6 @@ def render_belyi_galmap_webpage(label):
     return render_template(
         "belyi_galmap.html",
         properties=belyi_galmap.properties,
-        credit=credit_string,
         info={},
         data=belyi_galmap.data,
         code=belyi_galmap.code,
@@ -236,7 +232,6 @@ def render_belyi_passport_webpage(label):
     return render_template(
         "belyi_passport.html",
         properties=belyi_passport.properties,
-        credit=credit_string,
         data=belyi_passport.data,
         bread=belyi_passport.bread,
         learnmore=learnmore_list(),
@@ -576,7 +571,6 @@ def url_for_label(label):
     projection=["label", "group", "deg", "g", "orbit_size", "abc", "lambdas", "moduli_field", "moduli_field_label"],
     url_for_label=url_for_label,
     bread=lambda: get_bread("Search results"),
-    credit=lambda: credit_string,
     learnmore=learnmore_list,
 )
 
@@ -672,7 +666,6 @@ def statistics():
     return render_template(
         "display_stats.html",
         info=Belyi_stats(),
-        credit=credit_string,
         title=title,
         bread=bread,
         learnmore=learnmore_list(),
@@ -685,25 +678,35 @@ def completeness_page():
     bread = get_bread("Completeness")
     return render_template(
         "single.html",
-        kid="dq.belyi.extent",
-        credit=credit_string,
+        kid="rcs.cande.belyi",
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Completeness"),
     )
 
-
 @belyi_page.route("/Source")
 def how_computed_page():
-    t = "Source of Belyi map data"
+    t = "Source and acknowledgments for Belyi map data"
     bread = get_bread("Source")
     return render_template(
-        "single.html",
-        kid="dq.belyi.source",
-        credit=credit_string,
+        "double.html",
+        kid="rcs.source.belyi",
+        kid2="rcs.source.belyi",
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),
+    )
+
+@belyi_page.route("/Reliability")
+def reliability_page():
+    t = "Reliability of Belyi map data"
+    bread = get_bread("Source")
+    return render_template(
+        "single.html",
+        kid="rcs.rigor.belyi",
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list_remove("Reliability"),
     )
 
 
@@ -714,7 +717,6 @@ def labels_page():
     return render_template(
         "single.html",
         kid="belyi.label",
-        credit=credit_string,
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("labels"),
