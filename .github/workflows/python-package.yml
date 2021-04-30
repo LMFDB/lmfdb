@@ -44,6 +44,7 @@ jobs:
 
     - name: Cache conda
       uses: actions/cache@v2
+      id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
         CACHE_NUMBER: 3
@@ -67,7 +68,7 @@ jobs:
 
     - name: Run install script
       # Only need to run install when deps has been changed
-      if: steps.conda.outputs.cache-hit != 'true'
+      if: steps.condacache.outputs.cache-hit != 'true'
       run: conda env create -f .environment.yml  || conda env update -f .environment.yml
 
     - name: Show conda info
