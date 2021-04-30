@@ -691,7 +691,7 @@ def how_computed_page():
     return render_template(
         "double.html",
         kid="rcs.source.belyi",
-        kid2="rcs.source.belyi",
+        kid2="rcs.ack.belyi",
         title=t,
         bread=bread,
         learnmore=learnmore_list_remove("Source"),
