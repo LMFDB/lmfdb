@@ -60,7 +60,7 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: lmfdb
-        environment-file: .environment.yml
+        # environment-file: .environment.yml
         condarc-file: .condarc.yml
         channel-priority: strict
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
@@ -71,7 +71,7 @@ jobs:
     - name: Run install script
       # Only need to run install when deps has been changed
       if: steps.conda.outputs.cache-hit != 'true'
-      run: conda env create -f .environment.yml
+      run: conda env create -f .environment.yml  || conda env update -f .environment.yml
 
     - name: Show conda info
       shell: bash -l {0}
