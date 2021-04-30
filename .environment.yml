@@ -12,8 +12,4 @@ channels:
 dependencies:
   - python
   - sage=9.1
-  - setuptools
   - tox
-  - pip
-  - pyflakes
-  - pylint

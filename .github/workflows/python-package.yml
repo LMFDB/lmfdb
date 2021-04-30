@@ -37,7 +37,7 @@ jobs:
       run: conda list
     - name: pip stuff
       shell: bash -l {0}
-      run: sage -pip install -r requirements.txt
+      run: sage -pip install -r requirements.txt && pip install pyflakes pylint
     - name: Run Tox
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
