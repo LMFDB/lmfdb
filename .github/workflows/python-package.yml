@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: goanpeca/setup-miniconda@v2
+    - uses: goanpeca/setup-miniconda@v1
       with:
         auto-update-conda: true
         activate-environment: lmfdb
