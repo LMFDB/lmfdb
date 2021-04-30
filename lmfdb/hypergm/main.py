@@ -543,7 +543,6 @@ def render_hgm_family_webpage(label):
                            info=info,
                            family=family,
                            properties=family.properties,
-                           credit=HGM_credit,
                            bread=family.bread,
                            title=family.title,
                            friends=family.friends,
