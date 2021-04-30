@@ -11,5 +11,5 @@ channels:
   - defaults
 dependencies:
   - python
-  - sage=9.1
+  - sage=9.2
   - tox
