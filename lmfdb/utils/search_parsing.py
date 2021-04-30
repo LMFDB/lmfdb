@@ -558,7 +558,6 @@ def parse_mod1(inp, query, qfield, exact_den=4, rat_prec=10):
         if A[0] == '$or':
             new_ors = []
             for D in A[1]:
-                print("D", D, list(D)[0], list(D.values())[0])
                 # D is a dictionary with one entry
                 new_ors.extend(fix_endpoint(list(D)[0], list(D.values())[0], rat_prec))
             A[1] = new_ors
