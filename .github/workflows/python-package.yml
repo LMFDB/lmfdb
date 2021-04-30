@@ -37,21 +37,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/setup-python@v2
       with:
-        activate-environment: lmfdb
-        environment-file: .environment.yml
-        condarc-file: .condarc.yml
-        channel-priority: strict
-        # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
-        use-only-tar-bz2: true
-        # IMPORTANT: so we can run cache *after*, so we also restore the environment
-        auto-activate-base: false
+        python-version: 3.x
+    # Remove envs directory if exists to prevent cache restore errors. Github runner already has bundled conda.
+    - name: Remove envs directory
+        run: rm -rf /usr/share/miniconda/envs
     - name: Cache conda
       uses: actions/cache@v2
       env:
         # Increase this value to reset cache if .environment.yml has not changed
-        CACHE_NUMBER: 1
+        CACHE_NUMBER: 2
       with:
         path: |
           ~/conda_pkgs_dir
@@ -59,13 +55,25 @@ jobs:
         key:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
           hashFiles('.environment.yml') }}
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: lmfdb
+        #environment-file: .environment.yml
+        condarc-file: .condarc.yml
+        channel-priority: strict
+        # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
+        use-only-tar-bz2: true
+        # IMPORTANT: so we can run cache *after*, so we also restore the environment
+        auto-activate-base: false
     - name: Run install script
       # Only need to run install when deps has been changed
       if: steps.conda.outputs.cache-hit != 'true'
-      run: conda env create -f environment.yml
+      run: conda env create -f .environment.yml
+
     - name: Show conda info
       shell: bash -l {0}
       run: conda list
+
     - name: Cache pip
       uses: actions/cache@v2
       with:
@@ -76,14 +84,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
           ${{ runner.os }}-
+
     - name: pip stuff
       shell: bash -l {0}
       run: |
         sage -pip install -r requirements.txt
         pip install pyflakes pylint
+
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
+
     - name: Run Tox
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
