@@ -42,7 +42,7 @@ jobs:
         python-version: 3.x
     # Remove envs directory if exists to prevent cache restore errors. Github runner already has bundled conda.
     - name: Remove envs directory
-        run: rm -rf /usr/share/miniconda/envs
+      run: rm -rf /usr/share/miniconda/envs
     - name: Cache conda
       uses: actions/cache@v2
       env:
