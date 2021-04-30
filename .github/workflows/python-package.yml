@@ -18,7 +18,6 @@ jobs:
           - "lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py"
           - "lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py"
           - "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py"
-          - "lmfdb/genus2_curves/test_genus2_curves.py lmfdb/lfunctions/test_lfunctions.py"
           - "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py"
           - "lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py"
           - "lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py"
@@ -33,6 +32,8 @@ jobs:
           - "lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py"
           - "lmfdb/classical_modular_forms/test_cmf.py"
           - "lmfdb/artin_representations/test_artin_representation.py"
+          - "lmfdb/genus2_curves/test_genus2_curves.py"
+          - "lmfdb/lfunctions/test_lfunctions.py"
 
     steps:
     - uses: actions/checkout@v2
