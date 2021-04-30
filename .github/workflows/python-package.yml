@@ -49,7 +49,7 @@ jobs:
       uses: actions/cache@v2
       env:
         # Increase this value to reset cache if .environment.yml has not changed
-        CACHE_NUMBER: 2
+        CACHE_NUMBER: 3
       with:
         path: |
           ~/conda_pkgs_dir
