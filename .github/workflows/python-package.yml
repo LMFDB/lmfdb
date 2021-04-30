@@ -36,9 +36,6 @@ jobs:
           - "lmfdb/lfunctions/test_lfunctions.py"
 
     steps:
-    - name: checking that we didn't miss any test files
-      shell: bash -l {0}
-      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
       with:
@@ -85,6 +82,9 @@ jobs:
       run: |
         sage -pip install -r requirements.txt
         pip install pyflakes pylint
+    - name: checking that we didn't miss any test files
+      shell: bash -l {0}
+      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
     - name: Run Tox
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
