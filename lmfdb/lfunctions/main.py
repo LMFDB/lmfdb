@@ -463,7 +463,7 @@ class LFunctionSearchArray(SearchArray):
         else:
             root_angle = TextBox(
                 name="root_angle",
-                knowl="lfunction.sign",
+                knowl="lfunction.root_angle_input",
                 label="Root angle",
                 example="0.5",
                 example_span="0.5, -0.1-0.1")
