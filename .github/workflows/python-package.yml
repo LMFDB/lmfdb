@@ -45,6 +45,16 @@ jobs:
     - name: Show conda info
       shell: bash -l {0}
       run: conda list
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
     - name: pip stuff
       shell: bash -l {0}
       run: sage -pip install -r requirements.txt && pip install pyflakes pylint
