@@ -14,10 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        files: # 4*7 + 6 + test_workshoplinks.py + test_external.py = 36 total number of test files
+        files: # 7 + 7 + 3 + 4 + 7 + 6 + test_workshoplinks.py + test_external.py = 36 total number of test files
           - "lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/genus2_curves/test_genus2_curves.py" #7
-          - "lmfdb/lfunctions/test_lfunctions.py lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py lmfdb/tests/test_homepage.py" #7
-          - "lmfdb/classical_modular_forms/test_cmf.py lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py" #7
+          - "lmfdb/lfunctions/test_lfunctions.py lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py" #3
+          - "lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py lmfdb/tests/test_homepage.py" #4
+          - "lmfdb/classical_modular_forms/test_cmf.py lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py" # 4
+          - "lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py" #7
           - "lmfdb/cluster_pictures/test_clusterpicture.py lmfdb/local_fields/test_localfields.py lmfdb/artin_representations/test_artin_representation.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py" #7
           - "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py" #6
 
@@ -42,6 +44,9 @@ jobs:
         auto-activate-base: false
         channel-priority: strict
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+    - name: checking that we didn't miss any test files
+      shell: bash -l {0}
+      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
     - name: Show conda info
       shell: bash -l {0}
       run: conda list
