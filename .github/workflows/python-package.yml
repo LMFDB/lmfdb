@@ -38,9 +38,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
     # Remove envs directory if exists to prevent cache restore errors. Github runner already has bundled conda.
     - name: Remove envs directory
       run: rm -Rf /usr/share/miniconda/envs
