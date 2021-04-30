@@ -8,7 +8,6 @@
 name: lmfdb
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python
   - sage=9.2
