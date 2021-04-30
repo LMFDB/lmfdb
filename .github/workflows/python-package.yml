@@ -51,6 +51,7 @@ jobs:
         key:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
           hashFiles('.environment.yml') }}
+
     - uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: lmfdb
