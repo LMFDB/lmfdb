@@ -46,7 +46,6 @@ jobs:
         activate-environment: lmfdb
         environment-file: .environment.yml
         condarc-file: .condarc.yml
-        auto-activate-base: false
         channel-priority: strict
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
         use-only-tar-bz2: true
@@ -65,10 +64,9 @@ jobs:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
           hashFiles('.environment.yml') }}
     - name: Run install script
-        # Only need to run install when deps has been changed
-        if: steps.conda.outputs.cache-hit != 'true'
-        run: |
-          conda env create -f environment.yml
+      # Only need to run install when deps has been changed
+      if: steps.conda.outputs.cache-hit != 'true'
+      run: conda env create -f environment.yml
     - name: Show conda info
       shell: bash -l {0}
       run: conda list
@@ -84,7 +82,9 @@ jobs:
           ${{ runner.os }}-
     - name: pip stuff
       shell: bash -l {0}
-      run: sage -pip install -r requirements.txt && pip install pyflakes pylint
+      run: |
+        sage -pip install -r requirements.txt
+        pip install pyflakes pylint
     - name: Run Tox
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
