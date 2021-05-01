@@ -946,7 +946,8 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise SearchParsingError('It is not a valid field name or label, or a defining polynomial.')
 
     # Expand out factored labels, like 11.11.11e20.1
-    if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
+    from lmfdb.number_fields.number_field import FIELD_LABEL_RE
+    if not FIELD_LABEL_RE.match(F):
         raise SearchParsingError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
     def raise_power(ab):
@@ -980,7 +981,8 @@ def input_to_subfield(inp):
         return None
 
     # Do we have a nf label
-    if re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',inp):
+    from lmfdb.number_fields.number_field import FIELD_LABEL_RE
+    if FIELD_LABEL_RE.match(inp):
         from lmfdb import db
         myfield = db.nf_fields.lookup(inp)
         if myfield:
