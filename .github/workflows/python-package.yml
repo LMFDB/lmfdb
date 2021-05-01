@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         files:  # files below + test_workshoplinks.py + test_external.py = 37 total number of test files
+          - "lint" # this one is not a file but triggers to only do linting
           - "lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py"
           - "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py"
           - "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py"
@@ -83,6 +84,12 @@ jobs:
       # If this fails you need to update the file list above and file count
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 37
 
-    - name: Run LMFDB tests and linting
+    - name: Run LMFDB tests
+      if: matrix.files != 'lint'
       shell: bash -l {0}
-      run: tox -- ${{ matrix.files}}
+      run: tox -e tests -- ${{ matrix.files}}
+
+    - name: Run linting
+      if: matrix.files == 'lint'
+      shell: bash -l {0}
+      run: tox -e lint
