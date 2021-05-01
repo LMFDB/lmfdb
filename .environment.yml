@@ -6,6 +6,10 @@
 ## See https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533
 ## or    https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 name: lmfdb
+channel_priority: strict
+safety_checks: disabled
+channels:
+  - conda-forge
 channels:
   - conda-forge
 dependencies:

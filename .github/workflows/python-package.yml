@@ -30,8 +30,7 @@ jobs:
       with:
         activate-environment: lmfdb
         auto-activate-base: false
-        # environment-file: .environment.yml
-        condarc-file: .condarc.yml
+        # environment-file: .environment.yml # now we install after cache
         channel-priority: strict
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
         use-only-tar-bz2: true
