@@ -1111,6 +1111,9 @@ def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
     flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
 
+def flash_info(errmsg, *args):
+    """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
+    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
 
 ################################################################################
 #  Ajax utilities

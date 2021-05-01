@@ -17,7 +17,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix',
            'code_snippet_knowl',
            'Pagination',
-           'debug', 'flash_error', 'flash_warning',
+           'debug', 'flash_error', 'flash_warning', 'flash_info',
            'ajax_url',
            'image_callback', 'encode_plot',
            'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_mod1', 'parse_rational', 'parse_rational_to_list',
@@ -62,7 +62,7 @@ from .utilities import (
     bigpoly_knowl, factor_base_factor, factor_base_factorization_latex,
     polyquo_knowl, web_latex_poly, list_to_latex_matrix, code_snippet_knowl,
     Pagination,
-    debug, flash_error, flash_warning,
+    debug, flash_error, flash_warning, flash_info,
     ajax_url,  # try to eliminate?
     image_callback, encode_plot, raw_typeset, letters2num, num2letters,
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)

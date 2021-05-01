@@ -107,7 +107,7 @@ def list():
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
-    n = len(users)/COLS
+    n = len(users)//COLS
     user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
