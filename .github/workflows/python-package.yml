@@ -83,7 +83,7 @@ jobs:
 
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
-      # if this fails you need to update the file list above and file count
+      # If this fails you need to update the file list above and file count
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
 
     - name: Run Tox
