@@ -83,6 +83,6 @@ jobs:
       # If this fails you need to update the file list above and file count
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 36
 
-    - name: Run Tox
+    - name: Run LMFDB tests and linting
       shell: bash -l {0}
       run: tox -- ${{ matrix.files}}
