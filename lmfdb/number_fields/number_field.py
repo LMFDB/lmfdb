@@ -18,7 +18,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset,
+    flash_info)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -752,11 +753,22 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+# Test if a user input polynomial is exactly the same as the one
+# in the database
+def is_new_poly(userinp, label):
+    dbcoeffs = db.nf_fields.lookup(label)['coeffs']
+    userinp = re.sub(r'[<>]','', userinp)
+    R = PolynomialRing(ZZ, 'x')
+    userpol = [int(z) for z in R(userinp).coefficients(sparse=False)]
+    return userpol != dbcoeffs
 
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
         parse_nf_string(info, query, 'jump',name="Label", qfield='label')
+        if 'x' in info['jump'].lower():
+            if is_new_poly(info['jump'].lower(), query['label']):
+                flash_info(r"The requested field $\Q[x]/\langle {}\rangle$ is isomorphic to the field below, but uses a different defining polynomial.".format(info['jump']))
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
