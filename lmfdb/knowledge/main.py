@@ -39,24 +39,17 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile("^[a-zA-Z0-9._-~]+$") # all unreserved URL characters
 def allowed_id(ID):
     if ID.endswith('comment'):
         main_knowl = ".".join(ID.split(".")[:-2])
         return knowldb.knowl_exists(main_knowl)
     if ID.endswith('top') or ID.endswith('bottom'):
-        if ID.startswith('belyi'):
-            extras = "[],T"
-        elif ID.startswith('hgm'):
-            extras = "AB"
-        elif ID.startswith('ec'):
-            extras = "CM"
-        elif ID.startswith('gg'):
-            extras = "T"
-        else:
-            extras = ""
-        for c in extras:
-            ID = ID.replace(c,'')
-    if not allowed_knowl_id.match(ID):
+        if not allow_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            flash_error("Label '%s' contains characters not allowed by knowl database; updated allowed_id function or change label scheme" % label)
+            return False
+    elif not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", ID)
