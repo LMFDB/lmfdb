@@ -753,15 +753,6 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
-# Test if a user input polynomial is exactly the same as the one
-# in the database
-def is_new_poly(userinp, label):
-    dbcoeffs = db.nf_fields.lookup(label)['coeffs']
-    userinp = re.sub(r'[<>]','', userinp)
-    R = PolynomialRing(ZZ, 'x')
-    userpol = [int(z) for z in R(userinp).coefficients(sparse=False)]
-    return userpol != dbcoeffs
-
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
