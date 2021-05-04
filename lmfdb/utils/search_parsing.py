@@ -874,11 +874,7 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         else:
             raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
 
-def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
-    if FF in ['q', 'Q']:
-        return '1.1.1.1'
-    if FF.lower() in ['qi', 'q(i)']:
-        return '2.0.4.1'
+def input_string_to_poly(FF):
     # Change unicode dash with minus sign
     FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
@@ -886,20 +882,27 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     # Remove non-ascii characters
     FF = re.sub(r'[^\x00-\x7f]', r'', FF)
     F = FF.lower() # keep original if needed
-    if len(F) == 0:
-        raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     # check if a polynomial was entered
     try:
-        F1 = coeff_to_poly(F)
+        return coeff_to_poly(F), F
     except Exception:
-        pass
-    else:
-        if len(str(F1.parent().gen())) == 1: # we only support single-letter variable names
-            from lmfdb.number_fields.number_field import poly_to_field_label
-            F1 = poly_to_field_label(F1)
-            if F1:
-                return F1
-            raise SearchParsingError('%s does not define a number field in the database.' % F)
+        return None, F, FF
+
+def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+    if FF in ['q', 'Q']:
+        return '1.1.1.1'
+    if FF.lower() in ['qi', 'q(i)']:
+        return '2.0.4.1'
+
+    F1, F, FF = input_string_to_poly(FF)
+    if len(F) == 0:
+        raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+    if F1 and len(str(F1.parent().gen())) == 1: # we only support single-letter variable names
+        from lmfdb.number_fields.number_field import poly_to_field_label
+        F1 = poly_to_field_label(F1)
+        if F1:
+            return F1
+        raise SearchParsingError('%s does not define a number field in the database.' % F)
 
     if F[0] == 'q':
         if '(' in F and ')' in F:
