@@ -43,7 +43,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'datetime_to_timestamp_in_ms', 'timestamp_in_ms_to_datetime',
            'TraceHash', 'TraceHashClass',
            'redirect_no_cache', 'nums2letters', 'letters2num', 'num2letters',
-           'raw_typeset']
+           'raw_typeset', 'input_string_to_poly']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -76,7 +76,7 @@ from .search_parsing import (
     parse_nf_elt, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield,
-    clean_input, prep_ranges)
+    clean_input, prep_ranges, input_string_to_poly)
 
 from .search_wrapper import search_wrap, count_wrap
 from .search_boxes import (

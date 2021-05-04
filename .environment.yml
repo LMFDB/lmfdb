@@ -10,8 +10,6 @@ channel_priority: strict
 safety_checks: disabled
 channels:
   - conda-forge
-channels:
-  - conda-forge
 dependencies:
   - python=3.9
   - sage=9.2
