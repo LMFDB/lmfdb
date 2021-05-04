@@ -65,7 +65,7 @@ from .utilities import (
     debug, flash_error, flash_warning, flash_info,
     ajax_url,  # try to eliminate?
     image_callback, encode_plot, raw_typeset, letters2num, num2letters,
-    datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime, input_string_to_poly)
+    datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
     parse_ints, parse_signed_ints, parse_floats, parse_mod1, parse_rational, parse_rational_to_list, parse_rats,
@@ -76,7 +76,7 @@ from .search_parsing import (
     parse_nf_elt, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield,
-    clean_input, prep_ranges)
+    clean_input, prep_ranges, input_string_to_poly)
 
 from .search_wrapper import search_wrap, count_wrap
 from .search_boxes import (
