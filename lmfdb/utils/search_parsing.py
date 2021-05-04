@@ -884,7 +884,7 @@ def input_string_to_poly(FF):
     F = FF.lower() # keep original if needed
     # check if a polynomial was entered
     try:
-        return coeff_to_poly(F), F
+        return coeff_to_poly(F), F, FF
     except Exception:
         return None, F, FF
 
