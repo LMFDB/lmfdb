@@ -230,7 +230,7 @@ def search(info, query):
     parse_ints(info, query, 'level', name='Level')
     parse_ints(info, query, 'weight', name='Weight')
     parse_character(info, query, 'character', name='Character')
-    parse_floats(info, query, 'spectral_parameter', name='Spectral parameter', allow_singletons=True)
+    parse_floats(info, query, 'spectral_parameter', name='Spectral parameter')
     if info.get('symmetry'):
         query['symmetry'] = int(info['symmetry'])
     query['__sort__'] = ['level', 'weight', 'conrey_index', 'spectral_parameter']

@@ -546,7 +546,7 @@ def parse_range_float(arg, key, exact_den=4, exact_prec=10, mod1=False):
         return [key, {'$gte': x - eps(prec), '$lte': x + eps(prec)}], "%s-%s" % (start, end)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_floats(inp, query, qfield, rat_prec=5, int_prec=1, allow_singletons=False):
+def parse_floats(inp, query, qfield):
     if LIST_FLOAT_RE.match(inp):
         A, clauses = parse_range_float(inp, qfield)
         collapse_ors(A, query)
