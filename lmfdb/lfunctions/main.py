@@ -267,7 +267,7 @@ def parse_spectral(inp, query, qfield):
     query[qfield] = out
 
 def common_parse(info, query):
-    info['z1'] = parse_floats(info,query,'z1', allow_singletons=True)
+    info['z1'] = parse_floats(info,query,'z1')
     parse_ints(info,query,'degree')
     parse_ints(info,query,'conductor')
     parse_bool(info,query,'primitive')
@@ -295,8 +295,8 @@ def common_parse(info, query):
     parse_spectral(info,query,'spectral_label')
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
-    info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor', allow_singletons=True)
-    info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor', allow_singletons=True)
+    info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
+    info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
     parse_sort(info, query)
     info['bigint_knowl'] = bigint_knowl
 
@@ -458,7 +458,7 @@ class LFunctionSearchArray(SearchArray):
         else:
             root_angle = TextBox(
                 name="root_angle",
-                knowl="lfunction.sign",
+                knowl="lfunction.root_angle_input",
                 label="Root angle",
                 example="0.5",
                 example_span="0.5, -0.1-0.1")

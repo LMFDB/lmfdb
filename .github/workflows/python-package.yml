@@ -1,0 +1,94 @@
+name: LMFDB CI
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ master, dev, web ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        files:  # files below + test_workshoplinks.py + test_external.py = 37 total number of test files
+          - "lint" # this one is not a file but triggers to only do linting
+          - "lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py"
+          - "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py"
+          - "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py"
+          - "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py"
+          - "lmfdb/cluster_pictures/test_clusterpicture.py lmfdb/local_fields/test_localfields.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py"
+          - "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py"
+          - "lmfdb/artin_representations/test_artin_representation.py lmfdb/genus2_curves/test_genus2_curves.py"
+          - "lmfdb/classical_modular_forms/test_cmf.py lmfdb/classical_modular_forms/test_cmf2.py"
+          - "lmfdb/lfunctions/test_lfunctions.py"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: lmfdb
+        auto-activate-base: false
+        # environment-file: .environment.yml # now we install after cache
+        channel-priority: strict
+        # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
+        use-only-tar-bz2: true
+
+    - name: Cache conda
+      uses: actions/cache@v2
+      id: condacache
+      env:
+        # Increase this value to reset cache if .environment.yml has not changed
+        CACHE_NUMBER: 0
+      with:
+        path: |
+          /usr/share/miniconda/envs/lmfdb
+        key:
+          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+          hashFiles('.environment.yml') }}
+
+
+
+    - name: Run install script
+      # Only need to run install when deps has been changed
+      if: steps.condacache.outputs.cache-hit != 'true'
+      run: conda env create -f .environment.yml  || conda env update -f .environment.yml
+
+    - name: Show conda info
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
+    - name: pip stuff
+      shell: bash -l {0}
+      run: |
+        sage -pip install -r requirements.txt
+        pip install pyflakes pylint
+
+    - name: checking that we didn't miss any test files
+      shell: bash -l {0}
+      # If this fails you need to update the file list above and file count
+      run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 37
+
+    - name: Run LMFDB tests
+      if: matrix.files != 'lint'
+      shell: bash -l {0}
+      run: tox -e tests -- ${{ matrix.files}}
+
+    - name: Run linting
+      if: matrix.files == 'lint'
+      shell: bash -l {0}
+      run: tox -e lint
