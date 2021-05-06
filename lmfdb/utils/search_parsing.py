@@ -552,7 +552,8 @@ def parse_floats(inp, query, qfield):
         collapse_ors(A, query)
         return clauses
     else:
-        raise SearchParsingError("It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121).")
+        msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
+        raise SearchParsingError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_mod1(inp, query, qfield, exact_den=4, exact_prec=10):
