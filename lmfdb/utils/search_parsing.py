@@ -463,6 +463,8 @@ def parse_range_float(arg, key, exact_den=4, exact_prec=10, mod1=False):
             return "%s/%s" % ((x * n).round(), n)
         if prec is None:
             prec = find_prec(rep)
+            if prec is None: # integer
+                prec = 0
         return "%.{}f".format(prec) % x
     def eps(prec=None):
         if prec is None:
