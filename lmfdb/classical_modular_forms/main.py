@@ -696,7 +696,7 @@ def common_parse(info, query, na_check=False):
                 query['level'] = {'$in': ZZ(query['level']).divisors()}
         else:
             query['level_is_' + info['level_type']] = True
-    parse_floats(info, query, 'analytic_conductor', name="Analytic conductor", allow_singletons=True)
+    parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
