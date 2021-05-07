@@ -845,11 +845,11 @@ def render_by_label(label):
                 s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
             else:
                 s = "<table>"
-                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,3)]) + '</th></tr>'
-                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:5])/n)
-                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(4)]) + '</td></tr>'
-                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[5:9])/n)
-                s += '</td><td align="center">'.join(["$%s$" % (z[5+i]/n) for i in range(4)]) + "</td></tr>"
+                s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-2,3)]) + '</th></tr>'
+                s += '<tr><th>$-$</th><td align="center">$1$</td><td align="center">$%s$</td><td align="center">' % (sum(z[1:6])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[1+i]/n) for i in range(5)]) + '</td></tr>'
+                s += '<tr><th>$a_1=0$</td><td align="center">$%s$</td><td align="center">$%s$</td><td align="center">' % (z[0]/n,sum(z[6:11])/n)
+                s += '</td><td align="center">'.join(["$%s$" % (z[6+i]/n) for i in range(5)]) + "</td></tr>"
                 s += "</table>"
             info['probabilities'] = s
         elif data['degree'] == 6:
