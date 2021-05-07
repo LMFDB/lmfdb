@@ -18,7 +18,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset)
+    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset,
+    flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -752,11 +753,14 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
-
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
         parse_nf_string(info, query, 'jump',name="Label", qfield='label')
+        # we end up parsing the string twice, but that is okay
+        F1, _, _ = input_string_to_poly(info['jump'])
+        if F1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
+            flash_info(r"The requested field $\Q[{}]/\langle {}\rangle$ is isomorphic to the field below, but uses a different defining polynomial.".format(str(F1.parent().gen()), latex(F1)))
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))

@@ -24,11 +24,10 @@ from .web_family import WebHyperGeometricFamily
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
 
-HGM_credit = 'D. Roberts and M. Watkins'
-
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Hypergeometric motive labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -269,7 +268,6 @@ def index():
         "hgm-index.html",
         title=r"Hypergeometric motives over $\Q$",
         bread=get_bread(),
-        credit=HGM_credit,
         info=info,
         learnmore=learnmore_list())
 
@@ -352,7 +350,6 @@ def url_for_label(label):
              shortcuts={'jump': hgm_jump},
              url_for_label=url_for_label,
              bread=lambda: get_bread([("Search results", '')]),
-             credit=lambda: HGM_credit,
              learnmore=learnmore_list)
 def hgm_search(info, query):
     info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
@@ -494,7 +491,6 @@ def render_hgm_webpage(label):
     bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
     return render_template(
         "hgm-show-motive.html",
-        credit=HGM_credit,
         title=title,
         bread=bread,
         info=info,
@@ -547,7 +543,6 @@ def render_hgm_family_webpage(label):
                            info=info,
                            family=family,
                            properties=family.properties,
-                           credit=HGM_credit,
                            bread=family.bread,
                            title=family.title,
                            friends=family.friends,
@@ -580,7 +575,6 @@ def interesting_families():
         regex=HGM_FAMILY_LABEL_RE,
         title=r"Some interesting families of hypergeometric motives",
         bread=get_bread([("Interesting", " ")]),
-        credit=HGM_credit,
         learnmore=learnmore_list()
     )
 
@@ -593,32 +587,39 @@ def interesting_motives():
         regex=HGM_LABEL_RE,
         title=r"Some interesting hypergeometric motives",
         bread=get_bread([("Interesting motives", " ")]),
-        credit=HGM_credit,
         learnmore=learnmore_list()
     )
+
+@hypergm_page.route("/Source")
+def how_computed_page():
+    t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
+    bread = get_bread(('Source',''))
+    return render_template("double.html", kid='rcs.source.hgm', kid2='rcs.ack.hgm',
+           title=t, bread=bread,
+           learnmore=learnmore_list_remove('Source'))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
     bread = get_bread(('Completeness', ''))
-    return render_template("single.html", kid='dq.hgm.extent',
-           credit=HGM_credit, title=t, bread=bread,
+    return render_template("single.html", kid='rcs.cande.hgm',
+           title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
 
-@hypergm_page.route("/Source")
-def how_computed_page():
-    t = r'Source of hypergeometric motive Data over $\Q$'
-    bread = get_bread(('Source',''))
-    return render_template("single.html", kid='dq.hgm.source',
-           credit=HGM_credit, title=t, bread=bread,
-           learnmore=learnmore_list_remove('Source'))
+@hypergm_page.route("/Reliability")
+def reliability_page():
+    t = r'Reliability of hypergeometric motive data over $\Q$'
+    bread = get_bread(('Reliability', ''))
+    return render_template("single.html", kid='rcs.rigor.hgm',
+           title=t, bread=bread,
+           learnmore=learnmore_list_remove('Reliability'))
 
 @hypergm_page.route("/Labels")
 def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
-           credit=HGM_credit, title=t, bread=bread,
+           title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))
 
 class HGMSearchArray(SearchArray):
