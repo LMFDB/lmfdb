@@ -45,7 +45,7 @@ def allowed_id(ID):
         main_knowl = ".".join(ID.split(".")[:-2])
         return knowldb.knowl_exists(main_knowl)
     if ID.endswith('top') or ID.endswith('bottom'):
-        if not allow_annotation_id.match(ID):
+        if not allowed_annotation_id.match(ID):
             label = '.'.join(ID.split(".")[1:-1])
             flash_error("Label '%s' contains characters not allowed by knowl database; updated allowed_id function or change label scheme" % label)
             return False
