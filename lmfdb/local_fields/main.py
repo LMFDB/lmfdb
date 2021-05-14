@@ -195,6 +195,8 @@ class LF_download(Downloader):
 def local_field_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'u',name='Unramified degree')
+    parse_ints(info,query,'t',name='Tame degree')
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
@@ -477,10 +479,24 @@ class LFSearchArray(SearchArray):
                 display_knowl('group.small_group_label', "GAP id's"),
                 display_knowl('nf.galois_group.name', 'list of group labels'),
                 display_knowl('gg.label', 'transitive group labels')))
+        u = TextBox(
+            name='u',
+            label='Galois unramified degree',
+            knowl='lf.unramified_degree',
+            example='3',
+            example_span='3, or a range like 1..4'
+            )
+        t = TextBox(
+            name='t',
+            label='Galois tame degree',
+            knowl='lf.tame_degree',
+            example='2',
+            example_span='2, or a range like 2..3'
+            )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
-        self.refine_array = [[degree, c, gal], [qp, e, topslope]]
+        self.browse_array = [[degree], [qp], [c], [e], [topslope], [u], [t], [gal], [results]]
+        self.refine_array = [[degree, c, gal, u], [qp, e, topslope, t]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
