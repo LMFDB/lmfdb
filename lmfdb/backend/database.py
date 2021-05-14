@@ -529,6 +529,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         else:
             extra_order = table.extra_cols
         label_col = table._label_col
+        table_description = table.table_description
+        col_description = table.col_description
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table.search_cols
@@ -536,6 +538,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             new_name,
             search_columns,
             label_col,
+            table_description,
+            col_description,
             sort,
             id_ordered,
             extra_columns,
@@ -1095,7 +1099,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                             if name != "id":
                                 extra_columns[typ].append(name)
                     # the rest of the meta arguments will be replaced on the reload_all
-                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
+                    self.create_table(tablename, search_columns, None, table_description=meta["table_description"], col_description=meta["col_description"], extra_columns=extra_columns)
 
             for tablename in self.tablenames:
                 included = []
