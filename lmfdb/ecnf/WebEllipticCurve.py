@@ -92,16 +92,19 @@ def pretty_ideal(Kgen, s, enclose=True):
         gens = gens.replace(Kgen, r"\phi")
     return r"\(" + gens + r"\)" if enclose else gens
     
-def latex_factorization(plist, exponents):
-    """
-    plist is a list of strings representing prime ideals P in latex without math delimiters.
+def latex_factorization(plist, exponents, sign=+1):
+    """plist is a list of strings representing prime ideals P (or other things) in latex without math delimiters.
     exponents is a list (of the same length) of non-negative integer exponents e, possibly  0.
 
-    output is a latex string for the product of the P^e
+    output is a latex string for the product of the P^e.
+
+    When the factors are integers (for the factorization of a norm,
+    for example) set sign=-1 to preprend a minus sign.
+
     """
     factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(plist, exponents)]
     factors = [f for f in factors if f] # exclude any factors with exponent 0
-    return r"\({}\)".format(r"\cdot".join(factors))
+    return r"\({}{}\)".format("-" if sign==-1 else "", r"\cdot".join(factors))
 
 def parse_point(K, s):
     r""" Returns a point in P^2(K) defined by the string s.  s has the form
@@ -333,12 +336,13 @@ class ECNF(object):
             Dnorm_factor = local_data[ip]['normp']**12
 
         self.disc_norm = web_latex(Dnorm)
-        if Dnorm == 1:  # since the factorization of (1) displays as "1"
+        signDnorm = 1 if Dnorm>0 else -1
+        if Dnorm in [1, -1]:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
-            self.fact_disc_norm = '1'
+            self.fact_disc_norm = str(Dnorm)
         else:
             self.fact_disc      = latex_factorization(badprimes, disc_ords)
-            self.fact_disc_norm = latex_factorization(badnorms, disc_ords)
+            self.fact_disc_norm = latex_factorization(badnorms, disc_ords, sign=signDnorm)
 
         if self.is_minimal:
             Dmin_norm = Dnorm
@@ -348,12 +352,12 @@ class ECNF(object):
             self.mindisc = pretty_ideal(Kgen, self.minD)
 
         self.mindisc_norm = web_latex(Dmin_norm)
-        if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
+        if Dmin_norm in [1,-1]:  # since the factorization of (1) displays as "1"
             self.fact_mindisc      = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
             self.fact_mindisc      = latex_factorization(badprimes, mindisc_ords)
-            self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords)
+            self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords, sign=signDnorm)
 
         j = self.field.parse_NFelt(self.jinv)
         self.j = web_latex(j)
