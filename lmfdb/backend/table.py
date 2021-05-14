@@ -141,6 +141,8 @@ class PostgresTable(PostgresBase):
         stats_valid=True,
         total=None,
         include_nones=False,
+        table_description=None,
+        col_description=None,
         data_types=None,
     ):
         self.search_table = search_table
@@ -165,6 +167,12 @@ class PostgresTable(PostgresBase):
         self.col_type.update(extend_coltype)
         self._set_sort(sort)
         self.stats = self._stats_table_class_(self, total)
+        if table_description is None:
+            table_description = ""
+        if col_description is None:
+            col_description = {col: "" for col in self.search_cols + self.extra_cols}
+        self.table_description = table_description
+        self.col_description = col_description
 
     def _set_sort(self, sort):
         """
@@ -2188,7 +2196,30 @@ class PostgresTable(PostgresBase):
         """
         return self._label_col
 
-    def add_column(self, name, datatype, extra=False, label=False):
+    def set_description(self, table_description):
+        """
+        Set the description string for this table in meta_tables
+        """
+        assert isinstance(table_description, str)
+        modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
+        self._execute(modifier, [table_description, self.search_table])
+        self.table_description = table_description
+
+    def set_column_description(self, col, description, drop=False):
+        """
+        Set the description for a column in meta_tables.
+        """
+        if not col in self.search_cols + self.extra_cols:
+            raise ValueError("%s is not a column of this table" % col)
+        assert isinstance(description, str)
+        if drop:
+            del self.col_description[col]
+        else:
+            self.col_description[col] = description
+        modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
+        self._execute(modifier, [Json(self.col_description), self.search_table])
+
+    def add_column(self, name, datatype, description=None, extra=False, label=False, force_description=False):
         """
         Adds a column to this table.
 
@@ -2196,6 +2227,7 @@ class PostgresTable(PostgresBase):
 
         - ``name`` -- a string giving the column name.  Must not be a current column name.
         - ``datatype`` -- a valid Postgres data type (e.g. 'numeric' or 'text')
+        - ``description`` -- a string giving the description of the column
         - ``extra`` -- whether this column should be added to the extras table.
           If no extras table has been created, you must call ``create_extra_table`` first.
         - ``label`` -- whether this column should be set as the label column for this table
@@ -2207,6 +2239,10 @@ class PostgresTable(PostgresBase):
             raise ValueError("%s already has column %s" % (self.extra_table, name))
         if label and extra:
             raise ValueError("label must be a search column")
+        if force_description and description is None:
+            raise ValueError("You must provide a description of this column")
+        elif description is None:
+            description = ""
         self._check_locks()
         self._check_col_datatype(datatype)
         self.col_type[name] = datatype
@@ -2229,6 +2265,7 @@ class PostgresTable(PostgresBase):
                 self.search_cols.append(name)
             if label:
                 self.set_label(name)
+            self.set_column_description(name, description)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True, force=False):
@@ -2253,6 +2290,7 @@ class PostgresTable(PostgresBase):
                 % (self.search_table, name)
             )
         with DelayCommit(self, commit, silence=True):
+            self.set_column_description(name, "", drop=True)
             if name in self.search_cols:
                 table = self.search_table
                 counts_table = table + "_counts"
