@@ -481,22 +481,22 @@ class LFSearchArray(SearchArray):
                 display_knowl('gg.label', 'transitive group labels')))
         u = TextBox(
             name='u',
-            label='Unramified degree',
+            label='Galois unramified degree',
             knowl='lf.unramified_degree',
             example='3',
-            example_span='4, or a range like 1..4'
+            example_span='3, or a range like 1..4'
             )
         t = TextBox(
             name='t',
-            label='Tame degree',
+            label='Galois tame degree',
             knowl='lf.tame_degree',
-            example='3',
+            example='2',
             example_span='2, or a range like 2..3'
             )
         results = CountBox()
 
         self.browse_array = [[degree], [qp], [c], [e], [topslope], [u], [t], [gal], [results]]
-        self.refine_array = [[degree, c, gal], [qp, e, topslope], [u, t]]
+        self.refine_array = [[degree, c, gal, u], [qp, e, topslope, t]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
