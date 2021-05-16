@@ -10,6 +10,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
+    parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
@@ -18,7 +19,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
-    knowl_cache, galdata, galunformatter,
+    knowl_cache, galdata, galunformatter, small_group_display_knowl,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
@@ -201,6 +202,8 @@ def local_field_search(info,query):
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_bracketed_posints(info,query,'inertia_gap',exactlength=2, allow0=True)
+    parse_bracketed_posints(info,query,'wild_gap',exactlength=2, allow0=True)
     info['group_display'] = group_pretty_and_nTj
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
@@ -281,6 +284,12 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
+        if 'wild_gap' in data:
+            wild_inertia = small_group_display_knowl(data['wild_gap'][0],
+                data['wild_gap'][1])
+        else:
+            wild_inertia = 'data not computed'
+
         info.update({
                     'polynomial': raw_typeset(polynomial),
                     'n': data['n'],
@@ -297,6 +306,7 @@ def render_field_webpage(args):
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
+                    'wild_inertia': wild_inertia,
                     'unram': unramp,
                     'eisen': eisenp,
                     'gms': data['gms'],
@@ -492,10 +502,25 @@ class LFSearchArray(SearchArray):
             example='2',
             example_span='2, or a range like 2..3'
             )
+        inertia = TextBox(
+            name='inertia_gap',
+            label='Inertia subgroup',
+            knowl='lf.inertia_group',
+            example='[3,1]',
+            example_span=display_knowl('group.small_group_label', "GAP id") + ' of a group like [3,1]'
+            )
+        wild = TextBox(
+            name='wild_gap',
+            label='Wild inertia subgroup',
+            knowl='lf.wild_inertia_group',
+            example='[4,1]',
+            example_span=display_knowl('group.small_group_label', "GAP id") + ' of a group like [3,1]'
+            )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [topslope], [u], [t], [gal], [results]]
-        self.refine_array = [[degree, c, gal, u], [qp, e, topslope, t]]
+        self.browse_array = [[degree], [qp], [c], [e], [topslope], [u], [t], [gal], [results], [inertia],
+            [wild]]
+        self.refine_array = [[degree, c, gal, inertia, u], [qp, e, topslope, wild, t]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
