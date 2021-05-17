@@ -52,7 +52,7 @@ def smallgroup_cache(gap_labels, cache=None, reverse=None):
 def small_group_display_knowl(n, k, name=None, cache=None):
     label = '%s.%s' % (n, k)
     if not name:
-        myname = '$[%d, %d]$'%(n,k)
+        myname = 'GAP id $[%d, %d]$'%(n,k)
     else:
         myname = name
     if cache:
