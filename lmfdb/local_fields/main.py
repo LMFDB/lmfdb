@@ -10,7 +10,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
-    parse_bracketed_posints,
+    parse_bracketed_posints, parse_inertia,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
@@ -202,8 +202,8 @@ def local_field_search(info,query):
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
-    parse_bracketed_posints(info,query,'inertia_gap',exactlength=2, allow0=True)
-    parse_bracketed_posints(info,query,'wild_gap',exactlength=2, allow0=True)
+    parse_inertia(info,query,qfield=('inertia_gap','inertia'))
+    parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['group_display'] = group_pretty_and_nTj
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content

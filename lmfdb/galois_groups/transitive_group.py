@@ -644,6 +644,11 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
+def nt2gap(n, t):
+    res = db.gps_transitive.lookup('{}T{}'.format(n,t))
+    if res and 'gapid' in res:
+        return [res['order'], res['gapid']]
+    raise NameError('GAP id not found')
 
 def complete_group_code(code):
     # Order direct products
