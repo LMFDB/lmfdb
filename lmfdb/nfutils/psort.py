@@ -129,7 +129,7 @@ def make_keys(K,p):
                 key_dict[P] = (P.norm(),e,i)
 
         # Lastly we add a field j to each key (n,e,i) -> (n,j,e,i)
-        # which is its index in the sublist with same n-value.  This
+        # which is its index in the sublist with the same n-value.  This
         # will not affect sorting but is used in the label n.j.
 
         vals = list(key_dict.values())
@@ -208,7 +208,13 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     # The set of possible degrees f of primes is the set of cycle
     # lengths in the Galois group acting as permutations on the roots
     # of the defining polynomial:
-    dlist = Set(sum([list(g.cycle_type()) for g in K.galois_group('gap').group()],[]))
+
+    from sage.version import version as sage_version
+    if [int(c) for c in sage_version.split(".")[:2]] < [9, 3]:
+        Kgal = K.galois_group('gap').group()
+    else:
+        Kgal = K.galois_group()
+    dlist = Set(sum([list(g.cycle_type()) for g in Kgal],[]))
 
     # Create an array of iterators, one for each residue degree
     PPs = [primes_of_degree_iter(K,d, condition, sort_key, maxnorm=maxnorm)  for d in dlist]
