@@ -472,6 +472,12 @@ class LFSearchArray(SearchArray):
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
+        f = TextBox(
+            name='f',
+            label='Residue field degree',
+            knowl='lf.residue_field_degree',
+            example='3',
+            example_span='3, or a range like 2..6')
         topslope = TextBox(
             name='topslope',
             label='Top slope',
@@ -505,22 +511,30 @@ class LFSearchArray(SearchArray):
         inertia = TextBox(
             name='inertia_gap',
             label='Inertia subgroup',
-            knowl='lf.inertia_group',
+            knowl='lf.inertia_group_search',
             example='[3,1]',
-            example_span=display_knowl('group.small_group_label', "GAP id") + ' of a group like [3,1]'
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
             )
         wild = TextBox(
             name='wild_gap',
             label='Wild inertia subgroup',
-            knowl='lf.wild_inertia_group',
+            knowl='lf.wild_inertia_group_search',
             example='[4,1]',
-            example_span=display_knowl('group.small_group_label', "GAP id") + ' of a group like [3,1]'
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [topslope], [u], [t], [gal], [results], [inertia],
-            [wild]]
-        self.refine_array = [[degree, c, gal, inertia, u], [qp, e, topslope, wild, t]]
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u], 
+            [t], [gal], [inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u], 
+            [e, c, inertia, t], 
+            [f, topslope, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
