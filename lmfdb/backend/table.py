@@ -171,8 +171,8 @@ class PostgresTable(PostgresBase):
             table_description = ""
         if col_description is None:
             col_description = {col: "" for col in self.search_cols + self.extra_cols}
-        self.table_description = table_description
-        self.col_description = col_description
+        self._table_description = table_description
+        self._col_description = col_description
 
     def _set_sort(self, sort):
         """
@@ -2196,28 +2196,55 @@ class PostgresTable(PostgresBase):
         """
         return self._label_col
 
-    def set_description(self, table_description):
+    def description(self, table_description=None):
         """
-        Set the description string for this table in meta_tables
-        """
-        assert isinstance(table_description, str)
-        modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
-        self._execute(modifier, [table_description, self.search_table])
-        self.table_description = table_description
+        Return or set the description string for this table in meta_tables
 
-    def set_column_description(self, col, description, drop=False):
+        INPUT:
+
+        - ``table_description`` -- if provided, set the description to this value.  If not, return the current description.
+        """
+        if table_description is None:
+            return self._table_description
+        else:
+            assert isinstance(table_description, str)
+            modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
+            self._execute(modifier, [table_description, self.search_table])
+            self._table_description = table_description
+
+    def column_description(self, col=None, description=None, drop=False):
         """
         Set the description for a column in meta_tables.
+
+        INPUT:
+
+        - ``col`` -- the name of the column.  If None, ``description`` should be a dictionary with keys equal to the column names.
+
+        - ``description`` -- if provided, set the column description to this value.  If not, return the current description.
+
+        - ``drop`` -- if ``True``, delete the column from the description dictionary in preparation for dropping the column.
         """
-        if not col in self.search_cols + self.extra_cols:
+        if not (col is None or col in self.search_cols + self.extra_cols):
             raise ValueError("%s is not a column of this table" % col)
-        assert isinstance(description, str)
-        if drop:
-            del self.col_description[col]
+        if description is None:
+            if col is None:
+                return self._col_description
+            return self._col_description.get(col, "")
         else:
-            self.col_description[col] = description
-        modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
-        self._execute(modifier, [Json(self.col_description), self.search_table])
+            assert isinstance(description, str)
+            if drop:
+                if col is None:
+                    raise ValueError("Must specify column name to drop")
+                del self._col_description[col]
+            elif col is None:
+                for col in self.search_cols + self.extra_cols:
+                    if col not in description:
+                        description[col] = self._col_description.get(col, "")
+                self._col_description = description
+            else:
+                self._col_description[col] = description
+            modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
+            self._execute(modifier, [Json(self._col_description), self.search_table])
 
     def add_column(self, name, datatype, description=None, extra=False, label=False, force_description=False):
         """
@@ -2265,7 +2292,7 @@ class PostgresTable(PostgresBase):
                 self.search_cols.append(name)
             if label:
                 self.set_label(name)
-            self.set_column_description(name, description)
+            self.column_description(name, description)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True, force=False):
@@ -2290,7 +2317,7 @@ class PostgresTable(PostgresBase):
                 % (self.search_table, name)
             )
         with DelayCommit(self, commit, silence=True):
-            self.set_column_description(name, "", drop=True)
+            self.column_description(name, drop=True)
             if name in self.search_cols:
                 table = self.search_table
                 counts_table = table + "_counts"
