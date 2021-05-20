@@ -6,6 +6,7 @@ Soon:
 - degs and gs: change column names in db?
 - fix breadcrumbs (top of galmap pages)
 - record arithmetic part (constant field extension) of function field extension given by Belyi map
+- add improved equations for genus 0 maps computed by Ciaran
 
 Short term:
 - add friends: specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good reduction outside of 2 and 3?
