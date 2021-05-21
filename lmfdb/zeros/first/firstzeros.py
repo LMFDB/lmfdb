@@ -106,7 +106,7 @@ def list_zeros(start=None,
     C = sqlite3.connect(data_location + 'first_zeros.db').cursor()
     C.execute(query, values)
 
-    response = Response((" ".join([str(x) for x in row]) + "\n" for row in C))
+    response = Response((" ".join(str(x) for x in row) + "\n" for row in C))
     response.headers['content-type'] = 'text/plain'
     if download == "yes":
         response.headers['content-disposition'] =\

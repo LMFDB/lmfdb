@@ -302,7 +302,7 @@ def download_rep_galois_modl_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in reps])
+    outstr += ",\\\n".join(entry(r) for r in reps)
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

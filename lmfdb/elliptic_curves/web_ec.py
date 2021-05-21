@@ -236,7 +236,7 @@ class WebEC(object):
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
             else:
-                data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+                data['cm_ramp'] = ", ".join(str(p) for p in data['cm_ramp'])
             data['cm_sqf'] = ZZ(self.cm).squarefree_part()
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
@@ -471,7 +471,7 @@ class WebEC(object):
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
         else:
-            mwbsd['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in self.torsion_structure])
+            mwbsd['tor_struct'] = r' \times '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
             tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
             mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp), 
                 ', '.join(web_latex(P) for P in tor_gens_tmp))
@@ -489,7 +489,7 @@ class WebEC(object):
         if not self.cm:
             self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.lmfdb_label)
             from sage.matrix.all import Matrix
-            twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
+            twoadicdata['gen_matrices'] = ','.join(latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens'])
             twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
@@ -565,7 +565,7 @@ class WebEC(object):
             if "missing" in tg1['f']:
                 tg['fields_missing'] = True
             T = tgd['torsion']
-            tg1['t'] = r'\(' + r' \times '.join([r'\Z/{}\Z'.format(n) for n in T]) + r'\)'
+            tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
             bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
                    from lmfdb.ecnf.main import split_full_label

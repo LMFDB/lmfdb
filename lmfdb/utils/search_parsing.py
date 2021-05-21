@@ -796,7 +796,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         elif split:
             query[qfield] = L
         else:
-            inp = '[%s]'%','.join([str(a) for a in L])
+            inp = '[%s]'%','.join(str(a) for a in L)
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
@@ -841,7 +841,7 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
         elif split:
             query[qfield] = L
         else:
-            inp = '[%s]'%','.join([str(a) for a in L])
+            inp = '[%s]'%','.join(str(a) for a in L)
             if keepbrackets:
                 inp = inp.replace("[","['").replace("]","']").replace(",","','")
                 query[qfield] = inp
@@ -977,7 +977,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
 # and different behavior if the entry is not in the database
 def input_to_subfield(inp):
     def finish(result):
-        return '.'.join([str(z) for z in result])
+        return '.'.join(str(z) for z in result)
 
     def notq():
         raise SearchParsingError(r"The rational numbers $\Q$ cannot be a proper intermediate field.")

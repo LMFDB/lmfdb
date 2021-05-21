@@ -228,7 +228,7 @@ def render_dimension_table_page(args, bread):
     info = { 'family_list': fam_list, 'args': to_dict(args) }
     family = get_smf_family(args.get('family'))
     if not family:
-        flash_error("Space %s not found in databsae", args.get('family'))
+        flash_error("Space %s not found in database", args.get('family'))
     elif not family.computes_dimensions():
         flash_error("Dimension table not available for family %s.", args.get('family'))
     else:

@@ -386,7 +386,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
             info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
             if 'gens' in info:
-                info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
+                info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens'])
             return render_template('CharGroup.html', **info)
         else:
             if modulus <= 10000:
