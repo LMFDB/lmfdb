@@ -1,14 +1,12 @@
 Soon:
-- Improve the pages under "Learn more about" and add a reliability page
-- Knowl for passport, and improve label knowl
 - Upload the rest of our data
-- Browse maps by base field, and see statistics on base field data
-- Browse by orbit size on Belyi main page
-- browsing passports in general? adding passport knowl on main browse page
-- search passports and add search on passport size
-- browse columns: degs and gs...column names for db in sage?
+- Improve the pages under "Learn more about" and add a reliability page
+- see statistics on base field data
+- browsing and searching on passports in general? adding passport knowl on main browse page
+- degs and gs: change column names in db?
 - fix breadcrumbs (top of galmap pages)
-- display groups as in the fields page and perhaps as a knowl
+- record arithmetic part (constant field extension) of function field extension given by Belyi map
+- add improved equations for genus 0 maps computed by Ciaran
 
 Short term:
 - add friends: specialize map and connect to resulting number fields? specialize at values in list of j-invariants with good reduction outside of 2 and 3?

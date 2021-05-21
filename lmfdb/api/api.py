@@ -29,10 +29,11 @@ def quote_string(value):
     return value
 
 
-def pretty_document(rec,sep=", ",id = True):
+def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
-    return "{"+sep.join(["'%s': %s" % attr for attr in attrs])+"}"
+    return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
 
 def hidden_collection(c):
     """
@@ -156,7 +157,7 @@ def api_query_id(table, id):
             out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
         return out
     else:
-        return api_query(table, id = id)
+        return api_query(table, id=id)
 
 
 @api_page.route("/<table>")
@@ -248,7 +249,7 @@ def api_query(table, id = None):
             q[qkey] = qval
 
         # assure that one of the keys of the query is indexed
-        # however, this doesn't assure that the query will be fast... 
+        # however, this doesn't assure that the query will be fast...
         #if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(coll))) == 0:
         #    flash_error("no key in the query %s is indexed.", q)
         #    return redirect(url_for(".api_query", table=table))
@@ -340,8 +341,14 @@ def api_query(table, id = None):
         title = "API - " + location
         bc = [("API", url_for(".index")), (table,)]
         query_unquote = unquote(data["query"])
+        description = coll.description()
+        if description:
+            title += " (%s)" % description
+        schema = [(col, coll.col_type[col], coll.column_description(col)) for col in
+                  sorted(coll.search_cols) + sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
+                               schema=schema,
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,

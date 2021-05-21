@@ -230,6 +230,12 @@ class LMFDBSearchTable(PostgresSearchTable):
                     if isinstance(check, typ):
                         show_check(checkname, check, typ)
 
+    @overrides(PostgresSearchTable)
+    def add_column(self, *args, **kwds):
+        if "force_description" not in kwds:
+            kwds["force_description"] = True
+        return super().add_column(*args, **kwds)
+
 class LMFDBDatabase(PostgresDatabase):
     """
     ATTRIBUTES:
@@ -393,6 +399,8 @@ class LMFDBDatabase(PostgresDatabase):
     def create_table(self, name, *args, **kwargs):
         if "_" not in name:
             raise ValueError("Table name '%s' must contain an underscore; first part gives the LMFDB section" % name,)
+        if "force_description" not in kwargs:
+            kwargs["force_description"] = True
         return PostgresDatabase.create_table(name, *args, **kwargs)
 
 

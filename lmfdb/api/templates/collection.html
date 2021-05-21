@@ -2,6 +2,21 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function show_schema() {
+    $("#schema-table").show();
+    $("#schema-hider").show();
+    $("#schema-shower").hide();
+    return false;
+  }
+  function hide_schema() {
+    $("#schema-table").hide();
+    $("#schema-hider").hide();
+    $("#schema-shower").show();
+    return false;
+  }
+</script>
+
 <style>
 .api-entries > li { margin-bottom: 14px; }
 </style>
@@ -18,6 +33,24 @@ Formats:
 </div>
 <div>
 Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
+</div>
+<div>
+  <a id="schema-shower" onclick="return show_schema();" href="#">Show schema</a>
+  <a id="schema-hider" onclick="return hide_schema();" href="#" style="display: none;">Hide schema</a>
+  <table id="schema-table" class="ntdata" style="display: none;">
+    <tr>
+      <th>Column</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    {% for col, typ, desc in schema %}
+      <tr>
+        <td>{{col}}</td>
+        <td>{{typ}}</td>
+        <td>{{desc}}</td>
+      </tr>
+    {% endfor %}
+  </table>
 </div>
 
 {% if single_object %}
