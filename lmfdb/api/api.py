@@ -29,10 +29,11 @@ def quote_string(value):
     return value
 
 
-def pretty_document(rec,sep=", ",id = True):
+def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
-    return "{"+sep.join(["'%s': %s" % attr for attr in attrs])+"}"
+    return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
 
 def hidden_collection(c):
     """

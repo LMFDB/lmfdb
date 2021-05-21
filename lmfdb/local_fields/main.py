@@ -279,8 +279,7 @@ def render_field_webpage(args):
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
-            gsm = lf_formatfield(','.join([str(b) for b in gsm]))
-
+            gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
         info.update({
                     'polynomial': raw_typeset(polynomial),

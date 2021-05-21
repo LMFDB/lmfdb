@@ -157,7 +157,7 @@ def download_search(info):
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(gram) for gram in res])
+    s += ",\\\n".join(entry(gram) for gram in res)
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
@@ -433,7 +433,7 @@ def download_lattice_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ",\\\n".join(entry(r) for r in res['genus_reps'])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

@@ -31,7 +31,7 @@ def NFelt(a):
 
     For example the element (3+4*w)/2 in Q(w) gives '3/2,2'.
     """
-    return ",".join([str(c) for c in list(a)])
+    return ",".join(str(c) for c in list(a))
 
 def genus1_lookup_equation_nf(rec):
     assert rec['g'] == 1
