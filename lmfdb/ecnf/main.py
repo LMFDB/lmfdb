@@ -461,17 +461,15 @@ def url_for_label(label):
     return url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number)
 
 def make_cm_query(cm_disc_str):
-    #cm_list = parse_ints_to_list_flash(info['cm_disc'], "CM discriminant", max_val=None)
     cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
     for d in cm_list:
         if not ((d < 0) and (d % 4 in [0,1])):
-            raise ValueError("Must be a fundamental discriminant of an imaginary quadratic field")
+            raise ValueError("A CM discriminant must be a fundamental discriminant of an imaginary quadratic field.")
     cm_list += [-el for el in cm_list]
     return cm_list
 
 @search_parser
 def parse_cm_list(inp, query, qfield):
-    #query['cm'] = {'$in': cm_list}
     query[qfield] = {'$in': make_cm_query(inp)}
 
 @search_wrap(template="ecnf-search-results.html",
@@ -550,8 +548,7 @@ def elliptic_curve_search(info, query):
         elif info['include_cm'] == 'noPCM':
             query['cm'] = 0
 
-    #parse_ints(info,query,field='cm_disc',qfield='cm')
-    parse_cm_list(info,query,field='cm_disc',qfield='cm')
+    parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
