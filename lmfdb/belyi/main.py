@@ -650,11 +650,11 @@ class Belyi_stats(StatsDisplay):
     stat_list = [
         {"cols": ["deg", "orbit_size", "g"],
         "totaler": {"avg": True}},
-        {"cols": ["pass_size", "num_orbits"],
-        "table": db.belyi_passports,
+        #{"cols": ["pass_size", "num_orbits"],
+        #"table": db.belyi_passports,
         #'top_title': [("pass_size" : "passport size"), ("num_orbits": "Galois orbits per passport")],
         #'top_title': [("pass_size" : None), ("num_orbits": None)],
-        "totaler": {"avg": True}}
+        #"totaler": {"avg": True}}
     ]
 
     @property
