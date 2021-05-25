@@ -638,23 +638,30 @@ class Belyi_stats(StatsDisplay):
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
-    #short_display = {"deg": "degree", "orbit_size": "size", "g": "genus", "pass_size" : "passport size", "num_orbits": "number of orbits"}
     short_display = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
     knowls = {
         "deg": "belyi.degree",
         "orbit_size": "belyi.orbit_size",
         "g": "belyi.genus",
-        #"pass_size": "belyi.pass_size"
     }
     stat_list = [
-        {"cols": ["deg", "orbit_size", "g"],
-        "totaler": {"avg": True}},
-        #{"cols": ["pass_size", "num_orbits"],
-        #"table": db.belyi_passports,
-        #'top_title': [("pass_size" : "passport size"), ("num_orbits": "Galois orbits per passport")],
-        #'top_title': [("pass_size" : None), ("num_orbits": None)],
-        #"totaler": {"avg": True}}
+        {"cols": col, "totaler": {"avg": True}} for col in ["deg", "orbit_size", "g"]
+    ]
+    stat_list +=[
+        {
+        "cols": "pass_size",
+        "table": db.belyi_passports,
+        "top_title": [("passport sizes", "belyi.pass_size")],
+        "totaler": {"avg": True}
+        },
+        {
+        "cols": "num_orbits",
+        "table": db.belyi_passports,
+        "top_title": [("number of Galois orbits", "belyi.num_orbits"), ("per", None), ("passport", "belyi.passport")],
+        "totaler": {"avg": True}
+        }
+        #TODO: add base field degree; needs new column
     ]
 
     @property
