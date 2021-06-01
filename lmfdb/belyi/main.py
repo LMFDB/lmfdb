@@ -648,6 +648,21 @@ class Belyi_stats(StatsDisplay):
     stat_list = [
         {"cols": col, "totaler": {"avg": True}} for col in ["deg", "orbit_size", "g"]
     ]
+    stat_list +=[
+        {
+        "cols": "pass_size",
+        "table": db.belyi_passports,
+        "top_title": [("passport sizes", "belyi.pass_size")],
+        "totaler": {"avg": True}
+        },
+        {
+        "cols": "num_orbits",
+        "table": db.belyi_passports,
+        "top_title": [("number of Galois orbits", "belyi.num_orbits"), ("per", None), ("passport", "belyi.passport")],
+        "totaler": {"avg": True}
+        }
+        #TODO: add base field degree; needs new column
+    ]
 
     @property
     def short_summary(self):

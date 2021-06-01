@@ -36,7 +36,14 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.3.1-123201.1-b',
                       '2.0.3.1-123201.1-c',
                       '2.0.3.1-123201.3-b',
-                      '2.0.3.1-123201.3-c']
+                      '2.0.3.1-123201.3-c',
+                      '2.0.19.1-1849.1-a',
+                      '2.0.19.1-1849.3-a']
+
+def cremona_label_to_lmfdb_label(lab):
+    if "." in lab:
+        return lab
+    return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
 class WebBMF(object):
     """
@@ -185,6 +192,8 @@ class WebBMF(object):
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
+            if curve_bc and "." not in curve_bc[0]:
+                curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
