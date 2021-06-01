@@ -7,6 +7,7 @@ import logging
 import os
 import time
 import traceback
+import itertools
 from collections import defaultdict, Counter
 from glob import glob
 
@@ -696,7 +697,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             processed_extra_columns = process_columns(extra_columns, extra_order)
         else:
             processed_extra_columns = []
-        description_columns = [col for col in processed_search_columns + processed_extra_columns if col != 'id']
+        description_columns = []
+        for col in itertools.chain(search_columns.values(), [] if extra_columns is None else extra_columns.values()):
+            if col == 'id':
+                continue
+            if isinstance(col, str):
+                description_columns.append(col)
+            else:
+                description_columns.extend(col)
         if force_description:
             if table_description is None or col_description is None:
                 raise ValueError("You must provide table and column descriptions")
