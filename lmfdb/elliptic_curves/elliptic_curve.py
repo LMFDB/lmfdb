@@ -314,7 +314,7 @@ def download_search(info):
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
     res = db.ec_curvedata.search(ast.literal_eval(info["query"]), 'ainvs')
-    s += ",\\\n".join([str(ainvs) for ainvs in res])
+    s += ",\\\n".join(str(ainvs) for ainvs in res)
     s += ']' + eol + '\n'
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))

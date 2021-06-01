@@ -10,6 +10,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
+    parse_inertia,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
@@ -18,7 +19,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
-    knowl_cache, galdata, galunformatter,
+    knowl_cache, galdata, galunformatter, small_group_display_knowl,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
@@ -195,10 +196,14 @@ class LF_download(Downloader):
 def local_field_search(info,query):
     parse_ints(info,query,'p',name='Prime p')
     parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'u',name='Unramified degree')
+    parse_ints(info,query,'t',name='Tame degree')
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_inertia(info,query,qfield=('inertia_gap','inertia'))
+    parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     info['group_display'] = group_pretty_and_nTj
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
@@ -277,8 +282,13 @@ def render_field_webpage(args):
         elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
-            gsm = lf_formatfield(','.join([str(b) for b in gsm]))
+            gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
+        if 'wild_gap' in data:
+            wild_inertia = small_group_display_knowl(data['wild_gap'][0],
+                data['wild_gap'][1])
+        else:
+            wild_inertia = 'data not computed'
 
         info.update({
                     'polynomial': raw_typeset(polynomial),
@@ -296,6 +306,7 @@ def render_field_webpage(args):
                     'gal': group_pretty_and_nTj(gn, gt, True),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
+                    'wild_inertia': wild_inertia,
                     'unram': unramp,
                     'eisen': eisenp,
                     'gms': data['gms'],
@@ -461,6 +472,12 @@ class LFSearchArray(SearchArray):
             knowl='lf.ramification_index',
             example='3',
             example_span='3, or a range like 2..6')
+        f = TextBox(
+            name='f',
+            label='Residue field degree',
+            knowl='lf.residue_field_degree',
+            example='3',
+            example_span='3, or a range like 2..6')
         topslope = TextBox(
             name='topslope',
             label='Top slope',
@@ -477,10 +494,47 @@ class LFSearchArray(SearchArray):
                 display_knowl('group.small_group_label', "GAP id's"),
                 display_knowl('nf.galois_group.name', 'list of group labels'),
                 display_knowl('gg.label', 'transitive group labels')))
+        u = TextBox(
+            name='u',
+            label='Galois unramified degree',
+            knowl='lf.unramified_degree',
+            example='3',
+            example_span='3, or a range like 1..4'
+            )
+        t = TextBox(
+            name='t',
+            label='Galois tame degree',
+            knowl='lf.tame_degree',
+            example='2',
+            example_span='2, or a range like 2..3'
+            )
+        inertia = TextBox(
+            name='inertia_gap',
+            label='Inertia subgroup',
+            knowl='lf.inertia_group_search',
+            example='[3,1]',
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
+            )
+        wild = TextBox(
+            name='wild_gap',
+            label='Wild inertia subgroup',
+            knowl='lf.wild_inertia_group_search',
+            example='[4,1]',
+            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
+                display_knowl('group.small_group_label', "GAP id"),
+                display_knowl('nf.galois_group.name', 'list of group labels'),
+                display_knowl('gg.label', 'transitive group label'))
+            )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [topslope], [gal], [results]]
-        self.refine_array = [[degree, c, gal], [qp, e, topslope]]
+        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u], 
+            [t], [gal], [inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u], 
+            [e, c, inertia, t], 
+            [f, topslope, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],

@@ -36,7 +36,7 @@ def learnmore_list_remove(matchstring):
 
 
 def list2string(li):
-    return ','.join([str(x) for x in li])
+    return ','.join(str(x) for x in li)
 
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
@@ -79,8 +79,8 @@ def normalize_family(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)$', label)
     a = sorted([int(u) for u in m.group(1).split('.')], reverse=True)
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
-    aas = '.'.join([str(u) for u in a])
-    bs = '.'.join([str(u) for u in b])
+    aas = '.'.join(str(u) for u in a)
+    bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0]>a[0]:
         return 'A%s_B%s'%(aas, bs)
     return 'A%s_B%s'%(bs, aas)
@@ -89,8 +89,8 @@ def normalize_motive(label):
     m = re.match(r'^A((\d+\.)*\d+)_B((\d+\.)*\d+)_t(-?)(\d+)\.(\d+)$', label)
     a = sorted([int(u) for u in m.group(1).split('.')], reverse=True)
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
-    aas = '.'.join([str(u) for u in a])
-    bs = '.'.join([str(u) for u in b])
+    aas = '.'.join(str(u) for u in a)
+    bs = '.'.join(str(u) for u in b)
     if 1 in b or b[0]>a[0]:
         return 'A%s_B%s_t%s%s.%s'%(aas, bs,m.group(5),m.group(6),m.group(7))
     return 'A%s_B%s_t%s%s.%s'%(bs, aas, m.group(5), m.group(7), m.group(6))

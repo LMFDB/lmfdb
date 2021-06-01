@@ -796,7 +796,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         elif split:
             query[qfield] = L
         else:
-            inp = '[%s]'%','.join([str(a) for a in L])
+            inp = '[%s]'%','.join(str(a) for a in L)
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
@@ -841,7 +841,7 @@ def parse_bracketed_rats(inp, query, qfield, maxlength=None, exactlength=None, s
         elif split:
             query[qfield] = L
         else:
-            inp = '[%s]'%','.join([str(a) for a in L])
+            inp = '[%s]'%','.join(str(a) for a in L)
             if keepbrackets:
                 inp = inp.replace("[","['").replace("]","']").replace(",","','")
                 query[qfield] = inp
@@ -875,12 +875,56 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         else:
             query[galfield] = {'$in': cands}
     except NameError:
-        if re.match(r'^[ACDS]\d+$', inp):
+        if re.match(r'^[ACDFMQS]\d+$', inp):
             raise SearchParsingError("The requested group is not in the database")
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
             raise SearchParsingError("It needs to be a list made up of GAP id's, such as [4,1] or [12,5], transitive groups in nTj notation, such as 5T1, and <a title = 'Galois group labels' knowl='nf.galois_group.name'>group labels</a>")
+
+# The queries for inertia (and wild inertia) subgroups are different
+# than the ones for Galois groups.
+@search_parser(clean_info=True, default_field='inertia_gap', default_name='Inertia group', default_qfield='inertia_gap', error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_inertia(inp, query, qfield, err_msg=None):
+    try:
+        # For inertia groups, qfield=('inertia_gap', 'inertia')
+        # For wild inertia, qfield=('wild_gap', 'wild_gap')
+
+        # Need to convert it to GAP id
+        from lmfdb.galois_groups.transitive_group import nt2gap
+        iner_gap, iner = qfield
+        # Check for nTj
+        rematch = re.match(r"^(\d+)T(\d+)$", inp)
+        if rematch:
+            n = int(rematch.group(1))
+            t = int(rematch.group(2))
+            if iner != iner_gap:
+                query[iner] = ['t', [n, t]]
+            else:
+                gapid = nt2gap(n, t)
+                query[iner] = gapid
+        else:
+            # Check for an alias, like D4
+            from lmfdb.galois_groups.transitive_group import aliases
+            inp2 = inp.upper()
+            if inp2 in aliases:
+                nt = aliases[inp2][0]
+                query[iner_gap] = nt2gap(nt[0],nt[1])
+            else:
+                # Check for Gap code
+                rematch = re.match(r'^\[(\d+),(\d+)\]$', inp)
+                if rematch:
+                    query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
+                else:
+                    raise NameError
+
+    except NameError:
+        if re.match(r'^[ACDFMQS]\d+$', inp):
+            raise SearchParsingError("The requested group is not in the database")
+        if err_msg:
+            raise SearchParsingError(err_msg)
+        else:
+            raise SearchParsingError("It needs to be a GAP id, such as [4,1] or [12,5], ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
 
 def input_string_to_poly(FF):
     # Change unicode dash with minus sign
@@ -977,7 +1021,7 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
 # and different behavior if the entry is not in the database
 def input_to_subfield(inp):
     def finish(result):
-        return '.'.join([str(z) for z in result])
+        return '.'.join(str(z) for z in result)
 
     def notq():
         raise SearchParsingError(r"The rational numbers $\Q$ cannot be a proper intermediate field.")
