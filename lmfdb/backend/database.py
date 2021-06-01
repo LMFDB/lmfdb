@@ -205,8 +205,7 @@ class PostgresDatabase(PostgresBase):
 
         cur = self._execute(SQL(
             "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, "
-            "has_extras, stats_valid, total, include_nones, "
-            "table_description, col_description FROM meta_tables"
+            "has_extras, stats_valid, total, include_nones FROM meta_tables"
         ))
         self.tablenames = []
         for tabledata in cur:
@@ -529,8 +528,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         else:
             extra_order = table.extra_cols
         label_col = table._label_col
-        table_description = table.table_description
-        col_description = table.col_description
+        table_description = table.description()
+        col_description = table.column_description()
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table.search_cols
@@ -768,8 +767,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             id_ordered=id_ordered,
             out_of_order=(not id_ordered),
             has_extras=(extra_columns is not None),
-            table_description=table_description,
-            col_description=col_description,
             total=0,
         )
         self.tablenames.append(name)
@@ -931,8 +928,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             tabledata = self._execute(
                 SQL(
                     "SELECT name, label_col, sort, count_cutoff, id_ordered, "
-                    "out_of_order, has_extras, stats_valid, total, include_nones, "
-                    "table_description, col_description "
+                    "out_of_order, has_extras, stats_valid, total, include_nones "
                     "FROM meta_tables WHERE name = %s"
                 ),
                 [new_name],

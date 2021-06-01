@@ -343,11 +343,14 @@ def api_query(table, id = None):
         description = coll.description()
         if description:
             title += " (%s)" % description
-        schema = [(col, coll.col_type[col], coll.column_description(col)) for col in
-                  sorted(coll.search_cols) + sorted(coll.extra_cols)]
+        search_schema = [(col, coll.col_type[col], coll.column_description(col))
+                         for col in sorted(coll.search_cols)]
+        extra_schema = [(col, coll.col_type[col], coll.column_description(col))
+                        for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
-                               schema=schema,
+                               search_schema=search_schema,
+                               extra_schema=extra_schema,
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,

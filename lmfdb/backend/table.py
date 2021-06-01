@@ -141,8 +141,6 @@ class PostgresTable(PostgresBase):
         stats_valid=True,
         total=None,
         include_nones=False,
-        table_description=None,
-        col_description=None,
         data_types=None,
     ):
         self.search_table = search_table
@@ -167,12 +165,6 @@ class PostgresTable(PostgresBase):
         self.col_type.update(extend_coltype)
         self._set_sort(sort)
         self.stats = self._stats_table_class_(self, total)
-        if table_description is None:
-            table_description = ""
-        if col_description is None:
-            col_description = {col: "" for col in self.search_cols + self.extra_cols}
-        self._table_description = table_description
-        self._col_description = col_description
 
     def _set_sort(self, sort):
         """
@@ -2205,12 +2197,13 @@ class PostgresTable(PostgresBase):
         - ``table_description`` -- if provided, set the description to this value.  If not, return the current description.
         """
         if table_description is None:
-            return self._table_description
+            selecter = SQL("SELECT table_description FROM meta_tables WHERE name = %s")
+            cur = self._execute(selecter, [self.search_table])
+            return cur.fetchone()[0]
         else:
             assert isinstance(table_description, str)
             modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
             self._execute(modifier, [table_description, self.search_table])
-            self._table_description = table_description
 
     def column_description(self, col=None, description=None, drop=False):
         """
@@ -2224,27 +2217,35 @@ class PostgresTable(PostgresBase):
 
         - ``drop`` -- if ``True``, delete the column from the description dictionary in preparation for dropping the column.
         """
-        if not (col is None or col in self.search_cols + self.extra_cols):
+        allcols = self.search_cols + self.extra_cols
+        if not (col is None or col in allcols):
             raise ValueError("%s is not a column of this table" % col)
+        # Get the current column description
+        selecter = SQL("SELECT col_description FROM meta_tables WHERE name = %s")
+        cur = self._execute(selecter, [self.search_table])
+        current = cur.fetchone()[0]
+
         if description is None:
             if col is None:
-                return self._col_description
-            return self._col_description.get(col, "")
+                return current
+            return current.get(col, "")
         else:
-            assert isinstance(description, str)
             if drop:
                 if col is None:
                     raise ValueError("Must specify column name to drop")
-                del self._col_description[col]
+                del current[col]
             elif col is None:
-                for col in self.search_cols + self.extra_cols:
-                    if col not in description:
-                        description[col] = self._col_description.get(col, "")
-                self._col_description = description
+                assert isinstance(description, dict)
+                for col in description:
+                    if col not in allcols:
+                        raise ValueError("%s is not a column of this table" % col)
+                    assert isinstance(description[col], str)
+                    current[col] = description[col]
             else:
-                self._col_description[col] = description
+                assert isinstance(description, str)
+                current[col] = description
             modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
-            self._execute(modifier, [Json(self._col_description), self.search_table])
+            self._execute(modifier, [Json(current), self.search_table])
 
     def add_column(self, name, datatype, description=None, extra=False, label=False, force_description=False):
         """
