@@ -401,7 +401,7 @@ class LMFDBDatabase(PostgresDatabase):
             raise ValueError("Table name '%s' must contain an underscore; first part gives the LMFDB section" % name,)
         if "force_description" not in kwargs:
             kwargs["force_description"] = True
-        return PostgresDatabase.create_table(name, *args, **kwargs)
+        return PostgresDatabase.create_table(self, name, *args, **kwargs)
 
 
 db = LMFDBDatabase()
