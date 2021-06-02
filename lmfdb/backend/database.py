@@ -7,6 +7,7 @@ import logging
 import os
 import time
 import traceback
+import itertools
 from collections import defaultdict, Counter
 from glob import glob
 
@@ -205,8 +206,7 @@ class PostgresDatabase(PostgresBase):
 
         cur = self._execute(SQL(
             "SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, "
-            "has_extras, stats_valid, total, include_nones, "
-            "table_description, col_description FROM meta_tables"
+            "has_extras, stats_valid, total, include_nones FROM meta_tables"
         ))
         self.tablenames = []
         for tabledata in cur:
@@ -529,8 +529,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         else:
             extra_order = table.extra_cols
         label_col = table._label_col
-        table_description = table.table_description
-        col_description = table.col_description
+        table_description = table.description()
+        col_description = table.column_description()
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table.search_cols
@@ -697,7 +697,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             processed_extra_columns = process_columns(extra_columns, extra_order)
         else:
             processed_extra_columns = []
-        description_columns = [col for col in processed_search_columns + processed_extra_columns if col != 'id']
+        description_columns = []
+        for col in itertools.chain(search_columns.values(), [] if extra_columns is None else extra_columns.values()):
+            if col == 'id':
+                continue
+            if isinstance(col, str):
+                description_columns.append(col)
+            else:
+                description_columns.extend(col)
         if force_description:
             if table_description is None or col_description is None:
                 raise ValueError("You must provide table and column descriptions")
@@ -768,8 +775,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             id_ordered=id_ordered,
             out_of_order=(not id_ordered),
             has_extras=(extra_columns is not None),
-            table_description=table_description,
-            col_description=col_description,
             total=0,
         )
         self.tablenames.append(name)
@@ -931,8 +936,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             tabledata = self._execute(
                 SQL(
                     "SELECT name, label_col, sort, count_cutoff, id_ordered, "
-                    "out_of_order, has_extras, stats_valid, total, include_nones, "
-                    "table_description, col_description "
+                    "out_of_order, has_extras, stats_valid, total, include_nones "
                     "FROM meta_tables WHERE name = %s"
                 ),
                 [new_name],
