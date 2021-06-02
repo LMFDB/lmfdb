@@ -39,6 +39,7 @@ h2.link > a {
 #content > h1:first-child,
 #content > h2:first-child {
     margin-top: 0px;
+    padding-top: 0px;
 }
 
 #content > h2
@@ -49,8 +50,8 @@ h2.link > a {
     text-align: left;
     font-weight: bold;
     color: {{color.a_text}};
-    padding: 5px 0 5px 0;
-    margin: 15px 0 10px 0;
+    padding: 5px 0;
+    margin: 10px 0;
 }
 #content > h3, td.table_h2 {
     font-family: sans-serif;
@@ -85,10 +86,10 @@ h2.link > a {
 
 #footer {
     clear: both;
-    margin-top: 40px;
+    margin-top: 20px;
     background-color: {{color.footer_background}};
-    border-top: 2px solid {{ color.footer_border }};
-    padding: 25px 10px;
+    padding-top: 6px;
+    padding-bottom: 10px;
     text-align: center;
     font-size: 75%;
     color: {{color.footer_text}};
@@ -185,12 +186,10 @@ a:hover {
 
 #header {
   background: {{color.header_background}};
-  box-shadow: 0px 5px 5px {{color.header_shadow}};
 }
 
 body.knowl #header {
   background: {{ color.knowl_l }};
-  box-shadow: 0px 5px 5px {{color.knowl_shadow}};
 }
 
 #header #logo {
@@ -213,7 +212,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    padding-top: 5px;
+    padding-bottom: 2px;
     color: {{color.header_text_title}};
 }
 
@@ -299,7 +298,7 @@ body.knowl #header {
 #main {
   margin:  0px 0px 0px 184px;
   padding: 0px 0px 0px 10px;
-  min-height: 700px;
+  min-height:600px;
 }
 
 .debug {
@@ -308,8 +307,8 @@ body.knowl #header {
 }
 
 body > .debug {
-    margin: 20px;
-    padding: 2px;
+    margin: 10px 20px 20px 200px;
+    padding: 5px;
 }
 
 
@@ -395,13 +394,15 @@ body > .debug {
 .properties-header {
   border-top-left-radius: 10px;
   margin: 0;
-  margin-top: 10px;
   padding: 5px 9px;
   color: {{ color.properties_header_text }};
   background: {{ color.properties_header_background }};
   font-size: 14px;
   cursor: pointer;
   padding-right: 30px;
+}
+.properties-header ~ .properties-header {
+  margin-top: 5px;
 }
 #properties-collapser {
   cursor: pointer;
@@ -413,13 +414,13 @@ body > .debug {
   width: 20px;
   height: 17px;
   position: absolute;
-  top:   12px;
+  top:   4px;
   right: 3px;
   {{ BORDER_RADIUS(20) }}
 }
 
 #content {
-  margin-top: 20px;
+  margin-top: 10px;
   font-size: 95%;
   line-height: 135%;
   padding-right: 10px;
@@ -433,12 +434,11 @@ body > .debug {
 #sidebar {
   float: left;
   width: 184px;
-  margin: 10px 0px 0px 0px;
+  margin: 10px 0px;
   font-family: sans-serif;
   font-size: 85%;
   color: {{color.sidebar_text}};
   background: {{color.sidebar_background}};
-  margin-bottom: 100px;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
 }
@@ -475,7 +475,8 @@ body > .debug {
   border-top-right-radius: 10px;
 }
 #sidebar ul:last-child li:last-child,
-#sidebar ul:last-child li:last-child a {
+#sidebar ul:last-child li:last-child a,
+#sidebar h2:last-child {
   border-bottom-right-radius: 10px;
 }
 #sidebar ul {
@@ -733,11 +734,17 @@ table.ntdata > thead {
 table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata tr.toplined {
+  border-top: 2px solid {{ color.table_ntdata_border }};
+}
 
 table.ntdata th {
   text-align: left;
   padding-right: 7px;
   padding-left: 7px;
+}
+table.ntdata.centered th, table.ntdata.centered td {
+  text-align: center;
 }
 
 table.ntdata > tr.odd,
@@ -2326,7 +2333,7 @@ input::placeholder {
   white-space: nowrap;
 }
 
-/* an horizonal list with bullet points */
+/* an horizontal list with bullet points */
 ul.horizontal-list {
   display:inline-block;
   padding:0;
@@ -2356,4 +2363,12 @@ input.color_selecter {
 /* the advanced search options themselves, hidden by default */
 .advanced {
     display: none;
+}
+
+.tset-icon {
+  visibility: hidden;
+}
+
+.tset-container:hover .tset-icon {
+  visibility: visible;
 }

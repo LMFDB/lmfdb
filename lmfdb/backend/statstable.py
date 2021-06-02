@@ -577,9 +577,9 @@ class PostgresStatsTable(PostgresBase):
                 if satisfies_constraint(rec[0])
             }
 
-    def _quick_max(self, col, ccols, cvals):
+    def _quick_extreme(self, col, ccols, cvals, kind="max"):
         """
-        Return the maximum value achieved by the column, or None if not cached.
+        Return the min or max value achieved by the column, or None if not cached.
 
         INPUT::
 
@@ -587,9 +587,10 @@ class PostgresStatsTable(PostgresBase):
         - ``ccols`` -- constraint columns
         - ``cvals`` -- constraint values.  The max will be taken over rows where
             the constraint columns take on these values.
+        - ``kind`` -- either "min" or "max"
         """
         constraint = SQL("constraint_cols = %s AND constraint_values = %s")
-        values = ["max", Json([col]), ccols, cvals]
+        values = [kind, Json([col]), ccols, cvals]
         selecter = SQL(
             "SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}"
         ).format(Identifier(self.stats), constraint)
@@ -597,14 +598,14 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return cur.fetchone()[0]
 
-    def _slow_max(self, col, constraint):
+    def _slow_extreme(self, col, constraint, kind="max"):
         """
-        Compute the maximum value achieved by the column.
+        Compute the minimum/maximum value achieved by the column.
 
         INPUT::
 
         - ``col`` -- the column
-        - ``constraint`` -- a dictionary giving a constraint.  The max will be taken
+        - ``constraint`` -- a dictionary giving a constraint.  The min/max will be taken
             over rows satisfying this constraint.
         """
         qstr, values = self.table._parse_dict(constraint)
@@ -613,13 +614,19 @@ class PostgresStatsTable(PostgresBase):
             values = []
         else:
             where = SQL(" WHERE {0}").format(qstr)
-        base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0} DESC ").format(
+        if kind == "min":
+            base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0}")
+        elif kind == "max":
+            base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0} DESC ")
+        else:
+            raise ValueError("Invalid kind")
+        base_selecter = base_selecter.format(
             Identifier(col), Identifier(self.search_table), where
         )
         selecter = base_selecter + SQL("LIMIT 1")
         cur = self._execute(selecter, values)
         m = cur.fetchone()[0]
-        if m is None:
+        if m is None and kind == "max":
             # the default order ends with NULLs, so we now have to use NULLS LAST,
             # preventing the use of indexes.
             selecter = base_selecter + SQL("NULLS LAST LIMIT 1")
@@ -627,7 +634,7 @@ class PostgresStatsTable(PostgresBase):
             m = cur.fetchone()[0]
         return m
 
-    def _record_max(self, col, ccols, cvals, m):
+    def _record_extreme(self, col, ccols, cvals, m, kind="max"):
         """
         Store a computed maximum value in the stats table.
 
@@ -646,7 +653,7 @@ class PostgresStatsTable(PostgresBase):
             )
             self._execute(
                 inserter.format(Identifier(self.stats)),
-                [Json([col]), "max", m, ccols, cvals],
+                [Json([col]), kind, m, ccols, cvals],
             )
         except Exception:
             pass
@@ -654,6 +661,8 @@ class PostgresStatsTable(PostgresBase):
     def max(self, col, constraint={}, record=True):
         """
         The maximum value attained by the given column, which must be in the search table.
+
+        Will raise an error if there are no non-null values of the column.
 
         INPUT:
 
@@ -674,11 +683,40 @@ class PostgresStatsTable(PostgresBase):
         if col not in self.table.search_cols:
             raise ValueError("%s not a column of %s" % (col, self.search_table))
         ccols, cvals = self._split_dict(constraint)
-        m = self._quick_max(col, ccols, cvals)
+        m = self._quick_extreme(col, ccols, cvals, kind="max")
         if m is None:
-            m = self._slow_max(col, constraint)
+            m = self._slow_extreme(col, constraint, kind="max")
             if record and self.saving:
-                self._record_max(col, ccols, cvals, m)
+                self._record_extreme(col, ccols, cvals, m, kind="max")
+        return m
+
+    def min(self, col, constraint={}, record=True):
+        """
+        The minimum value attained by the given column, which must be in the search table.
+
+        Will raise an error if there are no non-null values of the column.
+
+        INPUT:
+
+        - ``col`` -- the column on which the min is taken.
+        - ``constraint`` -- a dictionary giving a constraint.  The min will be taken
+            over rows satisfying this constraint.
+        - ``record`` -- whether to store the result in the stats table.
+
+        EXAMPLES::
+
+            sage: from lmfdb import db
+            sage: db.ec_mwbsd.stats.min('area')
+            0.00000013296713869846309987200099760
+        """
+        if col not in self.table.search_cols:
+            raise ValueError("%s not a column of %s" % (col, self.search_table))
+        ccols, cvals = self._split_dict(constraint)
+        m = self._quick_extreme(col, ccols, cvals, kind="min")
+        if m is None:
+            m = self._slow_extreme(col, constraint, kind="min")
+            if record and self.saving:
+                self._record_extreme(col, ccols, cvals, m, kind="min")
         return m
 
     def _bucket_iterator(self, buckets, constraint):
@@ -732,7 +770,7 @@ class PostgresStatsTable(PostgresBase):
         A convenience function for adding statistics on a given set of columns,
         where rows are grouped into intervals by a bucketing dictionary.
 
-        See the ``add_stats`` mehtod for the actual statistics computed.
+        See the ``add_stats`` method for the actual statistics computed.
 
         INPUT:
 
@@ -1305,7 +1343,7 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``col`` -- a colum name
+        - ``col`` -- a column name
         - ``n`` -- an integer
         """
         if col not in self.table.search_cols:
@@ -1798,7 +1836,7 @@ ORDER BY v.ord LIMIT %s"""
 
     def get_oldstat(self, name):
         """
-        Temporary suppport for statistics created in Mongo.
+        Temporary support for statistics created in Mongo.
         """
         selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
         cur = self._execute(selecter, [name])

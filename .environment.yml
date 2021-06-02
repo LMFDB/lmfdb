@@ -1,0 +1,17 @@
+## This is a conda environment file.
+## Use it as follows:
+##
+##    conda env create -f environment.yml
+##
+## See https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533
+## or    https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+name: lmfdb
+channel_priority: strict
+safety_checks: disabled
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - sage=9.2
+  - tox
+  - parallel

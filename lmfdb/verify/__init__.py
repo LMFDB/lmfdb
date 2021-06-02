@@ -2,7 +2,8 @@
 # since we don't make guarantees about safety from SQL injection.
 # It is intended for use from an interactive sage prompt or from a Python script
 
-import os, importlib
+import os
+import importlib
 
 import lmfdb.lmfdb_database as database
 from lmfdb.app import is_running

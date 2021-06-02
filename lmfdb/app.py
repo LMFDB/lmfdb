@@ -10,12 +10,12 @@ from urllib.parse import urlparse, urlunparse
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
-# acknowledgement page, reads info from CONTRIBUTORS.yaml
+# acknowledgment page, reads info from CONTRIBUTORS.yaml
 
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.2"
+LMFDB_VERSION = "LMFDB Release 1.2.1"
 
 ############################
 #         Main app         #
@@ -676,17 +676,21 @@ WhiteListedRoutes = [
     'Group',
     'HigherGenus/C/Aut',
     'L/Completeness',
+    'L/CuspForms',
+    'L/Labels',
     'L/Lhash',
     'L/Plot',
     'L/Riemann',
     'L/SymmetricPower',
-    'L/Zeros',
-    'L/browseGraphChar',
+    'L/contents',
     'L/degree',
     'L/download',
     'L/history',
+    'L/interesting',
     'L/lhash',
+    'L/rational',
     'L/tracehash',
+    'L/download',
     'LocalNumberField',
     'ModularForm/GL2/ImaginaryQuadratic',
     'ModularForm/GL2/Q/Maass',
@@ -716,6 +720,7 @@ WhiteListedRoutes = [
     'inventory',
     'knowledge',
     'management',
+    'padicField',
     'news',
     'not_yet_implemented',
     'random',
@@ -742,6 +747,7 @@ for elt in WhiteListedRoutes:
             bread = s
         WhiteListedBreads.add(bread)
 
+
 def white_listed(url):
     url = url.rstrip("/").lstrip("/")
     if not url:
@@ -754,7 +760,9 @@ def white_listed(url):
         return True
     # check if it starts with an L
     elif url[:2] == "L/":
-        return white_listed(url[1:])
+        # if the origin is allowed
+        # or if it is a L-function with a label
+        return white_listed(url[1:]) or len(url) == 2 or url[2].isdigit()
     else:
         return False
 

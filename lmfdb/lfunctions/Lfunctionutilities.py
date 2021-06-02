@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 # Different helper functions.
 from six import string_types
-import math, re
+import math
+import re
 
 from flask import url_for
 from sage.all import (
@@ -45,7 +46,7 @@ def p2sage(s):
         return z
 
 def string2number(s):
-    # a start to replace p2sage (used for the paramters in the FE)
+    # a start to replace p2sage (used for the parameters in the FE)
     strs = str(s).replace(' ','')
     try:
         if 'e' in strs:
@@ -451,7 +452,7 @@ def lfuncEPhtml(L, fmt):
     return(ans)
 
 def lfuncEpSymPower(L):
-    """ Helper funtion for lfuncEPtex to do the symmetric power L-functions
+    """ Helper function for lfuncEPtex to do the symmetric power L-functions
     """
     ans = ''
     for p in L.S.bad_primes:
@@ -579,7 +580,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if L._Ltype == "maass":
+            if  not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3
@@ -613,7 +614,7 @@ def lfuncFEtex(L, fmt):
 
 
 def specialValueString(L, s, sLatex, normalization="analytic"):
-    ''' Returns the LaTex to dislpay for L(s)
+    ''' Returns the LaTex to display for L(s)
         Will eventually be replaced by specialValueTriple.
     '''
     if normalization=="arithmetic":
@@ -808,7 +809,7 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
         at two points related by the Atkin-Lehner involution.
         If the absolute value of the result is more than tol from 1
         then it returns "Not able to compute" which indicates to few
-        (or wrong) coeffcients.
+        (or wrong) coefficients.
         The parameter num chooses the related points and shouldn't be 1.
     """
     sum1 = 0
@@ -857,15 +858,11 @@ def getConductorIsogenyFromLabel(label):
 
 
 
-def get_bread(degree=None, breads=[]):
+def get_bread(breads=[]):
     """
-    Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    Returns the top level of bread crumbs plus the ones supplied in breads.
     """
     bread = [('L-functions', url_for('.index'))]
-    if degree is not None:
-        bread.append(
-          ('Degree ' + str(degree),
-           url_for('.l_function_degree_page', degree='degree' + str(degree))))
     bread.extend(breads)
     return bread
 

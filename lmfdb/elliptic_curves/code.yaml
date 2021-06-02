@@ -17,15 +17,9 @@ not-implemented:
     // (not yet implemented)
 
 curve:
-  sage: |
-    E = EllipticCurve(%s)    # or
-    E = EllipticCurve("%s")
-  pari: |
-    E = ellinit(%s)       \\ or
-    E = ellinit("%s")
-  magma: |
-    E := EllipticCurve(%s); // or
-    E := EllipticCurve("%s");
+  sage:  E = EllipticCurve(%s)
+  pari:  E = ellinit(%s)
+  magma: E := EllipticCurve(%s);
 
 gens:
   sage:  E.gens()
@@ -121,5 +115,5 @@ galrep:
 
 padicreg:
   sage: |
-    [E.padic_regulator(p) for p in primes(3,20) if E.conductor().valuation(p)<2]
+    [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
 

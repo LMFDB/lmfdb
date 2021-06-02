@@ -5,7 +5,8 @@ import yaml
 from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
+from lmfdb.number_fields.number_field import unlatex
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
@@ -173,7 +174,11 @@ class WebEC(object):
 
         self.local_data = local_data = list(db.ec_localdata.search({"lmfdb_label": lmfdb_label}))
         for ld in local_data:
-            ld['kod'] = latex(KodairaSymbol(ld['kodaira_symbol']))
+            if ld['kodaira_symbol'] <= -14:
+                # Work around bug in Sage's latex
+                ld['kod'] = 'I_{%s}^{*}' % (-ld['kodaira_symbol'] - 4)
+            else:
+                ld['kod'] = latex(KodairaSymbol(ld['kodaira_symbol']))
 
         Nfac = Factorization([(ZZ(ld['prime']),ld['conductor_valuation']) for ld in local_data])
         Dfac = Factorization([(ZZ(ld['prime']),ld['discriminant_valuation']) for ld in local_data], unit=ZZ(self.signD))
@@ -191,7 +196,8 @@ class WebEC(object):
 
         # latex equation:
 
-        data['equation'] = latex_equation(self.ainvs)
+        latexeqn = latex_equation(self.ainvs)
+        data['equation'] = raw_typeset(unlatex(latexeqn), latexeqn)
 
         # minimal quadratic twist:
 
@@ -202,10 +208,10 @@ class WebEC(object):
 
         # modular degree:
         
-        if self.degree is None:
+        try:
+            data['degree'] = ZZ(self.degree) # convert None to 0
+        except AttributeError: # if not computed, db has Null and the attribute is missing
             data['degree'] = 0 # invalid, but will be displayed nicely
-        else:
-            data['degree'] = self.degree
 
         # coefficients of modular form / L-series:
 
@@ -230,7 +236,7 @@ class WebEC(object):
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
             else:
-                data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+                data['cm_ramp'] = ", ".join(str(p) for p in data['cm_ramp'])
             data['cm_sqf'] = ZZ(self.cm).squarefree_part()
 
             data['CM'] = r"yes (\(D=%s\))" % data['CMD']
@@ -339,7 +345,8 @@ class WebEC(object):
 
         # Newform
         
-        data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        rawnewform =  str(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
+        data['newform'] =  raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
@@ -395,7 +402,7 @@ class WebEC(object):
                            ('Discriminant', prop_int_pretty(data['disc'])),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', prop_int_pretty(self.mwbsd['rank'])),
+                           ('Rank', 'unknown' if self.mwbsd['rank'] == '?' else prop_int_pretty(self.mwbsd['rank'])),
                            ('Torsion structure', (r'\(%s\)' % self.mwbsd['tor_struct']) if self.mwbsd['tor_struct'] else 'trivial'),
                            ]
 
@@ -417,11 +424,31 @@ class WebEC(object):
 
         # Some components are in the main table:
         
-        mwbsd['rank'] = r = self.rank
+        mwbsd['analytic_rank'] = r = self.analytic_rank
         mwbsd['torsion'] = self.torsion
-        mwbsd['reg'] = self.regulator
-        mwbsd['sha'] = self.sha
-        mwbsd['sha2'] = latex_sha(self.sha)
+        tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
+        mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
+        if mwbsd['tamagawa_product'] > 1:
+            cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
+            cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+            mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
+        else:
+            mwbsd['tamagawa_factors'] = None
+
+
+        try:
+            mwbsd['rank'] = self.rank
+            mwbsd['reg']  = self.regulator
+            mwbsd['sha']  = self.sha
+            mwbsd['sha2'] = latex_sha(self.sha)
+        except AttributeError:
+            mwbsd['rank'] = '?'
+            mwbsd['reg']  = '?'
+            mwbsd['sha']  = '?'
+            mwbsd['sha2'] = '?'
+            mwbsd['regsha'] = ( mwbsd['special_value'] * self.torsion**2 ) / ( mwbsd['tamagawa_product'] * mwbsd['real_period'] )
+            if r<=1:
+                mwbsd['rank'] = r
 
         # Integral points
 
@@ -429,21 +456,25 @@ class WebEC(object):
         a1, _, a3, _, _ = ainvs = self.ainvs
         if a1 or a3:
             int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
-            mwbsd['int_points'] = ', '.join(web_latex(P) for P in int_pts)
+            mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
         else:
             int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
-            mwbsd['int_points'] = ', '.join(pm_pt(P) for P in int_pts)
+            raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
+            raw_form = ', '.join(str(P) for P in raw_form)
+            mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
 
         # Generators (mod torsion) and heights:
-        mwbsd['generators'] = [web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
 
         # Torsion structure and generators:
         if mwbsd['torsion'] == 1:
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
         else:
-            mwbsd['tor_struct'] = r' \times '.join([r'\Z/{%s}\Z' % n for n in self.torsion_structure])
-            mwbsd['tor_gens'] = ', '.join(web_latex(weighted_proj_to_affine_point(P)) for P in mwbsd['torsion_generators'])
+            mwbsd['tor_struct'] = r' \times '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
+            tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
+            mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp), 
+                ', '.join(web_latex(P) for P in tor_gens_tmp))
 
         # BSD invariants
         if r >= 2:
@@ -453,17 +484,12 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
-        tamagawa_numbers = [ld['tamagawa_number'] for ld in self.local_data]
-        cp_fac = [ZZ(cp).factor() for cp in tamagawa_numbers]
-        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
-        mwbsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
-        mwbsd['tamagawa_product'] = prod(tamagawa_numbers)
 
     def make_twoadic_data(self):
         if not self.cm:
             self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.lmfdb_label)
             from sage.matrix.all import Matrix
-            twoadicdata['gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens']])
+            twoadicdata['gen_matrices'] = ','.join(latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens'])
             twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
@@ -539,7 +565,7 @@ class WebEC(object):
             if "missing" in tg1['f']:
                 tg['fields_missing'] = True
             T = tgd['torsion']
-            tg1['t'] = r'\(' + r' \times '.join([r'\Z/{}\Z'.format(n) for n in T]) + r'\)'
+            tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
             bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
                    from lmfdb.ecnf.main import split_full_label
@@ -567,24 +593,13 @@ class WebEC(object):
 
     def code(self):
         if self._code is None:
-            self.make_code_snippets()
+
+            # read in code.yaml from current directory:
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+            # Fill in placeholders for this specific curve:
+            for lang in ['sage', 'pari', 'magma']:
+                self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'])
+
         return self._code
-
-    def make_code_snippets(self):
-        # read in code.yaml from current directory:
-
-        _curdir = os.path.dirname(os.path.abspath(__file__))
-        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-
-        # Fill in placeholders for this specific curve:
-
-        for lang in ['sage', 'pari', 'magma']:
-            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.lmfdb_label)
-        return
-        for k in self._code:
-            if k != 'prompt':
-                for lang in self._code[k]:
-                    self._code[k][lang] = self._code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self._code[k][lang][-1])==0:
-                        self._code[k][lang] = self._code[k][lang][:-1]

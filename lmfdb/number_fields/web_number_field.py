@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
-import os, yaml
+import os
+import yaml
 from six import text_type
 
 from flask import url_for
@@ -9,10 +10,12 @@ from sage.all import (
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
-        display_multiset, factor_base_factor, factor_base_factorization_latex)
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
+        raw_typeset, display_multiset, factor_base_factor, 
+        factor_base_factorization_latex)
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -265,13 +268,15 @@ def formatfield(coef, show_poly=False, missing_text=None):
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
-        mypol = latex(coeff_to_poly(coef))
+        mypolraw = coeff_to_poly(coef)
+        mypol = latex(mypolraw)
         if show_poly:
             return '$'+mypol+'$'
 
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+        mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
         else:
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
@@ -302,7 +307,7 @@ def nf_knowl_guts(label):
     out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += r"\(%s\)" % latex(wnf.poly())
+    out += raw_typeset(wnf.poly(), r"\(%s\)" % latex(wnf.poly()))
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
@@ -372,6 +377,9 @@ class WebNumberField:
             # try again as a string
             pol = PolynomialRing(QQ, 'x')(str(pol))
         pol *= pol.denominator()
+        # For some reason the error raised by Pari on a constant polynomial is not being caught
+        if pol.degree() < 1:
+            raise ValueError("Polynomial cannot be constant")
         R = pol.parent()
         pol = R(pari(pol).polredbest().polredabs())
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
@@ -394,6 +402,9 @@ class WebNumberField:
 
     def _get_dbdata(self):
         return db.nf_fields.lookup(self.label)
+
+    def is_in_db(self):
+        return self._data is not None
 
     def get_label(self):
         if self.label == 'a':
@@ -448,7 +459,7 @@ class WebNumberField:
         return self._data['gg']
 
     def is_galois(self):
-        return self.gg().order() == self.degree()
+        return self._data['is_galois']
 
     def is_abelian(self):
         return self.gg().is_abelian()
@@ -480,9 +491,9 @@ class WebNumberField:
         return coeff_to_poly(self._data['coeffs'])
 
     def haskey(self, key):
-        return self._data.get(key) is not None
+        return self._data and self._data.get(key) is not None
 
-    # Warning, this produces our prefered integral basis
+    # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
     # they will be in terms of a different basis
     def zk(self):

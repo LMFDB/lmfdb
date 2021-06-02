@@ -9,7 +9,8 @@ from six import PY3
 from sage.structure.sage_object import SageObject
 from sage.misc.latex import Latex
 from lmfdb import db
-import importlib, inspect
+import importlib
+import inspect
 from .sample import Samples
 
 def get_smf_families():

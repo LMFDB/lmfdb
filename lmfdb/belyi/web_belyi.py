@@ -129,9 +129,11 @@ class WebBelyiGalmap(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 2: # passport label length
-                galmap = db.belyi_galmaps.lucky({"plabel": label})
+                #galmap = db.belyi_galmaps.lucky({"plabel": label})
+                galmap = db.belyi_galmaps_prim.lucky({"plabel": label})
             elif len(slabel) == 3: # galmap label length
-                galmap = db.belyi_galmaps.lucky({"label": label})
+                #galmap = db.belyi_galmaps.lucky({"label": label})
+                galmap = db.belyi_galmaps_prim.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -146,7 +148,7 @@ class WebBelyiGalmap(object):
         return WebBelyiGalmap(galmap)
 
     def make_galmap_object(self, galmap):
-        from lmfdb.belyi.main import url_for_belyi_passport_label
+        from lmfdb.belyi.main import url_for_belyi_passport_label, url_for_belyi_galmap_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
@@ -229,6 +231,8 @@ class WebBelyiGalmap(object):
 
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        if galmap['label'] != galmap['primitivization']:
+            self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
         self.friends.extend(names_and_urls(galmap['friends']))
 
         # Downloads
@@ -357,7 +361,8 @@ class WebBelyiPassport(object):
         data["pass_size"] = passport["pass_size"]
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps.search(
+        #galmaps_for_plabel = db.belyi_galmaps.search(
+        galmaps_for_plabel = db.belyi_galmaps_prim.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []

@@ -42,7 +42,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+t,'Base change')
 
     #
-    # Jump to specfic newform
+    # Jump to specific newform
     def test_jump(self):
         r"""
         Check that jumping to a specific newform by label works.
@@ -68,7 +68,7 @@ class BMFTest(LmfdbTest):
         """
         self.check_args(base_url+'2.0.3.1/77283.1', 'contains the following\nnewforms')
         self.check_args(base_url+'2.0.11.1/207.6', 'Dimension of new cuspidal subspace:')
-        # I don't know why the follwing fails, as the text was copied from the page source:
+        # I don't know why the following fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.11.1/207.6', '\((2 a + 13) = (\left(a - 1\right))^{2} \cdot (\left(a - 5\right)) \)')
 
     #
@@ -80,10 +80,10 @@ class BMFTest(LmfdbTest):
         base_url = '/ModularForm/GL2/ImaginaryQuadratic/'
         self.check_args(base_url+'2.0.11.1/207.6/b', 'Base change')
         self.check_args(base_url+'2.0.11.1/207.6/b', '2.0.11.1-207.6-b')
-        self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Isogeny class 2.0.3.1-44332.1-a')
+        self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve 2.0.3.1-44332.1-a')
         self.check_args(base_url+'2.0.3.1/44332.1/a/', '-238 a + 76')
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base change of a form over');
-        self.check_args(base_url+'2.0.11.1/256.1/a/', 'Isogeny class 2.0.11.1-256.1-a');
+        self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve 2.0.11.1-256.1-a');
         # A dimension 2 example
         self.check_args(base_url+'2.0.4.1/377.1/a2', r'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining');
 
@@ -92,18 +92,18 @@ class BMFTest(LmfdbTest):
         for url, texts, notitself in [
                 ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.3/a/',
                     ('Bianchi modular form 2.0.7.1-44.4-a',
-                        'Isogeny class 2.0.7.1-44.3-a',
-                        'Isogeny class 2.0.7.1-44.4-a'),
+                        'Elliptic curve 2.0.7.1-44.3-a',
+                        'Elliptic curve 2.0.7.1-44.4-a'),
                     'Bianchi modular form 2.0.7.1-44.3-a'),
                 ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.4/a/',
                     ('Bianchi modular form 2.0.7.1-44.3-a',
-                        'Isogeny class 2.0.7.1-44.3-a',
-                        'Isogeny class 2.0.7.1-44.4-a'),
+                        'Elliptic curve 2.0.7.1-44.3-a',
+                        'Elliptic curve 2.0.7.1-44.4-a'),
                     'Bianchi modular form 2.0.7.1-44.4-a'),
                 ('/ModularForm/GL2/ImaginaryQuadratic/2.0.8.1/32.1/a/',
                     ('Hilbert modular form 2.2.8.1-32.1-a',
-                        'Isogeny class 2.0.8.1-32.1-a',
-                        'Isogeny class 2.2.8.1-32.1-a'),
+                        'Elliptic curve 2.0.8.1-32.1-a',
+                        'Elliptic curve 2.2.8.1-32.1-a'),
                     'Bianchi modular form 2.0.8.1-32.1-a')
                     ]:
             L = self.tc.get(url)
@@ -115,23 +115,15 @@ class BMFTest(LmfdbTest):
             # but the goal is to test that itself doesn't show in the friends list
             assert notitself not in L.get_data(as_text=True)
 
-    def check_compile_and_get_level(self, download_data):
-        """Simulates a user downloading the sage code, and then loading it into
-        a sage session. This requires the sage import at the top"""
-
-        sage_code = download_data.get_data(as_text=True)
-        exec(sage_code, globals())
-        global NN
-        return NN
-
     def test_download_sage(self):
+
         # A dimension 1 example
-        L1 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage')
-        L1_level = self.check_compile_and_get_level(L1)
+        L1_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/18333.3/a/download/sage').get_data(as_text=True)
+        L1_level = self.check_sage_compiles_and_extract_var(L1_sage_code, 'NN')
         assert L1_level.norm() == Integer(18333)
-        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1.get_data(as_text=True)
-        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1.get_data(as_text=True)
-        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1.get_data(as_text=True)
+        assert 'NN = ZF.ideal((6111, 3*a + 5052))' in L1_sage_code
+        assert '(27*a-22,),(-29*a+15,),(-29*a+14,),(29*a-11,),(-29*a+18,),(-29*a+9,)' in L1_sage_code
+        assert 'hecke_eigenvalues_array = [0, -1, 2, -1, 1, -3, 4, 0, -2, -8, 7, -9, -8, -4, -9, 8, 10, -11,' in L1_sage_code
         """
         Observe that example 1 above checks equality of the level norm between
         the loaded sage code and what appears on the homepage, but then checks
@@ -143,8 +135,8 @@ class BMFTest(LmfdbTest):
         """
 
         # A dimension 2 example
-        L2 = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage')
-        L2_level = self.check_compile_and_get_level(L2)
+        L2_sage_code = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/377.1/a2/download/sage').get_data(as_text=True)
+        L2_level = self.check_sage_compiles_and_extract_var(L2_sage_code, 'NN')
 
         P = PolynomialRing(QQ,'x')
         g = P([1, 0, 1])
@@ -155,8 +147,8 @@ class BMFTest(LmfdbTest):
         L2_level_actual = ZF.ideal((16*i - 11))  # the level displayed on BMF homepage
         assert L2_level == L2_level_actual
         assert L2_level.norm() == 377
-        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2.get_data(as_text=True)
-        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2.get_data(as_text=True)
+        assert '(2*i+3,),(i+4,),(i-4,),(-2*i+5,),(2*i+5,),(i+6,)' in L2_sage_code
+        assert 'hecke_eigenvalues_array = [-z, 2*z, -1, 2*z+2, "not known", 2*z-1, 4, 2*z+3, "not known", 2*z+1, -2*z-5, -4*z+5, -4*z+5, 2*z+1, 2*z]' in L2_sage_code
 
     def test_download_magma(self):
         # A dimension 1 example
@@ -167,17 +159,13 @@ class BMFTest(LmfdbTest):
         page = self.tc.get('ModularForm/GL2/ImaginaryQuadratic/159.0.7.1/30.5/a/download/magma').get_data(as_text=True)
         assert 'Bianchi newform not found' in page
 
-        # These tests take too long to use magma_free, so we run magma when it is installed
-        from sage.all import magma
-        import sys
+        # We run magma when it is installed
         for label, expected in [
                 ['2.0.4.1/100.2/a',
                  'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
                 ['2.0.11.1/933.1/a',
                  'ideal<ZF | {a + 30, 933}>;']
         ]:
-            sys.stdout.write("{}...".format(label))
-            sys.stdout.flush()
             page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
             assert expected in page
             assert  'make_newform'  in page
@@ -186,11 +174,4 @@ class BMFTest(LmfdbTest):
             magma_code += 'f, iso := Explode(make_newform());\n'
             magma_code += 'for P in primes[1..15] do;\n if Valuation(NN,P) eq 0 then;\n  assert iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P);\n end if;\nend for;\n'
             magma_code += 'f;\n'
-
-            try:
-                assert 'success' in magma.eval(magma_code)
-            except RuntimeError as the_error:
-                if str(the_error).startswith("unable to start magma"):
-                    pass
-                else:
-                    raise
+            self.assert_if_magma('success', magma_code, mode='in')
