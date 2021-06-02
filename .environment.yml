@@ -14,5 +14,5 @@ dependencies:
   - python=3.9
   - sage=9.2
   - tox
-  - flask<=1.1.4
+  - flask<=1.1.2
   - parallel
