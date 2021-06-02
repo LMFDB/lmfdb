@@ -734,6 +734,9 @@ table.ntdata > thead {
 table.ntdata > thead > tr.bottomlined {
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+table.ntdata tr.toplined {
+  border-top: 2px solid {{ color.table_ntdata_border }};
+}
 
 table.ntdata th {
   text-align: left;
