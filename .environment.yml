@@ -15,5 +15,5 @@ dependencies:
   - sage=9.2
   - tox
   - flask<=1.1.4
-  - werkzeug<=1
+  - werkzeug<=1.0.1
   - parallel
