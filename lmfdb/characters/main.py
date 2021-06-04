@@ -4,10 +4,10 @@ from __future__ import absolute_import
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import gcd, euler_phi
+from sage.all import gcd, euler_phi, PolynomialRing, QQ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
-    TextBox, CountBox, parse_bool, parse_ints, search_wrap,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
@@ -593,6 +593,9 @@ def dirichlet_group_table(**args):
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Group of Dirichlet characters'
+    if info['poly'] != '???':
+        info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
+        info['poly'] = raw_typeset(info['poly'])
     return render_template("CharacterGroupTable.html", **info)
 
 
