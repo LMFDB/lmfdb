@@ -1081,6 +1081,12 @@ class NFSearchArray(SearchArray):
             example_span="2.2.5.1 or x^2-5 or a "+
                 display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
+        completion = TextBox(
+            name="completion",
+            label="$p$-adic completion",
+            knowl="nf.padic_completion",
+            example_span="2.4.10.7",
+            example="2.4.10.7")
         count = CountBox()
 
         self.browse_array = [
@@ -1091,9 +1097,9 @@ class NFSearchArray(SearchArray):
             [num_ram, cm_field],
             [ram_primes, ur_primes],
             [regulator, subfield],
-            [count]]
+            [count, completion]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, regulator, subfield]]
+            [discriminant, rd, regulator, subfield, completion]]
