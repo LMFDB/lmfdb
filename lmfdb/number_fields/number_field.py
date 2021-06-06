@@ -540,7 +540,7 @@ def render_field_webpage(args):
                                         modulus=int(conductor),
                                         char_number_list=','.join(
                                             str(a) for a in dirichlet_chars),
-                                        poly=info['polynomial'])))
+                                        poly=nf.poly())))
     resinfo = []
     galois_closure = nf.galois_closure()
     if galois_closure[0]>0:

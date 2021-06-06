@@ -54,7 +54,7 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get=r'modulus=35&poly=\%28+x^{6}+\%29+-+\%28+x^{5}+\%29+-+\%28+7+x^{4}+\%29+%2B+\%28+2+x^{3}+\%29+%2B+\%28+7+x^{2}+\%29+-+\%28+2+x+\%29+-+\%28+1+\%29&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
         W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
         assert '35 }(29' in W.get_data(as_text=True)
 
