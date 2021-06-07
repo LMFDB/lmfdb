@@ -1085,8 +1085,8 @@ class NFSearchArray(SearchArray):
         completion = TextBox(
             name="completions",
             label="$p$-adic completions",
-            knowl="nf.padic_completion",
-            example_span="2.4.10.7",
+            knowl="nf.padic_completion.search",
+            example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
             example="2.4.10.7")
         count = CountBox()
 
