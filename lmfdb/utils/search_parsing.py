@@ -38,6 +38,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r'^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$')
+LF_LABEL_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
 import ast
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -935,6 +936,14 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             raise SearchParsingError(err_msg)
         else:
             raise SearchParsingError("It needs to be a GAP id, such as [4,1] or [12,5], ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
+
+@search_parser(clean_info=True, error_is_safe=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_padicfields(inp, query, qfield):
+    labellist = inp.split(',')
+    for label in labellist:
+        if not LF_LABEL_RE.match(label):
+            raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
+    query[qfield] = {'$contains': labellist}
 
 def input_string_to_poly(FF):
     # Change unicode dash with minus sign
