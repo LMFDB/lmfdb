@@ -290,7 +290,7 @@ def get_menu_cookie():
 def index():
     return render_template('index-boxes.html',
         titletag="The L-functions and modular forms database",
-        title="LMFDB - The L-functions and Modular Forms Database",
+        title="The L-functions and modular forms database (LMFDB)",
         bread=None,
         boxes=load_boxes())
 
