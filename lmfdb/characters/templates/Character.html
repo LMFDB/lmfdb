@@ -29,7 +29,7 @@
   {% endif %}
 </h2>
 <div style='overflow:auto'>
-  <table class="values" style="margin-left:10px; margin-top:5px;">
+  <table class="values">
     <thead>
       <tr>{% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}</tr>
     </thead>
@@ -39,7 +39,7 @@
 
 {% set value_default = 2 %}
 <form>
-  <table style="margin-left:10px;">
+  <table style="margin-left:10px; margin-top:5px;">
     <tbody>
     <tr>
       <td>value at</td>
@@ -69,7 +69,7 @@
     <button id="calc-gauss-go"> Compute </button>
     <span class="formexample"> e.g. {{gauss_default}} </span>
 </form>
-<div class="output"><span id="calc-gauss-output">{{ charsums.gauss|safe }}</span></div>
+<div class="output" style="margin-top:5px;"><span id="calc-gauss-output">{{ charsums.gauss|safe }}</span></div>
 
 {# Jacobi sum #}
 
@@ -83,7 +83,7 @@
   <button id="calc-jacobi-go"> Compute </button>
   <span class="formexample"> e.g. 1</span>
 </form>
-<div class="output"><span id="calc-jacobi-output">{{ charsums.jacobi|safe }}</span></div>
+<div class="output" style="margin-top:5px;"><span id="calc-jacobi-output">{{ charsums.jacobi|safe }}</span></div>
 
 {# Kloosterman sum #}
 
@@ -98,7 +98,7 @@
   <button id="calc-kloosterman-go"> Compute </button>
   <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
 </form>
-<div class="output"><span id="calc-kloosterman-output">{{ charsums.kloosterman|safe }}</span></div>
+<div class="output" style="margin-top:5px;"><span id="calc-kloosterman-output">{{ charsums.kloosterman|safe }}</span></div>
 
 {% endif %} {# charsums #}
 

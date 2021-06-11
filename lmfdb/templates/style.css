@@ -1277,6 +1277,50 @@ div.limit-height {
 
 /* end knowl */
 
+/* Copied from charpage.html */
+
+.output {
+    padding:20px 0 20px 100px;
+    text-align: left;
+    font-size: 115%;
+}
+table.navi td {
+    padding: 0;
+}
+table.props tr td:first-child {
+    width: 5em;
+}
+
+table.values {
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+table.values a {
+  display: block;
+}
+table.values thead tr {
+    border-bottom: 1px dotted gray;
+}
+table.values th {
+  text-align: center;
+  font-weight: normal;
+}
+
+table.values td.odd,
+table.values td:nth-child(odd),
+table.values td:first-child {
+ background: {{color.chi_table_background_off}};
+}
+
+table.values td.even,
+table.values td:nth-child(even) {
+ background: {{color.chi_table_background}};
+}
+
+/* end copied from charpage.html */
+
 /*** Dirichlet series, displayed in HTML ***/
 
 .dirichletseries {
