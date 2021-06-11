@@ -36,19 +36,12 @@
     <tr>{% for v in values %}<td style="text-align:center">{{v}}</td>{%endfor%}</tr>
   </table>
 </div>
-
+{{ place_code('jacobi') }}
 {% set value_default = 2 %}
-<form>
-  <table style="margin-left:10px; margin-top:5px;">
-    <tbody>
-    <tr>
-      <td>value at</td>
-      <td><input id="calc-value-input" size=10 placeholder={{value_default}}></td>
-      <td><button id="calc-value-go"> Compute </button></td>
-      <td><span class="formexample"> e.g. {{value_default}}</span></td>
-    </tr>
-    </tbody>
-  </table>
+<form style="margin-left:10px;"> \( \chi_{ {{modulus}} }({{number}},a) )\;\)  at \(\;a = \)
+    <input id="calc-value-input" size=10 placeholder={{gauss_default}}>
+    <button id="calc-value-go"> Compute </button>
+    <span class="formexample"> e.g. {{value_default}} </span>
 </form>
 <div class="output"><span id="calc-value-output"></span></div>
 {% endif %}
