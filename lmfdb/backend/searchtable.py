@@ -191,7 +191,7 @@ class PostgresSearchTable(PostgresTable):
                 self._parse_dict(clause, outer=col, outer_type=col_type)
                 for clause in value
             ]
-            if key == "$or" and any(pair[0] is None for pair in paris):
+            if key == "$or" and any(pair[0] is None for pair in pairs):
                 # If any of the pairs is None, then we should not filter anything
                 return None, None
             pairs = [pair for pair in pairs if pair[0] is not None]
