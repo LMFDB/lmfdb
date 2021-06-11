@@ -622,7 +622,6 @@ def belyi_search(info, query):
         if info.get(fld):
             query[fld] = info[fld]
 
-
     info["nf_link"] = lambda elt: field_display_gen(elt.get('moduli_field_label'), elt.get('moduli_field'), truncate=16)
 
 
@@ -670,7 +669,6 @@ class Belyi_stats(StatsDisplay):
         "top_title": [("number of Galois orbits", "belyi.num_orbits"), ("per", None), ("passport", "belyi.passport")],
         "totaler": {"avg": True}
         }
-        #TODO: add base field degree; needs new column
     ]
 
     @property
@@ -803,6 +801,7 @@ class BelyiSearchArray(SearchArray):
             knowl="belyi.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
+
         count = CountBox()
 
         self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [geomtype], [field], [count]]
