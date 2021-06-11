@@ -538,17 +538,34 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
 
+    parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
+
     if 'include_cm' in info:
         if info['include_cm'] == 'PCM':
-            query['cm'] = {'$ne' : 0}
+            tmp = {'$ne' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'PCMnoCM':
-            query['cm'] = {'$lt' : 0}
+            tmp = {'$lt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'CM':
-            query['cm'] = {'$gt' : 0}
+            tmp = {'$gt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'noPCM':
-            query['cm'] = 0
+            tmp = 0
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
 
-    parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
