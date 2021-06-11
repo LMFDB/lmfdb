@@ -154,13 +154,14 @@ class WebBelyiGalmap(object):
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg"):
+        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization"):
             data[elt] = galmap[elt]
         nt = galmap["group"].split("T")
         data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
 
         data["geomtype"] = geomtypelet_to_geomtypename_dict[galmap["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
+        data["primitivization_url"] = url_for_belyi_galmap_label(data['primitivization'])
 
         data["isQQ"] = False
         data["in_LMFDB"] = False
