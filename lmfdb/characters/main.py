@@ -666,6 +666,7 @@ class DirichStats(StatsDisplay):
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
             comma(self.norbits),
+            display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
             url_for(".statistics"))
 
     @property
