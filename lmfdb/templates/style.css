@@ -1,4 +1,4 @@
-t{# template defs #}
+{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -38,8 +38,8 @@ h2.link > a {
 }
 #content > h1:first-of-type,
 #content > h2:first-of-type {
-    margin-top: 3px;
-    padding-top: 7px;
+    margin-top: 0px;
+    padding-top: 0px;
 }
 
 #content > h2
