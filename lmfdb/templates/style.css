@@ -39,7 +39,7 @@ h2.link > a {
 #content > h1:first-of-type,
 #content > h2:first-of-type {
     margin-top: 0px;
-    padding-top: 0px;
+    padding-top: 2px;
 }
 
 #content > h2
