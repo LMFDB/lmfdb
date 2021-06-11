@@ -43,7 +43,7 @@
     <button id="calc-value-go"> Compute </button>
     <span class="formexample"> e.g. {{value_default}} </span>
 </form>
-<div class="output"><span id="calc-value-output"></span></div>
+<div class="output"><span id="calc-value-output">{{ charsums.value|safe }}</span></div>
 {% endif %}
 
 {# sums #}
