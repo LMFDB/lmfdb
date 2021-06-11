@@ -36,7 +36,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".source")),
             ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
-            ('Local field labels', url_for(".labels_page"))]
+            ('$p$-adic field labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -321,6 +321,9 @@ def render_field_webpage(args):
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
+        if db.nf_fields.exists({'local_algs': {'$contains': label}}):
+            friends.append(('Number fields with this completion', 
+                url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
 
         bread = get_bread([(label, ' ')])
         return render_template(
