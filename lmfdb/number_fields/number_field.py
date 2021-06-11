@@ -18,8 +18,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset,
-    flash_info, input_string_to_poly)
+    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl, 
+    raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -806,6 +806,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
+    parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1081,6 +1082,12 @@ class NFSearchArray(SearchArray):
             example_span="2.2.5.1 or x^2-5 or a "+
                 display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
+        completion = TextBox(
+            name="completions",
+            label="$p$-adic completions",
+            knowl="nf.padic_completion.search",
+            example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
+            example="2.4.10.7")
         count = CountBox()
 
         self.browse_array = [
@@ -1091,9 +1098,9 @@ class NFSearchArray(SearchArray):
             [num_ram, cm_field],
             [ram_primes, ur_primes],
             [regulator, subfield],
-            [count]]
+            [count, completion]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, regulator, subfield]]
+            [discriminant, rd, regulator, subfield, completion]]
