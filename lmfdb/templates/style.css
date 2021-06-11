@@ -38,8 +38,8 @@ h2.link > a {
 }
 #content > h1:first-child,
 #content > h2:first-child {
-    margin-top: 0px;
-    padding-top: 0px;
+    margin-top: 3px;
+    padding-top: 7px;
 }
 
 #content > h2
@@ -1280,7 +1280,7 @@ div.limit-height {
 /* Copied from charpage.html */
 
 .output {
-    padding:10px 0 20px 10px;
+    padding:10px 0 10px 10px;
     text-align: left;
     font-size: 115%;
 }
