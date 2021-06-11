@@ -58,7 +58,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/GaloisGroups', 'abstract group may have')
 
     def test_imaginary_quadratic_page(self):
-        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'Mosunov')
+        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
 
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')
@@ -67,7 +67,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/FieldLabels', 'with the same signature and absolute value of the')
 
     def test_url_bad(self):
-        self.check_args('/NumberField/junk', 'Error') # error mesage
+        self.check_args('/NumberField/junk', 'Error')  # error message
 
     def test_random_field(self):
         self.check_args('/NumberField/random', 'Discriminant')

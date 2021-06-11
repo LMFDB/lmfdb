@@ -52,7 +52,7 @@ def smallgroup_cache(gap_labels, cache=None, reverse=None):
 def small_group_display_knowl(n, k, name=None, cache=None):
     label = '%s.%s' % (n, k)
     if not name:
-        myname = '$[%d, %d]$'%(n,k)
+        myname = 'GAP id $[%d, %d]$'%(n,k)
     else:
         myname = name
     if cache:
@@ -644,6 +644,11 @@ def group_alias_table():
     ans += r'</tbody></table>'
     return ans
 
+def nt2gap(n, t):
+    res = db.gps_transitive.lookup('{}T{}'.format(n,t))
+    if res and 'gapid' in res:
+        return [res['order'], res['gapid']]
+    raise NameError('GAP id not found')
 
 def complete_group_code(code):
     # Order direct products

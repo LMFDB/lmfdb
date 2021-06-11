@@ -1,6 +1,7 @@
 from random import randrange
 from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
+from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 
 from lmfdb.app import ctx_proc_userdata
@@ -80,6 +81,13 @@ class Wrapper(object):
 
     def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
         flash_error('Error parsing %s.', str(err))
+        info['err'] = str(err)
+        info['query'] = dict(query)
+        return render_template(template, info=info, title=self.err_title, **template_kwds)
+
+    def oob_error(self, info, query, err, err_title, template, template_kwds):
+        # The error string is long and ugly, so we just describe the type of issue
+        flash_error('Input number larger than allowed by integer type in database.')
         info['err'] = str(err)
         info['query'] = dict(query)
         return render_template(template, info=info, title=self.err_title, **template_kwds)
@@ -196,6 +204,9 @@ class SearchWrapper(Wrapper):
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
             return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+        except NumericValueOutOfRange as err:
+            # This is caused when a user inputs a number that's too large for a column search type
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
         else:
             try:
                 if self.cleaners:

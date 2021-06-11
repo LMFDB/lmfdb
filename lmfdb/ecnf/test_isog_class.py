@@ -44,7 +44,7 @@ class EcnfIsogClassTest(LmfdbTest):
 
         L = self.tc.get('/EllipticCurve/2.2.8.1/9.1/a/').get_data(as_text=True)
         assert 'Hilbert modular form 2.2.8.1-9.1-a' in L
-        assert 'Isogeny class 576.a' in L
+        assert 'Genus 2 curve 576.a' in L
         assert 'Modular form 24.2.d.a' in L
 
         L = self.tc.get('/EllipticCurve/2.0.11.1/256.1/b/').get_data(as_text=True)
@@ -52,9 +52,9 @@ class EcnfIsogClassTest(LmfdbTest):
         assert 'Bianchi modular form 2.0.11.1-256.1-b' in L
         assert 'Hilbert modular form 2.2.44.1-16.1-a' in L
         assert 'Hilbert modular form 2.2.44.1-16.1-c' in L
-        assert 'Isogeny class 2.0.11.1-256.1-a' in L
-        assert 'Isogeny class 2.2.44.1-16.1-a' in L
-        assert 'Isogeny class 2.2.44.1-16.1-c' in L
+        assert 'Elliptic curve 2.0.11.1-256.1-a' in L
+        assert 'Elliptic curve 2.2.44.1-16.1-a' in L
+        assert 'Elliptic curve 2.2.44.1-16.1-c' in L
         assert 'L-function' in L
 
 

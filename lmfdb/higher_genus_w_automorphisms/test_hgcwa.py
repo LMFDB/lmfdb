@@ -18,6 +18,19 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
         L = self.tc.get('/HigherGenus/C/Aut/junk',follow_redirects=True)
         assert 'No family with label' in L.get_data(as_text=True)
 
+    def test_url_topological_pages(self):
+        """Test bad URLs for topological webpages"""
+
+        L = self.tc.get('/HigherGenus/C/Aut/boaty/mcboatface',follow_redirects=True)
+        assert 'Invalid family label' in L.get_data(as_text=True)
+
+        L = self.tc.get('/HigherGenus/C/Aut/2.8-1.0.2-8-8/mcboatface',follow_redirects=True)
+        assert 'Invalid topological action label' in L.get_data(as_text=True)
+
+        # This URL referenced in LMFDB#4449
+        L = self.tc.get('/HigherGenus/C/Aut/2.8-1.0.2-8-8/T.2.1',follow_redirects=True)
+        assert 'No orbit in family with label' in L.get_data(as_text=True)
+
     def test_search_genus_group(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=2&group=%5B48%2C29%5D&signature=&dim=&hyperelliptic=include&count=20&Submit=Search')
         assert 'both matches' in L.get_data(as_text=True)
@@ -65,5 +78,3 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
     def braid_summary_pages(self):
         L = self.tc.get('/HigherGenus/C/Aut/3.8-3.0.2-2-4-4/T.1.1')
         assert 'braid inequivalent' in L.get_data(as_text=True)
-
-        

@@ -1,32 +1,72 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
-<h2> Browse {{KNOWL('lfunction', title='L-functions' )}}
-by
-{{ KNOWL('lfunction.signature', title='signature') }}
-or
-{{KNOWL("lfunction.underlying_object",title="underlying object")}}</h2>
-<table>
-{% for i in type_row_list: %}
-<tr>
-  {% for t in type_table[i]: %}
-  <td><a  style="padding: 5px;" href="{{t.link}}">{{t.title|safe}}</a></td>
-  {% endfor %}
-<tr>
-{% endfor %}
-</table>
+{% set rational = "yes" if info.search_array.force_rational else "" %}
 
-<h2> Browse {{KNOWL('lfunction', title='L-functions')}} by {{KNOWL('lfunction.degree', title='degree') }}</h2>
-<table>
- <tr>
-  {% for r in degree_list: %}
-    <td style="text-align: center;">
-       <a style="width: 2em;" href="degree{{r}}">{{r}}</a>
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{KNOWL('lfunction.degree', 'degree')}}:</td>
+    <td>{% for deg in range(1,5) %} <a href="?degree={{deg}}">{{deg}}</a>&nbsp;&nbsp;{% endfor %}</td>
+  </tr>
+  <tr>
+    <td>By {{KNOWL('lfunction.motivic_weight', 'motivic weight')}}:</td>
+    <td>{% for w in range(4) %} <a href="?motivic_weight={{w}}">{{w}}</a>&nbsp;&nbsp;{% endfor %}</td>
+  </tr>
+  <tr>
+    <td>By {{KNOWL('lfunction.conductor', 'conductor')}}:</td>
+    <td>{% for cond in ["1-99", "100-999", "1000-9999", "10000-100000"] %} <a href="?conductor={{cond}}">{{cond}}</a>&nbsp;&nbsp;{% endfor %} <a href="?conductor=100001-">&gt;100000</a>
     </td>
-  {% endfor %}
- </tr>
-
+  </tr>
+  <tr>
+    <td>By <a href="?sort_order=zero">lowest zero</a></td>
+  </tr>
+  <tr>
+    <td colspan="2">A <a href="{{url_for('.l_function_cuspform_browse_page')}}">plot</a> of classical modular form L-functions by analytic conductor, first zero and weight</td>
+  </tr>
+  <tr>
+    <td colspan="2">Some interesting L-functions in degree <a href="{{url_for('.interesting', degree=1, rational=rational)}}">1</a>, <a href="{{url_for('.interesting', degree=2, rational=rational)}}">2</a>, <a href="{{url_for('.interesting', degree=3, rational=rational)}}">3</a>, <a href="{{url_for('.interesting', degree=4, rational=rational)}}">4</a></td>
+  </tr>
+  <tr>
+    <td colspan="2">A random L-function in degree <a href="?degree=1&search_type=Random">1</a>, <a href="?degree=2&search_type=Random">2</a>, <a href="?degree=3&search_type=Random">3</a>, <a href="?degree=4&search_type=Random">4</a></td>
+    </tr>
 </table>
-<br />
+
+<h3> By {{KNOWL('lfunction.underlying_object', 'origin')}} </h3>
+
+<table class="browse">
+  <tr>
+    <td><a href="?origin=DIR">Dirichlet character</a>
+    <td><a href="?origin=CMF">Classical modular form</a></td>
+    <td><a href="?origin=ECQ">Elliptic curve over $\mathbb{Q}$</a></td>
+    <td><a href="?origin=Artin">Artin representation</a></td>
+  </tr>
+  <tr>
+    <td><a href="?origin=BMF">Hilbert modular form</a></td>
+    <td><a href="?origin=BMF">Bianchi modular form</a></td>
+    <td><a href="?degree=4&origin=ECNF">Elliptic curve over $\mathbb{Q}(\sqrt{d})$</a></td>
+    <td><a href="?origin=G2Q">Genus 2 curve over $\mathbb{Q}$</a></td>
+
+  </tr>
+  {% if not info.search_array.force_rational %}
+  <tr>
+    <td><a href="?degree=3&origin=MaassGL3">$\operatorname{GL}_3$ Maass form</a></td>
+    <td><a href="?degree=4&origin=MaassGL4">$\operatorname{GL}_4$ Maass form</a></td>
+    <td><a href="?degree=4&origin=MaassGSp4">$\operatorname{GSp}_4$ Maass form</a></td>
+  </tr>
+  {% endif %}
+</table>
+
+<h2> Search </h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
 
 {% endblock %}

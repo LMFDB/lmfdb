@@ -124,6 +124,8 @@ _meta_tables_cols = (
     "total",
     "important",
     "include_nones",
+    "table_description",
+    "col_description",
 )
 _meta_tables_cols_notrequired = (
     "count_cutoff",
@@ -131,7 +133,9 @@ _meta_tables_cols_notrequired = (
     "total",
     "important",
     "include_nones",
-)  # defaults: 1000, true, 0, false, false
+    "table_description",
+    "col_description",
+)  # defaults: 1000, true, 0, false, false, "", {}
 _meta_tables_types = dict(zip(_meta_tables_cols, (
     "text",
     "jsonb",
@@ -144,6 +148,8 @@ _meta_tables_types = dict(zip(_meta_tables_cols, (
     "bigint",
     "boolean",
     "boolean",
+    "text",
+    "jsonb",
 )))
 _meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
 
@@ -949,7 +955,7 @@ class PostgresBase(object):
         INPUT:
 
         - ``filename`` -- a string, the filename to load the table from
-        - ``name`` -- the name fo the table
+        - ``name`` -- the name of the table
         - ``sep`` -- the separator character, defaulting to tab
         - ``addid`` -- if true, also adds an id column to the created table
 

@@ -2,8 +2,31 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function show_schema() {
+    $("div.schema-holder").show();
+    $("#schema-hider").show();
+    $("#schema-shower").hide();
+    return false;
+  }
+  function hide_schema() {
+    $("div.schema-holder").hide();
+    $("#schema-hider").hide();
+    $("#schema-shower").show();
+    return false;
+  }
+</script>
+
 <style>
-.api-entries > li { margin-bottom: 14px; }
+  .api-entries > li { margin-bottom: 14px; }
+  #schema-table {
+    width: 95%;
+  }
+  div.schema-holder {
+    height: 300px;
+    width: 97%;
+    overflow-y: scroll;
+  }
 </style>
 
 <div>
@@ -18,6 +41,35 @@ Formats:
 </div>
 <div>
 Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
+</div>
+<div>
+  <a id="schema-shower" onclick="return show_schema();" href="#">Show schema</a>
+  <a id="schema-hider" onclick="return hide_schema();" href="#" style="display: none;">Hide schema</a>
+  <div class="schema-holder" style="display: none;">
+    <table id="schema-table" class="ntdata">
+      <tr>
+        <th>Column</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+      {% for col, typ, desc in search_schema %}
+        <tr>
+          <td>{{col}}</td>
+          <td>{{typ}}</td>
+          <td style="white-space: normal; max-width: 600px;">{{desc}}</td>
+        </tr>
+      {% endfor %}
+      {% if extra_schema %}
+        {% for col, typ, desc in extra_schema %}
+          <tr{% if loop.index == 1 %} class="toplined"{% endif %}>
+            <td>{{col}}</td>
+            <td>{{typ}}</td>
+            <td style="white-space: normal; max-width: 600px;">{{desc}}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </table>
+  </div>
 </div>
 
 {% if single_object %}

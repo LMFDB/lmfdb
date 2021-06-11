@@ -54,6 +54,26 @@ def simplify_hyperelliptic(fh):
     f = (n.squarefree_part() * f) / n
     return f.coefficients(sparse=False)
 
+def simplify_hyperelliptic_point(fh, pt):
+    xR = PolynomialRing(QQ,'x')
+    f = 4*xR(fh[0]) + xR(fh[1])**2
+    f1 = xR(fh[1])
+    n = gcd(f.coefficients())
+    xzR = PolynomialRing(QQ,['x','z'])
+    z = xzR('z')
+    f1 = (xzR(f1)*z**(4-len(fh[1]))).homogenize(z)
+    return [pt[0], (2*pt[1] + f1([pt[0],pt[2]])) / n, pt[2]]
+
+def comp_poly(fh):
+    xR = PolynomialRing(QQ,'x')
+    f = 4*xR(fh[0]) + xR(fh[1])**2
+    f1 = xR(fh[1])
+    n = gcd(f.coefficients())
+    xyzR = PolynomialRing(QQ,['x','y','z'])
+    y = xyzR('y')
+    z = xyzR('z')
+    f1 = (xyzR(f1)*z**(4-len(fh[1]))).homogenize(z)
+    return (2*y + f1) / n
 
 def min_eqns_pretty(fh):
     xR = PolynomialRing(QQ,'x')
@@ -266,14 +286,14 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-        
+
 def plot_from_label(label):
     curve = db.g2c_curves.lookup(label)
     ratpts = db.g2c_ratpts.lookup(curve['label'])
     min_eqn = literal_eval(curve['eqn'])
     plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
     return plot
-    
+
 ###############################################################################
 # Statement functions for displaying formatted endomorphism data
 ###############################################################################
@@ -442,14 +462,14 @@ def split_field_statement(is_simple_geom, field_label, poly):
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
-        statement = "Decomposes up to isogeny as the square of the elliptic curve:"
+        statement = "Decomposes up to isogeny as the square of the elliptic curve isogeny class:"
     else:
-        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"
+        statement = "Decomposes up to isogeny as the product of the non-isogenous elliptic curve isogeny classes:"
     for n in range(len(coeffs)):
         # Use labels when possible:
         label = labels[n] if labels else ''
         if label:
-            statement += "<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>" % (url_for_ec(label), label)
+            statement += "<br>&nbsp;&nbsp;Elliptic curve isogeny class <a href=%s>%s</a>" % (url_for_ec_class(label), ec_label_class(label))
         # Otherwise give defining equation:
         else:
             statement += r"<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with"
@@ -509,7 +529,7 @@ def td_wrapcn(val):
 def point_string(P):
     return '(' + ' : '.join(map(str, P)) + ')'
 
-def mw_gens_table(invs,gens,hts,pts):
+def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x','y','z'])('y')):
     def divisor_data(P):
         R = PolynomialRing(QQ,['x','z']); x = R('x');z = R('z')
         xP,yP = P[0],P[1]
@@ -518,6 +538,7 @@ def mw_gens_table(invs,gens,hts,pts):
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
+        yD = comp(x, yD, z)
         return [make_bigint(elt, 10) for elt in [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]], xD, yD, yden
     if not invs:
         return ''
@@ -540,6 +561,10 @@ def mw_gens_table(invs,gens,hts,pts):
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
+
+def mw_gens_simple_table(invs,gens,hts,pts,fh):
+    spts = [simplify_hyperelliptic_point(fh,pt) for pt in pts]
+    return mw_gens_table(invs,gens,hts,spts,comp=comp_poly(fh))
 
 def local_table(N,D,tama,bad_lpolys,cluster_pics):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
@@ -582,14 +607,14 @@ def ratpts_table(pts,pts_v):
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
-            return '<p>This curve has no %s.</p>' % display_knowl(kid, 'rational points')
+            return 'This curve has no %s.' % display_knowl(kid, 'rational points')
         else:
-            return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
+            return 'No %s for this curve.' % display_knowl(kid, 'rational points are known')
     spts = [point_string(P) for P in pts]
     caption = 'All points' if pts_v else 'Known points'
     tabcols = 6
     if len(pts) <= tabcols+1:
-        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(spts))
+        return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption)]
     ptstab.extend(['<th></th>' for i in range(tabcols-1)])
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
@@ -601,6 +626,10 @@ def ratpts_table(pts,pts_v):
         ptstab.append('</tr>')
     ptstab.extend(['</tbody>', '</table>'])
     return '\n'.join(ptstab)
+
+def ratpts_simpletable(pts,pts_v,fh):
+    spts = [simplify_hyperelliptic_point(fh, pt) for pt in pts]
+    return ratpts_table(spts,pts_v)
 
 
 ###############################################################################
@@ -734,7 +763,7 @@ class WebG2C(object):
             data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
             if data['mw_rank'] == 0 and data['mw_rank_proved']:
                 data['regulator'] = '1' # display an exact 1 when we know this
-                
+
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
             data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
@@ -742,6 +771,7 @@ class WebG2C(object):
             data['rat_pts'] = ratpts['rat_pts']
             data['rat_pts_v'] =  ratpts['rat_pts_v']
             data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
+            data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
 
             data['mw_gens_v'] = ratpts['mw_gens_v']
             lower = len([n for n in ratpts['mw_invs'] if n == 0])
@@ -753,6 +783,7 @@ class WebG2C(object):
                 data['mw_group'] = r'\(' + r' \times '.join([ (r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs]) + r'\)'
             if lower >= upper:
                 data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
             if curve['two_torsion_field'][0]:
                 data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
@@ -787,7 +818,7 @@ class WebG2C(object):
         data['end_field_label'] = endo['fod_label']
         data['end_field_poly'] = intlist_to_poly(endo['fod_coeffs'])
         data['end_field_statement'] = end_field_statement(data['end_field_label'], data['end_field_poly'])
-        
+
         # Endomorphism data over QQbar:
         data['factorsQQ_geom'] = endo['factorsQQ_geom']
         data['factorsRR_geom'] = endo['factorsRR_geom']
@@ -850,18 +881,28 @@ class WebG2C(object):
         # Friends
         self.friends = friends = []
         if is_curve:
-            friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+            friends.append(('Genus 2 curve %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
-        # first deal with EC
+        # first deal with ECs and MFs
         ecs = []
+        mfs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
                     ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                    ecs.append(("Elliptic curve " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                try:
+                    cond, iso = ec_label_class(friend_label).split(".")
+                    newform_label = ".".join([cond, str(2), 'a', iso])
+                    mfs.append(("Modular form " + newform_label, url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)))
+                except ValueError:
+                    # means the friend isn't an elliptic curve over Q; adding Hilbert/Bianchi modular forms
+                    # is dealt with via the L-functions instances below
+                    pass
 
         ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
+        mfs.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
         # then again EC from lfun
         instances = []
@@ -876,10 +917,11 @@ class WebG2C(object):
                                                   int(data["Lhash"])
                                                   )
             ])
+
         exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
                    if elt[1]}
         exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
-        for elt in ecs + names_and_urls(instances, exclude=exclude):
+        for elt in ecs + mfs + names_and_urls(instances, exclude=exclude):
             # because of the splitting we must use G2C specific code
             add_friend(friends, elt)
         if is_curve:
@@ -930,7 +972,8 @@ class WebG2C(object):
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
         if ratpts:
-            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + '];' }
+            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + ']; // minimal model'}
+            code['rat_pts_simp'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in [simplify_hyperelliptic_point(data['min_eqn'], pt) for pt in ratpts['rat_pts']]]) + ']; // simplified model'}
         code['mw_group'] = {'magma':'MordellWeilGroupGenus2(Jacobian(C));'}
         code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}

@@ -1934,7 +1934,7 @@ class PostgresTable(PostgresBase):
 
     def max_id(self, table=None):
         """
-        The largest id occuring in the given table.  Used in the random method.
+        The largest id occurring in the given table.  Used in the random method.
         """
         if table is None:
             table = self.search_table
@@ -1946,7 +1946,7 @@ class PostgresTable(PostgresBase):
     # A temporary hack for RANDOM FIXME
     def min_id(self, table=None):
         """
-        The smallest id occuring in the given table.  Used in the random method.
+        The smallest id occurring in the given table.  Used in the random method.
         """
         if table is None:
             table = self.search_table
@@ -2162,8 +2162,9 @@ class PostgresTable(PostgresBase):
                 self.resort()
 
             # add an index for the default sort
-            if not any(index["columns"] == sort for index_name, index in self.list_indexes().items()):
-                self.create_index(sort)
+            sort_index = [x if isinstance(x, str) else x[0] for x in sort]
+            if not any(index["columns"] == sort_index for index_name, index in self.list_indexes().items()):
+                self.create_index(sort_index)
             self.log_db_change("set_sort", sort=sort)
 
     def set_label(self, label_col=None):
@@ -2187,7 +2188,66 @@ class PostgresTable(PostgresBase):
         """
         return self._label_col
 
-    def add_column(self, name, datatype, extra=False, label=False):
+    def description(self, table_description=None):
+        """
+        Return or set the description string for this table in meta_tables
+
+        INPUT:
+
+        - ``table_description`` -- if provided, set the description to this value.  If not, return the current description.
+        """
+        if table_description is None:
+            selecter = SQL("SELECT table_description FROM meta_tables WHERE name = %s")
+            cur = self._execute(selecter, [self.search_table])
+            return cur.fetchone()[0]
+        else:
+            assert isinstance(table_description, str)
+            modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
+            self._execute(modifier, [table_description, self.search_table])
+
+    def column_description(self, col=None, description=None, drop=False):
+        """
+        Set the description for a column in meta_tables.
+
+        INPUT:
+
+        - ``col`` -- the name of the column.  If None, ``description`` should be a dictionary with keys equal to the column names.
+
+        - ``description`` -- if provided, set the column description to this value.  If not, return the current description.
+
+        - ``drop`` -- if ``True``, delete the column from the description dictionary in preparation for dropping the column.
+        """
+        allcols = self.search_cols + self.extra_cols
+        if not (col is None or col in allcols):
+            raise ValueError("%s is not a column of this table" % col)
+        # Get the current column description
+        selecter = SQL("SELECT col_description FROM meta_tables WHERE name = %s")
+        cur = self._execute(selecter, [self.search_table])
+        current = cur.fetchone()[0]
+
+        if description is None:
+            if col is None:
+                return current
+            return current.get(col, "")
+        else:
+            if drop:
+                if col is None:
+                    raise ValueError("Must specify column name to drop")
+                del current[col]
+            elif col is None:
+                assert isinstance(description, dict)
+                for col in description:
+                    if col not in allcols:
+                        raise ValueError("%s is not a column of this table" % col)
+                    assert isinstance(description[col], str)
+                    current[col] = description[col]
+            else:
+                assert isinstance(description, str)
+                current[col] = description
+            modifier = SQL("UPDATE meta_tables SET col_description = %s WHERE name = %s")
+            self._execute(modifier, [Json(current), self.search_table])
+
+    def add_column(self, name, datatype, description=None, extra=False, label=False, force_description=False):
         """
         Adds a column to this table.
 
@@ -2195,6 +2255,7 @@ class PostgresTable(PostgresBase):
 
         - ``name`` -- a string giving the column name.  Must not be a current column name.
         - ``datatype`` -- a valid Postgres data type (e.g. 'numeric' or 'text')
+        - ``description`` -- a string giving the description of the column
         - ``extra`` -- whether this column should be added to the extras table.
           If no extras table has been created, you must call ``create_extra_table`` first.
         - ``label`` -- whether this column should be set as the label column for this table
@@ -2206,6 +2267,10 @@ class PostgresTable(PostgresBase):
             raise ValueError("%s already has column %s" % (self.extra_table, name))
         if label and extra:
             raise ValueError("label must be a search column")
+        if force_description and description is None:
+            raise ValueError("You must provide a description of this column")
+        elif description is None:
+            description = ""
         self._check_locks()
         self._check_col_datatype(datatype)
         self.col_type[name] = datatype
@@ -2228,6 +2293,7 @@ class PostgresTable(PostgresBase):
                 self.search_cols.append(name)
             if label:
                 self.set_label(name)
+            self.column_description(name, description)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True, force=False):
@@ -2252,6 +2318,7 @@ class PostgresTable(PostgresBase):
                 % (self.search_table, name)
             )
         with DelayCommit(self, commit, silence=True):
+            self.column_description(name, drop=True)
             if name in self.search_cols:
                 table = self.search_table
                 counts_table = table + "_counts"

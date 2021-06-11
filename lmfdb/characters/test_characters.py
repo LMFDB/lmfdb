@@ -54,7 +54,7 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get=r'modulus=35&poly=\%28+x^{6}+\%29+-+\%28+x^{5}+\%29+-+\%28+7+x^{4}+\%29+%2B+\%28+2+x^{3}+\%29+%2B+\%28+7+x^{2}+\%29+-+\%28+2+x+\%29+-+\%28+1+\%29&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
         W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
         assert '35 }(29' in W.get_data(as_text=True)
 
@@ -89,6 +89,55 @@ class DirichletCharactersTest(LmfdbTest):
         assert '648646704' in W.get_data(as_text=True), "order"
         assert 'C_{333666}' in W.get_data(as_text=True), "structure"
         assert r'\chi_{999999999}(234567902,' in W.get_data(as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(as_text=True)
+
+    def test_dirichletgalorbs(self):
+        W = self.tc.get('/Character/Dirichlet/289/j')
+        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W.get_data(as_text=True)
+        table_row = (r'<td class="center">\(-1\)</td>  '
+                    r'<td class="center">\(1\)</td>  '
+                    r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{191}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{57}{68}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{219}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{33}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{229}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{35}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
+        assert table_row in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/7145/da')
+        assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
+        table_row = (r'<td class="center">\(-1\)</td>  '
+                    r'<td class="center">\(1\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{84}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{481}{714}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{42}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{1285}{1428}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{341}{357}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{19}{28}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{124}{357}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{779}{1428}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{15}{119}\right)\)</td>  '
+                    r'<td class="center">\(e\left(\frac{115}{714}\right)\)</td>')
+        assert table_row in W.get_data(as_text=True)
+
+        # Tests for URL behaviour of characters
+
+        W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
+        #import pdb; pdb.set_trace()
+        assert bool_string(True) in W.get_data(as_text=True)
+        assert r"The URL has been duly corrected." in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
+        assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
+        assert r'labels have not been computed for this modulus' in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
+        assert 'Error: Galois orbits have only been computed for modulus up to 10,000' in W.get_data(as_text=True)
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
@@ -161,8 +210,8 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
         assert r'e\left(\frac{881}{1818}\right)' in W.get_data(as_text=True), "value on a generator is wrong"
         assert r'\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
-        assert '$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
-        assert '/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"
+        assert r'$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
+        assert r'/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"
 
     def test_sage_code_gens(self):
         """Test that the sage code stubs generate the correct character. This

@@ -107,7 +107,7 @@ def list():
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
     if len(users)%COLS:
         users += [{} for i in range(COLS-len(users)%COLS)]
-    n = len(users)/COLS
+    n = len(users)//COLS
     user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
@@ -203,7 +203,7 @@ def knowl_reviewer_required(fn):
     def decorated_view(*args, **kwargs):
         logger.info("reviewer access attempt by %s" % current_user.get_id())
         if not current_user.is_knowl_reviewer():
-            return flask.abort(403)  # acess denied
+            return flask.abort(403)  # access denied
         return fn(*args, **kwargs)
     return decorated_view
 

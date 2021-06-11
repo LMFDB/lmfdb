@@ -21,6 +21,11 @@ logger = make_logger("bmf")
 # Schembri.  At some point we will want to list these abelian surfaces
 # as friends when there is no curve.
 
+# TO (after adding 31 more for 2.0.43.1): make this list into a table,
+# OR add a column to the bmf_forms table to indicate whether or not a
+# curve exists (which could be because we have not foud one, but is
+# normally because there really is not curve).
+
 bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.4.1-34225.7-a',
                       '2.0.4.1-34225.3-b',
@@ -36,7 +41,45 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.3.1-123201.1-b',
                       '2.0.3.1-123201.1-c',
                       '2.0.3.1-123201.3-b',
-                      '2.0.3.1-123201.3-c']
+                      '2.0.3.1-123201.3-c',
+                      '2.0.19.1-1849.1-a',
+                      '2.0.19.1-1849.3-a',
+                      '2.0.43.1-121.1-a',
+                      '2.0.43.1-121.3-a',
+                      '2.0.43.1-256.1-c',
+                      '2.0.43.1-256.1-d',
+                      '2.0.43.1-256.1-e',
+                      '2.0.43.1-256.1-f',
+                      '2.0.43.1-529.1-a',
+                      '2.0.43.1-529.3-a',
+                      '2.0.43.1-961.1-a',
+                      '2.0.43.1-961.3-a',
+                      '2.0.43.1-1849.1-b',
+                      '2.0.43.1-1936.1-a',
+                      '2.0.43.1-1936.3-a',
+                      '2.0.43.1-2209.1-a',
+                      '2.0.43.1-2209.3-a',
+                      '2.0.43.1-3481.1-a',
+                      '2.0.43.1-3481.3-a',
+                      '2.0.43.1-4096.1-d',
+                      '2.0.43.1-4096.1-e',
+                      '2.0.43.1-4096.1-f',
+                      '2.0.43.1-4096.1-g',
+                      '2.0.43.1-4489.1-a',
+                      '2.0.43.1-4489.3-a',
+                      '2.0.43.1-6241.1-a',
+                      '2.0.43.1-6241.3-a',
+                      '2.0.43.1-6889.1-a',
+                      '2.0.43.1-6889.3-a',
+                      '2.0.43.1-8464.1-a',
+                      '2.0.43.1-8464.3-a',
+                      '2.0.43.1-9801.1-a',
+                      '2.0.43.1-9801.3-a']
+
+def cremona_label_to_lmfdb_label(lab):
+    if "." in lab:
+        return lab
+    return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
 class WebBMF(object):
     """
@@ -185,6 +228,8 @@ class WebBMF(object):
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
+            if curve_bc and "." not in curve_bc[0]:
+                curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]

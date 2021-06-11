@@ -13,11 +13,15 @@
         {% if object.sign() %}
         <tr><td class="nowrap">{{ KNOWL('artin.root_number', title='Root number') }}: </td><td>${{ object.root_number()}}$</td></tr>
         {% endif %}
-        <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin number field') }}: </td><td>
-        {% if wnf %}
-        Galois closure of {{wnf.knowl()|safe}}
+        {% if wnf and not wnf.is_galois() %}
+          <tr><td class="nowrap"> {{ KNOWL('artin.stem_field', title='Artin stem field') }}: </td><td>
         {% else %}
-        Splitting field of defining polynomial $f(x)$ over $\Q$</td></tr>
+          <tr><td class="nowrap"> {{ KNOWL('artin.number_field', title='Artin field') }}: </td><td>
+        {% endif %}
+        {% if wnf %}
+          {{wnf.knowl()|safe}}
+        {% else %}
+          Splitting field of defining polynomial $f(x)$ over $\Q$</td></tr>
         {%endif%}
         <tr><td class="nowrap"> {{ KNOWL('artin.galois_orbit', title='Galois orbit size') }}: </td><td> ${{object.galois_conjugacy_size()}}$ </td></tr>
         <tr><td class="nowrap"> {{ KNOWL('artin.permutation_container', title='Smallest permutation container') }}: </td><td> {{object.smallest_gal_t_format()|safe}}</td></tr>
@@ -31,18 +35,23 @@
         {% else %}
             <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: </td><td> {{ object.det_as_artin_display()|safe}} </td></tr>
         {% endif %}
-        <tr><td class="nowrap"> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
-        <tr><td class="nowrap"> {{ KNOWL('artin.projective_field', title='Projective field') }}: </td><td> {{ object.projective_field()|safe}} </td></tr>
+            <tr><td class="nowrap"> {{ KNOWL('artin.projective_image', title='Projective image') }}: </td><td> {{ object.projective_group()|safe}} </td></tr>
+        {% if proj_wnf.is_in_db() and not proj_wnf.is_galois() %}
+            <tr><td class="nowrap"> {{ KNOWL('artin.projective_stem_field', title='Projective stem field') }}:
+        {% else %}
+            <tr><td class="nowrap"> {{ KNOWL('artin.projective_field', title='Projective field') }}:
+        {% endif %}
+        </td><td> {{ object.projective_field()|safe}} </td></tr>
     </table>
      
     <h2>Defining polynomial</h2>
-    <table style="margin-left:10px;"><tr><td>$f(x)$</td><td>$=$</td><td>${{ object.number_field_galois_group().polynomial_latex()}}$.</td></tr></table>
+    <table style="margin-left:10px;"><tr><td>$f(x)$</td><td>$=$</td><td>{{ object.number_field_galois_group().polynomial_raw_typeset()|safe}}.</td></tr></table>
     {% if object.number_field_galois_group().computation_minimal_polynomial()|length > 2 %}
     <p>
     The roots of $f$ are computed in an extension of $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
     </p>
     <p>
-    Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: ${{object.number_field_galois_group().computation_minimal_polynomial_latex()}}$
+    Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: {{object.number_field_galois_group().computation_minimal_polynomial_raw_typeset()|safe}}
     </p>
     {% else %}
     <p>The roots of $f$ are computed in $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.</p>
@@ -54,7 +63,7 @@
         <tr>
           <td> $r_{ {{loop.index}} }$</td>
           <td> $=$ </td>
-          <td>${{root}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right)$</td>
+          <td>{{root|safe}}
         {% endfor %}
         </table>
     </div>

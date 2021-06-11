@@ -11,7 +11,7 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 1 work.
         """
         homepage = self.tc.get("/").get_data(as_text=True)
-        self.check(homepage, "/L/degree2/", '9.53369')
+        self.check(homepage, "/L/?degree=2", '2-23-23.22-c0-0-0')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
         self.check(homepage, "/ModularForm/GL2/Q/Maass/",  '/BrowseGraph/1/15/0/15/')
         self.check(homepage, "/zeros", 'The zeros are accurate') # the interesting numbers are filled in dynamically
@@ -24,7 +24,7 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 2 work.
         """
         homepage = self.tc.get("/").get_data(as_text=True)
-        self.check(homepage,"/L/Riemann/",  r'Pole at \(s=1\)')
+        self.check(homepage,"/L/Riemann/",  r'14.1347251417346937')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '0.792122')
@@ -37,9 +37,7 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 3 work.
         """
         homepage = self.tc.get("/").get_data(as_text=True)
-        self.check(homepage, "/L/", 'Dirichlet')
-        self.check(homepage, "/L/", 'Symmetric square')
-        self.check(homepage, "/L/", 'Genus 2 curve')
+        self.check(homepage, "/L/", 'Lowest zero')
         self.check(homepage, "/EllipticCurve/Q/", 'Label or coefficients')
         self.check(homepage, "/NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')
 

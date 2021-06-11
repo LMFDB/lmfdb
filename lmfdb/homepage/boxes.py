@@ -1,6 +1,8 @@
-import os, yaml
+import os
+import yaml
 from flask import url_for
 from sage.all import cached_function
+
 
 class Box(object):
     def __init__(self, title):

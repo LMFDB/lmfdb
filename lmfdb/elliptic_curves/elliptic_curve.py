@@ -5,17 +5,17 @@ from six import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
-from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.all import ZZ, QQ, Qp, RealField, EllipticCurve, cputime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, comma, flash_error, display_knowl,
+    web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, SubsetNoExcludeBox, TextBoxWithSelect, CountBox,
-    StatsDisplay, YesNoBox, parse_element_of, parse_bool, search_wrap, redirect_no_cache)
+    StatsDisplay, YesNoBox, parse_element_of, parse_bool, parse_signed_ints, search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -25,12 +25,6 @@ from lmfdb.ecnf.ecnf_stats import latex_tor
 q = ZZ['x'].gen()
 the_ECstats = None
 
-#########################
-#   Data credit
-#########################
-
-def ec_credit():
-    return 'John Cremona, Enrique  Gonz&aacute;lez Jim&eacute;nez, Robert Pollack, Jeremy Rouse, Andrew Sutherland and others: see <a href={}>here</a> for details'.format(url_for(".how_computed_page"))
 
 #########################
 #   Utility functions
@@ -60,8 +54,8 @@ def get_stats():
 #########################
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page"))]
 
@@ -108,7 +102,6 @@ def rational_elliptic_curves(err_args=None):
         return redirect(url_for(".rational_elliptic_curves"))
     return render_template("ec-index.html",
                            info=info,
-                           credit=ec_credit(),
                            title=t,
                            bread=get_bread(),
                            learnmore=learnmore_list(),
@@ -124,7 +117,6 @@ def interesting():
         label_col="lmfdb_label",
         title=r"Some interesting elliptic curves over $\Q$",
         bread=get_bread("Interesting"),
-        credit=ec_credit(),
         learnmore=learnmore_list()
     )
 
@@ -159,9 +151,11 @@ class ECstats(StatsDisplay):
         self.nclasses = db.ec_classdata.count()
         self.nclasses_c = comma(self.nclasses)
         self.max_N_Cremona = 500000
-        self.max_N_Cremona_c = comma(500000)
+        self.max_N_Cremona_c = comma(self.max_N_Cremona)
         self.max_N = db.ec_curvedata.max('conductor')
         self.max_N_c = comma(self.max_N)
+        self.max_N_prime = 1000000
+        self.max_N_prime_c = comma(self.max_N_prime)
         self.max_rank = db.ec_curvedata.max('rank')
         self.max_rank_c = comma(self.max_rank)
         self.cond_knowl = display_knowl('ec.q.conductor', title = "conductor")
@@ -176,16 +170,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return "\n".join([
-            '<p>',
-            'The database currently includes {} {} in {} {}, with {} at most {},'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c),
-            'consisting of',
-            '<ul>',
-            '<li>all curves of conductor less than {};</li>'.format(self.max_N_Cremona),
-            '<li> all curves with $7$-smooth conductor.</li>',
-            '</ul>',
-            '</p>',
-        ])
+        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
     
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -218,7 +203,7 @@ class ECstats(StatsDisplay):
         # It's a theorem that the complete set of possible degrees is this:
         return list(range(1,20)) + [21,25,27,37,43,67,163]
         
-# NB the contex processor wants something callable and the summary is a *property*
+# NB the context processor wants something callable and the summary is a *property*
 
 @app.context_processor
 def ctx_elliptic_curve_summary():
@@ -228,7 +213,7 @@ def ctx_elliptic_curve_summary():
 def statistics():
     title = r'Elliptic curves over $\Q$: Statistics'
     bread = get_bread("Statistics")
-    return render_template("display_stats.html", info=ECstats(), credit=ec_credit(), title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=ECstats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -329,7 +314,7 @@ def download_search(info):
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
     res = db.ec_curvedata.search(ast.literal_eval(info["query"]), 'ainvs')
-    s += ",\\\n".join([str(ainvs) for ainvs in res])
+    s += ",\\\n".join(str(ainvs) for ainvs in res)
     s += ']' + eol + '\n'
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
@@ -353,12 +338,12 @@ def url_for_label(label):
              learnmore=learnmore_list,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
-             bread=lambda:get_bread('Search results'),
-             credit=ec_credit)
+             bread=lambda:get_bread('Search results'))
 
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
+    parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
     parse_ints(info,query,'sha','analytic order of &#1064;')
@@ -366,6 +351,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_size','class_size')
     parse_ints(info,query,'class_deg','class_deg')
     parse_floats(info,query,'regulator','regulator')
+    parse_floats(info, query, 'faltings_height', 'faltings_height')
     parse_bool(info,query,'semistable','semistable')
     parse_bool(info,query,'potential_good_reduction','potential_good_reduction')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
@@ -402,6 +388,7 @@ def elliptic_curve_search(info, query):
     info['cremona_bound'] = CREMONA_BOUND
     info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Clabel'])
     info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['Ciso'])
+    info['FH'] = lambda dbc: RealField(20)(dbc['faltings_height'])
 
 ##########################
 #  Specific curve pages
@@ -491,7 +478,6 @@ def render_isogeny_class(iso_class):
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
-                           credit=ec_credit(),
                            title=class_data.title,
                            friends=class_data.friends,
                            KNOWL_ID="ec.q.%s"%iso_class,
@@ -514,7 +500,7 @@ def modular_form_display(label, number):
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
-    modform_string = web_latex(modform)
+    modform_string = raw_typeset(modform)
     return modform_string
 
 def render_curve_webpage_by_label(label):
@@ -536,7 +522,6 @@ def render_curve_webpage_by_label(label):
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
                          properties=data.properties,
-                         credit=ec_credit(),
                          data=data,
                          # set default show names but actually code snippets are filled in only when needed
                          code=code,
@@ -615,34 +600,33 @@ def download_EC_all(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@ec_page.route("/Source")
+def how_computed_page():
+    t = r'Source and acknowledgments for elliptic curve data over $\Q$'
+    bread = get_bread('Source')
+    return render_template("double.html", kid='rcs.source.ec.q', kid2='rcs.ack.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = r'Completeness of Elliptic curve data over $\Q$'
+    t = r'Completeness of elliptic curve data over $\Q$'
     bread = get_bread('Completeness')
-    return render_template("single.html", kid='dq.ec.extent',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-@ec_page.route("/Source")
-def how_computed_page():
-    t = r'Source of Elliptic curve data over $\Q$'
-    bread = get_bread('Source')
-    return render_template("single.html", kid='dq.ec.source',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("single.html", kid='rcs.cande.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Reliability")
 def reliability_page():
-    t = r'Reliability of Elliptic curve data over $\Q$'
+    t = r'Reliability of elliptic curve data over $\Q$'
     bread = get_bread('Reliability')
-    return render_template("single.html", kid='dq.ec.reliability',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.ec.q',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ec_page.route("/Labels")
 def labels_page():
-    t = r'Labels for Elliptic curves over $\Q$'
+    t = r'Labels for elliptic curves over $\Q$'
     bread = get_bread('Labels')
     return render_template("single.html", kid='ec.q.lmfdb_label',
-                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
 def ec_code_download(**args):
@@ -722,6 +706,12 @@ class ECSearchArray(SearchArray):
             name="conductor",
             label="Conductor",
             knowl="ec.q.conductor",
+            example="389",
+            example_span="389 or 100-200")
+        disc = TextBox(
+            name="discriminant",
+            label="Discriminant",
+            knowl="ec.discriminant",
             example="389",
             example_span="389 or 100-200")
         rank = TextBox(
@@ -822,6 +812,11 @@ class ECSearchArray(SearchArray):
             label="Regulator",
             knowl="ec.q.regulator",
             example="8.4-9.1")
+        faltings_height = TextBox(
+            name="faltings_height",
+            label="Faltings height",
+            knowl="ec.q.faltings_height",
+            example="-1-2")
         semistable = YesNoBox(
             name="semistable",
             label="Semistable",
@@ -847,6 +842,7 @@ class ECSearchArray(SearchArray):
 
         self.browse_array = [
             [cond, jinv],
+            [disc, faltings_height],
             [rank, regulator],
             [torsion, torsion_struct],
             [cm_disc, cm],
@@ -860,8 +856,9 @@ class ECSearchArray(SearchArray):
             ]
 
         self.refine_array = [
-            [cond, jinv, rank, torsion, torsion_struct],
+            [cond, disc, jinv, faltings_height],
+            [rank, regulator, torsion, torsion_struct],
             [sha, sha_primes, surj_primes, nonsurj_primes, bad_primes],
-            [num_int_pts, regulator, cm, cm_disc, semistable],
-            [optimal, isodeg, class_size, class_deg, potentially_good]
+            [num_int_pts, cm, cm_disc, semistable, potentially_good],
+            [optimal, isodeg, class_size, class_deg]
             ]

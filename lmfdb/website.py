@@ -118,6 +118,7 @@ def main():
     from .utils.config import Configuration
 
     flask_options = Configuration().get_flask()
+    flask_options['threaded'] = False
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")

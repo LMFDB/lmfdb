@@ -77,6 +77,14 @@ text-align: center;
 {% endif %}
 </p>
 
+<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2>
+
+<!-- Description of a splitting field of minimal degree: -->
+<p>{{data.split_field_statement|safe}}</p>
+
+<!-- Description of the splittings themselves. -->
+<p>{{data.split_statement|safe}}</p>
+
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
 
 <p>{{data.gl2_statement_base}}</p>

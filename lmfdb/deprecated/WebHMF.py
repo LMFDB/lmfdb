@@ -118,9 +118,9 @@ class WebHMF:
             ans = "\\begin{aligned}\n\\Lambda(s)=&"
             ans = ans + latex(self.level) + "^{-\\frac{s}{2}}"
             for mu in self.mu_fe:
-                ans = ans + "\Gamma_{\mathbb{R}}(s+" + latex(mu) + ")"
+                ans = ans + r"\Gamma_{\mathbb{R}}(s+" + latex(mu) + ")"
             for nu in self.nu_fe:
-                ans = ans + "\Gamma_{\mathbb{C}}(s+" + latex(nu) + ")"
+                ans = ans + r"\Gamma_{\mathbb{C}}(s+" + latex(nu) + ")"
             ans = ans + "\\cdot L(s)\\cr\n"
             ans = ans + "=\\mathstrut & " + latex(self.sign) +\
                 "\\overline{\\Lambda(1-\\overline{s})}\n\\end{aligned}\n"

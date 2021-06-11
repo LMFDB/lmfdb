@@ -1,5 +1,6 @@
 import json
-import logging, logging.handlers
+import logging
+import logging.handlers
 from os import devnull
 #from lmfdb.base import getDBConnection
 
@@ -10,7 +11,7 @@ __version__ = '0.3.0'
 #Email contact for app errors
 email_contact = 'rse@warwick.ac.uk'
 
-#Sting constants
+#String constants
 STR_NAME = 'name'
 STR_CONTENT = 'content'
 STR_NOTES = "(NOTES)"

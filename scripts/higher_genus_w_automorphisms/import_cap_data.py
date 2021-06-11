@@ -85,7 +85,7 @@ print("Collecting statistics on genus and dim attributes...")
 update_attribute_stats(db, 'passports', ['genus'])
 update_attribute_stats(db, 'passports', ['dim'])
 
-# Count unique number of entires
+# Count unique number of entries
 print("Counting number of unique entries for  passport_label and total_label attributes...")
 update_unique_count(db, 'passports', 'passport_label')
 update_unique_count(db, 'passports', 'total_label')

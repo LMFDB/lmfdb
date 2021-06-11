@@ -52,7 +52,7 @@ class HomePageTest(LmfdbTest):
                         '266910.ck5')
 
     #
-    # Jump to specfic curve or class
+    # Jump to specific curve or class
     def test_jump(self):
         r"""
         Check that the link to a specific curve works.

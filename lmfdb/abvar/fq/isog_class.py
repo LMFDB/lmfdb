@@ -96,6 +96,10 @@ class AbvarFq_isoclass(object):
         self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+        if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
+            self.expanded_polynomial = ''
+        else:
+            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
@@ -413,16 +417,20 @@ class AbvarFq_isoclass(object):
         return ans
 
     def curve_display(self):
+        def show_curve(cv):
+            cv = cv.replace("*", "")
+            if "=" not in cv:
+                cv = cv + "=0"
+            return "  <li>$%s$</li>\n" % cv
         if hasattr(self, "curves") and self.curves:
             s = "\n<ul>\n"
             cutoff = 20 if len(self.curves) > 30 else len(self.curves)
             for cv in self.curves[:cutoff]:
-                cv = cv.replace("*", "")
-                if "=" not in cv:
-                    cv = cv + "=0"
-                s += "  <li>$%s$</li>\n" % cv
+                s += show_curve(cv)
             if cutoff < len(self.curves):
-                s += "  <li>and %s more</li>\n" % (len(self.curves) - cutoff)
+                s += '  <li id="curve_shower">and <a href="#" onclick="show_more_curves(); return false;">%s more</a></li>\n</ul>\n<ul id="more_curves" style="display: none;">\n' % (len(self.curves) - cutoff)
+                for cv in self.curves[cutoff:]:
+                    s += show_curve(cv)
             s += "</ul>\n"
             return s
         else:

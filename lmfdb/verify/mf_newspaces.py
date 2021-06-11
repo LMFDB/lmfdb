@@ -234,7 +234,7 @@ class mf_newspaces(MfChecker):
     @overall
     def check_against_char_dir_orbits(self):
         """
-        check that char_* atrributes and prim_orbit_index match data in char_dir_orbits table (conrey_indexes should match galois_orbit)
+        check that char_* attributes and prim_orbit_index match data in char_dir_orbits table (conrey_indexes should match galois_orbit)
         """
         # TIME about 50s
         return accumulate_failures(self.check_crosstable('char_dir_orbits', col, ['level', 'char_orbit_label'], charcol, ['modulus', 'orbit_label']) for col, charcol in [('char_orbit_index', 'orbit_index'), ('conrey_indexes', 'galois_orbit'), ('char_order', 'order'), ('char_conductor', 'conductor'), ('char_degree', 'char_degree'), ('prim_orbit_index', 'prim_orbit_index'), ('char_parity', 'parity'), ('char_is_real', 'is_real')])

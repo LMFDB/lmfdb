@@ -212,8 +212,8 @@ def render_search_results_page(args, bread):
     info = { 'args': to_dict(args) }
     query = {}
     try:
-        parse_ints (info['args'], query, 'deg', 'degree')
-        parse_ints (info['args'], query, 'wt', '$k$')
+        parse_ints (info['args'], query, 'deg', 'degree', qfield="degree")
+        parse_ints (info['args'], query, 'wt', '$k$', qfield="weight")
         parse_ints (info['args'], query, 'fdeg', 'field degree')
     except ValueError:
         info['error'] = True
@@ -228,7 +228,7 @@ def render_dimension_table_page(args, bread):
     info = { 'family_list': fam_list, 'args': to_dict(args) }
     family = get_smf_family(args.get('family'))
     if not family:
-        flash_error("Space %s not found in databsae", args.get('family'))
+        flash_error("Space %s not found in database", args.get('family'))
     elif not family.computes_dimensions():
         flash_error("Dimension table not available for family %s.", args.get('family'))
     else:
@@ -283,7 +283,7 @@ def render_sample_page(family, sam, args, bread):
     info['evs_avail'] = [n for n in sam.available_eigenvalues()]
     info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
 
-    # Do not attempt to constuct a modulus ideal unless the field has a reasonably small discriminant
+    # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
     info['field'] = sam.field()
     if info['field_poly'].disc() < 10**80:
