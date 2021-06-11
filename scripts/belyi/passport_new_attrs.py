@@ -17,3 +17,7 @@ def assign_automorphism_group(rec):
     galmap = db.belyi_galmaps.lucky({'plabel':rec['plabel']})
     rec['aut_group'] = galmap['aut_group']
     return rec
+
+def base_field_deg(rec):
+    rec['base_field_deg'] = len(rec['base_field']) - 1
+    return rec
