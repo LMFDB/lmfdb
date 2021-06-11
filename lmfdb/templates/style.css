@@ -36,8 +36,8 @@ h2.link > a {
     text-decoration: none;
     margin: 15px 0;
 }
-#content > h1:first-child,
-#content > h2:first-child {
+#content > h1:first-of-type,
+#content > h2:first-of-type {
     margin-top: 3px;
     padding-top: 7px;
 }
