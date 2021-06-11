@@ -1280,7 +1280,7 @@ div.limit-height {
 /* Copied from charpage.html */
 
 .output {
-    padding:20px 0 20px 100px;
+    padding:10px 0 20px 10px;
     text-align: left;
     font-size: 115%;
 }
