@@ -73,7 +73,7 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% if cl.has_jacobian == -1 %}
 This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% elif cl.jacobian_count is not none %}
-This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians')}} of {{ cl.jacobian_count }} curves (of which {{ cl.hyp_count }} {% if cl.hyp_count == 1 %}is{% else %}are{% endif %} hyperelliptic), and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
+This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians' if cl.jacobian_count != 1 else 'Jacobian')}} of {{ cl.jacobian_count }} curve{% if cl.jacobian_count != 1 %}s{% endif %} ({% if cl.jacobian_count == 1 %}which is {% if cl.hyp_count == 0 %}not{% endif %}hyperelliptic{% else %}of which {% if cl.hyp_count == 1 %}1 is{% elif cl.hyp_count == cl.jacobian_count %}all are{% else %}{{ cl.hyp_count }} are{% endif %} hyperelliptic{% endif %}), and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
 {% elif cl.has_jacobian == 1 %}
 This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% else %}
