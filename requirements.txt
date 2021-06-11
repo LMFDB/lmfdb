@@ -1,6 +1,6 @@
 bcrypt
 cython
-flask
+flask<=1.1.4
 flask-cache
 flask-login
 flask-markdown

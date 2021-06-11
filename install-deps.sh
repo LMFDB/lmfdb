@@ -47,9 +47,9 @@ do
         sage_exec=${par:$i}
         if [[ -x $sage_exec ]]
         then
-            echo $sage_exec "is exectuable!"
+            echo $sage_exec "is executable!"
         else
-            echo $sage_exec "is not exectuable!"
+            echo $sage_exec "is not executable!"
             exit
         fi
      fi

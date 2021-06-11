@@ -2,7 +2,8 @@
 #  logging utilities
 ################################################################################
 from six import string_types
-import logging, os
+import logging
+import os
 
 
 class LmfdbFormatter(logging.Formatter):

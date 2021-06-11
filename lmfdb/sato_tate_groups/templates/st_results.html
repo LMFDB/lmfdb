@@ -16,8 +16,10 @@
     <th>{{ KNOWL('st_group.name', title='Name') }}</th>
     <th>{{ KNOWL('st_group.component_group', title='$\mathrm{G}/\mathrm{G}^0$') }}</th>
     <th>{{ KNOWL('st_group.components', title='$\#\mathrm{G}/\mathrm{G^0}$') }}</th>
-    <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[t\!=\!0]$') }}</th>
-    <th colspan="11">{{ KNOWL('st_group.trace_moments', title='Trace moments') }}</th>
+    <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{Pr}[t\!=\!0]$') }}</th>
+    <th>{{ KNOWL('st_group.second_trace_moment', title='$\mathrm{E}[a_1^2]$') }}</th>
+    <th>{{ KNOWL('st_group.fourth_trace_moment', title='$\mathrm{E}[a_1^4]$') }}</th>
+    <th>{{ KNOWL('st_group.first_a2_moment', title='$\mathrm{E}[a_2]$') }}</th>
   </tr>
 </thead>
 <tbody>
@@ -32,9 +34,9 @@
     <td> ${{group.component_group}}$ </td>
     <td align=right> ${{group.components}}$ </td>
     <td align=center> ${{group.trace_zero_density}}$ </td>
-    {% for m in group.trace_moments %}
-        <td align=right>${{m}}$</td>
-    {% endfor %}
+    <td align=center> ${{group.second_trace_moment}}$ </td>
+    <td align=center> ${{group.fourth_trace_moment}}$ </td>
+    <td align=center> ${{group.first_a2_moment}}$ </td>
 </tr>
 {% endfor %}
 </tbody>

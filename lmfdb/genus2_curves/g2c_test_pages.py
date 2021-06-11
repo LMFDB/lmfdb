@@ -35,6 +35,6 @@ class Genus2Test(LmfdbTest):
         if not errors:
             print("Tested %s pages with no errors" % n)
         else:
-            print("Tested %d pages with %d errors occuring on the following pages:" %(n,len(errors)))
+            print("Tested %d pages with %d errors occurring on the following pages:" %(n,len(errors)))
             for url in errors:
                 print(url)

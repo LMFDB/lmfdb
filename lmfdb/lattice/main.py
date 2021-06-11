@@ -18,8 +18,6 @@ from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.lattice_stats import Lattice_stats
 
-lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
-
 # Database connection
 
 from lmfdb import db
@@ -54,8 +52,9 @@ def get_bread(tail=[]):
     return base + tail
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),            
             ('Labels for integral lattices', url_for(".labels_page")),
             ('History of lattices', url_for(".history_page"))]
 
@@ -77,14 +76,13 @@ def lattice_render_webpage():
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info.update({'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list})
-        credit = lattice_credit
         t = 'Integral lattices'
         bread = get_bread()
         info['stats'] = stats
         info['max_cn'] = stats.max_cn
         info['max_dim'] = stats.max_dim
         info['max_det'] = stats.max_det
-        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
+        return render_template("lattice-index.html", info=info, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(info)
 
@@ -102,7 +100,6 @@ def interesting():
         url_for_label=url_for_label,
         title=r"Some interesting Lattices",
         bread=get_bread("Interesting"),
-        credit=lattice_credit,
         learnmore=learnmore_list()
     )
 
@@ -110,7 +107,7 @@ def interesting():
 def statistics():
     title = 'Lattices: Statistics'
     bread = get_bread('Statistics')
-    return render_template("display_stats.html", info=Lattice_stats(), credit=lattice_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=Lattice_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
@@ -160,7 +157,7 @@ def download_search(info):
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(gram) for gram in res])
+    s += ",\\\n".join(entry(gram) for gram in res)
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
@@ -242,7 +239,6 @@ def render_lattice_webpage(**args):
     info['friends'] = []
 
     bread = get_bread(f['label'])
-    credit = lattice_credit
     info['dim']= int(f['dim'])
     info['det']= int(f['det'])
     info['level']=int(f['level'])
@@ -309,7 +305,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
         t = "Integral lattice %s" % info['label']
     else:
         t = "Integral lattice "+info['label']+" ("+info['name']+")"
-#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
+#This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
@@ -325,7 +321,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
+    return render_template("lattice-single.html", info=info, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):
@@ -357,37 +353,40 @@ def theta_display(label, number):
 
 
 #data quality pages
+@lattice_page.route("/Source")
+def how_computed_page():
+    t = 'Source and acknowledgments for integral lattices'
+    bread = get_bread("Source")
+    return render_template("double.html", kid='rcs.source.lattice', kid2='rcs.ack.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 @lattice_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of integral lattice data'
     bread = get_bread("Completeness")
-    credit = lattice_credit
-    return render_template("single.html", kid='dq.lattice.completeness',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    return render_template("single.html", kid='rcs.cande.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@lattice_page.route("/Source")
-def how_computed_page():
-    t = 'Source of integral lattice data'
-    bread = get_bread("Source")
-    credit = lattice_credit
-    return render_template("single.html", kid='dq.lattice.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+@lattice_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of integral lattice data'
+    bread = get_bread("Reliability")
+    return render_template("single.html", kid='rcs.rigor.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @lattice_page.route("/Labels")
 def labels_page():
     t = 'Integral lattice labels'
     bread = get_bread("Labels")
-    credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 @lattice_page.route("/History")
 def history_page():
     t = 'A brief history of lattices'
     bread = get_bread("History")
-    credit = lattice_credit
     return render_template("single.html", kid='lattice.history',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
+                           title=t, bread=bread, learnmore=learnmore_list_remove('History'))
 
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
@@ -434,7 +433,7 @@ def download_lattice_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ",\\\n".join(entry(r) for r in res['genus_reps'])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

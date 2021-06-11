@@ -137,11 +137,14 @@ function show_eqns(invstyle) {
     </tr>
 </table>
 
-
 <h2> {{ KNOWL('g2c.all_rational_points','Rational points') }} </h2>
 
-<p>{{ data.rat_pts_table | safe }}</p>
-<p>{{place_code('rat_pts')}}</p>
+<table>
+	<tr class='min_eqn'><td>{{ data.rat_pts_table | safe }}</td></tr>
+	<tr class='proj_eqn nodisplay'><td>{{ data.rat_pts_table | safe }}</td></tr>
+	<tr class='simp_eqn nodisplay'><td>{{ data.rat_pts_simple_table | safe }}</td></tr>
+</table>
+<p>{{place_code('rat_pts')}}{{place_code('rat_pts_simp')}}</p>
 
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', 'Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 <p>{{place_code('num_rat_wpts')}}</p>
@@ -158,7 +161,11 @@ function show_eqns(invstyle) {
 <p>{{place_code('mw_group')}}</p>
 
 {% if data.mw_gens_table %}
-<p>{{ data.mw_gens_table | safe }}</p>
+<table>
+	<tr class='min_eqn'><td>{{ data.mw_gens_table | safe }}</td></tr>
+	<tr class='proj_eqn nodisplay'><td>{{ data.mw_gens_table | safe }}</td></tr>
+	<tr class='simp_eqn nodisplay'><td>{{ data.mw_gens_simple_table | safe }}</td></tr>
+</table>
 {% endif %}
 
 <p>{{ KNOWL('g2c.two_torsion_field', '2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>

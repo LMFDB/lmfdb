@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
 class ECisog_class(object):
     """
@@ -106,6 +106,9 @@ class ECisog_class(object):
                 c['curve_label'] = c['lmfdb_label']
                 _, c_iso, c_number = split_lmfdb_label(c['lmfdb_label'])
             c['short_label'] = "{}{}".format(c_iso,c_number)
+            c['FH'] = RealField(20)(c['faltings_height'])
+            c['j_inv'] = QQ(tuple(c['jinv'])) # convert [num,den] to rational for display
+            c['disc'] = c['signD'] * c['absD']
             
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
@@ -128,7 +131,7 @@ class ECisog_class(object):
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
 
-        self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
+        self.newform =  raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         if self.newform_exists_in_db:

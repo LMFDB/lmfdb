@@ -8,6 +8,16 @@ import ssl
 import errno
 from lmfdb.app import app
 
+# The following sage imports are used to check that various sage code
+# download pages actually compile in sage. Future tests requiring additional
+# imports should be declared here. The assertions following the imports
+# keep pyflakes happy.
+
+from sage.all import PolynomialRing, QQ, NumberField
+assert PolynomialRing
+assert QQ
+assert NumberField
+
 
 class LmfdbTest(unittest2.TestCase):
     def setUp(self):
@@ -61,3 +71,36 @@ class LmfdbTest(unittest2.TestCase):
                 print(e)
                 print(e.errno)
                 raise
+
+    def assert_if_magma(self, expected, magma_code, mode='equal'):
+        """Helper method for running test_download_magma test. Checks
+        equality only if magma is installed; if it isn't, then the test
+        passes."""
+        from sage.all import magma
+        try:
+            if mode == 'equal':
+                assert expected == magma.eval(magma_code)
+            elif mode == 'in':
+                assert expected in magma.eval(magma_code)
+            else:
+                raise ValueError("mode must be either 'equal' or 'in")
+        except RuntimeError as the_error:
+            if str(the_error).startswith("unable to start magma"):
+                pass
+            else:
+                raise
+
+    def check_sage_compiles_and_extract_var(self, sage_code, my_name):
+        """
+        Simulates a user downloading the sage code, and then loading it
+        into a sage session. This requires the sage imports at the top of
+        the file. It returns a desired variable for further checks.
+
+        sage_code [Type: str] : the sage code to execute
+        my_name [Type: str] : name of the variable to extract from the
+                              sage code. This then allows the developer
+                              to implement subsequent checks.
+        """
+
+        exec(sage_code, globals())
+        return globals()[my_name]

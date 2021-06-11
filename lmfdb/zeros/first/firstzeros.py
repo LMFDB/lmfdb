@@ -28,7 +28,7 @@ def firstzeros():
     # limit=limit, degree=degree, signature_r=signature_r,
     # signature_c=signature_c)
     title = "First zero search results"
-    bread = [("L-functions", url_for("l_functions.l_function_top_page")),
+    bread = [("L-functions", url_for("l_functions.index")),
              ("First zeros", " "), ("Search results", " "), ]
     return render_template("first_zeros.html",
                            start=start, end=end, limit=limit,
@@ -106,7 +106,7 @@ def list_zeros(start=None,
     C = sqlite3.connect(data_location + 'first_zeros.db').cursor()
     C.execute(query, values)
 
-    response = Response((" ".join([str(x) for x in row]) + "\n" for row in C))
+    response = Response((" ".join(str(x) for x in row) + "\n" for row in C))
     response.headers['content-type'] = 'text/plain'
     if download == "yes":
         response.headers['content-disposition'] =\

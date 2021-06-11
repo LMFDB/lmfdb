@@ -16,6 +16,7 @@ import string
 import re
 import json
 import time
+from xml.etree import ElementTree
 from collections import Counter
 from lmfdb.app import app, is_beta
 from datetime import datetime
@@ -33,34 +34,22 @@ from lmfdb.knowledge import logger
 from lmfdb.utils import datetime_to_timestamp_in_ms,\
                         timestamp_in_ms_to_datetime, flash_error
 
-#ejust for those, who still use an older markdown
-try:
-    markdown.util.etree
-except:
-    logger.fatal("You need to update the markdown python utility:" +
-                 "sage -sh -> easy_install -U markdown flask-markdown")
-    exit()
-
 _cache_time = 120
 
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile("^[a-zA-Z0-9._-~]+$") # all unreserved URL characters
 def allowed_id(ID):
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        return knowldb.knowl_exists(main_knowl)
     if ID.endswith('top') or ID.endswith('bottom'):
-        if ID.startswith('belyi'):
-            extras = "[],T"
-        elif ID.startswith('hgm'):
-            extras = "AB"
-        elif ID.startswith('ec'):
-            extras = "CM"
-        elif ID.startswith('gg'):
-            extras = "T"
-        else:
-            extras = ""
-        for c in extras:
-            ID = ID.replace(c,'')
-    if not allowed_knowl_id.match(ID):
+        if not allowed_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            flash_error("Label '%s' contains characters not allowed by knowl database; updated allowed_id function or change label scheme" % label)
+            return False
+    elif not allowed_knowl_id.match(ID):
         flash_error("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", ID)
@@ -77,7 +66,7 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
 
 class HashTagPattern(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
-        el = markdown.util.etree.Element("a")
+        el = ElementTree.Element("a")
         el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
         el.text = '#' + m.group(2)
         return el
@@ -128,8 +117,8 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
         return ""
 
     previouschar = ""
-       # we need to keep track of the previous character becaause \{ does not
-       # count as a bracket
+    # we need to keep track of the previous character because \{ does not
+    # count as a bracket
 
     if depth == 0 and thetext[0] != lbrack:
         return "",thetext
@@ -817,7 +806,7 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searchs by keyword or regex
+    # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searches by keyword or regex
     if search:
         types = list(knowl_type_code)
     try:
@@ -829,7 +818,7 @@ def index():
         if regex and "invalid regular expression" in str(e):
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
-            flash_error("Unexpected error %s occured during knowl search", str(e))
+            flash_error("Unexpected error %s occurred during knowl search", str(e))
     categories = Counter()
     if cur_cat:
         # Always include the current category

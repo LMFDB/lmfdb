@@ -103,12 +103,7 @@
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
         </div>
-        {% if title_arithmetic -%}
-        <div id="title" class="arithmetic">{{ title_arithmetic|safe }}</div>
-        <div id="title" class="analytic nodisplay">{{ title_analytic|safe }}</div>
-        {% else %}
         <div id="title">{{ title|safe }}</div>
-        {% endif %}
 
     </div>
 </div>
@@ -119,7 +114,7 @@
 {%- include "sidebar.html" -%}
 </div>
 {% else %}
-<div id="sidebar" style="display: none; witdh=0">
+<div id="sidebar" style="display: none; width=0">
 {%- include "sidebar.html" -%}
 </div>
 <style type="text/css">
@@ -195,7 +190,7 @@
    {{ rightnavig("Origins of factors", factors_origins) }}
    {{ neighbors("Nearby objects", navi) }}
    {{ rightnavig("Downloads", downloads) }}
-   {{ rightnavig("Learn more about", learnmore) }}
+   {{ rightnavig("Learn more", learnmore) }}
     </div>
     {%- endif %}
 
@@ -208,6 +203,7 @@
         {%- endfor %}
       </div>
     {%- endwith %}
+    <div align="right" style="float: right; padding-left:10px;" id="rawtseticonspot"></div>
     {% if code %}
         <script>
         var cur_lang = null;
@@ -224,7 +220,7 @@
             }
         }
         </script>
-        <div align="right">
+        <div align="right" style="float: right">
             Show commands for:
             {% set slash = joiner("/ ") %}
             {% for lang in code['show'] %}
@@ -234,6 +230,15 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    {# Need to run after page has otherwise loaded #}
+    <script>
+    $().ready( function(){
+        if ($(".tset-container").length>0) {
+            imgsrc = "{{url_for("static", filename="images/t2r.png") }}";
+            $("#rawtseticonspot").html('<span onclick="iconrawtsetall()"><img alt="Toggle raw display" src="'+imgsrc+'" id="tset-raw-icon-all" style="position:relative;top: 2px"></span>');
+    } });
+    </script>
     {% if KNOWL_ID %}
     {% if BACKUP_KNOWL_ID %}
     {{ KNOWL_INC(KNOWL_ID+'.top', title='', backupid=BACKUP_KNOWL_ID+'.top') }}
@@ -274,10 +279,8 @@ The function which was called for this page is: {{calling_function}}
 
     {% if support -%}
       {{ support|safe }}<br/>
-    {%- else -%}
-        <h4>{{shortthanks|safe}}</h4>
-<br />
     {%- endif %}
+    <h4 style="margin:5px;">{{shortthanks|safe}}</h4>
     <div>
       <a href="{{ url_for('contact') }}">Contact</a>
       &middot;
@@ -289,8 +292,8 @@ The function which was called for this page is: {{calling_function}}
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
       {{ current_source|safe }}
-      &middot;
-      {{ latest_changeset|safe }}
+      {# &middot;
+      {{ latest_changeset|safe }} #}
       &middot;
       {{ sage_version|safe }}
       &middot;
