@@ -660,15 +660,13 @@ class DirichStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  In addition, %s, Galois orbits and %s are available up to modulus $10^{20}$.  Here are some <a href="%s">further statistics</a>.' % (
+        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
             comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
-            display_knowl("character.dirichlet.basic_properties", "basic properties"),
-            display_knowl("character.dirichlet.value_field", "field of values"),
             url_for(".statistics"))
 
     @property
