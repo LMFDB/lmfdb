@@ -90,12 +90,22 @@ class SearchParser(object):
                 inp = prep_ranges(inp)
             if self.prep_plus:
                 inp = inp.replace('+','')
-            if self.pass_name:
-                rval = self.f(inp, query, name, qfield, *args, **kwds)
-            else:
-                rval = self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
+            negated = inp.startswith("~")
+            if negated:
+                tmp = {}
+                inp = inp[1:]
+            else:
+                tmp = query
+            if self.pass_name:
+                rval = self.f(inp, tmp, name, qfield, *args, **kwds)
+            else:
+                rval = self.f(inp, tmp, qfield, *args, **kwds)
+            if negated:
+                copied = dict(query)
+                query.clear()
+                query["$and"] = [{"$not": tmp}, copied]
             return rval
         except (ValueError, AttributeError, TypeError) as err:
             if self.error_is_safe:
@@ -103,7 +113,7 @@ class SearchParser(object):
             else:
                 flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
-            raise		
+            raise
 
 @decorator_keywords
 def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,

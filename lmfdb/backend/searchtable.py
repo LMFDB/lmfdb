@@ -139,6 +139,9 @@ class PostgresSearchTable(PostgresTable):
 
         INPUT:
         - ``key`` -- a code starting with $ from the following list:
+            - ``$and`` -- and
+            - ``$or`` -- or
+            - ``$not`` -- not
             - ``$lte`` -- less than or equal to
             - ``$lt`` -- less than
             - ``$gte`` -- greater than or equal to
@@ -188,6 +191,9 @@ class PostgresSearchTable(PostgresTable):
                 self._parse_dict(clause, outer=col, outer_type=col_type)
                 for clause in value
             ]
+            if key == "$or" and any(pair[0] is None for pair in pairs):
+                # If any of the pairs is None, then we should not filter anything
+                return None, None
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
                 strings, values = zip(*pairs)
@@ -197,6 +203,12 @@ class PostgresSearchTable(PostgresTable):
                 return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
                 return None, None
+        elif key == "$not":
+            negated, values = self._parse_dict(value, outer=col, outer_type=col_type)
+            if negated is None:
+                return SQL("%s"), [False]
+            else:
+                return SQL("NOT ({0})").format(negated), values
 
         # First handle the cases that have unusual values
         if key == "$exists":
