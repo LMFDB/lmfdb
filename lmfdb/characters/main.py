@@ -594,8 +594,11 @@ def dirichlet_group_table(**args):
     info['contents'] = c
     info['title'] = 'Group of Dirichlet characters'
     if info['poly'] != '???':
-        info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
-        info['poly'] = raw_typeset(info['poly'])
+        try:
+            info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
+            info['poly'] = raw_typeset(info['poly'])
+        except:
+            pass
     return render_template("CharacterGroupTable.html", **info)
 
 
