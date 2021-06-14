@@ -16,10 +16,9 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
+    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, parse_rational,
-    redirect_no_cache
+    search_wrap, redirect_no_cache
     )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
@@ -491,20 +490,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_deg','class_deg')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_floats(info,query,'reg','regulator')
-
-    if 'jinv' in info:
-        if info.get('field','').strip() == '2.2.5.1':
-            info['jinv'] = info['jinv'].replace('phi','a')
-        if info.get('field','').strip() == '2.0.4.1':
-            info['jinv'] = info['jinv'].replace('i','a')
-        if not 'a' in info['jinv'] and not info.get('field'): # rational j-invariant allowed for any field
-            parse_rational(info, query, 'jinv', name='j-invariant')
-            if query.get('jinv'):
-                query['jinv'] = {'$regex': '^' + query['jinv'] + '(,0)*$'} # nf elements like j,0,0,0
-        else: # j-invariant is a number field element
-            parse_nf_elt(info, query, 'jinv', name='j-invariant')
-            if query.get('jinv'):
-                query['jinv'] = ','.join(query['jinv'])
+    parse_nf_jinv(info,query,'jinv',name='j-invariant',field_label=query.get('field_label'))
 
     if info.get('one') == "yes":
         info['number'] = 1
