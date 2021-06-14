@@ -66,7 +66,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
         assert '41616.bi2' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/?jinv=0,1728')
-        t = L.get_dat(as_text=True)
+        t = L.get_data(as_text=True)
         assert '27.a3' in t and '32.a3' in t and '11.a3' not in t
         L = self.tc.get('/EllipticCurve/Q/?jinv=~0,1728&count=100')
         assert '27.a3' not in t and '32.a3' not in t and '11.a3' in t
