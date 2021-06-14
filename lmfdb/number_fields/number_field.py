@@ -464,8 +464,6 @@ def render_field_webpage(args):
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
-                print("**************")
-                print(mydat)
                 for mm in mydat:
                     if not primefirstline:
                         loc_alg += '<tr>'
