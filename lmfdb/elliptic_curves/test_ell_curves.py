@@ -69,6 +69,7 @@ class EllCurveTest(LmfdbTest):
         t = L.get_data(as_text=True)
         assert '27.a3' in t and '32.a3' in t and '11.a3' not in t
         L = self.tc.get('/EllipticCurve/Q/?jinv=~0,1728&count=100')
+        t = L.get_data(as_text=True)
         assert '27.a3' not in t and '32.a3' not in t and '11.a3' in t
 
     def test_jbad_search(self):
