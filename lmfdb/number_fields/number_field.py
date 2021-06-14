@@ -460,21 +460,25 @@ def render_field_webpage(args):
                 loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
             else:
                 from lmfdb.local_fields.main import show_slope_content
+                primefirstline=True
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
-                mm = mydat[0]
-                myurl = url_for('local_fields.by_label', label=mm[0])
-                lab = mm[0]
-                if mm[3]*mm[2] == 1:
-                    lab = r'$\Q_{%s}$'%str(p)
-                loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
-                for mm in mydat[1:]:
-                    lab = mm[0]
-                    myurl = url_for('local_fields.by_label', label=lab)
-                    if mm[3]*mm[2] == 1:
-                        lab = r'$\Q_{%s}$'%str(p)
-                    loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                print("**************")
+                print(mydat)
+                for mm in mydat:
+                    if not primefirstline:
+                        loc_alg += '<tr>'
+                        primefirstline=False
+                    if len(mm)==4:
+                        loc_alg += '<td><td>Deg {}<td>{}<td>{}<td>{}<td><td>'.format(
+                            mm[1]*mm[2], mm[1], mm[2], mm[3])
+                    else:
+                        lab = mm[0]
+                        myurl = url_for('local_fields.by_label', label=lab)
+                        if mm[3]*mm[2] == 1:
+                            lab = r'$\Q_{%s}$'%str(p)
+                        loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
         loc_alg += '</tbody></table>'
 
     ram_primes = str(ram_primes)[1:-1]

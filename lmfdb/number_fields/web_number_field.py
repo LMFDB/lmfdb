@@ -879,8 +879,8 @@ class WebNumberField:
         for lab in local_algs:
             if lab[0] == 'm': # signals data about field not in lf db
                 lab1 = lab[1:] # deletes marker m
-                p, deg, c, e = [int(z) for z in lab1.split('.')]
-                f = deg/e
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                deg = e*f
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [[deg,c,e,f]]
                 else:
