@@ -490,7 +490,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_deg','class_deg')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_floats(info,query,'reg','regulator')
-    parse_nf_jinv(info,query,'jinv',name='j-invariant',field_label=query.get('field_label'))
+    parse_nf_jinv(info,query,'jinv','j-invariant',field_label=query.get('field_label'))
 
     if info.get('one') == "yes":
         info['number'] = 1

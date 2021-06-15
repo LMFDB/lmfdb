@@ -1176,8 +1176,8 @@ def parse_nf_elt(inp, query, name, qfield, field_label):
     else:
         query[qfield] = pol_string_to_list(inp, deg=deg)
 
-@search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_nf_jinv(inp, query, qfield, name, field_label):
+@search_parser(pass_name=True, clean_info=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_nf_jinv(inp, query, name, qfield, field_label):
     if field_label is not None:
         field_label = field_label.strip()
     if field_label == '2.2.5.1':
