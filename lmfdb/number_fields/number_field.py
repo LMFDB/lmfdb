@@ -457,7 +457,7 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
+                loc_alg += '<tr><td>$%s$<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
             else:
                 from lmfdb.local_fields.main import show_slope_content
                 primefirstline=True
@@ -465,18 +465,20 @@ def render_field_webpage(args):
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
                 for mm in mydat:
-                    if not primefirstline:
-                        loc_alg += '<tr>'
+                    if primefirstline:
                         primefirstline=False
+                    else:
+                        loc_alg += '<tr>'
                     if len(mm)==4:
-                        loc_alg += '<td><td>Deg {}<td>{}<td>{}<td>{}<td><td>'.format(
+                        loc_alg += '<td></td><td>Deg {}</td><td>{}</td><td>{}</td><td>{}</td><td></td><td></td>'.format(
                             mm[1]*mm[2], mm[1], mm[2], mm[3])
                     else:
                         lab = mm[0]
                         myurl = url_for('local_fields.by_label', label=lab)
                         if mm[3]*mm[2] == 1:
                             lab = r'$\Q_{%s}$'%str(p)
-                        loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>$%s$</td>'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+            loc_alg += '</tr>'
         loc_alg += '</tbody></table>'
 
     ram_primes = str(ram_primes)[1:-1]

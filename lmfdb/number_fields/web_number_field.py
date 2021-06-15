@@ -882,9 +882,9 @@ class WebNumberField:
                 p, e, f, c = [int(z) for z in lab1.split('.')]
                 deg = e*f
                 if str(p) not in local_algebra_dict:
-                    local_algebra_dict[str(p)] = [[deg,c,e,f]]
+                    local_algebra_dict[str(p)] = [[deg,e,f,c]]
                 else:
-                    local_algebra_dict[str(p)].append([deg,c,e,f])
+                    local_algebra_dict[str(p)].append([deg,e,f,c])
             else:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
@@ -897,34 +897,6 @@ class WebNumberField:
                 else:
                     local_algebra_dict[str(p)].append(thisdat)
         return local_algebra_dict
-
-        local_algebra_dict = self._data.get('loc_algebras', None)
-        if local_algebra_dict is None:
-            return None
-        if str(p) in local_algebra_dict:
-            R = PolynomialRing(QQ, 'x')
-            palg = local_algebra_dict[str(p)]
-            palgs = [R(str(s)) for s in palg.split(',')]
-            try:
-                palgstr = [
-                    list2string([int(c) for c in pol.coefficients(sparse=False)])
-                    for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
-                return [
-                    [
-                        LF['label'],
-                        latex(f),
-                        int(LF['e']),
-                        int(LF['f']),
-                        int(LF['c']),
-                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
-                        LF['t'],
-                        LF['u'],
-                        LF['slopes']
-                    ]
-                    for LF, f in zip(palgrec, palgs) ]
-            except: # we were unable to find the local fields in the database
-                return None
 
     def ramified_algebras_data(self):
         if 'local_algs' not in self._data:
