@@ -98,7 +98,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/?jinv=0,1728')
         t = L.get_data(as_text=True)
         assert '729.4-a3' in t and '1024.1-c1' in t and '11.1-a1' not in t
-        L = self.gc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
+        L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
         assert '11.1-a1' not in L.get_data(as_text=True)
 
 
