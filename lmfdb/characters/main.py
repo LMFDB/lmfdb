@@ -597,7 +597,7 @@ def dirichlet_group_table(**args):
         try:
             info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
             info['poly'] = raw_typeset(info['poly'])
-        except:
+        except Exception:
             pass
     return render_template("CharacterGroupTable.html", **info)
 
