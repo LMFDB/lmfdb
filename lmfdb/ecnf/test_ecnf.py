@@ -95,6 +95,12 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/?field=Qsqrt-11&include_base_change=on&conductor_norm=&include_isogenous=on&torsion=&torsion_structure=&count=')
         assert '2.0.11.1' in L.get_data(as_text=True)
         assert '1681' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/?jinv=0,1728')
+        t = L.get_data(as_text=True)
+        assert '729.4-a3' in t and '1024.1-c1' in t and '11.1-a1' not in t
+        L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
+        assert '11.1-a1' not in L.get_data(as_text=True)
+
 
     def test_isodeg(self):
         r"""
@@ -111,6 +117,10 @@ class EllCurveTest(LmfdbTest):
         """
         self.check_args('/EllipticCurve/?cm_disc=-4','1024.1-c1')
         self.not_check_args('/EllipticCurve/?cm_disc=-4','1.0.1-a1')
+        
+        # make sure it works with 4-way PCM, CM, PCMnoCM, noCM switch
+        self.check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','14641.1-a1')
+        self.not_check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','9.1-CMa1')
 
     def test_related_objects(self):
         for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',

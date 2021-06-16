@@ -1,4 +1,4 @@
-t{# template defs #}
+{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -36,10 +36,10 @@ h2.link > a {
     text-decoration: none;
     margin: 15px 0;
 }
-#content > h1:first-child,
-#content > h2:first-child {
+#content > h1:first-of-type,
+#content > h2:first-of-type {
     margin-top: 0px;
-    padding-top: 0px;
+    padding-top: 2px;
 }
 
 #content > h2
@@ -1276,6 +1276,50 @@ div.limit-height {
 }
 
 /* end knowl */
+
+/* Copied from charpage.html */
+
+.output {
+    padding:10px 0 10px 10px;
+    text-align: left;
+    font-size: 115%;
+}
+table.navi td {
+    padding: 0;
+}
+table.props tr td:first-child {
+    width: 5em;
+}
+
+table.values {
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+table.values a {
+  display: block;
+}
+table.values thead tr {
+    border-bottom: 1px dotted gray;
+}
+table.values th {
+  text-align: center;
+  font-weight: normal;
+}
+
+table.values td.odd,
+table.values td:nth-child(odd),
+table.values td:first-child {
+ background: {{color.chi_table_background_off}};
+}
+
+table.values td.even,
+table.values td:nth-child(even) {
+ background: {{color.chi_table_background}};
+}
+
+/* end copied from charpage.html */
 
 /*** Dirichlet series, displayed in HTML ***/
 
