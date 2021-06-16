@@ -16,7 +16,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
+    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache
     )
