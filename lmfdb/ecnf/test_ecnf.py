@@ -117,6 +117,10 @@ class EllCurveTest(LmfdbTest):
         """
         self.check_args('/EllipticCurve/?cm_disc=-4','1024.1-c1')
         self.not_check_args('/EllipticCurve/?cm_disc=-4','1.0.1-a1')
+        
+        # make sure it works with 4-way PCM, CM, PCMnoCM, noCM switch
+        self.check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','14641.1-a1')
+        self.not_check_args('/EllipticCurve/?cm_disc=-11&include_cm=PCMnoCM','9.1-CMa1')
 
     def test_related_objects(self):
         for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',

@@ -15,11 +15,13 @@ from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
-    parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
+    parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
+    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache
     )
+from lmfdb.utils.search_parsing import search_parser
+
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
@@ -457,6 +459,18 @@ def url_for_label(label):
     nf, cond_label, iso_label, number = split_full_label(label.strip())
     return url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number)
 
+def make_cm_query(cm_disc_str):
+    cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
+    for d in cm_list:
+        if not ((d < 0) and (d % 4 in [0,1])):
+            raise ValueError("A CM discriminant must be a fundamental discriminant of an imaginary quadratic field.")
+    cm_list += [-el for el in cm_list]
+    return cm_list
+
+@search_parser
+def parse_cm_list(inp, query, qfield):
+    query[qfield] = {'$in': make_cm_query(inp)}
+
 @search_wrap(template="ecnf-search-results.html",
              table=db.ec_nfcurves,
              title='Elliptic curve search results',
@@ -510,17 +524,34 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
 
+    parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
+
     if 'include_cm' in info:
         if info['include_cm'] == 'PCM':
-            query['cm'] = {'$ne' : 0}
+            tmp = {'$ne' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'PCMnoCM':
-            query['cm'] = {'$lt' : 0}
+            tmp = {'$lt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'CM':
-            query['cm'] = {'$gt' : 0}
+            tmp = {'$gt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'noPCM':
-            query['cm'] = 0
+            tmp = 0
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
 
-    parse_ints(info,query,field='cm_disc',qfield='cm')
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
