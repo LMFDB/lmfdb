@@ -219,8 +219,8 @@ def _dimension_Gamma0_3(wt):
 
 
 def _dimension_Gamma0_3_psi_3(wt):
-    """
-    Return the dimensions of subspaces of Siegel modular forms$Gamma0(3)$
+    r"""
+    Return the dimensions of subspaces of Siegel modular forms $Gamma0(3)$
     with character $\psi_3$.
 
     OUTPUT
@@ -270,8 +270,8 @@ def _dimension_Gamma0_4(wt):
 
 
 def _dimension_Gamma0_4_psi_4(wt):
-    """
-    Return the dimensions of subspaces of Siegel modular forms$Gamma0(4)$
+    r"""
+    Return the dimensions of subspaces of Siegel modular forms $Gamma0(4)$
     with character $\psi_4$.
 
     OUTPUT

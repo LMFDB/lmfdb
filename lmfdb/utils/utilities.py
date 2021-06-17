@@ -39,12 +39,21 @@ def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
+    # Strip trailing zeros
+    if not s:
+        s = [0]
+    if s[-1] == 0:
+        j = len(s) - 1
+        while j > 0 and s[j] == 0:
+            j -= 1
+        s = s[:j+1]
     if len(s) == 1:
         if galois:
             return [str(s[0]), [[0,0]]]
         return str(s[0])
     ZZT = PolynomialRing(ZZ, vari)
-    sfacts = ZZT(s).factor()
+    f = ZZT(s)
+    sfacts = f.factor()
     sfacts_fc = [[g, e] for g, e in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
@@ -278,6 +287,9 @@ def str_to_CBF(s):
     try:
         return CBF(s)
     except TypeError:
+        # Need to deal with scientific notation
+        # Replace e+ and e- with placeholders so that we can split on + and -
+        s = s.replace("e+", "P").replace("E+", "P").replace("e-", "M").replace("E-", "M")
         sign = 1
         s = s.lstrip('+')
         if '+' in s:
@@ -296,7 +308,9 @@ def str_to_CBF(s):
         if b == 'I':
             b = '1'
         else:
-            b = b.rstrip(' ').rstrip('I').rstrip('*')
+            b = b.rstrip().rstrip('I').rstrip('*')
+        a = a.replace("M", "e-").replace("P", "e+")
+        b = b.replace("M", "e-").replace("P", "e+")
 
         res = CBF(0)
         if a:
@@ -360,7 +374,9 @@ def is_exact(x):
 
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits=3,
-                             try_halfinteger=True):
+                             try_halfinteger=True,
+                             no_sci=None,
+                             latex=False):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     # if small, try to display it as an exact or half integer
@@ -376,7 +392,7 @@ def display_float(x, digits, method = "truncate",
                 k2 = ZZ(2*x)
             except TypeError:
                 pass
-            # the second statment checks for overflow
+            # the second statement checks for overflow
             if k2 == 2*x and (2*x + 1) - k2 == 1:
                 if k2 % 2 == 0:
                     s = '%s' % (k2/2)
@@ -387,7 +403,8 @@ def display_float(x, digits, method = "truncate",
         rnd = 'RNDZ'
     else:
         rnd = 'RNDN'
-    no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+    if no_sci is None:
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
         s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
@@ -399,6 +416,8 @@ def display_float(x, digits, method = "truncate",
                 s = s[:digits+1]
             else:
                 s = s[:point]
+    if latex and "e" in s:
+        s = s.replace("e", r"\times 10^{") + "}"
     return s
 
 def display_complex(x, y, digits, method = "truncate",
@@ -629,7 +648,7 @@ def web_latex_ideal_fact(x, enclose=True):
 def web_latex_split_on(x, on=['+', '-']):
     r"""
     Convert input into a latex string. A different latex surround `\(` `\)` is
-    used, with splits occuring at `on` (+ - by default).
+    used, with splits occurring at `on` (+ - by default).
 
     Example:
     >>> x = var('x')
@@ -707,7 +726,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
         c = re.compile(r)
         A = A.replace(r'+', r'\) \( {}+ ')
         A = A.replace(r'-', r'\) \( {}- ')
-#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\left(','\left( {}\\right.') # parentheses needs to be balanced
 #        A = A.replace('\\right)','\left.\\right)')
         A = A.replace(r'\left(',r'\bigl(')
         A = A.replace(r'\right)',r'\bigr)')
@@ -1088,6 +1107,13 @@ def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
     flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
+def flash_warning(errmsg, *args):
+    """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
+    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
+
+def flash_info(errmsg, *args):
+    """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
+    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
 
 ################################################################################
 #  Ajax utilities
@@ -1335,4 +1361,33 @@ def sparse_cyclotomic_to_latex(n, dat):
     if ans == '':
         return '0'
     return ans
+raw_count = 0
+
+def raw_typeset(raw, tset='', extra=''):
+    r"""
+    Return a span with typeset material which will toggle to raw material 
+    when an icon is clicked on.
+
+    The raw version can be a string, or a sage object which will stringify
+    properly.
+
+    If the typeset version can be gotten by just applying latex to the raw
+    version, the typeset version can be omitted.
+
+    If there is a string to appear between the toggled text and the icon,
+    it can be given in the argument extra
+
+    If one of these appear on a page, then the icon to toggle all of them
+    on the page will appear in the upper right corner of the body of the
+    page.
+    """
+    global raw_count
+    raw_count += 1
+    if not tset:
+        tset = r'\({}\)'.format(latex(raw))
+    srcloc = url_for('static', filename='images/t2r.png') 
+    out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)
+    out += extra
+    out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
+    return out
 

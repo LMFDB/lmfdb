@@ -10,12 +10,12 @@ from urllib.parse import urlparse, urlunparse
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
 from sage.env import SAGE_VERSION
-# acknowledgement page, reads info from CONTRIBUTORS.yaml
+# acknowledgment page, reads info from CONTRIBUTORS.yaml
 
 from .logger import logger_file_handler, critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.2"
+LMFDB_VERSION = "LMFDB Release 1.2.1"
 
 ############################
 #         Main app         #
@@ -290,7 +290,7 @@ def get_menu_cookie():
 def index():
     return render_template('index-boxes.html',
         titletag="The L-functions and modular forms database",
-        title="LMFDB - The L-functions and Modular Forms Database",
+        title="The L-functions and modular forms database (LMFDB)",
         bread=None,
         boxes=load_boxes())
 
@@ -377,21 +377,6 @@ def workshops():
 @app.route("/search")
 def search():
     return render_template("search.html", title="Search LMFDB", bread=[('Search', url_for("search"))])
-
-@app.route('/L')
-@app.route('/L/')
-def l_functions():
-    t = 'L-functions'
-    b = [(t, url_for('l_functions'))]
-    lm = [('History of L-functions', '/L/history'),('Completeness of the data',url_for('l_functions.completeness'))]
-    return render_template('single.html', title=t, kid='lfunction.about', bread=b, learnmore=lm)
-
-@app.route("/L/history")
-def l_functions_history():
-    t = 'L-functions'
-    b = [(t, url_for('l_functions'))]
-    b.append(('History', url_for("l_functions_history")))
-    return render_template(_single_knowl, title="A brief history of L-functions", kid='lfunction.history', body_class=_bc, bread=b)
 
 @app.route('/ModularForm')
 @app.route('/ModularForm/')
@@ -680,6 +665,10 @@ def sitemap():
 WhiteListedRoutes = [
     'ArtinRepresentation',
     'Character/Dirichlet',
+    'Character/calc-gauss/Dirichlet',
+    'Character/calc-jacobi/Dirichlet',
+    'Character/calc-kloosterman/Dirichlet',
+    'Character/calc-value/Dirichlet',
     'EllipticCurve',
     'Field',
     'GaloisGroup',
@@ -687,17 +676,21 @@ WhiteListedRoutes = [
     'Group',
     'HigherGenus/C/Aut',
     'L/Completeness',
+    'L/CuspForms',
+    'L/Labels',
     'L/Lhash',
     'L/Plot',
     'L/Riemann',
     'L/SymmetricPower',
-    'L/Zeros',
-    'L/browseGraphChar',
+    'L/contents',
     'L/degree',
     'L/download',
     'L/history',
+    'L/interesting',
     'L/lhash',
+    'L/rational',
     'L/tracehash',
+    'L/download',
     'LocalNumberField',
     'ModularForm/GL2/ImaginaryQuadratic',
     'ModularForm/GL2/Q/Maass',
@@ -727,6 +720,7 @@ WhiteListedRoutes = [
     'inventory',
     'knowledge',
     'management',
+    'padicField',
     'news',
     'not_yet_implemented',
     'random',
@@ -753,6 +747,7 @@ for elt in WhiteListedRoutes:
             bread = s
         WhiteListedBreads.add(bread)
 
+
 def white_listed(url):
     url = url.rstrip("/").lstrip("/")
     if not url:
@@ -765,7 +760,9 @@ def white_listed(url):
         return True
     # check if it starts with an L
     elif url[:2] == "L/":
-        return white_listed(url[1:])
+        # if the origin is allowed
+        # or if it is a L-function with a label
+        return white_listed(url[1:]) or len(url) == 2 or url[2].isdigit()
     else:
         return False
 

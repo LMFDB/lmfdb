@@ -12,7 +12,6 @@ from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
 print("setting nfcurves")
 nfcurves = db.ec_nfcurves
-qcurves = db.ec_curves
 
 print("setting bmf forms")
 forms = db.bmf_forms

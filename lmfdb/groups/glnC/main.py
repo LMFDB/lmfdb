@@ -7,11 +7,12 @@ from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error, display_knowl, SearchArray, TextBox, CountBox,
+    flash_error, display_knowl, SearchArray, TextBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
-from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup, group_names_pretty
+from lmfdb.groups.abstract.main import group_display_knowl
 
 from lmfdb.groups.glnC import glnC_page
 
@@ -49,7 +50,7 @@ def index():
         return group_search(info)
     info['order_list']= ['1-10', '20-100', '101-200']
 
-    return render_template("glnC-index.html", title="Finite subgroups of $\GL(n,\C)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnC-index.html", title=r'Finite subgroups of $\GL(n,\C)$', bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
@@ -77,13 +78,6 @@ def dispmat(n,mat):
     s += r'\end{pmatrix}'
     return s
 
-def getname(label):
-    try:
-        wag=WebAbstractGroup(label)
-        return '$'+WebAbstractGroup(label).tex_name+'$'
-    except:
-        return label
-
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
@@ -103,8 +97,8 @@ def url_for_label(label):
 
 @search_wrap(template="glnC-search.html",
              table=db.gps_crep,
-             title='$\GL(n,\C)$ subgroup search results',
-             err_title='$\GL(n,\C)$ subgroup search input error',
+             title=r'$\GL(n,\C)$ subgroup search results',
+             err_title=r'$\GL(n,\C)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','dim','group'],
@@ -117,9 +111,10 @@ def url_for_label(label):
              url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
-    info['getname'] = getname
+    info['getname'] = lambda xx: '$'+group_names_pretty(xx)+'$'
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
+    parse_bool(info, query, 'irreducible', 'irreducible')
 
 def get_url(label):
     return url_for(".by_label", label=label)
@@ -130,13 +125,15 @@ def render_glnC_group(args):
     if 'label' in args:
         label = clean_input(args['label'])
         info = db.gps_crep.lucky({'label': label})
+        info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
+        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
         N=info['cyc_order_mat']
         info['dispmat'] = lambda z: dispmat(N,z)
 
-        title = '$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
+        title = r'$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
 
         prop = [('Label', '%s' %  label), 
-                ('Order', '\(%s\)' % info['order']),
+                ('Order', '$%s$' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
         bread = get_bread([(label, )])
@@ -155,52 +152,9 @@ def render_glnC_group(args):
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
 
-@glnC_page.route("/subinfo/<label>")
-def shortsubinfo(label):
-    if not sub_label_is_valid(label):
-        # Should only come from code, so return nothing if label is bad
-        return ''
-    wsg = WebAbstractSubgroup(label)
-    ambientlabel = str(wsg.ambient)
-    # helper function
-    def subinfo_getsub(title, knowlid, count):
-        h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
-        prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.counter, h.subgroup_tex)
-
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
-    ans += '<table>'
-    ans += '<tr><td>%s <td> %s\n' % (
-        make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
-    ans += '<tr><td>%s<td>' % make_knowl('Normal', 'group.subgroup.normal')
-    if wsg.normal:
-        ans += 'True with quotient group '
-        ans +=  '$'+group_names_pretty(wsg.quotient)+'$\n'
-    else:
-        ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
-
-    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
-    ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
-    ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
-    ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
-    ans += subinfo_getsub('Core', 'group.core', wsg.core)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Central', 'group.central'), wsg.central)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
-    #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
-    p = wsg.sylow
-    nt = 'Yes for $p$ = %d' % p if p>0 else 'No'
-    ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
-    #print ""
-    #print ans
-    ans += '</table>'
-    return ans
-
-
 @glnC_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the $\GL(n,\C)$ subgroup data'
+    t = r'Completeness of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnC.extent',
                             title=t, bread=bread,
@@ -210,7 +164,7 @@ def completeness_page():
 
 @glnC_page.route("/Labels")
 def labels_page():
-    t = 'Labels for finite subgroups of $\GL(n,\C)$'
+    t = r'Labels for finite subgroups of $\GL(n,\C)$'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.glnC.label',
                            learnmore=learnmore_list_remove('label'), 
@@ -219,7 +173,7 @@ def labels_page():
 
 @glnC_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the $\GL(n,\C)$ subgroup data'
+    t = r'Reliability of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.glnC.reliability',
                            title=t, bread=bread, 
@@ -229,7 +183,7 @@ def reliability_page():
 
 @glnC_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the $\GL(n,\C)$ subgroup data'
+    t = r'Source of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.glnC.source',
                            title=t, bread=bread, 
@@ -254,11 +208,17 @@ class GLnCSearchArray(SearchArray):
             label="Dimension",
             example="2",
             example_span="4, or a range like 3..5")
+        irreducible = YesNoBox(
+            name="irreducible",
+            knowl="group.representation.irreducible",
+            label="Irreducible",
+        )
         count = CountBox()
 
         self.browse_array = [
              [order],
-             [dim]]
+             [dim],
+             [irreducible]]
         self.refine_array = [
-             [order, dim]]
+             [order, dim, irreducible]]
 

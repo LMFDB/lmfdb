@@ -1,7 +1,6 @@
 bcrypt
 cython
-git+https://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
-flask
+flask<=1.1.4
 flask-cache
 flask-login
 flask-markdown

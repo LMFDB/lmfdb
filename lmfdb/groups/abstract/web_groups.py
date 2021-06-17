@@ -9,9 +9,11 @@ from collections import Counter
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
-#currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
-    pretty = db.gps_small.lookup(label, 'pretty')
+    if isinstance(label, str):
+        pretty = db.gps_groups.lookup(label, 'tex_name')
+    else:
+        pretty = label.tex_name
     if pretty:
         return pretty
     else:
@@ -22,7 +24,11 @@ def group_pretty_image(label):
     img = db.gps_images.lookup(pretty, 'image')
     if img:
         return str(img)
-    else: # we don't have it, not sure what to do
+    # fallback which should always be in the database
+    img = db.gps_images.lookup('?', 'image')
+    if img:
+        return str(img)
+    else: # we should not get here
         return None
 
 class WebObj(object):
@@ -47,7 +53,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.tex_name = group_names_pretty(label) # remove once in database
+        #self.tex_name = group_names_pretty(label) # remove once in database
 
     @lazy_attribute
     def subgroups(self):
@@ -113,6 +119,20 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def upper_central_series(self):
         return self.series_search('U')
+
+    @lazy_attribute
+    def diagram_ok(self):
+        return self.number_subgroup_classes < 100
+
+    @lazy_attribute
+    def subgroup_profile(self):
+        subs = db.gps_subgroups.search({'ambient': self.label})
+        by_order= {}
+        for s in subs:
+            cntr = by_order.get(s['subgroup_order'], Counter())
+            cntr.update({s['subgroup']:1})
+            by_order[s['subgroup_order']] = cntr
+        return by_order
 
     @lazy_attribute
     def conjugacy_classes(self):

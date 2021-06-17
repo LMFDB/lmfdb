@@ -24,7 +24,11 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'ot computed')
 
     def test_search_poly_mean2parser(self):
-        self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '148') # discriminant
+        # X^3-4x+2
+        self.check_args('/NumberField/?jump=X**3-4x%2B2&search=Go', '3.3.148.1') # label
+        # z^3 - 4*z + 2
+        self.check_args('/NumberField/?jump=z%5E3+-+4*z%2B2', '3.3.148.1') # label
+
 
     def test_search_zeta(self):
         self.check_args('/NumberField/?jump=Qzeta23&search=Go', '[3]') # class group
@@ -54,7 +58,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/GaloisGroups', 'abstract group may have')
 
     def test_imaginary_quadratic_page(self):
-        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'Mosunov')
+        self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
 
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')
@@ -63,7 +67,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/FieldLabels', 'with the same signature and absolute value of the')
 
     def test_url_bad(self):
-        self.check_args('/NumberField/junk', 'Error') # error mesage
+        self.check_args('/NumberField/junk', 'Error')  # error message
 
     def test_random_field(self):
         self.check_args('/NumberField/random', 'Discriminant')

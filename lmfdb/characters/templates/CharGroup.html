@@ -51,13 +51,13 @@ and several values of the character.
 </p>
 <table class="ntdata" id="chitable">
   <thead class="space">
-    <tr> 
+    <tr>
       {% for h in headers %} <th class="center">{{h}} </th> {% endfor %}
       {% for v in groupelts %} <th class="center">\({{v}}\)</th> {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for char, prop, values in contents %}
+    {% for char, orb, prop, values in contents %}
     {# row = ( label, tex, order, primitive ) #}
     <tr>
       <td class="left">
@@ -68,10 +68,18 @@ and several values of the character.
         </a>
         {% endwith %}
       </td>
-      {% for value in prop %} <td class="center">{{value}}</td> {% endfor %} 
-      {% for value in values %} <td class="center">{{value}}</td> {% endfor %} 
+      <td class="left">
+        {% with mod,letter,orb_disp = orb %}
+        <a class="center"
+          align="center" href="{{ url_character(type=type, number_field=nflabel, modulus=mod, orbit_label=letter) }}">
+          {{ orb_disp }}
+        </a>
+        {% endwith %}
+      </td>
+      {% for value in prop %} <td class="center">{{value}}</td> {% endfor %}
+      {% for value in values %} <td class="center">{{value}}</td> {% endfor %}
     </tr>
-    {% endfor %} 
+    {% endfor %}
   </tbody>
 </table>
 {% endif %}

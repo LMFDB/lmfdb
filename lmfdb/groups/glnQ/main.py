@@ -11,7 +11,8 @@ from lmfdb.utils import (
     parse_ints, parse_bool, clean_input, to_dict,
     # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
-from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup, group_names_pretty
+from lmfdb.groups.abstract.main import group_display_knowl
 
 from lmfdb.groups.glnQ import glnQ_page
 
@@ -77,13 +78,6 @@ def dispmat(mat):
     s += r'\end{pmatrix}'
     return s
 
-def getname(label):
-    try:
-        wag=WebAbstractGroup(label)
-        return '$'+WebAbstractGroup(label).tex_name+'$'
-    except:
-        return label
-
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
@@ -117,7 +111,7 @@ def url_for_label(label):
              url_for_label=url_for_label)
 def group_search(info, query):
     info['group_url'] = get_url
-    info['getname'] = getname
+    info['getname'] = lambda xx: '$'+group_names_pretty(xx)+'$'
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
 
@@ -131,6 +125,8 @@ def render_glnQ_group(args):
         label = clean_input(args['label'])
         info = db.gps_qrep.lucky({'label': label})
         info['dispmat'] = dispmat
+        info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
+        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
 
         title = '$\GL('+str(info['dim'])+',\Q)$ subgroup '  + label
 
@@ -153,49 +149,6 @@ def render_glnQ_group(args):
 
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
-
-@glnQ_page.route("/subinfo/<label>")
-def shortsubinfo(label):
-    if not sub_label_is_valid(label):
-        # Should only come from code, so return nothing if label is bad
-        return ''
-    wsg = WebAbstractSubgroup(label)
-    ambientlabel = str(wsg.ambient)
-    # helper function
-    def subinfo_getsub(title, knowlid, count):
-        h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
-        prop = make_knowl(title, knowlid)
-        return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
-            prop, h.spanclass(), h.counter, h.subgroup_tex)
-
-    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
-    ans += '<table>'
-    ans += '<tr><td>%s <td> %s\n' % (
-        make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
-    ans += '<tr><td>%s<td>' % make_knowl('Normal', 'group.subgroup.normal')
-    if wsg.normal:
-        ans += 'True with quotient group '
-        ans +=  '$'+group_names_pretty(wsg.quotient)+'$\n'
-    else:
-        ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
-
-    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
-    ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
-    ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
-    ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
-    ans += subinfo_getsub('Core', 'group.core', wsg.core)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Central', 'group.central'), wsg.central)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
-    #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
-    p = wsg.sylow
-    nt = 'Yes for $p$ = %d' % p if p>0 else 'No'
-    ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
-    #print ""
-    #print ans
-    ans += '</table>'
-    return ans
-
 
 @glnQ_page.route("/Completeness")
 def completeness_page():

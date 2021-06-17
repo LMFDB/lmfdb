@@ -9,13 +9,18 @@ from six import integer_types as six_integers
 import binascii
 import json
 import datetime
-
 from psycopg2.extras import Json as pgJson
 from psycopg2.extensions import adapt, ISQLQuote
 try:
     from sage.all import ceil
-    from sage.rings.complex_number import ComplexNumber
+    try:
+        # this fails in sage 9.3
+
+        from sage.rings.complex_mpfr import ComplexNumber
+    except ImportError:
+        from sage.rings.complex_number import ComplexNumber
     from sage.rings.complex_field import ComplexField
+    from sage.rings.complex_double import ComplexDoubleElement
     from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
     from sage.rings.integer import Integer
     from sage.rings.rational import Rational
@@ -217,6 +222,8 @@ class Json(pgJson):
                 "prec": int(obj.prec()),
                 "data": [str(obj.real()), str(obj.imag())],
             }
+        elif SAGE_MODE and isinstance(obj, ComplexDoubleElement):
+            return [float(obj.real()), float(obj.imag())]
         elif SAGE_MODE and isinstance(obj, NumberFieldElement):
             return {
                 "__NFElt__": 0,  # encoding version

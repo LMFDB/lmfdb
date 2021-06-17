@@ -790,7 +790,7 @@ function getpositions() {
   var mylist="[\""+ambientlabel+"\",[";
   for (var i = 0; i < ourg.nodes.length; i++) {
     mylist +=  i>0 ? ',' : '';
-    mylist +="["+ourg.nodes[i].value+","+ ourg.nodes[i].layoutPosX+"]";
+    mylist +="[\""+ourg.nodes[i].value+"\","+ ourg.nodes[i].layoutPosX+"]";
   }
   mylist += "]]";
   var mydiv = document.getElementById("positions");

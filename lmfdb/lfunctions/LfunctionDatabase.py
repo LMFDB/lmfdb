@@ -2,10 +2,19 @@
 
 from lmfdb import db
 
+def get_lfunction_by_label(label, **kwargs):
+    Ldata = db.lfunc_lfunctions.lucky({'label': label}, **kwargs)
+    if Ldata is None:
+        raise KeyError("Label '%s' not found in Lfunction table" % (label,))
+    return Ldata
+
+def get_instances_by_label(label):
+    return list(db.lfunc_instances.search({'label': label}, sort=[]))
+
 def get_lfunction_by_Lhash(Lhash, **kwargs):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, **kwargs)
     if Ldata is None:
-        raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
+        raise KeyError("Lhash '%s' not found in Lfunction table" % (Lhash,))
     return Ldata
 
 def get_instances_by_Lhash(Lhash):
@@ -122,10 +131,8 @@ def get_lfunction_by_url(url, **kwargs):
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
 
-
-
 def getEllipticCurveData(label):
-    return db.ec_curves.lucky({'lmfdb_label': label})
+    return db.ec_curvedata.lucky({'lmfdb_label': label})
 
 def getHmfData(label):
     from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field

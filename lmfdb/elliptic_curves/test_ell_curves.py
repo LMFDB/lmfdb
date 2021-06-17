@@ -22,13 +22,31 @@ class EllCurveTest(LmfdbTest):
 
     def test_Cremona_label_mal(self):
         L = self.tc.get('/EllipticCurve/Q/?jump=Cremona%3A12qx', follow_redirects=True)
-        assert '12qx' in L.get_data(as_text=True) and 'does not define a recognised elliptic curve' in L.get_data(as_text=True)
+        assert '12qx' in L.get_data(as_text=True) and 'not a valid label' in L.get_data(as_text=True)
 
     def test_missing_curve(self):
         L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
-        assert '13.a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
+        assert '13.a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
-        assert '13a1' in L.get_data(as_text=True) and 'No curve' in L.get_data(as_text=True)
+        assert '13a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/13/a/1', follow_redirects=True)
+        assert '13.a1' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+
+    def test_missing_class(self):
+        L = self.tc.get('/EllipticCurve/Q/11.b', follow_redirects=True)
+        assert '11.b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/11b', follow_redirects=True)
+        assert '11b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/11/b', follow_redirects=True)
+        assert '11.b' in L.get_data(as_text=True) and 'not in the database' in L.get_data(as_text=True)
+
+    def test_invalid_class(self):
+        L = self.tc.get('/EllipticCurve/Q/11/a1', follow_redirects=True)
+        assert '11.a1' in L.get_data(as_text=True) and 'not a valid label for an isogeny class' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/11/a1banana', follow_redirects=True)
+        assert '11.a1banana' in L.get_data(as_text=True) and 'not a valid label for an isogeny class' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/11/1', follow_redirects=True)
+        assert '11.1' in L.get_data(as_text=True) and 'not a valid label for an isogeny class' in L.get_data(as_text=True)
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -113,7 +131,7 @@ class EllCurveTest(LmfdbTest):
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert r'\(-1 \cdot 163^{9} \)' in L.get_data(as_text=True)
+        assert r'-1 \cdot 163^{9}' in L.get_data(as_text=True)
 
     def test_torsion_growth(self):
         """
@@ -131,11 +149,18 @@ class EllCurveTest(LmfdbTest):
         # has a different Gamma-optimal curve in its labelling than all others.
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
-          '<td class="center">[1, -1, 1, -1568, -4669]</td>',
-          '<td align="center">[6]</td>',
-          '<td align="center">',
-          '1728</td>',
-          r'<td>\(\Gamma_0(N)\)-optimal</td>'
+            '<td class="center"><a href="/EllipticCurve/Q/990h3/">990h3</a></td>',
+            r'<td class="center">\([1, -1, 1, -1568, -4669]\)</td>',
+            r'<td class="center">\(15781142246787/8722841600\)</td>',
+            r'<td class="center">\(235516723200\)</td>',
+            r'<td align="center">\([6]\)</td>',
+            r'<td align="center">',
+            r'\(1728\)</td>',
+            r'<td align="center">',
+            r'\(0.87260\)',
+            r'</td>',
+            r'<td>',
+            r'  \(\Gamma_0(N)\)-optimal</td>'
         ])
         self.assertTrue(row in L.get_data(as_text=True),
                         "990.i appears to have the wrong optimal curve.")
@@ -151,4 +176,4 @@ class EllCurveTest(LmfdbTest):
         Test that the dynamic completeness knowl displays OK.
         """
         L = self.tc.get('/EllipticCurve/Q/Completeness')
-        assert 'The database currently contains' in L.get_data(as_text=True)
+        assert 'Currently, the database includes' in L.get_data(as_text=True)

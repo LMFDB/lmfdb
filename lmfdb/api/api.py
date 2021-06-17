@@ -29,10 +29,11 @@ def quote_string(value):
     return value
 
 
-def pretty_document(rec,sep=", ",id = True):
+def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
-    return "{"+sep.join(["'%s': %s" % attr for attr in attrs])+"}"
+    return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
 
 def hidden_collection(c):
     """
@@ -156,7 +157,7 @@ def api_query_id(table, id):
             out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
         return out
     else:
-        return api_query(table, id = id)
+        return api_query(table, id=id)
 
 
 @api_page.route("/<table>")
@@ -182,7 +183,7 @@ def api_query(table, id = None):
 
     if offset > 10000:
         if format != "html":
-            abort(404)
+            return abort(404)
         else:
             flash_error("offset %s too large, please refine your query.", offset)
             return redirect(url_for(".api_query", table=table))
@@ -192,7 +193,7 @@ def api_query(table, id = None):
         coll = getattr(db, table)
     except AttributeError:
         if format != "html":
-            abort(404)
+            return abort(404)
         else:
             flash_error("table %s does not exist", table)
             return redirect(url_for(".index"))
@@ -206,6 +207,8 @@ def api_query(table, id = None):
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
+        else:
+            return abort(404, "id '%s' must be an integer" % id)
         data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
@@ -225,9 +228,7 @@ def api_query(table, id = None):
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
-                    print(qval)
                     qval = [int(_) for _ in qval[2:].split(DELIM)]
-                    print(qval)
                 elif qval.startswith("lf"):
                     qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
@@ -248,7 +249,7 @@ def api_query(table, id = None):
             q[qkey] = qval
 
         # assure that one of the keys of the query is indexed
-        # however, this doesn't assure that the query will be fast... 
+        # however, this doesn't assure that the query will be fast...
         #if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(coll))) == 0:
         #    flash_error("no key in the query %s is indexed.", q)
         #    return redirect(url_for(".api_query", table=table))
@@ -265,7 +266,12 @@ def api_query(table, id = None):
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
-        api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
+        # So as not to preserve backwards compatibility (see test_api_usage() test)
+        if table=='ec_curvedata':
+            for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
+                if oldkey in q:
+                    q[newkey] = q[oldkey]
+                    q.pop(oldkey)
         try:
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
@@ -274,10 +280,13 @@ def api_query(table, id = None):
         except KeyError as err:
             flash_error("No key %s in table %s", err, table)
             return redirect(url_for(".api_query", table=table))
+        except ValueError as err:
+            flash_error(str(err))
+            return redirect(url_for(".api_query", table=table))
 
     if single_object and not data:
         if format != 'html':
-            abort(404)
+            return abort(404)
         else:
             flash_error("no document with id %s found in table %s.", id, table)
             return redirect(url_for(".api_query", table=table))
@@ -332,8 +341,17 @@ def api_query(table, id = None):
         title = "API - " + location
         bc = [("API", url_for(".index")), (table,)]
         query_unquote = unquote(data["query"])
+        description = coll.description()
+        if description:
+            title += " (%s)" % description
+        search_schema = [(col, coll.col_type[col], coll.column_description(col))
+                         for col in sorted(coll.search_cols)]
+        extra_schema = [(col, coll.col_type[col], coll.column_description(col))
+                        for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
+                               search_schema=search_schema,
+                               extra_schema=extra_schema,
                                single_object=single_object,
                                query_unquote = query_unquote,
                                url_args = url_args,

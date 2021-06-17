@@ -14,7 +14,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -31,19 +31,14 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
-
 # convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]
 def mult2mult(li):
-    ans = []
-    for j in range(len(li)):
-        if li[j]>0:
-            ans.append([j, li[j]])
-    return ans
+    return [[j, li_j] for j, li_j in enumerate(li) if li_j > 0]
+
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Galois group labels', url_for(".labels_page"))]
 
@@ -64,6 +59,7 @@ def int_reps_are_complete(intreps):
         if 'complete' in r:
             return r['complete']
     return -1
+
 
 def galois_module_data(n, t, index):
     return galois_module_knowl_guts(n, t, index)
@@ -91,7 +87,7 @@ def index():
     if request.args:
         return galois_group_search(info)
     info['degree_list'] = list(range(1, 48))
-    return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore_list())
+    return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
 
 # For the search order-parsing
 def make_order_key(order):
@@ -104,8 +100,7 @@ def make_order_key(order):
              err_title='Galois group search input error',
              url_for_label=lambda label: url_for(".by_label", label=label),
              learnmore=learnmore_list,
-             bread=lambda: get_bread([("Search results", ' ')]),
-             credit=lambda: GG_credit)
+             bread=lambda: get_bread([("Search results", ' ')]))
 def galois_group_search(info, query):
     def includes_composite(s):
         s = s.replace(' ','').replace('..','-')
@@ -237,7 +232,7 @@ def render_group_webpage(args):
         else:
             data['arith_equiv'] = r'Data on whether or not a number field with this Galois group has <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields has not been computed.'
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
-        if len(intreps) > 0:
+        if intreps:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
                 onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
@@ -254,8 +249,10 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        if db.nf_fields.exists({'galois_label': "%dT%d" % (n, t)}):
+        if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
+        if db.lf_fields.exists({'n': n, 'galT': t}):
+            friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
             ('Order', prop_int_pretty(order)),
@@ -276,16 +273,17 @@ def render_group_webpage(args):
             data['nilpotency'] += ' (not nilpotent)'
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
+        return render_template("gg-show-group.html", title=title, bread=bread, info=data, properties=prop2, friends=friends, KNOWL_ID="gg.%s"%label, learnmore=learnmore_list())
 
 
 def search_input_error(info, bread):
     return render_template("gg-search.html", info=info, title='Galois group search input error', bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/random")
+@redirect_no_cache
 def random_group():
     label = db.gps_transitive.random()
-    return redirect(url_for(".by_label", label=label), 307)
+    return url_for(".by_label", label=label)
 
 @galois_groups_page.route("/interesting")
 def interesting():
@@ -295,7 +293,6 @@ def interesting():
         url_for_label=lambda label: url_for(".by_label", label=label),
         title=r"Some interesting Galois groups",
         bread=get_bread([("Interesting", " ")]),
-        credit=GG_credit,
         learnmore=learnmore_list()
     )
 
@@ -303,7 +300,7 @@ def interesting():
 def statistics():
     title = "Galois groups: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=GaloisStats(), credit=GG_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=GaloisStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @galois_groups_page.route("/Completeness")
 def cande():
@@ -311,7 +308,7 @@ def cande():
     bread = get_bread([("Completeness", )])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.gg',
-                           credit=GG_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @galois_groups_page.route("/Labels")
@@ -320,14 +317,14 @@ def labels_page():
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='gg.label',
            learnmore=learnmore_list_remove('label'), 
-           credit=GG_credit, title=t, bread=bread)
+           title=t, bread=bread)
 
 @galois_groups_page.route("/Source")
 def source():
-    t = 'Source of Galois group data'
+    t = 'Source and acknowledgments for Galois group pages'
     bread = get_bread([("Source", '')])
-    return render_template("single.html", kid='rcs.source.gg',
-                           credit=GG_credit, title=t, bread=bread, 
+    return render_template("double.html", kid='rcs.source.gg', kid2='rcs.ack.gg',
+                           title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'))
 
 @galois_groups_page.route("/Reliability")
@@ -335,7 +332,7 @@ def reliability():
     t = 'Reliability of Galois group data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.rigor.gg',
-                           credit=GG_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Reliability'))
 
 class GalSearchArray(SearchArray):

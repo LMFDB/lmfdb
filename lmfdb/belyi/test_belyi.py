@@ -55,11 +55,17 @@ class BelyiTest(LmfdbTest):
     def test_orbit_size_search(self):
         self.check_args("/Belyi/?orbit_size=20-", "7T7-6.1_5.2_4.2.1-a")
 
+    def test_pass_size_search(self):
+        self.check_args("/Belyi/?pass_size=6", "7T6-4.2.1_4.2.1_3.2.2-a")
+
     def test_geom_type_search(self):
         self.check_args("/Belyi/?geomtype=H", "6T8-4.1.1_4.1.1_3.3-a")
 
     def test_count_search(self):
         self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
+
+    def test_field_search(self):
+        self.check_args("Belyi/?field=Qsqrt-3", "3T1-3_3_3-a")
 
     # downloads
 
@@ -131,15 +137,15 @@ class BelyiTest(LmfdbTest):
         for url, friends in [
             ('/Belyi/4T5/4/4/3.1/a',
                 ('Passport',
-                    'Curve 48.a6',)
+                    'Elliptic curve 48.a6',)
                 ),
             ('/Belyi/5T3/5/4.1/4.1/a',
                 ('Passport',
-                    'Curve 2.0.4.1-1250.3-a3',)
+                    'Elliptic curve 2.0.4.1-1250.3-a3',)
                 ),
             ('/Belyi/6T6/6/6/3.3/a',
                 ('Passport',
-                    'Curve 1728.b.442368.1',)
+                    'Genus 2 curve 1728.b.442368.1',)
                 )
             ]:
             data = self.tc.get(url).get_data(as_text=True)

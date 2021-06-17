@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
-# Author: Paul-Olivier Dehaye, John Jones
+# Authors: Paul-Olivier Dehaye, John Jones
 
-import re, random
+import re
+import random
 
 from flask import render_template, request, url_for, redirect
 from sage.all import ZZ, cached_function
@@ -13,7 +14,7 @@ from lmfdb.utils import (
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
-    display_knowl, search_wrap, to_dict, comma, prop_int_pretty)
+    display_knowl, search_wrap, to_dict, comma, prop_int_pretty, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
@@ -47,8 +48,8 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".cande")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            ('Completeness of the data', url_for(".cande")),
             ('Reliability of the data', url_for(".reliability")),
             ('Artin representations labels', url_for(".labels_page"))]
 
@@ -117,7 +118,7 @@ def add_lfunction_friends(friends, label):
     for label in both_labels(label):
         rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
         if rec:
-            num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF lable based on artin label (rep or orbit)
+            num = 10 if 'c' in label.split('.')[-1] else 8 # number of components of CMF label based on artin label (rep or orbit)
             for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
                 s = r['url'].split('/')
                 if r['type'] == 'CMF' and len(s) == num:
@@ -263,10 +264,6 @@ def by_partial_data(dim, conductor):
     return artin_representation_search({'dimension': dim, 'conductor': conductor, 'search_array': ArtinSearchArray()})
 
 
-# credit information should be moved to the databases themselves, not at the display level. that's too late.
-tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
-support_credit = "Support by Paul-Olivier Dehaye."
-
 @artin_representations_page.route("/<label>/")
 @artin_representations_page.route("/<label>")
 def render_artin_representation_webpage(label):
@@ -331,14 +328,17 @@ def render_artin_representation_webpage(label):
 
     friends = []
     wnf = None
+    proj_wnf = None
     nf_url = the_nf.url_for()
     if nf_url:
-        friends.append(("Artin field", nf_url))
+        friends.append(("Field {}".format(the_nf.label()), nf_url))
         wnf = the_nf.wnf()
-    proj_nf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
-    if proj_nf._data:
-        friends.append(("Projective Artin field", 
-            str(url_for("number_fields.by_label", label=proj_nf.get_label()))))
+    proj_wnf = WebNumberField.from_coeffs(the_rep._data['Proj_Polynomial'])
+    if proj_wnf.is_in_db():
+        proj_coefs = [int(z) for z in proj_wnf.coeffs()]
+        if proj_coefs != the_nf.polynomial():
+            friends.append(("Field {}".format(proj_wnf.get_label()), 
+                str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
     if case == 'rep':
         cc = the_rep.central_character()
         if cc is not None:
@@ -350,7 +350,7 @@ def render_artin_representation_webpage(label):
                 friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
             else:
                 detrep = the_rep.central_character_as_artin_rep()
-                friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
+                friends.append(("Determinant "+detrep.label(), detrep.url_for()))
         add_lfunction_friends(friends,label)
 
         # once the L-functions are in the database, the link can always be shown
@@ -386,14 +386,13 @@ def render_artin_representation_webpage(label):
     if case == 'rep':
         return render_template(
             "artin-representation-show.html",
-            credit=tim_credit,
-            support=support_credit,
             title=title,
             bread=bread,
             friends=friends,
             object=the_rep,
             cycle_string=cycle_string,
             wnf=wnf,
+            proj_wnf=proj_wnf,
             properties=properties,
             info=info,
             learnmore=learnmore_list(),
@@ -402,8 +401,6 @@ def render_artin_representation_webpage(label):
     # else we have an orbit
     return render_template(
         "artin-representation-galois-orbit.html",
-        credit=tim_credit,
-        support=support_credit,
         title=title,
         bread=bread,
         allchars=allchars,
@@ -411,6 +408,7 @@ def render_artin_representation_webpage(label):
         object=the_rep,
         cycle_string=cycle_string,
         wnf=wnf,
+        proj_wnf=proj_wnf,
         properties=properties,
         info=info,
         learnmore=learnmore_list(),
@@ -418,11 +416,12 @@ def render_artin_representation_webpage(label):
     )
 
 @artin_representations_page.route("/random")
+@redirect_no_cache
 def random_representation():
     rep = db.artin_reps.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"."+num2letters(num+1)
-    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
+    return url_for(".render_artin_representation_webpage", label=label)
 
 @artin_representations_page.route("/interesting")
 def interesting():
@@ -433,7 +432,6 @@ def interesting():
         label_col="Baselabel",
         title=r"Some interesting Artin representations",
         bread=get_bread([("Interesting", " ")]),
-        credit=tim_credit,
         learnmore=learnmore_list(),
     )
 
@@ -441,22 +439,23 @@ def interesting():
 def statistics():
     title = "Artin representations: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=ArtinStats(), credit=tim_credit, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=ArtinStats(), title=title, bread=bread, learnmore=learnmore_list())
 
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin representations'
     bread = get_bread([("Labels", '')])
     learnmore = learnmore_list_remove('labels')
-    return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
+    return render_template("single.html", kid='artin.label',learnmore=learnmore, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
 def source():
-    t = 'Source of Artin representation data'
+    t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("single.html", kid='rcs.source.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+    return render_template("double.html", kid='rcs.source.artin',
+                           kid2='rcs.ack.artin',
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -465,7 +464,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -474,7 +473,7 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           credit=tim_credit, title=t, bread=bread, 
+                           title=t, bread=bread, 
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):

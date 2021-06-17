@@ -35,7 +35,7 @@
 
 <h2>Constructions</h2>
 
-<table style="white-space: nowrap">
+<table class=nowrap>
   <tr>
     <td>{% if gp.solvable %}{{KNOWL('group.presentation', 'Presentation:')}}{% else %}{{KNOWL('group.permutation_gens', 'Generators:')}}{% endif %}</td>
     <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
@@ -125,6 +125,7 @@
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}}</h3>
 <p>
+{% if gp.diagram_ok %}
 {% if info.wide %}
 <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
   Sorry, your browser does not support the subgroup diagram.
@@ -166,6 +167,13 @@ Click on a subgroup in the diagram to see information about it.
 <div id="positions">
 </div>
 {% endif %}
+{% endif %}
+{% else %}
+There are too many classes of subgroups to display.
+<p>
+{% for ordline in info.subgroup_profile %}
+Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
+{% endfor %}
 {% endif %}
 
 <h3>Series</h3>

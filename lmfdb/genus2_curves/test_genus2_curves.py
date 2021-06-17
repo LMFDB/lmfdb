@@ -20,17 +20,17 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/169.a.169.1',follow_redirects=True)
         assert 'square of' in L.get_data(as_text=True) and 'E_6' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
-        assert 'non-isogenous elliptic curves' in L.get_data(as_text=True) and '24.a5' in L.get_data(as_text=True) and '48.a5' in L.get_data(as_text=True)
+        assert 'non-isogenous elliptic curve' in L.get_data(as_text=True) and '24.a' in L.get_data(as_text=True) and '48.a' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
-        assert 'N(G_{1,3})' in L.get_data(as_text=True) and '480.b3' in L.get_data(as_text=True) and '32.a3' in L.get_data(as_text=True)
+        assert r"N(\mathrm{U}(1)\times\mathrm{SU}(2))" in L.get_data(as_text=True) and '480.b' in L.get_data(as_text=True) and '32.a' in L.get_data(as_text=True)
 
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
-        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and 'G_{3,3}' in L.get_data(as_text=True)
+        assert '1369.1' in L.get_data(as_text=True) and '50653.1' in L.get_data(as_text=True) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)" in L.get_data(as_text=True)
 
     def test_Lfunction_link(self):
         L = self.tc.get('/L/Genus2Curve/Q/1369/a',follow_redirects=True)
-        assert 'G_{3,3}' in L.get_data(as_text=True) and 'Motivic weight' in L.get_data(as_text=True)
+        assert 'Motivic weight' in L.get_data(as_text=True)
 
     def test_twist_link(self):
         L = self.tc.get('/Genus2Curve/Q/?g22=1016576&g20=5071050752/9&g21=195344320/9')
@@ -54,7 +54,7 @@ class Genus2Test(LmfdbTest):
         assert '32.a1' in L.get_data(as_text=True) and '34.a3' in L.get_data(as_text=True)
         # RM curve:
         L = self.tc.get('/Genus2Curve/Q/17689/e/866761/1')
-        assert ('simple' in L.get_data(as_text=True) or 'Simple' in L.get_data(as_text=True)) and 'G_{3,3}' in L.get_data(as_text=True)
+        assert ('simple' in L.get_data(as_text=True) or 'Simple' in L.get_data(as_text=True)) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)" in L.get_data(as_text=True)
         # QM curve:
         L = self.tc.get('Genus2Curve/Q/262144/d/524288/1')
         assert 'quaternion algebra' in L.get_data(as_text=True) and 'J(E_2)' in L.get_data(as_text=True)
@@ -252,32 +252,37 @@ class Genus2Test(LmfdbTest):
         assert '324.a.648.1' in L.get_data(as_text=True)
         assert '450.a.2700.1' in L.get_data(as_text=True)
         assert not('169.a.169.1' in L.get_data(as_text=True))
-                
+
     def test_related_objects(self):
         for url, friends in [
                 ('/Genus2Curve/Q/20736/i/373248/1',
                     ('L-function',
-                        'Isogeny class 20736.i',
+                        'Genus 2 curve 20736.i',
                         'Elliptic curve 576.f3',
                         'Elliptic curve 36.a4',
-                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.0.8.1-324.3-a',
+                        'Modular form 36.2.a.a',
+                        'Modular form 576.2.a.f',
                         'Bianchi modular form 2.0.8.1-324.3-a',
                         'Hilbert modular form 2.2.24.1-36.1-a',
-                        'Isogeny class 2.2.24.1-36.1-a',
+                        'Elliptic curve 2.2.24.1-36.1-a',
                         'Twists',)
                     ),
                 ('/Genus2Curve/Q/20736/i/',
                     ('L-function',
-                        'Isogeny class 576.f',
-                        'Isogeny class 36.a',
-                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Elliptic curve 576.f',
+                        'Elliptic curve 36.a',
+                        'Modular form 36.2.a.a',
+                        'Modular form 576.2.a.f',
                         'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.0.8.1-324.3-a',
+                        'Elliptic curve 2.2.24.1-36.1-a',
                         'Hilbert modular form 2.2.24.1-36.1-a',
-                        'Isogeny class 2.2.24.1-36.1-a',)
+                     )
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
-                        'Isogeny class 2.2.8.1-9.1-a',
+                        'Elliptic curve 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
                         'Hilbert modular form 2.2.8.1-9.1-a',)
                     )

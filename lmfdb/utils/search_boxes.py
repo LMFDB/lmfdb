@@ -558,7 +558,7 @@ class SearchArray(UniqueRepresentation):
         lines = []
         for row in grid:
             if isinstance(row, Spacer):
-                lines.append("\n      " + row.html())
+                lines.append("\n      " + row.html(info))
             elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
                     labels = [box.label_html(info) for box in row]

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
-import os, yaml
+import os
+import yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
@@ -17,7 +18,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler)
+    StatsDisplay, proportioners, totaler,
+    redirect_no_cache)
 from lmfdb.backend.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
@@ -44,8 +46,8 @@ def learnmore_list():
     """
     Return the learnmore list
     """
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Classical modular form labels', url_for(".labels_page"))]
 
@@ -55,15 +57,6 @@ def learnmore_list_remove(matchstring):
     Return the learnmore list with the matchstring entry removed
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
-
-
-@cached_function
-def credit():
-    """
-    Return the credit string
-    """
-    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
-
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -211,20 +204,21 @@ def index():
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
-                           credit=credit(),
                            title="Classical modular forms",
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
 @cmf.route("/random/")
+@redirect_no_cache
 def random_form():
     label = db.mf_newforms.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/random_space/")
+@redirect_no_cache
 def random_space():
     label = db.mf_newspaces.random()
-    return redirect(url_for_label(label), 307)
+    return url_for_label(label)
 
 @cmf.route("/interesting_newforms")
 def interesting_newforms():
@@ -234,7 +228,6 @@ def interesting_newforms():
         url_for_label,
         regex=LABEL_RE,
         title="Some interesting newforms",
-        credit=credit(),
         bread=get_bread(other="Interesting newforms"),
         learnmore=learnmore_list()
     )
@@ -247,7 +240,6 @@ def interesting_spaces():
         url_for_label,
         regex=NEWSPACE_RE,
         title="Some interesting newspaces",
-        credit=credit(),
         bread=get_bread(other="Interesting newspaces"),
         learnmore=learnmore_list()
     )
@@ -330,7 +322,7 @@ def parse_prec(info):
 
 
 def eta_quotient_texstring(etadata):
-    """
+    r"""
     Returns a latex string representing an eta quotient.
 
     etadata should be a dictionary as returned from parsing `eta.yaml`.
@@ -396,7 +388,6 @@ def render_newform_webpage(label):
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
-                           credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.title,
@@ -429,7 +420,6 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
-                           credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
@@ -448,7 +438,6 @@ def render_space_webpage(label):
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
-                           credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
                            title=space.title,
@@ -467,7 +456,6 @@ def render_full_gamma1_space_webpage(label):
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
-                           credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
                            title=space.title,
@@ -701,8 +689,14 @@ def common_parse(info, query, na_check=False):
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        query['level_is_' + info['level_type']] = True
-    parse_floats(info, query, 'analytic_conductor', name="Analytic conductor", allow_singletons=True)
+        if info['level_type'] == 'divides':
+            if not isinstance(query.get('level'), int):
+                raise ValueError("You must specify a single level")
+            else:
+                query['level'] = {'$in': ZZ(query['level']).divisors()}
+        else:
+            query['level_is_' + info['level_type']] = True
+    parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
@@ -794,8 +788,7 @@ def newspace_parse(info, query):
              projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'field_disc_factorization', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
@@ -819,7 +812,7 @@ def trace_postprocess(res, info, query, spaces=False):
     return res
 def space_trace_postprocess(res, info, query):
     return trace_postprocess(res, info, query, True)
-def process_an_constraints(info, query):
+def process_an_constraints(info, query, qfield='traces', nshift=None):
     q = info.get('an_modulo','').strip()
     if q:
         try:
@@ -830,15 +823,16 @@ def process_an_constraints(info, query):
             msg = "Modulo must be a positive integer"
             flash_error(msg)
             raise ValueError(msg)
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
-                                   parse_singleton=(lambda x: {'$mod':[int(x),q]}))
+        parse_equality_constraints(info, query, 'an_constraints', qfield=qfield,
+                                   parse_singleton=(lambda x: {'$mod':[int(x),q]}),
+                                   nshift=nshift)
     else:
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
+        parse_equality_constraints(info, query, 'an_constraints', qfield=qfield)
         if info.get('view_modp') == 'reductions':
             msg = "Must set Modulo input in order to view reductions"
             flash_error(msg)
             raise ValueError(msg)
-def set_Trn(info, query):
+def set_Trn(info, query, limit=1000):
     ns = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
@@ -848,12 +842,12 @@ def set_Trn(info, query):
         Trn = [n for n in Trn if n > 1 and ZZ(n).is_prime_power()]
     else:
         Trn = [n for n in Trn if n > 1]
-    if any(n > 1000 for n in Trn):
+    if any(n > limit for n in Trn):
         msg = "Cannot display traces above 1000; more may be available by downloading individual forms"
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
-    info['download_limit'] = 1000
+    info['download_limit'] = limit
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
@@ -864,8 +858,7 @@ def set_Trn(info, query):
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
              postprocess=trace_postprocess,
              bread=get_search_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def trace_search(info, query):
     set_Trn(info, query)
     newform_parse(info, query)
@@ -881,8 +874,7 @@ def trace_search(info, query):
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
              postprocess=space_trace_postprocess,
              bread=get_search_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def space_trace_search(info, query):
     set_Trn(info, query)
     newspace_parse(info, query)
@@ -1055,8 +1047,7 @@ def dimension_form_postprocess(res, info, query):
              projection=['level', 'weight', 'dim'],
              postprocess=dimension_form_postprocess,
              bread=get_dim_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def dimension_form_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
     if 'weight' not in info:
@@ -1075,8 +1066,7 @@ def dimension_form_search(info, query):
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def dimension_space_search(info, query):
     info.pop('count',None) # remove per_page so that we get all results
     if 'weight' not in info:
@@ -1096,42 +1086,37 @@ def dimension_space_search(info, query):
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list,
-             credit=credit)
+             learnmore=learnmore_list)
 def space_search(info, query):
     newspace_parse(info, query)
     set_info_funcs(info)
 
-@cmf.route("/Completeness")
-def completeness_page():
-    t = 'Completeness of classical modular form data'
-    return render_template("single.html", kid='rcs.cande.cmf',
-                           credit=credit(), title=t,
-                           bread=get_bread(other='Completeness'),
-                           learnmore=learnmore_list_remove('Completeness'))
-
-
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("single.html", kid='rcs.source.cmf',
-                           credit=credit(), title=t,
+    return render_template("double.html", kid='rcs.source.cmf',
+                           kid2='rcs.ack.cmf', title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
+
+@cmf.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of classical modular form data'
+    return render_template("single.html", kid='rcs.cande.cmf', title=t,
+                           bread=get_bread(other='Completeness'),
+                           learnmore=learnmore_list_remove('Completeness'))
 
 @cmf.route("/Labels")
 def labels_page():
     t = 'Labels for classical modular forms'
-    return render_template("single.html", kid='cmf.label',
-                           credit=credit(), title=t,
+    return render_template("single.html", kid='cmf.label', title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
 
 @cmf.route("/Reliability")
 def reliability_page():
     t = 'Reliability of classical modular form data'
-    return render_template("single.html", kid='rcs.rigor.cmf',
-                           credit=credit(), title=t,
+    return render_template("single.html", kid='rcs.rigor.cmf', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
@@ -1295,17 +1280,14 @@ class CMF_stats(StatsDisplay):
 @cmf.route("/stats")
 def statistics():
     title = 'Classical modular forms: Statistics'
-    return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
+    return render_template("display_stats.html", info=CMF_stats(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
     title = 'Classical modular forms: Dynamic statistics'
-    return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
-
-
-
+    return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
     jump_example="3.6.a.a"
@@ -1319,7 +1301,8 @@ class CMFSearchArray(SearchArray):
                      ('prime', 'prime'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
-                     ('squarefree', 'squarefree')
+                     ('squarefree', 'squarefree'),
+                     ('divides','divides'),
                      ],
             min_width=110)
         level = TextBoxWithSelect(
@@ -1592,14 +1575,13 @@ class CMFSearchArray(SearchArray):
         if info is None:
             return self.browse_array
         search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
-            return self.refine_array
-        elif search_type in ['Spaces', 'SpaceTraces']:
+        if search_type in ['Spaces', 'SpaceTraces']:
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
         else:
-            raise ValueError
+            # search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
+            return self.refine_array
 
     def search_types(self, info):
         basic = [('List', 'List of forms'),

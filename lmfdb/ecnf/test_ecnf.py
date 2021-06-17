@@ -120,8 +120,8 @@ class EllCurveTest(LmfdbTest):
                  'Base change of 576.f3',
                  'Bianchi modular form 2.0.8.1-324.3-a',
                  'Hilbert modular form 2.2.24.1-36.1-a',
-                 'Isogeny class 2.2.24.1-36.1-a',
-                 'Isogeny class 20736.i',
+                 'Elliptic curve 2.2.24.1-36.1-a',
+                 'Genus 2 curve 20736.i',
                  'L-function']),
                 ('/EllipticCurve/2.0.11.1/256.1/b/1',
                     ['Isogeny class 256.1-b',
@@ -130,9 +130,9 @@ class EllCurveTest(LmfdbTest):
                      'Bianchi modular form 2.0.11.1-256.1-b',
                      'Hilbert modular form 2.2.44.1-16.1-a',
                      'Hilbert modular form 2.2.44.1-16.1-c',
-                     'Isogeny class 2.0.11.1-256.1-a',
-                     'Isogeny class 2.2.44.1-16.1-a',
-                     'Isogeny class 2.2.44.1-16.1-c',
+                     'Elliptic curve 2.0.11.1-256.1-a',
+                     'Elliptic curve 2.2.44.1-16.1-a',
+                     'Elliptic curve 2.2.44.1-16.1-c',
                      'L-function'])]:
             L = self.tc.get(url).get_data(as_text=True)
             for t in text:

@@ -121,6 +121,9 @@ class PostgresSearchTable(PostgresTable):
         It is called from `_parse_special` and `_parse_dict`; see the documentation
         of those functions for inputs.
         """
+        if col_type == "smallint[]" and key in ["$contains", "$containedin"]:
+            # smallint[] requires a typecast to test containment
+            return "::int[]"
         if col_type.endswith("[]") and key in ["$eq", "$ne", "$contains", "$containedin"]:
             if isinstance(col, Identifier):
                 return "::" + col_type
@@ -490,7 +493,7 @@ class PostgresSearchTable(PostgresTable):
                 cur.close()
                 if (
                     cur.withhold # to assure that it is a buffered cursor
-                    and self._db._nocommit_stack == 0 # and there is nothing to commmit
+                    and self._db._nocommit_stack == 0 # and there is nothing to commit
                 ):
                     cur.connection.commit()
 
@@ -957,7 +960,7 @@ class PostgresSearchTable(PostgresTable):
                     # so we just get an unsorted list of labels
                     L = list(self.search(query, 0, sort=[]))
                 else:
-                    # An arbitary projection might be large, so we get ids
+                    # An arbitrary projection might be large, so we get ids
                     L = list(self.search(query, "id", sort=[]))
                 self.stats._record_count(query, len(L))
                 if len(L) == 0:
@@ -1115,6 +1118,23 @@ class PostgresSearchTable(PostgresTable):
             1892503075117056
         """
         return self.stats.max(col, constraint)
+
+    def min(self, col, constraint={}):
+        """
+        The minimum value attained by the given column.
+
+        INPUT:
+
+        - ``col`` -- the name of the column
+        - ``constraint`` -- a query dictionary constraining which rows are considered
+
+        EXAMPLES::
+
+            sage: from lmfdb import db
+            sage: db.ec_mwbsd.min('area')
+            0.00000013296713869846309987200099760
+        """
+        return self.stats.min(col, constraint)
 
     def distinct(self, col, query={}):
         """

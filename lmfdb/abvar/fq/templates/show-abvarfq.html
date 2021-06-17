@@ -2,6 +2,13 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function show_more_curves() {
+    $("#more_curves").show();
+    $("#curve_shower").hide();
+  }
+</script>
+
 <h2>Invariants</h2>
 
 <p>
@@ -9,6 +16,9 @@
     <tr><td>{{ KNOWL('ag.base_field',title = "Base field") }}:</td><td>&nbsp;&nbsp;${{cl.field()}}$</td></tr>
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td><td>&nbsp;&nbsp;${{cl.g}}$</td></tr>
     <tr><td>{{ KNOWL('av.fq.l-polynomial',title='L-polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
+    {% if cl.expanded_polynomial %}
+    <tr><td></td><td>&nbsp;&nbsp;${{cl.expanded_polynomial}}$</td></tr>
+    {% endif %}
     <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}}</td></tr>
     <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.angle_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
     {% if cl.is_simple %}
@@ -63,7 +73,7 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% if cl.has_jacobian == -1 %}
 This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% elif cl.jacobian_count is not none %}
-This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians')}} of {{ cl.jacobian_count }} curves, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
+This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians' if cl.jacobian_count != 1 else 'Jacobian')}} of {{ cl.jacobian_count }} curve{% if cl.jacobian_count != 1 %}s{% endif %} ({% if cl.jacobian_count == 1 %}which is {% if cl.hyp_count == 0 %}not {% endif %}hyperelliptic{% else %}of which {% if cl.hyp_count == 1 %}1 is{% elif cl.hyp_count == cl.jacobian_count %}all are{% else %}{{ cl.hyp_count }} are{% endif %} hyperelliptic{% endif %}), and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
 {% elif cl.has_jacobian == 1 %}
 This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% else %}

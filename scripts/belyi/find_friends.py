@@ -1,7 +1,6 @@
 from lmfdb import db
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 from lmfdb.belyi.main import hyperelliptic_polys_to_ainvs, curve_string_parser
-from scripts.ecnf.import_utils import NFelt
 from sage.all import EllipticCurve
 import re
 from lmfdb.genus2_curves.main import genus2_lookup_equation as genus2_lookup_equation_polys
@@ -16,13 +15,23 @@ def genus1_lookup_equation_QQ(rec):
     ainvs = hyperelliptic_polys_to_ainvs(f,h)
     E = EllipticCurve(ainvs)
     j = E.j_invariant()
-    for r in db.ec_curves.search({"jinv":str(j)}):
+    for r in db.ec_curvedata.search({"jinv":[j.numerator(), j.denominator()]}):
         ainvs2 = r['ainvs']
         E2 = EllipticCurve(ainvs2)
         if E.is_isomorphic(E2):
             return r['lmfdb_label']
     #print("Curve not found in database")
     return None
+
+def NFelt(a):
+    r""" Returns an NFelt string encoding the element a (in a number field
+    K).  This consists of d strings representing the rational
+    coefficients of a (with respect to the power basis), separated by
+    commas, with no spaces.
+
+    For example the element (3+4*w)/2 in Q(w) gives '3/2,2'.
+    """
+    return ",".join(str(c) for c in list(a))
 
 def genus1_lookup_equation_nf(rec):
     assert rec['g'] == 1

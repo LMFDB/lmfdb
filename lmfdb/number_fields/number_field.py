@@ -4,6 +4,7 @@ import ast
 import os
 import re
 from six import BytesIO
+
 import time
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, Markup
@@ -14,10 +15,11 @@ from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage,
     flash_error, display_knowl, CountBox, prop_int_pretty,
-    SearchArray, TextBox, TextBoxNoEg, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
+    SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl)
+    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl, 
+    raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -27,13 +29,12 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
-    factor_base_factorization_latex)
+    factor_base_factorization_latex, formatfield)
 
 assert nf_logger
 
 bread_prefix = lambda: [('Number fields', url_for(".number_field_render_webpage"))]
 
-NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
 dnc = 'data not computed'
 
@@ -94,8 +95,12 @@ def ctx_galois_groups():
 @app.context_processor
 def ctx_number_fields():
     return {'number_field_data': number_field_data,
-            'global_numberfield_summary': global_numberfield_summary}
+            'global_numberfield_summary': global_numberfield_summary,
+            'ez_raw_typeset': ez_raw_typeset,
+            'raw_typeset': raw_typeset}
 
+def ez_raw_typeset(rawpol):
+    return raw_typeset(rawpol)
 
 def global_numberfield_summary():
     init_nf_count()
@@ -103,8 +108,8 @@ def global_numberfield_summary():
 
 
 def learnmore_list():
-    return [(Completename, url_for(".render_discriminants_page")),
-            ('Source of the data', url_for(".source")),
+    return [('Source and acknowledgments', url_for(".source")),
+            (Completename, url_for(".render_discriminants_page")),
             ('Reliability of the data', url_for(".reliability")),
             ('Number field labels', url_for(".render_labels_page")),
             ('Galois group labels', url_for(".render_groups_page")),
@@ -120,17 +125,17 @@ def poly_to_field_label(pol):
     try:
         wnf = WebNumberField.from_polynomial(pol)
         return wnf.get_label()
-    except:
+    except Exception:
         return None
 
 
 @nf_page.route("/Source")
 def source():
     learnmore = learnmore_list_remove('Source')
-    t = 'Source of number field data'
+    t = 'Source and acknowledgments for number field pages'
     bread = bread_prefix() + [('Source', ' ')]
-    return render_template("single.html", kid='rcs.source.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+    return render_template("double.html", kid='rcs.source.nf', kid2='rcs.ack.nf',
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/Reliability")
@@ -139,7 +144,7 @@ def reliability():
     t = 'Reliability of number field data'
     bread = bread_prefix() + [('Reliability', ' ')]
     return render_template("single.html", kid='rcs.rigor.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/GaloisGroups")
@@ -148,7 +153,7 @@ def render_groups_page():
     learnmore = learnmore_list_remove('Galois group')
     t = 'Galois group labels'
     bread = bread_prefix() + [('Galois group labels', ' ')]
-    return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+    return render_template("galois_groups.html", al=group_alias_table(), info=info, title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/FieldLabels")
@@ -157,7 +162,7 @@ def render_labels_page():
     learnmore = learnmore_list_remove('number field labels')
     t = 'Labels for number fields'
     bread = bread_prefix() + [('Labels', '')]
-    return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
+    return render_template("single.html", info=info, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/Completeness")
@@ -166,7 +171,7 @@ def render_discriminants_page():
     t = 'Completeness of number field data'
     bread = [('Number fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='rcs.cande.nf',
-        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+        title=t, bread=bread, learnmore=learnmore)
 
 
 @nf_page.route("/QuadraticImaginaryClassGroups")
@@ -207,12 +212,12 @@ def render_class_group_data():
             info['message'] = 'Invalid congruence requested'
             return class_group_request_error(info, bread)
 
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=learnmore)
+    return render_template("class_group_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
 
 
 def class_group_request_error(info, bread):
     t = 'Class groups of quadratic imaginary fields'
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
+    return render_template("class_group_data.html", info=info, title=t, bread=bread)
 
 
 # Helper for stats page
@@ -329,7 +334,6 @@ def statistics():
             'maxdeg': max_deg}
     return render_template("nf-statistics.html",
                            info=info,
-                           credit=NF_credit,
                            title=title,
                            bread=bread)
 
@@ -354,7 +358,7 @@ def number_field_render_webpage():
         info['discriminant_list'] = discriminant_list
         t = 'Number fields'
         bread = bread_prefix()
-        return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
+        return render_template("nf-index.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(info)
 
@@ -479,11 +483,12 @@ def render_field_webpage(args):
     if not ram_primes:
         ram_primes = r'\textrm{None}'
     data['phrase'] = group_phrase(n, t)
-    zk = nf.zk()
+    zkraw = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
-    zk = [latex(Ra(x)) for x in zk]
+    zk = [latex(Ra(x)) for x in zkraw]
     zk = ['$%s$' % x for x in zk]
     zk = ', '.join(zk)
+    zkraw = ', '.join(zkraw)
     grh_label = '<small>(<a title="assuming GRH" knowl="nf.assuming_grh">assuming GRH</a>)</small>' if nf.used_grh() else ''
     # Short version for properties
     grh_lab = nf.short_grh_string()
@@ -495,18 +500,25 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    rootofunity = '%s (order $%d$)' % (nf.root_of_1_gen(),nf.root_of_1_order())
+    rootof1raw = unlatex(nf.root_of_1_gen())
+    rootofunity = raw_typeset(rootof1raw, nf.root_of_1_gen(),
+        extra='&nbsp;(order ${}$)'.format(nf.root_of_1_order()))
+    safe_units = nf.units_safe()
+    if 'too long' in safe_units:
+        myunits = safe_units
+    else:
+        myunits = raw_typeset(unlatex(safe_units), safe_units)
 
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex(nf.poly()),
+        'polynomial': raw_typeset(nf.poly()),
         'ram_primes': ram_primes,
-        'integral_basis': zk,
+        'integral_basis': raw_typeset(zkraw, zk),
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
-        'fund_units': nf.units_safe(),
+        'fund_units': myunits,
         'cnf': nf.cnf(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
@@ -517,7 +529,7 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
     if nf.can_class_number():
-        # hide ones that take a lond time to compute on the fly
+        # hide ones that take a long time to compute on the fly
         # note that the first degree 4 number field missed the zero of the zeta function
         if abs(D**n) < 50000000:
             info['friends'].append(('L-function', "/L/NumberField/%s" % label))
@@ -528,7 +540,7 @@ def render_field_webpage(args):
                                         modulus=int(conductor),
                                         char_number_list=','.join(
                                             str(a) for a in dirichlet_chars),
-                                        poly=info['polynomial'])))
+                                        poly=nf.poly())))
     resinfo = []
     galois_closure = nf.galois_closure()
     if galois_closure[0]>0:
@@ -623,7 +635,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("nf-show-field.html", properties=properties, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label)
+    return render_template("nf-show-field.html", properties=properties, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, formatfield=formatfield, KNOWL_ID="nf.%s"%label)
 
 
 def format_coeffs2(coeffs):
@@ -669,7 +681,6 @@ def interesting():
         url_for_label,
         title=r"Some interesting number fields",
         bread=bread_prefix() + [("Interesting", " ")],
-        credit=NF_credit,
         learnmore=learnmore_list(),
     )
 
@@ -742,11 +753,14 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
-
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info,query,'jump',name="Label",qfield='label')
+        parse_nf_string(info, query, 'jump',name="Label", qfield='label')
+        # we end up parsing the string twice, but that is okay
+        F1, _, _ = input_string_to_poly(info['jump'])
+        if F1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
+            flash_info(r"The requested field $\Q[{}]/\langle {}\rangle$ is isomorphic to the field below, but uses a different defining polynomial.".format(str(F1.parent().gen()), latex(F1)))
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         return redirect(url_for(".number_field_render_webpage"))
@@ -778,19 +792,21 @@ def number_field_jump(info):
 def number_field_search(info, query):
     parse_ints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
-    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
+    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
     parse_floats(info, query, 'regulator')
     parse_ints(info,query,'class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
+    parse_bool(info,query,'is_galois')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
+    parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -879,12 +895,13 @@ def frobs(nf):
 # utility for downloading data
 def unlatex(s):
     s = re.sub(r'\\+', r'\\',s)
+    s = s.replace(r'&nbsp;', r' ')
     s = s.replace('\\(', '')
     s = s.replace('\\)', '')
     s = re.sub(r'\\frac{(.+?)}{(.+?)}', r'(\1)/(\2)', s)
     s = s.replace(r'{',r'(')
     s = s.replace(r'}',r')')
-    s = re.sub(r'([^\s+-])\s*a', r'\1*a',s)
+    s = re.sub(r'([^\s+-,])\s*a', r'\1*a',s)
     return s
 
 
@@ -1013,16 +1030,16 @@ class NFSearchArray(SearchArray):
             name="cm_field",
             label="CM field",
             knowl="nf.cm_field")
-        gal = TextBoxNoEg(
+        gal = TextBox(
             name="galois_group",
             label="Galois group",
-            knowl="nf.galois_group",
+            knowl="nf.galois_search",
             example="C5",
-            example_span_colspan=4,
-            example_span="%s, e.g. [8,3] or [16,7]; %s, e.g. C5 or S12; %s, e.g., 7T2 or 11T5" % (
-                display_knowl("group.small_group_label", "GAP id's"),
-                display_knowl("nf.galois_group.name", "group names"),
-                display_knowl("gg.label", "transitive group labels")))
+            example_span="[8,3], C5 or 7T2")
+        is_galois = YesNoBox(
+            name="is_galois",
+            label="Is Galois",
+            knowl="nf.galois_group")
         regulator = TextBox(
             name="regulator",
             label="Regulator",
@@ -1065,19 +1082,25 @@ class NFSearchArray(SearchArray):
             example_span="2.2.5.1 or x^2-5 or a "+
                 display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
+        completion = TextBox(
+            name="completions",
+            label="$p$-adic completions",
+            knowl="nf.padic_completion.search",
+            example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
+            example="2.4.10.7")
         count = CountBox()
 
         self.browse_array = [
             [degree, signature],
             [discriminant, rd],
-            [gal],
+            [gal, is_galois],
             [class_number, class_group],
             [num_ram, cm_field],
             [ram_primes, ur_primes],
             [regulator, subfield],
-            [count]]
+            [count, completion]]
 
         self.refine_array = [
-            [degree, signature, gal, class_number, class_group],
-            [regulator, num_ram, ram_primes, ur_primes, cm_field],
-            [discriminant, rd, subfield]]
+            [degree, signature, class_number, class_group, cm_field],
+            [num_ram, ram_primes, ur_primes, gal, is_galois],
+            [discriminant, rd, regulator, subfield, completion]]
