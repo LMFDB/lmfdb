@@ -280,7 +280,7 @@ def render_abstract_group(args):
                 ctor[v.label] = k['label']
         info['ctor'] = ctor
 
-        s = ",\ "
+        s = r",\ "
         max_subs = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_subgroup_of])))
         max_quot = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_quotient_of])))
         info['max_subs'] = max_subs

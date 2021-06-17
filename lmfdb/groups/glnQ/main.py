@@ -50,7 +50,7 @@ def index():
         return group_search(info)
     info['order_list']= ['1-10', '20-100', '101-200']
 
-    return render_template("glnQ-index.html", title="Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("glnQ-index.html", title=r"Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
@@ -97,8 +97,8 @@ def url_for_label(label):
 
 @search_wrap(template="glnQ-search.html",
              table=db.gps_qrep,
-             title='$\GL(n,\Q)$ subgroup search results',
-             err_title='$\GL(n,\Q)$ subgroup search input error',
+             title=r'$\GL(n,\Q)$ subgroup search results',
+             err_title=r'$\GL(n,\Q)$ subgroup search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','dim','group'],
@@ -128,10 +128,10 @@ def render_glnQ_group(args):
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
         info['groupknowl'] = group_display_knowl(info['group'], info['group'])
 
-        title = '$\GL('+str(info['dim'])+',\Q)$ subgroup '  + label
+        title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
 
         prop = [('Label', '%s' %  label),
-                ('Order', '\(%s\)' % info['order']),
+                ('Order', r'\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
         bread = get_bread([(label, )])
@@ -152,7 +152,7 @@ def make_knowl(title, knowlid):
 
 @glnQ_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the $\GL(n,\Q)$ subgroup data'
+    t = r'Completeness of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.extent',
                             title=t, bread=bread,
@@ -162,7 +162,7 @@ def completeness_page():
 
 @glnQ_page.route("/Labels")
 def labels_page():
-    t = 'Labels for finite subgroups of $\GL(n,\Q)$'
+    t = r'Labels for finite subgroups of $\GL(n,\Q)$'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.label',
                            learnmore=learnmore_list_remove('label'), 
@@ -171,7 +171,7 @@ def labels_page():
 
 @glnQ_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the $\GL(n,\Q)$ subgroup data'
+    t = r'Reliability of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.reliability',
                            title=t, bread=bread, 
@@ -181,7 +181,7 @@ def reliability_page():
 
 @glnQ_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the $\GL(n,\Q)$ subgroup data'
+    t = r'Source of the $\GL(n,\Q)$ subgroup data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.glnQ.source',
                            title=t, bread=bread, 
