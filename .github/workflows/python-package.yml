@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         files:  # files below + test_workshoplinks.py + test_external.py = 37 total number of test files
           - "lint" # this one is not a file but triggers to only do linting
