@@ -880,6 +880,7 @@ class PostgresSearchTable(PostgresTable):
 
         A dictionary with keys the column names requested by the projection.
 
+        Note, the example below uses loc_algebras which is no longer a column
         EXAMPLES::
 
             sage: from lmfdb import db
