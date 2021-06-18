@@ -22,14 +22,14 @@
 <tbody>
 {% for group in info.results: %}
 <tr>
-    <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a>
-    <td align=center> {{info.getname(group.label)}}
-    <td align=center> {{info.show_factor(group.order)}} 
-    <td align=center> {{info.show_factor(group.exponent)}} 
-    <td align=center> {{group.number_conjugacy_classes}} 
-    <td align=center> {{group.center_label}}
-    <td align=center> {{info.show_factor(group.outer_order)}}
-    <td align=center> {{info.show_type(group.label)}}
+    <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a></td>
+    <td align=center> ${{group.tex_name}}$</td>
+    <td align=center> {{info.show_factor(group.order)}}</td>
+    <td align=center> {{info.show_factor(group.exponent)}}</td>
+    <td align=center> {{group.number_conjugacy_classes}}</td>
+    <td align=center> {{group.center_label}}</td>
+    <td align=center> {{info.show_factor(group.outer_order)}}</td>
+    <td align=center> {{info.show_type(group.label)}}</td>
 </tr>
 {% endfor %}
 </tbody>

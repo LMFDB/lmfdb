@@ -192,9 +192,17 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
 </table>
 
-{% if gp.maximal_subgroup_of or gp.maximal_quotient_of %}
+{% if gp.max_sub_cnt or gp.max_quo_cnt %}
 <h2> Supergroups </h2>
 
+{% if gp.max_sub_cnt %}
+<p>This group is a {{KNOWL('group.maximal_subgroup', "maximal subgroup")}} of <a href="{{url_for('.index', search_type='Subgroups', maximal='yes', subgroup=gp.label)}}">{{gp.max_sub_cnt}} larger groups</a> in the database.</p>
+{% endif %}
+{% if gp.max_sub_cnt %}
+<p>This group is a {{KNOWL('group.maximal_quotient', "maximal quotient")}} of <a href="{{url_for('.index', search_type='Subgroups', minimal_normal='yes', quotient=gp.label)}}">{{gp.max_quo_cnt}} larger groups</a> in the database.</p>
+{% endif %}
+
+{#
 {% if gp.maximal_subgroup_of %}
 
 <table>
@@ -234,6 +242,7 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
 </table>
 {% endif %}
+#}
 {% endif %}
 
 <h2> Character Theory </h2>

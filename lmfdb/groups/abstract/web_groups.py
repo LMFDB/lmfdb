@@ -470,6 +470,13 @@ class WebAbstractGroup(WebObj):
     def frattini_quot(self):
         return self.subgroups[self.fratt()].quotient_tex
 
+    @lazy_attribute
+    def max_sub_cnt(self):
+        return db.gps_subgroups.count_distinct('ambient', {'subgroup': self.label, 'maximal': True})
+
+    @lazy_attribute
+    def max_quo_cnt(self):
+        return db.gps_subgroups.count_distinct('ambient', {'quotient': self.label, 'minimal_normal': True})
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups

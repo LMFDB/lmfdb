@@ -148,6 +148,7 @@ def index():
         if search_type in ['List', 'Random']:
             return group_search(info)
         elif search_type in ['Subgroups', 'RandomSubgroup']:
+            info['search_array'] = SubgroupSearchArray()
             return subgroup_search(info)
     info['count']= 50
     info['order_list']= ['1-10', '20-100', '101-200']
@@ -176,10 +177,10 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
-#@abstract_page.route("/sub/<label>")
-#def by_subgroup_label(label):
-#    if subgroup_label_is_valid(label):
-#        return render_abstract_subgroup({'label': label})
+@abstract_page.route("/sub/<label>")
+def by_subgroup_label(label):                                                           
+    if subgroup_label_is_valid(label):
+        return render_abstract_subgroup({'label': label})
 
 def show_type(label):
     wag = WebAbstractGroup(label)
@@ -223,7 +224,6 @@ def group_download(info):
 def group_search(info, query):
     info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
-    info['getname'] = lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
     info['show_type'] = show_type
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
@@ -242,7 +242,7 @@ def group_search(info, query):
              projection=['label', 'cyclic', 'abelian', 'solvable',
                          'cyclic_quotient', 'abelian_quotient', 'solvable_quotient',
                          'normal', 'characteristic', 'perfect', 'maximal', 'minimal_normal',
-                         'central', 'direct', 'semidirect', 'hall', 'sylow',
+                         'central', 'direct', 'split', 'hall', 'sylow',
                          'subgroup_order', 'ambient_order', 'quotient_order',
                          'subgroup', 'ambient', 'quotient',
                          'subgroup_tex', 'ambient_tex', 'quotient_tex'],
@@ -250,6 +250,10 @@ def group_search(info, query):
              learnmore=learnmore_list,
              credit=lambda:credit_string)
 def subgroup_search(info, query):
+    info['group_url'] = get_url
+    info['subgroup_url'] = get_sub_url
+    info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
+    info['search_type'] = 'Subgroups'
     parse_ints(info, query, 'subgroup_order')
     parse_ints(info, query, 'ambient_order')
     parse_ints(info, query, 'quotient_order', 'subgroup index')
@@ -265,7 +269,7 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'maximal')
     parse_bool(info, query, 'minimal_normal')
     parse_bool(info, query, 'central')
-    parse_bool(info, query, 'semidirect')
+    parse_bool(info, query, 'split')
     parse_bool(info, query, 'direct')
     parse_bool(info, query, 'hall')
     parse_bool(info, query, 'sylow')
@@ -275,6 +279,8 @@ def subgroup_search(info, query):
 
 def get_url(label):
     return url_for(".by_label", label=label)
+def get_sub_url(label):
+    return url_for(".by_subgroup_label", label=label)
 
 #Writes individual pages
 def render_abstract_group(args):
@@ -347,40 +353,42 @@ def render_abstract_group(args):
 
         s = r",\ "
 
-        def sortkey(x):
-            if x[0] is None:
-                return (0, 0)
-            return tuple(int(m) for m in x[0].split("."))
-        def show_cnt(x, cnt):
-            if cnt == 1:
-                return x
-            else:
-                return x + " (%s)" % cnt
-        max_subs = defaultdict(lambda: defaultdict(int))
-        for sup in gp.maximal_subgroup_of:
-            if sup.normal:
-                max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
-            else:
-                max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
-        max_subs = [A + (", ".join(
-            show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
-                     max_subs[A][quo, quo_tex])
-            for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
-                    for A in sorted(max_subs, key=sortkey)]
-        abstract_logger.info("D1")
-        max_quot = defaultdict(lambda: defaultdict(int))
-        for sup in gp.maximal_quotient_of:
-            print(sup.ambient, sup.ambient_tex, sup.ambient_order)
-            max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
-        print("LEN", len(max_quot))
-        max_quot = [A + (", ".join(
-            show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
-                     max_quot[A][sub, sub_tex])
-            for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
-                    for A in sorted(max_quot, key=sortkey)]
-        abstract_logger.info("D2")
-        info['max_subs'] = max_subs
-        info['max_quot'] = max_quot
+        info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
+        info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
+        #def sortkey(x):
+        #    if x[0] is None:
+        #        return (0, 0)
+        #    return tuple(int(m) for m in x[0].split("."))
+        #def show_cnt(x, cnt):
+        #    if cnt == 1:
+        #        return x
+        #    else:
+        #        return x + " (%s)" % cnt
+        #max_subs = defaultdict(lambda: defaultdict(int))
+        #for sup in gp.maximal_subgroup_of:
+        #    if sup.normal:
+        #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
+        #    else:
+        #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
+        #max_subs = [A + (", ".join(
+        #    show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
+        #             max_subs[A][quo, quo_tex])
+        #    for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
+        #            for A in sorted(max_subs, key=sortkey)]
+        #abstract_logger.info("D1")
+        #max_quot = defaultdict(lambda: defaultdict(int))
+        #for sup in gp.maximal_quotient_of:
+        #    print(sup.ambient, sup.ambient_tex, sup.ambient_order)
+        #    max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
+        #print("LEN", len(max_quot))
+        #max_quot = [A + (", ".join(
+        #    show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
+        #             max_quot[A][sub, sub_tex])
+        #    for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
+        #            for A in sorted(max_quot, key=sortkey)]
+        #abstract_logger.info("D2")
+        #info['max_subs'] = max_subs
+        #info['max_quot'] = max_quot
 
         title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
@@ -619,8 +627,8 @@ class SubgroupSearchArray(SearchArray):
             name="direct",
             label="Direct product",
             knowl="group.direct_product")
-        semidirect = YesNoBox(
-            name="semidirect",
+        split = YesNoBox(
+            name="split",
             label="Semidirect product",
             knowl="group.semidirect_product")
         #stem = YesNoBox(
@@ -654,24 +662,30 @@ class SubgroupSearchArray(SearchArray):
             name="subgroup_order",
             label="Subgroup Order",
             knowl="group.order",
-            example="3",
+            example="8",
             example_span="4, or a range like 3..5")
         quotient_order = TextBox(
             name="quotient_order",
             label="Subgroup Index",
             knowl="group.subgroup.index",
-            example="4")
+            example="16")
         ambient_order = TextBox(
             name="ambient_order",
             label="Ambient Order",
             knowl="group.order",
-            example="24")
+            example="128")
 
         self.refine_array = [
             [cyclic, abelian, solvable, cyclic_quotient, abelian_quotient, solvable_quotient],
             [normal, characteristic, perfect, maximal, minimal_normal, central],
-            [direct, semidirect, hall, sylow],
-            [subgroup_order, ambient_order, subgroup_index, subgroup, ambient, quotient]]
+            [direct, split, hall, sylow],
+            [subgroup_order, ambient_order, quotient_order, subgroup, ambient, quotient]]
+
+    def search_types(self, info):
+        if info is None:
+            return [("Subgroups", "List of subgroups"), ("Random", "Random subgroup")]
+        else:
+            return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
 
 def cc_display_knowl(gp, label, typ, name=None):
     if not name:

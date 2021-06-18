@@ -21,7 +21,7 @@
 
 <p>A <a href="{{url_for('.random_abstract_group')}}">random abstract group</a> from the database.</p>
 
-
+<p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a>.</p>
 
 <h2>Search</h2>
 <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
