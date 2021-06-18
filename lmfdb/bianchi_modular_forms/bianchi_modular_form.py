@@ -200,6 +200,7 @@ def bmf_field_dim_table(**args):
     field_label=argsdict['field_label']
     field_label = nf_string_to_label(field_label)
 
+    count = parse_count(argsdict, 50)
     start = parse_start(argsdict)
 
     info={}
@@ -209,7 +210,6 @@ def bmf_field_dim_table(**args):
     # with positive new dimension ('new').  Default is 'cusp'.
     level_flag = argsdict.get('level_flag', 'cusp')
     info['level_flag'] = level_flag
-    count = parse_count(argsdict, 50)
 
     pretty_field_label = field_pretty(field_label)
     bread = get_bread(pretty_field_label)
