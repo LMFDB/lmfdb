@@ -504,7 +504,7 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 <div>
 <p>
 This curve {% if ec.base_change %} is the
-{{KNOWL('ec.base_change','base change')}} of elliptic curves
+{{KNOWL('ec.base_change','base change')}} of
 {% for E0 in ec.base_change%}
 <a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
 {% endfor %}
