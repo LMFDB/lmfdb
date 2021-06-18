@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
+from collections import defaultdict
 
 from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
 from sage.all import ZZ, latex #, Permutation
@@ -10,14 +11,14 @@ from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
-    parse_ints, parse_bool, clean_input, 
-    # parse_gap_id, parse_bracketed_posints, 
+    parse_ints, parse_bool, clean_input,
+    # parse_gap_id, parse_bracketed_posints,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
-from lmfdb.groups.abstract import abstract_page
+from lmfdb.groups.abstract import abstract_page, abstract_logger
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
-    WebAbstractRationalCharacter, WebAbstractCharacter, 
+    WebAbstractRationalCharacter, WebAbstractCharacter,
     group_names_pretty, group_pretty_image)
 from lmfdb.number_fields.web_number_field import formatfield
 
@@ -133,12 +134,21 @@ def url_for_label(label):
         return url_for(".random_abstract_group")
     return url_for("abstract.by_label", label=label)
 
+#def url_for_subgroup_label(label):
+#    if label == "random":
+#        return url_for(".random_abstract_subgroup")
+#    return url_for("abstract.by_subgroup_label", label=label)
+
 @abstract_page.route("/")
 def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        return group_search(info)
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        if search_type in ['List', 'Random']:
+            return group_search(info)
+        elif search_type in ['Subgroups', 'RandomSubgroup']:
+            return subgroup_search(info)
     info['count']= 50
     info['order_list']= ['1-10', '20-100', '101-200']
     info['nilp_list']= range(1,5)
@@ -166,6 +176,11 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
+#@abstract_page.route("/sub/<label>")
+#def by_subgroup_label(label):
+#    if subgroup_label_is_valid(label):
+#        return render_abstract_subgroup({'label': label})
+
 def show_type(label):
     wag = WebAbstractGroup(label)
     if wag.abelian:
@@ -184,7 +199,7 @@ def group_download(info):
     t = 'Stub'
     bread = get_bread([("Jump", '')])
     return render_template("single.html", kid='rcs.groups.abstract.source',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
@@ -209,7 +224,7 @@ def group_search(info, query):
     info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
     info['getname'] = lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
-    info['show_type'] = show_type 
+    info['show_type'] = show_type
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
@@ -220,11 +235,30 @@ def group_search(info, query):
     parse_bool(info, query, 'nilpotent', 'is nilpotent')
     parse_bool(info, query, 'perfect', 'is perfect')
 
+@search_wrap(template="subgroup-search.html",
+             table=db.gps_subgroups,
+             title='Subgroup search results',
+             err_title='Subgroup search input error',
+             projection=['label', 'cyclic', 'abelian', 'solvable',
+                         'cyclic_quotient', 'abelian_quotient', 'solvable_quotient',
+                         'normal', 'characteristic', 'perfect', 'maximal', 'minimal_normal',
+                         'central', 'direct', 'semidirect', 'hall', 'sylow',
+                         'subgroup_order', 'ambient_order', 'quotient_order',
+                         'subgroup', 'ambient', 'quotient',
+                         'subgroup_tex', 'ambient_tex', 'quotient_tex'],
+             bread=lambda:get_bread([('Search Results', '')]),
+             learnmore=learnmore_list,
+             credit=lambda:credit_string)
+def subgroup_search(info, query):
+    parse_ints(info, query, 'subgroup_order')
+    parse_ints(info, query, 'ambient_order')
+
 def get_url(label):
     return url_for(".by_label", label=label)
 
 #Writes individual pages
 def render_abstract_group(args):
+    abstract_logger.info("A")
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
@@ -257,17 +291,27 @@ def render_abstract_group(args):
             info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
             info['dojs'] = ''
 
+        abstract_logger.info("B0")
         factored_order = web_latex(gp.order_factor(), False)
+        abstract_logger.info("B1")
         aut_order = web_latex(gp.aut_order_factor(), False)
+        abstract_logger.info("B2")
         out_order = web_latex(gp.out_order_factor(), False)
+        abstract_logger.info("B3")
         z_order = web_latex(gp.cent_order_factor(), False)
+        abstract_logger.info("B4")
         Gab_order = web_latex(gp.Gab_order_factor(), False)
 
+        abstract_logger.info("C1")
         info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
         info['ccdata'] = gp.conjugacy_classes
+        abstract_logger.info("C2")
         info['chardata'] = gp.characters
+        abstract_logger.info("C3")
         info['qchardata'] = gp.rational_characters
+        abstract_logger.info("C4")
         ccdivs = gp.conjugacy_class_divisions
+        abstract_logger.info("C5")
         ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
         ccdivs.sort(key=lambda x: x['classes'][0].counter)
         info['ccdivisions'] = ccdivs
@@ -279,10 +323,42 @@ def render_abstract_group(args):
             for v in k['classes']:
                 ctor[v.label] = k['label']
         info['ctor'] = ctor
+        abstract_logger.info("D0")
 
         s = r",\ "
-        max_subs = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_subgroup_of])))
-        max_quot = s.join(sorted(set([sup.ambient_tex for sup in gp.maximal_quotient_of])))
+
+        def sortkey(x):
+            if x[0] is None:
+                return (0, 0)
+            return tuple(int(m) for m in x[0].split("."))
+        def show_cnt(x, cnt):
+            if cnt == 1:
+                return x
+            else:
+                return x + " (%s)" % cnt
+        max_subs = defaultdict(lambda: defaultdict(int))
+        for sup in gp.maximal_subgroup_of:
+            if sup.normal:
+                max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
+            else:
+                max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
+        max_subs = [A + (", ".join(
+            show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
+                     max_subs[A][quo, quo_tex])
+            for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
+                    for A in sorted(max_subs, key=sortkey)]
+        abstract_logger.info("D1")
+        max_quot = defaultdict(lambda: defaultdict(int))
+        for sup in gp.maximal_quotient_of:
+            print(sup.ambient, sup.ambient_tex, sup.ambient_order)
+            max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
+        print("LEN", len(max_quot))
+        max_quot = [A + (", ".join(
+            show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
+                     max_quot[A][sub, sub_tex])
+            for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
+                    for A in sorted(max_quot, key=sortkey)]
+        abstract_logger.info("D2")
         info['max_subs'] = max_subs
         info['max_quot'] = max_quot
 
@@ -301,6 +377,7 @@ def render_abstract_group(args):
 
 #        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
 #                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        abstract_logger.info("Z")
 
         return render_template("abstract-show-group.html",
                                title=title, bread=bread, info=info,
@@ -434,7 +511,7 @@ class GroupsSearchArray(SearchArray):
             name="cyclic",
             label="Cyclic",
             knowl="group.cyclic")
-        solvable =YesNoBox(
+        solvable = YesNoBox(
             name="solvable",
             label="Solvable",
             knowl="group.solvable")
@@ -467,6 +544,114 @@ class GroupsSearchArray(SearchArray):
     def sort_order(self, info):
         return [("", "order"),
                 ("descorder", "order descending")]
+
+class SubgroupSearchArray(SearchArray):
+    def __init__(self):
+        abelian = YesNoBox(
+            name="abelian",
+            label="Abelian",
+            knowl="group.abelian")
+        cyclic = YesNoBox(
+            name="cyclic",
+            label="Cyclic",
+            knowl="group.cyclic")
+        solvable = YesNoBox(
+            name="solvable",
+            label="Solvable",
+            knowl="group.solvable")
+        abelian_quotient = YesNoBox(
+            name="abelian_quotient",
+            label="Abelian quotient",
+            knowl="group.abelian")
+        cyclic_quotient = YesNoBox(
+            name="cyclic_quotient",
+            label="Cyclic quotient",
+            knowl="group.cyclic")
+        solvable_quotient = YesNoBox(
+            name="solvable_quotient",
+            label="Solvable quotient",
+            knowl="group.solvable")
+        perfect = YesNoBox(
+            name="perfect",
+            label="Perfect",
+            knowl="group.perfect")
+        normal = YesNoBox(
+            name="normal",
+            label="Normal",
+            knowl="group.subgroup.normal")
+        characteristic = YesNoBox(
+            name="characteristic",
+            label="Characteristic",
+            knowl="group.characteristic_subgroup")
+        maximal = YesNoBox(
+            name="maximal",
+            label="Maximal",
+            knowl="group.maximal_subgroup")
+        minimal_normal = YesNoBox(
+            name="minimal_normal",
+            label="Minimal Normal",
+            knowl="group.minimal_normal")
+        central = YesNoBox(
+            name="central",
+            label="Central",
+            knowl="group.central")
+        direct = YesNoBox(
+            name="direct",
+            label="Direct product",
+            knowl="group.direct_product")
+        semidirect = YesNoBox(
+            name="semidirect",
+            label="Semidirect product",
+            knowl="group.semidirect_product")
+        #stem = YesNoBox(
+        #    name="stem",
+        #    label="Stem",
+        #    knowl="group.stem")
+        hall = YesNoBox(
+            name="hall",
+            label="Hall subgroup",
+            knowl="group.subgroup.hall")
+        sylow = YesNoBox(
+            name="sylow",
+            label="Sylow subgroup",
+            knowl="group.sylow_subgroup")
+        subgroup = TextBox(
+            name="subgroup",
+            label="Subgroup label",
+            knowl="group.subgroup_isolabel",
+            example="8.4")
+        quotient = TextBox(
+            name="quotient",
+            label="Quotient label",
+            knowl="group.quotient_isolabel",
+            example="16.5")
+        ambient = TextBox(
+            name="ambient",
+            label="Ambient label",
+            knowl="group.ambient_isolabel",
+            example="128.207")
+        subgroup_order = TextBox(
+            name="subgroup_order",
+            label="Subgroup Order",
+            knowl="group.order",
+            example="3",
+            example_span="4, or a range like 3..5")
+        subgroup_index = TextBox(
+            name="subgroup_index",
+            label="Subgroup Index",
+            knowl="group.subgroup.index",
+            example="4")
+        ambient_order = TextBox(
+            name="ambient_order",
+            label="Ambient Order",
+            knowl="group.order",
+            example="24")
+
+        self.refine_array = [
+            [cyclic, abelian, solvable, cyclic_quotient, abelian_quotient, solvable_quotient],
+            [normal, characteristic, perfect, maximal, minimal_normal, central],
+            [direct, semidirect, hall, sylow],
+            [subgroup_order, ambient_order, subgroup_index, subgroup, ambient, quotient]]
 
 def cc_display_knowl(gp, label, typ, name=None):
     if not name:

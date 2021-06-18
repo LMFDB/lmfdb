@@ -18,7 +18,7 @@
 <h2> Group Information</h2>
 <p>
   <table>
-    <tr><td>${{gp.name_label()}}$  </td><td>  </td></tr>
+    <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
@@ -192,14 +192,48 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
   {% endfor %}
 </table>
 
+{% if gp.maximal_subgroup_of or gp.maximal_quotient_of %}
 <h2> Supergroups </h2>
 
-
 {% if gp.maximal_subgroup_of %}
-<p> {{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of ${{info.max_subs}}$</p>
+
+<table>
+  <tr>
+    <td colspan=3>{{KNOWL('group.maximal_subgroup', "Maximal subgroup")}} of {{info.max_subs | length }} groups in the database</td>
+  </tr>
+  <tr>
+    <th>Subgroup of</th>
+    <th>Order</th>
+    <th>Quotient</th>
+  </tr>
+  {% for suplab, suptex, supord, quos in info.max_subs %}
+    <tr>
+      <td><a href="{{ url_for('.by_label', label=suplab) }}">${{suptex}}$</a></td>
+      <td>${{supord}}$</td>
+      <td>{{quos | safe }}</td>
+    </tr>
+  {% endfor %}
+</table>
 {% endif %}
 {% if gp.maximal_quotient_of %}
-<p> {{KNOWL('group.maximal_quotient', "Maximal quotient")}} of ${{info.max_quot}}$</p>
+<table>
+  <tr>
+    <td colspan=3>{{KNOWL('group.maximal_quotient', "Maximal quotient")}} of {{info.max_quot | length }} groups in the database</td>
+  </tr>
+  <tr>
+    <th>Quotient of</th>
+    <th>Order</th>
+    <th>By</th>
+  </tr>
+  {% for suplab, suptex, supord, subs in info.max_quot %}
+    <tr>
+      <td><a href="{{ url_for('.by_label', label=suplab) }}">${{suptex}}$</a></td>
+      <td>${{supord}}$</td>
+      <td>{{subs | safe}}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endif %}
 {% endif %}
 
 <h2> Character Theory </h2>

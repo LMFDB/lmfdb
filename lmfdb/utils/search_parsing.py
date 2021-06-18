@@ -1394,11 +1394,13 @@ def parse_count(info, default=50):
     return info['count']
 
 def parse_start(info, default=0):
+    print("INFO", info)
     try:
         start = int(info['start'])
         count = info['count']
         if start < 0:
             start += (1 - (start + 1) / count) * count
     except (KeyError, ValueError):
+        print("DEFAULTING")
         start = default
     return start

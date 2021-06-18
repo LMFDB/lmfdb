@@ -3,6 +3,7 @@ import re
 
 from lmfdb import db
 
+from lmfdb.groups.abstract import abstract_logger
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
 from collections import Counter
@@ -35,11 +36,11 @@ class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
         if data is None:
-            self._data = self._get_dbdata()
-        else:
-            self._data = data
-        for key, val in self._data.items():
-            setattr(self, key, val)
+            data = self._get_dbdata()
+        self._data = data
+        if data is not None:
+            for key, val in self._data.items():
+                setattr(self, key, val)
 
     @classmethod
     def from_data(cls, data):
@@ -53,12 +54,16 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        #self.tex_name = group_names_pretty(label) # remove once in database
 
     @lazy_attribute
     def subgroups(self):
         # Should join with gps_groups to get pretty names for subgroup and quotient
-        return {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+        abstract_logger.info("subgroups start")
+        X = db.gps_subgroups.search({'ambient': self.label})
+        abstract_logger.info("search done")
+        D = {subdata['label']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in X}
+        abstract_logger.info("subgroups end")
+        return D
 
 
     # special subgroups
@@ -142,14 +147,14 @@ class WebAbstractGroup(WebObj):
     #These are the power-conjugacy classes
     @lazy_attribute
     def conjugacy_class_divisions(self):
-        cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
+        cl = self.conjugacy_classes
         divs = {}
         for c in cl:
             divkey = re.sub(r'([^\d])-?\d+?$',r'\1', c.label)
             if divkey in divs:
                 divs[divkey].append(c)
             else:
-                divs[divkey]=[c]
+                divs[divkey] = [c]
         return divs
 
     @lazy_attribute
@@ -406,28 +411,23 @@ class WebAbstractGroup(WebObj):
     def order_factor(self):
         return factor(int(self._data['order']))
 
-    def name_label(self):
-        return group_names_pretty(self._data['label'])
-
     ###automorphism group
-    #WHAT IF NULL??
     def show_aut_group(self):
-        try:
-            return group_names_pretty(self.aut_group)
-        except:
+        if self.aut_group is None:
             return r'\textrm{Not computed}'
+        else:
+            return group_names_pretty(self.aut_group)
 
     #TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
         return factor(int(self._data['aut_order']))
 
-    #WHAT IF NULL??
+    ###outer automorphism group
     def show_outer_group(self):
-        try:
-            return group_names_pretty(self.outer_group)
-        except:
+        if self.outer_group is None:
             return r'\textrm{Not computed}'
-
+        else:
+            return group_names_pretty(self.outer_group)
 
     def out_order(self):
         return int(self._data['outer_order'])
@@ -441,10 +441,10 @@ class WebAbstractGroup(WebObj):
         return self.special_search('Z')
 
     def cent_label(self):
-        return group_names_pretty(self._data['center_label'])
+        return self.subgroups[self.cent()].subgroup_tex
 
     def central_quot(self):
-        return group_names_pretty(self._data['central_quotient'])
+        return self.subgroups[self.cent()].quotient_tex
 
     def cent_order_factor(self):
         return (self.order // ZZ(self.comm().split('.')[2])).factor()
@@ -453,10 +453,10 @@ class WebAbstractGroup(WebObj):
         return self.special_search('D')
 
     def comm_label(self):
-        return group_names_pretty(self._data['commutator_label'])
+        return self.subgroups[self.comm()].subgroup_tex
 
     def abelian_quot(self):
-        return group_names_pretty(self._data['abelian_quotient'])
+        return self.subgroups[self.comm()].quotient_tex
 
     def Gab_order_factor(self):
         return ZZ(self._data['abelian_quotient'].split('.')[0]).factor()
@@ -465,22 +465,21 @@ class WebAbstractGroup(WebObj):
         return self.special_search('Phi')
 
     def fratt_label(self):
-        return group_names_pretty(self._data['frattini_label'])
+        return self.subgroups[self.fratt()].subgroup_tex
 
     def frattini_quot(self):
-        return group_names_pretty(self._data['frattini_quotient'])
+        return self.subgroups[self.fratt()].quotient_tex
 
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.ambient_gp = self.ambient # in case we still need it
-        self.subgroup_tex = s = group_names_pretty(self.subgroup) # temporary
+        s = self.subgroup_tex
         self.subgroup_tex_parened = s if self._is_atomic(s) else "(%s)" % s
-        if 'quotient' in self._data:
-            self.quotient_tex = s = group_names_pretty(self.quotient) # temporary
-            self.quotient_tex_parened = s if self._is_atomic(s) else "(%s)" % s
+        if self._data.get('quotient'):
+            q = self.quotient_tex
+            self.quotient_tex_parened = q if self._is_atomic(q) else "(%s)" % q
 
     @classmethod
     def from_label(cls, label):
@@ -509,7 +508,8 @@ class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
     def __init__(self, ambient_gp, label, data=None):
         self.ambient_gp = ambient_gp
-        data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label':label})
+        if data is None:
+            data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label':label})
         WebObj.__init__(self, label, data)
 
 class WebAbstractCharacter(WebObj):
@@ -535,4 +535,3 @@ class WebAbstractSupergroup(WebObj):
         self.sub_or_quo_gp = sub_or_quo
         self.typ = typ
         WebObj.__init__(self, label, data)
-        self.ambient_tex = group_names_pretty(self.ambient) # temporary
