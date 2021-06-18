@@ -382,7 +382,7 @@ class WebBelyiPassport(object):
                 field["in_LMFDB"] = True
                 if F.poly().degree() == 1:
                     field["isQQ"] = True
-                F.latex_poly = web_latex(F.poly())
+                F.latex_poly = web_latex(F.poly(var="t"))
                 field["base_field"] = F
 
             galmapdatum = [
