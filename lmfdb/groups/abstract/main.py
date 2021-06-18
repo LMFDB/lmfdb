@@ -301,7 +301,7 @@ def render_abstract_group(args):
         # prepare for javascript call to make the diagram
         if gp.diagram_ok:
             layers = gp.subgroup_layers
-            ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+            ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), 0, grp.diagram_x] for grp in layer] for layer in layers[0]]
             subs = gp.subgroups
             orders = list(set(sub.subgroup_order for sub in subs.values()))
             orders.sort()
