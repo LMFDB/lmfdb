@@ -252,6 +252,24 @@ def group_search(info, query):
 def subgroup_search(info, query):
     parse_ints(info, query, 'subgroup_order')
     parse_ints(info, query, 'ambient_order')
+    parse_ints(info, query, 'quotient_order', 'subgroup index')
+    parse_bool(info, query, 'abelian')
+    parse_bool(info, query, 'cyclic')
+    parse_bool(info, query, 'solvable')
+    parse_bool(info, query, 'abelian_quotient')
+    parse_bool(info, query, 'cyclic_quotient')
+    parse_bool(info, query, 'solvable_quotient')
+    parse_bool(info, query, 'perfect')
+    parse_bool(info, query, 'normal')
+    parse_bool(info, query, 'characteristic')
+    parse_bool(info, query, 'maximal')
+    parse_bool(info, query, 'minimal_normal')
+    parse_bool(info, query, 'central')
+    parse_bool(info, query, 'semidirect')
+    parse_bool(info, query, 'direct')
+    parse_bool(info, query, 'hall')
+    parse_bool(info, query, 'sylow')
+    parse_bool(info, query, '')
 
 def get_url(label):
     return url_for(".by_label", label=label)
@@ -589,8 +607,8 @@ class SubgroupSearchArray(SearchArray):
             knowl="group.maximal_subgroup")
         minimal_normal = YesNoBox(
             name="minimal_normal",
-            label="Minimal Normal",
-            knowl="group.minimal_normal")
+            label="Maximal quotient",
+            knowl="group.maximal_quotient")
         central = YesNoBox(
             name="central",
             label="Central",
@@ -636,8 +654,8 @@ class SubgroupSearchArray(SearchArray):
             knowl="group.order",
             example="3",
             example_span="4, or a range like 3..5")
-        subgroup_index = TextBox(
-            name="subgroup_index",
+        quotient_order = TextBox(
+            name="quotient_order",
             label="Subgroup Index",
             knowl="group.subgroup.index",
             example="4")
