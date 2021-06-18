@@ -32,7 +32,10 @@ div.properties-body table tr td.label { vertical-align: top; }
     </table>
   </p>
 
-<p><h2>Generators</h2>
+<p><h2>Conjugacy class data</h2>
+  <p>
+    The order and cycle type of an element in each of the conjugacy classes $C_0, C_1, C_{\infty}$ of the {{ KNOWL('belyi.passport', title="passport") }} containing this orbit.
+  </p>
 
   <table class="ntdata">
       <thead><tr><td>Order</td><td>Partition</td></tr></thead>
@@ -69,8 +72,12 @@ div.properties-body table tr td.label { vertical-align: top; }
     {% endif %}
   </p>
 
-<h2>Map</h2>
-  <p> \(\displaystyle \phi = {{data.map}}\) </p>
+<h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
+  {% if data.g == 0 %}
+    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+  {% else %}
+    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+  {% endif %}
 
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>
   <p>
