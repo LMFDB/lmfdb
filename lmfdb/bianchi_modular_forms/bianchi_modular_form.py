@@ -58,10 +58,10 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11,19,43]]
-        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [67,163,20]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11,19,43]]
-        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [67,163,5]]
+        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11,19,43,67,163]]
+        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [20]]
+        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11,19,43,67,163]]
+        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [5]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
@@ -793,7 +793,7 @@ class BianchiStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  It also contains %s %s over %s imaginary quadratic fields (including all with class number one)." % (
+        return r"The database currently contains %s %s of weight 2 over %s imaginary quadratic fields, and %s %s over %s imaginary quadratic fields, including all with class number one." % (
             comma(self.nforms),
             display_knowl("mf.bianchi.bianchimodularforms",
                           "Bianchi modular forms"),
@@ -805,4 +805,4 @@ class BianchiStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s %s of weight 2 over several imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), url_for(".statistics"))
+        return r'The database currently contains %s %s of weight 2 over the nine imaginary quadratic fields of class number one.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), url_for(".statistics"))
