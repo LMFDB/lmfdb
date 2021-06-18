@@ -11,7 +11,7 @@ from lmfdb.app import app
 from lmfdb.utils import (
     flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
-    parse_ints, parse_bool, clean_input,
+    parse_ints, parse_bool, clean_input, parse_regex_restricted,
     # parse_gap_id, parse_bracketed_posints,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
@@ -269,7 +269,9 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'direct')
     parse_bool(info, query, 'hall')
     parse_bool(info, query, 'sylow')
-    parse_bool(info, query, '')
+    parse_regex_restricted(info, query, 'subgroup', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'ambient', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'quotient', regex=abstract_group_label_regex)
 
 def get_url(label):
     return url_for(".by_label", label=label)

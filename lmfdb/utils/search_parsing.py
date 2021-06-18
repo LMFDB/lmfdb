@@ -1224,6 +1224,25 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
     query[qfield] = process(inp)
 
 @search_parser
+def parse_regex_restricted(inp, query, qfield, regex, err=None, errknowl=None, errtitle=None, comma_split=True):
+    if comma_split:
+        inps = inp.split(",")
+    else:
+        inps = [inp]
+    if all(regex.match(x) for x in inps):
+        if len(inps) == 1:
+            query[qfield] = inps[0]
+        else:
+            query[qfield] = {"$in": inps}
+    else:
+        if err is not None:
+            raise SearchParsingError(err)
+        elif errknowl is not None and errtitle is not None:
+            raise SearchParsingError('It needs to be a <a title = "{0}" knowl="{1}">{0}</a> or a list of {0}s'.format(errtitle, errknowl))
+        else:
+            raise SearchParsingError('It does not match the required form')
+
+@search_parser
 def parse_noop(inp, query, qfield, func=None):
     if func is not None:
         inp = func(inp)
