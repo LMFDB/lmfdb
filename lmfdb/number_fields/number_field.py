@@ -18,8 +18,8 @@ from lmfdb.utils import (
     SearchArray, TextBox, YesNoBox, SubsetNoExcludeBox, TextBoxWithSelect,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    parse_floats, parse_subfield, search_wrap, bigint_knowl, raw_typeset,
-    flash_info, input_string_to_poly)
+    parse_floats, parse_subfield, search_wrap, parse_padicfields, bigint_knowl, 
+    raw_typeset, flash_info, input_string_to_poly)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
@@ -457,25 +457,29 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
+                loc_alg += '<tr><td>$%s$</td><td colspan="7">Data not computed</td></tr>'%str(ram_primes[j]).rstrip('L')
             else:
                 from lmfdb.local_fields.main import show_slope_content
+                primefirstline=True
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
-                mm = mydat[0]
-                myurl = url_for('local_fields.by_label', label=mm[0])
-                lab = mm[0]
-                if mm[3]*mm[2] == 1:
-                    lab = r'$\Q_{%s}$'%str(p)
-                loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
-                for mm in mydat[1:]:
-                    lab = mm[0]
-                    myurl = url_for('local_fields.by_label', label=lab)
-                    if mm[3]*mm[2] == 1:
-                        lab = r'$\Q_{%s}$'%str(p)
-                    loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
-        loc_alg += '</tbody></table>'
+                for mm in mydat:
+                    if primefirstline:
+                        primefirstline=False
+                    else:
+                        loc_alg += '<tr>'
+                    if len(mm)==4:
+                        loc_alg += '<td></td><td>Deg {}</td><td>{}</td><td>{}</td><td>{}</td><td></td><td></td>'.format(
+                            mm[1]*mm[2], mm[1], mm[2], mm[3])
+                    else:
+                        lab = mm[0]
+                        myurl = url_for('local_fields.by_label', label=lab)
+                        if mm[3]*mm[2] == 1:
+                            lab = r'$\Q_{%s}$'%str(p)
+                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>$%s$</td>'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+            loc_alg += '</tr>\n'
+        loc_alg += '</tbody></table>\n'
 
     ram_primes = str(ram_primes)[1:-1]
     # Get rid of python L for big numbers
@@ -540,7 +544,7 @@ def render_field_webpage(args):
                                         modulus=int(conductor),
                                         char_number_list=','.join(
                                             str(a) for a in dirichlet_chars),
-                                        poly=info['polynomial'])))
+                                        poly=nf.poly())))
     resinfo = []
     galois_closure = nf.galois_closure()
     if galois_closure[0]>0:
@@ -806,6 +810,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=info.get('ram_quantifier'),radical='disc_rad')
     parse_subfield(info, query, 'subfield', qfield='subfields', name='Intermediate field')
+    parse_padicfields(info, query, 'completions', qfield='local_algs', name='$p$-adic completions')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1081,6 +1086,12 @@ class NFSearchArray(SearchArray):
             example_span="2.2.5.1 or x^2-5 or a "+
                 display_knowl("nf.nickname", "field nickname"),
             example="x^2-5")
+        completion = TextBox(
+            name="completions",
+            label="$p$-adic completions",
+            knowl="nf.padic_completion.search",
+            example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
+            example="2.4.10.7")
         count = CountBox()
 
         self.browse_array = [
@@ -1091,9 +1102,9 @@ class NFSearchArray(SearchArray):
             [num_ram, cm_field],
             [ram_primes, ur_primes],
             [regulator, subfield],
-            [count]]
+            [count, completion]]
 
         self.refine_array = [
             [degree, signature, class_number, class_group, cm_field],
             [num_ram, ram_primes, ur_primes, gal, is_galois],
-            [discriminant, rd, regulator, subfield]]
+            [discriminant, rd, regulator, subfield, completion]]

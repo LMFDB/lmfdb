@@ -58,10 +58,10 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11,19]]
-        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [43,67,163,20]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11,19]]
-        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [43,67,163,5]]
+        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11,19,43]]
+        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [67,163,20]]
+        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11,19,43]]
+        sl2_names = gl2_names + [r"\(\Q(\sqrt{-%s})\)" % d for d in [67,163,5]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
@@ -200,6 +200,7 @@ def bmf_field_dim_table(**args):
     field_label=argsdict['field_label']
     field_label = nf_string_to_label(field_label)
 
+    count = parse_count(argsdict, 50)
     start = parse_start(argsdict)
 
     info={}
@@ -209,7 +210,6 @@ def bmf_field_dim_table(**args):
     # with positive new dimension ('new').  Default is 'cusp'.
     level_flag = argsdict.get('level_flag', 'cusp')
     info['level_flag'] = level_flag
-    count = parse_count(argsdict, 50)
 
     pretty_field_label = field_pretty(field_label)
     bread = get_bread(pretty_field_label)

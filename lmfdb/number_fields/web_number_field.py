@@ -870,39 +870,39 @@ class WebNumberField:
         return self._data['dirichlet_group']
 
     # Helper for ramified algebras table
-    def get_local_algebra(self, p):
-        local_algebra_dict = self._data.get('loc_algebras', None)
-        if local_algebra_dict is None:
+    def get_local_algebras(self):
+        local_algs = self._data.get('local_algs', None)
+        if local_algs is None:
             return None
-        if str(p) in local_algebra_dict:
-            R = PolynomialRing(QQ, 'x')
-            palg = local_algebra_dict[str(p)]
-            palgs = [R(str(s)) for s in palg.split(',')]
-            try:
-                palgstr = [
-                    list2string([int(c) for c in pol.coefficients(sparse=False)])
-                    for pol in palgs]
-                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': [int(cf) for cf in c.split(',')]}) for c in palgstr]
-                return [
-                    [
-                        LF['label'],
-                        latex(f),
-                        int(LF['e']),
-                        int(LF['f']),
-                        int(LF['c']),
-                        group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
-                        LF['t'],
-                        LF['u'],
-                        LF['slopes']
-                    ]
-                    for LF, f in zip(palgrec, palgs) ]
-            except: # we were unable to find the local fields in the database
-                return None
+        local_algebra_dict = {}
+        R = PolynomialRing(QQ, 'x')
+        for lab in local_algs:
+            if lab[0] == 'm': # signals data about field not in lf db
+                lab1 = lab[1:] # deletes marker m
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                deg = e*f
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [[deg,e,f,c]]
+                else:
+                    local_algebra_dict[str(p)].append([deg,e,f,c])
+            else:
+                LF = db.lf_fields.lookup(lab)
+                f = latex(R(LF['coeffs']))
+                p = LF['p']
+                thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
+                    group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
+                    LF['t'], LF['u'], LF['slopes']]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [thisdat]
+                else:
+                    local_algebra_dict[str(p)].append(thisdat)
+        return local_algebra_dict
 
     def ramified_algebras_data(self):
-        if 'loc_algebras' not in self._data:
+        if 'local_algs' not in self._data:
             return dnc
-        return [self.get_local_algebra(p) for p in self.ramified_primes()]
+        loc_alg_dict = self.get_local_algebras()
+        return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def make_code_snippets(self):
          # read in code.yaml from numberfields directory:

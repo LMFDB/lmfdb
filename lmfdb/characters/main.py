@@ -4,10 +4,10 @@ from __future__ import absolute_import
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import gcd, euler_phi
+from sage.all import gcd, euler_phi, PolynomialRing, QQ
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
-    TextBox, CountBox, parse_bool, parse_ints, search_wrap,
+    TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset,
     StatsDisplay, totaler, proportioners, comma, flash_warning)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.characters.utils import url_character
@@ -593,6 +593,12 @@ def dirichlet_group_table(**args):
     info['headers'] = h
     info['contents'] = c
     info['title'] = 'Group of Dirichlet characters'
+    if info['poly'] != '???':
+        try:
+            info['poly'] = PolynomialRing(QQ, 'x')(info['poly'])
+            info['poly'] = raw_typeset(info['poly'])
+        except Exception:
+            pass
     return render_template("CharacterGroupTable.html", **info)
 
 
@@ -657,15 +663,13 @@ class DirichStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  In addition, %s, Galois orbits and %s are available up to modulus $10^{20}$.  Here are some <a href="%s">further statistics</a>.' % (
+        return 'The database currently contains %s %s of %s up to %s, lying in %s %s.  Among these, L-functions are available for characters of modulus up to 2,800 (and some of higher modulus).  Here are some <a href="%s">further statistics</a>.' % (
             comma(self.nchars),
             display_knowl("character.dirichlet", "Dirichlet characters"),
             display_knowl("character.dirichlet.modulus", "modulus"),
             comma(self.maxmod),
             comma(self.norbits),
             display_knowl("character.dirichlet.galois_orbit", "Galois orbits"),
-            display_knowl("character.dirichlet.basic_properties", "basic properties"),
-            display_knowl("character.dirichlet.value_field", "field of values"),
             url_for(".statistics"))
 
     @property
