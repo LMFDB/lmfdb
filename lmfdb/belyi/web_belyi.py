@@ -154,7 +154,7 @@ class WebBelyiGalmap(object):
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization"):
+        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization", "is_primitive"):
             data[elt] = galmap[elt]
         nt = galmap["group"].split("T")
         data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))

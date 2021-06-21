@@ -17,6 +17,7 @@ from lmfdb.utils import (
     parse_ints,
     parse_bracketed_posints,
     parse_nf_string,
+    parse_bool,
     redirect_no_cache,
     search_wrap,
     Downloader,
@@ -24,6 +25,7 @@ from lmfdb.utils import (
     SearchArray,
     TextBox,
     SelectBox,
+    YesNoBox,
     CountBox,
 )
 from lmfdb.utils.interesting import interesting_knowls
@@ -623,7 +625,7 @@ def belyi_search(info, query):
             query[fld] = info[fld]
 
     info["nf_link"] = lambda elt: field_display_gen(elt.get('moduli_field_label'), elt.get('moduli_field'), truncate=16)
-
+    parse_bool(info, query, "is_primitive", name="is_primitive")
 
 ################################################################################
 # Statistics
@@ -795,15 +797,19 @@ class BelyiSearchArray(SearchArray):
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
+        is_primitive = YesNoBox(
+            name="is_primitive",
+            label="Primitive",
+            knowl="belyi.primitive",
+            example="yes")
         field = TextBox(
             name="field",
             label="Base field",
             knowl="belyi.base_field",
             example="2.2.5.1",
             example_span="2.2.5.1 or Qsqrt5")
-
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [geomtype], [field], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive]]

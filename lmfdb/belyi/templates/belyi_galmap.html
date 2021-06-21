@@ -24,7 +24,7 @@ div.properties-body table tr td.label { vertical-align: top; }
     <tr><td>{{ KNOWL('belyi.group', title="Monodromy group") }}:</td><td>{{data.group | safe}}</td></tr>
     <tr><td> {{ KNOWL('belyi.genus', title="Genus") }}:</td><td>${{data.g}}$</td> </tr>
     <tr><td>{{ KNOWL('belyi.geometry_type', title="Geometry type") }}:</td><td>{{data.geomtype}}</td></tr>
-    {% if (data['primitivization'] == data['label']) %}
+    {% if data['is_primitive'] %}
       <tr><td>{{ KNOWL('belyi.primitive', title="Primitive") }}:</td><td>yes</td></tr>
     {% else %}
       <tr><td>{{ KNOWL('belyi.primitive', title="Primitive") }}:</td><td>no, lift of <a href="{{data.primitivization_url|safe}}">{{data.primitivization}}</a></td></tr>
