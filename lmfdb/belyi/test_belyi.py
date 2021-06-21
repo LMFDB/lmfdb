@@ -42,30 +42,42 @@ class BelyiTest(LmfdbTest):
 
     def test_group_search(self):
         self.check_args("/Belyi/?group=7T5", "7T5-7_7_3.3.1-a")
+        self.not_check_args("/Belyi/?group=7T5", "1T1-1_1_1-a")
 
     def test_abc_search(self):
         self.check_args("/Belyi/?abc=2-4", "6T10-4.2_4.2_3.3-a")
 
     def test_abc_list_search(self):
         self.check_args("/Belyi/?abc_list=[7,6,6]", "7T7-7_3.2.1.1_3.2.1.1-a")
+        self.not_check_args("/Belyi/?abc_list=[7,6,6]", "1T1-1_1_1-a")
 
     def test_genus_search(self):
         self.check_args("/Belyi/?g=2", "6T6-6_6_3.3-a")
+        self.not_check_args("/Belyi/?g=2", "1T1-1_1_1-a")
 
     def test_orbit_size_search(self):
         self.check_args("/Belyi/?orbit_size=20-", "7T7-6.1_5.2_4.2.1-a")
+        self.not_check_args("/Belyi/?orbit_size=20-", "1T1-1_1_1-a")
 
     def test_pass_size_search(self):
         self.check_args("/Belyi/?pass_size=6", "7T6-4.2.1_4.2.1_3.2.2-a")
+        self.not_check_args("/Belyi/?pass_size=6", "1T1-1_1_1-a")
 
     def test_geom_type_search(self):
         self.check_args("/Belyi/?geomtype=H", "6T8-4.1.1_4.1.1_3.3-a")
+        self.not_check_args("/Belyi/?pass_size=6", "1T1-1_1_1-a")
 
     def test_count_search(self):
         self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
 
     def test_field_search(self):
         self.check_args("Belyi/?field=Qsqrt-3", "3T1-3_3_3-a")
+        self.not_check_args("Belyi/?field=Qsqrt-3", "1T1-1_1_1-a")
+
+    def test_primitive_search(self):
+        self.check_args("Belyi/?is_primitive=no", "4T1-4_4_1.1.1.1-a")
+        self.not_check_args("Belyi/?is_primitive=no", "1T1-1_1_1-a")
+        self.check_args("Belyi/?is_primitive=yes", "1T1-1_1_1-a")
 
     # downloads
 
