@@ -173,14 +173,16 @@ def by_label(label):
     if label_is_valid(label):
         return render_abstract_group({'label': label})
     else:
-        flash_error( "No group with label %s was found in the database.", label)
+        flash_error( "The label %s is invalid.", label)
         return redirect(url_for(".index"))
-#Should this be "Bad label instead?"
 
 @abstract_page.route("/sub/<label>")
-def by_subgroup_label(label):                                                           
+def by_subgroup_label(label):
     if subgroup_label_is_valid(label):
         return render_abstract_subgroup({'label': label})
+    else:
+        flash_error("The label %s is invalid.", label)
+        return redirect(url_for(".index"))
 
 def show_type(label):
     wag = WebAbstractGroup(label)
@@ -283,137 +285,140 @@ def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
 #Writes individual pages
-def render_abstract_group(args):
+def render_abstract_group(label):
     abstract_logger.info("A")
     info = {}
-    if 'label' in args:
-        label = clean_input(args['label'])
-        gp = WebAbstractGroup(label)
-        if gp.is_null():
-            flash_error( "No group with label %s was found in the database.", label)
-            return redirect(url_for(".index"))
-        #check if it fails to be a potential label even
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error( "No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    #check if it fails to be a potential label even
 
-        info['boolean_characteristics_string']=create_boolean_string(gp)
+    info['boolean_characteristics_string']=create_boolean_string(gp)
 
-        info['gpc'] = gp
+    # prepare for javascript call to make the diagram
+    if gp.diagram_ok:
+        layers = gp.subgroup_layers
+        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+        subs = gp.subgroups
+        orders = list(set(sub.subgroup_order for sub in subs.values()))
+        orders.sort()
 
-        # prepare for javascript call to make the diagram
-        if gp.diagram_ok:
-            layers = gp.subgroup_layers
-            ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), 0, grp.diagram_x] for grp in layer] for layer in layers[0]]
-            subs = gp.subgroups
-            orders = list(set(sub.subgroup_order for sub in subs.values()))
-            orders.sort()
+        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
+        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
+        info['dojs'] += ');'
+        #print info['dojs']
+        totsubs = len(gp.subgroups)
+        info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
+    else:
+        prof = list(gp.subgroup_profile.items())
+        info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
+        info['dojs'] = ''
 
-            info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
-            info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-            info['dojs'] += ');'
-            #print info['dojs']
-            totsubs = len(gp.subgroups)
-            info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
-        else:
-            prof = list(gp.subgroup_profile.items())
-            info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
-            info['dojs'] = ''
+    abstract_logger.info("B0")
+    factored_order = web_latex(gp.order_factor(), False)
+    abstract_logger.info("B1")
+    aut_order = web_latex(gp.aut_order_factor(), False)
+    abstract_logger.info("B2")
+    out_order = web_latex(gp.out_order_factor(), False)
+    abstract_logger.info("B3")
+    z_order = web_latex(gp.cent_order_factor(), False)
+    abstract_logger.info("B4")
+    Gab_order = web_latex(gp.Gab_order_factor(), False)
 
-        abstract_logger.info("B0")
-        factored_order = web_latex(gp.order_factor(), False)
-        abstract_logger.info("B1")
-        aut_order = web_latex(gp.aut_order_factor(), False)
-        abstract_logger.info("B2")
-        out_order = web_latex(gp.out_order_factor(), False)
-        abstract_logger.info("B3")
-        z_order = web_latex(gp.cent_order_factor(), False)
-        abstract_logger.info("B4")
-        Gab_order = web_latex(gp.Gab_order_factor(), False)
+    abstract_logger.info("C1")
+    info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
+    info['ccdata'] = gp.conjugacy_classes
+    abstract_logger.info("C2")
+    info['chardata'] = gp.characters
+    abstract_logger.info("C3")
+    info['qchardata'] = gp.rational_characters
+    abstract_logger.info("C4")
+    ccdivs = gp.conjugacy_class_divisions
+    abstract_logger.info("C5")
+    ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
+    ccdivs.sort(key=lambda x: x['classes'][0].counter)
+    info['ccdivisions'] = ccdivs
+    info['ccdisplayknowl'] = cc_display_knowl
+    info['chtrdisplayknowl'] = char_display_knowl
+    # Need to map cc's to their divisions
+    ctor = {}
+    for k in ccdivs:
+        for v in k['classes']:
+            ctor[v.label] = k['label']
+    info['ctor'] = ctor
+    abstract_logger.info("D0")
 
-        abstract_logger.info("C1")
-        info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
-        info['ccdata'] = gp.conjugacy_classes
-        abstract_logger.info("C2")
-        info['chardata'] = gp.characters
-        abstract_logger.info("C3")
-        info['qchardata'] = gp.rational_characters
-        abstract_logger.info("C4")
-        ccdivs = gp.conjugacy_class_divisions
-        abstract_logger.info("C5")
-        ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
-        ccdivs.sort(key=lambda x: x['classes'][0].counter)
-        info['ccdivisions'] = ccdivs
-        info['ccdisplayknowl'] = cc_display_knowl
-        info['chtrdisplayknowl'] = char_display_knowl
-        # Need to map cc's to their divisions
-        ctor = {}
-        for k in ccdivs:
-            for v in k['classes']:
-                ctor[v.label] = k['label']
-        info['ctor'] = ctor
-        abstract_logger.info("D0")
+    s = r",\ "
 
-        s = r",\ "
+    info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
+    info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
+    #def sortkey(x):
+    #    if x[0] is None:
+    #        return (0, 0)
+    #    return tuple(int(m) for m in x[0].split("."))
+    #def show_cnt(x, cnt):
+    #    if cnt == 1:
+    #        return x
+    #    else:
+    #        return x + " (%s)" % cnt
+    #max_subs = defaultdict(lambda: defaultdict(int))
+    #for sup in gp.maximal_subgroup_of:
+    #    if sup.normal:
+    #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
+    #    else:
+    #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
+    #max_subs = [A + (", ".join(
+    #    show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
+    #             max_subs[A][quo, quo_tex])
+    #    for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
+    #            for A in sorted(max_subs, key=sortkey)]
+    #abstract_logger.info("D1")
+    #max_quot = defaultdict(lambda: defaultdict(int))
+    #for sup in gp.maximal_quotient_of:
+    #    print(sup.ambient, sup.ambient_tex, sup.ambient_order)
+    #    max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
+    #print("LEN", len(max_quot))
+    #max_quot = [A + (", ".join(
+    #    show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
+    #             max_quot[A][sub, sub_tex])
+    #    for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
+    #            for A in sorted(max_quot, key=sortkey)]
+    #abstract_logger.info("D2")
+    #info['max_subs'] = max_subs
+    #info['max_quot'] = max_quot
 
-        info['max_sub_cnt'] = db.gps_subgroups.count_distinct('ambient', {'subgroup': label, 'maximal': True})
-        info['max_quo_cnt'] = db.gps_subgroups.count_distinct('ambient', {'quotient': label, 'minimal_normal': True})
-        #def sortkey(x):
-        #    if x[0] is None:
-        #        return (0, 0)
-        #    return tuple(int(m) for m in x[0].split("."))
-        #def show_cnt(x, cnt):
-        #    if cnt == 1:
-        #        return x
-        #    else:
-        #        return x + " (%s)" % cnt
-        #max_subs = defaultdict(lambda: defaultdict(int))
-        #for sup in gp.maximal_subgroup_of:
-        #    if sup.normal:
-        #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.quotient, sup.quotient_tex] += 1
-        #    else:
-        #        max_subs[sup.ambient, sup.ambient_tex, sup.ambient_order][None, None] += 1
-        #max_subs = [A + (", ".join(
-        #    show_cnt("Non-normal" if quo is None else '<a href="%s">$%s$</a>' % (quo, quo_tex),
-        #             max_subs[A][quo, quo_tex])
-        #    for (quo, quo_tex) in sorted(max_subs[A], key=sortkey)),)
-        #            for A in sorted(max_subs, key=sortkey)]
-        #abstract_logger.info("D1")
-        #max_quot = defaultdict(lambda: defaultdict(int))
-        #for sup in gp.maximal_quotient_of:
-        #    print(sup.ambient, sup.ambient_tex, sup.ambient_order)
-        #    max_quot[sup.ambient, sup.ambient_tex, sup.ambient_order][sup.subgroup, sup.subgroup_tex] += 1
-        #print("LEN", len(max_quot))
-        #max_quot = [A + (", ".join(
-        #    show_cnt('<a href="%s">$%s$</a>' % (sub, sub_tex),
-        #             max_quot[A][sub, sub_tex])
-        #    for (sub, sub_tex) in sorted(max_quot[A], key=sortkey)),)
-        #            for A in sorted(max_quot, key=sortkey)]
-        #abstract_logger.info("D2")
-        #info['max_subs'] = max_subs
-        #info['max_quot'] = max_quot
+    title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
-        title = 'Abstract group '  + '$' + gp.tex_name + '$'
+    properties = [
+        ('Label', label),
+        ('Order', '$%s$' % factored_order),
+        #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
+        #('#$\operatorname{Out}(G)$', '$%s$' % out_order),
+        #('#$Z(G)$', '$%s$' % z_order),
+        #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
+    ]
 
-        properties = [
-            ('Label', label),
-            ('Order', '$%s$' % factored_order),
-            #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
-            #('#$\operatorname{Out}(G)$', '$%s$' % out_order),
-            #('#$Z(G)$', '$%s$' % z_order),
-            #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
-        ]
+    bread = get_bread([(label, )])
 
-        bread = get_bread([(label, )])
+#    downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+#                 ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+    abstract_logger.info("Z")
 
-#        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-#                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
-        abstract_logger.info("Z")
+    return render_template("abstract-show-group.html",
+                           title=title, bread=bread, info=info,
+                           gp=gp,
+                           properties=properties,
+                           #friends=friends,
+                           learnmore=learnmore_list(),
+                           #downloads=downloads,
+                           credit=credit_string)
 
-        return render_template("abstract-show-group.html",
-                               title=title, bread=bread, info=info,
-                               properties=properties,
-                               #friends=friends,
-                               learnmore=learnmore_list(),
-                               #downloads=downloads, 
-                               credit=credit_string)
+def render_abstract_subgroup(label):
+    info = {}
+    label = clean_input(label)
+    gp = WebAbstractSubgroup(label)
 
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
