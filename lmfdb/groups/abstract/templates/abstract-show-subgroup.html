@@ -1,0 +1,115 @@
+{% extends "homepage.html" %}
+
+
+{% block content %}
+
+<h2> Subgroup Information</h2>
+<p>
+  <table>
+    <tr><td><a href="{{url_for('.by_label', label=seq.subgroup)}}">${{seq.subgroup_tex}}$</a></td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.subgroup_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.subgroup.index',title='Index:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.sub.exponent)}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{seq.sub.show_aut_group()}}$</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>${{seq.sub.show_outer_group()}}$</td></tr>
+    {# <tr><td>{{KNOWL('group.weyl_group',title='Weyl Group:')}}</td><td>${{seq.weyl_group_.tex_name}}$</td></tr> #}
+  </table>
+</p>
+
+<p>
+  {{info.create_boolean_string(seq.sub) | safe}}
+</p>
+{% set spec_lab = seq.show_special_labels() %}
+{% if spec_lab %}
+<p>
+  {{spec_lab | safe}}
+</p>
+{% endif %}
+
+<h2> Ambient group information</h2>
+
+<p>
+  <table>
+    <tr><td><a href="{{url_for('.by_label', label=seq.ambient)}}">${{seq.ambient_tex}}$</a></td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.ambient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.amb.exponent)}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{seq.amb.show_aut_group()}}$</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>${{seq.amb.show_outer_group()}}$</td></tr>
+  </table>
+</p>
+
+<p>
+  {{info.create_boolean_string(seq.amb) | safe}}
+</p>
+
+{% if seq.normal %}
+<h2> Quotient group structure </h2>
+
+<p>
+  <table>
+    <tr><td><a href="{{url_for('.by_label', label=seq.quotient)}}">${{seq.quotient_tex}}$</a></td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.factor_latex(seq.quotient_order)}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.factor_latex(seq.quo.exponent)}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{seq.quo.show_aut_group()}}$</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>${{seq.quo.show_outer_group()}}$</td></tr>
+  </table>
+</p>
+
+<p>
+  {{info.create_boolean_string(seq.quo) | safe}}
+</p>
+{% endif %}
+
+<h2> Related subgroups </h2>
+
+<p>
+  <table>
+    <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.centralizer)}}">${{seq.centralizer_.subgroup_tex}}$</a></td></tr>
+    <tr><td>{{KNOWL('group.centralizer', 'Normalizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normalizer)}}">${{seq.normalizer_.subgroup_tex}}$</a></td></tr>
+    {% if not seq.normal %}
+    <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normal_closure)}}">${{seq.normal_closure_.subgroup_tex}}$</a></td></tr>
+    <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.core)}}">${{seq.core_.subgroup_tex}}$</a></td></tr>
+    {% endif %}
+    {% if seq.split and seq.complements %}
+    <tr><td>{{KNOWL('group.subgroup.complement', 'Complements:')}}</td><td>{% for comp in seq.complements_ %}<a href="{{url_for('.by_subgroup_label', label=comp.label)}}">${{comp.subgroup_tex}}$</a> {% endfor %}</td></tr>
+    {% endif %}
+    {% if seq.contained_in %}
+    <tr><td>{{KNOWL('group.over_subgroup', 'Minimal over-subgroups:')}}</td><td>{% for H in seq.contained_in_ %}<a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a> {% endfor %}</td></tr>
+    {% endif %}
+    {% if seq.contains %}
+    <tr><td>{{KNOWL('group.under_subgroup', 'Maximal under-subgroups:')}}</td><td>{% for H in seq.contains_ %}<a href="{{url_for('.by_subgroup_label', label=H.label)}}">${{H.subgroup_tex}}$</a> {% endfor %}</td></tr>
+    {% endif %}
+  </table>
+</p>
+
+{#
+
+<h2>Generators</h2>
+
+{% if seq.amb.solvable %}
+<table class=nowrap>
+  <tr>
+    <td>{{KNOWL('group.presentation', 'Presentation of Ambient group:')}}</td>
+    <td>${{seq.amb.presentation()}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.subgroup_generators', 'Generators of Subgroup:')}}</td>
+    <td>${{seq.subgroup_gens()}}$</td>
+  </tr>
+</table>
+{% else %}
+<table class=nowrap>
+  <tr>
+    <td>{{KNOWL('group.presentation', 'Generators of Ambient group:')}}</td>
+    <td>${{seq.amb.presentation()}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.subgroup_generators', 'Generators of Subgroup:')}}</td>
+    <td>${{seq.sub.presentation()}}$</td> this isn't right since subgroup may be solvable
+  </tr>
+</table>
+{% endif %}
+
+#}
+
+{% endblock %}

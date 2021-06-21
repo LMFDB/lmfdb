@@ -1,0 +1,77 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{% include 'refine_search_form.html' %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan=10>Subgroup</th>
+      <th colspan=2>Ambient</th>
+      <th colspan=6>Quotient</th>
+    </tr>
+    <tr>
+      <th>{{ KNOWL('group.subgroup_label', title='Label') }}</th>
+      <th>{{ KNOWL('group.name', title='Name') }}</th>
+      <th>{{ KNOWL('group.order', title='Order') }}</th>
+      <th>{{ KNOWL('group.subgroup.normal', title='norm') }}</th>
+      <th>{{ KNOWL('group.characteristic_subgroup', title='char') }}</th>
+      <th>{{ KNOWL('group.cyclic', title='cyc') }}</th>
+      <th>{{ KNOWL('group.abelian', title='ab') }}</th>
+      <th>{{ KNOWL('group.solvable', title='solv') }}</th>
+      <th>{{ KNOWL('group.maximal_subgroup', title='max') }}</th>
+      <th>{{ KNOWL('group.perfect', title='perf') }}</th>
+      <th>{{ KNOWL('group.central', title='cent') }}</th>
+      <th>{{ KNOWL('group.name', title='Name') }}</th>
+      <th>{{ KNOWL('group.order', title='Order') }}</th>
+      <th>{{ KNOWL('group.name', title='Name') }}</th>
+      <th>{{ KNOWL('group.order', title='Order') }}</th>
+      <th>{{ KNOWL('group.cyclic', title='cyc') }}</th>
+      <th>{{ KNOWL('group.abelian', title='ab') }}</th>
+      <th>{{ KNOWL('group.solvable', title='solv') }}</th>
+      <th>{{ KNOWL('group.maximal_quotient', title='max') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for sub in info.results: %}
+      <tr>
+        <td> <a href="{{info.subgroup_url(sub.label)}}">{{sub.label}}</a> </td>
+        <td> <a href="{{info.group_url(sub.subgroup)}}">${{sub.subgroup_tex}}$</a> </td>
+        <td> {{info.show_factor(sub.subgroup_order)}} </td>
+        <td> {{('&#x2713;' if sub.normal else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.characteristic else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.cyclic else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.abelian else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.solvable else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.maximal else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.perfect else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.central else '')|safe}} </td>
+        <td> <a href="{{info.group_url(sub.ambient)}}">${{sub.ambient_tex}}$</a> </td>
+        <td> {{info.show_factor(sub.ambient_order)}} </td>
+        {% if sub.normal %}
+        <td> <a href="{{info.group_url(sub.quotient)}}">${{sub.quotient_tex}}$</a> </td>
+        <td> {{info.show_factor(sub.quotient_order)}} </td>
+        <td> {{('&#x2713;' if sub.cyclic_quotient else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.abelian_quotient else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.solvable_quotient else '')|safe}} </td>
+        <td> {{('&#x2713;' if sub.minimal_normal else '')|safe}} </td>
+        {% else %}
+        <td></td><td> {{info.show_factor(sub.quotient_order)}} </td><td></td><td></td><td></td><td></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'forward_back.html' %}
+{#
+   {% include 'download_search_results.html' %}
+#}
+{% endif %}
+{% include 'debug_info.html' %}
+
+
+{% endblock %}

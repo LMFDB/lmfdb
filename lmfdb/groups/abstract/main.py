@@ -4,7 +4,7 @@ import re #, StringIO, yaml, ast, os
 from collections import defaultdict
 
 from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
-from sage.all import ZZ, latex #, Permutation
+from sage.all import ZZ, latex, factor #, Permutation
 
 from lmfdb import db
 from lmfdb.app import app
@@ -61,7 +61,7 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
-def sub_label_is_valid(lab):
+def subgroup_label_is_valid(lab):
     return abstract_subgroup_label_regex.match(lab)
 
 def label_is_valid(lab):
@@ -171,7 +171,7 @@ def random_abstract_group():
 @abstract_page.route("/<label>")
 def by_label(label):
     if label_is_valid(label):
-        return render_abstract_group({'label': label})
+        return render_abstract_group(label)
     else:
         flash_error( "The label %s is invalid.", label)
         return redirect(url_for(".index"))
@@ -179,7 +179,7 @@ def by_label(label):
 @abstract_page.route("/sub/<label>")
 def by_subgroup_label(label):
     if subgroup_label_is_valid(label):
-        return render_abstract_subgroup({'label': label})
+        return render_abstract_subgroup(label)
     else:
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
@@ -284,6 +284,9 @@ def get_url(label):
 def get_sub_url(label):
     return url_for(".by_subgroup_label", label=label)
 
+def factor_latex(n):
+    return '$%s$' % web_latex(factor(n), False)
+
 #Writes individual pages
 def render_abstract_group(label):
     abstract_logger.info("A")
@@ -317,15 +320,15 @@ def render_abstract_group(label):
         info['dojs'] = ''
 
     abstract_logger.info("B0")
-    factored_order = web_latex(gp.order_factor(), False)
-    abstract_logger.info("B1")
-    aut_order = web_latex(gp.aut_order_factor(), False)
-    abstract_logger.info("B2")
-    out_order = web_latex(gp.out_order_factor(), False)
-    abstract_logger.info("B3")
-    z_order = web_latex(gp.cent_order_factor(), False)
-    abstract_logger.info("B4")
-    Gab_order = web_latex(gp.Gab_order_factor(), False)
+    factored_order = factor_latex(gp.order)
+    #abstract_logger.info("B1")
+    #aut_order = factor_latex(gp.aut_order)
+    #abstract_logger.info("B2")
+    #out_order = factor_latex(gp.outer_order)
+    #abstract_logger.info("B3")
+    #z_order = factor_latex(gp.cent_order())
+    #abstract_logger.info("B4")
+    #Gab_order = factor_latex(gp.Gab_order())
 
     abstract_logger.info("C1")
     info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
@@ -400,7 +403,7 @@ def render_abstract_group(label):
         #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
     ]
 
-    bread = get_bread([(label, )])
+    bread = get_bread([(label, '')])
 
 #    downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
 #                 ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
@@ -418,7 +421,32 @@ def render_abstract_group(label):
 def render_abstract_subgroup(label):
     info = {}
     label = clean_input(label)
-    gp = WebAbstractSubgroup(label)
+    seq = WebAbstractSubgroup(label)
+
+    info['create_boolean_string'] = create_boolean_string
+    info['factor_latex'] = factor_latex
+
+    title = r'Subgroup $%s \%s %s$' % (
+        seq.subgroup_tex,
+        'trianglelefteq' if seq.normal else 'subseteq',
+        seq.ambient_tex)
+
+    properties = [
+        ('Label', label),
+        ('Order', factor_latex(seq.subgroup_order)),
+        ('Index', factor_latex(seq.quotient_order)),
+    ]
+
+    bread = get_bread([(label, )])
+
+    return render_template("abstract-show-subgroup.html",
+                           title=title, bread=bread, info=info,
+                           seq=seq,
+                           properties=properties,
+                           #friends=friends,
+                           learnmore=learnmore_list(),
+                           #downloads=downloads,
+                           credit=credit_string)
 
 def make_knowl(title, knowlid):
     return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)

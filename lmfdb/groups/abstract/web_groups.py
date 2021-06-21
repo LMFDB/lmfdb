@@ -7,6 +7,7 @@ from lmfdb.groups.abstract import abstract_logger
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
 from collections import Counter
+from lmfdb.utils import to_ordinal
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
@@ -509,6 +510,108 @@ class WebAbstractSubgroup(WebObj):
     @staticmethod
     def _is_atomic(s):
         return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
+
+    def show_special_labels(self):
+        raw = [x.split('.')[-1] for x in self.special_labels]
+        specials = []
+        for x in raw:
+            if x == 'Z':
+                specials.append(display_knowl('group.center', 'center'))
+            elif x == 'D':
+                specials.append(display_knowl('group.commutator_subgroup', 'commutator subgroup'))
+            elif x == 'F':
+                specials.append(display_knowl('group.fitting_subgroup', 'Fitting subgroup'))
+            elif x == 'Phi':
+                specials.append(display_knowl('group.frattini_subgroup', 'Frattini subgroup'))
+            elif x == 'R':
+                specials.append(display_knowl('group.radical', 'radical'))
+            elif x == 'S':
+                specials.append(display_knowl('group.socle', 'socle'))
+            else:
+                n = to_ordinal(int(x[1:]) + 1)
+                if x.startswith('U'):
+                    specials.append('%s term in the %s' % (n, display_knowl('group.upper_central_series', 'upper central series')))
+                elif x.startswith('L'):
+                    specials.append('%s term in the %s' % (n, display_knowl('group.lower_central_series', 'lower central series')))
+                elif x.startswith('D'):
+                    specials.append('%s term in the %s' % (n, display_knowl('group.derived_series', 'derived series')))
+                # Don't show chief series since it's not canonical
+        return ', '.join(specials)
+
+    def _lookup(self, label, data, Wtype):
+        for rec in data:
+            if rec['label'] == label:
+                return Wtype(label, rec)
+
+    @lazy_attribute
+    def _full(self):
+        """
+        Get information from gps_groups for each of the abstract groups included here (the subgroup, the ambient group and the quotient, if normal)
+        """
+        labels = [self.subgroup, self.ambient]
+        if self.normal:
+            labels.append(self.quotient)
+        return list(db.gps_groups.search({'label': {'$in': labels}}))
+
+    @lazy_attribute
+    def sub(self):
+        return self._lookup(self.subgroup, self._full, WebAbstractGroup)
+
+    @lazy_attribute
+    def amb(self):
+        return self._lookup(self.ambient, self._full, WebAbstractGroup)
+
+    @lazy_attribute
+    def quo(self):
+        return self._lookup(self.quotient, self._full, WebAbstractGroup)
+
+    @lazy_attribute
+    def _others(self):
+        """
+        Get information from gps_subgroups for each of the other subgroups referred to (centralizer, complements, contained_in, contains, core, normal_closure, normalizer)
+        """
+        labels = []
+        for label in [self.centralizer, self.core, self.normal_closure, self.normalizer]:
+            if label:
+                labels.append(label)
+        for llist in [self.complements, self.contained_in, self.contains]:
+            if llist:
+                labels.extend(llist)
+        return list(db.gps_subgroups.search({'label': {'$in': labels}}))
+
+    @lazy_attribute
+    def centralizer_(self):
+        return self._lookup(self.centralizer, self._others, WebAbstractSubgroup)
+
+    @lazy_attribute
+    def core_(self):
+        return self._lookup(self.core, self._others, WebAbstractSubgroup)
+
+    @lazy_attribute
+    def normal_closure_(self):
+        return self._lookup(self.normal_closure, self._others, WebAbstractSubgroup)
+
+    @lazy_attribute
+    def normalizer_(self):
+        return self._lookup(self.normalizer, self._others, WebAbstractSubgroup)
+
+    @lazy_attribute
+    def complements_(self):
+        if self.complements is None:
+            return None
+        return [self._lookup(H, self._others, WebAbstractSubgroup) for H in self.complements]
+
+    @lazy_attribute
+    def contained_in_(self):
+        if self.contained_in is None:
+            return None
+        return [self._lookup(H, self._others, WebAbstractSubgroup) for H in self.contained_in]
+
+    @lazy_attribute
+    def contains_(self):
+        if self.contains is None:
+            return None
+        return [self._lookup(H, self._others, WebAbstractSubgroup) for H in self.contains]
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):

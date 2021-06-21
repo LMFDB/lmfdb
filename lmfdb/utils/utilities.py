@@ -1391,3 +1391,16 @@ def raw_typeset(raw, tset='', extra=''):
     out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
     return out
 
+def to_ordinal(n):
+    a = (n % 100) // 10
+    if a == 1:
+        return '%sth' % n
+    b = n % 10
+    if b == 1:
+        return '%sst' % n
+    elif b == 2:
+        return '%snd' % n
+    elif b == 3:
+        return '%srd' % n
+    else:
+        return '%sth' % n
