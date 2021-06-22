@@ -99,7 +99,6 @@ def base_bread():
 
 
 @login_page.route("/")
-@login_required
 def list():
     COLS = 5
     users = userdb.get_user_list()
@@ -144,17 +143,19 @@ def info():
 @login_required
 def set_info():
     for k, v in request.form.items():
-        setattr(current_user, k, v)
+        if v:
+            setattr(current_user, k, v)
     current_user.save()
     flask.flash(Markup("Thank you for updating your details!"))
     return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/profile/<userid>")
-@login_required
 def profile(userid):
-    # See issue #1169
     user = LmfdbUser(userid)
+    if not user.exists:
+        flash_error("User %s does not exist", userid)
+        return flask.redirect(url_for(".list"))
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
     from lmfdb.knowledge.knowl import knowldb
     userknowls = knowldb.search(author=userid, sort=['title'])

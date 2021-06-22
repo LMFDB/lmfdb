@@ -487,8 +487,8 @@ class WebNumberField:
     def is_imag_quadratic(self):
         return self.signature()==[0,1]
 
-    def poly(self):
-        return coeff_to_poly(self._data['coeffs'])
+    def poly(self, var="x"):
+        return coeff_to_poly(self._data['coeffs'], var=var)
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
