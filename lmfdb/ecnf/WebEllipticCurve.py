@@ -651,6 +651,7 @@ class ECNF(object):
             ('CM', self.cm_bool)]
 
         if self.base_change:
+            self.base_change = [lab for lab in self.base_change if '?' not in lab]
             self.properties += [('Base change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
