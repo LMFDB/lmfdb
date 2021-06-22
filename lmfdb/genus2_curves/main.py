@@ -575,7 +575,7 @@ class G2CSearchArray(SearchArray):
             name="abs_disc",
             knowl="g2c.abs_discriminant",
             label="Absolute discriminant",
-            short_label="Discriminant",
+            short_label="Absolute discriminant",
             example="169",
             example_span="169, 0-1000",
         )
