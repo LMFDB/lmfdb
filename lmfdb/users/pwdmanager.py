@@ -253,7 +253,8 @@ class LmfdbUser(UserMixin):
         self._dirty = False  # flag if we have to save
         self._data = dict([(_, None) for _ in LmfdbUser.properties])
 
-        if userdb.user_exists(uid):
+        self.exists = userdb.user_exists(uid)
+        if self.exists:
             self._data.update(userdb.lookup(uid))
 
     @property
