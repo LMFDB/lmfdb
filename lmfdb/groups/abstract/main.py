@@ -311,7 +311,6 @@ def render_abstract_group(label):
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
-        #print info['dojs']
         totsubs = len(gp.subgroups)
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:
