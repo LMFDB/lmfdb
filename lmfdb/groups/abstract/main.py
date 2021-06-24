@@ -214,7 +214,7 @@ def group_download(info):
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','abelian','exponent','solvable',
-                        'nilpotent','center_label','outer_order',
+                        'nilpotent','center_label','outer_order', 'tex_name',
                         'nilpotency_class','number_conjugacy_classes'],
              #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
              #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
