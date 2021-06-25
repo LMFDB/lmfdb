@@ -2198,8 +2198,11 @@ class PostgresTable(PostgresBase):
         """
         if table_description is None:
             selecter = SQL("SELECT table_description FROM meta_tables WHERE name = %s")
-            cur = self._execute(selecter, [self.search_table])
-            return cur.fetchone()[0]
+            desc = list(self._execute(selecter, [self.search_table]))
+            if desc and desc[0]:
+                return desc[0]
+            else:
+                return "(table description not yet updated on this server)"
         else:
             assert isinstance(table_description, str)
             modifier = SQL("UPDATE meta_tables SET table_description = %s WHERE name = %s")
@@ -2218,18 +2221,22 @@ class PostgresTable(PostgresBase):
         - ``drop`` -- if ``True``, delete the column from the description dictionary in preparation for dropping the column.
         """
         allcols = self.search_cols + self.extra_cols
-        if not (col is None or col in allcols):
-            raise ValueError("%s is not a column of this table" % col)
         # Get the current column description
         selecter = SQL("SELECT col_description FROM meta_tables WHERE name = %s")
         cur = self._execute(selecter, [self.search_table])
         current = cur.fetchone()[0]
 
         if description is None:
+            # We want to allow the set of columns to be out of date temporarily, on prod for example
             if col is None:
+                for col in allcols:
+                    if col not in current:
+                        current[col] = "(description not yet updated on this server)"
                 return current
-            return current.get(col, "")
+            return current.get(col, "(description not yet updated on this server)")
         else:
+            if not (col is None or col in allcols):
+                raise ValueError("%s is not a column of this table" % col)
             if drop:
                 if col is None:
                     raise ValueError("Must specify column name to drop")

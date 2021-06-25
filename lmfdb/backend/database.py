@@ -1105,7 +1105,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                             if name != "id":
                                 extra_columns[typ].append(name)
                     # the rest of the meta arguments will be replaced on the reload_all
-                    self.create_table(tablename, search_columns, None, table_description=meta["table_description"], col_description=meta["col_description"], extra_columns=extra_columns)
+                    # We use force_description=False so that beta and prod can be out-of-sync with respect to columns and/or descriptions
+                    self.create_table(tablename, search_columns, None, table_description=meta["table_description"], col_description=meta["col_description"], extra_columns=extra_columns, force_description=False)
 
             for tablename in self.tablenames:
                 included = []
