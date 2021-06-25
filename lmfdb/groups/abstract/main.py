@@ -214,7 +214,7 @@ def group_download(info):
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','abelian','exponent','solvable',
-                        'nilpotent','center_label','outer_order',
+                        'nilpotent','center_label','outer_order', 'tex_name',
                         'nilpotency_class','number_conjugacy_classes'],
              #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
              #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
@@ -311,7 +311,6 @@ def render_abstract_group(label):
         info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
-        #print info['dojs']
         totsubs = len(gp.subgroups)
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:
