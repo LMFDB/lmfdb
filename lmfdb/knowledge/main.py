@@ -250,6 +250,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   %(content)s
   """
@@ -732,6 +733,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
+  {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
   <div class="knowl">"""
     if foot == "1":
