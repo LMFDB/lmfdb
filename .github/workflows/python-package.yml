@@ -3,7 +3,7 @@ name: LMFDB CI
 on:
   push:
     branches: [ '**' ]
-  pull_request:
+  pull_request_target:
     branches: [ master, dev, web ]
 
 jobs:
