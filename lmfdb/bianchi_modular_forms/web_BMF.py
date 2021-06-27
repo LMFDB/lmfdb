@@ -228,6 +228,7 @@ class WebBMF(object):
 
         curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
         if curve_bc is not None:
+            curve_bc = [lab for lab in curve_bc if '?' not in lab]
             if curve_bc and "." not in curve_bc[0]:
                 curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
             self.ec_status = 'exists'
