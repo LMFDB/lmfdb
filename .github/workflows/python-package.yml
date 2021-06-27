@@ -14,7 +14,7 @@ jobs:
     steps:
       # Required as the JSON input file needs to be read
       - uses: actions/checkout@v2
-      - uses: JoshuaTheMiller/conditional-build-matrix
+      - uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
