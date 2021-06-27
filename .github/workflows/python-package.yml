@@ -20,7 +20,7 @@ jobs:
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
-          filter: "[?'push' == '${{ github.event.action }}' || server=='devmirror']"
+          filter: "[?  server=='devmirror']"
 
   build:
     runs-on: ubuntu-latest
