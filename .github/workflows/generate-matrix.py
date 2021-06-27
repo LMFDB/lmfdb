@@ -17,9 +17,13 @@ import os
 workflows_dir = os.path.dirname(os.path.abspath(__file__))
 assert workflows_dir.endswith('workflows')
 r = []
+strip = lambda elt: elt if not elt.startswith('lmfdb') else '/'.join(elt.split('/')[1:-1])
 from itertools import product
 for f, s in product(files, server):
-    r.append({'files': f, 'server': s})
+    r.append({'files': f,
+              'server': s,
+              'folders': ' '.join(sorted(set(map(strip, f.split())))),
+              })
 import json
 with open(os.path.join(workflows_dir, 'matrix_includes.json'), 'w') as W:
     W.write(json.dumps(r, indent=4) + '\n')
