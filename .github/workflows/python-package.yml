@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
-    name: Test ${{matrix.server}} ${{matrix.files}}
+    name: Test ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v2
 
