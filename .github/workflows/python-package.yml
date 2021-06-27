@@ -12,6 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        server:
+          - "devmirror"
+          - "proddb"
         files:  # files below + test_workshoplinks.py + test_external.py = 37 total number of test files
           - "lint" # this one is not a file but triggers to only do linting
           - "lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py"
@@ -83,6 +86,13 @@ jobs:
       shell: bash -l {0}
       # If this fails you need to update the file list above and file count
       run: test $(find lmfdb -name 'test_*.py'  | wc -l) -eq 37
+
+    - name: generate config
+      if: matrix.server == 'proddb'
+      env:
+        LMFDB_CI_ACCESS: ${{ secrets.LMFDB_CI_ACCESS }}
+      run: |
+        sage -python lmfdb/utils/config.py  --postgresql-host proddb.lmfdb.xyz  --postgresql-pass "$LMFDB_CI_ACCESS"
 
     - name: Run LMFDB tests
       if: matrix.files != 'lint'
