@@ -24,13 +24,13 @@ jobs:
           # using JMESPath https://jmespath.org/examples.html
           filter: "[? 'push' == '${{ github.event.action }}' || server=='devmirror']"
 
-  build:
+  test:
     runs-on: ubuntu-latest
     needs: matrix_prep
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
-    name: Build
+    name: Test ${{matrix.server}} ${{matrix.files}}
     steps:
     - uses: actions/checkout@v2
 
