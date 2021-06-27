@@ -16,11 +16,12 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Conditional Build Matrix
+        id: set-matrix
         uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
-          filter: '[?  server==`devmirror`]'
+          filter: "[? 'push' == '${{ github.event.action }}' || server=='devmirror']"
 
   build:
     runs-on: ubuntu-latest
