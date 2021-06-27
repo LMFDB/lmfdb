@@ -91,6 +91,7 @@ jobs:
       if: matrix.server == 'proddb'
       env:
         LMFDB_CI_ACCESS: ${{ secrets.LMFDB_CI_ACCESS }}
+      shell: bash -l {0}
       run: |
         sage -python lmfdb/utils/config.py  --postgresql-host proddb.lmfdb.xyz  --postgresql-pass "$LMFDB_CI_ACCESS"
 
