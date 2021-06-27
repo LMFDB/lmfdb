@@ -17,16 +17,21 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 import random
 import string
 import __main__
 
-from lmfdb.backend.config import Configuration as _Configuration
 
 root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 
+# We don't want to trigger the lmfdb/__init__.py
+working_dir = sys.path[0]
+sys.path[0] = os.path.join(root_lmfdb_path, 'lmfdb', 'backend')
+from config import Configuration as _Configuration
+sys.path[0] = working_dir
 
 def abs_path_lmfdb(filename):
     return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
