@@ -1,0 +1,40 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.is_congruent %}
+
+<p>
+  {{ info.n }} is a congruent number.  The congruent number elliptic
+  curve $E_{ {{info.n}} }$ has rank {{info.rank}}.  It has {% if
+  info.rank==1 %}generator{%else%}generators{%endif%} {{info.gens}}.
+</p>
+
+<p>
+  A rational right triangle with area {{info.n}} is
+  ({{info.triangle.X}}, {{info.triangle.Y}}, {{info.triangle.Z}}).
+</p>
+
+{%  else %}
+
+<p>
+  {{ info.n }} is not a congruent number.
+  The congruent number elliptic curve $E_{ {{info.n}} }$ has rank 0.
+</p>
+{% endif %}
+
+<p>
+$E_{ {{info.n}} }$ has conductor {{info.conductor}}.
+{% if info.in_db == 'exact' %}
+It is in the main database with LMFDB label
+<a href="{{info.url}}">{{info.label}}</a>.
+{% else %}
+{% if info.in_db == 'isomorphic' %}
+It is isomorphic to the database curve with LMFDB label
+<a href="{{info.url}}">{{info.label}}</a>.
+{% else %} It is not in the database.
+{% endif %}
+{% endif %}
+</p>
+
+
+{% endblock %}

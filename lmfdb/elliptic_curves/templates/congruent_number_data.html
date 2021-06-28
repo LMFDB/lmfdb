@@ -1,0 +1,390 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>
+  Data for the first 1,000,000 Congruent Number Elliptic Curves is
+  available, provided by Randall L. Rathbun.  For each of the first
+  1,000,000 positive integers $n$, this includes data for the $n$th
+  congruent number elliptic curve $E_n$, from which it can be
+  determined whether or not $n$ is a congruent number, and a solution
+  to the congruent number problem when it is.
+</p>
+
+<h2>The congruent number problems, congruent numbers and congruent
+number curves</h2>
+
+<p>
+A congruent number $n$ is a rational number which is the area
+$\frac{1}{2}XY$ of a right triangle with rational legs $X$, $Y$ and
+rational hypotenuse $Z$, so that \[ X^2 + Y^2 = Z^2 \tag{1} \] and \[
+\frac{1}{2} XY = n. \tag{2} \] The
+congruent number problem is the problem of determining whether a given
+rational number is or is not a congruent number.  Since $n$ is
+congruent if and only if $nt^2$ is, for any nonzero rational number
+$t$, it is sufficient to consider the case where $n$ is a square-free
+integer; nevertheless, the data here includes the 392074
+non-squarefree integers up to one million as well as the 607926
+squarefree integers.
+</p>
+<p>
+For example, $6$ is a congruent number because it is the area of the
+$3,4,5$ right triangle.
+</p>
+<p>
+A positive integer $n$ is congruent if and only if there exists a
+rational number $a$, such that $a$, $a-n$ and $a+n$ are all squares of
+rational numbers.  For, given $X,Y,Z$ satisfying (1) and (2),
+$a=(Z/2)^2$ satisfies $a\pm n=((X\pm Y)/2)^2$, and conversely, given
+$a=A^2$ with $a+n=B^2$ and $a-n=C^2$, set $(X,Y,Z)=(2A,B+C,B-C)$.
+</p>
+<p>
+For example, with the $3,4,5$ right triangle and $n = 6$, let $a =
+25/4=(5/2)^2$; then $a-n=25/4 - 6 = (1/2)^2$ and $a+n=25/4 + 6 =
+(7/2)^2$.
+</p>
+
+<p>
+It is known that a positive integer number $n$ is congruent if and
+only if there exists a rational solution $(x,y)$ with $y\not=0$ to the
+{{ KNOWL('ec', title='elliptic curve') }} equation: \[ E_n:\quad y^2 =
+x^3 - n^2 x, \] or, in other words, a rational point $P=(x,y)\in
+E_n(\Q)$ with $y\not=0$.  (Given $(X,Y,Z)$, set $x=\frac{1}{4}Z^2$ and
+$y=\frac{1}{8}Z(X^2-Y^2)$.)  Moreover, the only rational points of
+finite order on $E_n(\Q)$ are the point at infinity (the origin for
+the group law) and the three points of order $2$: $(0,0)$, $(\pm
+n,0)$; thus, $n$ is congruent if and only if $E_n(\Q)$ is infinite,
+that is, if and only if the {{ KNOWL('ec.rank', title='rank') }} of
+$E_n(\Q)$ is positive.
+
+For example, the elliptic curve $E_6: y^2 = x^3 - 36x$ has rank $1$,
+with Mordell-Weil group $E_6(\Q)$ generated (modulo torsion) by $P =
+(-3,9)$, and $2P=(25/4,-35/8)$ is the rational point arising from the
+$(3,4,5)$-triangle.  In general, only points in $2E_n(\Q)$ give
+solutions to the congruent number problem.
+</p>
+
+<h2>Individual numbers</h2>
+
+<p>
+Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
+</p>
+
+<h2>Format of the Files</h2>
+
+Each file consists of 1,000,000 lines, indexed by a positive integer
+$n$ (the area) and tab delimited.
+
+<h3>Conductor</h3>
+<p>
+  The {{ KNOWL('ec.q.conductor', title='conductor') }} of $E_n$ is
+  $32n_0^2$ when the square-free part $n_0$ of $n$ is odd, and
+  $16n_0^2$ when $n_0$ is even.
+  <form>
+    <button type="submit" name="filename" value="CN.conductors"
+            onclick="$('#infomessage').text('');return true">Fetch file (20M)</button>
+  </form>
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th>conductor</tr>
+    <tr><td>000012<td align=right>288</tr>
+    <tr><td>000013<td align=right>5408</tr>
+    <tr><td>000014<td align=right>3136</tr>
+    <tr><td>000015<td align=right>7200</tr>
+    <tr><td>000016<td align=right>32</tr>
+  </table>
+</p>
+
+<!---
+<h3>Elliptic curve coefficients</h3>
+<p>
+  The Weierstrass coefficients $[a_1,a_2,a_3,a_4,a_6]=[0,0,0,-n^2,0]$ of the congruent number curve $E_n$.
+  <form>
+    <button type="submit" name="filename" value="CN.curves"
+            onclick="$('#infomessage').text('');return true">Fetch file (30M)</button>
+  </form>
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th>elliptic curve</tr>
+    <tr><td>000019<td>[0,0,0,-361,0]</tr>
+    <tr><td>000020<td>[0,0,0,-400,0]</tr>
+    <tr><td>000021<td>[0,0,0,-441,0]</tr>
+    <tr><td>000022<td>[0,0,0,-484,0]</tr>
+  </table>
+</p>
+--->
+
+<h3>Mordell-Weil rank</h3>
+<p>
+  The {{ KNOWL('ec.rank', title='rank') }} of the congruent number curve $E_n$.
+  <form>
+    <button type="submit" name="filename" value="CN.rank"
+            onclick="$('#infomessage').text('');return true">Fetch file (8.6M)</button>
+  </form>
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th>rank</tr>
+    <tr><td>000027<td>0</tr>
+    <tr><td>000028<td>1</tr>
+    <tr><td>000029<td>1</tr>
+    <tr><td>000030<td>1</tr>
+    <tr><td>000031<td>1</tr>
+  </table>
+</p>
+
+<p>
+  The distribution of ranks over the first 1,000,000 congruentt number curves is as follows:
+  <table>
+    <tr><th>rank<th align=left>count</tr>
+    <tr><td>0<td align=right>  446,823</tr>
+    <tr><td>1<td align=right>  497,599</tr>
+    <tr><td>2<td align=right>   53,153</tr>
+    <tr><td>3<td align=right>    2,394</tr>
+    <tr><td>4<td align=right>       31</tr>
+  </table>
+</p>
+    
+<p>
+  There are no curves of rank 5 or greater in this range. It has
+  been shown (see Number Theory List Server postings #004175 and
+  #004177, 2011-08-25, 2011-0908) that the first two rank 5
+  congruent number curves are at $n = 48,272,239$ and $n =
+  51,604,646$, both outside the range of this table.
+</p>
+
+<h3>{{ KNOWL('ec.mw_generators', title='Mordell-Weil generators') }}    </h3>
+<p>
+  <form>
+    <button type="submit" name="filename" value="CN.MWgroup"
+            onclick="$('#infomessage').text('');return true">Fetch file (765M)</button>
+  </form>
+</p>
+<p>
+  This file contains $r$ independent points which generate $E_n(\Q)$
+  (modulo torsion), where $r$ is the rank of $E_n(\Q)$, except for
+  $12$ cases where the rank is $2$ but only one generator is known.
+</p>
+
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th align=left>generator(s)</tr>
+    <tr><td>000046<td>[[242,3696]]</tr>
+    <tr><td>000047<td>[[16851025/261121,47401321680/133432831]]</tr>
+    <tr><td>000048<td>[]</tr>
+    <tr><td>000049<td>[]</tr>
+    <tr><td>000050<td>[]</tr>
+  </table>
+</p>
+
+<p>
+  An attempt has been made to provide a reduced Mordell-Weil basis;
+  the heights of the generators are in a separate file (see below).
+  
+  Saturation has been carefully checked for all given generators.
+</p>
+
+<p>
+  In the 12 cases (all of rank $2$) where the Mordell-Weil basis is
+  not completely known, then the first generator is provided, and
+  the second denoted by '?':
+  <table>
+    <tr><th>$n$<th align=left>first generator, with unknown second noted</tr>
+    <tr><td>378953<td>[[-189225,142822680],[?,?]]</tr>
+    <tr><td>462073<td>[[-24025,71524440],[?,?]]</tr>
+    <tr><td>548953<td>[[-525625,114787800],[?,?]]</tr>
+    <tr><td>593273<td>[[-27225,97786920],[?,?]]</tr>
+    <tr><td>701377<td>[[5321616037822692538225/1117677695665969,383973673624891848750755187069840/37365850888385932159703],[?,?]]</tr>
+    <tr><td>757633<td>[[-148225,286051920],[?,?]]</tr>
+    <tr><td>764593<td>[[-207025,334894560],[?,?]]</tr>
+    <tr><td>799657<td>[[-94381225/289,2049376840680/4913],[?,?]]</tr>
+    <tr><td>822722<td>[[-360000,443866800],[?,?]]</tr>
+    <tr><td>937121<td>[[-12321,104011440],[?,?]]</tr>
+    <tr><td>982777<td>[[-65933914176/469225,117194007082061832/321419125],[?,?]]</tr>
+    <tr><td>998617<td>[[-24025/289,44733048360/4913],[?,?]]</tr>
+  </table>
+</p>
+
+<p>
+  Note that that each congruent number elliptic curve $E_n$ belongs to
+  an {{ KNOWL('ec.isogeny_class', title='isogeny class') }} of 4
+  isogenous curves, connected by {{ KNOWL('ec.isogeny',
+  title='2-isogenies') }}.  The curves $2$-isogenous to
+  $E_n=[0,0,0,-n^2,0]$ are $[0,0,0,4n^2,0]$ and $[0,\pm 12n,0,n^2,0]$.
+  When finding generators for each curve, it was sometimes easier to
+  first find generators for the isogenous curves, when these had
+  smaller height.
+</p>
+
+<h3>Heights of the Mordell-Weil generators</h3>
+<p>
+  <form>
+    <button type="submit" name="filename" value="CN.height"
+            onclick="$('#infomessage').text('');return true">Fetch file (33M)</button>
+  </form>
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>n<th align=left>height (to 38 digits)</tr>
+    <tr><td>000037<td>[13.565420700285587131748445129250521300]</tr>
+    <tr><td>000038<td>[7.2286193070581855218163982610716326618]</tr>
+    <tr><td>000039<td>[2.8903191319369181337467743951378616733]</tr>
+    <tr><td>000040<td>[]</tr>
+    <tr><td>000041<td>[3.4601199799961583975543768130219921692,6.4099090409768820282955272168992370368]</tr>
+  </table>
+</p>
+<p>
+  In this sample, $E_n$ for $n=40$ is a rank 0 curve, hence not a
+  congruent number, while for $n=41$, $E_n$ is a rank 2 curve; the
+  other 3 are rank 1 curves.
+</p>
+<p>
+  This table may to be used to find the
+  actual congruent number triangles $(X,Y,Z)$ using the formulas
+  given above, from any $P\in 2E_n(\Q)$.  If the generators are
+  $P_1,\dots,P_r$ we may take $P=a_1P_1+\dots a_rP_r$ where the
+  integers $a_i$ are all even.
+</p>
+
+<h3>Regulator</h3>
+<p>
+  <form>
+    <button type="submit" name="filename" value="CN.regulator"
+            onclick="$('#infomessage').text('');return true">Fetch file (29M)</button>
+  </form>
+  Note that the regulator of a rank 0 curve is defined to be $1$.
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th align=left>regulator (to 38 digits)</tr>
+    <tr><td>000067<td>1</tr>
+    <tr><td>000068<td>1</tr>
+    <tr><td>000069<td>5.5707634705261050921421249225850855811</tr>
+    <tr><td>000070<td>2.0646625307750852988759495831254136060</tr>
+    <tr><td>000071<td>8.2038627182201825660872629682555644917</tr>
+    <tr><td>000072<td>1</tr>
+  </table>
+
+<!---
+<h3>Leading coefficient of the $L$-series</h3>
+<p>
+    <form>
+      <button type="submit" name="filename" value="CN.lseries"
+              onclick="$('#infomessage').text('');return true">Fetch file (86M)</button>
+    </form>
+  <p>
+ (10 digit accuracy)
+
+    sample entries:
+
+       N     1st deriv     2nd deriv     3rd deriv     4th deriv     5th deriv
+    ------  ------------  ------------  ------------  ------------- ------------
+    000010  1.0000000000  1.7747228220  0.8662192243  0.2125791161  0.0324288690
+    000011  1.0000000000  5.0287543698  3.4292746597  1.0883981505  0.2090896800
+    000012  1.0000000000  0.7433315622  0.1967169086  0.0282164288  0.0026154146
+    000013  5.8325117370  6.6551055653  3.0544087209  0.7889511726  0.1332477420
+    000014  2.1341208490  2.3792490764  0.9844806969  0.2253212093  0.0336384055
+    000015  1.4913448119  2.0011395922  1.0123355524  0.2824489312  0.0510920942
+
+    The L-series entries are used to verify the Tate-Sha group and to help
+    ascertain the true rank of the Elliptic Curve (assuming BSD)
+ --->
+ 
+<h3>Root number</h3>
+<p>
+  <form>
+    <button type="submit" name="filename" value="CN.root.number"
+            onclick="$('#infomessage').text('');return true">Fetch file (9.6M)</button>
+  </form>
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th align=left></tr>
+    <tr><td>000058<td>+1</tr>
+    <tr><td>000059<td>+1</tr>
+    <tr><td>000060<td>-1</tr>
+    <tr><td>000061<td>-1</tr>
+  </table>
+
+<h3>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of the Tate-Shafarevich group &#1064;') }}</h3>
+<p>
+  <form>
+    <button type="submit" name="filename" value="CN.Tate-Sha"
+            onclick="$('#infomessage').text('');return true">Fetch file (8.9M)</button>
+  </form>
+</p>
+<p>
+  This file contains the {{ KNOWL('ec.analytic_sha_order', title='analytic order')}} of the Tate-Shafarevich group &#1064;($E_n$).
+</p>
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th align-left>Analytic order of &#1064;</tr>
+    <tr><td>001225<td>1</tr>
+    <tr><td>001226<td>25</tr>
+    <tr><td>001227<td>4</tr>
+    <tr><td>001228<td>25</tr>
+    <tr><td>001229<td>1</tr>
+    <tr><td>001230<td>1</tr>
+    <tr><td>001231<td>1</tr>
+    <tr><td>001232<td>1</tr>
+    <tr><td>001233<td>1</tr>
+    <tr><td>001234<td>4</tr>
+  </table>
+  
+<p>
+  The order of &#1064; is conjectured to always be an integer
+  square.
+</p>
+
+<p>
+  There are 12 unknown values in this database corresponding to the 12
+  missing Mordell Weil generators for the 12 rank 2 elliptic curves.
+  The missing values are denoted by '?' in the file.
+</p>
+
+<h3>Class counts</h3>
+<p> Here, core($n$) is the square-free part of $n$, and "the classes
+  were used for quadratic units in determining mock Heegner points for
+  rank 1 curves."
+  <form>
+    <button type="submit" name="filename" value="CN.classes"
+            onclick="$('#infomessage').text('');return true">Fetch file (19M)</button>
+  </form>
+</p>
+
+<p>
+  Sample lines:
+  <table>
+    <tr><th>$n$<th>core<th>$n\%8$<th>class count</tr>
+    <tr><td>    000025<td>  1<td>       1<td>       1</tr>
+    <tr><td>    000026<td>  26<td>      2<td>       6</tr>
+    <tr><td>    000027<td>  3<td>       3<td>       1</tr>
+    <tr><td>    000028<td>  7<td>       7<td>       4</tr>
+    <tr><td>    000029<td>  29<td>      5<td>       2</tr>
+  </table>
+</p>
+
+<h2>Credit and acknowledgements</h2> 
+
+<p>
+These data files were created by Randall L. Rathbun on Thursday Feb
+14, 2013 at 3:31 pm PST.  Some data was provided by Allan J MacLeod,
+the rest computed by Rathbun using <tt>PARI/GP</tt> and <tt>eclib</tt>
+(in particular <tt>mwrank</tt>).  The notes were provided by Rathbun,
+with editing for the LMFDB by John Cremona.
+</p>
+
+<div id='infomessage'>
+{{ info.message }}
+</div>
+
+{% endblock %}
