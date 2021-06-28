@@ -66,23 +66,30 @@ solutions to the congruent number problem.
 <h2>Individual numbers</h2>
 
 <p>
-Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
+  Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
+<form>
+<input type='text' name='lookup' placeholder='6' size='6'>
+<button type='submit'>Look up $n$</button>
+<br><span class="formexample">e.g. 6</span>
+</form>
+
 </p>
 
-<h2>Format of the Files</h2>
+<h2>Format of the data files</h2>
 
-Each file consists of 1,000,000 lines, indexed by a positive integer
+Each file consists of 1,000,000 lines, indexed by the positive integer
 $n$ (the area) and tab delimited.
 
-<h3>Conductor</h3>
-<p>
-  The {{ KNOWL('ec.q.conductor', title='conductor') }} of $E_n$ is
-  $32n_0^2$ when the square-free part $n_0$ of $n$ is odd, and
-  $16n_0^2$ when $n_0$ is even.
+<h3>Conductor
   <form>
     <button type="submit" name="filename" value="CN.conductors"
             onclick="$('#infomessage').text('');return true">Fetch file (20M)</button>
   </form>
+</h3>
+<p>
+  The {{ KNOWL('ec.q.conductor', title='conductor') }} of $E_n$ is
+  $32n_0^2$ when the square-free part $n_0$ of $n$ is odd, and
+  $16n_0^2$ when $n_0$ is even.
 </p>
 <p>
   Sample lines:
@@ -97,13 +104,14 @@ $n$ (the area) and tab delimited.
 </p>
 
 <!---
-<h3>Elliptic curve coefficients</h3>
-<p>
-  The Weierstrass coefficients $[a_1,a_2,a_3,a_4,a_6]=[0,0,0,-n^2,0]$ of the congruent number curve $E_n$.
+<h3>Elliptic curve coefficients
   <form>
     <button type="submit" name="filename" value="CN.curves"
             onclick="$('#infomessage').text('');return true">Fetch file (30M)</button>
   </form>
+</h3>
+<p>
+  The Weierstrass coefficients $[a_1,a_2,a_3,a_4,a_6]=[0,0,0,-n^2,0]$ of the congruent number curve $E_n$.
 </p>
 <p>
   Sample lines:
@@ -117,13 +125,14 @@ $n$ (the area) and tab delimited.
 </p>
 --->
 
-<h3>Mordell-Weil rank</h3>
-<p>
-  The {{ KNOWL('ec.rank', title='rank') }} of the congruent number curve $E_n$.
+<h3>Mordell-Weil rank
   <form>
     <button type="submit" name="filename" value="CN.rank"
             onclick="$('#infomessage').text('');return true">Fetch file (8.6M)</button>
   </form>
+</h3>
+<p>
+  The {{ KNOWL('ec.rank', title='Mordell-Weil rank') }} of $E_n(\Q)$.
 </p>
 <p>
   Sample lines:
@@ -157,13 +166,12 @@ $n$ (the area) and tab delimited.
   51,604,646$, both outside the range of this table.
 </p>
 
-<h3>{{ KNOWL('ec.mw_generators', title='Mordell-Weil generators') }}    </h3>
-<p>
+<h3>{{ KNOWL('ec.mw_generators', title='Mordell-Weil generators') }}
   <form>
     <button type="submit" name="filename" value="CN.MWgroup"
             onclick="$('#infomessage').text('');return true">Fetch file (765M)</button>
   </form>
-</p>
+</h3>
 <p>
   This file contains $r$ independent points which generate $E_n(\Q)$
   (modulo torsion), where $r$ is the rank of $E_n(\Q)$, except for
@@ -190,7 +198,7 @@ $n$ (the area) and tab delimited.
 </p>
 
 <p>
-  In the 12 cases (all of rank $2$) where the Mordell-Weil basis is
+  In the 8 cases (all of rank $2$) where the Mordell-Weil basis is
   not completely known, then the first generator is provided, and
   the second denoted by '?':
   <table>
@@ -198,14 +206,10 @@ $n$ (the area) and tab delimited.
     <tr><td>378953<td>[[-189225,142822680],[?,?]]</tr>
     <tr><td>462073<td>[[-24025,71524440],[?,?]]</tr>
     <tr><td>548953<td>[[-525625,114787800],[?,?]]</tr>
-    <tr><td>593273<td>[[-27225,97786920],[?,?]]</tr>
-    <tr><td>701377<td>[[5321616037822692538225/1117677695665969,383973673624891848750755187069840/37365850888385932159703],[?,?]]</tr>
-    <tr><td>757633<td>[[-148225,286051920],[?,?]]</tr>
     <tr><td>764593<td>[[-207025,334894560],[?,?]]</tr>
     <tr><td>799657<td>[[-94381225/289,2049376840680/4913],[?,?]]</tr>
     <tr><td>822722<td>[[-360000,443866800],[?,?]]</tr>
     <tr><td>937121<td>[[-12321,104011440],[?,?]]</tr>
-    <tr><td>982777<td>[[-65933914176/469225,117194007082061832/321419125],[?,?]]</tr>
     <tr><td>998617<td>[[-24025/289,44733048360/4913],[?,?]]</tr>
   </table>
 </p>
@@ -221,17 +225,16 @@ $n$ (the area) and tab delimited.
   smaller height.
 </p>
 
-<h3>Heights of the Mordell-Weil generators</h3>
-<p>
+<h3>Heights of the Mordell-Weil generators
   <form>
     <button type="submit" name="filename" value="CN.height"
             onclick="$('#infomessage').text('');return true">Fetch file (33M)</button>
   </form>
-</p>
+</h3>
 <p>
   Sample lines:
   <table>
-    <tr><th>n<th align=left>height (to 38 digits)</tr>
+    <tr><th>$n$<th align=left>height (to 38 digits)</tr>
     <tr><td>000037<td>[13.565420700285587131748445129250521300]</tr>
     <tr><td>000038<td>[7.2286193070581855218163982610716326618]</tr>
     <tr><td>000039<td>[2.8903191319369181337467743951378616733]</tr>
@@ -252,13 +255,14 @@ $n$ (the area) and tab delimited.
   integers $a_i$ are all even.
 </p>
 
-<h3>Regulator</h3>
-<p>
+<h3>Regulator
   <form>
     <button type="submit" name="filename" value="CN.regulator"
             onclick="$('#infomessage').text('');return true">Fetch file (29M)</button>
   </form>
-  Note that the regulator of a rank 0 curve is defined to be $1$.
+</h3>
+<p>
+  Note that the regulator of a rank 0 curve is $1$.
 </p>
 <p>
   Sample lines:
@@ -273,12 +277,13 @@ $n$ (the area) and tab delimited.
   </table>
 
 <!---
-<h3>Leading coefficient of the $L$-series</h3>
-<p>
+<h3>Leading coefficient of the $L$-series
     <form>
       <button type="submit" name="filename" value="CN.lseries"
               onclick="$('#infomessage').text('');return true">Fetch file (86M)</button>
     </form>
+</h3>
+<p>
   <p>
  (10 digit accuracy)
 
@@ -297,32 +302,42 @@ $n$ (the area) and tab delimited.
     ascertain the true rank of the Elliptic Curve (assuming BSD)
  --->
  
-<h3>Root number</h3>
-<p>
-  <form>
+<h3>{{ KNOWL('lfunction.sign', title='Root number') }}  <form>
     <button type="submit" name="filename" value="CN.root.number"
             onclick="$('#infomessage').text('');return true">Fetch file (9.6M)</button>
   </form>
+</h3>
+  <p>
+    The {{ KNOWL('lfunction.sign', title='root number') }} of an
+    elliptic curve is the sign ($+1$ or $-1$) of the {{
+    KNOWL('lfunction.functional_equation', title = 'functional
+    equation') }} satisfied by its {{ KNOWL('lfunction', title =
+    'L-function') }}.  It is also equal to $(-1)^{r_{\text{an}}}$
+    where $r_{\text{an}}$ is the {{ KNOWL('ec.q.analytic_rank',
+    title='analytic rank') }} of the elliptic curve, and hence by the
+    {{ KNOWL('ec.q.bsdconjecture', title='Birch-Swinnerton-Dyer
+    Conjecture') }} is expected to be equal to $(-1)^r$ where $r$ is
+    the rank of the {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil
+    group') }}.
 </p>
 <p>
   Sample lines:
   <table>
-    <tr><th>$n$<th align=left></tr>
+    <tr><th>$n$<th align=left>root number</tr>
     <tr><td>000058<td>+1</tr>
     <tr><td>000059<td>+1</tr>
     <tr><td>000060<td>-1</tr>
     <tr><td>000061<td>-1</tr>
   </table>
 
-<h3>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of the Tate-Shafarevich group &#1064;') }}</h3>
-<p>
-  <form>
+<h3>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of the Tate-Shafarevich group &#1064;') }}
+    <form>
     <button type="submit" name="filename" value="CN.Tate-Sha"
             onclick="$('#infomessage').text('');return true">Fetch file (8.9M)</button>
   </form>
-</p>
+</h3>
 <p>
-  This file contains the {{ KNOWL('ec.analytic_sha_order', title='analytic order')}} of the Tate-Shafarevich group &#1064;($E_n$).
+  This file contains the (rounded) {{ KNOWL('ec.analytic_sha_order', title='analytic order')}} of the Tate-Shafarevich group &#1064;($E_n$).
 </p>
 <p>
   Sample lines:
@@ -346,30 +361,31 @@ $n$ (the area) and tab delimited.
 </p>
 
 <p>
-  There are 12 unknown values in this database corresponding to the 12
-  missing Mordell Weil generators for the 12 rank 2 elliptic curves.
+  There are 8 unknown values in this database corresponding to the 8
+  missing Mordell Weil generators for the 8 rank 2 elliptic curves.
   The missing values are denoted by '?' in the file.
 </p>
 
-<h3>Class counts</h3>
-<p> Here, core($n$) is the square-free part of $n$, and "the classes
-  were used for quadratic units in determining mock Heegner points for
-  rank 1 curves."
+<h3>Class counts
   <form>
     <button type="submit" name="filename" value="CN.classes"
             onclick="$('#infomessage').text('');return true">Fetch file (19M)</button>
   </form>
+</h3>
+<p> Here, core($n$) is the square-free part of $n$, and "the classes
+  were used for quadratic units in determining mock Heegner points for
+  rank 1 curves."
 </p>
 
 <p>
   Sample lines:
   <table>
-    <tr><th>$n$<th>core<th>$n\%8$<th>class count</tr>
-    <tr><td>    000025<td>  1<td>       1<td>       1</tr>
-    <tr><td>    000026<td>  26<td>      2<td>       6</tr>
-    <tr><td>    000027<td>  3<td>       3<td>       1</tr>
-    <tr><td>    000028<td>  7<td>       7<td>       4</tr>
-    <tr><td>    000029<td>  29<td>      5<td>       2</tr>
+    <tr><th>$n$<th>core<th>$n\pmod8$<th>class count</tr>
+    <tr><td>000025<td>  1<td>       1<td>       1</tr>
+    <tr><td>000026<td>  26<td>      2<td>       6</tr>
+    <tr><td>000027<td>  3<td>       3<td>       1</tr>
+    <tr><td>000028<td>  7<td>       7<td>       4</tr>
+    <tr><td>000029<td>  29<td>      5<td>       2</tr>
   </table>
 </p>
 

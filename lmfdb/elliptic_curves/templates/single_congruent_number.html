@@ -1,12 +1,28 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+{% if info.error %}
+
+<p>
+  The congruent number database only holds data for positive integers between 1 and 1,000,000.
+</p>
+
+{% else %}
+
 {% if info.is_congruent %}
 
 <p>
   {{ info.n }} is a congruent number.  The congruent number elliptic
-  curve $E_{ {{info.n}} }$ has rank {{info.rank}}.  It has {% if
-  info.rank==1 %}generator{%else%}generators{%endif%} {{info.gens}}.
+  curve $E_{ {{info.n}} }$ has rank {{info.rank}}.
+
+  {% if info.rank==1 %}
+  Its generator is {{info.gens}}.
+  {%else%}
+  {% if info.missing_generator %} One generator is  {{info.gens}}; the other is not yet computed.
+  {%else%}
+  Its generators are {{info.gens}}.
+  {% endif %}
+  {% endif %}
 </p>
 
 <p>
@@ -36,5 +52,6 @@ It is isomorphic to the database curve with LMFDB label
 {% endif %}
 </p>
 
+{% endif %}
 
 {% endblock %}

@@ -640,6 +640,8 @@ def ec_code_download(**args):
 @ec_page.route("/CongruentNumbers")
 def render_congruent_number_data():
     info = to_dict(request.args)
+    if 'lookup' in info:
+        return redirect(url_for(".render_single_congruent_number", n=info['lookup']))
     learnmore = learnmore_list_remove('Congruent numbers and curves')
     t = 'Congruent numbers and congruent number curves'
     bread = get_bread(t)
@@ -655,9 +657,12 @@ def render_congruent_number_data():
 
 @ec_page.route("/CongruentNumber/<int:n>")
 def render_single_congruent_number(n):
-    info = get_congruent_number_data(n)
+    if 0 < n and n <= 1000000:
+        info = get_congruent_number_data(n)
+    else:
+        info = {'n': n, 'error': 'out of range'}
     t = "Is {} a congruent number?".format(n)
-    bread = get_bread("Congruent numbers")
+    bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
 
