@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import linecache
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import raw_typeset
@@ -8,9 +9,17 @@ from sage.all import EllipticCurve, QQ
 
 congruent_number_data_directory = os.path.expanduser('~/data/congruent-number-curves')
 
-def get_CN_data(file_suffix, n):
-    with open(os.path.join(congruent_number_data_directory, "CN.{}".format(file_suffix))) as data:
+def CNfilename(file_suffix):
+    return os.path.join(congruent_number_data_directory, "CN.{}".format(file_suffix))
+
+def get_CN_data_old(fs, n):
+    with open(CNfilename(fs)) as data:
         return data.readlines()[n-1].split()
+
+def get_CN_data_new(fs, n):
+    return linecache.getline(CNfilename(fs), n).split()
+
+get_CN_data = get_CN_data_new
 
 def parse_gens_string(s):
     if s == '[]':
