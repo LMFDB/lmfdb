@@ -16,18 +16,21 @@
   curve $E_{ {{info.n}} }$ has rank {{info.rank}}.
 
   {% if info.rank==1 %}
-  Its generator is {{info.gens}}.
+  Its generator is {{info.gen | safe}}.
   {%else%}
-  {% if info.missing_generator %} One generator is  {{info.gens}}; the other is not yet computed.
+  {% if info.missing_generator %} One generator is  {{info.gen | safe}}; the other is not yet computed.
   {%else%}
-  Its generators are {{info.gens}}.
+  Its generators are:
+  <table>
+    {% for pt in info.gens %} <tr><td> {{pt | safe}} </tr> {% endfor %}
+  </table>
   {% endif %}
   {% endif %}
 </p>
 
 <p>
-  A rational right triangle with area {{info.n}} is
-  ({{info.triangle.X}}, {{info.triangle.Y}}, {{info.triangle.Z}}).
+  One rational right triangle with area {{info.n}} has sides
+  \(X={{info.triangle.X}}\) and \(Y={{info.triangle.Y}}\), and hypoteneuse \(Z={{info.triangle.Z}}\).
 </p>
 
 {%  else %}
@@ -39,7 +42,7 @@
 {% endif %}
 
 <p>
-$E_{ {{info.n}} }$ has conductor {{info.conductor}}.
+The elliptic curve $E_{ {{info.n}} }$ has conductor {{info.conductor}}.
 {% if info.in_db == 'exact' %}
 It is in the main database with LMFDB label
 <a href="{{info.url}}">{{info.label}}</a>.

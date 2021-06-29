@@ -63,10 +63,10 @@ $(3,4,5)$-triangle.  In general, only points in $2E_n(\Q)$ give
 solutions to the congruent number problem.
 </p>
 
-<h2>Individual numbers</h2>
+<h2>Congruence property of individual numbers</h2>
 
 <p>
-  Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
+Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
 <form>
 <input type='text' name='lookup' placeholder='6' size='6'>
 <button type='submit'>Look up $n$</button>
@@ -75,15 +75,27 @@ solutions to the congruent number problem.
 
 </p>
 
-<h2>Format of the data files</h2>
+<h2>Data files</h2>
+
+<p>
+  Files containing
+<a href="#cond">conductors</a>,
+<a href="#rk">ranks</a>,
+<a href="#gens">generators</a>,
+<a href="#hts">heights</a>,
+<a href="#reg">regulators</a>,
+<a href="#rtno">root numbers</a>,
+<a href="#sha">(analytic) orders of &#1064;</a>
+are available for download.
 
 Each file consists of 1,000,000 lines, indexed by the positive integer
 $n$ (the area) and tab delimited.
+</p>
 
-<h3>Conductor
+<h3><a name="cond">Conductor</a>
   <form>
-    <button type="submit" name="filename" value="CN.conductors"
-            onclick="$('#infomessage').text('');return true">Fetch file (20M)</button>
+    <button type="submit" name="filename" value="CN.conductor"
+            onclick="$('#infomessage').text('hello?');return true">Fetch file (20M)</button>
   </form>
 </h3>
 <p>
@@ -106,7 +118,7 @@ $n$ (the area) and tab delimited.
 <!---
 <h3>Elliptic curve coefficients
   <form>
-    <button type="submit" name="filename" value="CN.curves"
+    <button type="submit" name="filename" value="CN.curve"
             onclick="$('#infomessage').text('');return true">Fetch file (30M)</button>
   </form>
 </h3>
@@ -125,7 +137,7 @@ $n$ (the area) and tab delimited.
 </p>
 --->
 
-<h3>Mordell-Weil rank
+<h3><a name="rk">Mordell-Weil rank</a>
   <form>
     <button type="submit" name="filename" value="CN.rank"
             onclick="$('#infomessage').text('');return true">Fetch file (8.6M)</button>
@@ -147,7 +159,7 @@ $n$ (the area) and tab delimited.
 </p>
 
 <p>
-  The distribution of ranks over the first 1,000,000 congruentt number curves is as follows:
+  The distribution of ranks over the first 1,000,000 congruent number curves is as follows:
   <table>
     <tr><th>rank<th align=left>count</tr>
     <tr><td>0<td align=right>  446,823</tr>
@@ -160,13 +172,14 @@ $n$ (the area) and tab delimited.
     
 <p>
   There are no curves of rank 5 or greater in this range. It has
-  been shown (see Number Theory List Server postings #004175 and
-  #004177, 2011-08-25, 2011-0908) that the first two rank 5
-  congruent number curves are at $n = 48,272,239$ and $n =
-  51,604,646$, both outside the range of this table.
+  been shown (see Number Theory List Server postings <a href="https://listserv.nodak.edu/cgi-bin/wa.exe?A2=NMBRTHRY;16b991d8.1108&S=">#004175</a> and
+  <a href="https://listserv.nodak.edu/cgi-bin/wa.exe?A2=NMBRTHRY;90748741.1109&S=">#004177</a>
+  from 2011) that the first two rank 5 congruent number curves are at
+  $n = 48,272,239$ and $n = 51,604,646$, both outside the range of
+  this table.
 </p>
 
-<h3>{{ KNOWL('ec.mw_generators', title='Mordell-Weil generators') }}
+<h3><a name="gens">{{ KNOWL('ec.mw_generators', title='Mordell-Weil generators') }}</a>
   <form>
     <button type="submit" name="filename" value="CN.MWgroup"
             onclick="$('#infomessage').text('');return true">Fetch file (765M)</button>
@@ -225,7 +238,7 @@ $n$ (the area) and tab delimited.
   smaller height.
 </p>
 
-<h3>Heights of the Mordell-Weil generators
+<h3><a name="hts">Heights of the Mordell-Weil generators</a>
   <form>
     <button type="submit" name="filename" value="CN.height"
             onclick="$('#infomessage').text('');return true">Fetch file (33M)</button>
@@ -255,7 +268,7 @@ $n$ (the area) and tab delimited.
   integers $a_i$ are all even.
 </p>
 
-<h3>Regulator
+<h3><a name="reg">Regulator</a>
   <form>
     <button type="submit" name="filename" value="CN.regulator"
             onclick="$('#infomessage').text('');return true">Fetch file (29M)</button>
@@ -276,6 +289,16 @@ $n$ (the area) and tab delimited.
     <tr><td>000072<td>1</tr>
   </table>
 
+<p>
+  The largest regulators are the following, both for curves of rank 2:
+  <table>
+    <tr><th>$n$<th align=left>regulator (to 38 digits)</tr>
+    <tr><td>894097<td>111327.01853534395558512966201243653950</tr>
+    <tr><td>856417<td>111192.73058837910329021633303899432936</tr>
+  </table>
+</p>
+
+  
 <!---
 <h3>Leading coefficient of the $L$-series
     <form>
@@ -302,7 +325,8 @@ $n$ (the area) and tab delimited.
     ascertain the true rank of the Elliptic Curve (assuming BSD)
  --->
  
-<h3>{{ KNOWL('lfunction.sign', title='Root number') }}  <form>
+<h3><a name="rtno">{{ KNOWL('lfunction.sign', title='Root number') }}</a>
+  <form>
     <button type="submit" name="filename" value="CN.root.number"
             onclick="$('#infomessage').text('');return true">Fetch file (9.6M)</button>
   </form>
@@ -330,7 +354,7 @@ $n$ (the area) and tab delimited.
     <tr><td>000061<td>-1</tr>
   </table>
 
-<h3>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of the Tate-Shafarevich group &#1064;') }}
+<h3><a name="sha">{{ KNOWL('ec.analytic_sha_order', title='Analytic order of the Tate-Shafarevich group &#1064;') }}</a>
     <form>
     <button type="submit" name="filename" value="CN.Tate-Sha"
             onclick="$('#infomessage').text('');return true">Fetch file (8.9M)</button>
@@ -366,7 +390,7 @@ $n$ (the area) and tab delimited.
   The missing values are denoted by '?' in the file.
 </p>
 
-<h3>Class counts
+<h3><a name="misc">Class counts</a>
   <form>
     <button type="submit" name="filename" value="CN.classes"
             onclick="$('#infomessage').text('');return true">Fetch file (19M)</button>
@@ -381,22 +405,23 @@ $n$ (the area) and tab delimited.
   Sample lines:
   <table>
     <tr><th>$n$<th>core<th>$n\pmod8$<th>class count</tr>
-    <tr><td>000025<td>  1<td>       1<td>       1</tr>
-    <tr><td>000026<td>  26<td>      2<td>       6</tr>
-    <tr><td>000027<td>  3<td>       3<td>       1</tr>
-    <tr><td>000028<td>  7<td>       7<td>       4</tr>
-    <tr><td>000029<td>  29<td>      5<td>       2</tr>
+    <tr><td>000025<td>1<td>1<td>1</tr>
+    <tr><td>000026<td>26<td>2<td>6</tr>
+    <tr><td>000027<td>3<td>3<td>1</tr>
+    <tr><td>000028<td>7<td>7<td>4</tr>
+    <tr><td>000029<td>29<td>5<td>2</tr>
   </table>
 </p>
 
 <h2>Credit and acknowledgements</h2> 
 
 <p>
-These data files were created by Randall L. Rathbun on Thursday Feb
-14, 2013 at 3:31 pm PST.  Some data was provided by Allan J MacLeod,
-the rest computed by Rathbun using <tt>PARI/GP</tt> and <tt>eclib</tt>
-(in particular <tt>mwrank</tt>).  The notes were provided by Rathbun,
-with editing for the LMFDB by John Cremona.
+These data files were created by Randall L. Rathbun on February 14,
+2013 with updates on May 18, 2014.  Some data was provided by Allan J
+MacLeod, the rest computed by Rathbun using <tt>PARI/GP</tt>
+and <tt>eclib</tt> (in particular <tt>mwrank</tt>).  The information
+on this page is based on notes provided by Rathbun, edited for the
+LMFDB by John Cremona.
 </p>
 
 <div id='infomessage'>
