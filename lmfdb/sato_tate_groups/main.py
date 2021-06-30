@@ -820,7 +820,6 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
         elif data['degree'] == 6:
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             if len(s) >= 56:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:56]]
@@ -828,7 +827,7 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
             elif len(s) >= 23:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
             if len(s) >= 56:
                 info['simplex_header'][-1] = ""
     if data.get('character_matrix'):
@@ -842,7 +841,7 @@ def render_by_label(label):
         z = data['zvector']
         if data['degree'] == 4:
             if sum(z) == 0:
-                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>"
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-2,3)]) + '</th></tr>'
@@ -854,7 +853,7 @@ def render_by_label(label):
             info['probabilities'] = s
         elif data['degree'] == 6:
             if sum(z) == 0:
-                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>"
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'
