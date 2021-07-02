@@ -22,7 +22,7 @@ jobs:
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
-          filter: "[? ('push' == '${{ github.event_name }}' && '${{ secrets.LMFDB_CI_ACCESS }}')  || server == 'devmirror']"
+          filter: "[? '${{ secrets.LMFDB_CI_ACCESS }}' || server == 'devmirror']"
 
 
   test:
