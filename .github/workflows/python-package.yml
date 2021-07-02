@@ -1,4 +1,4 @@
-name: T
+name: Tests
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
-    name: T:${{matrix.server}} ${{matrix.folders}}
+    name: ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v2
 
