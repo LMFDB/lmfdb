@@ -24,6 +24,7 @@ jobs:
           # using JMESPath https://jmespath.org/examples.html
           filter: "[? ('push' == '${{ github.event_name }}' && '${{ secrets.LMFDB_CI_ACCESS }}')  || server == 'devmirror']"
 
+
   test:
     runs-on: ubuntu-latest
     needs: matrix_prep
