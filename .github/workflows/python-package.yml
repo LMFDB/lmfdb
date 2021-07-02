@@ -1,4 +1,4 @@
-name: LMFDB CI
+name: Tests
 
 on:
   push:
@@ -22,7 +22,8 @@ jobs:
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
-          filter: "[? 'push' == '${{ github.event_name }}' || server == 'devmirror']"
+          filter: "[? '${{ secrets.LMFDB_CI_ACCESS }}' || server == 'devmirror']"
+
 
   test:
     runs-on: ubuntu-latest
@@ -30,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
-    name: Test ${{matrix.server}} ${{matrix.folders}}
+    name: ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v2
 
