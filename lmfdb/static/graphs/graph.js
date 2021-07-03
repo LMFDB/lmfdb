@@ -77,8 +77,8 @@ Graph = class {
     addNodes(values, orders) {
         for(var j=0, item; item = values[j]; j++) {
             for(var k=0, item2; item2 = item[k]; k++) {
-                dbug2=item2;
-                var myx = Math.max(k, item2[7]);
+                var myx = Math.max(k, item2[6]);
+                //var myx = Math.max(k, item2[7]);  // old version
                 this.addNode(item2, myx, orders, {});
             }
         }
@@ -102,7 +102,6 @@ class Node {
     this.highlit = false;
     this.label = '';
     this.image = null;
-    this.center = [100,100];
     this.level = 0;
 }
 
@@ -224,39 +223,39 @@ class Renderer {
         if(! node.ready) {
           img.onload = function() {
             node.ready=true;
-            ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
+            ctxt.drawImage(img,node.layoutPosX-0.5*img.width,node.layoutPosY-4);
             if(node.ccsize>1) {
-              ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+              ctxt.fillText(node.ccsize, node.layoutPosX-0.5*img.width-8, 12+node.layoutPosY);
             };
           };
         } else {
-        var lft = node.center[0]-0.5*img.width;
+        var lft = node.layoutPosX-0.5*img.width;
 
         if(node.selected) {
           ctxt.fillStyle= selected_color;
-          ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+          ctxt.fillRect(lft-2, node.layoutPosY-6, img.width+2, img.height+3);
         } else if(node.highlit) {
           ctxt.fillStyle= highlit_color;
-          ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+          ctxt.fillRect(lft-2, node.layoutPosY-6, img.width+2, img.height+3);
         }
-        ctxt.drawImage(node.image,lft,node.center[1]-4);
+        ctxt.drawImage(node.image,lft,node.layoutPosY-4);
         this.ctx.strokeStyle = 'black';
         this.ctx.fillStyle = 'black';
         if(node.ccsize>1) {
-          ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+          ctxt.fillText(node.ccsize, node.layoutPosX-0.5*img.width-8, 12+node.layoutPosY);
         }
       }
     }
 
     drawEdge(edge) {
-        var source = edge.source.center;
-        var target = edge.target.center;
+        var source = [edge.source.layoutPosX,edge.source.layoutPosY];
+        var target = [edge.target.layoutPosX,edge.target.layoutPosY];
 
         var tan = (target[1] - source[1]) / (target[0] - source[0]);
-    var extra = Math.abs(tan)< 0.7 ? 4 : -4;
+        var extra = Math.abs(tan)< 0.7 ? 4 : -4;
         var theta = Math.atan(tan);
         if(source[0] <= target[0]) {theta = Math.PI+theta}
-    var img = edge.source.image
+        var img = edge.source.image
         source = this.rotate(source, -this.radius-extra, theta, img.width, img.height);
         target = this.rotate(target, this.radius+extra, theta, img.width, img.height);
 
@@ -304,7 +303,10 @@ class Renderer {
     reposition() {
         for (var i = 0; i < this.graph.nodes.length; i++) {
           var node = this.graph.nodes[i];
-          node.center = this.translate([node.layoutPosX, node.layoutPosY]);
+          var newcenter = this.translate([node.layoutPosX, node.layoutPosY]);
+          //console.log("newcenter="+newcenter);
+          node.layoutPosX = newcenter[0];
+          node.layoutPosY = newcenter[1];
         }
   }
 
@@ -372,17 +374,17 @@ class Layout {
 
     linearPrepare() {
         this.levs = new Array();
-    var totx = 0;
+        var totx = 0;
         for (var i = 0, node; node = this.graph.nodes[i]; i++) {
             var thisLevel = node.level || 0;
             if(typeof(this.levs[thisLevel])=='undefined') {
                 this.levs[thisLevel] = new Array();
             }
             this.levs[thisLevel].push(node);
-      node.layoutPosX = 0;
-      node.layoutPosY = -10*thisLevel;
-            node.layoutForceX = 0;
-    }
+          node.layoutPosX = 0;
+          node.layoutPosY = -10*thisLevel;
+          node.layoutForceX = 0;
+        }
         this.numlevs = this.levs.length;
 
         //for (var i=0, node; node = this.graph.nodes[i]; i++) {
@@ -396,18 +398,18 @@ class Layout {
 
     layoutPrepare(by_order) {
         this.levs = new Array();
-    var totx = 0;
+        var totx = 0;
         for (var i = 0, node; node = this.graph.nodes[i]; i++) {
             var thisLevel = node.level || 0;
             if(typeof(this.levs[thisLevel])=='undefined') {
               this.levs[thisLevel] = new Array();
             }
             this.levs[thisLevel].push(node);
-      node.layoutPosX = node.posn;
-      totx += node.posn;
-      node.layoutPosY = -10*thisLevel;
-          node.layoutForceX = 0;
-    }
+            node.layoutPosX = node.posn;
+            totx += node.posn;
+            node.layoutPosY = -10*thisLevel;
+            node.layoutForceX = 0;
+        }
         this.numlevs = this.levs.length;
 
     // Make trivial and whole group come at the start and end
@@ -700,7 +702,7 @@ class EventHandler {
   updateDrag(event) {
     if(this.activeNode) {
       if(this.options.moveNodeOnDrag) {
-              this.activeNode.center[0] = this.offset(event)[0];
+              this.activeNode.layoutPosX = this.offset(event)[0];
       }
       this.options.updateNodeDrag(this.activeNode, event);
     }
@@ -763,6 +765,7 @@ var ambientlabel;
 
 function make_sdiagram(canv, ambient, nodes, edges, orders) {
   g = new Graph(ambient);
+  //dbug2=nodes;
   g.addNodes(nodes, orders);
   ourg = g;
   ambientlabel=ambient;
