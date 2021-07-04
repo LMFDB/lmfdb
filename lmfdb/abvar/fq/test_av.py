@@ -126,3 +126,14 @@ class AVTest(LmfdbTest):
         response = self.tc.get("Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D")
         self.assertTrue("Below is a list" in response.get_data(as_text=True))
         self.assertTrue("32*x^10" in response.get_data(as_text=True))
+
+    def test_download_all(self):
+        r"""
+        Test downloading all stored data to text
+        """
+
+        page = self.tc.get('Variety/Abelian/Fq/download_all/1.81.r', follow_redirects=True)
+        assert '"abvar_counts": [64, 6400, 529984, 43033600,' in page.get_data(as_text=True)
+
+        page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
+        assert '"curve_counts": [21, 283, 4719, 84395' in page.get_data(as_text=True)

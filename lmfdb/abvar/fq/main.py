@@ -23,6 +23,7 @@ from .search_parsing import parse_newton_polygon, parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.utils import redirect_no_cache
+from lmfdb.abvar.fq.download import AbvarFq_download
 
 logger = make_logger("abvarfq")
 
@@ -50,6 +51,16 @@ def learnmore_list():
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
+
+#########################
+#    Downloads
+#########################
+
+@abvarfq_page.route("/download_all/<label>")
+def download_all(label):
+    return AbvarFq_download().download_all(label)
+
 
 #########################
 #  Search/navigate
@@ -108,9 +119,14 @@ def abelian_varieties_by_gqi(g, q, iso):
         (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso))
     )
 
+    downloads = [
+        ('All stored data to text', url_for('.download_all', label=label))
+    ]
+
     return render_template(
         "show-abvarfq.html",
         properties=cl.properties(),
+        downloads=downloads,
         title='Abelian variety isogeny class %s over $%s$'%(label, cl.field()),
         bread=bread,
         cl=cl,
