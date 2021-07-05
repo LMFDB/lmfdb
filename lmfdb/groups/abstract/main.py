@@ -452,7 +452,7 @@ def make_knowl(title, knowlid):
 
 @abstract_page.route("/subinfo/<label>")
 def shortsubinfo(label):
-    if not sub_label_is_valid(label):
+    if not subgroup_label_is_valid(label):
         # Should only come from code, so return nothing if label is bad
         return ''
     wsg = WebAbstractSubgroup(label)
