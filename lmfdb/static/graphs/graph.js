@@ -63,7 +63,6 @@ Graph = class {
             node.level = orders.indexOf(value[4]);
             node.image = new Image();
             node.image.src = value[5];
-            node.lat_level = value[6];
             node.ready = false;
             node.key = key;
 
@@ -78,7 +77,6 @@ Graph = class {
         for(var j=0, item; item = values[j]; j++) {
             for(var k=0, item2; item2 = item[k]; k++) {
                 var myx = Math.max(k, item2[6]);
-                //var myx = Math.max(k, item2[7]);  // old version
                 this.addNode(item2, myx, orders, {});
             }
         }
