@@ -23,7 +23,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,
-    group_phrase, galois_group_data,
+    group_phrase, galois_group_data, group_display_knowl,
     group_cclasses_knowl_guts, group_pretty_and_nTj,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
@@ -470,8 +470,13 @@ def render_field_webpage(args):
                     else:
                         loc_alg += '<tr>'
                     if len(mm)==4:
-                        loc_alg += '<td></td><td>Deg {}</td><td>{}</td><td>{}</td><td>{}</td><td></td><td></td>'.format(
-                            mm[1]*mm[2], mm[1], mm[2], mm[3])
+                        if mm[1]*mm[2]==1:
+                            loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,group_display_knowl(1,1), show_slope_content([],1,1))
+                        elif mm[1]*mm[2]==2:
+                            loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],group_display_knowl(2,1), show_slope_content([],mm[1],mm[2]))
+                        else:
+                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td></td><td></td>'.format(
+                                mm[1]*mm[2], mm[1], mm[2], mm[3])
                     else:
                         lab = mm[0]
                         myurl = url_for('local_fields.by_label', label=lab)
