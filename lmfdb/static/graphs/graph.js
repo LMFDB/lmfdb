@@ -223,33 +223,33 @@ class Renderer {
         if(! node.ready) {
           img.onload = function() {
             node.ready=true;
-            ctxt.drawImage(img,node.layoutPosX-0.5*img.width,node.layoutPosY-4);
+            ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
             if(node.ccsize>1) {
-              ctxt.fillText(node.ccsize, node.layoutPosX-0.5*img.width-8, 12+node.layoutPosY);
+              ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
             };
           };
         } else {
-        var lft = node.layoutPosX-0.5*img.width;
+        var lft = node.center[0]-0.5*img.width;
 
         if(node.selected) {
           ctxt.fillStyle= selected_color;
-          ctxt.fillRect(lft-2, node.layoutPosY-6, img.width+2, img.height+3);
+          ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
         } else if(node.highlit) {
           ctxt.fillStyle= highlit_color;
-          ctxt.fillRect(lft-2, node.layoutPosY-6, img.width+2, img.height+3);
+          ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
         }
-        ctxt.drawImage(node.image,lft,node.layoutPosY-4);
+        ctxt.drawImage(node.image,lft,node.center[1]-4);
         this.ctx.strokeStyle = 'black';
         this.ctx.fillStyle = 'black';
         if(node.ccsize>1) {
-          ctxt.fillText(node.ccsize, node.layoutPosX-0.5*img.width-8, 12+node.layoutPosY);
+          ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
         }
       }
     }
 
     drawEdge(edge) {
-        var source = [edge.source.layoutPosX,edge.source.layoutPosY];
-        var target = [edge.target.layoutPosX,edge.target.layoutPosY];
+        var source = edge.source.center;
+        var target = edge.target.center;
 
         var tan = (target[1] - source[1]) / (target[0] - source[0]);
         var extra = Math.abs(tan)< 0.7 ? 4 : -4;
@@ -274,14 +274,14 @@ class Renderer {
         var mind = Infinity;
         var rsquared = this.options.radius*this.options.radius;
         for (var i = 0, n; n=this.graph.nodes[i]; i++) {
-          var np = this.translate([n.layoutPosX, n.layoutPosY]);
-          var dx = point[0] - np[0];
-          var dy = point[1] - np[1];
-          var d = dx * dx + dy * dy;
-          if(d < mind && d <= rsquared) {
+            var np = this.translate([n.layoutPosX, n.layoutPosY]);
+            var dx = point[0] - np[0];
+            var dy = point[1] - np[1];
+            var d = dx * dx + dy * dy;
+            if(d < mind && d <= rsquared) {
                 mind = d;
                 node = n;
-          }
+            }
         }
         return node;
   }
@@ -303,10 +303,8 @@ class Renderer {
     reposition() {
         for (var i = 0; i < this.graph.nodes.length; i++) {
           var node = this.graph.nodes[i];
-          var newcenter = this.translate([node.layoutPosX, node.layoutPosY]);
+          node.center = this.translate([node.layoutPosX, node.layoutPosY]);
           //console.log("newcenter="+newcenter);
-          node.layoutPosX = newcenter[0];
-          node.layoutPosY = newcenter[1];
         }
   }
 
@@ -597,10 +595,10 @@ class EventHandler {
         var handlerinit = function(event){ event.data.initDrag(event) };
         var handlerupdrag = function(event){ event.data.updateDrag(event) };
         var handlerenddrag = function(event){ event.data.endDrag(event) };
-    var handlermousemove = function(event) { event.data.mouseMove(event)};
-    var handlertouchstart = function(event) {
-      var touch = event.touches[0];
-      var mouseEvent = new MouseEvent("mousedown", {
+        var handlermousemove = function(event) { event.data.mouseMove(event)};
+        var handlertouchstart = function(event) {
+        var touch = event.touches[0];
+        var mouseEvent = new MouseEvent("mousedown", {
         clientX: touch.clientX,
         clientY: touch.clientY
       });
@@ -690,7 +688,7 @@ class EventHandler {
               this.activeNode.select();
               this.renderer.draw();
           } else {
-        clearsubinfo();
+              clearsubinfo();
               this.renderer.unselectNodes();
               this.renderer.draw();
       }
@@ -702,7 +700,7 @@ class EventHandler {
   updateDrag(event) {
     if(this.activeNode) {
       if(this.options.moveNodeOnDrag) {
-              this.activeNode.layoutPosX = this.offset(event)[0];
+              this.activeNode.center[0] = this.offset(event)[0];
       }
       this.options.updateNodeDrag(this.activeNode, event);
     }
