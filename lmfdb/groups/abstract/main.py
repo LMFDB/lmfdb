@@ -31,6 +31,11 @@ ngroups = None
 max_order = None
 init_absgrp_flag = False
 
+def yesno(val):
+    if val:
+        return 'yes'
+    return 'no'
+
 def init_grp_count():
     global ngroups, init_absgrp_flag, max_order
     if not init_absgrp_flag or True : # Always recalculate for now
@@ -75,56 +80,110 @@ def get_bread(breads=[]):
 
 #function to create string of group characteristics
 def create_boolean_string(gp, short_string=False):
-    if gp.abelian:
-        strng = display_knowl('group.abelian','Abelian')
-        if gp.cyclic:
-            strng += ", " + display_knowl('group.cyclic', "Cyclic")
+    cyclic_str = display_knowl('group.cyclic', 'Cyclic') 
+    abelian_str = display_knowl('group.abelian','Abelian')
+    nonabelian_str =  display_knowl('group.abelian', "non-Abelian")
+    nilpotent_str = display_knowl('group.nilpotent', "Nilpotent")
+    supersolvable_str = display_knowl('group.supersolvable', "Supersolvable")
+    monomial_str = display_knowl('group.monomial', "Monomial")
+    solvable_str = display_knowl('group.solvable', "Solvable")
+    nonsolvable_str = display_knowl('group.solvable', "non-Solvable")
+    zgroup_str = display_knowl('group.z_group', "Zgroup")
+    agroup_str = display_knowl('group.a_group', "Agroup")
+    metacyclic_str = display_knowl('group.metacyclic', "Metacyclic")
+    metabelian_str = display_knowl('group.metabelian', "Metabelian")
+    quasisimple_str = display_knowl('group.quasisimple', "Quasisimple")
+    almostsimple_str = display_knowl('group.almost_simple', "Almost Simple")
+    simple_str = display_knowl('group.simple', "Simple")
+    perfect_str = display_knowl('group.perfect', "Perfect")
+    rational_str= display_knowl('group.rational_group', "Rational")
+
+
+    #nilpotent implies supersolvable for finite groups
+    #supersolvable imples monomial for finite groups
+    #Zgroup implies metacyclic for finite groups
+    
+    if gp.cyclic:
+        strng = cyclic_str + " (hence " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", and a " + zgroup_str + " hence " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")"
+        if gp.simple:
+            strng += "<br>" + simple_str
+
+    elif gp.abelian:
+        strng = abelian_str + " (hence " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str +  ", as well as " +  metabelian_str + ", and an " + agroup_str +  ")"
+        if gp.Zgroup:
+            strng += "<br>" + zgroup_str + " (hence " + metacyclic_str + ")"
+
+            
+#rest will assume non-abelian            
     else:
-        strng = display_knowl('group.abelian', "non-Abelian")
+        strng = nonabelian_str
 
-    if gp.solvable:
-        strng += ", " +  display_knowl('group.solvable', "Solvable")
-        if gp.supersolvable:
-            strng += ", " + display_knowl('group.supersolvable', "Supersolvable")
-    else:
-        strng += ", " + display_knowl('group.solvable', "non-Solvable")
+        #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
+        if gp.nilpotent:
+            strng += " and " + nilpotent_str + " (hence " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+            if gp.metacyclic:
+                strng += "<br>"  + metacyclic_str + " (hence " + metabelian_str + ")"
+            elif gp.metabelian:
+                strng += "<br>" + metabelian_str
 
-    if gp.nilpotent:
-        strng += ", " + display_knowl('group.nilpotent', "Nilpotent")
+        elif gp.Zgroup:
+            strng += " and " + zgroup_str + " (hence " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str + " as well as " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
 
-    if gp.metacyclic:
-        strng += ", " +  display_knowl('group.metacyclic', "Metacyclic")
+        elif gp.metacyclic:
+            strng += " and " + metacyclic_str +  " (hence " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
 
-    if gp.metabelian:
-        strng += ", " +  display_knowl('group.metabelian', "Metabelian")
 
-    if gp.simple:
-        strng += ", " +  display_knowl('group.simple', "Simple")
+        elif gp.supersolvable:
+            strng += " and " + supersolvable_str + " (hence " + monomial_str + " and " + solvable_str + ")"
+            if gp.Agroup:
+                strng += "<br>" + agroup_str
+            if gp.metabelian:
+                strng += "<br>" + metabelian_str
 
-    if short_string:
-        return strng
+        elif gp.metabelian:
+            strng += " and " + metabelian_str + " (hence " + solvable_str + ")"
+            if gp.monomial:
+                strng += "<br>" + monomial_str
 
-    if gp.almost_simple:
-        strng += ", " +  display_knowl('group.almost_simple', "Almost Simple")
+        elif gp.monomial:
+            strng += " and " + monomial_str + " (hence " + solvable_str + ")"
+            
+        elif gp.solvable:
+            strng += " and " + solvable_str
 
-    if gp.quasisimple:
-        strng += ", " +  display_knowl('group.quasisimple', "Quasisimple")
+        else:
+            strng += " and " + nonsolvable_str
 
-    if gp.perfect:
-        strng += ", " +  display_knowl('group.perfect', "Perfect")
+        #nonabelian only here so QS and perfect and AS too        
+        if gp.simple:
+            strng += " and " + simple_str + " (hence " + quasisimple_str + ", " + perfect_str + ", and " + almostsimple_str + ")"
 
-    if gp.monomial:
-        strng += ", " +  display_knowl('group.monomial', "Monomial")
+        elif gp.quasisimple:
+            strng += " and " + quasisimple_str + " (hence " + perfect_str + ")"
+            if gp.almost_simple:
+                strng += "<br>" + almostsimple_str
 
+        elif gp.perfect:
+            strng += " and " + perfect_str
+            if gp.almost_simple:
+                strng += "<br>" +  almostsimple_str
+
+        elif  gp.almost_simple:
+            strng += "<br>" +  almostsimple_str
+
+        #if Zgroup, already labeled as Agroup    
+        if gp.Agroup and not gp.Zgroup:
+            strng += "<br>" + agroup_str
+            
     if gp.rational:
-        strng += ", " +  display_knowl('group.rational_group', "Rational")
+        strng += "<br>" +  rational_str
 
-    if gp.Zgroup:
-        strng += ", " +  display_knowl('group.z_group', "Zgroup")
 
-    if gp.Agroup:
-        strng += ", " +  display_knowl('group.a_group', "Agroup")
+# didn't bother with short_string for now        
+#   if short_string:
+#       return strng
 
+        
     return strng
 
 
@@ -308,7 +367,7 @@ def render_abstract_group(label):
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
 
-        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
+        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
         totsubs = len(gp.subgroups)
@@ -393,9 +452,25 @@ def render_abstract_group(label):
 
     title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
+
+    if gp.cyclic:
+        abelian_property_string = "Cyclic"
+    elif gp.abelian:
+        abelian_property_string = "Abelian"
+    else:
+        abelian_property_string ="non-Abelian"
+
+    if gp.solvable:
+        solvable_property_string = "Solvable"
+    else:
+        solvable_property_string ="non-Solvable"
+       
+    
     properties = [
         ('Label', label),
         ('Order', '$%s$' % factored_order),
+        (abelian_property_string, ' '),
+        (solvable_property_string, ' '),
         #('#$\operatorname{Aut}(G)$', '$%s$' % aut_order),
         #('#$\operatorname{Out}(G)$', '$%s$' % out_order),
         #('#$Z(G)$', '$%s$' % z_order),
