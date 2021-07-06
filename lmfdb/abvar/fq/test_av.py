@@ -133,7 +133,7 @@ class AVTest(LmfdbTest):
         """
 
         page = self.tc.get('Variety/Abelian/Fq/download_all/1.81.r', follow_redirects=True)
-        assert '"abvar_counts": [64, 6400, 529984, 43033600,' in page.get_data(as_text=True)
+        assert '"abvar_counts": [99, 6435, 532224, 43043715,' in page.get_data(as_text=True)
 
         page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
         assert '"curve_counts": [21, 283, 4719, 84395' in page.get_data(as_text=True)
@@ -149,7 +149,7 @@ class AVTest(LmfdbTest):
         page = self.tc.get('Variety/Abelian/Fq/download_curves/2.19.ae_w', follow_redirects=True)
         assert 'y^2=3*x^6+18*x^5+15*x^4+12*x^3+x^2+5*x+18' in page.get_data(as_text=True)
 
-        page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
+        page = self.tc.get('Variety/Abelian/Fq/3.17.d_b_act', follow_redirects=True)
         assert not 'Curves to text' in page.get_data(as_text=True)
 
         page = self.tc.get('Variety/Abelian/Fq/download_curves/3.17.d_b_act', follow_redirects=True)
