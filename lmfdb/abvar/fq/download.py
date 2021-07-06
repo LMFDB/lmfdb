@@ -18,6 +18,10 @@ class AbvarFq_download(Downloader):
 
     def download_curves(self, label, lang='text'):
         data = db.av_fq_isog.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        if not 'curves' in data or ('curves' in data and not data['curves']):
+            return abort(404, "No curves for abelian variety isogeny class %s"%label)
         return self._wrap('\n'.join(data['curves']),
                           label + '.curves',
                           lang=lang,

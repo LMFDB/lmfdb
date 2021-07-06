@@ -137,3 +137,20 @@ class AVTest(LmfdbTest):
 
         page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
         assert '"curve_counts": [21, 283, 4719, 84395' in page.get_data(as_text=True)
+
+    def test_download_curves(self):
+        r"""
+        Test downloading all stored data to text
+        """
+
+        page = self.tc.get('Variety/Abelian/Fq/2.19.ae_w', follow_redirects=True)
+        assert 'Curves to text' in page.get_data(as_text=True)
+
+        page = self.tc.get('Variety/Abelian/Fq/download_curves/2.19.ae_w', follow_redirects=True)
+        assert 'y^2=3*x^6+18*x^5+15*x^4+12*x^3+x^2+5*x+18' in page.get_data(as_text=True)
+
+        page = self.tc.get('Variety/Abelian/Fq/download_all/3.17.d_b_act', follow_redirects=True)
+        assert not 'Curves to text' in page.get_data(as_text=True)
+
+        page = self.tc.get('Variety/Abelian/Fq/download_curves/3.17.d_b_act', follow_redirects=True)
+        assert 'No curves for abelian variety isogeny class 3.17.d_b_act' in page.get_data(as_text=True)
