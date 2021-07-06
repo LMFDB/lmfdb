@@ -61,6 +61,10 @@ def learnmore_list_remove(matchstring):
 def download_all(label):
     return AbvarFq_download().download_all(label)
 
+@abvarfq_page.route("/download_curves/<label>")
+def download_curves(label):
+    return AbvarFq_download().download_curves(label)
+
 
 #########################
 #  Search/navigate
@@ -122,6 +126,9 @@ def abelian_varieties_by_gqi(g, q, iso):
     downloads = [
         ('All stored data to text', url_for('.download_all', label=label))
     ]
+
+    if hasattr(cl, "curves") and cl.curves:
+        downloads.append(('Curves to text', url_for('.download_curves', label=label)))
 
     return render_template(
         "show-abvarfq.html",
