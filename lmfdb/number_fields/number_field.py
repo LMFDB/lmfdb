@@ -469,11 +469,15 @@ def render_field_webpage(args):
                         primefirstline=False
                     else:
                         loc_alg += '<tr>'
-                    if len(mm)==4:
-                        if mm[1]*mm[2]==1:
+                    if len(mm)==4:         # not in database
+                        if mm[1]*mm[2]==1: # Q_p
                             loc_alg += '<td>$\\Q_{%d}$</td><td>$x$</td><td>$1$</td><td>$1$</td><td>$0$</td><td>%s</td><td>$%s$</td>'%(p,group_display_knowl(1,1), show_slope_content([],1,1))
-                        elif mm[1]*mm[2]==2:
+                        elif mm[1]*mm[2]==2: # quadratic
                             loc_alg += '<td></td><td>Deg $2$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1],mm[2],mm[3],group_display_knowl(2,1), show_slope_content([],mm[1],mm[2]))
+                        elif mm[1]==1: # unramified
+                            # nT1 is cyclic except for n = 32
+                            cyc = 33 if mm[2] == 32 else 1
+                            loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td>{}</td><td>${}$</td>'.format(mm[1]*mm[2],mm[1],mm[2],mm[3],group_display_knowl(mm[2],cyc), show_slope_content([],mm[1],mm[2]))
                         else:
                             loc_alg += '<td></td><td>Deg ${}$</td><td>${}$</td><td>${}$</td><td>${}$</td><td></td><td></td>'.format(
                                 mm[1]*mm[2], mm[1], mm[2], mm[3])
