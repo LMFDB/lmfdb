@@ -64,7 +64,7 @@
 
 <h2> Subgroups </h2>
 
-<p>There are {{gp.number_subgroups}} subgroups{% if gp.number_normal_subgroups < gp.number_subgroups %} in {{gp.number_subgroup_classes}} conjugacy classes, {{ gp.number_normal_subgroups }} normal{% else %}, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}{{ gp.number_characteristic_subgroups }}{% else %}all{% endif %} characteristic).
+<p>There are {% if gp.number_normal_subgroups < gp.number_subgroups %}{{gp.number_subgroups}} subgroups in <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroup_classes}} conjugacy classes</a>, <a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, normal='yes')}}">{{ gp.number_normal_subgroups }} normal</a>{% else %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label)}}">{{gp.number_subgroups}} subgroups</a>, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}<a href="{{url_for('.index', search_type='Subgroups', ambient=gp.label, characteristic='yes')}}">{{ gp.number_characteristic_subgroups }} characteristic</a>{% else %}all characteristic{% endif %}).
 </p>
 
 <table>

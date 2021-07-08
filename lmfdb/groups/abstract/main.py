@@ -102,7 +102,7 @@ def create_boolean_string(gp, short_string=False):
     #nilpotent implies supersolvable for finite groups
     #supersolvable imples monomial for finite groups
     #Zgroup implies metacyclic for finite groups
-    
+
     if gp.cyclic:
         strng = cyclic_str + " (hence " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", and a " + zgroup_str + " hence " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")"
         if gp.simple:
@@ -113,8 +113,8 @@ def create_boolean_string(gp, short_string=False):
         if gp.Zgroup:
             strng += "<br>" + zgroup_str + " (hence " + metacyclic_str + ")"
 
-            
-#rest will assume non-abelian            
+
+    #rest will assume non-abelian
     else:
         strng = nonabelian_str
 
@@ -147,14 +147,14 @@ def create_boolean_string(gp, short_string=False):
 
         elif gp.monomial:
             strng += " and " + monomial_str + " (hence " + solvable_str + ")"
-            
+
         elif gp.solvable:
             strng += " and " + solvable_str
 
         else:
             strng += " and " + nonsolvable_str
 
-        #nonabelian only here so QS and perfect and AS too        
+        #nonabelian only here so QS and perfect and AS too
         if gp.simple:
             strng += " and " + simple_str + " (hence " + quasisimple_str + ", " + perfect_str + ", and " + almostsimple_str + ")"
 
@@ -171,19 +171,18 @@ def create_boolean_string(gp, short_string=False):
         elif  gp.almost_simple:
             strng += "<br>" +  almostsimple_str
 
-        #if Zgroup, already labeled as Agroup    
+        #if Zgroup, already labeled as Agroup
         if gp.Agroup and not gp.Zgroup:
             strng += "<br>" + agroup_str
-            
+
     if gp.rational:
         strng += "<br>" +  rational_str
 
 
-# didn't bother with short_string for now        
+# didn't bother with short_string for now
 #   if short_string:
 #       return strng
 
-        
     return strng
 
 
@@ -193,10 +192,10 @@ def url_for_label(label):
         return url_for(".random_abstract_group")
     return url_for("abstract.by_label", label=label)
 
-#def url_for_subgroup_label(label):
-#    if label == "random":
-#        return url_for(".random_abstract_subgroup")
-#    return url_for("abstract.by_subgroup_label", label=label)
+def url_for_subgroup_label(label):
+    if label == "random":
+        return url_for(".random_abstract_subgroup")
+    return url_for("abstract.by_subgroup_label", label=label)
 
 @abstract_page.route("/")
 def index():
@@ -334,6 +333,7 @@ def subgroup_search(info, query):
     parse_bool(info, query, 'direct')
     parse_bool(info, query, 'hall')
     parse_bool(info, query, 'sylow')
+    parse_bool(info, query, 'proper')
     parse_regex_restricted(info, query, 'subgroup', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'ambient', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'quotient', regex=abstract_group_label_regex)
@@ -500,15 +500,17 @@ def render_abstract_subgroup(label):
     info['create_boolean_string'] = create_boolean_string
     info['factor_latex'] = factor_latex
 
-    title = r'Subgroup $%s \%s %s$' % (
-        seq.subgroup_tex,
-        'trianglelefteq' if seq.normal else 'subseteq',
-        seq.ambient_tex)
+    if seq.normal:
+        title = r'Normal subgroup $%s \trianglelefteq %s$'
+    else:
+        title = r'Non-normal subgroup $%s \subseteq %s$'
+    title = title % (seq.subgroup_tex, seq.ambient_tex)
 
     properties = [
         ('Label', label),
         ('Order', factor_latex(seq.subgroup_order)),
         ('Index', factor_latex(seq.quotient_order)),
+        ('Normal', 'Yes' if seq.normal else 'No'),
     ]
 
     bread = get_bread([(label, )])
@@ -562,7 +564,7 @@ def shortsubinfo(label):
     p = wsg.sylow
     nt = 'Yes for $p$ = %d' % p if p>1 else 'No'
     ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
-    ans += '<tr><td><td style="text-align: right"><a href="%s">$%s$ home page</a>' % (url_for_label(wsg.subgroup), wsg.subgroup_tex)
+    ans += '<tr><td><td style="text-align: right"><a href="%s">$%s$ home page</a>' % (url_for_subgroup_label(wsg.label), wsg.subgroup_tex)
     #print ""
     #print ans
     ans += '</table>'
@@ -781,12 +783,16 @@ class SubgroupSearchArray(SearchArray):
             label="Ambient Order",
             knowl="group.order",
             example="128")
+        proper = YesNoBox(
+            name="proper",
+            label="Proper",
+            knowl="group.proper_subgroup")
 
         self.refine_array = [
-            [cyclic, abelian, solvable, cyclic_quotient, abelian_quotient, solvable_quotient],
-            [normal, characteristic, perfect, maximal, minimal_normal, central],
-            [direct, split, hall, sylow],
-            [subgroup_order, ambient_order, quotient_order, subgroup, ambient, quotient]]
+            [subgroup, subgroup_order, cyclic, abelian, solvable],
+            [normal, characteristic, perfect, maximal, central, proper],
+            [ambient, ambient_order, direct, split, hall, sylow],
+            [quotient, quotient_order, cyclic_quotient, abelian_quotient, solvable_quotient, minimal_normal]]
 
     def search_types(self, info):
         if info is None:

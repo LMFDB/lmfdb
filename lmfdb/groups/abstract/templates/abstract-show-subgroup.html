@@ -26,7 +26,7 @@
 </p>
 {% endif %}
 
-<h2> Ambient group information</h2>
+<h2> {{KNOWL('group.ambient', 'Ambient group information')}} </h2>
 
 <p>
   <table>
@@ -65,7 +65,7 @@
 <p>
   <table>
     <tr><td>{{KNOWL('group.centralizer', 'Centralizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.centralizer)}}">${{seq.centralizer_.subgroup_tex}}$</a></td></tr>
-    <tr><td>{{KNOWL('group.centralizer', 'Normalizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normalizer)}}">${{seq.normalizer_.subgroup_tex}}$</a></td></tr>
+    <tr><td>{{KNOWL('group.subgroup.normalizer', 'Normalizer:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normalizer)}}">${{seq.normalizer_.subgroup_tex}}$</a></td></tr>
     {% if not seq.normal %}
     <tr><td>{{KNOWL('group.subgroup.normal_closure', 'Normal closure:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.normal_closure)}}">${{seq.normal_closure_.subgroup_tex}}$</a></td></tr>
     <tr><td>{{KNOWL('group.core', 'Core:')}}</td><td><a href="{{url_for('.by_subgroup_label', label=seq.core)}}">${{seq.core_.subgroup_tex}}$</a></td></tr>

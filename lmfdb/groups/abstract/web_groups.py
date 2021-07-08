@@ -536,6 +536,8 @@ class WebAbstractSubgroup(WebObj):
                 elif x.startswith('D'):
                     specials.append('%s term in the %s' % (n, display_knowl('group.derived_series', 'derived series')))
                 # Don't show chief series since it's not canonical
+        if self.sylow:
+            specials.append(display_knowl("group.sylow_subgroup", "%s-Sylow subgroup" % self.sylow))
         return ', '.join(specials)
 
     def _lookup(self, label, data, Wtype):
