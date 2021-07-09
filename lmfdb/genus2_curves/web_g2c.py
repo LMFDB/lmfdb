@@ -7,7 +7,7 @@ from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          display_knowl, web_latex_factored_integer)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
-from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
+#from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -97,7 +97,6 @@ def url_for_ec(label):
         return url_for('ec.by_ec_label', label = label)
     else:
         (nf, cond, isog, num) = split_ecnf_label(label)
-        cond = convert_IQF_label(nf,cond)
         url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
         return url
 
@@ -107,7 +106,6 @@ def url_for_ec_class(ec_label):
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:
         (nf, cond, isog, num) = split_ecnf_label(ec_label)
-        cond = convert_IQF_label(nf,cond)
         return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 def ec_label_class(ec_label):
@@ -489,8 +487,8 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        cond = convert_IQF_label(parts[1],parts[2])
-        label = parts[1] + "-" + cond + "-" + parts[3]
+        #cond = convert_IQF_label(parts[1],parts[2])
+        label = parts[1] + "-" + parts[2] + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]

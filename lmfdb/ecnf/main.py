@@ -27,7 +27,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
-from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
+from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
@@ -278,7 +278,6 @@ def show_ecnf_conductor(nf, conductor_label):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
@@ -304,7 +303,6 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
@@ -338,7 +336,6 @@ def show_ecnf(nf, conductor_label, class_label, number):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
@@ -661,7 +658,6 @@ def statistics_by_signature(d,r):
 @ecnf_page.route("/download_all/<nf>/<conductor_label>/<class_label>/<number>")
 def download_ECNF_all(nf,conductor_label,class_label,number):
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
