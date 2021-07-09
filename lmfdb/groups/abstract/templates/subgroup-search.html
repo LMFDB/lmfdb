@@ -10,12 +10,12 @@
   <thead>
     <tr>
       <th></th>
-      <th colspan=10>Subgroup</th>
-      <th colspan=2>Ambient</th>
-      <th colspan=6>Quotient</th>
+      <th colspan=10 class="center">Subgroup</th>
+      <th colspan=2 class="center">Ambient</th>
+      <th colspan=6 class="center">Quotient</th>
     </tr>
     <tr>
-      <th>{{ KNOWL('group.subgroup_label', title='Label') }}</th>
+      <th class="border-right">{{ KNOWL('group.subgroup_label', title='Label') }}</th>
       <th>{{ KNOWL('group.name', title='Name') }}</th>
       <th>{{ KNOWL('group.order', title='Order') }}</th>
       <th>{{ KNOWL('group.subgroup.normal', title='norm') }}</th>
@@ -25,9 +25,9 @@
       <th>{{ KNOWL('group.solvable', title='solv') }}</th>
       <th>{{ KNOWL('group.maximal_subgroup', title='max') }}</th>
       <th>{{ KNOWL('group.perfect', title='perf') }}</th>
-      <th>{{ KNOWL('group.central', title='cent') }}</th>
+      <th class="border-right">{{ KNOWL('group.central', title='cent') }}</th>
       <th>{{ KNOWL('group.name', title='Name') }}</th>
-      <th>{{ KNOWL('group.order', title='Order') }}</th>
+      <th class="border-right">{{ KNOWL('group.order', title='Order') }}</th>
       <th>{{ KNOWL('group.name', title='Name') }}</th>
       <th>{{ KNOWL('group.order', title='Order') }}</th>
       <th>{{ KNOWL('group.cyclic', title='cyc') }}</th>
@@ -39,7 +39,7 @@
   <tbody>
     {% for sub in info.results: %}
       <tr>
-        <td> <a href="{{info.subgroup_url(sub.label)}}">{{sub.label}}</a> </td>
+        <td class="border-right"> <a href="{{info.subgroup_url(sub.label)}}">{{sub.label}}</a> </td>
         <td> <a href="{{info.group_url(sub.subgroup)}}">${{sub.subgroup_tex}}$</a> </td>
         <td> {{info.show_factor(sub.subgroup_order)}} </td>
         <td> {{('&#x2713;' if sub.normal else '')|safe}} </td>
@@ -49,9 +49,9 @@
         <td> {{('&#x2713;' if sub.solvable else '')|safe}} </td>
         <td> {{('&#x2713;' if sub.maximal else '')|safe}} </td>
         <td> {{('&#x2713;' if sub.perfect else '')|safe}} </td>
-        <td> {{('&#x2713;' if sub.central else '')|safe}} </td>
+        <td class="border-right"> {{('&#x2713;' if sub.central else '')|safe}} </td>
         <td> <a href="{{info.group_url(sub.ambient)}}">${{sub.ambient_tex}}$</a> </td>
-        <td> {{info.show_factor(sub.ambient_order)}} </td>
+        <td class="border-right"> {{info.show_factor(sub.ambient_order)}} </td>
         {% if sub.normal %}
         <td> <a href="{{info.group_url(sub.quotient)}}">${{sub.quotient_tex}}$</a> </td>
         <td> {{info.show_factor(sub.quotient_order)}} </td>
