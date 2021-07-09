@@ -7,7 +7,6 @@ from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          display_knowl, web_latex_factored_integer)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
-#from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -487,7 +486,6 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        #cond = convert_IQF_label(parts[1],parts[2])
         label = parts[1] + "-" + parts[2] + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":

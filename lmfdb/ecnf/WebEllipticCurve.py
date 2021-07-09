@@ -11,32 +11,6 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
                                         get_instances_by_Lhash_and_trace_hash)
 
-# For backwards compatibility of labels of conductors (ideals) over
-# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
-# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
-# 2. N.c.d
-# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
-#
-# Converting 1->2 is trivial and 2->3 is done via a stored lookup
-# table, which contains entries for the five Euclidean imaginary
-# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
-#
-
-def convert_IQF_label(fld, lab):
-    if fld.split(".")[:2] != ['2','0']:
-        return lab
-    newlab = lab
-    if lab[0]=='[':
-        newlab = lab[1:-1].replace(",",".")
-    if len(newlab.split("."))!=3:
-        # if newlab!=lab:
-        #     print("Converted IQF label {} to {} over {}".format(lab, newlab, fld))
-        return newlab
-    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
-    # if newlab and newlab!=lab:
-    #     print("Converted IQF label {} to {} over {}".format(lab, newlab, fld))
-    return newlab if newlab else lab
-
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
                  '4.0.125.1': 'zeta5',
