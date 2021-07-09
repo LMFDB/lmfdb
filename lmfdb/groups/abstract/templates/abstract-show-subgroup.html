@@ -16,8 +16,9 @@
   </table>
 </p>
 
+
 <p>
-  {{info.create_boolean_string(seq.sub) | safe}}
+  {{info.create_boolean_string(seq.sub, short_string=True) | safe}}
 </p>
 {% set spec_lab = seq.show_special_labels() %}
 {% if spec_lab %}
@@ -39,7 +40,7 @@
 </p>
 
 <p>
-  {{info.create_boolean_string(seq.amb) | safe}}
+  {{info.create_boolean_string(seq.amb, short_string=True) | safe}}
 </p>
 
 {% if seq.normal %}
@@ -56,7 +57,7 @@
 </p>
 
 <p>
-  {{info.create_boolean_string(seq.quo) | safe}}
+  {{info.create_boolean_string(seq.quo, short_string=True) | safe}}
 </p>
 {% endif %}
 
