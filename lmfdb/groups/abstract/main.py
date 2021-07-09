@@ -103,6 +103,7 @@ def create_boolean_string(gp, short_string=False):
 
     if short_string:
         if gp.cyclic:
+            strng = cyclic_str + " (" + hence_str + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")"
             if gp.simple:
                 strng = cyclic_str + ", " +  solvable_str + ", and " + simple_str
             else:
