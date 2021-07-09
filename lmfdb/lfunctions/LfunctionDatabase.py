@@ -34,7 +34,7 @@ def get_instances_by_trace_hash(degree, trace_hash):
     res = []
     for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection='Lhash', sort=[]):
         for elt in get_instances_by_Lhash(Lhash):
-            if elt['type'] in ['ECQP', 'ECNF']:
+            if elt['type'] == 'ECQP':
                 continue
             if elt not in res:
                 res.append(elt)
