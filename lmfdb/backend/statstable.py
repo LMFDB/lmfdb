@@ -270,6 +270,8 @@ class PostgresStatsTable(PostgresBase):
 
         Either an integer giving the number of results, or None if not cached.
         """
+        if not query:
+            return self.total
         cols, vals = self._split_dict(query)
         selecter = SQL(
             "SELECT count FROM {0} WHERE cols = %s AND values = %s AND split = %s"
@@ -364,8 +366,6 @@ class PostgresStatsTable(PostgresBase):
             244006
         """
         if groupby is None:
-            if not query:
-                return self.total
             nres = self.quick_count(query)
             if nres is None:
                 nres = self._slow_count(query, record=record)
