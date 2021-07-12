@@ -328,6 +328,8 @@ def group_search(info, query):
     parse_bool(info, query, 'semidirect_product', 'is semidirect product')
     parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'commutator_label', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'central_quotient', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'abelian_quotient', regex=abstract_group_label_regex)
 
 @search_wrap(template="subgroup-search.html",
              table=db.gps_subgroups,
@@ -740,6 +742,20 @@ class GroupsSearchArray(SearchArray):
             example="4.2",
             example_span="4.2"
             )
+        abelian_quotient = TextBox(
+            name="abelian_quotient",
+            label="Abelianization",
+            knowl="group.abelianization_isolabel",
+            example="4.2",
+            example_span="4.2"
+            )
+        central_quotient = TextBox(
+            name="central_quotient",
+            label="Central quotient",
+            knowl="group.central_quotient_isolabel",
+            example="4.2",
+            example_span="4.2"
+            )
         count = CountBox()
 
         self.browse_array = [
@@ -747,6 +763,7 @@ class GroupsSearchArray(SearchArray):
             [exponent],
             [nilpclass],
             [center_label, commutator_label],
+            [central_quotient, abelian_quotient],
             [abelian, metabelian],
             [cyclic, metacyclic],
             [simple, almost_simple, quasisimple],
@@ -757,7 +774,7 @@ class GroupsSearchArray(SearchArray):
 
         self.refine_array = [
             [order, exponent, nilpclass, nilpotent],
-            [center_label, commutator_label],
+            [center_label, commutator_label, central_quotient, abelian_quotient],
             [abelian, metabelian, cyclic, metacyclic],
             [solvable, supersolvable, simple, almost_simple, quasisimple],
             [perfect, direct_product, semidirect_product]
