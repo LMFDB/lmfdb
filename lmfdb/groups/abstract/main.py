@@ -326,6 +326,8 @@ def group_search(info, query):
     parse_bool(info, query, 'quasisimple', 'is quasisimple')
     parse_bool(info, query, 'direct_product', 'is direct product')
     parse_bool(info, query, 'semidirect_product', 'is semidirect product')
+    parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'commutator_label', regex=abstract_group_label_regex)
 
 @search_wrap(template="subgroup-search.html",
              table=db.gps_subgroups,
@@ -726,7 +728,15 @@ class GroupsSearchArray(SearchArray):
             knowl="group.semidirect_product")
         center_label = TextBox(
             name="center_label",
-            label="%s label" % display_knowl("group.center", "Center"),
+            label="Center label",
+            knowl="group.center_isolabel",
+            example="4.2",
+            example_span="4.2"
+            )
+        commutator_label = TextBox(
+            name="commutator_label",
+            label="Commutator label",
+            knowl="group.commutator_isolabel",
             example="4.2",
             example_span="4.2"
             )
@@ -736,7 +746,7 @@ class GroupsSearchArray(SearchArray):
             [order],
             [exponent],
             [nilpclass],
-            [center_label],
+            [center_label, commutator_label],
             [abelian, metabelian],
             [cyclic, metacyclic],
             [simple, almost_simple, quasisimple],
@@ -747,6 +757,7 @@ class GroupsSearchArray(SearchArray):
 
         self.refine_array = [
             [order, exponent, nilpclass, nilpotent],
+            [center_label, commutator_label],
             [abelian, metabelian, cyclic, metacyclic],
             [solvable, supersolvable, simple, almost_simple, quasisimple],
             [perfect, direct_product, semidirect_product]
