@@ -554,7 +554,7 @@ class Belyi_download(Downloader):
     def download_galmap_text(self, label, lang="text"):
         #data = db.belyi_galmaps.lookup(label)
         data = db.belyi_galmaps_prim.lookup(label)
-        if rec is None:
+        if data is None:
             return abort(404, "Label not found: %s" % label)
         return self._wrap(Json.dumps(data),
                           label,
