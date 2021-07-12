@@ -460,6 +460,8 @@ class Belyi_download(Downloader):
         s = ""
         #rec = db.belyi_galmaps.lookup(label)
         rec = db.belyi_galmaps_prim.lookup(label)
+        if rec is None:
+            return abort(404, "Label not found: %s" % label)
         s += "// Magma code for Belyi map with label %s\n\n" % label
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
@@ -502,6 +504,8 @@ class Belyi_download(Downloader):
         s = ""
         #rec = db.belyi_galmaps.lookup(label)
         rec = db.belyi_galmaps_prim.lookup(label)
+        if rec is None:
+            return abort(404, "Label not found: %s" % label)
         s += "# Sage code for Belyi map with label %s\n\n" % label
         s += "\n# Group theoretic data\n\n"
         s += "d = %s\n" % rec["deg"]
@@ -550,9 +554,11 @@ class Belyi_download(Downloader):
     def download_galmap_text(self, label, lang="text"):
         #data = db.belyi_galmaps.lookup(label)
         data = db.belyi_galmaps_prim.lookup(label)
+        if rec is None:
+            return abort(404, "Label not found: %s" % label)
         return self._wrap(Json.dumps(data),
-        label,
-        title='Data for embedded Belyi map with label %s,'%label)
+                          label,
+                          title='Data for embedded Belyi map with label %s,'%label)
 
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
