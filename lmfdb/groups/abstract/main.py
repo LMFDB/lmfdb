@@ -314,10 +314,18 @@ def group_search(info, query):
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
     parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
     parse_bool(info, query, 'abelian', 'is abelian')
+    parse_bool(info, query, 'metabelian', 'is metabelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
+    parse_bool(info, query, 'metacyclic', 'is metacyclic')
     parse_bool(info, query, 'solvable', 'is solvable')
+    parse_bool(info, query, 'supersolvable', 'is supersolvable')
     parse_bool(info, query, 'nilpotent', 'is nilpotent')
     parse_bool(info, query, 'perfect', 'is perfect')
+    parse_bool(info, query, 'simple', 'is simple')
+    parse_bool(info, query, 'almost_simple', 'is almost simple')
+    parse_bool(info, query, 'quasisimple', 'is quasisimple')
+    parse_bool(info, query, 'direct_product', 'is direct product')
+    parse_bool(info, query, 'semidirect_product', 'is semidirect product')
 
 @search_wrap(template="subgroup-search.html",
              table=db.gps_subgroups,
@@ -668,38 +676,81 @@ class GroupsSearchArray(SearchArray):
             name="abelian",
             label="Abelian",
             knowl="group.abelian")
+        metabelian = YesNoBox(
+            name="metabelian",
+            label="Metabelian",
+            knowl="group.metabelian")
         cyclic = YesNoBox(
             name="cyclic",
             label="Cyclic",
             knowl="group.cyclic")
+        metacyclic = YesNoBox(
+            name="metacyclic",
+            label="Metacyclic",
+            knowl="group.metacyclic")
         solvable = YesNoBox(
             name="solvable",
             label="Solvable",
             knowl="group.solvable")
+        supersolvable = YesNoBox(
+            name="supersolvable",
+            label="Supersolvable",
+            knowl="group.supersolvable")
         nilpotent = YesNoBox(
             name="nilpotent",
             label="Nilpotent",
             knowl="group.nilpotent")
+        simple = YesNoBox(
+            name="simple",
+            label="Simple",
+            knowl="group.simple")
+        almost_simple= YesNoBox(
+            name="almost_simple",
+            label="Almost simple",
+            knowl="group.almost_simple")
+        quasisimple= YesNoBox(
+            name="quasisimple",
+            label="Quasisimple",
+            knowl="group.quasisimple")
         perfect = YesNoBox(
             name="perfect",
             label="Perfect",
             knowl="group.perfect")
+        direct_product = YesNoBox(
+            name="direct_product",
+            label="Direct product",
+            knowl="group.direct_product")
+        semidirect_product= YesNoBox(
+            name="semidirect_product",
+            label="Semidirect product",
+            knowl="group.semidirect_product")
+        center_label = TextBox(
+            name="center_label",
+            label="%s label" % display_knowl("group.center", "Center"),
+            example="4.2",
+            example_span="4.2"
+            )
         count = CountBox()
 
         self.browse_array = [
             [order],
             [exponent],
             [nilpclass],
-            [abelian],
-            [cyclic],
-            [solvable],
-            [nilpotent],
-            [perfect],
+            [center_label],
+            [abelian, metabelian],
+            [cyclic, metacyclic],
+            [simple, almost_simple, quasisimple],
+            [solvable, supersolvable],
+            [nilpotent, perfect],
+            [direct_product, semidirect_product],
             [count]]
 
         self.refine_array = [
-            [order, exponent, nilpclass],
-            [abelian,cyclic,solvable, nilpotent, perfect]]
+            [order, exponent, nilpclass, nilpotent],
+            [abelian, metabelian, cyclic, metacyclic],
+            [solvable, supersolvable, simple, almost_simple, quasisimple],
+            [perfect, direct_product, semidirect_product]
+            ]
 
     sort_knowl = "group.sort_order"
     def sort_order(self, info):
