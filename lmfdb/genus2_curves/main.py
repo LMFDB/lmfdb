@@ -610,7 +610,7 @@ class G2CSearchArray(SearchArray):
             name="num_rat_wpts",
             knowl="g2c.num_rat_wpts",
             label="Rational Weierstrass points",
-            short_label="Weierstrass",
+            short_label="Weierstrass points",
             example="1",
             example_span="1, 0-6",
         )
@@ -787,14 +787,14 @@ class G2CSearchArray(SearchArray):
         X = [
             ('', 'label'),
             ('abs_disc', 'absolute discriminant'),
-            ('num_rat_pts1', 'num. rational points (ascending)'),
-            ('num_rat_pts-1', 'num. rational points (descending)'),
-            ('num_rat_wpts1', 'num. weierstrass points (ascending)'),
-            ('num_rat_wpts-1', 'num. weierstrass points (descending)'),
-            ('torsion_order1', 'torsion order (ascending)'),
-            ('torsion_order-1', 'torsion order (descending)'),
-            ('analytic_sha1', 'analytic order sha (ascending)'),
-            ('analytic_sha-1', 'analytic order sha (descending)'),
+            ('num_rat_pts1', 'rational points (inc)'),
+            ('num_rat_pts-1', 'rational points (dec)'),
+            ('num_rat_wpts1', 'Weierstrass points (inc)'),
+            ('num_rat_wpts-1', 'Weierstrass points (dec)'),
+            ('torsion_order1', 'torsion order (inc)'),
+            ('torsion_order-1', 'torsion order (dec)'),
+            ('analytic_sha1', 'analytic sha (inc)'),
+            ('analytic_sha-1', 'analytic sha (dec)'),
         ]
         return X
 
