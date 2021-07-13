@@ -1,6 +1,5 @@
 from six.moves.urllib_parse import unquote
 
-from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.utils import nf_string_to_label
 
 
@@ -17,7 +16,6 @@ def ecnf_simple_label_search(search, baseurl, label):
         return
 
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf, conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:

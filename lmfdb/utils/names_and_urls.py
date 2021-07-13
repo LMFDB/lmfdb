@@ -11,7 +11,6 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 def name_and_object_from_url(url, check_existence=False):
     # the import is here to avoid circular imports
     from lmfdb import db
-    from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
     url_split = url.rstrip('/').lstrip('/').split("/")
     name = '??'
     obj_exists = False
@@ -36,16 +35,12 @@ def name_and_object_from_url(url, check_existence=False):
             if len(url_split) == 4: # isogeny class
                 # EllipticCurve/2.2.140.1/14.1/a
                 field, cond, isog = url_split[-3:]
-                # in the cond is written in the old format
-                cond = convert_IQF_label(field, cond)
                 label_isogeny_class =  "-".join([field, cond, isog])
                 if check_existence:
                     obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
             elif len(url_split) == 5: # curve
                 # EllipticCurve/2.0.4.1/1250.3/a/3
                 field, cond, isog, ind = url_split[-4:]
-                # if the cond is written in the old format
-                cond = convert_IQF_label(field, cond)
                 label_curve =  "-".join([field, cond, isog]) + ind
                 if check_existence:
                     obj_exists = db.ec_nfcurves.exists({"label" : label_curve})
