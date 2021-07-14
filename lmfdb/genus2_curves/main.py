@@ -2,6 +2,7 @@
 
 import re
 from ast import literal_eval
+from collections import defaultdict
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ, QQ, PolynomialRing
@@ -335,6 +336,22 @@ class G2C_download(Downloader):
                              'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
                      'gp':['[apply(Polrev,c)|c<-data];']}
 
+def parse_sort(info, query):
+    default = [ "cond", "class", "abs_disc", "disc_sign", "label"]
+    d = defaultdict(lambda: default, (
+            ('', default),
+            ('abs_disc', ['abs_disc'] + default),
+            ('num_rat_pts1', [('num_rat_pts',1)] + default),
+            ('num_rat_pts-1', [('num_rat_pts',-1)] + default),
+            ('num_rat_wpts1', [('num_rat_wpts',1)] + default),
+            ('num_rat_wpts-1', [('num_rat_wpts',-1)] + default),
+            ('torsion_order1', [('torsion_order',1)] + default),
+            ('torsion_order-1', [('torsion_order',-1)] + default),
+            ('analytic_sha1', [('analytic_sha',1)] + default),
+            ('analytic_sha-1', [('analytic_sha',-1)] + default),
+        ))
+    query['__sort__'] = d[info.get('sort_order')]
+
 @search_wrap(
     template="g2c_search_results.html",
     table=db.g2c_curves,
@@ -401,6 +418,7 @@ def genus2_curve_search(info, query):
     parse_primes(info, query, 'bad_primes', name='bad primes',qfield='bad_primes',mode=info.get('bad_quantifier'))
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
+    parse_sort(info, query)
 
 ################################################################################
 # Statistics
@@ -592,7 +610,7 @@ class G2CSearchArray(SearchArray):
             name="num_rat_wpts",
             knowl="g2c.num_rat_wpts",
             label="Rational Weierstrass points",
-            short_label="Weierstrass",
+            short_label="Weierstrass points",
             example="1",
             example_span="1, 0-6",
         )
@@ -763,6 +781,22 @@ class G2CSearchArray(SearchArray):
                 is_gl2_type,
             ],
         ]
+
+    sort_knowl = 'g2c.sort_order'
+    def sort_order(self, info):
+        X = [
+            ('', 'label'),
+            ('abs_disc', 'absolute discriminant'),
+            ('num_rat_pts1', 'rational points (inc)'),
+            ('num_rat_pts-1', 'rational points (dec)'),
+            ('num_rat_wpts1', 'Weierstrass points (inc)'),
+            ('num_rat_wpts-1', 'Weierstrass points (dec)'),
+            ('torsion_order1', 'torsion order (inc)'),
+            ('torsion_order-1', 'torsion order (dec)'),
+            ('analytic_sha1', 'analytic sha (inc)'),
+            ('analytic_sha-1', 'analytic sha (dec)'),
+        ]
+        return X
 
     def jump_box(self, info):
         info["jump_example"] = "169.a.169.1"
