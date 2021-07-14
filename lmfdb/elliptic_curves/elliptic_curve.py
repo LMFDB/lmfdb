@@ -60,7 +60,7 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
-            ('Congruent numbers and curves', url_for(".render_congruent_number_data"))]
+            ('Congruent number curves', url_for(".render_congruent_number_data"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
