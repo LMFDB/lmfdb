@@ -137,9 +137,6 @@ white-space: pre in order to keep line breaks! #}
       {{data.mwbsd.int_points | safe}}
       </p>
     </div>
-    {%else %}
-    <p> None </p>
-    {%endif %}
     {% if data.mwbsd.ngens < data.mwbsd.rank %}
      <p>
      N.B. Only integral points which are combinations of known generators are shown.
@@ -318,11 +315,13 @@ white-space: pre in order to keep line breaks! #}
         </tr>
         {% endif %}
         <tr>
+        <td colspan="4">
+       {{ place_code('L1') }}
+        </td>
         <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
         <td>\( {{ data.mwbsd.lder_name }} \) &approx; \( {{ data.mwbsd.special_value }} \)</td>
         </tr>
         </table>
-       {{ place_code('L1') }}
     </p>
 
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}

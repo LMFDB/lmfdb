@@ -453,15 +453,18 @@ class WebEC(object):
         # Integral points
 
         xintcoords = mwbsd['xcoord_integral_points']
-        a1, _, a3, _, _ = ainvs = self.ainvs
-        if a1 or a3:
-            int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
-            mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
+        if xinttcoords:
+            a1, _, a3, _, _ = ainvs = self.ainvs
+            if a1 or a3:
+                int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
+                mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts), ', '.join(web_latex(P) for P in int_pts))
+            else:
+                int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
+                raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
+                raw_form = ', '.join(str(P) for P in raw_form)
+                mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
         else:
-            int_pts = [(x, make_y_coords(ainvs,x)[0]) for x in xintcoords]
-            raw_form = sum([[P, (P[0],-P[1])] if P[1] else [P]for P in int_pts], [])
-            raw_form = ', '.join(str(P) for P in raw_form)
-            mwbsd['int_points'] = raw_typeset(raw_form, ', '.join(pm_pt(P) for P in int_pts))
+            mwbsd['int_points'] = "None"
 
         # Generators (mod torsion) and heights:
         mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
