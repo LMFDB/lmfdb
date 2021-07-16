@@ -683,7 +683,9 @@ class GroupsSearchArray(SearchArray):
         metabelian = YesNoBox(
             name="metabelian",
             label="Metabelian",
-            knowl="group.metabelian")
+            knowl="group.metabelian",
+            advanced=True
+            )
         cyclic = YesNoBox(
             name="cyclic",
             label="Cyclic",
@@ -691,7 +693,9 @@ class GroupsSearchArray(SearchArray):
         metacyclic = YesNoBox(
             name="metacyclic",
             label="Metacyclic",
-            knowl="group.metacyclic")
+            knowl="group.metacyclic",
+            advanced=True
+            )
         solvable = YesNoBox(
             name="solvable",
             label="Solvable",
@@ -699,7 +703,9 @@ class GroupsSearchArray(SearchArray):
         supersolvable = YesNoBox(
             name="supersolvable",
             label="Supersolvable",
-            knowl="group.supersolvable")
+            knowl="group.supersolvable",
+            advanced=True
+            )
         nilpotent = YesNoBox(
             name="nilpotent",
             label="Nilpotent",
@@ -711,11 +717,15 @@ class GroupsSearchArray(SearchArray):
         almost_simple= YesNoBox(
             name="almost_simple",
             label="Almost simple",
-            knowl="group.almost_simple")
+            knowl="group.almost_simple",
+            advanced=True
+            )
         quasisimple= YesNoBox(
             name="quasisimple",
             label="Quasisimple",
-            knowl="group.quasisimple")
+            knowl="group.quasisimple",
+            advanced=True
+            )
         perfect = YesNoBox(
             name="perfect",
             label="Perfect",
@@ -730,14 +740,14 @@ class GroupsSearchArray(SearchArray):
             knowl="group.semidirect_product")
         center_label = TextBox(
             name="center_label",
-            label="Center label",
+            label="Center",
             knowl="group.center_isolabel",
             example="4.2",
             example_span="4.2"
             )
         commutator_label = TextBox(
             name="commutator_label",
-            label="Commutator label",
+            label="Commutator",
             knowl="group.commutator_isolabel",
             example="4.2",
             example_span="4.2"
