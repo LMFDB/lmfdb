@@ -313,9 +313,11 @@ def group_search(info, query):
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
     parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
+    parse_ints(info, query, 'aut_order', 'aut_order')
+    parse_ints(info, query, 'derived_length', 'derived_length')
     parse_bool(info, query, 'abelian', 'is abelian')
-    parse_bool(info, query, 'metabelian', 'is metabelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
+    parse_bool(info, query, 'metabelian', 'is metabelian')
     parse_bool(info, query, 'metacyclic', 'is metacyclic')
     parse_bool(info, query, 'solvable', 'is solvable')
     parse_bool(info, query, 'supersolvable', 'is supersolvable')
@@ -326,10 +328,14 @@ def group_search(info, query):
     parse_bool(info, query, 'quasisimple', 'is quasisimple')
     parse_bool(info, query, 'direct_product', 'is direct product')
     parse_bool(info, query, 'semidirect_product', 'is semidirect product')
+    parse_bool(info, query, 'Agroup', 'is A-group')
+    parse_bool(info, query, 'Zgroup', 'is Z-group')
     parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'aut_group', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'commutator_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'central_quotient', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'abelian_quotient', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'frattini_label', regex=abstract_group_label_regex)
 
 @search_wrap(template="subgroup-search.html",
              table=db.gps_subgroups,
@@ -672,19 +678,51 @@ class GroupsSearchArray(SearchArray):
             example_span="list of integers?")
         nilpclass = TextBox(
             name="nilpotency_class",
-            label="Nilpotency Class",
+            label="Nilpotency class",
             knowl="group.nilpotent",
             example="3",
             example_span="4, or a range like 3..5")
+        aut_group = TextBox(
+            name="aut_group",
+            label="Automorphism group",
+            knowl="group.automorphism",
+            example="4.2",
+            example_span="4.2"
+            )
+        aut_order = TextBox(
+            name="aut_order",
+            label="Automorphism group order",
+            knowl="group.automorphism",
+            example="3",
+            example_span="4, or a range like 3..5")
+        derived_length = TextBox(
+            name="derived_length",
+            label="Derived length",
+            knowl="group.derived_series",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+            )
+        frattini_label= TextBox(
+            name="frattini_label",
+            label="Frattini subgroup",
+            knowl="group.frattini_subgroup",
+            example="4.2",
+            example_span="4.2",
+            advanced=True
+            )
         abelian = YesNoBox(
             name="abelian",
             label="Abelian",
-            knowl="group.abelian")
+            knowl="group.abelian",
+            example_col=True
+            )
         metabelian = YesNoBox(
             name="metabelian",
             label="Metabelian",
             knowl="group.metabelian",
-            advanced=True
+            advanced=True,
+            example_col=True
             )
         cyclic = YesNoBox(
             name="cyclic",
@@ -699,7 +737,9 @@ class GroupsSearchArray(SearchArray):
         solvable = YesNoBox(
             name="solvable",
             label="Solvable",
-            knowl="group.solvable")
+            knowl="group.solvable",
+            example_col=True
+            )
         supersolvable = YesNoBox(
             name="supersolvable",
             label="Supersolvable",
@@ -713,11 +753,14 @@ class GroupsSearchArray(SearchArray):
         simple = YesNoBox(
             name="simple",
             label="Simple",
-            knowl="group.simple")
+            knowl="group.simple",
+            example_col=True
+            )
         almost_simple= YesNoBox(
             name="almost_simple",
             label="Almost simple",
             knowl="group.almost_simple",
+            example_col=True,
             advanced=True
             )
         quasisimple= YesNoBox(
@@ -733,11 +776,26 @@ class GroupsSearchArray(SearchArray):
         direct_product = YesNoBox(
             name="direct_product",
             label="Direct product",
-            knowl="group.direct_product")
+            knowl="group.direct_product",
+            example_col=True
+            )
         semidirect_product= YesNoBox(
             name="semidirect_product",
             label="Semidirect product",
             knowl="group.semidirect_product")
+        Agroup= YesNoBox(
+            name="Agroup",
+            label="A-group",
+            knowl="group.a_group",
+            advanced=True,
+            example_col=True
+            )
+        Zgroup= YesNoBox(
+            name="Zgroup",
+            label="Z-group",
+            knowl="group.z_group",
+            advanced=True,
+            )
         center_label = TextBox(
             name="center_label",
             label="Center",
@@ -769,26 +827,33 @@ class GroupsSearchArray(SearchArray):
         count = CountBox()
 
         self.browse_array = [
-            [order],
-            [exponent],
+            [order, exponent],
             [nilpclass],
+            [aut_group, aut_order],
             [center_label, commutator_label],
             [central_quotient, abelian_quotient],
-            [abelian, metabelian],
-            [cyclic, metacyclic],
-            [simple, almost_simple, quasisimple],
-            [solvable, supersolvable],
-            [nilpotent, perfect],
+            [abelian, cyclic],
+            [simple, perfect],
+            [solvable, nilpotent],
             [direct_product, semidirect_product],
-            [count]]
+            [metabelian, metacyclic],
+            [almost_simple, quasisimple],
+            [Agroup, Zgroup],
+            [derived_length, frattini_label],
+            [supersolvable],
+            [count]
+        ]
 
         self.refine_array = [
             [order, exponent, nilpclass, nilpotent],
             [center_label, commutator_label, central_quotient, abelian_quotient],
-            [abelian, metabelian, cyclic, metacyclic],
-            [solvable, supersolvable, simple, almost_simple, quasisimple],
-            [perfect, direct_product, semidirect_product]
-            ]
+            [abelian, cyclic, solvable, simple],
+            [perfect, direct_product, semidirect_product],
+            [aut_group, aut_order],
+            [metabelian, metacyclic, almost_simple, quasisimple],
+            [Agroup, Zgroup, derived_length, frattini_label],
+            [supersolvable]
+        ]
 
     sort_knowl = "group.sort_order"
     def sort_order(self, info):

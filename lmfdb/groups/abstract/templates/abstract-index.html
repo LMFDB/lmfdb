@@ -23,7 +23,8 @@
 
 <p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a>.</p>
 
-<h2>Search</h2>
+<h2 id='search_h2'> Search <button id="advancedtoggle" href="#">Advanced search options</button></h2>
+<!--<h2>Search</h2>-->
 <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
   {{ info.search_array.html() | safe }}
 </form>
