@@ -317,8 +317,12 @@ white-space: pre in order to keep line breaks! #}
         <td> \({{ data.mwbsd.regsha }}\)</td>
         </tr>
         {% endif %}
-
+        <tr>
+        <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
+        <td>\( {{ data.mwbsd.lder_name }} \) &approx; \( {{ data.mwbsd.special_value }} \)</td>
+        </tr>
         </table>
+       {{ place_code('L1') }}
     </p>
 
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
@@ -397,14 +401,6 @@ white-space: pre in order to keep line breaks! #}
 	{% endif %}
 	{% endif %}
 	</p>
-
-
-    <p>
-      <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>
-    {{ place_code('L1') }}
-    <p>
-        \( {{ data.mwbsd.lder_name }} \) &approx; \( {{ data.mwbsd.special_value }} \)
-    </p>
 
     <h2> Local data </h2>
 
