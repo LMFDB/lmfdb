@@ -131,7 +131,6 @@ white-space: pre in order to keep line breaks! #}
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
       {{ place_code('intpts') }}
-    {% if data.mwbsd.int_points %}
     <div class="ip">
       <p>
       {{data.mwbsd.int_points | safe}}
@@ -313,7 +312,7 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }} \(\times\) {{ KNOWL('ec.regulator', title='Regulator') }}:</td>
         <td> \({{ data.mwbsd.regsha }}\)</td>
         </tr>
-        {% endif %}
+  {% endif %}
         <tr>
         <td colspan="4">
        {{ place_code('L1') }}
