@@ -453,7 +453,7 @@ class WebEC(object):
         # Integral points
 
         xintcoords = mwbsd['xcoord_integral_points']
-        if xinttcoords:
+        if xintcoords:
             a1, _, a3, _, _ = ainvs = self.ainvs
             if a1 or a3:
                 int_pts = sum([[(x, y) for y in make_y_coords(ainvs,x)] for x in xintcoords], [])
