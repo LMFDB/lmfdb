@@ -220,103 +220,76 @@ white-space: pre in order to keep line breaks! #}
     <p>
         <table>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('rank') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('rank') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.q.analytic_rank', title='Analytic rank') }}:</td>
         <td> \({{ data.analytic_rank }}\)
         </td>
         </tr>
 
-
-        <tr>
-        <td colspan="4">
-          {{ place_code('reg') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('reg') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.regulator', title='Regulator') }}:</td>
-	{% if data.mwbsd.reg == '?' %}
-	<td>Not computed</td>
-	{% else %}
-        {% if data.rank==0 %}
-        <td> \(1\)</td>
-        {% else %}
-        <td> \({{ data.mwbsd.reg }}\dots\)</td>
-        {% endif %}
+      	{% if data.mwbsd.reg == '?' %}
+        	<td>Not computed</td>
+      	{% else %}
+          {% if data.rank==0 %}
+            <td> \(1\)</td>
+          {% else %}
+            <td> \({{ data.mwbsd.reg }}\dots\)</td>
+          {% endif %}
         {% endif %}
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('real_period') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('real_period') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.q.real_period', title='Real period') }}:</td>
         <td> \({{ data.mwbsd.real_period }}\dots\)</td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('cp') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('cp') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
         <td>\( {{ data.mwbsd.tamagawa_product }} \)
           {% if data.mwbsd.tamagawa_factors %}
-          &nbsp;=&nbsp;\( {{ data.mwbsd.tamagawa_factors }} \)
+            &nbsp;=&nbsp;\( {{ data.mwbsd.tamagawa_factors }} \)
           {% endif %}
         </td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('ntors') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('ntors') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
         <td>\({{ data.mwbsd.torsion }}\)</td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('sha') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('sha') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
-	<td>
-	  {% if data.mwbsd.sha == '?' %}
-	  Not computed
-	  {% else %}
-          \({{data.mwbsd.sha }}\)
-	  {% if data.mwbsd.sha > 1 %}
-	  = {{data.mwbsd.sha2}}
-          {% endif %}
-          {% if data.rank > 1 %}
-          ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
-          {% else %}
-          ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
-          {% endif %}
+      	<td>
+      	  {% if data.mwbsd.sha == '?' %}
+        	  Not computed
+      	  {% else %}
+            \({{data.mwbsd.sha }}\)
+        	  {% if data.mwbsd.sha > 1 %}
+          	  = {{data.mwbsd.sha2}}
+            {% endif %}
+            {% if data.rank > 1 %}
+              ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+            {% else %}
+              ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+            {% endif %}
           {% endif %}
         </td>
         </tr>
-	{% if data.mwbsd.sha == '?' %}
+      	{% if data.mwbsd.sha == '?' %}
+          <tr>
+          <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }} \(\times\) {{ KNOWL('ec.regulator', title='Regulator') }}:</td>
+          <td> \({{ data.mwbsd.regsha }}\)</td>
+          </tr>
+        {% endif %}
+        <tr><td colspan="4">{{ place_code('L1') }}</td></tr>
         <tr>
-        <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }} \(\times\) {{ KNOWL('ec.regulator', title='Regulator') }}:</td>
-        <td> \({{ data.mwbsd.regsha }}\)</td>
-        </tr>
-  {% endif %}
-        <tr>
-        <td colspan="4">
-       {{ place_code('L1') }}
-        </td>
         <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
         <td>\( {{ data.mwbsd.lder_name }} \) &approx; \( {{ data.mwbsd.special_value }} \)</td>
         </tr>
