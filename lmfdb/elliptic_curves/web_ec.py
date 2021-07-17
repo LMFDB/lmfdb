@@ -59,7 +59,7 @@ def gl2_subgroup_data(label):
         if kid:
             return "<tr><td>{{KNOWL('gl2.%s','%s')}}: </td><td>%s</td></tr>\n" % (kid, cap, val)
         else:
-            return "<tr><td>%s: </td><td>%s</td></tr>\n" % (caption, val)
+            return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = "<div><table>\n"
     info += row_wrap('',"{{KNOWL('gl2.subgroup','Subgroup')}} %s\n" % (label),  "<small>" + ','.join([matrix(m) for m in data['generators']]) + "</small>")
