@@ -9,6 +9,7 @@ from lmfdb.number_fields.number_field import unlatex
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.classical_modular_forms.main import url_for_label as cmf_url_for_label
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
@@ -84,7 +85,7 @@ def gl2_subgroup_data(label):
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     if data['genus'] > 0:
-        info += row_wrap('Newforms', ','.join(['<a href="%s">%s</a>' % (cmf.url_for_label(x), x) for x in data['newforms']]))
+        info += row_wrap('Newforms', ','.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
         info += row_wrap('Analytic rank', data['rank'])
         if data['genus'] == 1 and data['model']:
             info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('.by_ec_label',label=data['model'])))
