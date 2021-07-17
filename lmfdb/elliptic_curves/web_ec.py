@@ -62,10 +62,22 @@ def gl2_subgroup_data(label):
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
-    info += row_wrap('Cusps', "%s (of which %s are rational)" % (data['cusps'], data['rational_cusps']))
+    def ratcusps(c,r):
+        if not c:
+            return ""
+        if not r:
+            return " (none of which are rational)"
+        if r == c:
+            return " (all of which are rational)"
+        if r == 1:
+            return " (one of which is rational)"
+        else
+            return " (of which %s are rational)" % r
+
+    info += row_wrap('Cusps', "%s%s" % (data['cusps'], rattcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'] == label else "no")
     if data.get('CPlabel'):
-        info += row_wrap('Cummins and Pauli label', "<a href=%s%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
+        info += row_wrap('Cummins and Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
         info += row_wrap('Rouse and Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('SZlabel'):
