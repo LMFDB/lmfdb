@@ -77,7 +77,7 @@ def gl2_subgroup_data(label):
             return " (of which %s are rational)" % r
 
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'][0] == label else "no")
+    info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
     if data.get('CPlabel'):
         info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
