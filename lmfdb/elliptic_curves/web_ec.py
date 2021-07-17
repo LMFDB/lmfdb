@@ -10,10 +10,10 @@ from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, di
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, Matrix
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
 RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
-CP_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
+CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
@@ -62,13 +62,21 @@ def gl2_subgroup_data(label):
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
-    info += row_wrap('Generators', "$" + ','.join(latex(Matrix(2,2,M)) for M in data['generators']) + "$")
+    info += row_wrap('Cusps', "%s (of which %s are rational)" % (data['cusps'], data['rational_cusps']))
+    info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'] == label else "no")
+    if data.get('CPlabel'):
+        info += row_wrap('Cummins and Pauli label', "<a href=%s%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
-        info += row_wrap('Rouse and Zureick-Brown label', ''.join([RZB_URL_PREFIX, data['RZBlabel'], ".html"]))
+        info += row_wrap('Rouse and Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('SZlabel'):
         info += row_wrap('Sutherland and Zywina label', data['SZlabel'])
-    if data.get('CPlabel'):
-        info += row_wrap('Cummins and Pauli label', data['CPlabel'])
+    if data['genus'] > 0:
+        info += row_wrap('Newforms', ','.join(data['newforms']))
+        info += row_wrap('Analytic rank', data['rank'])
+        if data['gens'] == 1 and data['model']:
+            info += row_wrap('Model', data['model'])
+    mat = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % m
+    info += row_wrap('Generators', "<small>" + ','.join([mat(m) for m in data['generators']]) + "</small>")
     info += "</table></div>\n"
     return info
 
