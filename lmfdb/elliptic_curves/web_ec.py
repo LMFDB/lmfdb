@@ -12,7 +12,8 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, Matrix
 
-ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+RZB_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
+CP_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
 CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
@@ -61,7 +62,13 @@ def gl2_subgroup_data(label):
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
-    info += row_wrap('Generators', ','.join(latex(Matrix(2,2,M)) for M in data['generators']))
+    info += row_wrap('Generators', "$" + ','.join(latex(Matrix(2,2,M)) for M in data['generators']) + "$")
+    if data.get('RZBlabel'):
+        info += row_wrap('Rouse and Zureick-Brown label', ''.join([RZB_URL_PREFIX, data['RZBlabel'], ".html"]))
+    if data.get('SZlabel'):
+        info += row_wrap('Sutherland and Zywina label', data['SZlabel'])
+    if data.get('CPlabel'):
+        info += row_wrap('Cummins and Pauli label', data['CPlabel'])
     info += "</table></div>\n"
     return info
 
