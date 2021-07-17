@@ -59,6 +59,7 @@ def gl2_subgroup_data(label):
     info += "<div><table class='chardata'>\n"
     def row_wrap(header, val):
         return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
+    info += row_wrap('Generators', "<small>" + ','.join([mat(m) for m in data['generators']]) + "</small>")
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
@@ -77,18 +78,17 @@ def gl2_subgroup_data(label):
     info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'][0] == label else "no")
     if data.get('CPlabel'):
-        info += row_wrap('Cummins&endash;Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
+        info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
-        info += row_wrap('Rouse&endash;Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('SZlabel'):
-        info += row_wrap('Sutherland&endash;Zywina label', data['SZlabel'])
+        info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     if data['genus'] > 0:
         info += row_wrap('Newforms', ','.join(data['newforms']))
         info += row_wrap('Analytic rank', data['rank'])
         if data['gens'] == 1 and data['model']:
             info += row_wrap('Model', data['model'])
     mat = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
-    info += row_wrap('Generators', "<small>" + ','.join([mat(m) for m in data['generators']]) + "</small>")
     info += "</table></div>\n"
     return info
 
