@@ -504,6 +504,7 @@ class WebEC(object):
             mwbsd['lder_name'] = "L(E,1)"
 
     def display_elladic_image(self,label):
+        print("display_elladic_image")
         return display_knowl('gl2_subgroup_data', title=label, kwargs={'label':label})
 
     def make_twoadic_data(self):
