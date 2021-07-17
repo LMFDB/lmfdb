@@ -54,19 +54,15 @@ def gl2_subgroup_data(label):
     try:
         data = db.gps_gl2zhat.lookup(label)
     except ValueError:
-        return "Invalid label for GL(2,Zhat) subgroup: %s" % label
-    def row_wrap(kid, cap, val):
-        if kid:
-            return "<tr><td>{{KNOWL('gl2.%s','%s')|}}: </td><td>%s</td></tr>\n" % (kid, cap, val)
-        else:
-            return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
+        return "Invalid label for subgroup of GL(2,Zhat): %s" % label
+    row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = "<div><table>\n"
-    info += row_wrap('',"{{KNOWL('gl2.subgroup','Subgroup')|safe}} %s\n" % (label),  "<small>" + ','.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += row_wrap('Subgroup' + label,  "<small>" + ','.join([matrix(m) for m in data['generators']]) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
-    info += row_wrap('level', 'Level', data['level'])
-    info += row_wrap('index', 'Index', data['index'])
-    info += row_wrap('genus', 'Genus', data['genus'])
+    info += row_wrap('Level', data['level'])
+    info += row_wrap('Index', data['index'])
+    info += row_wrap('Genus', data['genus'])
     def ratcusps(c,r):
         if not c:
             return ""
@@ -79,19 +75,19 @@ def gl2_subgroup_data(label):
         else:
             return " (of which %s are rational)" % r
 
-    info += row_wrap('cusps', 'Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
-    info += row_wrap('contains_negative_one','Contains $-I$', "yes" if data['quadratic_twists'][0] == label else "no")
+    info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
+    info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'][0] == label else "no")
     if data.get('CPlabel'):
-        info += row_wrap('CPlabel', 'Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
+        info += row_wrap('Cummins & Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
     if data.get('RZBlabel'):
-        info += row_wrap('RZBlabel', 'Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
+        info += row_wrap('Rouse & Zureick-Brown label', "<a href={prefix}{label}.html>{label}</a>".format(prefix= RZB_URL_PREFIX, label=data['RZBlabel']))
     if data.get('SZlabel'):
-        info += row_wrap('SZlabel', 'Sutherland & Zywina label', data['SZlabel'])
+        info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     if data['genus'] > 0:
-        info += row_wrap('newforms', 'Newforms', ','.join(data['newforms']))
-        info += row_wrap('rank', 'Analytic rank', data['rank'])
+        info += row_wrap('Newforms', ','.join(data['newforms']))
+        info += row_wrap('Analytic rank', data['rank'])
         if data['gens'] == 1 and data['model']:
-            info += row_wrap('model', 'Model', data['model'])
+            info += row_wrap('Model', data['model'])
     info += "</table></div>\n"
     return info
 
