@@ -75,7 +75,7 @@ def gl2_subgroup_data(label):
         info += row_wrap('Analytic rank', data['rank'])
         if data['gens'] == 1 and data['model']:
             info += row_wrap('Model', data['model'])
-    mat = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % m
+    mat = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info += row_wrap('Generators', "<small>" + ','.join([mat(m) for m in data['generators']]) + "</small>")
     info += "</table></div>\n"
     return info
