@@ -71,10 +71,10 @@ def gl2_subgroup_data(label):
             return " (all of which are rational)"
         if r == 1:
             return " (one of which is rational)"
-        else
+        else:
             return " (of which %s are rational)" % r
 
-    info += row_wrap('Cusps', "%s%s" % (data['cusps'], rattcusps(data['cusps'],data['rational_cusps'])))
+    info += row_wrap('Cusps', "%s%s" % (data['cusps'], ratcusps(data['cusps'],data['rational_cusps'])))
     info += row_wrap('Contains $-I$', "yes" if data['quadratic_twists'] == label else "no")
     if data.get('CPlabel'):
         info += row_wrap('Cummins and Pauli label', "<a href=%scsg%sM.html#level%s>%s</a>" % (CP_URL_PREFIX, data['genus'], data['level'], data['CPlabel']))
