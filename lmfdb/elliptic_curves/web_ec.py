@@ -58,7 +58,7 @@ def gl2_subgroup_data(label):
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
     info = "<div><table>\n"
-    info += row_wrap('Subgroup ' + label,  "<small>" + ','.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += row_wrap('Subgroup ' + label,  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
@@ -84,10 +84,10 @@ def gl2_subgroup_data(label):
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     if data['genus'] > 0:
-        info += row_wrap('Newforms', ','.join(data['newforms']))
+        info += row_wrap('Newforms', ','.join(['<a href="%s">%s</a>' % (cmf.url_for_label(x), x) for x in data['newforms']]))
         info += row_wrap('Analytic rank', data['rank'])
         if data['genus'] == 1 and data['model']:
-            info += row_wrap('Model', data['model'])
+            info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('.by_ec_label',label=data['model'])))
     info += "</table></div>\n"
     return info
 
