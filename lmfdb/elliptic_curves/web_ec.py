@@ -6,11 +6,11 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
-from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset
+from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl
 from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
+from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, Matrix
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -48,6 +48,22 @@ def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
 logger = make_logger("ec")
+
+def gl2_subgroup_data(label):
+    try:
+        data = db.gps_gl2zhat.lookup(label)
+    except ValueError:
+        return "Invalid label for GL(2,Zhat) subgroup: %s" % label
+    info = "Subgroup %s\n" % (label)
+    info += "<div><table class='chardata'>\n"
+    def row_wrap(header, val):
+        return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
+    info += row_wrap('Level', data['level'])
+    info += row_wrap('Index', data['index'])
+    info += row_wrap('Genus', data['genus'])
+    info += row_wrap('Generators', ','.join(latex(Matrix(2,2,M)) for M in data['generators']))
+    info += "</table></div>\n"
+    return info
 
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
@@ -487,6 +503,8 @@ class WebEC(object):
         else:
             mwbsd['lder_name'] = "L(E,1)"
 
+    def display_elladic_image(self,label):
+        return display_knowl('gl2_subgroup_data', title=label, kwargs={'label':label})
 
     def make_twoadic_data(self):
         if not self.cm:

@@ -493,7 +493,7 @@ text-align: center;
     {% for pr in data.data.galois_data %}
       <tr>
       <td align=center>${{pr.prime}}$</td>
-      <td align=center>{{pr.elladic_image}}</td>
+      <td align=center>{{data.data.display_elladic_image(pr.elladic_image) | safe}}</td>
       <td align=center>{{pr.modell_image}}</td>
       </tr>
     {% endfor %}
