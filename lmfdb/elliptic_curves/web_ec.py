@@ -92,9 +92,8 @@ def gl2_subgroup_data(label):
         info += row_wrap("Cyclic %s-torsion field degree" % (ell), min([r[1] for r in data['orbits'] if r[0] == ell]))
         info += row_wrap("Full %s-torsion field degree" % (ell), ell*(ell-1)*(ell-1)*(ell+1) // data['index'])
     else:
-        print("ell=%s,e=%s,iorbits=%s,orbits=%s"%(ell,e,data['isogeny_orbits'],data['orbits']))
-        info += row_wrap("Cyclic %s^n-isogeny field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['isogeny_orbits'] if r[0] == ell^n])) for n in range(1,e+1)]))
-        info += row_wrap("Cyclic %s^n-torsion field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['orbits'] if r[0] == ell^n])) for n in range(1,e+1)]))
+        info += row_wrap("Cyclic %s^n-isogeny field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['isogeny_orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
+        info += row_wrap("Cyclic %s^n-torsion field degrees" % (ell), ", ".join(["%s"%(min([r[1] for r in data['orbits'] if r[0] == ell**n])) for n in range(1,e+1)]))
         info += row_wrap("Full %s^n-torsion field degrees" % (ell), ", ".join(["%s"%(ell*(ell-1)*(ell-1)*(ell+1)*ell**(4*n) // data['index']) for n in range(1,e+1)]))
     if data['genus'] > 0:
         info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
