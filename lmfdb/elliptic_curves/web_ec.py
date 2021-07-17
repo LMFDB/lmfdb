@@ -57,7 +57,7 @@ def gl2_subgroup_data(label):
         return "Invalid label for GL(2,Zhat) subgroup: %s" % label
     def row_wrap(kid, cap, val):
         if kid:
-            return "<tr><td>{{KNOWL('gl2.%s','%s')}}: </td><td>%s</td></tr>\n" % (kid, caption, val)
+            return "<tr><td>{{KNOWL('gl2.%s','%s')}}: </td><td>%s</td></tr>\n" % (kid, cap, val)
         else:
             return "<tr><td>%s: </td><td>%s</td></tr>\n" % (caption, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
