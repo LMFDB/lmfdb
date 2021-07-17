@@ -283,9 +283,6 @@ class WebEC(object):
         else:
             data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
 
-
-        self.make_twoadic_data()
-
         # Optimality
 
         # The optimal curve in the class is the curve whose Cremona
@@ -512,13 +509,6 @@ class WebEC(object):
 
     def display_elladic_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
-
-    def make_twoadic_data(self):
-        if not self.cm:
-            self.twoadicdata = twoadicdata = db.ec_2adic.lookup(self.lmfdb_label)
-            from sage.matrix.all import Matrix
-            twoadicdata['gen_matrices'] = ','.join(latex(Matrix(2,2,M)) for M in twoadicdata['twoadic_gens'])
-            twoadicdata['rouse_url'] = ''.join([ROUSE_URL_PREFIX, twoadicdata['twoadic_label'], ".html"])
 
     def make_iwasawa(self):
         iw = self.iw = {}
