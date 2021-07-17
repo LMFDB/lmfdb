@@ -55,12 +55,11 @@ def gl2_subgroup_data(label):
         data = db.gps_gl2zhat.lookup(label)
     except ValueError:
         return "Invalid label for GL(2,Zhat) subgroup: %s" % label
-    info = "Subgroup %s\n" % (label)
     info += "<div><table class='chardata'>\n"
-    def row_wrap(header, val):
-        return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
-    mat = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
-    info += row_wrap('Generators', "<small>" + ','.join([mat(m) for m in data['generators']]) + "</small>")
+    row_wrap = lambda caption, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (caption, val)
+    matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
+    info += row_wrap("Subgroup %s\n" % (label),  "<small>" + ','.join([matrix(m) for m in data['generators']]) + "</small>")
+    info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
     info += row_wrap('Index', data['index'])
     info += row_wrap('Genus', data['genus'])
