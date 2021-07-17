@@ -58,7 +58,7 @@ def gl2_subgroup_data(label):
         return "Invalid label for subgroup of GL(2,Zhat): %s" % label
     row_wrap = lambda cap, val: "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
     matrix = lambda m: r'$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$' % (m[0],m[1],m[2],m[3])
-    info = "<div><table>\n"
+    info = '<table style="margin-top:0px; margin-bottom:0px;">\n'
     info += row_wrap('Subgroup ' + label,  "<small>" + ', '.join([matrix(m) for m in data['generators']]) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap('Level', data['level'])
@@ -100,7 +100,7 @@ def gl2_subgroup_data(label):
         info += row_wrap('Analytic rank', data['rank'])
         if data['genus'] == 1 and data['model']:
             info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('ec.by_ec_label',label=data['model']), data['model']))
-    info += "</table></div>\n"
+    info += "</table>\n"
     return info
 
 def split_galois_image_code(s):
