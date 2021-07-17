@@ -85,7 +85,7 @@ def gl2_subgroup_data(label):
     if data.get('SZlabel'):
         info += row_wrap('Sutherland & Zywina label', data['SZlabel'])
     if data['genus'] > 0:
-        info += row_wrap('Newforms', ','.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
+        info += row_wrap('Newforms', ''.join(['<a href="%s">%s</a>' % (cmf_url_for_label(x), x) for x in data['newforms']]))
         info += row_wrap('Analytic rank', data['rank'])
         if data['genus'] == 1 and data['model']:
             info += row_wrap('Model', '<a href="%s">%s</a>' % (url_for('ec.by_ec_label',label=data['model']), data['model']))
