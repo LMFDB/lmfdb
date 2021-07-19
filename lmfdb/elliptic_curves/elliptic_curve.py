@@ -19,7 +19,7 @@ from lmfdb.utils import (
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, CREMONA_BOUND
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 q = ZZ['x'].gen()
@@ -208,6 +208,10 @@ class ECstats(StatsDisplay):
 @app.context_processor
 def ctx_elliptic_curve_summary():
     return {'elliptic_curve_summary': lambda: ECstats().summary}
+
+@app.context_processor
+def ctx_gl2_subgroup():
+    return {'gl2_subgroup_data': gl2_subgroup_data}
 
 @ec_page.route("/stats")
 def statistics():
