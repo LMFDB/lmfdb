@@ -67,28 +67,28 @@ white-space: pre in order to keep line breaks! #}
     {% if data.mwbsd.rank == '?' %}
     Not computed
     {% if data.mwbsd.rank_bounds.0>0 %}
-    (\( {{data.mwbsd.rank_bounds.0}} \le r \le {{data.mwbsd.rank_bounds.1}} \))
+    ($ {{data.mwbsd.rank_bounds.0}} \le r \le {{data.mwbsd.rank_bounds.1}} $)
     {% else %}
-    (\(r \le {{data.mwbsd.rank_bounds.1}}\))
+    ($r \le {{data.mwbsd.rank_bounds.1}}$)
     {%endif%}
     {% else %}
     {% if data.mwbsd.rank == 0 %}
       {% if data.mwbsd.torsion == 1 %}
         trivial
       {% else %}
-        \({{data.mwbsd.tor_struct}}\)
+        ${{data.mwbsd.tor_struct}}$
       {%endif%}
     {% elif data.mwbsd.rank==1 %}
       {% if data.mwbsd.torsion == 1 %}
-        \(\Z\)
+        $\Z$
       {% else %}
-        \(\Z\times {{data.mwbsd.tor_struct}}\)
+        $\Z\times {{data.mwbsd.tor_struct}}$
       {%endif%}
     {% else %}
       {% if data.mwbsd.torsion == 1 %}
-        \(\Z^{{data.mwbsd.rank}}\)
+        $\Z^{{data.mwbsd.rank}}$
       {% else %}
-        \(\Z^{{data.mwbsd.rank}} \times {{data.mwbsd.tor_struct}}\)
+        $\Z^{{data.mwbsd.rank}} \times {{data.mwbsd.tor_struct}}$
       {% endif %}
     {%endif%}
     {%endif%}
@@ -106,10 +106,10 @@ white-space: pre in order to keep line breaks! #}
       {% else %}
       <div style='overflow:auto'><p>
       <table>
-        <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
+        <tr><td>$P$</td><td>&nbsp;=&nbsp;</td>
           {% for pt in data.mwbsd.generators %}<td>{{pt|safe}}</td>{% endfor %}
           </tr>
-        <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
+        <tr><td>$\hat{h}(P)$</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mwbsd.heights %}<td>${{ht}}$</td>{% endfor %}
           </tr>
         </table>
@@ -131,15 +131,11 @@ white-space: pre in order to keep line breaks! #}
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
       {{ place_code('intpts') }}
-    {% if data.mwbsd.int_points %}
     <div class="ip">
       <p>
       {{data.mwbsd.int_points | safe}}
       </p>
     </div>
-    {%else %}
-    <p> None </p>
-    {%endif %}
     {% if data.mwbsd.ngens < data.mwbsd.rank %}
      <p>
      N.B. Only integral points which are combinations of known generators are shown.
@@ -158,7 +154,7 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ KNOWL('ec.q.conductor', title='Conductor') }}:</td>
         <td>{{ data.data.cond_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.data.cond_factor }}\)</td>
+        <td>${{ data.data.cond_factor }}$</td>
         </tr>
 
         <tr>
@@ -168,9 +164,9 @@ white-space: pre in order to keep line breaks! #}
         </tr>
         <tr>
         <td>{{ KNOWL('ec.discriminant', title='Discriminant') }}:</td>
-        <td>\({{ data.data.disc }} \)</td>
+        <td>${{ data.data.disc }} $</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.data.disc_factor }} \)</td>
+        <td>${{ data.data.disc_factor }} $</td>
         </tr>
 
         <tr>
@@ -182,12 +178,12 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ KNOWL('ec.j_invariant', title='j-invariant') }}:</td>
         <td>{{ data.data.j_inv_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.data.j_inv_factor }}\)</td>
+        <td>${{ data.data.j_inv_factor }}$</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
-        <td>\(\Z\)</td>
+        <td>$\Z$</td>
         </tr>
 
         <tr>
@@ -209,12 +205,12 @@ white-space: pre in order to keep line breaks! #}
 
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Faltings height') }}:</td>
-        <td>\({{ data.faltings_height }}\dots\)</td>
+        <td>${{ data.faltings_height }}\dots$</td>
         </tr>
 
         <tr>
         <td>{{ KNOWL('ec.q.faltings_height', title='Stable Faltings height') }}:</td>
-        <td>\({{ data.stable_faltings_height }}\dots\)</td>
+        <td>${{ data.stable_faltings_height }}\dots$</td>
         </tr>
 
        </table>
@@ -224,100 +220,79 @@ white-space: pre in order to keep line breaks! #}
     <p>
         <table>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('rank') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('rank') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.q.analytic_rank', title='Analytic rank') }}:</td>
-        <td> \({{ data.analytic_rank }}\)
+        <td> ${{ data.analytic_rank }}$
         </td>
         </tr>
 
-
-        <tr>
-        <td colspan="4">
-          {{ place_code('reg') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('reg') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.regulator', title='Regulator') }}:</td>
-	{% if data.mwbsd.reg == '?' %}
-	<td>Not computed</td>
-	{% else %}
-        {% if data.rank==0 %}
-        <td> \(1\)</td>
-        {% else %}
-        <td> \({{ data.mwbsd.reg }}\dots\)</td>
-        {% endif %}
+      	{% if data.mwbsd.reg == '?' %}
+        	<td>Not computed</td>
+      	{% else %}
+          {% if data.rank==0 %}
+            <td> $1$</td>
+          {% else %}
+            <td> ${{ data.mwbsd.reg }}\dots$</td>
+          {% endif %}
         {% endif %}
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('real_period') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('real_period') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.q.real_period', title='Real period') }}:</td>
-        <td> \({{ data.mwbsd.real_period }}\dots\)</td>
+        <td> ${{ data.mwbsd.real_period }}\dots$</td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('cp') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('cp') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
-        <td>\( {{ data.mwbsd.tamagawa_product }} \)
+        <td>$ {{ data.mwbsd.tamagawa_product }} $
           {% if data.mwbsd.tamagawa_factors %}
-          &nbsp;=&nbsp;\( {{ data.mwbsd.tamagawa_factors }} \)
+            &nbsp;=&nbsp;$ {{ data.mwbsd.tamagawa_factors }} $
           {% endif %}
         </td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('ntors') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('ntors') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
-        <td>\({{ data.mwbsd.torsion }}\)</td>
+        <td>${{ data.mwbsd.torsion }}$</td>
         </tr>
 
-        <tr>
-        <td colspan="4">
-          {{ place_code('sha') }}
-        </td>
-        </tr>
+        <tr><td colspan="4">{{ place_code('sha') }}</td></tr>
         <tr>
         <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
-	<td>
-	  {% if data.mwbsd.sha == '?' %}
-	  Not computed
-	  {% else %}
-          \({{data.mwbsd.sha }}\)
-	  {% if data.mwbsd.sha > 1 %}
-	  = {{data.mwbsd.sha2}}
-          {% endif %}
-          {% if data.rank > 1 %}
-          ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
-          {% else %}
-          ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
-          {% endif %}
+      	<td>
+      	  {% if data.mwbsd.sha == '?' %}
+        	  Not computed
+      	  {% else %}
+            ${{data.mwbsd.sha }}$
+        	  {% if data.mwbsd.sha > 1 %}
+          	  = {{data.mwbsd.sha2}}
+            {% endif %}
+            {% if data.rank > 1 %}
+              ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+            {% else %}
+              ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+            {% endif %}
           {% endif %}
         </td>
         </tr>
-	{% if data.mwbsd.sha == '?' %}
-        <tr>
-        <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }} \(\times\) {{ KNOWL('ec.regulator', title='Regulator') }}:</td>
-        <td> \({{ data.mwbsd.regsha }}\)</td>
-        </tr>
+      	{% if data.mwbsd.sha == '?' %}
+          <tr>
+          <td>{{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }} $\times$ {{ KNOWL('ec.regulator', title='Regulator') }}:</td>
+          <td> ${{ data.mwbsd.regsha }}$</td>
+          </tr>
         {% endif %}
-
+        <tr><td colspan="4">{{ place_code('L1') }}</td></tr>
+        <tr>
+        <td>{{KNOWL('ec.q.special_value', title='Special value', special_value = data.special_value)}}:</td>
+        <td>$ {{ data.mwbsd.lder_name }} $ &approx; $ {{ data.mwbsd.special_value }} $</td>
+        </tr>
         </table>
     </p>
 
@@ -368,7 +343,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 	{% if data.conductor < data.cremona_bound %}
         <tr>
-        <td>{{ KNOWL('ec.q.optimal', title='\( \Gamma_0(N) \)-optimal') }}:</td>
+        <td>{{ KNOWL('ec.q.optimal', title='$ \Gamma_0(N) $-optimal') }}:</td>
         <td>
 	  {% if data.data.optimality_code==1 %}yes{% elif data.data.optimality_code==0 %}no{% else %}not computed<sup>*</sup> (one of {{ data.data.optimality_code }} curves in this isogeny class which might be optimal){% endif %}
         </td>
@@ -397,14 +372,6 @@ white-space: pre in order to keep line breaks! #}
 	{% endif %}
 	{% endif %}
 	</p>
-
-
-    <p>
-      <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>
-    {{ place_code('L1') }}
-    <p>
-        \( {{ data.mwbsd.lder_name }} \) &approx; \( {{ data.mwbsd.special_value }} \)
-    </p>
 
     <h2> Local data </h2>
 
@@ -435,16 +402,16 @@ text-align: center;
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
-<th>{{KNOWL('ec.conductor_valuation', title='ord(\(N\))')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord($N$)')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord($\Delta$)')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord$(j)_{-}$')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in data.local_data %}
 <tr>
-<td> \({{pr.prime}}\)</td>
-<td>\({{pr.tamagawa_number}}\)</td>
-<td>\({{pr.kod}}\)</td>
+<td> ${{pr.prime}}$</td>
+<td>${{pr.tamagawa_number}}$</td>
+<td>${{pr.kod}}$</td>
 <td>
 {% if pr.reduction_type==0 %}
  Additive
@@ -463,100 +430,92 @@ text-align: center;
 </tbody>
 </table>
 
-
     <h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
-
-{% if data.data.CMD %} {% else %}
-{% if data.twoadicdata.twoadic_index == 1 %}
-<p>
-The {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached
-to this elliptic curve is surjective.
-</p>
-{% else %}
-<p>
-The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
-is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
- <a href="{{data.twoadicdata.rouse_url}}" target="_blank">{{data.twoadicdata.twoadic_label}}</a>.
-</p>
-<p>
-This subgroup is the pull-back of the subgroup of
-$\GL(2,\Z_2/2^{{data.twoadicdata.twoadic_log_level}}\Z_2)$ generated by
-${{data.twoadicdata.gen_matrices}}$ and has index {{
-data.twoadicdata.twoadic_index }}.
-</p>
-{% endif %}
-{% endif %}
 
     {{ place_code('galrep') }}
 
-<p>
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois representation')}}
-has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
-{% if not data.data.CMD %}
-\(\GL(2,\F_p)\)
-for all primes \( p \)
-{% else %}
-for all primes \( p < 1000 \)
-{% endif %}
-{% if data.data.galois_data %} {# there are non-maximal primes #}
-except those listed.
-</p>
-
-<p>
-<table class="ntdata"><thead>
-<tr>
-<th>prime</th>
-<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois representation')}}</th>
-</tr>
-</thead><tbody>
-{% for pr in data.data.galois_data %}
-<tr>
-<td align=center> \({{pr.prime}}\)</td>
-<td align=center>{{pr.image}}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-{% else %}
-.
-{% endif %}
-</p>
-
 {% if data.data.CMD %}
-<p>
-{% if data.data.galois_data %} For all other primes \(p\), the
-{% else %} The
-{% endif %}
-image is
-{% if data.data.cm_nramp!=0 %}
-a {{KNOWL('gl2.borel', title='Borel subgroup')}}
-{% if data.data.cm_nramp==1 %}
-if \(p={{data.data.cm_ramp}}\),
-{% else %}
-if \(p\in \{ {{ data.data.cm_ramp }}\}\),
-{% endif %}
-{% endif %}
-the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
-if \(\left(\frac{ {{data.data.cm_sqf}} }{p}\right)=+1\) or
-the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
-if \(\left(\frac{ {{data.data.cm_sqf}} }{p}\right)=-1\).
-</p>
-{% endif %} {# CM case #}
+  <p>
+  The {{KNOWL('ec.galois_rep', title='mod-$\ell$  Galois representation')}}
+  has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
+  {% if data.data.galois_data %} {# any non-maximal primes? #}
+    for all primes $\ell < 1000$ except those listed in the table below.
+    </p>
+    <table class="ntdata"><thead>
+    <tr>
+    <th>prime $\ell$</th>
+    <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
+    </tr>
+    </thead><tbody>
+    {% for pr in data.data.galois_data %}
+      <tr>
+      <td align=center>${{pr.prime}}$</td>
+      <td align=center>{{pr.modell_image}}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    <p>
+    For all other primes $\ell$ the image is
+    {% if data.data.cm_nramp!=0 %}
+      a {{KNOWL('gl2.borel', title='Borel subgroup')}}
+      {% if data.data.cm_nramp==1 %}
+        if $\ell={{data.data.cm_ramp}}$, 
+      {% else %}
+        if $\ell\in \{ {{ data.data.cm_ramp }}\}$,
+      {% endif %}
+    {% endif %}
+    the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
+    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=+1$ or
+    the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
+    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=-1$.
+    </p>
+  {% else %} {# non non-maximal primes (that we know of) #}
+    for all primes $\ell < 1000$.
+    </p>
+  {% endif %}
 
+{% else %}  {# end CM case, begin non-CM case #}
 
-<h2> $p$-adic data </h2>
+  <p>
+    The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}}
+    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} $\GL(2,\Z_\ell)$
+  {% if data.data.galois_data %} {# any non-maximal primes? #}
+    for all primes $\ell$ except those listed in the table below.
+    </p>
+    <table class="ntdata"><thead>
+    <tr>
+    <th>prime $\ell$</th>
+    <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
+    <th>{{KNOWL('ec.q.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
+    </tr>
+    </thead><tbody>
+    {% for pr in data.data.galois_data %}
+      <tr>
+      <td align=center>${{pr.prime}}$</td>
+      <td align=center>{{pr.modell_image}}</td>
+      <td align=center>{{data.display_elladic_image(pr.elladic_image) | safe}}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+  {% else %} {# non non-maximal primes (that we know of) #}
+    for all primes $\ell$.
+    </p>
+  {% endif %}
+{% endif %} {# end non-CM case #}
 
-<h3>$p$-adic regulators</h3>
+<h2>$p$-adic regulators</h2>
 
     {{ place_code('padicreg') }}
 
 <p>
 {% if data.rank==0 %}
-All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
+All $p$-adic regulators are identically $1$ since the rank is $0$.
 {% else %}
 {% if data.data.p_adic_data_exists %}
 </p><p>
-Note: \(p\)-adic regulator data only exists for primes \(p\ge 5\) of good ordinary
+Note: $p$-adic regulator data only exists for primes $p\ge 5$ of good ordinary
 reduction.
 </p>
   <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p=0)}}'+this.value, function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
@@ -567,9 +526,9 @@ reduction.
   </select>
   <div id='padic'></div>
 {% elif data.data.Gamma0optimal %}
-No \(p\)-adic data exists for this curve.
+No $p$-adic data exists for this curve.
 {% else %}
-\(p\)-adic regulators are not yet computed for curves that are not \(\Gamma_0\)-optimal.
+$p$-adic regulators are not yet computed for curves that are not $\Gamma_0$-optimal.
 {% endif %}
 {% endif %}
     </p>
@@ -644,7 +603,7 @@ No Iwasawa invariant data is available for this curve.
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
 {% if data.data.isogeny_degrees %}
-This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
+This curve has non-trivial cyclic isogenies of degree $d$ for $d=$
 {{ data.data.isogeny_degrees}}.
 <br>
 Its isogeny class <a href={{ data.class_url }}>{{data.class_name}}</a>
