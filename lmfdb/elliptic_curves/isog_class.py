@@ -94,10 +94,9 @@ class ECisog_class(object):
             for c in self.curves:
                 c['optimal'] = None
                 c['optimality_known'] = False
-                
         for c in self.curves:
             c['ai'] = c['ainvs']
-            c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=self.conductor, iso_label=self.iso_label, number=c['lmfdb_number'])
+            c['curve_url_lmfdb'] = url_for(".by_ec_label", label=c['lmfdb_label'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel']) if self.conductor < CREMONA_BOUND else "N/A"
             if self.label_type == 'Cremona':
                 c['curve_label'] = c['Clabel']
