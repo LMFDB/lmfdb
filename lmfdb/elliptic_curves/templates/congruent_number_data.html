@@ -3,7 +3,7 @@
 
 <p>
   Data for the first 1,000,000 {{ KNOWL('ec.congruent_number_curve',
-  'Congruent Number Elliptic Curves') }} is available, provided by
+  'congruent number curves') }} is available, provided by
   Randall L. Rathbun.  For each of the first 1,000,000 positive
   integers $n$, this includes information about the $n$th {{
   KNOWL('ec.congruent_number_curve', 'congruent number curve') }}
@@ -13,16 +13,19 @@
   problem') }} when it is.
 </p>
 
-<h2>Congruence property of individual numbers</h2>
+<h2>Congruence property of specific integers</h2>
 
 <p>
-Enter an integer between 1 and 1,000,000 to see if it is a congruent number or not:
+Enter an integer between 1 and 1,000,000 to see if it is a {{
+  KNOWL('ec.congruent_number', 'congruent number') }} or not:
 <form>
 <input type='text' name='lookup' placeholder='6' size='6'>
 <span class="formexample">e.g. 6</span>
 <button type='submit'>Look up $n$</button>
 </form>
 </p>
+
+{#
 
 <h2>Congruent numbers, the congruent number problem, and congruent number curves</h2>
 
@@ -34,16 +37,11 @@ Enter an integer between 1 and 1,000,000 to see if it is a congruent number or n
 {{ KNOWL_INC('ec.congruent_number_problem') }}
 </p>
 
-{#
-<p>
-The data here includes the 392074 non-squarefree integers up to one
-million as well as the 607926 squarefree integers.
-</p>
-#}
-
 <p>
 {{ KNOWL_INC('ec.congruent_number_curve') }}
 </p>
+
+#}
 
 <h2>Data files</h2>
 
@@ -73,7 +71,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
     <pre>000137    60608</pre>
     </td>
   <td>
-    &nbsp;
+    For squarefree $n$, the conductor of $E_n$ is $32n^2$ or $16n^2$, for $n$ odd and even respectively.
   </td>
   </tr>
 
@@ -127,7 +125,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
     <pre>000137    [8.4621365965410101565417149184287484305,10.575571190572966907642306531966335545]</pre>
     </td>
     <td>
-      Computed to 38 decimal digit precision
+      Given to 38 decimal digit precision
     </td>
   </tr>
 
@@ -145,7 +143,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
       <pre>000137    84.158316595868123199826622496651245358</pre>
     </td>
     <td>
-      &nbsp;
+      Given to 38 decimal digit precision
     </td>
 
   <tr>
@@ -264,9 +262,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
 The data files were created by Randall L. Rathbun on February 14, 2013
 with updates on May 18, 2014.  Some data was provided by Allan J
 MacLeod, the rest computed by Rathbun using <tt>PARI/GP</tt>
-and <tt>eclib</tt> (in particular <tt>mwrank</tt>).  The information
-on this page is based on notes provided by Rathbun, edited for the
-LMFDB by John Cremona and other LMFDB editors.
+and <tt>eclib</tt> (in particular <tt>mwrank</tt>).
 </p>
 
 <div id='infomessage'>
