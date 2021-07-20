@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
-<<<<<<< Updated upstream
 
 import time
 from six import BytesIO
 from collections import defaultdict, Counter
 
-
-=======
-import time
-from six import BytesIO
-from collections import defaultdict
-
->>>>>>> Stashed changes
 from flask import render_template, request, url_for, redirect, Markup, make_response, send_file #, abort
 from sage.all import ZZ, latex, factor, Permutations
 
@@ -104,7 +96,7 @@ def create_boolean_string(gp, short_string=False):
     metacyclic_str = display_knowl('group.metacyclic', "metacyclic")
     metabelian_str = display_knowl('group.metabelian', "metabelian")
     quasisimple_str = display_knowl('group.quasisimple', "quasisimple")
-    almostsimple_str = display_knowl('group.almost_simple', "qlmost simple")
+    almostsimple_str = display_knowl('group.almost_simple', "almost simple")
     simple_str = display_knowl('group.simple', "simple")
     perfect_str = display_knowl('group.perfect', "perfect")
     rational_str= display_knowl('group.rational_group', "rational")
@@ -162,7 +154,7 @@ def create_boolean_string(gp, short_string=False):
 
         #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
             if gp.nilpotent:
-                strng += "It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+                strng += " It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
                 if gp.rational:
                     if gp.metacyclic:
                         strng += ", "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ") and " + rational_str + "."
@@ -177,41 +169,26 @@ def create_boolean_string(gp, short_string=False):
 
             elif gp.Zgroup:
                 if gp.rational:
-                    strng += "It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
+                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
                 else:
-                    strng += "It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
-<<<<<<< Updated upstream
+                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
+
 
             elif gp.metacyclic:   
                 if gp.rational and gp.Agroup:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
+                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
                 elif gp.rational:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
+                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
                 elif gp.Agroup:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
+                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
                 else:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
+                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
 
 
 
-=======
-
-            elif gp.metacyclic:   
-                if gp.rational and gp.Agroup:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
-                elif gp.rational:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
-                elif gp.Agroup:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
-                else:
-                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
-
-
-
->>>>>>> Stashed changes
                     
             elif gp.supersolvable:
-                strng += "It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
+                strng += " It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
                 if gp.metabelian:
                     if gp.rational and gp.Agroup:
                         strng += ", " + metabelian_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -233,7 +210,7 @@ def create_boolean_string(gp, short_string=False):
 
                     
             elif gp.metabelian:
-                strng += "It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
+                strng += " It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
                 if gp.monomial:
                     if gp.rational and gp.Agroup:
                         strng += ", " + monomial_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -254,7 +231,7 @@ def create_boolean_string(gp, short_string=False):
 
 
             elif gp.monomial:
-                strng += "It is " + monomial_str + " (" + hence_str + solvable_str + ")"
+                strng += " It is " + monomial_str + " (" + hence_str + solvable_str + ")"
                 if gp.rational:
                     if gp.Agroup:
                         strng += ", an " + agroup_str + " and  " + rational_str
@@ -264,7 +241,7 @@ def create_boolean_string(gp, short_string=False):
 
                 
             elif gp.solvable:
-                strng += "It is " + solvable_str
+                strng += " It is " + solvable_str
                 if gp.rational:
                     if gp.Agroup:
                         strng += ", an " + agroup_str + " and  " + rational_str
@@ -273,7 +250,7 @@ def create_boolean_string(gp, short_string=False):
                 strng += "."
 
             else:
-                strng += "It is " + nonsolvable_str
+                strng += " It is " + nonsolvable_str
                 if gp.rational:
                     if gp.Agroup:
                         strng += ", an " + agroup_str + " and  " + rational_str
