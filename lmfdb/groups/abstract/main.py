@@ -314,7 +314,9 @@ def group_search(info, query):
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
     parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
     parse_ints(info, query, 'aut_order', 'aut_order')
+    parse_ints(info, query, 'outer_order', 'outer_order')
     parse_ints(info, query, 'derived_length', 'derived_length')
+    parse_ints(info, query, 'rank', 'rank')
     parse_bool(info, query, 'abelian', 'is abelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'metabelian', 'is metabelian')
@@ -330,12 +332,15 @@ def group_search(info, query):
     parse_bool(info, query, 'semidirect_product', 'is semidirect product')
     parse_bool(info, query, 'Agroup', 'is A-group')
     parse_bool(info, query, 'Zgroup', 'is Z-group')
+    parse_bool(info, query, 'monomial', 'is monomial')
+    parse_bool(info, query, 'rational', 'is rational')
     parse_regex_restricted(info, query, 'center_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'aut_group', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'commutator_label', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'central_quotient', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'abelian_quotient', regex=abstract_group_label_regex)
     parse_regex_restricted(info, query, 'frattini_label', regex=abstract_group_label_regex)
+    parse_regex_restricted(info, query, 'outer_group', regex=abstract_group_label_regex)
 
 @search_wrap(template="subgroup-search.html",
              table=db.gps_subgroups,
@@ -711,6 +716,30 @@ class GroupsSearchArray(SearchArray):
             example_span="4.2",
             advanced=True
             )
+        outer_group = TextBox(
+            name="outer_group",
+            label="Outer automorphism group",
+            knowl="group.outer_aut",
+            example="4.2",
+            example_span="4.2",
+            advanced=True
+            )
+        outer_order = TextBox(
+            name="outer_order",
+            label="Outer automorphism group order",
+            knowl="group.outer_aut",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+            )
+        rank = TextBox(
+            name="rank",
+            label="Rank",
+            knowl="group.rank",
+            example="3",
+            example_span="4, or a range like 3..5",
+            advanced=True
+            )
         abelian = YesNoBox(
             name="abelian",
             label="Abelian",
@@ -744,7 +773,8 @@ class GroupsSearchArray(SearchArray):
             name="supersolvable",
             label="Supersolvable",
             knowl="group.supersolvable",
-            advanced=True
+            advanced=True,
+            example_col=True
             )
         nilpotent = YesNoBox(
             name="nilpotent",
@@ -779,22 +809,35 @@ class GroupsSearchArray(SearchArray):
             knowl="group.direct_product",
             example_col=True
             )
-        semidirect_product= YesNoBox(
+        semidirect_product = YesNoBox(
             name="semidirect_product",
             label="Semidirect product",
             knowl="group.semidirect_product")
-        Agroup= YesNoBox(
+        Agroup = YesNoBox(
             name="Agroup",
             label="A-group",
             knowl="group.a_group",
             advanced=True,
             example_col=True
             )
-        Zgroup= YesNoBox(
+        Zgroup = YesNoBox(
             name="Zgroup",
             label="Z-group",
             knowl="group.z_group",
             advanced=True,
+            )
+        monomial = YesNoBox(
+            name="monomial",
+            label="Monomial",
+            knowl="group.monomial",
+            advanced=True,
+            )
+        rational = YesNoBox(
+            name="rational",
+            label="Rational",
+            knowl="group.rational_group",
+            advanced=True,
+            example_col=True
             )
         center_label = TextBox(
             name="center_label",
@@ -836,11 +879,13 @@ class GroupsSearchArray(SearchArray):
             [simple, perfect],
             [solvable, nilpotent],
             [direct_product, semidirect_product],
+            [outer_group, outer_order],
             [metabelian, metacyclic],
             [almost_simple, quasisimple],
             [Agroup, Zgroup],
             [derived_length, frattini_label],
-            [supersolvable],
+            [supersolvable, monomial],
+            [rational, rank],
             [count]
         ]
 
@@ -849,10 +894,10 @@ class GroupsSearchArray(SearchArray):
             [center_label, commutator_label, central_quotient, abelian_quotient],
             [abelian, cyclic, solvable, simple],
             [perfect, direct_product, semidirect_product],
-            [aut_group, aut_order],
+            [aut_group, aut_order, outer_group, outer_order],
             [metabelian, metacyclic, almost_simple, quasisimple],
             [Agroup, Zgroup, derived_length, frattini_label],
-            [supersolvable]
+            [supersolvable, monomial, rational, rank]
         ]
 
     sort_knowl = "group.sort_order"
