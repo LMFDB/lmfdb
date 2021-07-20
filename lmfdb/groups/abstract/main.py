@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
+<<<<<<< Updated upstream
+
+import time
+from six import BytesIO
 from collections import defaultdict, Counter
 
-from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
-from sage.all import ZZ, latex, factor #, Permutation
+
+=======
+import time
+from six import BytesIO
+from collections import defaultdict
+
+>>>>>>> Stashed changes
+from flask import render_template, request, url_for, redirect, Markup, make_response, send_file #, abort
+from sage.all import ZZ, latex, factor, Permutations
 
 from lmfdb import db
 from lmfdb.app import app
@@ -80,30 +91,29 @@ def get_bread(breads=[]):
 
 #function to create string of group characteristics
 def create_boolean_string(gp, short_string=False):
-    cyclic_str = display_knowl('group.cyclic', 'Cyclic') 
-    abelian_str = display_knowl('group.abelian','Abelian')
-    nonabelian_str =  display_knowl('group.abelian', "non-Abelian")
-    nilpotent_str = display_knowl('group.nilpotent', "Nilpotent")
-    supersolvable_str = display_knowl('group.supersolvable', "Supersolvable")
-    monomial_str = display_knowl('group.monomial', "Monomial")
-    solvable_str = display_knowl('group.solvable', "Solvable")
-    nonsolvable_str = display_knowl('group.solvable', "non-Solvable")
-    zgroup_str = display_knowl('group.z_group', "Zgroup")
-    agroup_str = display_knowl('group.a_group', "Agroup")
-    metacyclic_str = display_knowl('group.metacyclic', "Metacyclic")
-    metabelian_str = display_knowl('group.metabelian', "Metabelian")
-    quasisimple_str = display_knowl('group.quasisimple', "Quasisimple")
-    almostsimple_str = display_knowl('group.almost_simple', "Almost Simple")
-    simple_str = display_knowl('group.simple', "Simple")
-    perfect_str = display_knowl('group.perfect', "Perfect")
-    rational_str= display_knowl('group.rational_group', "Rational")
+    cyclic_str = display_knowl('group.cyclic', 'cyclic') 
+    abelian_str = display_knowl('group.abelian','abelian')
+    nonabelian_str =  display_knowl('group.abelian', "nonabelian")
+    nilpotent_str = display_knowl('group.nilpotent', "nilpotent")
+    supersolvable_str = display_knowl('group.supersolvable', "supersolvable")
+    monomial_str = display_knowl('group.monomial', "monomial")
+    solvable_str = display_knowl('group.solvable', "solvable")
+    nonsolvable_str = display_knowl('group.solvable', "nonsolvable")
+    zgroup_str = display_knowl('group.z_group', "Z-group")
+    agroup_str = display_knowl('group.a_group', "A-group")
+    metacyclic_str = display_knowl('group.metacyclic', "metacyclic")
+    metabelian_str = display_knowl('group.metabelian', "metabelian")
+    quasisimple_str = display_knowl('group.quasisimple', "quasisimple")
+    almostsimple_str = display_knowl('group.almost_simple', "qlmost simple")
+    simple_str = display_knowl('group.simple', "simple")
+    perfect_str = display_knowl('group.perfect', "perfect")
+    rational_str= display_knowl('group.rational_group', "rational")
 
-    hence_str = display_knowl('group.properties_interdependencies', 'hence ')
+    hence_str = display_knowl('group.properties_interdependencies', 'hence')
 
 
     if short_string:
         if gp.cyclic:
-            strng = cyclic_str + " (" + hence_str + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")"
             if gp.simple:
                 strng = cyclic_str + ", " +  solvable_str + ", and " + simple_str
             else:
@@ -128,83 +138,170 @@ def create_boolean_string(gp, short_string=False):
     #Zgroup implies metacyclic for finite groups
     
         if gp.cyclic:
-            strng = cyclic_str + " (" + hence_str + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")"
+            if gp.rational:
+                strng = "This group is " + cyclic_str + " (" + hence_str + " " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", a " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ") and " + rational_str +"."
+            else:
+                 strng = "This group is " +  cyclic_str + " (" + hence_str + " " + abelian_str + ", " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", " + solvable_str + ", a " + zgroup_str + ", " + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str +  ")."
+            
             if gp.simple:
-                strng += "<br>" + simple_str
+                strng += "<br> It is also " + simple_str + "."
+                
 
         elif gp.abelian:
-            strng = abelian_str + " (" + hence_str + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str +  ", as well as " +  metabelian_str + ", and an " + agroup_str +  ")"
+            if gp.rational:
+                strng = "This group is " + abelian_str + " (" + hence_str + " " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ",  " + solvable_str +  ", " +  metabelian_str + ", and an " + agroup_str +  ") and " + rational_str + "."
+            else:
+                strng = "This group is " + abelian_str + " (" + hence_str + " " + nilpotent_str + ", " + supersolvable_str + ", " + monomial_str + ",  " + solvable_str +  ", " +  metabelian_str + ", and an " + agroup_str +  ")."
             if gp.Zgroup:
-                strng += "<br>" + zgroup_str + " (" + hence_str + metacyclic_str + ")"
+                strng += "It is also a " + zgroup_str + " (" + hence_str + " " +  metacyclic_str + ")."
 
             
 #rest will assume non-abelian            
         else:
-            strng = nonabelian_str
+            strng = "This group is " + nonabelian_str + "."
 
         #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
             if gp.nilpotent:
-                strng += " and " + nilpotent_str + " (" + hence_str + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
-                if gp.metacyclic:
-                    strng += "<br>"  + metacyclic_str + " (" + hence_str + metabelian_str + ")"
-                elif gp.metabelian:
-                    strng += "<br>" + metabelian_str
+                strng += "It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+                if gp.rational:
+                    if gp.metacyclic:
+                        strng += ", "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ") and " + rational_str + "."
+                    elif gp.metabelian:
+                        strng += ", " + metabelian_str + " and " + rational_str +"."
+                else:
+                    if gp.metacyclic:
+                        strng += "and "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ")."
+                    elif gp.metabelian:
+                        strng += ", and " + metabelian_str + "."
+                        
 
             elif gp.Zgroup:
-                strng += " and " + zgroup_str + " (" + hence_str + metacyclic_str + ", " + metabelian_str + ", and an " + agroup_str + " as well as " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+                if gp.rational:
+                    strng += "It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
+                else:
+                    strng += "It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
+<<<<<<< Updated upstream
 
-            elif gp.metacyclic:
-                strng += " and " + metacyclic_str +  " (" + hence_str + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+            elif gp.metacyclic:   
+                if gp.rational and gp.Agroup:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
+                elif gp.rational:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
+                elif gp.Agroup:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
+                else:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
 
 
+
+=======
+
+            elif gp.metacyclic:   
+                if gp.rational and gp.Agroup:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
+                elif gp.rational:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
+                elif gp.Agroup:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
+                else:
+                    strng += "It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
+
+
+
+>>>>>>> Stashed changes
+                    
             elif gp.supersolvable:
-                strng += " and " + supersolvable_str + " (" + hence_str + monomial_str + " and " + solvable_str + ")"
-                if gp.Agroup:
-                    strng += "<br>" + agroup_str
+                strng += "It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
                 if gp.metabelian:
-                    strng += "<br>" + metabelian_str
+                    if gp.rational and gp.Agroup:
+                        strng += ", " + metabelian_str + ", an " + agroup_str + ", and " + rational_str + "."
+                    elif gp.rational:
+                         strng += ", " + metabelian_str + ", and " + rational_str + "."
+                    elif gp.Agroup:
+                         strng += ", " + metabelian_str + ", and an " + agroup_str + "."
 
+                else: #not metabelian
+                    if gp.rational and gp.Agroup:
+                        strng += ",  an " + agroup_str + ", and " + rational_str + "."
+                    elif gp.rational:
+                         strng += "and " + rational_str + "."
+                    elif gp.Agroup:
+                         strng += "and an " + agroup_str + "."
+                    else:
+                        strng +="."
+
+
+                    
             elif gp.metabelian:
-                strng += " and " + metabelian_str + " (" + hence_str + solvable_str + ")"
+                strng += "It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
                 if gp.monomial:
-                    strng += "<br>" + monomial_str
+                    if gp.rational and gp.Agroup:
+                        strng += ", " + monomial_str + ", an " + agroup_str + ", and " + rational_str + "."
+                    elif gp.rational:
+                         strng += ", " + monomial_str + ", and " + rational_str + "."
+                    elif gp.Agroup:
+                         strng += ", " + monomial_str + ", and an " + agroup_str + "."
+
+                else: #not metabelian
+                    if gp.rational and gp.Agroup:
+                        strng += ",  an " + agroup_str + ", and " + rational_str + "."
+                    elif gp.rational:
+                         strng += "and " + rational_str + "."
+                    elif gp.Agroup:
+                         strng += "and an " + agroup_str + "."
+                    else:
+                        strng +="."
 
 
             elif gp.monomial:
-                strng += " and " + monomial_str + " (" + hence_str + solvable_str + ")"
-            
-            elif gp.solvable:
-                strng += " and " + solvable_str
+                strng += "It is " + monomial_str + " (" + hence_str + solvable_str + ")"
+                if gp.rational:
+                    if gp.Agroup:
+                        strng += ", an " + agroup_str + " and  " + rational_str
+                    else:
+                        strng += " and  " + rational_str
+                strng += "."
 
+                
+            elif gp.solvable:
+                strng += "It is " + solvable_str
+                if gp.rational:
+                    if gp.Agroup:
+                        strng += ", an " + agroup_str + " and  " + rational_str
+                    else:
+                        strng += " and  " + rational_str
+                strng += "."
 
             else:
-                strng += " and " + nonsolvable_str
+                strng += "It is " + nonsolvable_str
+                if gp.rational:
+                    if gp.Agroup:
+                        strng += ", an " + agroup_str + " and  " + rational_str
+                    else:
+                        strng += " and  " + rational_str
+                strng += "."
 
                 
         #nonabelian only here so QS and perfect and AS too        
             if gp.simple:
-                strng += " and " + simple_str + " (" + hence_str  + quasisimple_str + ", " + perfect_str + ", and " + almostsimple_str + ")"
+                strng += "<br> It is also " + simple_str + " (" + hence_str + " "  + quasisimple_str + ", " + perfect_str + ", and " + almostsimple_str + ")."
 
 
             elif gp.quasisimple:
-                strng += " and " + quasisimple_str + " (" + hence_str  + perfect_str + ")"
+                strng += "<br> It is also " + quasisimple_str + " (" + hence_str  + " " + perfect_str + ")"
                 if gp.almost_simple:
-                    strng += "<br>" + almostsimple_str
+                    strng += " and " + almostsimple_str
+                strng += "."
 
+                
             elif gp.perfect:
-                strng += " and " + perfect_str
+                strng += "<br> It is also " + perfect_str
                 if gp.almost_simple:
-                    strng += "<br>" +  almostsimple_str
-
+                    strng += "and " +  almostsimple_str
+                strng += "."
+      
             elif  gp.almost_simple:
-                strng += "<br>" +  almostsimple_str
-
-        #if Zgroup, already labeled as Agroup    
-            if gp.Agroup and not gp.Zgroup:
-                strng += "<br>" + agroup_str
-            
-        if gp.rational:
-            strng += "<br>" +  rational_str
+                strng += "It is " +  almostsimple_str + "."
 
             
     return strng
@@ -531,16 +628,16 @@ def render_abstract_group(label):
 
 
     if gp.cyclic:
-        abelian_property_string = "Cyclic"
+        abelian_property_string = "cyclic"
     elif gp.abelian:
-        abelian_property_string = "Abelian"
+        abelian_property_string = "abelian"
     else:
-        abelian_property_string ="non-Abelian"
+        abelian_property_string ="nonabelian"
 
     if gp.solvable:
-        solvable_property_string = "Solvable"
+        solvable_property_string = "solvable"
     else:
-        solvable_property_string ="non-Solvable"
+        solvable_property_string ="nonsolvable"
        
     
     properties = [
@@ -554,19 +651,24 @@ def render_abstract_group(label):
         #(r'#$G^{\mathrm{ab}}$', '$%s$' % Gab_order),
     ]
 
+
+    downloads = [('Code for Magma', url_for(".download_group",  label=label, download_type='magma')),
+                     ('Code for Gap', url_for(".download_group", label=label, download_type='gap'))]
+
+  #  sbgp_url = FILL HERE
+   # friends =  [("Subgroups", sbgp_url)]
+    
     bread = get_bread([(label, '')])
 
-#    downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-#                 ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
     abstract_logger.info("Z")
 
     return render_template("abstract-show-group.html",
                            title=title, bread=bread, info=info,
                            gp=gp,
                            properties=properties,
-                           #friends=friends,
+                          # friends=friends,
                            learnmore=learnmore_list(),
-                           #downloads=downloads,
+                           downloads=downloads,
                            credit=credit_string)
 
 def render_abstract_subgroup(label):
@@ -685,6 +787,76 @@ def how_computed_page():
                            title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
+
+
+@abstract_page.route("/<label>/download/<download_type>")
+def download_group(**args):
+    dltype = args['download_type']
+    label = args['label']
+    delim = "bracket"
+    com = "#"  # single line comment start
+    com1 = ""  # multiline comment start
+    com2 = ""  # multiline comment end
+
+    gp_data = db.gps_groups.lucky({"label": label}) 
+    
+    filename = "group" +  label
+    mydate = time.strftime("%d %B %Y")
+    if dltype == "gap":
+        filename += ".gp"
+    if dltype == "magma":
+        com = ""
+        com1 = "/*"
+        com2 = "*/"
+        delim = "magma"
+        filename += ".m"
+    s = com1 + "\n"
+    s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
+    s += com + " Below is the group G, given with generators (and relations if solvable) \n"
+    s += com + " matching the LMFDB group.\n"
+    s += "\n" + com2
+    s += "\n"
+
+
+    if gp_data['solvable']:
+        s += "gpsize:=  " + str(gp_data['order']) + "; \n"
+        s +="encd:= " + str(gp_data['pc_code']) + "; \n"
+
+        if dltype == "magma":
+            s += "G:=SmallGroupDecoding(encd,gpsize); \n"
+        elif dltype == "gap":
+            s += "G:=PcGroupCode(encd, gpsize); \n"
+
+    #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??       
+    else:
+        d = -gp_data['elt_rep_type']
+        s += "d:=" +str(d) + "; \n"
+        s += "Sd:=SymmetricGroup(d); \n"
+
+        #Turn Lehmer code into permutations
+        list_gens = []
+        for perm in gp_data['perm_gens']:
+            perm_decode = Permutations(d).unrank(perm)
+            list_gens.append(perm_decode)
+
+        if dltype == "magma":
+            s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
+        elif dltype == "gap":
+#          MAKE LIST2
+            s += "List_Gens:="+ str(list_gens)+ "; \n \n"
+            s +="LGens:=[]; \n"
+            s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
+            s += "G:=Subgroup(Sd,LGens);"
+      
+
+    strIO = BytesIO()
+    strIO.write(s.encode('utf-8'))
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+
+
+
 
 def display_profile_line(data):
     datad = dict(data)
@@ -1199,4 +1371,7 @@ flist= {'cc_data': cc_data,
         'rchar_data': rchar_data,
         'cchar_data': cchar_data,
         'group_data': group_data}
+
+
+
 
