@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from flask import render_template, request, url_for, redirect, Markup, make_response #, send_file, abort
 from sage.all import ZZ, latex, factor #, Permutation
@@ -257,6 +257,36 @@ def by_label(label):
     else:
         flash_error( "The label %s is invalid.", label)
         return redirect(url_for(".index"))
+
+AB_LABEL_RE = re.compile(r"\d+(_\d+)?(\.\d+(_\d+)?)*")
+@abstract_page.route("/ab/<label>")
+def by_abelian_label(label):
+    print("ABELIAN")
+    # For convenience, we provide redirects for abelian groups:
+    # m1_e1.m2_e2... represents C_{m1}^e1 x C_{m2}^e2 x ...
+    if not AB_LABEL_RE.match(label):
+        flash_error(r"The abelian label %s is invalid; it must be of the form m1_e1.m2_e2... representing $C_{m_1}^{e_1} \times C_{m_2}^{e_2} \times \cdots$", label)
+        return redirect(url_for(".index"))
+    parts = defaultdict(list)
+    for piece in label.split("."):
+        if "_" in piece:
+            base, exp = map(ZZ, piece.split("_"))
+        else:
+            base = ZZ(piece)
+            exp = 1
+        for p,e in base.factor():
+            parts[p].extend([p**e] * exp)
+    for v in parts.values():
+        v.sort()
+    print(parts)
+    primary = sum((parts[p] for p in sorted(parts)), [])
+    label = db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
+    if label is None:
+        # We want latex, so don't use the escape
+        flash_error("The database does not contain the abelian group $%s$" % (r" \times ".join("C_{%s}^{%s}" % (q, e) for (q, e) in Counter(primary).items())))
+        return redirect(url_for(".index"))
+    else:
+        return redirect(url_for(".by_label", label=label))
 
 @abstract_page.route("/sub/<label>")
 def by_subgroup_label(label):
