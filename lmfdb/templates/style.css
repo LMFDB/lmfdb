@@ -1080,6 +1080,7 @@ table.knowl_review tr:first-child td {
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
 }
+
 table.euler {
     margin-left:auto;
     margin-right:auto;

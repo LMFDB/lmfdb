@@ -33,6 +33,15 @@ def group_pretty_image(label):
     else: # we should not get here
         return None
 
+def product_sort_key(sub):
+    s = sub.subgroup_tex_parened + sub.quotient_tex_parened
+    s = s.replace("{","").replace("}","").replace(" ","").replace(r"\rm","").replace(r"\times", "x")
+    v = []
+    for c in "SALwOQDC":
+        # A rough preference order for groups S_n (and SL_n), A_n, GL_n, wreath products, OD_n, Q_n, D_n, and finally C_n
+        v.append(-s.count(c))
+    return len(s), v
+
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -214,6 +223,7 @@ class WebAbstractGroup(WebObj):
                 if pair not in count:
                     semis.append(sub)
                 count[pair] += 1
+        semis.sort(key=product_sort_key)
         return [(sub, count[sub.subgroup, sub.quotient]) for sub in semis]
 
     @lazy_attribute
@@ -226,6 +236,7 @@ class WebAbstractGroup(WebObj):
                 if pair not in count:
                     nonsplit.append(sub)
                 count[pair] += 1
+        nonsplit.sort(key=product_sort_key)
         return [(sub, count[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
 

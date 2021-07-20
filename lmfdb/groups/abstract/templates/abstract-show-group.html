@@ -6,9 +6,19 @@
 <script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
 <script type="text/javascript">
   $(document).ready(
-  function() {
-  $(".subgp").hover(highlight_group, unhighlight_group);
-  $(".subgp").on('touchstart', highlight_group);
+    function() {
+    $(".subgp").hover(highlight_group, unhighlight_group);
+    $(".subgp").on('touchstart', highlight_group);
+    $(".show_semidirect").on("click", function() {
+      $(".show_semidirect_container").hide();
+      $(".hidden_semidirect").show();
+      return false;
+    });
+    $(".show_nonsplit").on("click", function() {
+      $(".show_nonsplit_container").hide();
+      $(".hidden_nonsplit").show();
+      return false;
+    });
   });
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
@@ -39,24 +49,30 @@
     <td colspan="{{gp.most_product_expressions()}}">{% if gp.abelian and not gp.cyclic %}Abelian group {% endif %}${{gp.presentation()}}$</td>
   </tr>
   {% if gp.direct_product %}
-  <tr>
-    <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
-    <td>${{ gp.display_direct_product }}$</td>
-  </tr>
+    <tr>
+      <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+      <td>${{ gp.display_direct_product }}$</td>
+    </tr>
   {% endif %}
   {% if gp.semidirect_products %}
-  <tr>
-    <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
-    {% for sub, count in gp.semidirect_products %}
-    <td>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
-    {% endfor %}
-  </tr>
+    <tr>
+      <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
+      {% for sub, count in gp.semidirect_products %}
+        {% if loop.index == 5 %}
+          <td class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
+        {% endif %}
+        <td{% if loop.index >= 5 %} class="hidden_semidirect nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
+      {% endfor %}
+    </tr>
   {% endif %}
   {% if gp.nonsplit_products %}
-  <tr>
-    <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
-    {% for sub, count in gp.nonsplit_products %}
-    <td>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
+    <tr>
+      <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
+      {% for sub, count in gp.nonsplit_products %}
+        {% if loop.index == 5 %}
+          <td class="show_nonsplit_container"><a href="#" class="show_nonsplit">Show all {{ gp.nonsplit_products | length }}</a></td>
+        {% endif %}
+        <td{% if loop.index >= 5 %} class="hidden_nonsplit nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~.~{{sub.quotient_tex_parened}}$ {% if count > 1 %}({{count}}){% endif %}</td>
     {% endfor %}
   </tr>
   {% endif %}
