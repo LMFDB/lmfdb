@@ -262,64 +262,32 @@ Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 <h2> Character Theory </h2>
 <p>
 
-{% set ccs = info.ccdata %}
-{% set rccs = info.ccdivisions %}
-{% set chars = info.chardata %}
-{% set qchars = info.qchardata %}
-
 <h3>{{KNOWL('group.complex_character_table','Complex character table')}}</h3>
-<p>
-<table class="nowrap">
-<tr><td></td><td></td>
-{% for c in ccs %}
-<td class="right">{{ info.ccdisplayknowl(gp.label, c.label, "complex", c.label)|safe }}</td>
-{% endfor %}
-{% for p in gp.factors_of_order %}
-{% set ploop = loop %}
-<tr><td></td><td class="right">{{p}}P</td>
-{% for c in ccs %}
-<td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
-{% endfor %}
 
-{% endfor %}
-<tr><td><td>{{KNOWL('group.representation.type', 'Type')}}</tr>
+{% if gp.number_conjugacy_classes <= 16 %}
 
-{% set dispv = info.sparse_cyclotomic_to_latex %}
-{% for chtr in chars %}
-<tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'C', chtr.label)|safe }}</td>
-     <td class="center">{{chtr.type()}}</td>
-  {% set cond = chtr.cyclotomic_n %}
-  {% for val in chtr['values'] %}
-   <td class="right">${{ dispv(cond, val) }}$</td>
-  {% endfor %}
-{% endfor %}
-</table>
+  {% include 'character_table.html' %}
+
+{% else %}
+
+  <p>
+    See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>.
+  </p>
+
+{% endif %}
 
 <h3>{{KNOWL('group.rational_character_table','Rational character table')}}</h3>
-<p>
-<table>
-<tr><td></td><td></td>
-{% for c in info.ccdivisions %}
-  <td>{{ info.ccdisplayknowl(gp.label, c.label, "rational", c.label)|safe }}</td>
-{% endfor %}
-{% for p in gp.factors_of_order %}
-  {% set ploop = loop %}
-  <tr><td></td><td>{{p}}P</td>
-  {% for c in rccs %}
-    <td>{{ info.ctor[ccs[c['classes'][0]['powers'][ploop.index-1]-1].label] }}</td>
-  {% endfor %}
-{% endfor %}
 
-{% for chtr in qchars %}
-  <tr> <td> {{ info.chtrdisplayknowl(chtr.label, 'Q', chtr.label)|safe }}</td><td></td>
-  {# for val in chtr['qvalues'] #}
-  {% for c in rccs %}
-    <td class="right">${{ chtr.qvalues[c.classes.0.counter -1] }}$</td>
-  {% endfor %}
-{% endfor %}
-</table>
+{% if gp.number_divisions <= 16 %}
 
-</p>
+  {% include 'rational_character_table.html' %}
 
+{% else %}
+
+  <p>
+    See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>.
+  </p>
+
+{% endif %}
 
 {% endblock %}

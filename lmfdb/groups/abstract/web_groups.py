@@ -7,7 +7,7 @@ from lmfdb.groups.abstract import abstract_logger
 from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup, ZZ, prod
 from sage.libs.gap.libgap import libgap
 from collections import Counter
-from lmfdb.utils import to_ordinal, display_knowl
+from lmfdb.utils import to_ordinal, display_knowl, sparse_cyclotomic_to_latex
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 
@@ -152,12 +152,6 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_classes(self):
         cl = [WebAbstractConjClass(self.label, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group': self.label})]
-        return sorted(cl, key=lambda x:x.counter)
-
-    #These are the power-conjugacy classes
-    @lazy_attribute
-    def conjugacy_class_divisions(self):
-        cl = self.conjugacy_classes
         divs = {}
         for c in cl:
             divkey = re.sub(r'([^\d])-?\d+?$',r'\1', c.label)
@@ -165,7 +159,36 @@ class WebAbstractGroup(WebObj):
                 divs[divkey].append(c)
             else:
                 divs[divkey] = [c]
-        return divs
+        ccdivs = []
+        for divkey, ccs in divs.items():
+            div = WebAbstractDivision(self.label, divkey, ccs)
+            for c in ccs:
+                c.division = div
+            ccdivs.append(div)
+        ccdivs.sort(key=lambda x: x.classes[0].counter)
+        self.conjugacy_class_divisions = ccdivs
+        return sorted(cl, key=lambda x:x.counter)
+
+    #These are the power-conjugacy classes
+    @lazy_attribute
+    def conjugacy_class_divisions(self):
+        cl = self.conjugacy_classes # creates divisions
+        return self.conjugacy_class_divisions
+
+    @lazy_attribute
+    def sorted_cc_divisions(self):
+        ccdivs = [{'label': k, 'classes': v} for k, v in self.conjugacy_class_divisions.items()]
+        ccdivs.sort(key=lambda x: x['classes'][0].counter)
+        return ccdivs
+
+    @lazy_attribute
+    def cc_to_div(self):
+        # Need to map cc's to their divisions
+        ctor = {}
+        for k, vs in self.conjugacy_class_divisions.items():
+            for v in vs:
+                ctor[v.label] = k
+        return ctor
 
     @lazy_attribute
     def characters(self):
@@ -490,6 +513,11 @@ class WebAbstractGroup(WebObj):
     def max_quo_cnt(self):
         return db.gps_subgroups.count_distinct('ambient', {'quotient': self.label, 'minimal_normal': True})
 
+    @staticmethod
+    def sparse_cyclotomic_to_latex(n, dat):
+        # The indirection is because we want to make this a staticmethod
+        return sparse_cyclotomic_to_latex(n, dat)
+
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
     def __init__(self, label, data=None):
@@ -632,14 +660,27 @@ class WebAbstractConjClass(WebObj):
     def __init__(self, ambient_gp, label, data=None):
         self.ambient_gp = ambient_gp
         if data is None:
-            data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label':label})
+            data = db.gps_groups_cc.lucky({'group': ambient_gp, 'label': label})
         WebObj.__init__(self, label, data)
+
+    def display_knowl(self, name=None):
+        if not name:
+            name = self.label
+        return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7Ccomplex">{}</a>'.format(name, self.ambient_gp, self.label, name)
+
+class WebAbstractDivision(object):
+    def __init__(self, ambient_gp, label, classes):
+        self.ambient_gp = ambient_gp
+        self.label = label
+        self.classes = classes
+
+    def display_knowl(self, name=None):
+        if not name:
+            name = self.label
+        return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7Crational">{}</a>'.format(name, self.ambient_gp, self.label, name)
 
 class WebAbstractCharacter(WebObj):
     table = db.gps_char
-    def __init__(self, label, data=None):
-        WebObj.__init__(self, label, data)
-
     def type(self):
         if self.indicator == 0:
             return "C"
@@ -647,10 +688,21 @@ class WebAbstractCharacter(WebObj):
             return "R"
         return "S"
 
+    def display_knowl(self, name=None):
+        label = self.label
+        if not name:
+            name = label
+        return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cchar_data&args=%s">%s</a>' % (name, label, name)
+
+
+
 class WebAbstractRationalCharacter(WebObj):
     table = db.gps_qchar
-    def __init__(self, label, data=None):
-        WebObj.__init__(self, label, data)
+    def display_knowl(self, name=None):
+        label = self.label
+        if not name:
+            name = label
+        return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=rchar_data&args=%s">%s</a>' % (name, label, name)
 
 class WebAbstractSupergroup(WebObj):
     table = db.gps_subgroups

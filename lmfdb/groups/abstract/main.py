@@ -9,7 +9,7 @@ from sage.all import ZZ, latex, factor #, Permutation
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    flash_error, to_dict, display_knowl, sparse_cyclotomic_to_latex,
+    flash_error, to_dict, display_knowl,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
     # parse_gap_id, parse_bracketed_posints,
@@ -296,6 +296,34 @@ def by_subgroup_label(label):
         flash_error("The label %s is invalid.", label)
         return redirect(url_for(".index"))
 
+@abstract_page.route("/char_table/<label>")
+def char_table(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error( "No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    return render_template("character_table_page.html",
+                           gp=gp,
+                           title="Character table for %s" % label,
+                           bread=get_bread([("Character table", " ")]),
+                           learnmore=learnmore_list(),
+                           credit=credit_string)
+
+@abstract_page.route("/Qchar_table/<label>")
+def Qchar_table(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error( "No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    return render_template("rational_character_table_page.html",
+                           gp=gp,
+                           title="Rational character table for %s" % label,
+                           bread=get_bread([("Rational character table", " ")]),
+                           learnmore=learnmore_list(),
+                           credit=credit_string)
+
 def show_type(label):
     wag = WebAbstractGroup(label)
     if wag.abelian:
@@ -449,7 +477,6 @@ def render_abstract_group(label):
         info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
         info['dojs'] = ''
 
-    abstract_logger.info("B0")
     factored_order = factor_latex(gp.order)
     #abstract_logger.info("B1")
     #aut_order = factor_latex(gp.aut_order)
@@ -460,27 +487,6 @@ def render_abstract_group(label):
     #abstract_logger.info("B4")
     #Gab_order = factor_latex(gp.Gab_order())
 
-    abstract_logger.info("C1")
-    info['sparse_cyclotomic_to_latex'] = sparse_cyclotomic_to_latex
-    info['ccdata'] = gp.conjugacy_classes
-    abstract_logger.info("C2")
-    info['chardata'] = gp.characters
-    abstract_logger.info("C3")
-    info['qchardata'] = gp.rational_characters
-    abstract_logger.info("C4")
-    ccdivs = gp.conjugacy_class_divisions
-    abstract_logger.info("C5")
-    ccdivs = [{'label': k, 'classes': ccdivs[k]} for k in ccdivs.keys()]
-    ccdivs.sort(key=lambda x: x['classes'][0].counter)
-    info['ccdivisions'] = ccdivs
-    info['ccdisplayknowl'] = cc_display_knowl
-    info['chtrdisplayknowl'] = char_display_knowl
-    # Need to map cc's to their divisions
-    ctor = {}
-    for k in ccdivs:
-        for v in k['classes']:
-            ctor[v.label] = k['label']
-    info['ctor'] = ctor
     abstract_logger.info("D0")
 
     s = r",\ "
@@ -1008,11 +1014,6 @@ class SubgroupSearchArray(SearchArray):
         else:
             return [("Subgroups", "Search again"), ("Random", "Random subgroup")]
 
-def cc_display_knowl(gp, label, typ, name=None):
-    if not name:
-        name = 'Conjugacy class {}'.format(label)
-    return '<a title = "{} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={}%7C{}%7C{}">{}</a>'.format(name, gp, label, typ, name)
-
 def group_display_knowl(label, name=None, pretty=False):
     if pretty:
         name = '$'+group_names_pretty(label)+'$'
@@ -1025,15 +1026,6 @@ def sub_display_knowl(label, name=None):
         name = 'Subgroup {}'.format(label)
     return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
 
-def char_display_knowl(label, field, name=None):
-    if field=='C':
-        fname='cchar_data'
-    else:
-        fname='rchar_data'
-    if not name:
-        name = 'Character {}'.format(label)
-    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=%s&args=%s">%s</a>' % (name, fname, label, name)
-
 #def crep_display_knowl(label, name=None):
 #    if not name:
 #        name = 'Subgoup {}'.format(label)
@@ -1044,13 +1036,18 @@ def char_display_knowl(label, field, name=None):
 #        name = 'Subgoup {}'.format(label)
 #    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (name, label, name)
 
-def cc_data(gp,label,typ='complex'):
-    if typ=='rational':
+def cc_data(gp, label, typ='complex'):
+    if typ == 'rational':
         wag = WebAbstractGroup(gp)
         rcc = wag.conjugacy_class_divisions
         if not rcc:
             return 'Data for conjugacy class {} not found.'.format(label)
-        classes = rcc[label]
+        for div in rcc:
+            if div.label == label:
+                break
+        else:
+            return 'Data for conjugacy class {} missing.'.format(label)
+        classes = div.classes
         wacc = classes[0]
         mult = len(classes)
         ans = '<h3>Rational conjugacy class {}</h3>'.format(label)
@@ -1073,68 +1070,69 @@ def cc_data(gp,label,typ='complex'):
     return Markup(ans)
 
 def rchar_data(label):
-  mychar = WebAbstractRationalCharacter(label)
-  ans = '<h3>Rational character {}</h3>'.format(label)
-  ans += '<br>Degree: {}'.format(mychar.qdim)
-  if mychar.faithful:
-    ans += '<br>Faithful character'
-  else:
-    ans += '<br>Not faithful'
-  ans += '<br>Multiplicity: {}'.format(mychar.multiplicity)
-  ans += '<br>Schur index: {}'.format(mychar.schur_index)
-  nt = mychar.nt
-  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
-  if 'image' in mychar._data:
-    txt = "Image"
-    if mychar.schur_index > 1:
-      txt = r'Image of ${}\ *\ ${}'.format(mychar.schur_index, label)
-    ans += '<br>{}: <a href="{}">{}</a>'.format(txt, url_for('glnQ.by_label', label=mychar.image), mychar.image)
-  else:
-      ans += '<br>Image: not computed'
-  return Markup(ans)
+    mychar = WebAbstractRationalCharacter(label)
+    ans = '<h3>Rational character {}</h3>'.format(label)
+    ans += '<br>Degree: {}'.format(mychar.qdim)
+    if mychar.faithful:
+        ans += '<br>Faithful character'
+    else:
+        ans += '<br>Not faithful'
+    ans += '<br>Multiplicity: {}'.format(mychar.multiplicity)
+    ans += '<br>Schur index: {}'.format(mychar.schur_index)
+    nt = mychar.nt
+    ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+    if mychar._data.get('image'):
+        txt = "Image"
+        if mychar.schur_index > 1:
+            txt = r'Image of ${}\ *\ ${}'.format(mychar.schur_index, label)
+        ans += '<br>{}: <a href="{}">{}</a>'.format(txt, url_for('glnQ.by_label', label=mychar.image), mychar.image)
+    else:
+        ans += '<br>Image: not computed'
+    return Markup(ans)
 
 def cchar_data(label):
-  mychar = WebAbstractCharacter(label)
-  ans = '<h3>Complex character {}</h3>'.format(label)
-  ans += '<br>Degree: {}'.format(mychar.dim)
-  if mychar.faithful:
-    ans += '<br>Faithful character'
-  else:
-    ker = WebAbstractSubgroup(mychar.kernel)
-    ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker.label,"$"+ker.subgroup_tex+'$'))
-  nt = mychar.nt
-  ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
-  ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
-  ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
-  if 'image' in mychar._data:
-    ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
-  else:
-      ans += '<br>Image: not computed'
-  return Markup(ans)
+    mychar = WebAbstractCharacter(label)
+    ans = '<h3>Complex character {}</h3>'.format(label)
+    ans += '<br>Degree: {}'.format(mychar.dim)
+    if mychar.faithful:
+        ans += '<br>Faithful character'
+    else:
+        ker = WebAbstractSubgroup(mychar.kernel)
+        ans += '<br>Not faithful with kernel {}'.format(sub_display_knowl(ker.label,"$"+ker.subgroup_tex+'$'))
+    nt = mychar.nt
+    ans += '<br>Frobenius-Schur indicator: {}'.format(mychar.indicator)
+    ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
+    ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
+    if mychar._data.get('image'):
+        print("IMAGE", mychar.image)
+        ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+    else:
+        ans += '<br>Image: not computed'
+    return Markup(ans)
 
 def sub_data(label):
-  return Markup(shortsubinfo(label))
+    return Markup(shortsubinfo(label))
 
 def group_data(label):
-  gp = WebAbstractGroup(label)
-  ans = 'Group ${}$: '.format(gp.tex_name)
-  ans += create_boolean_string(gp, short_string=True)
-  ans += '<br />Order: {}<br />'.format(gp.order)
-  ans += 'Gap small group number: {}<br />'.format(gp.counter)
-  ans += 'Exponent: {}<br />'.format(gp.exponent)
+    gp = WebAbstractGroup(label)
+    ans = 'Group ${}$: '.format(gp.tex_name)
+    ans += create_boolean_string(gp, short_string=True)
+    ans += '<br />Order: {}<br />'.format(gp.order)
+    ans += 'Gap small group number: {}<br />'.format(gp.counter)
+    ans += 'Exponent: {}<br />'.format(gp.exponent)
 
-  ans += 'There are {} subgroups'.format(gp.number_subgroups)
-  if gp.number_normal_subgroups < gp.number_subgroups:
-    ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
-  else:
-    ans += ', all normal, '
-  if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
-    ans += str(gp.number_characteristic_subgroups)
-  else:
-    ans += 'all'
-  ans += ' characteristic.<br />'
-  ans += '<div align="right"><a href="{}">{} home page</a></div>'.format(url_for('abstract.by_label',label=label), label)
-  return Markup(ans)
+    ans += 'There are {} subgroups'.format(gp.number_subgroups)
+    if gp.number_normal_subgroups < gp.number_subgroups:
+        ans += ' in {} conjugacy classes, {} normal, '.format(gp.number_subgroup_classes, gp.number_normal_subgroups)
+    else:
+        ans += ', all normal, '
+    if gp.number_characteristic_subgroups < gp.number_normal_subgroups:
+        ans += str(gp.number_characteristic_subgroups)
+    else:
+        ans += 'all'
+    ans += ' characteristic.<br />'
+    ans += '<div align="right"><a href="{}">{} home page</a></div>'.format(url_for('abstract.by_label',label=label), label)
+    return Markup(ans)
 
 def dyn_gen(f,args):
     r"""
