@@ -7,7 +7,7 @@ from lmfdb.utils import raw_typeset
 
 from sage.all import EllipticCurve, QQ
 
-congruent_number_data_directory = os.path.expanduser('~/data/congruent-number-curves')
+congruent_number_data_directory = os.path.expanduser('~/data/congruent_number_curves')
 
 def CNfilename(file_suffix):
     return os.path.join(congruent_number_data_directory, "CN.{}".format(file_suffix))
