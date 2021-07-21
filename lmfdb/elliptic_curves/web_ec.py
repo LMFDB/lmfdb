@@ -103,19 +103,6 @@ def gl2_subgroup_data(label):
     info += "</table>\n"
     return info
 
-def split_galois_image_code(s):
-    """Each code starts with a prime (1-3 digits but we allow for more)
-    followed by an image code or that prime.  This function returns
-    two substrings, the prefix number and the rest.
-    """
-    p = re.findall(r'\d+', s)[0]
-    return p, s[len(p):]
-
-def trim_galois_image_code(s):
-    """Return the image code with the prime prefix removed.
-    """
-    return split_galois_image_code(s)[1]
-
 def weighted_proj_to_affine_point(P):
     r""" Converts a triple of integers representing a point in weighted
     projective coordinates [a,b,c] to a tuple of rationals (a/c^2,b/c^3).
@@ -276,8 +263,6 @@ class WebEC(object):
         # mod-p Galois images:
         
         data['galois_data'] = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
-        for gd in data['galois_data']: # remove the prime prefix from each image code
-            gd['image'] = trim_galois_image_code(gd['image'])
         
         # CM and Endo ring:
         
