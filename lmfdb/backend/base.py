@@ -460,7 +460,7 @@ class PostgresBase(object):
         return [
             (locktype, pid)
             for (name, locktype, pid, t) in self._get_locks()
-            if name == tablename and (types == "all" or locktype in types)
+            if name == tablename and (types == "all" or locktype in types) and pid != self.conn.info.backend_pid
         ]
 
     def _index_exists(self, indexname, tablename=None):
@@ -1156,9 +1156,9 @@ class PostgresBase(object):
             for line in lines:
                 if line[table_name_idx] != search_table:
                     raise RuntimeError(
-                        "in %s column %d (= %s) in the file "
-                        "doesn't match the search table name %s"
-                        % (filename, table_name_idx, line[table_name_idx], search_table)
+                        f"column {table_name_idx} (= {line[table_name_idx]}) "
+                        f"in the file {filename} doesn't match "
+                        f"the search table name {search_table}"
                     )
 
         with DelayCommit(self, silence=True):
