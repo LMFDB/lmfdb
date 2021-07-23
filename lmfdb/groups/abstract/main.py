@@ -150,11 +150,11 @@ def create_boolean_string(gp, short_string=False):
             
 #rest will assume non-abelian            
         else:
-            strng = "This group is " + nonabelian_str + "."
+            strng = "This group is " + nonabelian_str 
 
         #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
             if gp.nilpotent:
-                strng += " It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+                strng += ". It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
                 if gp.rational:
                     if gp.metacyclic:
                         strng += ", "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ") and " + rational_str + "."
@@ -169,26 +169,26 @@ def create_boolean_string(gp, short_string=False):
 
             elif gp.Zgroup:
                 if gp.rational:
-                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
+                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
                 else:
-                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
+                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
 
 
             elif gp.metacyclic:   
                 if gp.rational and gp.Agroup:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
                 elif gp.rational:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
                 elif gp.Agroup:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
                 else:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
 
 
 
                     
             elif gp.supersolvable:
-                strng += " It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
+                strng += ". It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
                 if gp.metabelian:
                     if gp.rational and gp.Agroup:
                         strng += ", " + metabelian_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -210,7 +210,7 @@ def create_boolean_string(gp, short_string=False):
 
                     
             elif gp.metabelian:
-                strng += " It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
+                strng += ". It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
                 if gp.monomial:
                     if gp.rational and gp.Agroup:
                         strng += ", " + monomial_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -231,7 +231,7 @@ def create_boolean_string(gp, short_string=False):
 
 
             elif gp.monomial:
-                strng += " It is " + monomial_str + " (" + hence_str + solvable_str + ")"
+                strng += ". It is " + monomial_str + " (" + hence_str + solvable_str + ")"
                 if gp.rational:
                     if gp.Agroup:
                         strng += ", an " + agroup_str + " and  " + rational_str
@@ -241,21 +241,27 @@ def create_boolean_string(gp, short_string=False):
 
                 
             elif gp.solvable:
-                strng += " It is " + solvable_str
                 if gp.rational:
                     if gp.Agroup:
-                        strng += ", an " + agroup_str + " and  " + rational_str
+                        strng += ", " + solvable_str + ",  an " + agroup_str + " and  " + rational_str
                     else:
-                        strng += " and  " + rational_str
+                        strng += ", " + solvable_str + ", and  " + rational_str
+                elif gp.Agroup:  #agroup but not rational
+                    strng += ", " + solvable_str + ", and  an " + agroup_str
+                else:  # only solvable
+                    strng += " and " + solvable_str
                 strng += "."
 
             else:
-                strng += " It is " + nonsolvable_str
                 if gp.rational:
                     if gp.Agroup:
-                        strng += ", an " + agroup_str + " and  " + rational_str
+                        strng += ", " + nonsolvable_str + ", an " + agroup_str + " and  " + rational_str
                     else:
-                        strng += " and  " + rational_str
+                        strng += ", " + nonsolvable_str + " and  " + rational_str
+                elif gp.Agroup:  #agroup but not rational
+                    strng += ", " + nonsolvable_str + ", and  an " + agroup_str
+                else:  # only solvable
+                    strng += " and " + nonsolvable_str
                 strng += "."
 
                 
@@ -638,8 +644,30 @@ def render_abstract_group(label):
     downloads = [('Code for Magma', url_for(".download_group",  label=label, download_type='magma')),
                      ('Code for Gap', url_for(".download_group", label=label, download_type='gap'))]
 
-  #  sbgp_url = FILL HERE
-   # friends =  [("Subgroups", sbgp_url)]
+
+
+
+    #"internal" friends
+    sbgp_of_url=" /Groups/Abstract/?hst=Subgroups&subgroup="+label+"&search_type=Subgroups"
+    sbgp_url = "/Groups/Abstract/?hst=Subgroups&ambient="+label+"&search_type=Subgroups"
+    quot_url ="/Groups/Abstract/?hst=Subgroups&quotient="+label+"&search_type=Subgroups"
+
+
+    
+    
+    friends =  [("Subgroups of " + label, sbgp_url),("Groups with "+ label +" as a quotient",quot_url),("Groups with "+label + " as a subgroup",sbgp_of_url)]
+
+    #"external" friends
+    gap_ints =  [int(y) for y in label.split(".")]
+    gap_str = str(gap_ints).replace(" ","")
+    if db.hgcwa_passports.count({'group':gap_str}) > 0:
+        auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
+        friends += [(label + " as automorphism of a curve",auto_url)]
+
+    if db.gps_transitive.count({'gapidfull': gap_str}) > 0:   
+        gal_gp_url= "/GaloisGroup/?gal=%5B" + str(gap_ints[0]) + "%2C" + str(gap_ints[1])  +"%5D"
+        friends +=[(label + " as transitive group", gal_gp_url)]
+    
     
     bread = get_bread([(label, '')])
 
@@ -649,7 +677,7 @@ def render_abstract_group(label):
                            title=title, bread=bread, info=info,
                            gp=gp,
                            properties=properties,
-                          # friends=friends,
+                           friends=friends,
                            learnmore=learnmore_list(),
                            downloads=downloads,
                            credit=credit_string)
