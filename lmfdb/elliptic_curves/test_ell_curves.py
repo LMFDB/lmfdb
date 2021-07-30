@@ -111,6 +111,10 @@ class EllCurveTest(LmfdbTest):
         self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
         self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
 
+    def test_one_per_search(self):
+        # Test that we correctly fixed issue 4678
+        self.check_args('EllipticCurve/Q/?jinv=-4096%2F11&optimal=on', '156 matches')
+
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.get_data(as_text=True)
