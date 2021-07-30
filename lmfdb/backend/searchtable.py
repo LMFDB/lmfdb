@@ -412,8 +412,11 @@ class PostgresSearchTable(PostgresTable):
                     has_sort = False
                     raw = []
             elif self._primary_sort in query or self._out_of_order:
-                # We use the actual sort because the postgres query planner doesn't know that
+                # The first precedence is a hack to prevent sequential scans
+                # Thus, we use the actual sort because the postgres query planner doesn't know that
                 # the primary key is connected to the id.
+                #
+                # Also, if id_ordered = False, then out_of_order = False
                 sort = self._sort
                 raw = self._sort_orig
             else:

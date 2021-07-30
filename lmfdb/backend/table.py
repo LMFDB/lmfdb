@@ -2,6 +2,7 @@
 from __future__ import print_function, absolute_import
 from six import string_types
 from six.moves import input  # in python2, this is raw_input
+import csv
 import os
 import tempfile
 import time
@@ -9,7 +10,7 @@ import time
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 
 from .encoding import Json, copy_dumps
-from .base import PostgresBase
+from .base import PostgresBase, _meta_table_name
 from .utils import DelayCommit, EmptyContext, IdentifierWrapper, LockError
 from .base import (
     _meta_indexes_cols,
@@ -881,8 +882,10 @@ class PostgresTable(PostgresBase):
     # Insertion and updating data                                    #
     ##################################################################
 
-    def _check_locks(self, types="all"):
-        locks = self._table_locked(self.search_table, types) + self._table_locked(self.extra_table, types)
+    def _check_locks(self, suffix="", types="all"):
+        locks = self._table_locked(self.search_table + suffix, types)
+        if self.extra_table:
+            locks += self._table_locked(self.extra_table + suffix, types)
         if locks:
             typelen = max(len(locktype) for (locktype, pid) in locks) + 3
             for locktype, pid in locks:
@@ -1164,12 +1167,11 @@ class PostgresTable(PostgresBase):
                 self.restore_indexes(columns[1:])
             elif not inplace:
                 # restore all indexes since we're working with a fresh table; also restores constraints
-                self.restore_indexes(suffix="_tmp")
+                self.restore_indexes(suffix=suffix)
                 # We also need to recreate the primary key
-                self.restore_pkeys(suffix="_tmp")
-            # if self._id_ordered and resort:
-            #    extra_table = None if self.extra_table is None else self.extra_table + suffix
-            #    self.resort(self.search_table + suffix, extra_table)
+                self.restore_pkeys(suffix=suffix)
+            if self._id_ordered and resort:
+                ordered = self.resort(suffix=suffix)
             if etable is not None:
                 ecols = SQL(", ").join([
                     SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
@@ -1194,20 +1196,21 @@ class PostgresTable(PostgresBase):
                     else [self.search_table, self.extra_table]
                 )
                 self._swap_in_tmp(swapped_tables, commit=commit)
+                if ordered:
+                    self._set_ordered()
             # Delete the temporary table used to load the data
             drop_tmp()
             if log_change:
                 self.log_db_change("file_update")
             print("Updated %s in %.3f secs" % (self.search_table, time.time() - now))
 
-    def delete(self, query, resort=True, restat=True, commit=True):
+    def delete(self, query, restat=True, commit=True):
         """
         Delete all rows matching the query.
 
         INPUT:
 
         - ``query`` -- a query dictionary; rows matching the query will be deleted
-        - ``resort`` -- whether to resort the table afterward
         - ``restat`` -- whether to recreate statistics afterward
         """
         self._check_locks("delete")
@@ -1223,11 +1226,9 @@ class PostgresTable(PostgresBase):
                     "WITH deleted_ids AS ({0} RETURNING id) DELETE FROM {1} WHERE id IN (SELECT id FROM deleted_ids)"
                 ).format(deleter, Identifier(self.extra_table))
             cur = self._execute(deleter, values)
-            self._break_order()
+            #self._break_order()
             self._break_stats()
             nrows = cur.rowcount
-            if resort:
-                self.resort()
             if self.stats.saving:
                 self.stats.total -= nrows
                 self.stats._record_count({}, self.stats.total)
@@ -1470,86 +1471,84 @@ class PostgresTable(PostgresBase):
                     self.stats.refresh_stats(total=False)
             self.log_db_change("insert_many", nrows=len(search_data))
 
-    def _identify_tables(self, search_table, extra_table):
-        """
-        Utility function for normalizing input on ``resort``.
-        """
-        if search_table is not None:
-            search_table = Identifier(search_table)
-        else:
-            search_table = Identifier(self.search_table)
-        if extra_table is not None:
-            if self.extra_table is None:
-                raise ValueError("No extra table")
-            extra_table = Identifier(extra_table)
-        elif self.extra_table is not None:
-            extra_table = Identifier(self.extra_table)
-        return search_table, extra_table
 
-    def resort(self, search_table=None, extra_table=None):
+    def resort(self, suffix="", sort=None):
         """
         Restores the sort order on the id column.
+        The id sequence might have gaps after resorting.
+        See: https://www.postgresql.org/docs/current/functions-sequence.html
 
         INPUT:
 
-        - ``search_table`` -- a string giving the name of the search_table to be sorted.
-            If None, will use ``self.search_table``; another common input is ``self.search_table + "_tmp"``.
-        - ``extra_table`` -- a string giving the name of the extra_table to be sorted.
-            If None, will use ``self.extra_table``; another common input is ``self.extra_table + "_tmp"``.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the command.
+        - ``sort`` -- -- a list, either of strings (which are interpreted as column names
+            in the ascending direction) or of pairs (column name, 1 or -1).
+            If None, will use ``self._sort_orig``.
         """
-        print("resorting disabled")
-        return
-        self._check_locks()
+
+
+        search_table = Identifier(self.search_table + suffix)
+        if self.extra_table:
+            extra_table = Identifier(self.extra_table + suffix)
+        else:
+            extra_table = None
+
+        tmp_table = Identifier(self.search_table + suffix + "_sorter")
+        tmp_seq = Identifier(self.search_table + suffix + "_sorter" + '_newid_seq')
+        sort_order = self._sort if sort is None else self._sort_str(sort)
+        if sort_order is None:
+            print("resort failed, no sort order given")
+            return False
+        self._check_locks(suffix=suffix)
         with DelayCommit(self, silence=True):
-            if self._id_ordered and (search_table is not None or self._out_of_order):
+            if (self._id_ordered and self._out_of_order) or suffix:
                 now = time.time()
-                search_table, extra_table = self._identify_tables(search_table, extra_table)
-                newid = "newid"
-                while newid in self.search_cols or newid in self.extra_cols:
-                    newid += "_"
-                newid = Identifier(newid)
-                oldid = Identifier("id")
-                addcol = SQL("ALTER TABLE {0} ADD COLUMN {1} bigint")
-                dropcol = SQL("ALTER TABLE {0} DROP COLUMN {1}")
-                movecol = SQL("ALTER TABLE {0} RENAME COLUMN {1} TO {2}")
-                pkey = SQL("ALTER TABLE {0} ADD PRIMARY KEY ({1})")
-                self._execute(addcol.format(search_table, newid))
-                updater = SQL(
-                    "UPDATE {0} SET {1} = newsort.newid "
-                    "FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) "
-                    "newsort WHERE {0}.id = newsort.id"
-                )
-                updater = updater.format(search_table, newid, self._sort)
-                self._execute(updater)
-                if extra_table is not None:
-                    self._execute(addcol.format(extra_table, newid))
-                    updater = SQL(
-                        "UPDATE {0} SET {1} = search_table.{1} "
-                        "FROM (SELECT id, {1} FROM {2}) search_table "
-                        "WHERE {0}.id = search_table.id"
-                    )
-                    updater = updater.format(extra_table, newid, search_table)
-                    self._execute(updater)
-                    self._execute(dropcol.format(extra_table, oldid))
-                    self._execute(movecol.format(extra_table, newid, oldid))
-                    self._execute(pkey.format(extra_table, oldid))
-                self._execute(dropcol.format(search_table, oldid))
-                self._execute(movecol.format(search_table, newid, oldid))
-                self._execute(pkey.format(search_table, oldid))
-                self._set_ordered()
+                # we will use a temporary table to avoid ACCESS EXCLUSIVE lock
+                self._execute(SQL(
+                    "CREATE TEMP SEQUENCE {0} MINVALUE 0 START 0 CACHE 10000"
+                ).format(tmp_seq))
+
+                self._execute(SQL(
+                    "CREATE TEMP TABLE {0} "
+                    "(oldid bigint, newid bigint NOT NULL DEFAULT nextval('{1}')) "
+                    "ON COMMIT DROP"
+                ).format(tmp_table, tmp_seq))
+
+                self._execute(SQL(
+                    "ALTER SEQUENCE {0} OWNED BY {1}.newid"
+                ).format(tmp_seq, tmp_table))
+
+                self._execute(SQL(
+                    "INSERT INTO {0} "
+                    "SELECT id as oldid FROM {1} ORDER BY {2}"
+
+                ).format(tmp_table, search_table, sort_order))
+                self.drop_pkeys(suffix=suffix)
+                for table in [search_table, extra_table]:
+                    if table is not None:
+                       self._execute(SQL(
+                            "UPDATE {0} SET id = {1}.newid "
+                            "FROM {1} WHERE {0}.id = {1}.oldid"
+                        ).format(table, tmp_table))
+                self.restore_pkeys(suffix=suffix)
+                if not suffix:
+                    self._set_ordered()
                 print("Resorted %s in %.3f secs" % (self.search_table, time.time() - now))
-            elif self._id_ordered:
-                print("Data already sorted")
-            else:
+            elif self._id_ordered and not self._out_of_order:
+                print(f"Table {self.search_table} already sorted")
+            else: # not self._id_ordered
                 print("Data does not have an id column to be sorted")
+        return True
 
     def _set_ordered(self):
         """
         Marks this table as sorted in meta_tables
         """
-        updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
-        self._execute(updater, [self.search_table])
-        self._out_of_order = False
+        with DelayCommit(self, silence=True):
+            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s) WHERE name = %s")
+            self._execute(updater, [True, False, self.search_table])
+            self._id_ordered = True
+            self._out_of_order = False
 
     def _write_header_lines(self, F, cols, sep=u"|", include_id=True):
         """
@@ -1732,19 +1731,10 @@ class PostgresTable(PostgresBase):
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
 
-            ## a workaround while resort is disabled
             self.restore_pkeys(suffix=suffix)
-            # if self._id_ordered and resort:
-            #    extra_table = None if self.extra_table is None else self.extra_table + suffix
-            #    self.resort(self.search_table + suffix, extra_table)
-            # else:
-            #    # We still need to build primary keys
-            #    self.restore_pkeys(suffix=suffix)
-            # end of workaround
 
             # update the indexes
             # these are needed before reindexing
-
             if indexesfile is not None:
                 # we do the swap at the end
                 self.reload_indexes(indexesfile, sep=sep)
@@ -1753,6 +1743,50 @@ class PostgresTable(PostgresBase):
             if reindex:
                 # Also restores constraints
                 self.restore_indexes(suffix=suffix)
+
+
+            if resort:
+                if metafile:
+                    # read the metafile
+                    from .base import _meta_cols_types_jsonb_idx
+                    # using code from _reload_meta
+                    meta_name = 'meta_tables'
+                    meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
+                    # the column which will match search_table
+                    table_name = _meta_table_name(meta_name)
+                    table_name_idx = meta_cols.index(table_name)
+                    with open(metafile, "r") as F:
+                        lines = [line for line in csv.reader(F, delimiter=str(sep))]
+                        if len(lines) != 1:
+                            raise RuntimeError(
+                                "%s has more than one line" % (metafile,)
+                            )
+                        line = lines[0]
+                        if line[table_name_idx] != self.search_table:
+                            raise RuntimeError(
+                                f"column {table_name_idx} (= {line[table_name_idx]}) "
+                                f"in the file {metafile} doesn't match "
+                                f"the search table name {self.search_table}"
+                            )
+                        for col in ["id_ordered", "out_of_order"]:
+                            idx = jsonb_idx[col]
+                            if line[idx] not in ['t', 'f']:
+                                raise RuntimeError(
+                                    f"columns {idx} (= {line[idx]}) "
+                                    f"in the file {metafile} is different from 't' or 'f'"
+                                )
+                        resort = line["id_ordered"] == 't' and line["out_of_order"] == 'f'
+                else:
+                    if not self._id_ordered: # this table doesn't need to be sorted
+                        resort = False
+                # tracks the success of resort
+                ordered = self.resort(suffix=suffix)
+            else:
+               # We still need to build primary keys
+               self.restore_pkeys(suffix=suffix)
+               ordered = False
+
+
             if restat and self.stats.saving:
                 # create tables before restating
                 for table in [self.stats.counts, self.stats.stats]:
@@ -1770,7 +1804,10 @@ class PostgresTable(PostgresBase):
                 self._create_counts_indexes(suffix=suffix)
 
             if final_swap:
-                self.reload_final_swap(tables=tables, metafile=metafile, commit=False)
+                self.reload_final_swap(tables=tables,
+                                       metafile=metafile,
+                                       ordered=ordered,
+                                       commit=False)
             elif metafile is not None and not silence_meta:
                 print(
                     "Warning: since the final swap was not requested, "
@@ -1792,7 +1829,7 @@ class PostgresTable(PostgresBase):
                 % (self.search_table, time.time() - now_overall)
             )
 
-    def reload_final_swap(self, tables=None, metafile=None, sep="|", commit=True):
+    def reload_final_swap(self, tables=None, metafile=None, ordered=False, sep="|", commit=True):
         """
         Renames the _tmp versions of `tables` to the live versions.
         and updates the corresponding meta_tables row if `metafile` is provided
@@ -1814,6 +1851,8 @@ class PostgresTable(PostgresBase):
             self._swap_in_tmp(tables, commit=False)
             if metafile is not None:
                 self.reload_meta(metafile, sep=sep)
+            if ordered:
+                self._set_ordered()
 
         # Reinitialize object
         tabledata = self._execute(
@@ -2139,32 +2178,34 @@ class PostgresTable(PostgresBase):
 
     # Note that create_table and drop_table are methods on PostgresDatabase
 
-    def set_sort(self, sort, resort=True, commit=True):
+    def set_sort(self, sort, id_ordered=True, resort=True, commit=True):
         """
         Change the default sort order for this table
 
         INPUT:
 
         - ``sort`` -- a list of columns or pairs (col, direction) where direction is 1 or -1.
-        - ``resort`` -- whether to resort the table ids after changing the sort.
+        - ``id_ordered`` -- the value id_ordered to set when changing the sort to a non None value.
+            If ``sort is None, then id_ordered will be set to False.
+        - ``resort`` -- whether to resort the table ids when changing the sort to a non None value
+            and if id_ordered=True
         """
         self._set_sort(sort)
         with DelayCommit(self, commit, silence=True):
-            if sort:
-                updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
-                values = [Json(sort), self.search_table]
-            else:
-                updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
-                values = [self.search_table]
-            self._execute(updater, values)
-            self._break_order()
-            if resort:
-                self.resort()
+            sort_json = Json(sort) if sort else None
+            self._id_ordered = id_ordered if sort else False
+            self._execute(SQL(
+                "UPDATE meta_tables SET (sort, id_ordered) = (%s, %s) WHERE name = %s"),
+                          [sort_json, self._id_ordered, self.search_table])
+            self._break_order() # set out_order = False
 
-            # add an index for the default sort
-            sort_index = [x if isinstance(x, str) else x[0] for x in sort]
-            if not any(index["columns"] == sort_index for index_name, index in self.list_indexes().items()):
-                self.create_index(sort_index)
+            if sort:
+                # add an index for the default sort
+                sort_index = [x if isinstance(x, str) else x[0] for x in sort]
+                if not any(index["columns"] == sort_index for index_name, index in self.list_indexes().items()):
+                    self.create_index(sort_index)
+                if self._id_ordered and resort:
+                    self.resort()
             self.log_db_change("set_sort", sort=sort)
 
     def set_label(self, label_col=None):
@@ -2370,14 +2411,14 @@ class PostgresTable(PostgresBase):
             raise ValueError("Extra table already exists")
         with DelayCommit(self, commit, silence=True):
             if ordered and not self._id_ordered:
-                updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
-                self._execute(updater, [True, True, True])
+                updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s) WHERE name = %s")
+                self._execute(updater, [True, True, True, self.search_table])
                 self._id_ordered = True
                 self._out_of_order = True
                 self.resort()
             else:
-                updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
-                self._execute(updater, [True])
+                updater = SQL("UPDATE meta_tables SET (has_extras) = (%s) WHERE name = %s")
+                self._execute(updater, [True,  self.search_table])
             self.extra_table = self.search_table + "_extras"
             col_type = [("id", "bigint")]
             cur = self._indexes_touching(columns)
