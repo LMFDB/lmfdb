@@ -426,7 +426,7 @@ class PostgresSearchTable(PostgresTable):
         else:
             return self._sort_str(sort), bool(sort), sort
 
-    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, raw_values=[]):
+    def _build_query(self, query, limit=None, offset=0, sort=None, raw=None, one_per=None, raw_values=[]):
         """
         Build an SQL query from a dictionary, including limit, offset and sorting.
 
@@ -436,9 +436,18 @@ class PostgresSearchTable(PostgresTable):
         - ``limit`` -- a limit on the number of records returned
         - ``offset`` -- an offset on how many records to skip
         - ``sort`` -- a sort order (to be passed into the ``_sort_str`` method, or None.
+        - ``one_per`` -- a list of columns.  If provided, only one result will be included with each given set of values for those columns (the first according to the provided sort order).
         - ``raw`` -- a string to be used as the WHERE clause.  DO NOT USE WITH INPUT FROM THE WEBSITE
 
         OUTPUT:
+
+        If ``one_per`` is provided,
+
+        - an SQL Composable giving the WHERE component for the inner portion of a nested SQL query, possibly including %s
+        - an SQL Composable giving the ORDER BY, LIMIT and OFFSET components for the outer portion of a nested SQL query
+        - a list of values to substitute for the %s entries
+
+        Otherwise,
 
         - an SQL Composable giving the WHERE, ORDER BY, LIMIT and OFFSET components of an SQL query, possibly including %s
         - a list of values to substitute for the %s entries
@@ -458,20 +467,28 @@ class PostgresSearchTable(PostgresTable):
         else:
             qstr, values = SQL(raw), raw_values
         if qstr is None:
-            s = SQL("")
+            where = SQL("")
             values = []
         else:
-            s = SQL(" WHERE {0}").format(qstr)
-        sort, has_sort, _ = self._process_sort(query, limit, offset, sort)
+            where = SQL(" WHERE {0}").format(qstr)
+        sort, has_sort, raw_sort = self._process_sort(query, limit, offset, sort)
         if has_sort:
-            s = SQL("{0} ORDER BY {1}").format(s, sort)
+            olo = SQL(" ORDER BY {0}").format(sort)
+        else:
+            olo = SQL("")
+        if one_per:
+            inner_sort, _, _ = self._process_sort(query, limit, offset, one_per + raw_sort)
+            where += SQL(" ORDER BY {0}").format(inner_sort)
         if limit is not None:
-            s = SQL("{0} LIMIT %s").format(s)
+            olo = SQL("{0} LIMIT %s").format(olo)
             values.append(limit)
             if offset != 0:
-                s = SQL("{0} OFFSET %s").format(s)
+                olo = SQL("{0} OFFSET %s").format(olo)
                 values.append(offset)
-        return s, values
+        if one_per:
+            return where, olo, values
+        else:
+            return where + olo, values
 
     def _search_iterator(self, cur, search_cols, extra_cols, projection):
         """
@@ -663,6 +680,7 @@ class PostgresSearchTable(PostgresTable):
         sort=None,
         info=None,
         split_ors=False,
+        one_per=None,
         silent=False,
         raw=None,
         raw_values=[],
@@ -692,6 +710,7 @@ class PostgresSearchTable(PostgresTable):
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``split_ors`` -- a boolean.  If true, executes one query per clause in the `$or` list, combining the results.  Only used when a limit is provided.
+        - ``one_per`` -- a list of columns.  If provided, only one result will be included with each given set of values for those columns (the first according to the provided sort order).
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
         - ``raw`` -- a string, to be used as the WHERE part of the query.  DO NOT USE THIS DIRECTLY FOR INPUT FROM WEBSITE.
         - ``raw_values`` -- a list of values to be substituted for %s entries in the raw string.  Useful when strings might include quotes.
@@ -742,7 +761,7 @@ class PostgresSearchTable(PostgresTable):
             raise ValueError("split_ors only supported when a limit is provided")
         if raw is not None:
             split_ors = False
-        if split_ors:
+        if split_ors or one_per:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
             raw_sort = [((col, 1) if isinstance(col, string_types) else col) for col in raw_sort]
@@ -755,10 +774,18 @@ class PostgresSearchTable(PostgresTable):
 
         def run_one_query(Q, lim, off):
             if lim is None:
-                qstr, values = self._build_query(Q, sort=sort, raw=raw, raw_values=raw_values)
+                built = self._build_query(Q, sort=sort, raw=raw, one_per=one_per, raw_values=raw_values)
             else:
-                qstr, values = self._build_query(Q, lim, off, sort, raw=raw, raw_values=raw_values)
-            selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
+                built = self._build_query(Q, lim, off, sort, raw=raw, one_per=one_per, raw_values=raw_values)
+            if one_per:
+#SELECT lmfdb_label FROM (SELECT lmfdb_label, conductor, iso_nlabel, lmfdb_number, row_number() OVER (PARTITION BY lmfdb_iso ORDER BY conductor, iso_nlabel, lmfdb_number) as row_number FROM ec_curvedata WHERE jinv = '{-4096, 11}') temp WHERE row_number = 1 ORDER BY conductor, iso_nlabel, lmfdb_number
+                where, olo, values = built
+                inner_cols = SQL(", ").join(map(IdentifierWrapper, set(search_cols + extra_cols + tuple(sort_cols))))
+                op = SQL(", ").join(map(IdentifierWrapper, one_per))
+                selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON ({1}) {2} FROM {3}{4}) temp {5}").format(cols, op, inner_cols, tbl, where, olo)
+            else:
+                qstr, values = built
+                selecter = SQL("SELECT {0} FROM {1}{2}").format(cols, tbl, qstr)
             return self._execute(
                 selecter,
                 values,
@@ -784,6 +811,8 @@ class PostgresSearchTable(PostgresTable):
                 # no ors to split
                 split_ors = False
             else:
+                if one_per:
+                    raise ValueError("split_ors and one_per not compatible")
                 results = []
                 total = 0
                 prelimit = (
@@ -1202,7 +1231,7 @@ class PostgresSearchTable(PostgresTable):
 
         INPUT:
 
-        - ``col`` -- the name of the column
+        - ``col`` -- the name of the column, or a list of such names
         - ``query`` -- a query dictionary constraining which rows are considered
         - ``record`` -- (default True) whether to record the number of results in the stats table.
         """

@@ -387,7 +387,7 @@ def elliptic_curve_search(info, query):
     # minimal Faltings heights, which is conjecturally the
     # Gamma_1(N)-optimal curve.
     if 'optimal' in info and info['optimal'] == 'on':
-        query.update({'lmfdb_number':1})
+        query["__one_per__"] = "lmfdb_iso"
 
     info['curve_ainvs'] = lambda dbc: str([ZZ(ai) for ai in dbc['ainvs']])
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
