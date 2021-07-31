@@ -204,7 +204,7 @@ class AbvarSearchArray(SearchArray):
     jump_knowl = "av.fq.search_input"
     jump_prompt = "Label or polynomial"
     def __init__(self):
-        qshort = display_knowl("ag.base_field", "base field")
+        qshort = display_knowl("ag.base_field", "Base field")
         q = TextBox(
             "q",
             label="Cardinality of the %s" % (qshort),
@@ -238,7 +238,6 @@ class AbvarSearchArray(SearchArray):
             label="$p$-rank deficit",
             knowl="av.fq.p_rank",
             example="2",
-            advanced=True,
         )
         angle_rank = TextBox(
             "angle_rank",
@@ -246,7 +245,6 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.angle_rank",
             example="3",
             example_col=False,
-            advanced=True,
         )
         newton_polygon = TextBox(
             "newton_polygon",
@@ -375,6 +373,18 @@ class AbvarSearchArray(SearchArray):
             knowl="av.geometrically_simple",
             short_label="Geom. simple",
         )
+        squarefree = YesNoBox(
+            "squarefree",
+            label="Squarefree",
+            knowl="av.squarefree",
+            short_label="Squarefree",
+        )
+        geom_squarefree = YesNoBox(
+            "geom_squarefree",
+            label="Geometrically squarefree",
+            knowl="av.geometrically_squarefree",
+            short_label="Geom. squarefree",
+        )
         primitive = YesNoBox(
             "primitive",
             label="Primitive",
@@ -384,7 +394,7 @@ class AbvarSearchArray(SearchArray):
             "polarizable",
             label="Principally polarizable",
             knowl="av.princ_polarizable",
-            short_label="Princ polarizable",
+            short_label="Princ. polarizable",
         )
         jacobian = YesNoMaybeBox(
             "jacobian",
@@ -488,12 +498,13 @@ class AbvarSearchArray(SearchArray):
         count = CountBox()
 
         self.refine_array = [
-            [q, p, g, p_rank, initial_coefficients],
+            [q, p, g, p_rank, p_rank_deficit, initial_coefficients, angle_rank],
+            [simple, geom_simple, primitive, polarizable, jacobian, squarefree, geom_squarefree],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
-            [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
-            [geom_deg, p_rank_deficit],
+            [geom_deg, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
             #[size],
-            [simple, geom_simple, primitive, polarizable, jacobian],
+            # [simple, geom_simple, primitive, polarizable, jacobian, squarefree, geom_squarefree],
+            # [squarefree, geom_squarefree],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
@@ -503,10 +514,11 @@ class AbvarSearchArray(SearchArray):
             [p, simple],
             [g, geom_simple],
             [initial_coefficients, polarizable],
-            [p_rank, jacobian],
-            [p_rank_deficit],
+            [angle_rank, jacobian],
+            [p_rank, squarefree],
+            [p_rank_deficit, geom_squarefree],
             [jac_cnt, hyp_cnt],
-            [geom_deg, angle_rank],
+            [geom_deg],
             [twist_count, max_twist_degree],
             [newton_polygon],
             [abvar_point_count],
@@ -536,6 +548,8 @@ def common_parse(info, query):
     parse_ints(info, query, "geom_deg", qfield="geometric_extension_degree")
     parse_bool(info, query, "simple", qfield="is_simple")
     parse_bool(info, query, "geom_simple", qfield="is_geometrically_simple")
+    parse_bool(info, query, "squarefree", qfield="is_squarefree")
+    parse_bool(info, query, "geom_squarefree", qfield="is_geometrically_squarefree")
     parse_bool(info, query, "primitive", qfield="is_primitive")
     parse_bool_unknown(info, query, "jacobian", qfield="has_jacobian")
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
