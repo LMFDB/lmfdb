@@ -1404,3 +1404,22 @@ def to_ordinal(n):
         return '%srd' % n
     else:
         return '%sth' % n
+
+def dispZmat(mat):
+    r""" Display a matrix with integer entries
+    """
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([str(z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
+
+def dispcyclomat(n,mat):
+    s = r'\begin{pmatrix}'
+    for row in mat:
+      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
+      s += rw + '\\\\'
+    s += r'\end{pmatrix}'
+    return s
+

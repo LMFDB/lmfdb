@@ -16,6 +16,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
     # parse_gap_id, parse_bracketed_posints,
+    dispZmat, dispcyclomat,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page, abstract_logger
@@ -1248,16 +1249,6 @@ def sub_display_knowl(label, name=None):
         name = 'Subgroup {}'.format(label)
     return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
 
-#def crep_display_knowl(label, name=None):
-#    if not name:
-#        name = 'Subgoup {}'.format(label)
-#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (name, label, name)
-#
-#def qrep_display_knowl(label, name=None):
-#    if not name:
-#        name = 'Subgoup {}'.format(label)
-#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (name, label, name)
-
 def cc_data(gp, label, typ='complex'):
     if typ == 'rational':
         wag = WebAbstractGroup(gp)
@@ -1305,9 +1296,10 @@ def rchar_data(label):
     ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
     if mychar._data.get('image'):
         txt = "Image"
+        imageknowl = '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (mychar.image, mychar.image, mychar.image)
         if mychar.schur_index > 1:
             txt = r'Image of ${}\ *\ ${}'.format(mychar.schur_index, label)
-        ans += '<br>{}: <a href="{}">{}</a>'.format(txt, url_for('glnQ.by_label', label=mychar.image), mychar.image)
+        ans += '<br>{}: {}'.format(txt, imageknowl)
     else:
         ans += '<br>Image: not computed'
     return Markup(ans)
@@ -1326,10 +1318,39 @@ def cchar_data(label):
     ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
     ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
     if mychar._data.get('image'):
-        print("IMAGE", mychar.image)
-        ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+        imageknowl = '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (mychar.image, mychar.image, mychar.image)
+        ans += '<br>Image: {}'.format(imageknowl)
     else:
         ans += '<br>Image: not computed'
+    return Markup(ans)
+
+def crep_data(label):
+    info = db.gps_crep.lookup(label)
+    ans = '<h3>Subgroup of $\GL_{{ {}  }}(\C)$: {}</h3>'.format(info['dim'], label)
+    ans += '<br>Order: ${}$'.format(info['order'])
+    ans += '<br>Abstract group: {}'.format(group_display_knowl(info['group'], info['group']))
+    ans += '<br>Group name: ${}$'.format(group_names_pretty(info['group']))
+    ans += '<br>Dimension: ${}$'.format(info['dim'])
+    ans += '<br>Irreducible: {}'.format(info['irreducible'])
+    plural = '' if len(info['gens'])==1 else 's'
+    ans += '<br>Matrix generator{}: '.format(plural)
+    N=info['cyc_order_mat']
+    genlist = ['$'+dispcyclomat(N, gen)+'$' for gen in info['gens']]
+    ans += ','.join(genlist)
+    return Markup(ans)
+
+def qrep_data(label):
+    info = db.gps_qrep.lookup(label)
+    ans = '<h3>Subgroup of $\GL_{{ {}  }}(\Q)$: {}</h3>'.format(info['dim'], label)
+    ans += '<br>Order: ${}$'.format(info['order'])
+    ans += '<br>Abstract group: {}'.format(group_display_knowl(info['group'], info['group']))
+    ans += '<br>Group name: ${}$'.format(group_names_pretty(info['group']))
+    ans += '<br>Dimension: ${}$'.format(info['dim'])
+    ans += '<br>Irreducible: {}'.format(info['irreducible'])
+    plural = '' if len(info['gens'])==1 else 's'
+    ans += '<br>Matrix generator{}: '.format(plural)
+    genlist = ['$'+dispZmat(gen)+'$' for gen in info['gens']]
+    ans += ','.join(genlist)
     return Markup(ans)
 
 def sub_data(label):
@@ -1373,7 +1394,9 @@ flist= {'cc_data': cc_data,
         'sub_data': sub_data,
         'rchar_data': rchar_data,
         'cchar_data': cchar_data,
-        'group_data': group_data}
+        'group_data': group_data,
+        'crep_data': crep_data,
+        'qrep_data': qrep_data}
 
 
 
