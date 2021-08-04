@@ -21,7 +21,7 @@
       <th colspan=4 class="center">{{ KNOWL('cmf.trace_form', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
-      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> {{ KNOWL('cmf.atkinlehner', title='A-L signs') }}</th>
+      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> {{ KNOWL('cmf.atkin-lehner', title='A-L signs') }}</th>
       {% elif Fricke_sign %}
       <th class="center" rowspan=2>{{ KNOWL('cmf.fricke', title='Fricke sign') }}</th>
       {% endif %}
