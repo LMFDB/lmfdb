@@ -142,7 +142,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroup_profile(self):
         subs = db.gps_subgroups.search({'ambient': self.label})
-        by_order= {}
+        by_order= {}  # a dictionary of Counters
         for s in subs:
             cntr = by_order.get(s['subgroup_order'], Counter())
             cntr.update({s['subgroup']:1})

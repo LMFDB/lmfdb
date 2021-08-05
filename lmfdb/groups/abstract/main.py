@@ -560,6 +560,7 @@ def render_abstract_group(label):
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:
         prof = list(gp.subgroup_profile.items())
+        prof.sort(key=lambda z: - z[0]) # largest to smallest
         info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
         info['dojs'] = ''
 
