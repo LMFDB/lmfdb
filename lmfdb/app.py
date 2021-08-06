@@ -372,6 +372,11 @@ def workshops():
     bread = [("Acknowledgments" , url_for('.acknowledgment')) , ("Activities", '')]
     return render_template("workshops.html", title="LMFDB Activities", contribs=contribs, bread=bread)
 
+@app.route("/LuCaNT")
+def lucant():
+    bread = [("LuCaNT" , '')]
+    return render_template("lucant.html", title="LMFDB, Computation, and Number Theory (LuCaNT)", contribs=contribs, bread=bread)
+
 # google's CSE for www.lmfdb.org/* (and *only* those pages!)
 @app.route("/search")
 def search():
@@ -691,6 +696,7 @@ WhiteListedRoutes = [
     'L/tracehash',
     'L/download',
     'LocalNumberField',
+    'LuCaNT',
     'ModularForm/GL2/ImaginaryQuadratic',
     'ModularForm/GL2/Q/Maass',
     'ModularForm/GL2/Q/holomorphic',
