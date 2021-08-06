@@ -372,6 +372,7 @@ def workshops():
     bread = [("Acknowledgments" , url_for('.acknowledgment')) , ("Activities", '')]
     return render_template("workshops.html", title="LMFDB Activities", contribs=contribs, bread=bread)
 
+@app.route("/lucant")
 @app.route("/LuCaNT")
 def lucant():
     bread = [("LuCaNT" , '')]
@@ -724,6 +725,7 @@ WhiteListedRoutes = [
     'intro',
     'inventory',
     'knowledge',
+    'lucant',
     'management',
     'padicField',
     'news',
