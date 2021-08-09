@@ -56,10 +56,10 @@
   {% endif %}
   {% if gp.semidirect_products %}
     <tr>
-      <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
+      <td >{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
       {% for sub, count in gp.semidirect_products %}
         {% if loop.index == 5 %}
-          <td class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
+          <td width=auto, class="show_semidirect_container"><a href="#" class="show_semidirect">Show all {{ gp.semidirect_products | length }}</a></td>
         {% endif %}
         <td{% if loop.index >= 5 %} class="hidden_semidirect nodisplay"{% endif %}>${{sub.subgroup_tex_parened}}~\rtimes~{{sub.quotient_tex_parened}}$ {% if count > 1 %} ({{count}}){% endif %}</td>
       {% endfor %}
