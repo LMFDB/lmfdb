@@ -7,6 +7,7 @@ from six import BytesIO
 from collections import defaultdict, Counter
 
 from flask import render_template, request, url_for, redirect, Markup, make_response, send_file #, abort
+from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, Permutations
 
 from lmfdb import db
@@ -657,18 +658,18 @@ def render_abstract_group(label):
 
     
     
-    friends =  [("Subgroups of " + label, sbgp_url),("Groups with "+ label +" as a quotient",quot_url),("Groups with "+label + " as a subgroup",sbgp_of_url)]
+    friends =  [("Subgroups", sbgp_url),("Extensions",quot_url),("Supergroups",sbgp_of_url)]
 
     #"external" friends
     gap_ints =  [int(y) for y in label.split(".")]
     gap_str = str(gap_ints).replace(" ","")
     if db.hgcwa_passports.count({'group':gap_str}) > 0:
         auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
-        friends += [(label + " as automorphism of a curve",auto_url)]
+        friends += [("As the automorphism of a curve",auto_url)]
 
     if db.gps_transitive.count({'gapidfull': gap_str}) > 0:   
         gal_gp_url= "/GaloisGroup/?gal=%5B" + str(gap_ints[0]) + "%2C" + str(gap_ints[1])  +"%5D"
-        friends +=[(label + " as transitive group", gal_gp_url)]
+        friends +=[("As a transitive group", gal_gp_url)]
     
     
     bread = get_bread([(label, '')])
@@ -825,8 +826,10 @@ def download_group(**args):
         filename += ".m"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    s += com + " Below is the group G, given with generators (and relations if solvable) \n"
-    s += com + " matching the LMFDB group.\n"
+    s += com + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
+    s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
+    s += com + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
+    s += com + " \n"
     s += "\n" + com2
     s += "\n"
 
@@ -839,6 +842,11 @@ def download_group(**args):
             s += "G:=SmallGroupDecoding(encd,gpsize); \n"
         elif dltype == "gap":
             s += "G:=PcGroupCode(encd, gpsize); \n"
+
+        gen_index = gp_data['gens_used']
+        num_gens = len(gen_index)
+        for i in range(num_gens):
+            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n" 
 
     #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??       
     else:
