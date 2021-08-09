@@ -663,13 +663,24 @@ def render_abstract_group(label):
     #"external" friends
     gap_ints =  [int(y) for y in label.split(".")]
     gap_str = str(gap_ints).replace(" ","")
-    if db.hgcwa_passports.count({'group':gap_str}) > 0:
+    if db.g2c_curves.count({'aut_grp_id':gap_str}) >0:
+        g2c_url = '/Genus2Curve/Q/?hst=List&aut_grp_id=%5B' + str(gap_ints[0]) + '%2C'+  str(gap_ints[1])  + '%5D&search_type=List'
+        friends += [("As the automorphism of a genus 2 curve",g2c_url)]
+        if db.hgcwa_passports.count({'group':gap_str}) > 0:
+            auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
+        friends += [( "... and of a higher genus curve",auto_url)]
+    elif db.hgcwa_passports.count({'group':gap_str}) > 0:
         auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
         friends += [("As the automorphism of a curve",auto_url)]
 
     if db.gps_transitive.count({'gapidfull': gap_str}) > 0:   
         gal_gp_url= "/GaloisGroup/?gal=%5B" + str(gap_ints[0]) + "%2C" + str(gap_ints[1])  +"%5D"
         friends +=[("As a transitive group", gal_gp_url)]
+
+
+    if db.gps_st.count({'component_group': label}) > 0:   
+        st_url='/SatoTateGroup/?hst=List&component_group=%5B'+  str(gap_ints[0])+ '%2C' +   str(gap_ints[1]) + '%5D&search_type=List'
+        friends += [("As the component group of a Sato-Tate group", st_url)]
     
     
     bread = get_bread([(label, '')])
