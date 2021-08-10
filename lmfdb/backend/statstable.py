@@ -325,10 +325,15 @@ class PostgresStatsTable(PostgresBase):
         cols, vals = self._split_dict(query)
         data = [count, cols, vals, split_list]
         if self.quick_count(query, suffix=suffix) is None:
+            if count == 0:
+                return # we don't want to store 0 counts since it can break stats
             updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
+            if count == 0:
+                updater = SQL("DELETE FROM {0} WHERE cols = %s AND values = %s AND split = %s")
+            else:
+                updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
@@ -1690,6 +1695,8 @@ ORDER BY v.ord LIMIT %s"""
                     else:
                         selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                         selecter_values.append(Json(cx))
+                    # count 0 rows shouldn't be added usually, but if they get in it can cause havoc since some formatters hard-code the valid inputs
+                    selecter_constraints.append(SQL("count > 0"))
         else:
             allcols = sorted(cols)
             selecter_values = [split_list, Json(allcols)]

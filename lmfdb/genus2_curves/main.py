@@ -481,7 +481,7 @@ class G2C_stats(StatsDisplay):
                   'real_geom_end_alg': 'Sato-Tate group identity components',
                   'st_group': 'Sato-Tate groups',
                   'torsion_order': 'torsion subgroup orders'}
-    formatters = {'aut_grp_id': lambda x: aut_grp_dict_pretty[x],
+    formatters = {'aut_grp_id': lambda x: aut_grp_dict_pretty.get(x, x),
                   'geom_aut_grp_id': lambda x: geom_aut_grp_dict_pretty[x],
                   'has_square_sha': formatters.boolean,
                   'is_gl2_type': formatters.boolean,
