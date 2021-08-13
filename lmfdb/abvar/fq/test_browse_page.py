@@ -91,13 +91,34 @@ class AVHomeTest(LmfdbTest):
         # search for simple
         self.check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=yes", "2.2.ad_f")
         self.not_check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=yes", "2.2.ae_i")
-        self.check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=yes", "2.2.ad_f")
-        self.not_check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=yes", "2.2.ae_i")
         # search for not simple
         self.check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=no", "2.2.ae_i")
         self.not_check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=no", "2.2.ad_f")
-        self.check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=no", "2.2.ae_i")
-        self.not_check_args("/Variety/Abelian/Fq/?q=2&g=2&simple=no", "2.2.ad_f")
+
+    def test_geom_decomp_search(self):
+        r"""
+        Check that we can restrict to (geometrically) (non) squarefree
+        abelian varieties only.
+        """
+        # search for squarefree
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=Yes", "1.3.ab")
+        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=Yes", "2.2.ae_i")
+
+        # search for squarefree and geometrically squarefree
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=YesAndGeom", "1.2.ac")
+        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=YesAndGeom", "2.2.ad_f")
+
+        # search for squarefree but not geometrically squarefree
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=YesNotGeom", "2.2.ad_f")
+        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=YesNotGeom", "1.2.ac")
+
+        # search for non squarefree
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=No", "2.2.ae_i")
+        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=No", "1.3.ab")
+
+        # search for not geometrically squarefree
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=NotGeom", "2.2.ae_i")
+        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=NotGeom", "1.4.ac")
 
     def test_primitive_search(self):
         r"""
@@ -114,7 +135,6 @@ class AVHomeTest(LmfdbTest):
         """
         self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.ah_ba")
         self.check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.af_o")
-        self.not_check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.b_ad")
         self.not_check_args("/Variety/Abelian/Fq/?q=9&g=2&p_rank=2", "2.9.b_ad")
 
     def test_search_newton(self):
