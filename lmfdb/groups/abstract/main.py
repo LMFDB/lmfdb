@@ -15,7 +15,8 @@ from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
-    # parse_gap_id, parse_bracketed_posints,
+    parse_bracketed_posints,
+    # parse_gap_id,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page, abstract_logger
@@ -449,6 +450,7 @@ def group_search(info, query):
     parse_ints(info, query, 'outer_order', 'outer_order')
     parse_ints(info, query, 'derived_length', 'derived_length')
     parse_ints(info, query, 'rank', 'rank')
+    parse_bracketed_posints(info, query, 'order_stats', 'order_stats')
     parse_bool(info, query, 'abelian', 'is abelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'metabelian', 'is metabelian')
@@ -1052,6 +1054,13 @@ class GroupsSearchArray(SearchArray):
             example="4.2",
             example_span="4.2"
             )
+        order_stats = TextBox(
+            name="order_stats",
+            label="Order statistics",
+            knowl="group.order_stats",
+            example="[[1, 1], [2, 1], [4, 2]]",
+            example_span="[[1, 1], [2, 1], [4, 2]]"
+            )
         count = CountBox()
 
         self.browse_array = [
@@ -1071,6 +1080,7 @@ class GroupsSearchArray(SearchArray):
             [derived_length, frattini_label],
             [supersolvable, monomial],
             [rational, rank],
+            [order_stats],
             [count]
         ]
 
@@ -1082,7 +1092,8 @@ class GroupsSearchArray(SearchArray):
             [aut_group, aut_order, outer_group, outer_order],
             [metabelian, metacyclic, almost_simple, quasisimple],
             [Agroup, Zgroup, derived_length, frattini_label],
-            [supersolvable, monomial, rational, rank]
+            [supersolvable, monomial, rational, rank],
+            [order_stats]
         ]
 
     sort_knowl = "group.sort_order"
