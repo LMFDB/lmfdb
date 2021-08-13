@@ -15,7 +15,7 @@ from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox,
+    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
 from . import abvarfq_page
@@ -238,6 +238,7 @@ class AbvarSearchArray(SearchArray):
             label="$p$-rank deficit",
             knowl="av.fq.p_rank",
             example="2",
+            advanced=True,
         )
         angle_rank = TextBox(
             "angle_rank",
@@ -245,6 +246,7 @@ class AbvarSearchArray(SearchArray):
             knowl="av.fq.angle_rank",
             example="3",
             example_col=False,
+            advanced=True,
         )
         newton_polygon = TextBox(
             "newton_polygon",
@@ -373,17 +375,18 @@ class AbvarSearchArray(SearchArray):
             knowl="av.geometrically_simple",
             short_label="Geom. simple",
         )
-        squarefree = YesNoBox(
-            "squarefree",
-            label="Squarefree",
-            knowl="av.squarefree",
-            short_label="Squarefree",
-        )
-        geom_squarefree = YesNoBox(
-            "geom_squarefree",
-            label="Geometrically squarefree",
+        geom_decomp = SelectBox(
+            name="geom_decomp",
             knowl="av.geometrically_squarefree",
-            short_label="Geom. squarefree",
+            label="(Geometric) Decomposition",
+            short_label="(Geom.) Decomp.",
+            options=[('', ''),
+            ('Yes', 'yes'),
+            ('YesAndGeom', 'yes; and geom.'),
+            ('YesNotGeom', 'yes; not geom.'),
+            ('No', 'no'),
+            ('NotGeom', 'not geom.')],
+            advanced=True
         )
         primitive = YesNoBox(
             "primitive",
@@ -498,13 +501,11 @@ class AbvarSearchArray(SearchArray):
         count = CountBox()
 
         self.refine_array = [
-            [q, p, g, p_rank, p_rank_deficit, initial_coefficients, angle_rank],
-            [simple, geom_simple, primitive, polarizable, jacobian, squarefree, geom_squarefree],
+            [q, p, g, p_rank, initial_coefficients],
+            [simple, geom_simple, primitive, polarizable, jacobian],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
-            [geom_deg, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
-            #[size],
-            # [simple, geom_simple, primitive, polarizable, jacobian, squarefree, geom_squarefree],
-            # [squarefree, geom_squarefree],
+            [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
+            [geom_deg, p_rank_deficit, geom_decomp],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
@@ -514,11 +515,10 @@ class AbvarSearchArray(SearchArray):
             [p, simple],
             [g, geom_simple],
             [initial_coefficients, polarizable],
-            [angle_rank, jacobian],
-            [p_rank, squarefree],
-            [p_rank_deficit, geom_squarefree],
+            [p_rank, jacobian],
+            [p_rank_deficit, geom_decomp],
             [jac_cnt, hyp_cnt],
-            [geom_deg],
+            [geom_deg, angle_rank],
             [twist_count, max_twist_degree],
             [newton_polygon],
             [abvar_point_count],
@@ -548,8 +548,6 @@ def common_parse(info, query):
     parse_ints(info, query, "geom_deg", qfield="geometric_extension_degree")
     parse_bool(info, query, "simple", qfield="is_simple")
     parse_bool(info, query, "geom_simple", qfield="is_geometrically_simple")
-    parse_bool(info, query, "squarefree", qfield="is_squarefree")
-    parse_bool(info, query, "geom_squarefree", qfield="is_geometrically_squarefree")
     parse_bool(info, query, "primitive", qfield="is_primitive")
     parse_bool_unknown(info, query, "jacobian", qfield="has_jacobian")
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
@@ -583,6 +581,24 @@ def common_parse(info, query):
         parse_ints(info, query, "dim%s_distinct" % n, qfield="%s%s_distinct" % (dimstr, n))
     parse_nf_string(info, query, "number_field", qfield=nf_qfield)
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
+
+    if 'geom_decomp' in info:
+        if info['geom_decomp'] == 'Yes':
+            query['is_squarefree'] = True
+
+        elif info['geom_decomp'] == 'YesAndGeom':
+            query['is_squarefree'] = True
+            query['is_geometrically_squarefree'] = True
+
+        elif info['geom_decomp'] == 'YesNotGeom':
+            query['is_squarefree'] = True
+            query['is_geometrically_squarefree'] = False
+
+        elif info['geom_decomp'] == 'No':
+            query['is_squarefree'] = False
+
+        elif info['geom_decomp'] == 'NotGeom':
+            query['is_geometrically_squarefree'] = False
 
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
