@@ -23,6 +23,31 @@
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
+<script>
+  function show_info(style) {
+    $('#subgroup_diagram').hide();
+    $('#subgroup_profile').hide();
+    $('#subgroup_'+style).show();
+    $('button.diagram').show();
+    $('button.profile').show();
+    if (style == 'diagram') {
+      $('button.diagram').css('background', '{{color.lf_an_button_bkg}}');
+      $('button.diagram').css('border', '2px solid {{color.lf_an_button_brd}}');
+      $('button.profile').css('background', '{{color.lf_ar_button_bkg}}');
+      $('button.profile').css('border', '1px solid {{color.lf_ar_button_brd}}');
+    }
+    if (style == 'profile') {
+      $('button.profile').css('background', '{{color.lf_an_button_bkg}}');
+      $('button.profile').css('border', '2px solid {{color.lf_an_button_brd}}');
+      $('button.diagram').css('background', '{{color.lf_ar_button_bkg}}');
+      $('button.diagram').css('border', '1px solid {{color.lf_ar_button_brd}}');
+    }
+  }
+
+</script>
+
+
+
 <h2> Group Information</h2>
 <p>
   <table>
@@ -137,9 +162,18 @@
 #}
 
 
-<h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}}</h3>
+<h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}} and profile</h3>
 <p>
+<div>
+<button class='diagram inactive' onclick="show_info('diagram'); return false">diagram</button>
+<button class='profile inactive' onclick="show_info('profile'); return false">profile</button>
+</div>
+<p>
+<div id="subgroup_diagram" style="display: block">
 {% if gp.diagram_ok %}
+<script>
+  show_info("diagram");
+</script>
 {% if info.wide %}
 <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
   Sorry, your browser does not support the subgroup diagram.
@@ -184,10 +218,17 @@ Click on a subgroup in the diagram to see information about it.
 {% endif %}
 {% else %}
 There are too many classes of subgroups to display.
-<p>
+{% endif %}
+</div>
+<div id="subgroup_profile" style="display: none">
 {% for ordline in info.subgroup_profile %}
 Order {{ordline[0]}}: {{ordline[1] | safe}} <br />
 {% endfor %}
+</div>
+{% if not gp.diagram_ok %}
+<script>
+  show_info("profile");
+</script>
 {% endif %}
 
 <h3>Series</h3>
