@@ -113,7 +113,7 @@ class AVHomeTest(LmfdbTest):
 
         # search for non squarefree
         self.check_args("/Variety/Abelian/Fq/?geom_squarefree=No", "2.2.ae_i")
-        self.not_check_args("/Variety/Abelian/Fq/?geom_squarefree=No", "1.3.ab")
+        self.check_args("/Variety/Abelian/Fq/?geom_squarefree=No&g=1", "No matches")
 
         # search for not geometrically squarefree
         self.check_args("/Variety/Abelian/Fq/?geom_squarefree=NotGeom", "2.2.ae_i")
