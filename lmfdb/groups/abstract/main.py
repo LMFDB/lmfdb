@@ -7,6 +7,7 @@ from six import BytesIO
 from collections import defaultdict, Counter
 
 from flask import render_template, request, url_for, redirect, Markup, make_response, send_file #, abort
+from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, Permutations
 
 from lmfdb import db
@@ -16,7 +17,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
     parse_bracketed_posints,
-    # parse_gap_id,
+    dispZmat, dispcyclomat,
     search_wrap, web_latex)
 from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
 from lmfdb.groups.abstract import abstract_page, abstract_logger
@@ -151,11 +152,11 @@ def create_boolean_string(gp, short_string=False):
             
 #rest will assume non-abelian            
         else:
-            strng = "This group is " + nonabelian_str + "."
+            strng = "This group is " + nonabelian_str 
 
         #finite nilpotent is Agroup iff group is abelian (so can't be Zgroup/Agroup)
             if gp.nilpotent:
-                strng += " It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
+                strng += ". It is " + nilpotent_str + " (" + hence_str + " " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")"
                 if gp.rational:
                     if gp.metacyclic:
                         strng += ", "  + metacyclic_str + " (" + hence_str + " " + metabelian_str + ") and " + rational_str + "."
@@ -170,26 +171,26 @@ def create_boolean_string(gp, short_string=False):
 
             elif gp.Zgroup:
                 if gp.rational:
-                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
+                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ") and " + rational_str + "."
                 else:
-                    strng += " It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
+                    strng += ". It is a  " + zgroup_str + " (" + hence_str + " " + metacyclic_str + ", " + metabelian_str + ",  an " + agroup_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."
 
 
             elif gp.metacyclic:   
                 if gp.rational and gp.Agroup:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), an  " + agroup_str + ", and " + rational_str + "."
                 elif gp.rational:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  "  + rational_str + "."
                 elif gp.Agroup:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + "), and  " + agroup_str + "."
                 else:
-                    strng += " It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
+                    strng += ". It is " + metacyclic_str +  " (" + hence_str + " " + metabelian_str + ", " + supersolvable_str + ", " + monomial_str + ", and " + solvable_str + ")."                    
 
 
 
                     
             elif gp.supersolvable:
-                strng += " It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
+                strng += ". It is  " + supersolvable_str + " (" + hence_str + " " + monomial_str + " and " + solvable_str + ")"
                 if gp.metabelian:
                     if gp.rational and gp.Agroup:
                         strng += ", " + metabelian_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -211,7 +212,7 @@ def create_boolean_string(gp, short_string=False):
 
                     
             elif gp.metabelian:
-                strng += " It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
+                strng += ". It is " + metabelian_str + " (" + hence_str + " " + solvable_str + ")"
                 if gp.monomial:
                     if gp.rational and gp.Agroup:
                         strng += ", " + monomial_str + ", an " + agroup_str + ", and " + rational_str + "."
@@ -232,7 +233,7 @@ def create_boolean_string(gp, short_string=False):
 
 
             elif gp.monomial:
-                strng += " It is " + monomial_str + " (" + hence_str + solvable_str + ")"
+                strng += ". It is " + monomial_str + " (" + hence_str + solvable_str + ")"
                 if gp.rational:
                     if gp.Agroup:
                         strng += ", an " + agroup_str + " and  " + rational_str
@@ -242,21 +243,27 @@ def create_boolean_string(gp, short_string=False):
 
                 
             elif gp.solvable:
-                strng += " It is " + solvable_str
                 if gp.rational:
                     if gp.Agroup:
-                        strng += ", an " + agroup_str + " and  " + rational_str
+                        strng += ", " + solvable_str + ",  an " + agroup_str + " and  " + rational_str
                     else:
-                        strng += " and  " + rational_str
+                        strng += ", " + solvable_str + ", and  " + rational_str
+                elif gp.Agroup:  #agroup but not rational
+                    strng += ", " + solvable_str + ", and  an " + agroup_str
+                else:  # only solvable
+                    strng += " and " + solvable_str
                 strng += "."
 
             else:
-                strng += " It is " + nonsolvable_str
                 if gp.rational:
                     if gp.Agroup:
-                        strng += ", an " + agroup_str + " and  " + rational_str
+                        strng += ", " + nonsolvable_str + ", an " + agroup_str + " and  " + rational_str
                     else:
-                        strng += " and  " + rational_str
+                        strng += ", " + nonsolvable_str + " and  " + rational_str
+                elif gp.Agroup:  #agroup but not rational
+                    strng += ", " + nonsolvable_str + ", and  an " + agroup_str
+                else:  # only solvable
+                    strng += " and " + nonsolvable_str
                 strng += "."
 
                 
@@ -555,6 +562,7 @@ def render_abstract_group(label):
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:
         prof = list(gp.subgroup_profile.items())
+        prof.sort(key=lambda z: - z[0]) # largest to smallest
         info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
         info['dojs'] = ''
 
@@ -640,8 +648,41 @@ def render_abstract_group(label):
     downloads = [('Code for Magma', url_for(".download_group",  label=label, download_type='magma')),
                      ('Code for Gap', url_for(".download_group", label=label, download_type='gap'))]
 
-  #  sbgp_url = FILL HERE
-   # friends =  [("Subgroups", sbgp_url)]
+
+
+
+    #"internal" friends
+    sbgp_of_url=" /Groups/Abstract/?hst=Subgroups&subgroup="+label+"&search_type=Subgroups"
+    sbgp_url = "/Groups/Abstract/?hst=Subgroups&ambient="+label+"&search_type=Subgroups"
+    quot_url ="/Groups/Abstract/?hst=Subgroups&quotient="+label+"&search_type=Subgroups"
+
+
+    
+    
+    friends =  [("Subgroups", sbgp_url),("Extensions",quot_url),("Supergroups",sbgp_of_url)]
+
+    #"external" friends
+    gap_ints =  [int(y) for y in label.split(".")]
+    gap_str = str(gap_ints).replace(" ","")
+    if db.g2c_curves.count({'aut_grp_id':gap_str}) > 0:
+        g2c_url = '/Genus2Curve/Q/?hst=List&aut_grp_id=%5B' + str(gap_ints[0]) + '%2C'+  str(gap_ints[1])  + '%5D&search_type=List'
+        friends += [("As the automorphism of a genus 2 curve",g2c_url)]
+        if db.hgcwa_passports.count({'group':gap_str}) > 0:
+            auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
+        friends += [( "... and of a higher genus curve",auto_url)]
+    elif db.hgcwa_passports.count({'group':gap_str}) > 0:
+        auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
+        friends += [("As the automorphism of a curve",auto_url)]
+
+    if db.gps_transitive.count({'gapidfull': gap_str}) > 0:
+        gal_gp_url= "/GaloisGroup/?gal=%5B" + str(gap_ints[0]) + "%2C" + str(gap_ints[1])  +"%5D"
+        friends +=[("As a transitive group", gal_gp_url)]
+
+
+    if db.gps_st.count({'component_group': label}) > 0:
+        st_url='/SatoTateGroup/?hst=List&component_group=%5B'+  str(gap_ints[0])+ '%2C' +   str(gap_ints[1]) + '%5D&search_type=List'
+        friends += [("As the component group of a Sato-Tate group", st_url)]
+    
     
     bread = get_bread([(label, '')])
 
@@ -651,7 +692,7 @@ def render_abstract_group(label):
                            title=title, bread=bread, info=info,
                            gp=gp,
                            properties=properties,
-                          # friends=friends,
+                           friends=friends,
                            learnmore=learnmore_list(),
                            downloads=downloads,
                            credit=credit_string)
@@ -797,8 +838,10 @@ def download_group(**args):
         filename += ".m"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    s += com + " Below is the group G, given with generators (and relations if solvable) \n"
-    s += com + " matching the LMFDB group.\n"
+    s += com + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
+    s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
+    s += com + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
+    s += com + " \n"
     s += "\n" + com2
     s += "\n"
 
@@ -811,6 +854,11 @@ def download_group(**args):
             s += "G:=SmallGroupDecoding(encd,gpsize); \n"
         elif dltype == "gap":
             s += "G:=PcGroupCode(encd, gpsize); \n"
+
+        gen_index = gp_data['gens_used']
+        num_gens = len(gen_index)
+        for i in range(num_gens):
+            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n" 
 
     #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??       
     else:
@@ -1231,16 +1279,6 @@ def sub_display_knowl(label, name=None):
         name = 'Subgroup {}'.format(label)
     return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args=%s&func=sub_data">%s</a>' % (name, label, name)
 
-#def crep_display_knowl(label, name=None):
-#    if not name:
-#        name = 'Subgoup {}'.format(label)
-#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (name, label, name)
-#
-#def qrep_display_knowl(label, name=None):
-#    if not name:
-#        name = 'Subgoup {}'.format(label)
-#    return '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (name, label, name)
-
 def cc_data(gp, label, typ='complex'):
     if typ == 'rational':
         wag = WebAbstractGroup(gp)
@@ -1288,9 +1326,10 @@ def rchar_data(label):
     ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
     if mychar._data.get('image'):
         txt = "Image"
+        imageknowl = '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=qrep_data&args=%s">%s</a>' % (mychar.image, mychar.image, mychar.image)
         if mychar.schur_index > 1:
             txt = r'Image of ${}\ *\ ${}'.format(mychar.schur_index, label)
-        ans += '<br>{}: <a href="{}">{}</a>'.format(txt, url_for('glnQ.by_label', label=mychar.image), mychar.image)
+        ans += '<br>{}: {}'.format(txt, imageknowl)
     else:
         ans += '<br>Image: not computed'
     return Markup(ans)
@@ -1309,10 +1348,39 @@ def cchar_data(label):
     ans += '<br>Smallest container: {}T{}'.format(nt[0],nt[1])
     ans += '<br>Field of character values: {}'.format(formatfield(mychar.field))
     if mychar._data.get('image'):
-        print("IMAGE", mychar.image)
-        ans += '<br>Image: <a href="{}">{}</a>'.format(url_for('glnC.by_label', label=mychar.image), mychar.image)
+        imageknowl = '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=crep_data&args=%s">%s</a>' % (mychar.image, mychar.image, mychar.image)
+        ans += '<br>Image: {}'.format(imageknowl)
     else:
         ans += '<br>Image: not computed'
+    return Markup(ans)
+
+def crep_data(label):
+    info = db.gps_crep.lookup(label)
+    ans = '<h3>Subgroup of $\GL_{{ {}  }}(\C)$: {}</h3>'.format(info['dim'], label)
+    ans += '<br>Order: ${}$'.format(info['order'])
+    ans += '<br>Abstract group: {}'.format(group_display_knowl(info['group'], info['group']))
+    ans += '<br>Group name: ${}$'.format(group_names_pretty(info['group']))
+    ans += '<br>Dimension: ${}$'.format(info['dim'])
+    ans += '<br>Irreducible: {}'.format(info['irreducible'])
+    plural = '' if len(info['gens'])==1 else 's'
+    ans += '<br>Matrix generator{}: '.format(plural)
+    N=info['cyc_order_mat']
+    genlist = ['$'+dispcyclomat(N, gen)+'$' for gen in info['gens']]
+    ans += ','.join(genlist)
+    return Markup(ans)
+
+def qrep_data(label):
+    info = db.gps_qrep.lookup(label)
+    ans = '<h3>Subgroup of $\GL_{{ {}  }}(\Q)$: {}</h3>'.format(info['dim'], label)
+    ans += '<br>Order: ${}$'.format(info['order'])
+    ans += '<br>Abstract group: {}'.format(group_display_knowl(info['group'], info['group']))
+    ans += '<br>Group name: ${}$'.format(group_names_pretty(info['group']))
+    ans += '<br>Dimension: ${}$'.format(info['dim'])
+    ans += '<br>Irreducible: {}'.format(info['irreducible'])
+    plural = '' if len(info['gens'])==1 else 's'
+    ans += '<br>Matrix generator{}: '.format(plural)
+    genlist = ['$'+dispZmat(gen)+'$' for gen in info['gens']]
+    ans += ','.join(genlist)
     return Markup(ans)
 
 def sub_data(label):
@@ -1356,7 +1424,9 @@ flist= {'cc_data': cc_data,
         'sub_data': sub_data,
         'rchar_data': rchar_data,
         'cchar_data': cchar_data,
-        'group_data': group_data}
+        'group_data': group_data,
+        'crep_data': crep_data,
+        'qrep_data': qrep_data}
 
 
 

@@ -212,11 +212,11 @@
         status: future
       - title: $\GL(n,\Q)$
         url_for: "glnQ.index"
-        status:  beta
+        status:  future
       - title: $\GL(n,\C)$
         url_for: "glnC.index"
-        status:  beta
-    status: beta
+        status:  future
+    status: future
     colspan: onecolumn
 
 8Inv:
