@@ -375,11 +375,11 @@ class AbvarSearchArray(SearchArray):
             knowl="av.geometrically_simple",
             short_label="Geom. simple",
         )
-        geom_decomp = SelectBox(
-            name="geom_decomp",
+        geom_squarefree = SelectBox(
+            name="geom_squarefree",
             knowl="av.geometrically_squarefree",
-            label="(Geometric) Decomposition",
-            short_label="(Geom.) Decomp.",
+            label="(Geometrically) Squarefree",
+            short_label="(Geom.) Sq.free",
             options=[('', ''),
             ('Yes', 'yes'),
             ('YesAndGeom', 'yes; and geom.'),
@@ -505,7 +505,7 @@ class AbvarSearchArray(SearchArray):
             [simple, geom_simple, primitive, polarizable, jacobian],
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
             [angle_rank, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
-            [geom_deg, p_rank_deficit, geom_decomp],
+            [geom_deg, p_rank_deficit, geom_squarefree],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
@@ -516,7 +516,7 @@ class AbvarSearchArray(SearchArray):
             [g, geom_simple],
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
-            [p_rank_deficit, geom_decomp],
+            [p_rank_deficit, geom_squarefree],
             [jac_cnt, hyp_cnt],
             [geom_deg, angle_rank],
             [twist_count, max_twist_degree],
@@ -582,22 +582,22 @@ def common_parse(info, query):
     parse_nf_string(info, query, "number_field", qfield=nf_qfield)
     parse_galgrp(info, query, "galois_group", qfield=gal_qfield)
 
-    if 'geom_decomp' in info:
-        if info['geom_decomp'] == 'Yes':
+    if 'geom_squarefree' in info:
+        if info['geom_squarefree'] == 'Yes':
             query['is_squarefree'] = True
 
-        elif info['geom_decomp'] == 'YesAndGeom':
+        elif info['geom_squarefree'] == 'YesAndGeom':
             query['is_squarefree'] = True
             query['is_geometrically_squarefree'] = True
 
-        elif info['geom_decomp'] == 'YesNotGeom':
+        elif info['geom_squarefree'] == 'YesNotGeom':
             query['is_squarefree'] = True
             query['is_geometrically_squarefree'] = False
 
-        elif info['geom_decomp'] == 'No':
+        elif info['geom_squarefree'] == 'No':
             query['is_squarefree'] = False
 
-        elif info['geom_decomp'] == 'NotGeom':
+        elif info['geom_squarefree'] == 'NotGeom':
             query['is_geometrically_squarefree'] = False
 
 def jump(info):
