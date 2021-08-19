@@ -2268,7 +2268,7 @@ class PostgresTable(PostgresBase):
         current = cur.fetchone()[0]
 
         if not drop and description is None:
-   op         # We want to allow the set of columns to be out of date temporarily, on prod for example
+            # We want to allow the set of columns to be out of date temporarily, on prod for example
             if col is None:
                 for col in allcols:
                     if col not in current:
