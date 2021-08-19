@@ -24,7 +24,7 @@ from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name
 
 ###############################################################################
-# List and dictionaries needed routing and searching
+# List and dictionaries needed for routing and searching
 ###############################################################################
 
 # lists determine display order in drop down lists, dictionary key is the
@@ -383,7 +383,7 @@ def genus2_curve_search(info, query):
     parse_bool(info,query,'is_simple_geom','is geometrically simple')
     parse_ints(info,query,'cond','conductor')
     if info.get('analytic_sha') == "None":
-        query['analytic_sha'] = None;
+        query['analytic_sha'] = None
     else:
         parse_ints(info,query,'analytic_sha','analytic order of sha')
     parse_ints(info,query,'num_rat_pts','rational points')

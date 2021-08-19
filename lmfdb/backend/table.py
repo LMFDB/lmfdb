@@ -2267,7 +2267,7 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, [self.search_table])
         current = cur.fetchone()[0]
 
-        if description is None:
+        if not drop and description is None:
             # We want to allow the set of columns to be out of date temporarily, on prod for example
             if col is None:
                 for col in allcols:
@@ -2276,7 +2276,7 @@ class PostgresTable(PostgresBase):
                 return current
             return current.get(col, "(description not yet updated on this server)")
         else:
-            if not (col is None or col in allcols):
+            if not (drop or col is None or col in allcols):
                 raise ValueError("%s is not a column of this table" % col)
             if drop:
                 if col is None:
