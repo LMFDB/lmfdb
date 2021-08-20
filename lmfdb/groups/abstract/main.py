@@ -1106,8 +1106,8 @@ class GroupsSearchArray(SearchArray):
             name="order_stats",
             label="Order statistics",
             knowl="group.order_stats",
-            example="[[1, 1], [2, 1], [4, 2]]",
-            example_span="[[1, 1], [2, 1], [4, 2]]"
+            example="1^1,2^3,3^2",
+            example_span="1^1,2^3,3^2"
             )
         count = CountBox()
 
