@@ -39,6 +39,7 @@ FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r'^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$')
 LF_LABEL_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
+MULTISET_RE = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 import ast
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -223,6 +224,20 @@ def parse_list(inp, query, qfield, process=None):
         query[qfield] = process(out)
     else:
         query[qfield] = out
+
+def parse_multiset(inp, query, qfield, process=None):
+    """
+    Parses a string representing a multiset of integers, written in the form, e.g., '1^1,2^4,4^1', and converts it to a list of pairs, e.g., [[1,1], [2,4], [4,1]]
+    """
+    if not MULTISET_RE.match(inp):
+        raise SearchParsingError("Multisets must be given as comma-separated strings with entries of the form <element>^<multiplicity>.")
+    o_string = inp.replace(' ','')
+    spl = o_string.split(',')
+    o_list = []
+    for s in spl:
+        s_spl = s.split('^')
+        o_list.append([ZZ(s_spl[0]), ZZ(s_spl[1])])
+    query[qfield] = o_list
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors

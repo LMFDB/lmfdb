@@ -16,10 +16,9 @@ from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
-    parse_bracketed_posints,
     dispZmat, dispcyclomat,
     search_wrap, web_latex)
-from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors, parse_multiset)
 from lmfdb.groups.abstract import abstract_page, abstract_logger
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
@@ -31,6 +30,7 @@ credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran K
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
+#order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 ngroups = None
 max_order = None
@@ -457,7 +457,7 @@ def group_search(info, query):
     parse_ints(info, query, 'outer_order', 'outer_order')
     parse_ints(info, query, 'derived_length', 'derived_length')
     parse_ints(info, query, 'rank', 'rank')
-    parse_bracketed_posints(info, query, 'order_stats', 'order_stats')
+    parse_multiset(info, query, 'order_stats', 'order_stats')
     parse_bool(info, query, 'abelian', 'is abelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'metabelian', 'is metabelian')
@@ -1428,6 +1428,12 @@ flist= {'cc_data': cc_data,
         'crep_data': crep_data,
         'qrep_data': qrep_data}
 
-
-
+def order_stats_list_to_string(o_list):
+    s = ""
+    for pair in o_list:
+        assert len(pair) == 2
+        s += "%s^%s" % (pair[0],pair[1])
+        if o_list.index(pair) != len(o_list)-1:
+            s += ","
+    return s
 
