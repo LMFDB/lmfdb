@@ -406,6 +406,27 @@ def Qchar_table(label):
                            learnmore=learnmore_list(),
                            credit=credit_string)
 
+@abstract_page.route("/diagram/<label>")
+def sub_diagram(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error( "No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    layers = gp.subgroup_layers
+    maxw = max([len(z) for z in layers[0]])
+    h = 160*(len(layers[0])-1)
+    h = min(h, 1000)
+    w = 200*maxw
+    w = min(w,1500)
+    info = {'dojs': diagram_js(gp,layers), 'w': w, 'h': h}
+    return render_template("diagram_page.html", 
+        info=info,
+        title="Rational character table for %s" % label,
+        bread=get_bread([("Subgroup diagram", " ")]),
+        learnmore=learnmore_list(),
+        credit=credit_string)
+
 def show_type(label):
     wag = WebAbstractGroup(label)
     if wag.abelian:
@@ -534,6 +555,17 @@ def get_sub_url(label):
 def factor_latex(n):
     return '$%s$' % web_latex(factor(n), False)
 
+def diagram_js(gp, layers):
+    ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+    subs = gp.subgroups
+    orders = list(set(sub.subgroup_order for sub in subs.values()))
+    orders.sort()
+
+    myjs = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(gp.label)
+    myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
+    myjs += ');'
+    return myjs
+
 #Writes individual pages
 def render_abstract_group(label):
     abstract_logger.info("A")
@@ -553,14 +585,7 @@ def render_abstract_group(label):
     # prepare for javascript call to make the diagram
     if gp.diagram_ok:
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
-        subs = gp.subgroups
-        orders = list(set(sub.subgroup_order for sub in subs.values()))
-        orders.sort()
-
-        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ');'
+        info['dojs'] = diagram_js(gp, layers)
         totsubs = len(gp.subgroups)
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:

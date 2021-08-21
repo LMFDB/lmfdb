@@ -189,6 +189,7 @@
 <div id="positions">
 </div>
 {% endif %}
+<a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 <h4>Subgroup information</h4>
 <div id="selectedsub">
 Click on a subgroup in the diagram to see information about it.
@@ -214,10 +215,12 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 <div id="positions">
 </div>
+<a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 {% endif %}
 {% endif %}
 {% else %}
 There are too many classes of subgroups to display.
+<a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 {% endif %}
 </div>
 <div id="subgroup_profile" style="display: none">

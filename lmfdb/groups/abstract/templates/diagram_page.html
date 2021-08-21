@@ -1,0 +1,60 @@
+
+{% extends "base.html" %}
+
+{% block body %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
+<script type="text/javascript">
+  $(document).ready(
+    function() {
+    $(".subgp").hover(highlight_group, unhighlight_group);
+    $(".subgp").on('touchstart', highlight_group);
+  });
+</script>
+
+<script type="text/javascript">
+  function newh(amt)
+  {
+    var h = $("#subdiagram").height();
+    var w = $("#subdiagram").width();
+    $("#subdiagram").height(h+amt);
+    $("#subdiagram").width(w);
+  }
+
+  function neww(amt)
+  {
+    var h = $("#subdiagram").height();
+    var w = $("#subdiagram").width();
+    $("#subdiagram").height(h);
+    $("#subdiagram").width(w+amt);
+  }
+</script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+
+
+<div id="main">
+
+<canvas id="subdiagram" width="{{ info.w }}" height="{{ info.h }}" style="border: 0px solid black">
+  Sorry, your browser does not support the subgroup diagram.
+</canvas>
+
+<script type="text/javascript">
+{{ info.dojs|safe }}
+</script>
+
+<div>
+<button onclick="newh(100)">More height</button>
+<button onclick="newh(-100)">Less height</button>
+<button onclick="neww(100)">More width</button>
+<button onclick="neww(-100)">Less width</button>
+</div>
+
+<h4>Subgroup information</h4>
+<div id="selectedsub">
+Click on a subgroup in the diagram to see information about it.
+</div>
+
+</div>
+
+{% endblock %}
