@@ -243,7 +243,7 @@ def register(N=10):
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
     if not userdb._rw_userdb:
-        flask.abort(401, "no attempt to create user, not enough privileges");
+        flask.abort(401, "no attempt to create user, not enough privileges")
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
         flask.abort(401)

@@ -148,8 +148,8 @@ class CMF_download(Downloader):
 
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
-        level_data = self.assign(lang, 'level', level);
-        weight_data = self.assign(lang, 'weight', weight);
+        level_data = self.assign(lang, 'level', level)
+        weight_data = self.assign(lang, 'weight', weight)
 
         c = self.comment_prefix[lang]
         func_start = self.get('function_start',{}).get(lang,[])
@@ -157,9 +157,9 @@ class CMF_download(Downloader):
 
         explain = '\n'
         explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
-        aps_data = self.assign(lang, 'aps_data', aps);
+        aps_data = self.assign(lang, 'aps_data', aps)
         code = ''
-        hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values']);
+        hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
             func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
@@ -611,7 +611,7 @@ class CMF_download(Downloader):
         hecke_nf = self._get_hecke_nf(label)
 
         out = []
-        newlines = ['']*2;
+        newlines = [''] * 2
         if newform.has_exact_qexp:
             out += self._magma_ConvertToHeckeField(newform, hecke_nf) + newlines
 
