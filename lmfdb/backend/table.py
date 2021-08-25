@@ -1486,7 +1486,11 @@ class PostgresTable(PostgresBase):
             If None, will use ``self._sort_orig``.
         """
 
-
+        print("resorting disabled")
+        # resorting without a reload makes replication stall
+        # and doesn't store data correctly on disk
+        # Given that our tables are readonly, we should just dump sorted and reload
+        return None
         search_table = Identifier(self.search_table + suffix)
         if self.extra_table:
             extra_table = Identifier(self.extra_table + suffix)
