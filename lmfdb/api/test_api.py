@@ -13,8 +13,7 @@ class ApiTest(LmfdbTest):
         r"""
         Check that one collection from each database works
         """
-        dbs = ['mwfp_forms', 'lat_lattices', 'lfunc_lfunctions',
-               'mwf_coeffs', 'sl2z_subgroups', 'av_fqisog',
+        dbs = ['lat_lattices', 'lfunc_lfunctions', 'av_fqisog',
                'artin_reps', 'bmf_forms', 'hgcwa_passports',
                'ec_curvedata', 'g2c_curves', 'halfmf_forms',
                'hgm_motives', 'hmf_forms', 'lf_fields',
