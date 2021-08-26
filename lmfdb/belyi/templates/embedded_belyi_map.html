@@ -1,0 +1,22 @@
+{% extends 'belyi_base.html' %}
+{% block subcontent %}
+
+
+<h2>Permutation triple</h2>
+
+<h2>Curve</h2>
+  <p>
+    \(\displaystyle {{data.curve}}\)
+    {% if data.g == 0 %}
+      , with affine coordinate $x$
+    {% endif %}
+  </p>
+
+<h2> Map </h2>
+  {% if data.g == 0 %}
+    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+  {% else %}
+    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+  {% endif %}
+
+{% endblock %}
