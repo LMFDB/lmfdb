@@ -92,8 +92,8 @@ div.properties-body table tr td.label { vertical-align: top; }
     </thead>
     <tbody>
       {% for g in data.embeddings_and_triples %}
-         <td>${{g[0]}}$</td>
-         <td>${{g[1]}},{{g[2]}},{{g[3]}}$</td>
+         <td>${{g['embedding']}}$</td>
+         <td><a href="{{g['triple_link']}}">${{g['triple']}}$</a></td>
          </tr>
       {% endfor %}
     </tbody>

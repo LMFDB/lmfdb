@@ -3,7 +3,7 @@
 from lmfdb.utils import web_latex
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import group_display_knowl
-from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
+from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import names_and_urls, prop_int_pretty
 from flask import url_for
 
@@ -21,7 +21,7 @@ geomtypelet_to_geomtypename_dict = {
 }
 
 
-def make_curve_latex(crv_str):
+def make_curve_latex(crv_str, nu = None):
     # FIXME: Get rid of nu when map is defined over QQ
     if "nu" not in crv_str:
         R0 = QQ
@@ -30,9 +30,20 @@ def make_curve_latex(crv_str):
     R = PolynomialRing(R0, 2, "x,y")
     F = FractionField(R)
     sides = crv_str.split("=")
-    lhs = latex(F(sides[0]))
-    rhs = latex(F(sides[1]))
-    eqn_str = lhs + "=" + rhs
+    lhs = F(sides[0])
+    rhs = F(sides[1])
+    if nu and ("nu" in crv_str):
+       R0 = CC
+       R = PolynomialRing(R0, 2, 'x,y')
+       new_lhs = dict()
+       new_rhs = dict()
+       for m, c in lhs.dict().items():
+           new_lhs[m] = c.subs(nu=nu)
+       for m, c in rhs.dict().items():
+           new_rhs[m] = c.subs(nu=nu)
+       lhs = R(new_lhs)
+       rhs = R(new_rhs)
+    eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
 
 
@@ -184,10 +195,10 @@ class WebBelyiGalmap(object):
         #if galmap['curve_label']:
         #    data['curve_label'] = galmap['curve_label']
 
+        data['embeddings'] = galmap['embeddings']
         # change pairs of floats to complex numbers
-        embeds = galmap["embeddings"]
         embed_strs = []
-        for el in embeds:
+        for el in galmap["embeddings"]:
             if el[1] < 0:
                 el_str = str(el[0]) + str(el[1]) + r"\sqrt{-1}"
             else:
@@ -196,23 +207,17 @@ class WebBelyiGalmap(object):
 
         data["map"] = make_map_latex(galmap["map"])
         data["embeddings_and_triples"] = []
-        if data["isQQ"]:
-            for i in range(0, len(data["triples_cyc"])):
-                triple_cyc = data["triples_cyc"][i]
-                data["embeddings_and_triples"].append(
-                    [
-                        r"\text{not applicable (over $\mathbb{Q}$)}",
-                        triple_cyc[0],
-                        triple_cyc[1],
-                        triple_cyc[2],
-                    ]
-                )
-        else:
-            for i in range(0, len(data["triples_cyc"])):
-                triple_cyc = data["triples_cyc"][i]
-                data["embeddings_and_triples"].append(
-                    [embed_strs[i], triple_cyc[0], triple_cyc[1], triple_cyc[2]]
-                )
+        for i in range(0, len(data["triples_cyc"])):
+            my_dict = {}
+            triple_str = ', '.join(data['triples_cyc'][i])
+            triple_link = triple_str.replace(' ','')
+            my_dict['triple'] = triple_str
+            my_dict['triple_link'] = triple_link
+            if data["isQQ"]:
+                my_dict['embedding'] = r"\text{not applicable (over $\mathbb{Q}$)}"
+            else:
+                my_dict['embedding'] = embed_strs[i]
+            data['embeddings_and_triples'].append(my_dict)
 
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
