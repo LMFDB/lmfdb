@@ -22,7 +22,6 @@ geomtypelet_to_geomtypename_dict = {
 
 
 def make_curve_latex(crv_str, nu = None):
-    # FIXME: Get rid of nu when map is defined over QQ
     if "nu" not in crv_str:
         R0 = QQ
     else:
@@ -33,22 +32,20 @@ def make_curve_latex(crv_str, nu = None):
     lhs = F(sides[0])
     rhs = F(sides[1])
     if nu and ("nu" in crv_str):
-       R0 = CC
-       R = PolynomialRing(R0, 2, 'x,y')
+       S = PolynomialRing(CC , 2, 'x,y')
+       # evaluate at nu, if given
        new_lhs = dict()
        new_rhs = dict()
        for m, c in lhs.dict().items():
            new_lhs[m] = c.subs(nu=nu)
        for m, c in rhs.dict().items():
            new_rhs[m] = c.subs(nu=nu)
-       lhs = R(new_lhs)
-       rhs = R(new_rhs)
+       lhs = S(new_lhs) # R, or something else, like CC[]?
+       rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
 
-
-def make_map_latex(map_str):
-    # FIXME: Get rid of nu when map is defined over QQ
+def make_map_latex(map_str, nu = None):
     if "nu" not in map_str:
         R0 = QQ
     else:
@@ -85,9 +82,22 @@ def make_map_latex(map_str):
     lc = lc * (num_gcd / den_gcd)
     num_new = num_new / num_gcd
     den_new = den_new / den_gcd
+    # evaluate at nu, if given
+    if nu and ("nu" in map_str):
+        S = PolynomialRing(CC , 2, 'x,y')
+        lc = lc.subs(nu=nu)
+        num_dict = dict()
+        den_dict = dict()
+        for m, c in num_new.dict().items():
+           num_dict[m] = c.subs(nu=nu)
+        for m, c in den_new.dict().items():
+           den_dict[m] = c.subs(nu=nu)
+        num_new = S(num_dict)
+        den_new = S(den_dict)
     # make strings for lc, num, and den
     num_str = latex(num_new)
     den_str = latex(den_new)
+
     if lc == 1:
         lc_str = ""
     else:
@@ -98,7 +108,7 @@ def make_map_latex(map_str):
         else:
             phi_str = lc_str + "(" + num_str + ")"
     else:
-        phi_str = lc_str + "\\frac{" + num_str + "}" + "{" + den_str + "}"
+        phi_str = lc_str + "\\frac{%s}{%s}" % (num_str, den_str)
     return phi_str
 
 
