@@ -85,7 +85,7 @@ jobs:
       shell: bash -l {0}
       run: |
         sage -pip install -r requirements.txt
-        pip install pyflakes pylint
+        pip install pyflakes pylint pycodestyle
 
     - name: checking that we didn't miss any test files
       shell: bash -l {0}

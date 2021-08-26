@@ -59,7 +59,7 @@ class WebMaassForm(object):
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$gt':self.maass_id}}
         forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
         if forms:
-            return forms[0];
+            return forms[0]
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': {'$gt': self.spectral_parameter}}
         forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
         return forms[0] if forms else None
@@ -69,7 +69,7 @@ class WebMaassForm(object):
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$lt':self.maass_id}}
         forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
         if forms:
-            return forms[0];
+            return forms[0]
         query = {'level':self.level,  'weight': self.weight, 'conrey_index':self.conrey_index, 'spectral_parameter': {'$lt': self.spectral_parameter}}
         forms = db.maass_forms.search(query, sort=["spectral_parameter","maass_id"], projection='maass_id', limit=1)
         return forms[0] if forms else None
