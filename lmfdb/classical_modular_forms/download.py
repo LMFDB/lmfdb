@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from ast import literal_eval
-from flask import  url_for, redirect, abort
+from flask import url_for, redirect, abort
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
+
 
 class CMF_download(Downloader):
     table = db.mf_newforms

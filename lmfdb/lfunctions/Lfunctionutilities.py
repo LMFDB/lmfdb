@@ -352,9 +352,9 @@ def lfuncEPhtml(L, fmt):
     good_primes = [p for p in prime_range(100) if p not in bad_primes]
     p_index = {p: i for i, p in enumerate(prime_range(100))}
 
-    #decide if we display galois
+    # decide if we display galois
     display_galois = True
-    if L.degree <= 2  or L.degree >= 12:
+    if L.degree <= 2 or L.degree >= 12:
         display_galois = False
     elif L.coefficient_field == "CDF":
         display_galois = False
@@ -580,7 +580,7 @@ def lfuncFEtex(L, fmt):
             return len(str(x).replace(".", "").lstrip("-").lstrip("0"))
 
         def mu_fe_prec(x):
-            if  not L.algebraic:
+            if not L.algebraic:
                 return real_digits(imag_part(x))
             else:
                 return 3

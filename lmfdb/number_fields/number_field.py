@@ -766,14 +766,15 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+
 def number_field_jump(info):
     query = {'label_orig': info['jump']}
     try:
-        parse_nf_string(info, query, 'jump',name="Label", qfield='label')
+        parse_nf_string(info, query, 'jump', name="Label", qfield='label')
         # we end up parsing the string twice, but that is okay
         F1, _, _ = input_string_to_poly(info['jump'])
         # we only use the output of input_string_to_poly with single-letter variable names
-        if F1  and len(str(F1.parent().gen())) == 1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
+        if F1 and len(str(F1.parent().gen())) == 1 and F1.list() != db.nf_fields.lookup(query['label'], 'coeffs'):
             flash_info(r"The requested field $\Q[{}]/\langle {}\rangle$ is isomorphic to the field below, but uses a different defining polynomial.".format(str(F1.parent().gen()), latex(F1)))
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:

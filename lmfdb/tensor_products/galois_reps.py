@@ -246,13 +246,12 @@ class GaloisRepresentation( Lfunction):
             R = PolynomialRing(K, "T")
             T = R.gens()[0]
             if self.conductor % p != 0:
-                return  1 - ComplexField()(chi(p)) * T
+                return 1 - ComplexField()(chi(p)) * T
             else:
                 return R(1)
 
         self.local_euler_factor = eu
         self.ld.gp().quit()
-
 
     def init_artin_rep(self, rho):
         """

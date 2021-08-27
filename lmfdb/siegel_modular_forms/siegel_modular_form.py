@@ -237,7 +237,7 @@ def render_dimension_table_page(args, bread):
             # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
             if not 'j' in info['args'] or not info['args']['j']:
                 info['args']['j'] = '0'
-        if not 'j' in family.latex_name and 'j' in info['args'] and  info['args']['j'] != '0':
+        if 'j' not in family.latex_name and 'j' in info['args'] and info['args']['j'] != '0':
             flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
             build_dimension_table (info, family, info['args'])

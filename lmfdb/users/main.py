@@ -330,7 +330,7 @@ def restart():
     urlparts = urlparse(request.url)
     if urlparts.netloc == "beta.lmfdb.org":
         command = ['bash', '/home/lmfdb/restart-dev']
-    elif urlparts.netloc in  ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
+    elif urlparts.netloc in ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
         command = ['bash', '/home/lmfdb/restart-web']
     else:
         command = None
