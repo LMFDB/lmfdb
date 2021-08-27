@@ -116,10 +116,15 @@ def interesting():
 # Galmaps, passports, triples and groups routes
 ###############################################################################
 
-@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>")
+@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/")
 def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
     label = "{}-{}_{}_{}-{}".format(group,sigma0,sigma1,sigmaoo,letnum)
     return render_belyi_galmap_webpage(label)
+
+@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/<triple>/")
+def by_url_embedded_belyi_map_label(group, sigma0, sigma1, sigmaoo, letnum, triple):
+    label = "{}-{}_{}_{}-{}".format(group,sigma0,sigma1,sigmaoo,letnum)
+    return render_embedded_belyi_map_webpage(label, triple)
 
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
 def by_url_belyi_passport_label(group, sigma0, sigma1, sigmaoo):
@@ -207,7 +212,6 @@ def by_url_belyi_search_group(group):
     info["group"] = group
     return belyi_search(info)
 
-
 def render_belyi_galmap_webpage(label):
     try:
         belyi_galmap = WebBelyiGalmap.by_label(label)
@@ -215,6 +219,25 @@ def render_belyi_galmap_webpage(label):
         return abort(404, err.args)
     return render_template(
         "belyi_galmap.html",
+        properties=belyi_galmap.properties,
+        info={},
+        data=belyi_galmap.data,
+        code=belyi_galmap.code,
+        bread=belyi_galmap.bread,
+        learnmore=learnmore_list(),
+        title=belyi_galmap.title,
+        downloads=belyi_galmap.downloads,
+        friends=belyi_galmap.friends,
+        KNOWL_ID="belyi.%s" % label,
+    )
+
+def render_embedded_belyi_map_webpage(label, triple):
+    try:
+        belyi_galmap = WebBelyiGalmap.by_label(label, triple=triple)
+    except (KeyError, ValueError) as err:
+        return abort(404, err.args)
+    return render_template(
+        "embedded_belyi_map.html",
         properties=belyi_galmap.properties,
         info={},
         data=belyi_galmap.data,

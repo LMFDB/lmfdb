@@ -27,10 +27,10 @@ def make_curve_latex(crv_str, nu = None):
     else:
         R0 = PolynomialRing(QQ, "nu")
     R = PolynomialRing(R0, 2, "x,y")
-    F = FractionField(R)
+    #F = FractionField(R)
     sides = crv_str.split("=")
-    lhs = F(sides[0])
-    rhs = F(sides[1])
+    lhs = R(sides[0])
+    rhs = R(sides[1])
     if nu and ("nu" in crv_str):
        S = PolynomialRing(CC , 2, 'x,y')
        # evaluate at nu, if given
@@ -137,11 +137,8 @@ class WebBelyiGalmap(object):
         title -- title to display on home page
     """
 
-    def __init__(self, galmap):
-        self.make_galmap_object(galmap)
-
     @staticmethod
-    def by_label(label):
+    def by_label(label, triple=None):
         """
         Searches for a specific Belyi map in the galmaps collection by its label.
         If label is for a passport, constructs an object for an arbitrarily chosen galmap in the passport
@@ -166,9 +163,9 @@ class WebBelyiGalmap(object):
                 )
             else:
                 raise KeyError("Belyi map %s not found in database." % label)
-        return WebBelyiGalmap(galmap)
+        return WebBelyiGalmap(galmap, triple=triple)
 
-    def make_galmap_object(self, galmap):
+    def __init__(self, galmap, triple=None):
         from lmfdb.belyi.main import url_for_belyi_passport_label, url_for_belyi_galmap_label
 
         # all information about the map goes in the data dictionary
@@ -177,6 +174,8 @@ class WebBelyiGalmap(object):
         # the stuff that does not need to be polished
         for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization", "is_primitive"):
             data[elt] = galmap[elt]
+        if triple:
+            data["label"] += '-' + (triple).replace(' ', '')
         nt = galmap["group"].split("T")
         data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
 
@@ -197,13 +196,6 @@ class WebBelyiGalmap(object):
                 data["isQQ"] = True
             F.latex_poly = web_latex(F.poly(var="t"))
             data["base_field"] = F
-        crv_str = galmap["curve"]
-        if crv_str == "PP1":
-            data["curve"] = r"\mathbb{P}^1"
-        else:
-            data["curve"] = make_curve_latex(crv_str)
-        #if galmap['curve_label']:
-        #    data['curve_label'] = galmap['curve_label']
 
         data['embeddings'] = galmap['embeddings']
         # change pairs of floats to complex numbers
@@ -214,13 +206,16 @@ class WebBelyiGalmap(object):
             else:
                 el_str = str(el[0]) + "+" + str(el[1]) + r"\sqrt{-1}"
             embed_strs.append(el_str)
-
-        data["map"] = make_map_latex(galmap["map"])
         data["embeddings_and_triples"] = []
+        self.triple = None
+        self.embedding = None
         for i in range(0, len(data["triples_cyc"])):
             my_dict = {}
             triple_str = ', '.join(data['triples_cyc'][i])
             triple_link = triple_str.replace(' ','')
+            if triple_link == triple:
+                self.triple = data['triples_cyc'][i]
+                self.embedding = CC(data['embeddings'][i])
             my_dict['triple'] = triple_str
             my_dict['triple_link'] = triple_link
             if data["isQQ"]:
@@ -229,6 +224,15 @@ class WebBelyiGalmap(object):
                 my_dict['embedding'] = embed_strs[i]
             data['embeddings_and_triples'].append(my_dict)
 
+        crv_str = galmap["curve"]
+        if crv_str == "PP1":
+            data["curve"] = r"\mathbb{P}^1"
+        else:
+            data["curve"] = make_curve_latex(crv_str, nu = self.embedding)
+        #if galmap['curve_label']:
+        #    data['curve_label'] = galmap['curve_label']
+
+        data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
 
         # Properties
@@ -239,9 +243,9 @@ class WebBelyiGalmap(object):
             properties += [(None, plot_link)]
         properties += [
             ("Group", str(galmap["group"])),
-            ("Orders", "$%s$" % (galmap["abc"])),
-            ("Genus", prop_int_pretty(galmap["g"])),
-            ("Size", prop_int_pretty(galmap["orbit_size"])),
+            ("Orders", "$%s$" % (data["abc"])),
+            ("Genus", prop_int_pretty(data["g"])),
+            ("Size", prop_int_pretty(data["orbit_size"])),
         ]
         self.properties = properties
 
@@ -319,10 +323,14 @@ class WebBelyiGalmap(object):
         ]
 
         # Title
-        self.title = "Belyi map orbit " + data["label"]
+        if self.triple:
+            self.title = "Embedded Belyi map " + data["label"]
+        else:
+            self.title = "Belyi map orbit " + data["label"]
 
         # Code snippets (only for curves)
         self.code = {}
+        self.__dict__.update(data)
         return
 
 
@@ -464,4 +472,5 @@ class WebBelyiPassport(object):
 
         # Code snippets (only for curves)
         self.code = {}
+        self.__dict__.update(data)
         return
