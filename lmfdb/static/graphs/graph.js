@@ -22,8 +22,7 @@ var dbug2 = '';
 // Highlight colors: these were for testing
 var selected_color = 'deepskyblue';
 var highlit_color = 'yellowgreen';
-
-
+var can_move_vertically = false;
 
 // Figure out the highlight color for activesubgp
 var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
@@ -698,7 +697,10 @@ class EventHandler {
   updateDrag(event) {
     if(this.activeNode) {
       if(this.options.moveNodeOnDrag) {
-              this.activeNode.center[0] = this.offset(event)[0];
+        this.activeNode.center[0] = this.offset(event)[0];
+        if(can_move_vertically) {
+          this.activeNode.center[1] = this.offset(event)[1];
+        }
       }
       this.options.updateNodeDrag(this.activeNode, event);
     }

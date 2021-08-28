@@ -28,6 +28,10 @@
     $("#subdiagram").height(h);
     $("#subdiagram").width(w+amt);
   }
+  function togglemovement()
+  {
+    can_move_vertically = $("#allMove").prop('checked');
+  }
 </script>
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
@@ -48,6 +52,11 @@
 <button onclick="newh(-100)">Less height</button>
 <button onclick="neww(100)">More width</button>
 <button onclick="neww(-100)">Less width</button>
+</div>
+<br />
+<div>
+Subgroups can be dragged in all directions?
+<input type="checkbox" id="allMove" onchange="togglemovement()" />
 </div>
 
 <h4>Subgroup information</h4>
