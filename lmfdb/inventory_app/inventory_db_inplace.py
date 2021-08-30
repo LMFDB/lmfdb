@@ -63,7 +63,7 @@ def update_fields(diff, storeRollback=True):
                     if ih.is_probable_record_hash(change['item']):
                         updated = idc.update_record_description(_c_id['id'], {'hash':change["item"], change["field"]:change["content"]})
                         if updated['err'] is False:
-                            succeeded = True;
+                            succeeded = True
                     if not succeeded:
                         updated = idc.update_field(_c_id['id'], change["item"], change["field"], change["content"], type="human")
 

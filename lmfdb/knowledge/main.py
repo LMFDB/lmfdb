@@ -701,9 +701,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # If we are rendering a reviewed knowl on nonbeta,
         # we always include the timestamp
         if timestamp is None and k.status == 1 and not is_beta():
-            kwargs['timestamp'] = k.ms_timestamp;
-
-
+            kwargs['timestamp'] = k.ms_timestamp
 
     # kw_params is inserted *verbatim* into the url_for(...) function inside the template
     # the idea is to pass the keyword arguments of the knowl further along the chain

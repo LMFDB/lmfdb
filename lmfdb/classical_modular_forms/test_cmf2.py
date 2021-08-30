@@ -99,7 +99,7 @@ class CmfTest(LmfdbTest):
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.get_data(as_text=True)
+            assert makenewform in page.get_data(as_text=True)
             magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
             self.assert_if_magma(expected, magma_code, mode='equal')
 
@@ -118,7 +118,7 @@ class CmfTest(LmfdbTest):
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.get_data(as_text=True)
+            assert makenewform in page.get_data(as_text=True)
             magma_code = page.get_data(as_text=True) + '\n' + '%s();\n' % makenewform
             self.assert_if_magma(expected, magma_code, mode='equal')
 

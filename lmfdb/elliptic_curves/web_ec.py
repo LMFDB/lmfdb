@@ -600,7 +600,7 @@ class WebEC(object):
                 tg['fields_missing'] = True
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \times '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab  for lab, pol in zip(bcs, bc_pols) if pol==F), None)
+            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol==F), None)
             if bcc:
                    from lmfdb.ecnf.main import split_full_label
                    F, NN, I, C = split_full_label(bcc)
