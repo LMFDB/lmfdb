@@ -249,7 +249,7 @@ def makeLfromdata(L):
                           for p, elt in L.bad_lfactors]
 
     # add missing bad factors
-    known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
+    known_bad_lfactors = [p for p, _ in L.bad_lfactors]
     for p in sorted([elt[0] for elt in L.level_factored]):
         if p not in known_bad_lfactors:
             L.bad_lfactors.append([p, [1, None]])
@@ -656,6 +656,7 @@ class Lfunction_from_db(Lfunction):
             return r"\Lambda(1-s)"
         else:
             return r"\overline{\Lambda}(1-s)"
+
     @lazy_attribute
     def texnamecompleted1ms_arithmetic(self):
         if self.selfdual:
@@ -665,7 +666,8 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def texnamecompleteds(self):
-        return  r"\Lambda(s)"
+        return r"\Lambda(s)"
+
     @lazy_attribute
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds

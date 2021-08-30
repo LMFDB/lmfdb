@@ -95,24 +95,24 @@ def make_keys(K,p):
             k0 = 20
             ok = False
             while not ok:
-                gfact = [h for h,e in g.factor_padic(p,k0)]
+                gfact = [h for h, e in g.factor_padic(p, k0)]
                 nfact = len(gfact)
                 gf = [h.lift() for h in gfact]
                 k1 = 1
-                while (k1<k0) and not ok:
-                    hh = [h % p**k1 for h  in gf]
-                    ok = len(Set(hh))==nfact
+                while (k1 < k0) and not ok:
+                    hh = [h % p**k1 for h in gf]
+                    ok = len(Set(hh)) == nfact
                     if not ok:
                         k1 += 1
                 if not ok:
-                    k0+=10
+                    k0 += 10
             # now hh holds the factors reduced mod p^k1 and these are
             # distinct so we sort the p-adic factors accordingly (these
             # will be first sorted by degree)
             gfact.sort(key=ZpX_key(k1))
             #print("p-adic factors: {}".format(gfact))
             #print("with keys {}".format([ZpX_key(k1)(h) for h in gfact]))
-            hh = [h.lift() % p**k1 for h  in gfact]
+            hh = [h.lift() % p**k1 for h in gfact]
             #print("p-adic factors mod {}^{}: {}".format(p,k1,hh))
             degs = list(Set([h.degree() for h in gfact]))
             hd = dict([(d,[h for h in hh if h.degree()==d]) for d in degs])
@@ -212,7 +212,8 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
     dlist = Set([1, 2]) if K.degree() == 2 else Set(sum([list(g.cycle_type()) for g in K.galois_group()],[]))
 
     # Create an array of iterators, one for each residue degree
-    PPs = [primes_of_degree_iter(K,d, condition, sort_key, maxnorm=maxnorm)  for d in dlist]
+    PPs = [primes_of_degree_iter(K, d, condition, sort_key, maxnorm=maxnorm)
+           for d in dlist]
 
     # pop the first prime off each iterator (allowing for the
     # possibility that there may be none):

@@ -280,15 +280,15 @@ class ECNF(object):
         self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
-        local_data.sort(key = lambda ld:ld['normp'])
+        local_data.sort(key=lambda ld: ld['normp'])
 
-        badprimes    = [pretty_ideal(Kgen, ld['p'], enclose=False) for ld in local_data]
-        badnorms     = [ld['normp']     for ld in local_data]
-        disc_ords    = [ld['ord_disc']  for ld in local_data]
-        mindisc_ords = [ld['ord_disc']  for ld in local_data]
-        cond_ords    = [ld['ord_cond']  for ld in local_data]
+        badprimes = [pretty_ideal(Kgen, ld['p'], enclose=False) for ld in local_data]
+        badnorms = [ld['normp'] for ld in local_data]
+        disc_ords = [ld['ord_disc'] for ld in local_data]
+        mindisc_ords = [ld['ord_disc'] for ld in local_data]
+        cond_ords = [ld['ord_cond'] for ld in local_data]
 
-        if self.conductor_norm==1:
+        if self.conductor_norm == 1:
             self.cond = r"\((1)\)"
             self.fact_cond = self.cond
             self.fact_cond_norm = '1'
@@ -470,7 +470,8 @@ class ECNF(object):
             self.ar = "not available"
 
         # for debugging:
-        assert self.rk=="not available" or (self.rk_lb==self.rank          and self.rank         ==self.rk_ub)
+        assert self.rk == "not available" or (self.rk_lb == self.rank and
+                                              self.rank == self.rk_ub)
         assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
 
         self.bsd_status = "incomplete"

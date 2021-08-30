@@ -167,7 +167,7 @@ class BMFTest(LmfdbTest):
         ]:
             page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
             assert expected in page
-            assert  'make_newform'  in page
+            assert 'make_newform' in page
 
             magma_code = page + '\n'
             magma_code += 'f, iso := Explode(make_newform());\n'

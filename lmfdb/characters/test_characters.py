@@ -141,11 +141,11 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
-        assert  '/NumberField/1.1.1.1' in W.get_data(as_text=True)
+        assert '/NumberField/1.1.1.1' in W.get_data(as_text=True)
 
     def test_valuefield(self):
         W = self.tc.get('/Character/Dirichlet/13/2')
-        assert  'Value field' in W.get_data(as_text=True)
+        assert 'Value field' in W.get_data(as_text=True)
 
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -188,7 +188,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/Character/Dirichlet/531/247' in W.get_data(as_text=True)
         assert '(119,415)' in W.get_data(as_text=True), "generators"
         assert 'Kloosterman sum' in W.get_data(as_text=True)
-        assert  r'(\zeta_{87})' in W.get_data(as_text=True), "field of values"
+        assert r'(\zeta_{87})' in W.get_data(as_text=True), "field of values"
 
     def test_dirichletchar6000lfunc(self):
         """ Check Sato-Tate group and L-function link for 6000/11  """
