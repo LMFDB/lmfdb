@@ -1172,6 +1172,8 @@ class PostgresTable(PostgresBase):
                 self.restore_pkeys(suffix=suffix)
             if self._id_ordered and resort:
                 ordered = self.resort(suffix=suffix)
+            else:
+                ordered = False
             if etable is not None:
                 ecols = SQL(", ").join([
                     SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
