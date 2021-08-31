@@ -205,7 +205,7 @@ class Downloader(object):
         cw = self.get('column_wrappers',{})
         id = lambda x: x
         for col in wo_label:
-            if not col in cw:
+            if col not in cw:
                 cw[col] = id
         # reissue query here
         try:

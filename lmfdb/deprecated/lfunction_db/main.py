@@ -14,7 +14,7 @@ def body_class():
 @mod.route("/")
 @mod.route("/<zero>")
 def zero_search(**kwargs):
-    if not 'zero' in kwargs:
+    if 'zero' not in kwargs:
         results = db.lfunc_zeros.search()
     else:
         zero = float(kwargs['zero'])

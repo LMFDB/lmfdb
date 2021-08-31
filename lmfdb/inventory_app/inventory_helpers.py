@@ -56,7 +56,7 @@ def is_toplevel_field(name):
 def is_record_name(item):
     """ Check for record items (document schemas)"""
     try:
-        if 'name' in item and not 'type' in item:
+        if 'name' in item and 'type' not in item:
             return True
         return False
     except Exception:

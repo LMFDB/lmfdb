@@ -150,7 +150,7 @@ class AVTest(LmfdbTest):
         assert 'y^2=3*x^6+18*x^5+15*x^4+12*x^3+x^2+5*x+18' in page.get_data(as_text=True)
 
         page = self.tc.get('Variety/Abelian/Fq/3.17.d_b_act', follow_redirects=True)
-        assert not 'Curves to text' in page.get_data(as_text=True)
+        assert 'Curves to text' not in page.get_data(as_text=True)
 
         page = self.tc.get('Variety/Abelian/Fq/download_curves/3.17.d_b_act', follow_redirects=True)
         assert 'No curves for abelian variety isogeny class 3.17.d_b_act' in page.get_data(as_text=True)

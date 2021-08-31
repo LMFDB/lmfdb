@@ -321,7 +321,7 @@ class ArtinRepresentation(object):
         p = 2
         hard_primes = self.hard_primes()
         while len(artfull)>1:
-            if not p in hard_primes:
+            if p not in hard_primes:
               k=0
               while k<len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
@@ -574,7 +574,7 @@ class ArtinRepresentation(object):
         return self.hard_factors()[i]
 
     def nf(self):
-        if not 'nf' in self._data:
+        if 'nf' not in self._data:
             self._data['nf']= self.number_field_galois_group()
         return self._data['nf']
 

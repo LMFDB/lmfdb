@@ -320,7 +320,7 @@ class LmfdbUser(UserMixin):
         checks if the given password for the user is valid.
         @return: True: OK, False: wrong password.
         """
-        if not 'password' in self._data and not 'bcpassword' in self._data:
+        if 'password' not in self._data and 'bcpassword' not in self._data:
             logger.warning("no password data in db for '%s'!" % self._uid)
             return False
         self._authenticated = userdb.authenticate(self._uid, pwd)

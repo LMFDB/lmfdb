@@ -66,7 +66,7 @@ class Genus2Test(LmfdbTest):
 
     def test_by_url_isogeny_class_discriminant(self):
         L = self.tc.get('/Genus2Curve/Q/15360/f/983040/')
-        assert '15360.f.983040.1' in L.get_data(as_text=True) and '15360.f.983040.2' in L.get_data(as_text=True) and not '15360.d.983040.1' in L.get_data(as_text=True)
+        assert '15360.f.983040.1' in L.get_data(as_text=True) and '15360.f.983040.2' in L.get_data(as_text=True) and '15360.d.983040.1' not in L.get_data(as_text=True)
 
     def test_random(self):
         for i in range(5):
