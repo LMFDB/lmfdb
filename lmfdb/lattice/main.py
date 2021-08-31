@@ -341,7 +341,7 @@ def vect_to_sym(v):
 def theta_display(label, number):
     try:
         number = int(number)
-    except:
+    except Exception:
         number = 20
     if number < 20:
         number = 30

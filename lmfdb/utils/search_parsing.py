@@ -1081,7 +1081,7 @@ def input_to_subfield(inp):
             raise SearchParsingError("You may only specify one subfield.")
         try:
             pol = PolynomialRing(QQ,'x')(str(F1))
-        except:
+        except Exception:
             raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():

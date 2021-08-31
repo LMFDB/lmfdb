@@ -758,7 +758,7 @@ class Lfunction_Maass(Lfunction):
             if self.level > 1:
                 try:
                     self.fricke = self.mf.fricke_eigenvalue
-                except:
+                except Exception:
                     raise KeyError('No Fricke information available for '
                                    + 'Maass form so not able to compute '
                                    + 'the L-function. ')
@@ -1350,7 +1350,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Compute Dirichlet coefficients ########################
         try:
             self.arith_coeffs = self.motive["coeffs"]
-        except:
+        except Exception:
             self.arith_coeffs = [Integer(k)
                                  for k in self.motive["coeffs_string"]]
         self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.)
