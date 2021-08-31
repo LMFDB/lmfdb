@@ -176,6 +176,7 @@ class WebBelyiGalmap(object):
             data[elt] = galmap[elt]
         if triple:
             data["label"] += '-' + (triple).replace(' ', '')
+            data["triple"] = triple
         nt = galmap["group"].split("T")
         data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
 
@@ -239,6 +240,8 @@ class WebBelyiGalmap(object):
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
         properties = [("Label", galmap["label"])]
+        if triple:
+            properties += [("Triple", "$%s$" % triple)]
         if self.plot:
             properties += [(None, plot_link)]
         properties += [
