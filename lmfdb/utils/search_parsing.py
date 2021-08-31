@@ -47,13 +47,14 @@ class PowMulNodeVisitor(ast.NodeTransformer):
         if isinstance(node.op, ast.Pow):
             if log2(self.visit(node.left)) * self.visit(node.right) > 3000:
                 raise ValueError('output will be too large')
-            return  self.visit(node.left) ** self.visit(node.right)
+            return self.visit(node.left) ** self.visit(node.right)
         elif isinstance(node.op, ast.Mult):
-            return  self.visit(node.left) * self.visit(node.right)
+            return self.visit(node.left) * self.visit(node.right)
+
     def visit_Constant(self, node):
         return ast.literal_eval(node)
-    if sys.version_info < (3,8):
-        def visit_Num(self, node): # deprecated for python >= 3.8
+    if sys.version_info < (3, 8):
+        def visit_Num(self, node):  # deprecated for python >= 3.8
             return self.visit_Constant(node)
 
 class SearchParser(object):
@@ -1355,12 +1356,14 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             parsed_values = list(sub_query.values())
             # asking for each value to be in the array
             if parse_singleton is str:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton and '-' not in val and ',' not in val]
             else:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton]
 
             if all_operand:
-                sub_query[qfield] = {'$all' : all_operand}
+                sub_query[qfield] = {'$all': all_operand}
 
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space

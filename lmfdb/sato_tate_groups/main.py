@@ -617,7 +617,7 @@ def mu_info(n):
     elif n > 2:
         rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
-    rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + ['1' if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['second_trace_moment'] = 1 if n <= 2 else 0
     rec['fourth_trace_moment'] = 1 if n <= 2 else 0
@@ -672,7 +672,7 @@ def su2_mu_info(w,n):
     rec['supgroups'] = comma_separated_list([st_link("%d.2.A.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
-    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['counts'] = []
     return rec
@@ -722,10 +722,11 @@ def nu1_mu_info(w,n):
     rec['supgroups'] = comma_separated_list([st_link("%d.2.B.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
-    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['counts'] = [['a_1', [[0,n]]]]
     return rec
+
 
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """

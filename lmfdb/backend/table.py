@@ -1172,6 +1172,8 @@ class PostgresTable(PostgresBase):
                 self.restore_pkeys(suffix=suffix)
             if self._id_ordered and resort:
                 ordered = self.resort(suffix=suffix)
+            else:
+                ordered = False
             if etable is not None:
                 ecols = SQL(", ").join([
                     SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table))
@@ -1486,7 +1488,11 @@ class PostgresTable(PostgresBase):
             If None, will use ``self._sort_orig``.
         """
 
-
+        print("resorting disabled")
+        # resorting without a reload makes replication stall
+        # and doesn't store data correctly on disk
+        # Given that our tables are readonly, we should just dump sorted and reload
+        return None
         search_table = Identifier(self.search_table + suffix)
         if self.extra_table:
             extra_table = Identifier(self.extra_table + suffix)

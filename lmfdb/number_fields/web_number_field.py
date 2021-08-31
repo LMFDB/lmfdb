@@ -840,7 +840,7 @@ class WebNumberField:
             ccgen = '['+','.join(ccreps)+']'
             ar = nfgg.artin_representations() # list of artin reps from db
             arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
-            gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;');
+            gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;')
             g = gap.Group(ccgen)
             h = g.Stabilizer('1')
             rc = g.RightCosets(h)

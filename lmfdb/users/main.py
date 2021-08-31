@@ -243,7 +243,7 @@ def register(N=10):
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
     if not userdb._rw_userdb:
-        flask.abort(401, "no attempt to create user, not enough privileges");
+        flask.abort(401, "no attempt to create user, not enough privileges")
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
         flask.abort(401)
@@ -330,7 +330,7 @@ def restart():
     urlparts = urlparse(request.url)
     if urlparts.netloc == "beta.lmfdb.org":
         command = ['bash', '/home/lmfdb/restart-dev']
-    elif urlparts.netloc in  ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
+    elif urlparts.netloc in ["prodweb1.lmfdb.xyz", "prodweb2.lmfdb.xyz"]:
         command = ['bash', '/home/lmfdb/restart-web']
     else:
         command = None

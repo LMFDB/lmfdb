@@ -77,7 +77,7 @@ class PostgresUserTable(PostgresBase):
                 existing_hash = bcrypt.gensalt().decode('utf-8')
             return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8')).decode('utf-8')
         except Exception:
-            logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
+            logger.warning("Failed to return bchash, perhaps bcrypt is not installed")
             return None
 
     def new_user(self, uid, pwd=None, full_name=None, about=None, url=None):
@@ -169,7 +169,7 @@ class PostgresUserTable(PostgresBase):
     def save(self, data):
         if not self._rw_userdb:
             logger.info("no attempt to save, not enough privileges")
-            return;
+            return
 
         data = dict(data) # copy
         uid = data.pop("username",None)
@@ -200,7 +200,7 @@ class PostgresUserTable(PostgresBase):
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
-            return;
+            return
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
         now = datetime.utcnow()
@@ -211,7 +211,7 @@ class PostgresUserTable(PostgresBase):
     def token_exists(self, token):
         if not self._rw_userdb:
             logger.info("no attempt to check if token exists, not enough privileges")
-            return False;
+            return False
         selecter = SQL("SELECT 1 FROM userdb.tokens WHERE id = %s")
         cur = self._execute(selecter, [token])
         return cur.rowcount == 1
@@ -219,7 +219,7 @@ class PostgresUserTable(PostgresBase):
     def delete_old_tokens(self):
         if not self._rw_userdb:
             logger.info("no attempt to delete old tokens, not enough privileges")
-            return;
+            return
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=8)
@@ -228,7 +228,7 @@ class PostgresUserTable(PostgresBase):
 
     def delete_token(self, token):
         if not self._rw_userdb:
-            return;
+            return
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])
 

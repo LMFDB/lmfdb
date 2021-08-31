@@ -14,6 +14,7 @@ def svgBegin():
     return ("<svg  xmlns='http://www.w3.org/2000/svg'"
             " xmlns:xlink='http://www.w3.org/1999/xlink'>\n")
 
+
 def svgEnd():
     return "</svg>"
 
@@ -21,22 +22,22 @@ def svgEnd():
 # Maass form for GL(n) n>2
 ###############################################################################
 
-#============
+# ============
 # url to add all degree-3, level-4 dots on one plot
 #   http://localhost:37777/L/browseGraph?group=GL3&level=4
-#=========
+# =========
 
 
-## ============================================
-## Returns all the html including links to the svg-files for Maass forms
-## of given degree (gives output for degree 3 and 4). Data is fetched from
-## the database.
-## ============================================
+# ============================================
+# Returns all the html including links to the svg-files for Maass forms
+# of given degree (gives output for degree 3 and 4). Data is fetched from
+# the database.
+# ============================================
 def getAllMaassGraphHtml(degree, signature=""):
     if degree == 3:
-        groups = [ ["GL3", [1 , 4] ] ] 
+        groups = [["GL3", [1, 4]]]
     elif degree == 4:
-        groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
+        groups = [["GSp4", [1]], ["GL4", [1]]]
     else:
         return ""
     if signature:
@@ -65,10 +66,10 @@ def getAllMaassGraphHtml(degree, signature=""):
 
     return(ans)
 
-## ============================================
-## Returns the header and information about the Gamma-factors for the
-## group with name group (in html and with math)
-## ============================================
+# ============================================
+# Returns the header and information about the Gamma-factors for the
+# group with name group (in html and with math)
+# ============================================
 
 
 def getGroupHtml(group):
@@ -165,11 +166,11 @@ def getGroupHtml(group):
     return(ans)
 
 
-## ============================================
-## Returns the header, some information and the url for the svg-file for
-## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation) (in html with math)
-## ============================================
+# ============================================
+# Returns the header, some information and the url for the svg-file for
+# the L-functions of the Maass forms for given group, level and
+# sign (of the functional equation) (in html with math)
+# ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:
         ans = ("<h4>L-functions of conductor " + str(gls[1]) + " and sign "
@@ -190,11 +191,11 @@ def getOneGraphHtml(gls):
 
     return(ans)
 
-## ============================================
-## Returns the url and width and height of the svg-file for
-## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation).
-## ============================================
+# ============================================
+# Returns the url and width and height of the svg-file for
+# the L-functions of the Maass forms for given group, level and
+# sign (of the functional equation).
+# ============================================
 
 
 def getGraphInfo(gls):
@@ -212,16 +213,16 @@ def getGraphInfo(gls):
 
     return(ans)
 
-## ============================================
-## Returns the width and height of the svg-file for
-## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation).
-## ============================================
+# ============================================
+# Returns the width and height of the svg-file for
+# the L-functions of the Maass forms for given group, level and
+# sign (of the functional equation).
+# ============================================
 
 
 def getWidthAndHeight(gls):
-    ## TODO: This should be adjusted
-    ##return ((700,450))
+    # TODO: This should be adjusted
+    # return ((700,450))
 
     xfactor = 20
     yfactor = 20
@@ -244,10 +245,10 @@ def getWidthAndHeight(gls):
 
     return((width, height))
 
-## ============================================
-## Returns the contents (as a string) of the svg-file for
-## the L-functions of the Maass forms for a set of given groups and levels
-## ============================================
+# ============================================
+# Returns the contents (as a string) of the svg-file for
+# the L-functions of the Maass forms for a set of given groups and levels
+# ============================================
 
 
 def paintSvgFileAll(glslist):  # list of group and level
@@ -287,7 +288,7 @@ def paintSvgFileAll(glslist):  # list of group and level
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
     for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
-        if float(x)>0 and float(y)>0:  #Only one of dual pair
+        if float(x) > 0 and float(y) > 0:  # Only one of dual pair
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
                                   level=level, char=char, R=R, ap_id=ap_id)
@@ -304,16 +305,18 @@ def paintSvgFileAll(glslist):  # list of group and level
     ans += svgEnd()
     return(ans)
 
-## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
+# ============================================
+# Returns the svg-code for a simple coordinate system.
+# width = width of the system
+# height = height of the system
+# xMax = maximum in first (x) coordinate
+# yMax = maximum in second (y) coordinate
+# xfactor = the number of pixels per unit in x
+# yfactor = the number of pixels per unit in y
+# ticlength = the length of the tickmarks
+# ============================================
+
+
 def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
@@ -357,16 +360,18 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
     return(xmlText)
 
-## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
+# ============================================
+# Returns the svg-code for a simple coordinate system.
+# width = width of the system
+# height = height of the system
+# xMax = maximum in first (x) coordinate
+# yMax = maximum in second (y) coordinate
+# xfactor = the number of pixels per unit in x
+# yfactor = the number of pixels per unit in y
+# ticlength = the length of the tickmarks
+# ============================================
+
+
 def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
@@ -390,7 +395,6 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5,
                              str(ysign*height - ticlength) + "' x2='" +
                              str(i * xfactor) + "' y2='" + str(ysign * height) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
-
 
     # y-axis
     xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
@@ -419,10 +423,10 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5,
 # This is normally picked from a static file created by this code.
 ###############################################################################
 
-## ============================================
-## Returns the header, some information and the url for the svg-file for
-## the L-functions of holomorphic cusp forms.
-## ============================================
+# ============================================
+# Returns the header, some information and the url for the svg-file for
+# the L-functions of holomorphic cusp forms.
+# ============================================
 def getOneGraphHtmlHolo(condmax):
     if condmax == 1:
         pic = (url_for('static', filename='images/browseGraphHoloNew_1.svg'), 2023, 610)
@@ -430,7 +434,7 @@ def getOneGraphHtmlHolo(condmax):
         pic = (url_for('static', filename='images/browseGraphHoloNew_0.501.svg'), 1020, 550)
     else:
         logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
-        pic = (url_for('.browseGraphHoloNew', **{'condmax':condmax}), 1010, 600)
+        pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
     ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
@@ -440,11 +444,11 @@ def getOneGraphHtmlHolo(condmax):
 
 
 # TODO cleanup here
-## ============================================
-## Returns the url and width and height of the svg-file for
-## the L-functions of holomorphic cusp form.
-## ============================================
-#def getGraphInfoHolo(condmax):
+# ============================================
+# Returns the url and width and height of the svg-file for
+# the L-functions of holomorphic cusp form.
+# ============================================
+# def getGraphInfoHolo(condmax):
 #    xfactor = 90
 #    yfactor = 30
 #    x_extraSpace = 50
@@ -460,10 +464,10 @@ def getOneGraphHtmlHolo(condmax):
 #
 #    return(ans)
 
-## ============================================
-## Returns the contents (as a string) of the svg-file for
-## the L-functions of holomorphic cusp forms.
-## ============================================
+# ============================================
+# Returns the contents (as a string) of the svg-file for
+# the L-functions of holomorphic cusp forms.
+# ============================================
 
 
 def paintSvgHoloNew(condmax):
@@ -476,14 +480,16 @@ def paintSvgHoloNew(condmax):
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
         return ["("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")"
-                for r,g,b in seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8)]
+                for r, g, b in seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8)]
 
     radius = 3
 
     values = {}
-    max_k = 0 # the largest weight we see
+    max_k = 0  # the largest weight we see
 
-    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','weight','conrey_indexes','dim','char_degree'],sort=[('analytic_conductor',1)]):
+    for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
+                                    projection=['analytic_conductor', 'label', 'weight', 'conrey_indexes', 'dim', 'char_degree'],
+                                    sort=[('analytic_conductor', 1)]):
         level, k, _, hecke_letter = nf['label'].split('.')
         if int(k) > max_k:
             max_k = int(k)
@@ -503,7 +509,6 @@ def paintSvgHoloNew(condmax):
                     if z1 is not None:
                         values[nf['weight']].append([label, z1, lfun_url, nf["analytic_conductor"]])
 
-
     points = []
     y_max = 0.0
     x_max = 0.0
@@ -519,19 +524,18 @@ def paintSvgHoloNew(condmax):
                 y_max = y
             if x > x_max:
                 x_max = x
-            points.append((x, y, lfun_url, ".".join(map(str,label)), k))
+            points.append((x, y, lfun_url, ".".join(map(str, label)), k))
 
     # Begin drawing
 
     ans = svgBegin()
-    ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
+    ans += "<g transform='translate(10 0)'>\n"  # give ourselves a little space
 
-    cfw = colorsForWeights(max_k) # pick our colour palette we need colors for weights 1 (at some point) to max_k inclusive
-
+    cfw = colorsForWeights(max_k)  # pick our colour palette we need colors for weights 1 (at some point) to max_k inclusive
 
     for p in points:
         x = str(p[0])
-        y = str(y_max + y_scale/2 - p[1]) # flip the graph + a little space as the largest value is approx 9.2
+        y = str(y_max + y_scale/2 - p[1])  # flip the graph + a little space as the largest value is approx 9.2
         ans += "<a xlink:href='" + "/L/" + p[2] + "/' target='_top'>\n"
         ans += "<circle cx='" + x
         ans += "' cy='" + y
@@ -554,6 +558,7 @@ def paintSvgHoloNew(condmax):
     ans += svgEnd()
 
     return ans
+
 
 def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     # the import must be here to avoid circular import
@@ -578,20 +583,20 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
     ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
-    #alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+    # alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
-# loop over levels and weights
+    # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
             try:
-                WS = WebGamma1Space(level = x, weight = y)
+                WS = WebGamma1Space(level=x, weight=y)
             except ValueError:
                 continue
             newspaces = WS.decomp
-            #numlabels = len(WS.decomp)  # one label per Galois orbit
-            #thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+            # numlabels = len(WS.decomp)  # one label per Galois orbit
+            # thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
             # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
             ybaseplus = y  # baseline y-coord for plus cases
@@ -602,7 +607,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                 for MF in newsp[1]:
                     print(MF)
                     linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
-                    numberwithlabel = MF['dim'] # number of forms in the Galois orbit
+                    numberwithlabel = MF['dim']  # number of forms in the Galois orbit
                     # frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
                     self_dual = MF['char_is_real'] * (-1) ** float(y / 2)  # sign of functional equation
                     xbase = x - self_dual * (xdotspacing / 2.0)
@@ -640,7 +645,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                             ybaseplus += 1.5 * ydotspacing
                     else:  # otherwise, use one dot per form in orbit, connected with a line
                         if numberwithlabel > 1:  # join dots if there are at least two
-    # add lines first and then dots to prevent line from hiding link
+                            # add lines first and then dots to prevent line from hiding link
                             firstcenterx = xbase + self_dual * xdotspacing
                             firstcentery = ybase
                             lastcenterx = xbase + (numberwithlabel * self_dual * xdotspacing)
@@ -664,17 +669,17 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     return ans
 
 
-## ============================================
-## Returns the svg-code for a simple coordinate system
-## INCLUDING a grid at the even lattice points.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
+# ============================================
+# Returns the svg-code for a simple coordinate system
+# INCLUDING a grid at the even lattice points.
+# width = width of the system
+# height = height of the system
+# xMax = maximum in first (x) coordinate
+# yMax = maximum in second (y) coordinate
+# xfactor = the number of pixels per unit in x
+# yfactor = the number of pixels per unit in y
+# ticlength = the length of the tickmarks
+# ============================================
 def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
@@ -723,17 +728,16 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     return(xmlText)
 
 
-
 ###############################################################################
 # Uncompleted code to create a more elaborate graph for cusp forms
 ###############################################################################
 
-## ===========================================
-## THIS HASN'T BEEN FINISHED AND TESTED
-## Returns the contents (as a string) of the svg-file for
-## the L-functions of holomorphic cusp forms.
-## General code to be used with plotsector routine.
-## ============================================
+# ===========================================
+# THIS HASN'T BEEN FINISHED AND TESTED
+# Returns the contents (as a string) of the svg-file for
+# the L-functions of holomorphic cusp forms.
+# General code to be used with plotsector routine.
+# ============================================
 def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     # the import must be here to avoid circular import
     from lmfdb.classical_modular_forms.web_newform import WebNewform
@@ -769,7 +773,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
             WS = WebGamma1Space(level = x, weight = y)  # space of modular forms of weight y, level x
-            galois_orbits = WS.decomp # make a list of Galois orbits
+            galois_orbits = WS.decomp  # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
@@ -826,12 +830,12 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                     if signfe == signtmp:  # we find an orbit with sign of "signtmp"
                         if signfe == 1:
                             dimensioninfo['edge'] = [[0, 1], [1, 0]]
-                                # unit vectors defining edges of sector for signfe positive
+                            # unit vectors defining edges of sector for signfe positive
                         else:
                             # dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges
                             # of sector for signfe negative
                             dimensioninfo['edge'] = [[0, -1], [-1, 0]]
-                                # unit vectors defining edges of sector for signfe negative
+                            # unit vectors defining edges of sector for signfe negative
                         dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
                         dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                         signcolour = signtocolour(signfe)
@@ -847,21 +851,21 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     ans += svgEnd()
     return(ans)
 
-#=====================
+# =====================
 
-## ============================================
+# ============================================
 #
 #
-## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
+# ============================================
+# Returns the svg-code for a simple coordinate system.
+# width = width of the system
+# height = height of the system
+# xMax = maximum in first (x) coordinate
+# yMax = maximum in second (y) coordinate
+# xfactor = the number of pixels per unit in x
+# yfactor = the number of pixels per unit in y
+# ticlength = the length of the tickmarks
+# ============================================
 # ============================================
 
 
@@ -923,14 +927,14 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     return(xmlText)
 
 
-## ============================================
-## Plot the dots in a sector
-##
-## We work in "working coordinates" and then convert to screen coordinates
-## via the scoord function
-##
-## ToDo: list of definitions/inputs, and check that they are called correctly
-## ============================================
+# ============================================
+# Plot the dots in a sector
+#
+# We work in "working coordinates" and then convert to screen coordinates
+# via the scoord function
+#
+# ToDo: list of definitions/inputs, and check that they are called correctly
+# ============================================
 def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     ans = ""
     scale = dimensioninfo['scale']
@@ -954,8 +958,8 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     # ans += myline(offset, scale, vertexlocation, lincomb(1, vertexlocation, parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
     # ans += "\n"
 
- # now iterate over the orbits
- # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
+    # now iterate over the orbits
+    # "orbitbase" is the starting point of an orbit, which initially is the "firstdotoffset"
     orbitbase = lincomb(1, vertexlocation, 1, dimensioninfo['firstdotoffset'])
     for orbit in urlinfo['space']['orbits']:
         # first determine if we should draw a line connecting the dots in an orbit, since want line beneath dots
@@ -991,26 +995,26 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
     return(ans)
 
-## ==================
-## addlists:  adds two lists as if they were vectors
-## ===================
+# ==================
+# addlists:  adds two lists as if they were vectors
+# ===================
 
 
 def addlists(list1, list2):
     return([list1[j] + list2[j] for j in range(len(list1))])
 
-## ==================
-## lincomb:  adds a v1 + b v2 as if lists v1, v2 were vectors
-## ===================
+# ==================
+# lincomb:  adds a v1 + b v2 as if lists v1, v2 were vectors
+# ===================
 
 
 def lincomb(scalar1, list1, scalar2, list2):
     return([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
 
 
-## ============================================
-## mydot: Draw a dot
-## ============================================
+# ============================================
+# mydot: Draw a dot
+# ============================================
 def mydot(offset, scale, startpt, radius, color, shape, title):
     ans = "<circle "
     mystartpt = scoord(offset, scale, startpt)
@@ -1024,11 +1028,11 @@ def mydot(offset, scale, startpt, radius, color, shape, title):
     return(ans)
 
 
-## ============================================
-## mytext: Place text in an svg, taking as input the offset and scale of the
-##    of the output coordinates, and the local coordinates of the
-##    location of the text
-## ============================================
+# ============================================
+# mytext: Place text in an svg, taking as input the offset and scale of the
+#    of the output coordinates, and the local coordinates of the
+#    location of the text
+# ============================================
 def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcolor):
     ans = "<text "
     mystartpt = scoord(offset, scale, startpt)
@@ -1044,12 +1048,12 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
     return(ans)
 
 
-## ============================================
-## myline: Draw a line, taking as input the offset and scale of the
-##    of the output coordinates, and the local coordinates of the
-##    start and end points, and some information about the appearance
-##    of the line
-## ============================================
+# ============================================
+# myline: Draw a line, taking as input the offset and scale of the
+#    of the output coordinates, and the local coordinates of the
+#    start and end points, and some information about the appearance
+#    of the line
+# ============================================
 def myline(offset, scale, startpt, endpt, width, style, color):
     if startpt == endpt:
         return("")
@@ -1070,12 +1074,12 @@ def myline(offset, scale, startpt, endpt, width, style, color):
     return(ans)
 
 
-## =================
-## scoord: convert from working coordinates to screen coordinates
-##  base + scale * localcoord
-##  since vec1 * vec2 does not do coordinatewise multiplication,
-##  we have to do it by hand
-## ================
+# =================
+# scoord: convert from working coordinates to screen coordinates
+#  base + scale * localcoord
+#  since vec1 * vec2 does not do coordinatewise multiplication,
+#  we have to do it by hand
+# ================
 def scoord(base, scale, wc):
     rescaled = [base[j] + scale[j] * wc[j] for j in range(len(scale))]
     return(rescaled)
