@@ -1554,7 +1554,7 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-    except:
+    except Exception:
         return ""
 
     plotrange = 30
@@ -1726,7 +1726,7 @@ def processEllipticCurveNavigation(startCond, endCond):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1735,7 +1735,7 @@ def processEllipticCurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = isogeny_class_table(N, end)
@@ -1775,7 +1775,7 @@ def processGenus2CurveNavigation(startCond, endCond):
             N = 169
         elif N > 1000:
             N = 1000
-    except:
+    except Exception:
         N = 169
 
     try:
@@ -1784,7 +1784,7 @@ def processGenus2CurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = genus2_isogeny_class_table(N, end)
@@ -1823,7 +1823,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1832,7 +1832,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 100
 
     iso_list = isogeny_class_table(N, end)
@@ -1895,7 +1895,7 @@ def source(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
@@ -1924,7 +1924,7 @@ def completeness(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
@@ -1951,7 +1951,7 @@ def reliability(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)

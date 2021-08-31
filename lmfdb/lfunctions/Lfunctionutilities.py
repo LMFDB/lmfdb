@@ -69,7 +69,7 @@ def string2number(s):
             return float(strs)
         else:
             return Integer(strs)
-    except:
+    except Exception:
         return s
 
 
@@ -81,7 +81,7 @@ def styleTheSign(sign):
         if sign == 0:
             return "unknown"
         return seriescoeff(sign, 0, "literal", "", 3)
-    except:
+    except Exception:
         logger.debug("no styling of sign")
         return str(sign)
 
@@ -765,7 +765,7 @@ def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
 
         try:
             ev2[p] = (ev[p], ev[p * p])
-        except:
+        except Exception:
             break
 
     logger.debug(str(ev2))
@@ -853,7 +853,7 @@ def getConductorIsogenyFromLabel(label):
             iso = iso[:-1]
         return cond, iso
 
-    except:
+    except Exception:
         return None, None
 
 

@@ -559,7 +559,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     try:
         numeigs = request.args['numeigs']
         numeigs = int(numeigs)
-    except:
+    except Exception:
         numeigs = 20
     info['numeigs'] = numeigs
     

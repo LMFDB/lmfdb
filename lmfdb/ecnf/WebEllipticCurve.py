@@ -174,7 +174,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
         return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
-    except:
+    except Exception:
         return text("Unable to plot", (1, 1), fontsize=36)
 
 def ec_disc(ainvs):

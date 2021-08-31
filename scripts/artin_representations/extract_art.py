@@ -36,7 +36,7 @@ try:
     if bound is None or bound<1:
         print("Bound is not valid")
         sys.exit()
-except:
+except Exception:
     print("Bound is not valid")
     sys.exit()
 

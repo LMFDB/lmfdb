@@ -679,7 +679,7 @@ def web_latex_split_on_pm(x):
  #   A = "\( %s \)" % latex(x)
     try:
         A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
-    except:
+    except Exception:
         A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly

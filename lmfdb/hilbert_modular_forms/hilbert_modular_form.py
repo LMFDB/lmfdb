@@ -429,7 +429,7 @@ def render_hmf_webpage(**args):
     try:
         numeigs = request.args['numeigs']
         numeigs = int(numeigs)
-    except:
+    except Exception:
         numeigs = 20
     info['numeigs'] = numeigs
 

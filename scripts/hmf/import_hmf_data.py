@@ -219,7 +219,7 @@ def import_data(hmf_filename):
         AL_eigsin = [hecke_eigenvalues[c] for c in ALind]
         try:
             assert all([abs(int(c)) <= 1 for c in AL_eigsin])
-        except:
+        except Exception:
             ferrors.write(str(n) + '/' + str(d) + ' ' + label + '\n')
 
         AL_eigenvalues = []

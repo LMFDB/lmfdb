@@ -10,7 +10,7 @@ class inventory_data:
     try:
       key_data = self.orphans[previous]
       self.data[new] = key_data
-    except:
+    except Exception:
       pass
 
   def get_outdated_keys(self):
