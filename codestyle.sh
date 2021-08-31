@@ -8,7 +8,7 @@
 
 # increased line length. might get shorter in time ... for now even ignored
 #ARGS='--max-line-length=120 --ignore=E501'
-ARGS='--select=E703,E271,E272,E722'
+ARGS='--select=E703,E271,E272,E714,E722'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then
