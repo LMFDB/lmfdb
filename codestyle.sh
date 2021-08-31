@@ -8,7 +8,12 @@
 
 # increased line length. might get shorter in time ... for now even ignored
 #ARGS='--max-line-length=120 --ignore=E501'
-ARGS='--select=E703,E271,E272,E714,E722'
+# E271 	multiple spaces after keyword
+# E272 	multiple spaces before keyword
+# E703 	statement ends with a semicolon
+# E714 test for object identity should be ‘is not’
+# E722 	do not use bare except, specify exception instead
+ARGS='--select=E271,E272,E703,E714,E722'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then
