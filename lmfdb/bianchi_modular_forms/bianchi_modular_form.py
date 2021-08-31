@@ -151,7 +151,7 @@ def bianchi_modular_form_search(info, query):
          qfield='field_bad_primes',mode=info.get('field_bad_quantifier'))
     parse_primes(info, query, 'level_bad_primes', name='level bad primes',
          qfield='level_bad_primes',mode=info.get('level_bad_quantifier'))
-    if not 'sfe' in info:
+    if 'sfe' not in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
         query['sfe'] = int(info['sfe'])

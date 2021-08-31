@@ -36,7 +36,7 @@ def get_hmf(label):
     f = db.hmf_forms.lookup(label)
     if f is None:
         return None
-    if not 'hecke_polynomial' in f:
+    if 'hecke_polynomial' not in f:
         # Hecke data now stored in separate hecke collection:
         h = db.hmf_hecke.lookup(label)
         if h:

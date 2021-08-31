@@ -82,7 +82,7 @@ from .LfunctionDatabase import (
 
 
 def validate_required_args(errmsg, args, *keys):
-    missing_keys = [key for key in keys if not key in args]
+    missing_keys = [key for key in keys if key not in args]
     if len(missing_keys):
         raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
 
