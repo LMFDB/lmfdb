@@ -369,13 +369,13 @@ class WebBelyiPassport(object):
         return WebBelyiPassport(passport)
 
     def make_passport_object(self, passport):
-        from lmfdb.belyi.main import url_for_belyi_galmap_label
+        from lmfdb.belyi.main import url_for_belyi_galmap_label, url_for_belyi_passport_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
 
-        for elt in ("plabel", "abc", "num_orbits", "g", "abc", "deg", "maxdegbf"):
+        for elt in ("plabel", "abc", "num_orbits", "g", "abc", "deg", "maxdegbf", "is_primitive", "primitivization"):
             data[elt] = passport[elt]
 
         nt = passport["group"].split("T")
@@ -384,6 +384,7 @@ class WebBelyiPassport(object):
         data["geomtype"] = geomtypelet_to_geomtypename_dict[passport["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in passport["lambdas"]]
         data["pass_size"] = passport["pass_size"]
+        data["primitivization_url"] = url_for_belyi_passport_label(data['primitivization'])
 
         # Permutation triples
         galmaps_for_plabel = db.belyi_galmaps_more.search(
