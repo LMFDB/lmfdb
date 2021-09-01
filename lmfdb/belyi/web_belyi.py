@@ -228,8 +228,15 @@ class WebBelyiGalmap(object):
             data["curve"] = r"\mathbb{P}^1"
         else:
             data["curve"] = make_curve_latex(crv_str, nu = self.embedding)
-        #if galmap['curve_label']:
-        #    data['curve_label'] = galmap['curve_label']
+        # TODO: fix url thing
+        #add curve link, if in LMFDB
+        if 'curve_label' in galmap.keys():
+            data['curve_label'] = galmap['curve_label']
+            for el in galmap["friends"]:
+                if "Curve" in el:
+                    data["curve_url"] = el
+            #if data['g'] == 1:
+                #data['curve_url'] = url_for("ec.by_ec_label", label=galmap['curve_label'])
 
         data["map"] = make_map_latex(galmap["map"], nu = self.embedding)
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
