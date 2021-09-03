@@ -161,6 +161,10 @@
  </table>		
 #}
 
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
 
 <h3>{{KNOWL('group.subgroup.diagram.lmfdb','Subgroup diagram')}} and profile</h3>
 <p>
@@ -215,8 +219,8 @@ Click on a subgroup in the diagram to see information about it.
 <p>
 <div id="positions">
 </div>
-<a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 {% endif %}
+<a href="{{url_for('.sub_diagram', label=gp.label)}}">See a full page version of the diagram</a>
 {% endif %}
 {% else %}
 There are too many classes of subgroups to display.

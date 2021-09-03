@@ -3,6 +3,13 @@
 
 {% block body %}
 
+
+
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
+
 <script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
 <script type="text/javascript">
   $(document).ready(
@@ -36,9 +43,6 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
-
-<div id="main">
-
 <canvas id="subdiagram" width="{{ info.w }}" height="{{ info.h }}" style="border: 0px solid black">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
@@ -64,6 +68,5 @@ Subgroups can be dragged in all directions?
 Click on a subgroup in the diagram to see information about it.
 </div>
 
-</div>
 
 {% endblock %}

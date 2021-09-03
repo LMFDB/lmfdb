@@ -36,7 +36,8 @@ for (var j = 0; j < classes.length; j++) {
 }
 
 // A darker color: easier since these items exist in the DOM
-var selected_color = $(".link").css('background-color');
+// This is moved later because of some issue with load order
+selected_color = $("#group-diagram-selected").css('background-color');
 
 Graph = class {
     constructor(ambient) {
@@ -229,6 +230,8 @@ class Renderer {
         var lft = node.center[0]-0.5*img.width;
 
         if(node.selected) {
+          // Just get it here, used to be at the start
+          selected_color = $("#group-diagram-selected").css('background-color');
           ctxt.fillStyle= selected_color;
           ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
         } else if(node.highlit) {
