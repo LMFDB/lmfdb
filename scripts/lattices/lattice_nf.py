@@ -59,7 +59,7 @@ def add_lattice_nf(ll):
     
     try:
         lab=nf_label+lat_label
-    except:
+    except Exception:
         print(nf_label, lat_label)
         print("fail")
             

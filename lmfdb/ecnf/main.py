@@ -489,7 +489,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
-    if 'torsion_structure' in query and not 'torsion_order' in query:
+    if 'torsion_structure' in query and 'torsion_order' not in query:
         t_o = 1
         for n in query['torsion_structure']:
             t_o *= int(n)
@@ -620,7 +620,7 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if not r in range(d%2,d+1,2):
+    if r not in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
@@ -700,7 +700,7 @@ def ecnf_code(**args):
     for k in sorted_code_names:
         if Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if not '\n' in Ecode[k] else '')
+            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
     return code
 
 def disp_tor(t):

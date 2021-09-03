@@ -174,7 +174,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
         return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
-    except:
+    except Exception:
         return text("Unable to plot", (1, 1), fontsize=36)
 
 def ec_disc(ainvs):
@@ -385,7 +385,7 @@ class ECNF(object):
 
         # Galois images in CM case:
         if self.cm and self.galois_images != '?':
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if p not in self.non_surjective_primes]
             self.cm_nramp = len(self.cm_ramp)
             if self.cm_nramp==1:
                 self.cm_ramp = self.cm_ramp[0]
@@ -598,13 +598,13 @@ class ECNF(object):
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
-        if totally_real and not 'Lfunction' in self.urls:
+        if totally_real and 'Lfunction' not in self.urls:
             self.friends += [('Hilbert modular form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
                 self.friends += [('Bianchi modular form is not cuspidal', '')]
-            elif not 'Lfunction' in self.urls:
+            elif 'Lfunction' not in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
                     self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
                 else:

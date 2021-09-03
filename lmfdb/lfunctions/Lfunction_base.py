@@ -235,7 +235,7 @@ class Lfunction(object):
             try:
                 info['sv_edge'] = specialValueString(self, 1, '1')
                 info['sv_critical'] = specialValueString(self, 0.5, '1/2')
-            except:
+            except Exception:
                 info['sv_critical'] = "L(1/2): not computed"
                 info['sv_edge'] = "L(1): not computed"
 

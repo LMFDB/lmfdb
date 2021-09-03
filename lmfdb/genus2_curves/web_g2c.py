@@ -92,7 +92,7 @@ def min_eqns_pretty(fh):
 
 
 def url_for_ec(label):
-    if not '-' in label:
+    if '-' not in label:
         return url_for('ec.by_ec_label', label = label)
     else:
         (nf, cond, isog, num) = split_ecnf_label(label)
@@ -100,7 +100,7 @@ def url_for_ec(label):
         return url
 
 def url_for_ec_class(ec_label):
-    if not '-' in ec_label:
+    if '-' not in ec_label:
         (cond, iso, num) = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:

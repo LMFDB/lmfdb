@@ -40,7 +40,7 @@ def is_special_field(name):
         if name[0] =='_' and name[-1]=='_':
             return True
         return False
-    except:
+    except Exception:
         return False
 
 def is_toplevel_field(name):
@@ -50,16 +50,16 @@ def is_toplevel_field(name):
         if name == "top_level":
             return True
         return False
-    except:
+    except Exception:
         return False
 
 def is_record_name(item):
     """ Check for record items (document schemas)"""
     try:
-        if 'name' in item and not 'type' in item:
+        if 'name' in item and 'type' not in item:
             return True
         return False
-    except:
+    except Exception:
         return False
 def is_probable_record_hash(name):
     """ Check whether given name seems to be a record identifier
@@ -68,7 +68,7 @@ def is_probable_record_hash(name):
         reg = r"([a-fA-F\d]{32})"
         #32 digits all either a-f or a number
         return (re.match(reg, name) is not None)
-    except:
+    except Exception:
         return False
 
 def make_empty_record(eg):
@@ -96,7 +96,7 @@ def transform_examples(str, backwards=False):
             return '`'+str+'`'
         else:
             return str
-    except:
+    except Exception:
         return str
 
 def escape_for_display(obj):
@@ -127,7 +127,7 @@ def null_empty_field(value):
             return None
         else:
             return value
-    except:
+    except Exception:
         return value
 
 def blank_all_empty_fields(obj):
@@ -146,7 +146,7 @@ def blank_empty_field(value):
             return ''
         else:
             return value
-    except:
+    except Exception:
         return value
 
 def empty_null_record_info(records):

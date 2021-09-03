@@ -135,7 +135,7 @@ def is_base_type(object):
         if (f.is_integer()):
             bv = bv | integer_type
         return bv
-    except:
+    except Exception:
         pass
 
     if is_string(object):
@@ -174,7 +174,7 @@ def is_string_of(object):
             continue
         try:
             sub_type = is_same_type(r_type, sub_type, strict=False)
-        except:
+        except Exception:
             sub_type = python_mixed
             break
     if sub_type == string_type:

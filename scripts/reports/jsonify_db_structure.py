@@ -95,15 +95,15 @@ def _jsonify_table_info(table, dbname = None):
             rls = get_sample_record(table, str(doc))
             try:
                 typedesc = get_description(rls[str(doc)])
-            except:
+            except Exception:
                 typedesc = 'Type cannot be identified (' \
                            + str(type(rls[str(doc)])) + ')'
             try:
                 strval =  str(rls[str(doc)]).decode('unicode_escape').\
                           encode('ascii','ignore')
-            except:
+            except Exception:
                 strval = 'Record cannot be stringified'
-        except:
+        except Exception:
             typedesc = 'Record cannot be found containing key'
             strval = 'N/A'
 
