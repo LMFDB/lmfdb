@@ -973,7 +973,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
 
         label = "%s.%s"%(self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
-        if not myrep is None:
+        if myrep is not None:
             j=myrep['Dets'].index(label)
             artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,

@@ -77,12 +77,12 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
             delete_collection_data(_c_id['id'], tbl='auto')
         try:
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
-        except:
+        except Exception:
             scrape_date = datetime.datetime.min
 
         invc.set_coll_scrape_date(_c_id['id'], scrape_date)
 
-    except:
+    except Exception:
         pass
 
     try:
@@ -91,7 +91,7 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
             #Add any keys needed to human_table
             invc.create_field(_c_id['id'], field, 'human')
 
-    except:
+    except Exception:
         pass
 
     orphaned_keys = []
@@ -99,7 +99,7 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
         try:
             #Trim any human table keys which are now redundant
             orphaned_keys = invc.trim_human_table(db_entry['id'], _c_id['id'])
-        except:
+        except Exception:
             pass
 
     return orphaned_keys
@@ -120,7 +120,7 @@ def extract_specials(coll_entry):
     try:
         coll_entry.pop(notes)
         coll_entry.pop(info)
-    except:
+    except Exception:
         pass
     return {inv.STR_NOTES:notes_entry, inv.STR_INFO: info_entry, 'data': coll_entry}
 
@@ -130,14 +130,14 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
     try:
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
-    except:
+    except Exception:
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
         #err = upload_indices(db, coll_info['id'], data)
         upload_indices(db, coll_info['id'], data)
         # TODO rethrow if err
-    except:
+    except Exception:
         return {'err':True, 'mess':'Failed to upload'}
     return {'err':False, 'mess':''}
 
@@ -160,7 +160,7 @@ def delete_contents(tbl_name, check=True):
     try:
         #TODO if keep, below should delete all records
         lmfdb_db[tbl_name].empty()
-    except:
+    except Exception:
         pass
 
 def delete_all_tables():
@@ -176,7 +176,7 @@ def delete_all_tables():
     for tbl in tbls:
         try:
             delete_contents(tbl)
-        except:
+        except Exception:
             pass
 
 def delete_collection_data(coll_id, tbl, dry_run=False):
@@ -203,7 +203,7 @@ def delete_collection_data(coll_id, tbl, dry_run=False):
             curs = lmfdb_db[fields_tbl].search(rec_find)
             for item in curs:
                 print(item)
-    except:
+    except Exception:
         pass
 
 def delete_by_collection(db_name, coll_name):
@@ -212,7 +212,7 @@ def delete_by_collection(db_name, coll_name):
     try:
         _db_id = invc.get_db_id(db_name)
         _c_id = invc.get_coll_id(_db_id['id'], coll_name)
-    except:
+    except Exception:
         return {'err':True, 'id':0, 'exist':False}
 
     #Remove fields entries matching _c_id
@@ -222,7 +222,7 @@ def delete_by_collection(db_name, coll_name):
 
     try:
         lmfdb_db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].delete({'_id':_c_id['id']})
-    except:
+    except Exception:
         pass
 
 #End table removal -----------------------------------------------------------------------
@@ -238,7 +238,7 @@ def recreate_rollback_table(sz):
     try:
         #TODO clearout rollbacks here
         pass
-    except:
+    except Exception:
         #TODO Do something useful here?
         pass
     #TODO replace with a recreate of rollbacks

@@ -205,20 +205,20 @@ class Downloader(object):
         cw = self.get('column_wrappers',{})
         id = lambda x: x
         for col in wo_label:
-            if not col in cw:
+            if col not in cw:
                 cw[col] = id
         # reissue query here
         try:
-            query = literal_eval(info.get('query','{}'))
+            query = literal_eval(info.get('query', '{}'))
             data = list(self.table.search(query, projection=proj))
             if label_col:
                 label_list = [res[label_col] for res in data]
             if onecol:
                 res_list = [cw[wo_label[0]](res.get(wo_label[0])) for res in data]
             else:
-                res_list = [[cw[col](res.get(col)) for col in wo_label]  for res in data]
+                res_list = [[cw[col](res.get(col)) for col in wo_label] for res in data]
         except Exception as err:
-            return abort(404, "Unable to parse query: %s"%err)
+            return abort(404, "Unable to parse query: %s" % err)
         c = self.comment_prefix[lang]
         s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
         if label_col:

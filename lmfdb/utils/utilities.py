@@ -95,7 +95,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
                     val = ZZ(elt).valuation(p)
                     gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
-        if  e > 1:
+        if e > 1:
             if len(glatex) != 1:
                 outstr += '( %s )^{%d}' % (glatex, e)
             else:
@@ -679,7 +679,7 @@ def web_latex_split_on_pm(x):
  #   A = "\( %s \)" % latex(x)
     try:
         A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
-    except:
+    except Exception:
         A = r"\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly

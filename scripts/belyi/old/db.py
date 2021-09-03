@@ -30,7 +30,7 @@ def makeDBconnection_write():
         db = pw_dict['db']
         _Cwrite[db].authenticate(username, password)
         print("Logged in as %s in %s!1!1!" % (username, db,))
-    except:
+    except Exception:
         print("Failed to login")
 
 def getDBconnection_write():

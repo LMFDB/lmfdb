@@ -150,7 +150,7 @@ class HomePageTest(LmfdbTest):
             try:
                 n = n + 1
                 self.check(full_label, [full_label, "Hecke eigenform"])
-            except:
+            except Exception:
                 print("\nError on page " + full_label)
                 errors.append(full_label)
         if not errors:

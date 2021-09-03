@@ -390,7 +390,7 @@ def genus2_curve_search(info, query):
     parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
     parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
     parse_ints(info,query,'torsion_order','torsion order')
-    if 'torsion' in query and not 'torsion_order' in query:
+    if 'torsion' in query and 'torsion_order' not in query:
         t_o = 1
         for n in query['torsion']:
             t_o *= int(n)

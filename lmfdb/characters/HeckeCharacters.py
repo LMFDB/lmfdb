@@ -52,7 +52,7 @@ class RayClassGroup(AbelianGroup_class):
     def _element_constructor_(self, *args, **kwargs):
         try:
             return AbelianGroupElement(args[0], self)
-        except:
+        except Exception:
             I = self.__number_field.ideal(*args, **kwargs)
             return AbelianGroupElement(self, self.log(I))
 
@@ -142,7 +142,7 @@ class HeckeChar(DualAbelianGroupElement):
     def logvalue(self, x):
         try:
             E = self.parent().group()(x)
-        except:
+        except Exception:
             return None
         E = E.exponents()
         F = self.exponents()
@@ -160,7 +160,7 @@ class HeckeChar(DualAbelianGroupElement):
     def __call__(self, x):
         try:
             logx = self.parent().group()(x)
-        except:
+        except Exception:
             return 0
         return DualAbelianGroupElement.__call__(self,logx)
 

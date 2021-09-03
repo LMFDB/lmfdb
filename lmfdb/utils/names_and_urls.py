@@ -86,20 +86,19 @@ def name_and_object_from_url(url, check_existence=False):
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
                     newform_label = ".".join(url_split[-6:-2])
                     conrey_newform_label = ".".join(url_split[-6:])
-                    name =  'Modular form ' + conrey_newform_label
+                    name = 'Modular form ' + conrey_newform_label
                     obj_exists = True
                     if check_existence:
                         obj_exists = db.mf_newforms.label_exists(newform_label)
                 elif len(url_split) == 8:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a
                     newform_label = ".".join(url_split[-4:])
-                    name =  'Modular form ' + newform_label
+                    name = 'Modular form ' + newform_label
                     obj_exists = True
                     if check_existence:
                         obj_exists = db.mf_newforms.label_exists(newform_label)
 
-
-            elif  url_split[2] == 'TotallyReal':
+            elif url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                 label = url_split[-1]
                 name =  'Hilbert modular form ' + label

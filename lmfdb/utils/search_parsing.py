@@ -47,13 +47,14 @@ class PowMulNodeVisitor(ast.NodeTransformer):
         if isinstance(node.op, ast.Pow):
             if log2(self.visit(node.left)) * self.visit(node.right) > 3000:
                 raise ValueError('output will be too large')
-            return  self.visit(node.left) ** self.visit(node.right)
+            return self.visit(node.left) ** self.visit(node.right)
         elif isinstance(node.op, ast.Mult):
-            return  self.visit(node.left) * self.visit(node.right)
+            return self.visit(node.left) * self.visit(node.right)
+
     def visit_Constant(self, node):
         return ast.literal_eval(node)
-    if sys.version_info < (3,8):
-        def visit_Num(self, node): # deprecated for python >= 3.8
+    if sys.version_info < (3, 8):
+        def visit_Num(self, node):  # deprecated for python >= 3.8
             return self.visit_Constant(node)
 
 class SearchParser(object):
@@ -798,7 +799,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                     # If used more generally we should check every modifier
                     # value -1 is used to force empty search results
                     if isinstance(query[qf], dict):
-                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                        if (('$in' in query[qf] and v not in query[qf]['$in'])
                            or ('$gt' in query[qf] and not v > query[qf]['$gt'])
                            or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
                            or ('$lt' in query[qf] and not v < query[qf]['$lt'])
@@ -1080,7 +1081,7 @@ def input_to_subfield(inp):
             raise SearchParsingError("You may only specify one subfield.")
         try:
             pol = PolynomialRing(QQ,'x')(str(F1))
-        except:
+        except Exception:
             raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():
@@ -1355,12 +1356,14 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             parsed_values = list(sub_query.values())
             # asking for each value to be in the array
             if parse_singleton is str:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton and '-' not in val and ',' not in val]
             else:
-                all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
+                all_operand = [val for val in parsed_values
+                               if type(val) == parse_singleton]
 
             if all_operand:
-                sub_query[qfield] = {'$all' : all_operand}
+                sub_query[qfield] = {'$all': all_operand}
 
             # if there are other condition, we can add the first of those
             # conditions the query, in the hope of reducing the search space

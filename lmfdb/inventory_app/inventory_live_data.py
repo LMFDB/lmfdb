@@ -20,7 +20,7 @@ def empty_ops():
     try:
       #TODO This should empty out the ops table
       pass
-    except:
+    except Exception:
         pass
 
 #Function to get list a list of all available db/collections
@@ -71,10 +71,10 @@ def get_progress(uid):
     #Assume all ops records with correct uid and containing 'running' are relevant
     try:
         n_scrapes = scrapes.count()
-    except:
+    except Exception:
         try:
             n_scrapes = len(scrapes())
-        except:
+        except Exception:
             n_scrapes = 0
 
     curr_coll = 0
@@ -86,7 +86,7 @@ def get_progress(uid):
     if curr_item:
         try:
             prog_in_curr = get_progress_from_db(uid, curr_item['db'], curr_item['coll'])
-        except:
+        except Exception:
             #Web front or user can't do anything about errors here. If process
             # is failing, will become evident later
             prog_in_curr = 0
@@ -124,7 +124,7 @@ def check_for_gone(lmfdb, db_name, coll_name):
     try:
         tbl_name = db_name+'_'+coll_name
         return tbl_name in lmfdb_db.tablenames
-    except:
+    except Exception:
         pass
     return False
 
@@ -171,7 +171,7 @@ def store_orphans(db_id, coll_id, uid, orphan_document):
     try:
         record = {'db':db_id, 'coll':coll_id, 'uid':uuid.UUID(uid), 'orphans':orphan_document}
         idc.add_to_ops_table(record)
-    except:
+    except Exception:
         db_name = idc.get_db_name(db_id)
         coll_name = idc.get_coll_name(coll_id)
         filename = 'Orph_'+db_name['name']+'_'+coll_name['name']+'.json'
@@ -189,12 +189,12 @@ def collate_orphans_by_uid(uid):
     db_name = ''
     try:
         db_name = idc.get_db_name(records[0]['db'])['name']
-    except:
+    except Exception:
         record = {'uid':uuid.UUID(uid)}
         tmp_record = idc.search_ops_table(record)
         try:
             db_name = idc.get_db_name(tmp_record['db'])['name']
-        except:
+        except Exception:
             pass
 
     orph_data[db_name] = {}
@@ -255,7 +255,7 @@ def set_lockout_state(state):
         assert(state is True or state is False)
         rec_set = {'lockout': state}
         idc.add_to_ops_table(rec_set)
-    except:
+    except Exception:
         pass
 
 
@@ -266,7 +266,7 @@ def get_lockout_state():
         rec_find = {'lockout': {"$exists": True}}
         # Get latest lockout record
         res = idc.search_ops_table(rec_find).sort('_id', -1).limit(1)
-    except:
+    except Exception:
         res = None
     if res is None:
         return False
