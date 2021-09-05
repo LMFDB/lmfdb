@@ -438,45 +438,6 @@ text-align: center;
   <p>
   The {{KNOWL('ec.galois_rep', title='mod-$\ell$  Galois representation')}}
   has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
-  {% if data.data.galois_data %} {# any non-maximal primes? #}
-    for all primes $\ell$ except those listed in the table below.
-    </p>
-    <table class="ntdata"><thead>
-    <tr>
-    <th>prime $\ell$</th>
-    <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
-    </tr>
-    </thead><tbody>
-    {% for pr in data.data.galois_data %}
-      <tr>
-      <td align=center>${{pr.prime}}$</td>
-      <td align=center>{{pr.modell_image}}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-    <p>
-    For all other primes $\ell$ the image is
-    {% if data.data.cm_nramp!=0 %}
-      a {{KNOWL('gl2.borel', title='Borel subgroup')}}
-      {% if data.data.cm_nramp==1 %}
-        if $\ell={{data.data.cm_ramp}}$, 
-      {% else %}
-        if $\ell\in \{ {{ data.data.cm_ramp }}\}$,
-      {% endif %}
-    {% endif %}
-    the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
-    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=+1$ or
-    the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
-    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=-1$.
-    </p>
-  {% else %} {# non non-maximal primes (that we know of) #}
-    for all primes $\ell < 1000$.
-    </p>
-  {% endif %}
-
-{% else %}  {# end CM case, begin non-CM case #}
-
   <p>
     The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}}
     has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
