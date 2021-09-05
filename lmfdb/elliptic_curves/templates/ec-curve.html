@@ -439,7 +439,7 @@ text-align: center;
   The {{KNOWL('ec.galois_rep', title='mod-$\ell$  Galois representation')}}
   has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
   {% if data.data.galois_data %} {# any non-maximal primes? #}
-    for all primes $\ell < 1000$ except those listed in the table below.
+    for all primes $\ell$ except those listed in the table below.
     </p>
     <table class="ntdata"><thead>
     <tr>
@@ -479,7 +479,7 @@ text-align: center;
 
   <p>
     The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}}
-    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} $\GL(2,\Z_\ell)$
+    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
   {% if data.data.galois_data %} {# any non-maximal primes? #}
     for all primes $\ell$ except those listed in the table below.
     </p>
@@ -499,7 +499,8 @@ text-align: center;
     {% endfor %}
     </tbody>
     </table>
-  {% else %} {# non non-maximal primes (that we know of) #}
+    Each $\ell$-adic image label listed in the table above denotes a subgroup $\overline H$ of $\GL_2(\Z/\ell^e\Z)$ where $e$ is $4,3,1,1,\ldots$ for $\ell=2,3,5,7,\ldots$.  The $\ell$-adic image $H=\rho_{E,\ell}(G_\Q)$ is the full inverse image of $\overline H$ under the composition of the maps $\Aut_{\mathcal O}(E[\ell^\infty])\hookrightarrow\Aut(E[\ell^infty])\simeq \GL_2(\Z_\ell)\twoheadrightarrow \GL_2(\Z/\ell^e\Z)$, where $\O$ is the geometric endomorphism ring of $E$.
+  {% else %} {# no non-maximal primes #}
     for all primes $\ell$.
     </p>
   {% endif %}
