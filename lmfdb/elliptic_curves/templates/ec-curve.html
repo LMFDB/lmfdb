@@ -430,80 +430,35 @@ text-align: center;
 </tbody>
 </table>
 
-    <h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
+<h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
 
-    {{ place_code('galrep') }}
+  {{ place_code('galrep') }}
 
-{% if data.data.CMD %}
-  <p>
-  The {{KNOWL('ec.galois_rep', title='mod-$\ell$  Galois representation')}}
-  has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
-  {% if data.data.galois_data %} {# any non-maximal primes? #}
-    for all primes $\ell < 1000$ except those listed in the table below.
-    </p>
-    <table class="ntdata"><thead>
+<p>
+The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {{KNOWL('ec.maximal_ladic_galois_rep', title='maximal image')}}
+{% if data.data.galois_data %}
+  for all primes $\ell$ except those listed in the table below.
+  </p>
+  <table class="ntdata"><thead>
+  <tr>
+  <th>prime $\ell$</th>
+  <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
+  <th>{{KNOWL('ec.q.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
+  </tr>
+  </thead><tbody>
+  {% for pr in data.data.galois_data %}
     <tr>
-    <th>prime $\ell$</th>
-    <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
+    <td align=center>${{pr.prime}}$</td>
+    <td align=center>{{pr.modell_image}}</td>
+    <td align=center>{{data.display_elladic_image(pr.elladic_image) | safe}}</td>
     </tr>
-    </thead><tbody>
-    {% for pr in data.data.galois_data %}
-      <tr>
-      <td align=center>${{pr.prime}}$</td>
-      <td align=center>{{pr.modell_image}}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-    <p>
-    For all other primes $\ell$ the image is
-    {% if data.data.cm_nramp!=0 %}
-      a {{KNOWL('gl2.borel', title='Borel subgroup')}}
-      {% if data.data.cm_nramp==1 %}
-        if $\ell={{data.data.cm_ramp}}$, 
-      {% else %}
-        if $\ell\in \{ {{ data.data.cm_ramp }}\}$,
-      {% endif %}
-    {% endif %}
-    the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
-    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=+1$ or
-    the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
-    if $\left(\frac{ {{data.data.cm_sqf}} }{\ell}\right)=-1$.
-    </p>
-  {% else %} {# non non-maximal primes (that we know of) #}
-    for all primes $\ell < 1000$.
-    </p>
-  {% endif %}
-
-{% else %}  {# end CM case, begin non-CM case #}
-
-  <p>
-    The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}}
-    has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} $\GL(2,\Z_\ell)$
-  {% if data.data.galois_data %} {# any non-maximal primes? #}
-    for all primes $\ell$ except those listed in the table below.
-    </p>
-    <table class="ntdata"><thead>
-    <tr>
-    <th>prime $\ell$</th>
-    <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
-    <th>{{KNOWL('ec.q.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
-    </tr>
-    </thead><tbody>
-    {% for pr in data.data.galois_data %}
-      <tr>
-      <td align=center>${{pr.prime}}$</td>
-      <td align=center>{{pr.modell_image}}</td>
-      <td align=center>{{data.display_elladic_image(pr.elladic_image) | safe}}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-  {% else %} {# non non-maximal primes (that we know of) #}
-    for all primes $\ell$.
-    </p>
-  {% endif %}
-{% endif %} {# end non-CM case #}
+  {% endfor %}
+  </tbody>
+  </table>
+{% else %} {# no non-maximal primes #}
+  for all primes $\ell$.
+  </p>
+{% endif %}
 
 <h2>$p$-adic regulators</h2>
 
