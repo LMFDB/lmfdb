@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import os
@@ -7,9 +6,20 @@ import time
 import six
 from urllib.parse import urlparse, urlunparse
 
-from flask import (Flask, g, render_template, request, make_response,
-                   redirect, url_for, current_app, abort)
+from flask import (
+    Flask,
+    abort,
+    current_app,
+    g,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from markupsafe import escape
 from sage.env import SAGE_VERSION
+from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
 from .logger import logger_file_handler, critical
@@ -40,7 +50,6 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 ############################
 
 def is_debug_mode():
-    from flask import current_app
     return current_app.debug
 
 # this is set here and is available for ctx_proc_userdata
@@ -246,6 +255,7 @@ def netloc_redirect():
         urlparts.netloc == "www.lmfdb.org"
         and
         not white_listed(urlparts.path)
+        and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
@@ -632,7 +642,7 @@ def news():
 # White listing routes for www.lmfdb.org      #
 ###############################################
 
-
+@cached_function
 def routes():
     """
     Returns all routes
@@ -667,7 +677,9 @@ def sitemap():
         + "</ul>"
     )
 
-WhiteListedRoutes = [
+@cached_function
+def WhiteListedRoutes():
+    return [
     'ArtinRepresentation',
     'Character/Dirichlet',
     'Character/calc-gauss/Dirichlet',
@@ -743,26 +755,30 @@ WhiteListedRoutes = [
     'zeros/zeta'
 ]
 
-WhiteListedBreads = set()
-for elt in WhiteListedRoutes:
-    elt_split = elt.split('/')
-    bread = ''
-    for s in elt.split('/'):
-        if bread:
-            bread += '/' + s
-        else:
-            bread = s
-        WhiteListedBreads.add(bread)
+
+@cached_function
+def WhiteListedBreads():
+    res = set()
+    for elt in WhiteListedRoutes():
+        bread = ''
+        for s in elt.split('/'):
+            if bread:
+                bread += '/' + s
+            else:
+                bread = s
+            res.add(bread)
+    return res
 
 
+@cached_function
 def white_listed(url):
     url = url.rstrip("/").lstrip("/")
     if not url:
         return True
     if (
-        any(url.startswith(elt) for elt in WhiteListedRoutes)
+        any(url.startswith(elt) for elt in WhiteListedRoutes())
         # check if is an allowed bread
-        or url in WhiteListedBreads
+        or url in WhiteListedBreads()
     ):
         return True
     # check if it starts with an L
@@ -772,6 +788,24 @@ def white_listed(url):
         return white_listed(url[1:]) or len(url) == 2 or url[2].isdigit()
     else:
         return False
+
+@cached_function
+def NotWhiteListedBreads():
+    res = set()
+    for _, endpoint in routes():
+        print(endpoint)
+        if not white_listed(endpoint):
+            print(endpoint.lstrip("/").split('/', 1))
+            res.add(endpoint.lstrip("/").split('/', 1)[0])
+    print(res)
+    return res
+
+
+@cached_function
+def valid_bread(url):
+    url = url.lstrip("/")
+    return url.split('/', 1)[0] in NotWhiteListedBreads()
+
 
 
 @app.route("/forcebetasitemap")
@@ -783,14 +817,14 @@ def forcebetasitemap():
         "<ul>"
         + "\n".join(
             [
-                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                '<li><a href="{0}">{1}</a></li>'.format(escape(url), escape(endpoint))
                 if url is not None
-                else "<li>{0}</li>".format(endpoint)
+                else "<li>{0}</li>".format(escape(endpoint))
                 for url, endpoint in routes()
-                if not white_listed(endpoint)
+                if not white_listed(endpoint) and valid_bread(endpoint)
             ]
         )
-        + "</ul>"
+        + "</ul>" + str(NotWhiteListedBreads())
     )
 
 
@@ -803,9 +837,9 @@ def whitelistedsitemap():
         "<ul>"
         + "\n".join(
             [
-                '<li><a href="{0}">{1}</a></li>'.format(url, endpoint)
+                '<li><href="{0}">{1}</a></li>'.format(escape(url), escape(endpoint))
                 if url is not None
-                else "<li>{0}</li>".format(endpoint)
+                else "<li>{0}</li>".format(escape(endpoint))
                 for url, endpoint in routes()
                 if white_listed(endpoint)
             ]
