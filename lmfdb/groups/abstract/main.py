@@ -1400,22 +1400,4 @@ flist= {'cc_data': cc_data,
 
 
 
-def display_Schur_multi(sm_list):
-    elements_count = {}
-    entries = []
-    if len(sm_list)==0:
-    	entries.append("C1")
-    for ints in sm_list:
-        if ints in elements_count:
-        	elements_count[element] += 1
-        else:
-        	elements_count[element] = 1
-    for key, value in elements_count.items():
-    	entry = ""
-    	if key != 1:
-    		entry = entry + "C_{" + str(key) + "}"
-    		if value != 1:
-    			entry = entry + "^{" + str(value) + "}"
-    	entries.append(entry)
-    prod = "\\times ".join(entries)
-    return prod
+
