@@ -522,10 +522,10 @@ def search(info):
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
-    if ((not 'weight' in query or 0 in weight_list) and
-        (not 'degree' in query or 1 in degree_list) and
-        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and
-        (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
+    if (('weight' not in query or 0 in weight_list) and
+        ('degree' not in query or 1 in degree_list) and
+        ('identity_component' not in query or query['identity_component'] == 'SO(1)') and
+        ('trace_zero_density' not in query or query['trace_zero_density'] == '0')):
         nres = None
         if components_list is None:
             components_list = range(1, 3 if ratonly else (start + count + 1 + len(omitted)))
@@ -617,7 +617,7 @@ def mu_info(n):
     elif n > 2:
         rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
-    rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + ['1' if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['second_trace_moment'] = 1 if n <= 2 else 0
     rec['fourth_trace_moment'] = 1 if n <= 2 else 0
@@ -672,7 +672,7 @@ def su2_mu_info(w,n):
     rec['supgroups'] = comma_separated_list([st_link("%d.2.A.c%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
-    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['counts'] = []
     return rec
@@ -722,10 +722,11 @@ def nu1_mu_info(w,n):
     rec['supgroups'] = comma_separated_list([st_link("%d.2.B.d%d"%(w,p*n)) for p in [2,3,5]] + [r"$\ldots$"])
     rec['moments'] = [['x'] + [ r'\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
-    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0 else '0' for m in range(13)]]
     rec['trace_moments'] = trace_moments(rec['moments'])
     rec['counts'] = [['a_1', [[0,n]]]]
     return rec
+
 
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
@@ -820,7 +821,6 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
             info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
         elif data['degree'] == 6:
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(data['simplex']))]
             s = data['simplex']
             if len(s) >= 56:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37],s[37:51],s[51:56]]
@@ -828,7 +828,7 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
             elif len(s) >= 23:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
             if len(s) >= 56:
                 info['simplex_header'][-1] = ""
     if data.get('character_matrix'):
@@ -842,7 +842,7 @@ def render_by_label(label):
         z = data['zvector']
         if data['degree'] == 4:
             if sum(z) == 0:
-                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2$ and $n\in\mathbb{Z}$.</p>"
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-2,3)]) + '</th></tr>'
@@ -854,7 +854,7 @@ def render_by_label(label):
             info['probabilities'] = s
         elif data['degree'] == 6:
             if sum(z) == 0:
-                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>."
+                s = r"<p>$\mathrm{Pr}[a_i=n]=0$ for $i=1,2,3$ and $n\in\mathbb{Z}$.</p>"
             else:
                 s = "<table>"
                 s += '<tr><th></th><th>$-$</th><th>$a_2\\in\\mathbb{Z}$</th><th>' + '</th><th>'.join(["$a_2=%s$" % (i) for i in range(-1,4)]) + '</th></tr>'

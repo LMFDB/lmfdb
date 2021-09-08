@@ -129,9 +129,11 @@ class WebBelyiGalmap(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 2: # passport label length
-                galmap = db.belyi_galmaps.lucky({"plabel": label})
+                #galmap = db.belyi_galmaps.lucky({"plabel": label})
+                galmap = db.belyi_galmaps_prim.lucky({"plabel": label})
             elif len(slabel) == 3: # galmap label length
-                galmap = db.belyi_galmaps.lucky({"label": label})
+                #galmap = db.belyi_galmaps.lucky({"label": label})
+                galmap = db.belyi_galmaps_prim.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -146,32 +148,33 @@ class WebBelyiGalmap(object):
         return WebBelyiGalmap(galmap)
 
     def make_galmap_object(self, galmap):
-        from lmfdb.belyi.main import url_for_belyi_passport_label
+        from lmfdb.belyi.main import url_for_belyi_passport_label, url_for_belyi_galmap_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg"):
+        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization", "is_primitive"):
             data[elt] = galmap[elt]
         nt = galmap["group"].split("T")
         data["group"] = group_display_knowl(int(nt[0]), int(nt[1]))
 
         data["geomtype"] = geomtypelet_to_geomtypename_dict[galmap["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
+        data["primitivization_url"] = url_for_belyi_galmap_label(data['primitivization'])
 
         data["isQQ"] = False
         data["in_LMFDB"] = False
         F = belyi_base_field(galmap)
         if F._data is None:
             fld_coeffs = galmap["base_field"]
-            pol = PolynomialRing(QQ, "x")(fld_coeffs)
+            pol = PolynomialRing(QQ, "t")(fld_coeffs)
             data["base_field"] = latex(pol)
         else:
             data["in_LMFDB"] = True
             if F.poly().degree() == 1:
                 data["isQQ"] = True
-            F.latex_poly = web_latex(F.poly())
+            F.latex_poly = web_latex(F.poly(var="t"))
             data["base_field"] = F
         crv_str = galmap["curve"]
         if crv_str == "PP1":
@@ -229,6 +232,8 @@ class WebBelyiGalmap(object):
 
         # Friends
         self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        if galmap['label'] != galmap['primitivization']:
+            self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
         self.friends.extend(names_and_urls(galmap['friends']))
 
         # Downloads
@@ -357,7 +362,8 @@ class WebBelyiPassport(object):
         data["pass_size"] = passport["pass_size"]
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps.search(
+        #galmaps_for_plabel = db.belyi_galmaps.search(
+        galmaps_for_plabel = db.belyi_galmaps_prim.search(
             {"plabel": passport["plabel"]}
         )  # , sort = ['label_index'])
         galmapdata = []
@@ -376,7 +382,7 @@ class WebBelyiPassport(object):
                 field["in_LMFDB"] = True
                 if F.poly().degree() == 1:
                     field["isQQ"] = True
-                F.latex_poly = web_latex(F.poly())
+                F.latex_poly = web_latex(F.poly(var="t"))
                 field["base_field"] = F
 
             galmapdatum = [

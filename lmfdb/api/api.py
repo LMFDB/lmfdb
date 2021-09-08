@@ -241,7 +241,7 @@ def api_query(table, id = None):
                     qval = { "contains" : [float(qval[2:])] }
                 elif qval.startswith("cpy"):
                     qval = { "$contains" : [literal_eval(qval[3:])] }
-            except:
+            except Exception:
                 # no suitable conversion for the value, keep it as string
                 pass
 

@@ -17,6 +17,7 @@ from lmfdb.utils import (
     parse_ints,
     parse_bracketed_posints,
     parse_nf_string,
+    parse_bool,
     redirect_no_cache,
     search_wrap,
     Downloader,
@@ -24,6 +25,7 @@ from lmfdb.utils import (
     SearchArray,
     TextBox,
     SelectBox,
+    YesNoBox,
     CountBox,
 )
 from lmfdb.utils.interesting import interesting_knowls
@@ -94,14 +96,16 @@ def index():
 @belyi_page.route("/random")
 @redirect_no_cache
 def random_belyi_galmap():
-    label = db.belyi_galmaps.random()
+    #label = db.belyi_galmaps.random()
+    label = db.belyi_galmaps_prim.random()
     return url_for_belyi_galmap_label(label)
 
 @belyi_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "belyi",
-        db.belyi_galmaps,
+        #db.belyi_galmaps,
+        db.belyi_galmaps_prim,
         url_for_label,
         title=r"Some interesting Belyi maps and passports",
         bread=get_bread("Interesting"),
@@ -379,7 +383,8 @@ def make_base_field(rec):
     return K
 
 class Belyi_download(Downloader):
-    table = db.belyi_galmaps
+    #table = db.belyi_galmaps
+    table = db.belyi_galmaps_prim
     title = "Belyi maps"
     columns = "triples"
     data_format = ["permutation_triples"]
@@ -453,7 +458,10 @@ class Belyi_download(Downloader):
 
     def download_galmap_magma(self, label, lang="magma"):
         s = ""
-        rec = db.belyi_galmaps.lookup(label)
+        #rec = db.belyi_galmaps.lookup(label)
+        rec = db.belyi_galmaps_prim.lookup(label)
+        if rec is None:
+            return abort(404, "Label not found: %s" % label)
         s += "// Magma code for Belyi map with label %s\n\n" % label
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
@@ -494,7 +502,10 @@ class Belyi_download(Downloader):
 
     def download_galmap_sage(self, label, lang="sage"):
         s = ""
-        rec = db.belyi_galmaps.lookup(label)
+        #rec = db.belyi_galmaps.lookup(label)
+        rec = db.belyi_galmaps_prim.lookup(label)
+        if rec is None:
+            return abort(404, "Label not found: %s" % label)
         s += "# Sage code for Belyi map with label %s\n\n" % label
         s += "\n# Group theoretic data\n\n"
         s += "d = %s\n" % rec["deg"]
@@ -541,10 +552,13 @@ class Belyi_download(Downloader):
         return self._wrap(s, label, lang=lang)
 
     def download_galmap_text(self, label, lang="text"):
-        data = db.belyi_galmaps.lookup(label)
+        #data = db.belyi_galmaps.lookup(label)
+        data = db.belyi_galmaps_prim.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s" % label)
         return self._wrap(Json.dumps(data),
-        label,
-        title='Data for embedded Belyi map with label %s,'%label)
+                          label,
+                          title='Data for embedded Belyi map with label %s,'%label)
 
 
 @belyi_page.route("/download_galmap_to_magma/<label>")
@@ -564,7 +578,8 @@ def url_for_label(label):
 
 @search_wrap(
     template="belyi_search_results.html",
-    table=db.belyi_galmaps,
+    #table=db.belyi_galmaps,
+    table=db.belyi_galmaps_prim,
     title="Belyi map search results",
     err_title="Belyi map search input error",
     shortcuts={"jump": belyi_jump, "download": Belyi_download()},
@@ -615,9 +630,8 @@ def belyi_search(info, query):
         if info.get(fld):
             query[fld] = info[fld]
 
-
     info["nf_link"] = lambda elt: field_display_gen(elt.get('moduli_field_label'), elt.get('moduli_field'), truncate=16)
-
+    parse_bool(info, query, "is_primitive", name="is_primitive")
 
 ################################################################################
 # Statistics
@@ -630,13 +644,15 @@ class Belyi_stats(StatsDisplay):
     """
 
     def __init__(self):
-        self.ngalmaps = comma(db.belyi_galmaps.stats.count())
+        #self.ngalmaps = comma(db.belyi_galmaps.stats.count())
+        self.ngalmaps = comma(db.belyi_galmaps_prim.stats.count())
         self.npassports = comma(db.belyi_passports.stats.count())
         self.max_deg = comma(db.belyi_passports.max("deg"))
         self.deg_knowl = display_knowl("belyi.degree", title="degree")
         self.belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
 
-    table = db.belyi_galmaps
+    #table = db.belyi_galmaps
+    table = db.belyi_galmaps_prim
     baseurl_func = ".index"
     short_display = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
@@ -661,7 +677,6 @@ class Belyi_stats(StatsDisplay):
         "top_title": [("number of Galois orbits", "belyi.num_orbits"), ("per", None), ("passport", "belyi.passport")],
         "totaler": {"avg": True}
         }
-        #TODO: add base field degree; needs new column
     ]
 
     @property
@@ -788,6 +803,11 @@ class BelyiSearchArray(SearchArray):
             label="Geometry type",
             knowl="belyi.geometry_type",
             options=[("", "")] + list(geometry_types_dict.items()))
+        is_primitive = YesNoBox(
+            name="is_primitive",
+            label="Primitive",
+            knowl="belyi.primitive",
+            example="yes")
         field = TextBox(
             name="field",
             label="Base field",
@@ -796,6 +816,6 @@ class BelyiSearchArray(SearchArray):
             example_span="2.2.5.1 or Qsqrt5")
         count = CountBox()
 
-        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [geomtype], [field], [count]]
+        self.browse_array = [[deg], [group], [abc], [abc_list], [g], [orbit_size], [pass_size], [field], [geomtype], [is_primitive], [count]]
 
-        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype]]
+        self.refine_array = [[deg, group, abc, abc_list], [g, orbit_size, pass_size, field], [geomtype, is_primitive]]

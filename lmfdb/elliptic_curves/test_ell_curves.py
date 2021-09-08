@@ -65,6 +65,12 @@ class EllCurveTest(LmfdbTest):
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
         assert '41616.bi2' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/?jinv=0,1728')
+        t = L.get_data(as_text=True)
+        assert '27.a3' in t and '32.a3' in t and '11.a3' not in t
+        L = self.tc.get('/EllipticCurve/Q/?jinv=~0,1728&count=100')
+        t = L.get_data(as_text=True)
+        assert '27.a3' not in t and '32.a3' not in t and '11.a3' in t
 
     def test_jbad_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2.3&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -77,10 +83,10 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, 9588, 2333199]' in L.get_data(as_text=True)
 
     def test_SurjPrimes_search(self):
-        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]');
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]')
 
     def test_NonSurjPrimes_search(self):
-        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]');
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]')
 
     def test_BadPrimes_search(self):
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=include&bad_primes=3%2C5')
@@ -104,6 +110,10 @@ class EllCurveTest(LmfdbTest):
     def test_cm_disc_search(self):
         self.check_args('EllipticCurve/Q/?cm_disc=-4', '32.a3')
         self.not_check_args('EllipticCurve/Q/?cm_disc=-4', '11.a1')
+
+    def test_one_per_search(self):
+        # Test that we correctly fixed issue 4678
+        self.check_args('EllipticCurve/Q/?jinv=-4096%2F11&optimal=on', '156 matches')
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')

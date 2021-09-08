@@ -15,18 +15,19 @@ from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error,
-    parse_ints, parse_noop, nf_string_to_label, parse_element_of,
-    parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
+    parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
+    parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_bool, parse_floats, parse_primes,
     SearchArray, TextBox, ExcludeOnlyBox, SelectBox, CountBox, YesNoBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, parse_rational,
-    redirect_no_cache
+    search_wrap, redirect_no_cache
     )
+from lmfdb.utils.search_parsing import search_parser
+
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
-from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
+from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
 # The conductor label seems to only have three parts for the trivial ideal (1.0.1)
@@ -185,7 +186,7 @@ def index():
                             for nf in rqfs)])
 
     # Imaginary quadratics (sample)
-    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11, 19, 43]]
+    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11, 19, 43, 67, 163]]
     info['fields'].append(['By <a href="{}">imaginary quadratic field</a>'.format(url_for('.statistics_by_signature', d=2, r=0)),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in iqfs)])
@@ -277,7 +278,6 @@ def show_ecnf_conductor(nf, conductor_label):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
@@ -303,7 +303,6 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
@@ -337,7 +336,6 @@ def show_ecnf(nf, conductor_label, class_label, number):
     if not FIELD_RE.fullmatch(nf):
         return abort(404)
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
@@ -458,6 +456,18 @@ def url_for_label(label):
     nf, cond_label, iso_label, number = split_full_label(label.strip())
     return url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number)
 
+def make_cm_query(cm_disc_str):
+    cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
+    for d in cm_list:
+        if not ((d < 0) and (d % 4 in [0,1])):
+            raise ValueError("A CM discriminant must be a fundamental discriminant of an imaginary quadratic field.")
+    cm_list += [-el for el in cm_list]
+    return cm_list
+
+@search_parser
+def parse_cm_list(inp, query, qfield):
+    query[qfield] = {'$in': make_cm_query(inp)}
+
 @search_wrap(template="ecnf-search-results.html",
              table=db.ec_nfcurves,
              title='Elliptic curve search results',
@@ -479,7 +489,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'rank')
     parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
-    if 'torsion_structure' in query and not 'torsion_order' in query:
+    if 'torsion_structure' in query and 'torsion_order' not in query:
         t_o = 1
         for n in query['torsion_structure']:
             t_o *= int(n)
@@ -491,20 +501,7 @@ def elliptic_curve_search(info, query):
     parse_ints(info,query,'class_deg','class_deg')
     parse_ints(info,query,'sha','analytic order of &#1064;')
     parse_floats(info,query,'reg','regulator')
-
-    if 'jinv' in info:
-        if info.get('field','').strip() == '2.2.5.1':
-            info['jinv'] = info['jinv'].replace('phi','a')
-        if info.get('field','').strip() == '2.0.4.1':
-            info['jinv'] = info['jinv'].replace('i','a')
-        if not 'a' in info['jinv'] and not info.get('field'): # rational j-invariant allowed for any field
-            parse_rational(info, query, 'jinv', name='j-invariant')
-            if query.get('jinv'):
-                query['jinv'] = {'$regex': '^' + query['jinv'] + '(,0)*$'} # nf elements like j,0,0,0
-        else: # j-invariant is a number field element
-            parse_nf_elt(info, query, 'jinv', name='j-invariant')
-            if query.get('jinv'):
-                query['jinv'] = ','.join(query['jinv'])
+    parse_nf_jinv(info,query,'jinv','j-invariant',field_label=query.get('field_label'))
 
     if info.get('one') == "yes":
         info['number'] = 1
@@ -524,17 +521,34 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
 
+    parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
+
     if 'include_cm' in info:
         if info['include_cm'] == 'PCM':
-            query['cm'] = {'$ne' : 0}
+            tmp = {'$ne' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'PCMnoCM':
-            query['cm'] = {'$lt' : 0}
+            tmp = {'$lt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'CM':
-            query['cm'] = {'$gt' : 0}
+            tmp = {'$gt' : 0}
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
         elif info['include_cm'] == 'noPCM':
-            query['cm'] = 0
+            tmp = 0
+            if 'cm' in query:
+                query['cm'] = {'$and': [tmp, query['cm']]}
+            else:
+                query['cm'] = tmp
 
-    parse_ints(info,query,field='cm_disc',qfield='cm')
     parse_primes(info, query, 'conductor_norm_factors', name='bad primes',
              qfield='conductor_norm_factors',mode=info.get('bad_quantifier'))
     info['field_pretty'] = field_pretty
@@ -606,7 +620,7 @@ def statistics_by_signature(d,r):
     else:
         info['degree'] = d
 
-    if not r in range(d%2,d+1,2):
+    if r not in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
     sig = (r,s)
@@ -644,7 +658,6 @@ def statistics_by_signature(d,r):
 @ecnf_page.route("/download_all/<nf>/<conductor_label>/<class_label>/<number>")
 def download_ECNF_all(nf,conductor_label,class_label,number):
     conductor_label = unquote(conductor_label)
-    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
@@ -687,7 +700,7 @@ def ecnf_code(**args):
     for k in sorted_code_names:
         if Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if not '\n' in Ecode[k] else '')
+            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
     return code
 
 def disp_tor(t):

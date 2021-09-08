@@ -1057,7 +1057,7 @@ function switch_basis(btype) {
                   th_wrap('cmf.dimension', 'Dim'),
                   '</tr>', '</thead>', '<tbody>']
 
-        for r in  sorted(self.twists, key = lambda x : [x['conductor'],x['twisting_char_orbit'],x['target_level'],x['target_char_orbit'],x['target_hecke_orbit']]):
+        for r in sorted(self.twists, key=lambda x: [x['conductor'], x['twisting_char_orbit'], x['target_level'], x['target_char_orbit'], x['target_hecke_orbit']]):
             minimality = '&check;' if r['target_label'] == self.minimal_twist else 'yes' if r['target_is_minimal'] else ''
             char_link = display_knowl('character.dirichlet.orbit_data', title=r['twisting_char_label'], kwargs={'label':r['twisting_char_label']})
             target_link = '<a href="%s">%s</a>'%('/ModularForm/GL2/Q/holomorphic/' + r['target_label'].replace('.','/'),r['target_label'])

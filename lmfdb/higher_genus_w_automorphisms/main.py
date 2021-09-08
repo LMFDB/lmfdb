@@ -802,7 +802,7 @@ def render_passport(args):
         try:
             numgenvecs = int(request.args['numgenvecs'])
             numbraidreps = int(request.args['numbraidreps'])
-        except:
+        except Exception:
             numgenvecs = 20
             numbraidreps = 20
 

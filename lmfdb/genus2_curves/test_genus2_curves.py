@@ -66,7 +66,7 @@ class Genus2Test(LmfdbTest):
 
     def test_by_url_isogeny_class_discriminant(self):
         L = self.tc.get('/Genus2Curve/Q/15360/f/983040/')
-        assert '15360.f.983040.1' in L.get_data(as_text=True) and '15360.f.983040.2' in L.get_data(as_text=True) and not '15360.d.983040.1' in L.get_data(as_text=True)
+        assert '15360.f.983040.1' in L.get_data(as_text=True) and '15360.f.983040.2' in L.get_data(as_text=True) and '15360.d.983040.1' not in L.get_data(as_text=True)
 
     def test_random(self):
         for i in range(5):
@@ -136,7 +136,7 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/?analytic_sha=3')
         assert 'No matches' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/?has_square_sha=False')
-        assert  '336.a.172032.1' in L.get_data(as_text=True) and not '169.a.169.1' in L.get_data(as_text=True)
+        assert '336.a.172032.1' in L.get_data(as_text=True) and '169.a.169.1' not in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False')
         assert 'No matches' in L.get_data(as_text=True)
         L = self.tc.get('/Genus2Curve/Q/?analytic_sha=2&has_square_sha=True')

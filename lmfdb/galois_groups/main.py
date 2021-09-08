@@ -28,7 +28,7 @@ from .transitive_group import (
 
 try:
     G = gap.TransitiveGroup(9, 2)
-except:
+except Exception:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
 # convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]

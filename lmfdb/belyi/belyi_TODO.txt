@@ -15,6 +15,8 @@ Short term:
 - show automorphism group on lmfdb page for galmaps
 
 Long term:
+- write down block stabilizer structure for non-primitive maps
+- given a non-primitive map, write down map as composition of primitivization + other map
 - pictures of dessins: Mike's ribbon graphs?; Bailey's drawing software (keeping the action of complex conjugation and other evident symmetries)?
 - allow passports without all maps computed
 - compute and identify fiber products and imprimitive maps

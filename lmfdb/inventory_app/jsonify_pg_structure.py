@@ -47,13 +47,13 @@ def _jsonify_record(name, record, parse_jsonb = False, inferred = False):
 
     try:
         typedesc = get_description(record)
-    except:
+    except Exception:
         typedesc = 'Type cannot be identified (' \
             + str(type(record)) + ')'
     try:
         strval =  str(record).decode('unicode_escape').\
             encode('ascii','ignore')
-    except:
+    except Exception:
         strval = 'Record cannot be stringified'
 
     lstr = len(strval)
@@ -85,7 +85,7 @@ def _jsonify_collection_info(table, parse_jsonb = False):
         rls = get_pg_sample_record(table, str(doc))
         try:
             merge_dicts(json_db_data['fields'], _jsonify_record(str(doc), rls[doc], parse_jsonb = parse_jsonb))
-        except:
+        except Exception:
             pass
 
     indices = db[table].list_indexes()
