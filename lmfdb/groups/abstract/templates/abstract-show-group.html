@@ -54,10 +54,11 @@
     <tr><td>${{gp.tex_name}}$  </td><td>  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
+   <tr><td>Element orders:</td><td> 
+<tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
     <tr><td>Outer Automorphisms:</td><td>${{gp.show_outer_group()}}$</td></tr>
     <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
-    <tr><td>Schur multiplier:</td><td>{{gp.schur_multiplier_text()}}</td><tr>
+    <tr><td>Schur multiplier:</td><td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td><tr> 
   </table>
 </p>
 
@@ -65,6 +66,42 @@
   {{info.boolean_characteristics_string | safe}}
 
 </p>
+
+<h2>Group Statistics</h2>
+{% if gp.order_stats is defined %}
+   <table class="ntdata">
+ <tbody>
+             <tr><td>Order of elements</td>
+            {% for c in gp.order_stats %}
+            <td>{{ c[0] | safe }} </td>
+            {% endfor %}
+	     </tr>
+             <tr><td>Number of elements</td>
+            {% for c in gp.order_stats %}
+            <td>{{ c[1] | safe }} </td>
+            {% endfor %}
+             </tr>
+         </tbody>
+      </table>
+     {% endif %}   
+<br>     
+<!--{% if gp.characters is defined %}
+   <table class="ntdata">
+ <tbody>
+             <tr><td>Irreducible complex rep</td>
+            {% for char in gp.characters %}
+            <td>{{ char.label }} </td>
+            {% endfor %}
+             </tr>
+             <tr><td>Dimension</td>
+            {% for char in gp.characters %}
+            <td>{{ char.dim}} </td>
+            {% endfor %}
+             </tr>
+         </tbody>
+      </table>
+     {% endif %} -->
+
 
 <h2>Constructions</h2>
 

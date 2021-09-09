@@ -316,7 +316,31 @@ class WebAbstractGroup(WebObj):
         return data
 
     def schur_multiplier_text(self):
-        return "trivial" if self.schur_multiplier == [] else self.schur_multiplier
+        sm_list = self.schur_multiplier 
+        elements_count = {}
+        entries = []
+        if len(sm_list)==0:
+    	    entries.append("C_1")
+        for element in sm_list:
+            if element in elements_count:
+                elements_count[element] += 1
+            else:
+                elements_count[element] = 1
+        for key, value in elements_count.items():
+            entry = ""
+            if key != 1:
+                entry = entry + "C_{" + str(key) + "}"
+                if value != 1:
+                    entry = entry + "^{" + str(value) + "}" 
+            entries.append(entry)
+        prod = "\\times ".join(entries)
+        return prod
+        #return "trivial" if self.schur_multiplier == [] else self.schur_multiplier
+    def schur_multiplier_label(self):
+        sm_list = self.schur_multiplier
+        str1 = '.'.join(str(e) for e in sm_list)
+        return str1
+        #return ".".join(map(str, sm_list))
 
     @lazy_attribute
     def G(self):
