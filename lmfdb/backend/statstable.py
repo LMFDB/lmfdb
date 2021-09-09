@@ -323,10 +323,15 @@ class PostgresStatsTable(PostgresBase):
         cols, vals = self._split_dict(query)
         data = [count, cols, vals, split_list]
         if self.quick_count(query, suffix=suffix) is None:
+            if count == 0:
+                return # we don't want to store 0 counts since it can break stats
             updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
+            if count == 0:
+                updater = SQL("DELETE FROM {0} WHERE cols = %s AND values = %s AND split = %s")
+            else:
+                updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user

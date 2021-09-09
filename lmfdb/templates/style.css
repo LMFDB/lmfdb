@@ -1,4 +1,4 @@
-t{# template defs #}
+{# template defs #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -2372,6 +2372,7 @@ span.normgp {
 
 span.activesubgp {
     background: {{color.col_main_ll}};
+    }
 /* the button to show advanced search options */
 #advancedtoggle {
     margin-left: 20px;
@@ -2400,3 +2401,9 @@ span.activesubgp {
 .tset-container:hover .tset-icon {
   visibility: visible;
 }
+
+#group-diagram-selected {
+    color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+    background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
+}
+

@@ -22,8 +22,7 @@ var dbug2 = '';
 // Highlight colors: these were for testing
 var selected_color = 'deepskyblue';
 var highlit_color = 'yellowgreen';
-
-
+var can_move_vertically = false;
 
 // Figure out the highlight color for activesubgp
 var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
@@ -37,7 +36,8 @@ for (var j = 0; j < classes.length; j++) {
 }
 
 // A darker color: easier since these items exist in the DOM
-var selected_color = $(".link").css('background-color');
+// This is moved later because of some issue with load order
+selected_color = $("#group-diagram-selected").css('background-color');
 
 Graph = class {
     constructor(ambient) {
@@ -230,6 +230,8 @@ class Renderer {
         var lft = node.center[0]-0.5*img.width;
 
         if(node.selected) {
+          // Just get it here, used to be at the start
+          selected_color = $("#group-diagram-selected").css('background-color');
           ctxt.fillStyle= selected_color;
           ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
         } else if(node.highlit) {
@@ -698,7 +700,10 @@ class EventHandler {
   updateDrag(event) {
     if(this.activeNode) {
       if(this.options.moveNodeOnDrag) {
-              this.activeNode.center[0] = this.offset(event)[0];
+        this.activeNode.center[0] = this.offset(event)[0];
+        if(can_move_vertically) {
+          this.activeNode.center[1] = this.offset(event)[1];
+        }
       }
       this.options.updateNodeDrag(this.activeNode, event);
     }

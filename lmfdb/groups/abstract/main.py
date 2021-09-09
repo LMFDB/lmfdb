@@ -7,6 +7,7 @@ from six import BytesIO
 from collections import defaultdict, Counter
 
 from flask import render_template, request, url_for, redirect, Markup, make_response, send_file #, abort
+from string import ascii_lowercase
 from sage.all import ZZ, latex, factor, Permutations
 
 from lmfdb import db
@@ -15,10 +16,9 @@ from lmfdb.utils import (
     flash_error, to_dict, display_knowl,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox, YesNoBox, comma,
     parse_ints, parse_bool, clean_input, parse_regex_restricted,
-    # parse_gap_id, parse_bracketed_posints,
     dispZmat, dispcyclomat,
     search_wrap, web_latex)
-from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors, parse_multiset)
 from lmfdb.groups.abstract import abstract_page, abstract_logger
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, WebAbstractConjClass,
@@ -30,6 +30,7 @@ credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran K
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)\.\d+$')
+#order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 ngroups = None
 max_order = None
@@ -405,6 +406,27 @@ def Qchar_table(label):
                            learnmore=learnmore_list(),
                            credit=credit_string)
 
+@abstract_page.route("/diagram/<label>")
+def sub_diagram(label):
+    label = clean_input(label)
+    gp = WebAbstractGroup(label)
+    if gp.is_null():
+        flash_error( "No group with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
+    layers = gp.subgroup_layers
+    maxw = max([len(z) for z in layers[0]])
+    h = 160*(len(layers[0])-1)
+    h = min(h, 1000)
+    w = 200*maxw
+    w = min(w,1500)
+    info = {'dojs': diagram_js(gp,layers), 'w': w, 'h': h}
+    return render_template("diagram_page.html", 
+        info=info,
+        title="Rational character table for %s" % label,
+        bread=get_bread([("Subgroup diagram", " ")]),
+        learnmore=learnmore_list(),
+        credit=credit_string)
+
 def show_type(label):
     wag = WebAbstractGroup(label)
     if wag.abelian:
@@ -456,6 +478,7 @@ def group_search(info, query):
     parse_ints(info, query, 'outer_order', 'outer_order')
     parse_ints(info, query, 'derived_length', 'derived_length')
     parse_ints(info, query, 'rank', 'rank')
+    parse_multiset(info, query, 'order_stats', 'order_stats')
     parse_bool(info, query, 'abelian', 'is abelian')
     parse_bool(info, query, 'cyclic', 'is cyclic')
     parse_bool(info, query, 'metabelian', 'is metabelian')
@@ -532,6 +555,17 @@ def get_sub_url(label):
 def factor_latex(n):
     return '$%s$' % web_latex(factor(n), False)
 
+def diagram_js(gp, layers):
+    ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
+    subs = gp.subgroups
+    orders = list(set(sub.subgroup_order for sub in subs.values()))
+    orders.sort()
+
+    myjs = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(gp.label)
+    myjs += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
+    myjs += ');'
+    return myjs
+
 #Writes individual pages
 def render_abstract_group(label):
     abstract_logger.info("A")
@@ -545,22 +579,16 @@ def render_abstract_group(label):
 
     info['boolean_characteristics_string']=create_boolean_string(gp)
 
+    prof = list(gp.subgroup_profile.items())
+    prof.sort(key=lambda z: - z[0]) # largest to smallest
+    info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
     # prepare for javascript call to make the diagram
     if gp.diagram_ok:
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.label, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup), grp.diagram_x] for grp in layer] for layer in layers[0]]
-        subs = gp.subgroups
-        orders = list(set(sub.subgroup_order for sub in subs.values()))
-        orders.sort()
-
-        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram", "%s",'% str(label)
-        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
-        info['dojs'] += ');'
+        info['dojs'] = diagram_js(gp, layers)
         totsubs = len(gp.subgroups)
         info['wide'] = (totsubs-2) > (len(layers[0])-2)*4; # boolean
     else:
-        prof = list(gp.subgroup_profile.items())
-        info['subgroup_profile'] = [(z[0], display_profile_line(z[1])) for z in prof]
         info['dojs'] = ''
 
     factored_order = factor_latex(gp.order)
@@ -656,18 +684,29 @@ def render_abstract_group(label):
 
     
     
-    friends =  [("Subgroups of " + label, sbgp_url),("Groups with "+ label +" as a quotient",quot_url),("Groups with "+label + " as a subgroup",sbgp_of_url)]
+    friends =  [("Subgroups", sbgp_url),("Extensions",quot_url),("Supergroups",sbgp_of_url)]
 
     #"external" friends
     gap_ints =  [int(y) for y in label.split(".")]
     gap_str = str(gap_ints).replace(" ","")
-    if db.hgcwa_passports.count({'group':gap_str}) > 0:
+    if db.g2c_curves.count({'aut_grp_id':gap_str}) > 0:
+        g2c_url = '/Genus2Curve/Q/?hst=List&aut_grp_id=%5B' + str(gap_ints[0]) + '%2C'+  str(gap_ints[1])  + '%5D&search_type=List'
+        friends += [("As the automorphism of a genus 2 curve",g2c_url)]
+        if db.hgcwa_passports.count({'group':gap_str}) > 0:
+            auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
+        friends += [( "... and of a higher genus curve",auto_url)]
+    elif db.hgcwa_passports.count({'group':gap_str}) > 0:
         auto_url = "/HigherGenus/C/Aut/?group=%5B"+str(gap_ints[0])+ "%2C" + str(gap_ints[1]) + "%5D"
-        friends += [(label + " as automorphism of a curve",auto_url)]
+        friends += [("As the automorphism of a curve",auto_url)]
 
-    if db.gps_transitive.count({'gapidfull': gap_str}) > 0:   
+    if db.gps_transitive.count({'gapidfull': gap_str}) > 0:
         gal_gp_url= "/GaloisGroup/?gal=%5B" + str(gap_ints[0]) + "%2C" + str(gap_ints[1])  +"%5D"
-        friends +=[(label + " as transitive group", gal_gp_url)]
+        friends +=[("As a transitive group", gal_gp_url)]
+
+
+    if db.gps_st.count({'component_group': label}) > 0:
+        st_url='/SatoTateGroup/?hst=List&component_group=%5B'+  str(gap_ints[0])+ '%2C' +   str(gap_ints[1]) + '%5D&search_type=List'
+        friends += [("As the component group of a Sato-Tate group", st_url)]
     
     
     bread = get_bread([(label, '')])
@@ -824,8 +863,10 @@ def download_group(**args):
         filename += ".m"
     s = com1 + "\n"
     s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    s += com + " Below is the group G, given with generators (and relations if solvable) \n"
-    s += com + " matching the LMFDB group.\n"
+    s += com + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
+    s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
+    s += com + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
+    s += com + " \n"
     s += "\n" + com2
     s += "\n"
 
@@ -838,6 +879,11 @@ def download_group(**args):
             s += "G:=SmallGroupDecoding(encd,gpsize); \n"
         elif dltype == "gap":
             s += "G:=PcGroupCode(encd, gpsize); \n"
+
+        gen_index = gp_data['gens_used']
+        num_gens = len(gen_index)
+        for i in range(num_gens):
+            s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n" 
 
     #otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??       
     else:
@@ -1081,6 +1127,13 @@ class GroupsSearchArray(SearchArray):
             example="4.2",
             example_span="4.2"
             )
+        order_stats = TextBox(
+            name="order_stats",
+            label="Order statistics",
+            knowl="group.order_stats",
+            example="1^1,2^3,3^2",
+            example_span="1^1,2^3,3^2"
+            )
         count = CountBox()
 
         self.browse_array = [
@@ -1100,6 +1153,7 @@ class GroupsSearchArray(SearchArray):
             [derived_length, frattini_label],
             [supersolvable, monomial],
             [rational, rank],
+            [order_stats],
             [count]
         ]
 
@@ -1111,7 +1165,8 @@ class GroupsSearchArray(SearchArray):
             [aut_group, aut_order, outer_group, outer_order],
             [metabelian, metacyclic, almost_simple, quasisimple],
             [Agroup, Zgroup, derived_length, frattini_label],
-            [supersolvable, monomial, rational, rank]
+            [supersolvable, monomial, rational, rank],
+            [order_stats]
         ]
 
     sort_knowl = "group.sort_order"
@@ -1398,6 +1453,12 @@ flist= {'cc_data': cc_data,
         'crep_data': crep_data,
         'qrep_data': qrep_data}
 
-
-
+def order_stats_list_to_string(o_list):
+    s = ""
+    for pair in o_list:
+        assert len(pair) == 2
+        s += "%s^%s" % (pair[0],pair[1])
+        if o_list.index(pair) != len(o_list)-1:
+            s += ","
+    return s
 
