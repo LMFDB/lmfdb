@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from six import string_types, PY3
-if PY3:
-    buffer = memoryview
-
 from six.moves.urllib_parse import unquote
 import re
 import yaml
@@ -19,12 +14,15 @@ from flask import (render_template, request, url_for, current_app,
 from lmfdb.api import api_page, api_logger
 
 
+buffer = memoryview
+
+
 def pluck(n, list):
     return [_[n] for _ in list]
 
 
 def quote_string(value):
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         return repr(value)
     return value
 
@@ -324,10 +322,7 @@ def api_query(table, id = None):
 
     if format.lower() == "json":
         #return flask.jsonify(**data) # can't handle binary data
-        if PY3:
-            return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
-        else:
-            return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
+        return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,
