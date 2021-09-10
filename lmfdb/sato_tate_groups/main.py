@@ -527,7 +527,7 @@ def search(info):
         ('trace_zero_density' not in query or query['trace_zero_density'] == '0')):
         nres = None
         if components_list is None:
-            components_list = range(1, 3 if ratonly else (start + count + 1 + len(omitted)))
+            components_list = list(range(1, 3 if ratonly else (start + count + 1 + len(omitted))))
             nres = None if ratonly else INFINITY
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]
