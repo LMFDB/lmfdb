@@ -1,8 +1,4 @@
 # -*- encoding: utf-8 -*-
-from six.moves import range
-from six import integer_types as six_integers
-from six import string_types
-
 import cmath
 import math
 import datetime
@@ -15,7 +11,6 @@ from copy import copy
 from itertools import islice
 from types import GeneratorType
 from six.moves.urllib_parse import urlencode
-from six import PY3
 
 from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -369,7 +364,7 @@ def to_dict(args, exclude = [], **kwds):
 
 
 def is_exact(x):
-    return isinstance(x, six_integers) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
 def display_float(x, digits, method = "truncate",
@@ -599,7 +594,7 @@ def web_latex(x, enclose=True):
     >>> web_latex(x**23 + 2*x + 1)
     '\\( x^{23} + 2 \\, x + 1 \\)'
     """
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
 
@@ -655,7 +650,7 @@ def web_latex_split_on(x, on=['+', '-']):
     >>> web_latex_split_on(x**2 + 1)
     '\\( x^{2} \\) + \\(  1 \\)'
     """
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     else:
         A = r"\( %s \)" % latex(x)
@@ -719,7 +714,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     def insert_latex(s):
         return s.group(1) + r'\) \('
 
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return x
     else:
         A = r"\( %s \)" % latex(x)
@@ -1250,10 +1245,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     formatted plot, which can be displayed in web pages with no
     further intervention.
     """
-    if PY3:
-        from io import BytesIO as IO
-    else:
-        from StringIO import StringIO as IO
+    from io import BytesIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
     from six.moves.urllib_parse import quote
@@ -1268,10 +1260,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
     virtual_file.seek(0)
-    if PY3:
-        buf = virtual_file.getbuffer()
-    else:
-        buf = virtual_file.buf
+    buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
 # conversion tools between timestamp different kinds of timestamp
@@ -1286,7 +1275,7 @@ def timestamp_in_ms_to_datetime(ts):
 # started to cause circular imports:
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, string_types):
+    if not isinstance(pol_str, str):
         pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')

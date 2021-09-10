@@ -3,9 +3,6 @@
 This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
-from six import string_types
-from six import integer_types as six_integers
-
 import binascii
 import json
 import datetime
@@ -294,7 +291,7 @@ class Json(pgJson):
             return {"__time__": 0, "data": "%s" % (obj)}
         elif isinstance(obj, datetime.datetime):
             return {"__datetime__": 0, "data": "%s" % (obj)}
-        elif isinstance(obj, (string_types, bool, float) + six_integers):
+        elif isinstance(obj, (str, bool, float, int)):
             return obj
         else:
             raise ValueError("Unsupported type: %s" % (type(obj)))
@@ -445,7 +442,7 @@ def copy_dumps(inp, typ, recursing=False):
         return "{" + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + "}"
     elif SAGE_MODE and isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (float,) + six_integers) or SAGE_MODE and isinstance(inp, (Integer, RealNumber)):
+    elif isinstance(inp, (float, int)) or SAGE_MODE and isinstance(inp, (Integer, RealNumber)):
         return str(inp).replace("L", "")
     elif typ == "boolean":
         return "t" if inp else "f"
