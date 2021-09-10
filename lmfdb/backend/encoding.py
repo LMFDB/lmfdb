@@ -46,7 +46,7 @@ else:
         """
 
         def __init__(self, parent, x=0, base=10):
-            if not isinstance(x, string_types):
+            if not isinstance(x, str):
                 x = str(x)
             RealLiteral.__init__(self, parent, x, base)
 
@@ -186,7 +186,7 @@ class Json(pgJson):
                         for k, v in obj.items()
                     ],
                 }
-            elif all(isinstance(k, string_types) for k in obj):
+            elif all(isinstance(k, str) for k in obj):
                 return {k: cls.prep(v, escape_backslashes) for k, v in obj.items()}
             else:
                 raise TypeError("keys must be strings or integers")
@@ -274,7 +274,7 @@ class Json(pgJson):
                 "prec": "inf" if obj.prec() is infinity else int(obj.prec()),
                 "data": data,
             }
-        elif escape_backslashes and isinstance(obj, string_types):
+        elif escape_backslashes and isinstance(obj, str):
             # For use in copy_dumps below
             return (
                 obj.replace("\\", "\\\\")
@@ -404,7 +404,7 @@ def copy_dumps(inp, typ, recursing=False):
     if inp is None:
         return u"\\N"
     elif typ in ("text", "char", "varchar"):
-        if not isinstance(inp, string_types):
+        if not isinstance(inp, str):
             inp = str(inp)
         inp = (
             inp.replace("\\", "\\\\")
