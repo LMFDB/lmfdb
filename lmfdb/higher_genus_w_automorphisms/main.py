@@ -6,7 +6,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 import yaml
 
 from lmfdb.logger import make_logger

@@ -3,7 +3,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 
 import time
 

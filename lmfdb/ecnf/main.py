@@ -4,7 +4,7 @@
 
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 from six.moves.urllib_parse import quote, unquote
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six.moves import range
 import itertools
 import re
 
