@@ -2,7 +2,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort

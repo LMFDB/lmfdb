@@ -1,8 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
-from six.moves import range
-
 import re
 import sys
 from collections import Counter

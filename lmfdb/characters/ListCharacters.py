@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # ListCharacters.py
-from six.moves import range
-
 import re
 from sage.all import lcm, factor, divisors, Integers
 from sage.databases.cremona import cremona_letter_code
@@ -11,6 +9,7 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error
 
 # utility functions #
+
 
 def modn_exponent(n):
     """ given a nonzero integer n, returns the group exponent of (Z/nZ)* """
