@@ -1,7 +1,6 @@
 ################################################################################
 #  logging utilities
 ################################################################################
-from six import string_types
 import logging
 import os
 
@@ -60,7 +59,7 @@ def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     if type(bp_or_name) == flask.Blueprint:
         name = bp_or_name.name
     else:
-        assert isinstance(bp_or_name, string_types)
+        assert isinstance(bp_or_name, str)
         name = bp_or_name
     l = logging.getLogger(name)
     l.propagate = False

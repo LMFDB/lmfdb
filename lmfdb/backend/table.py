@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 from six.moves import input  # in python2, this is raw_input
 import csv
 import os
@@ -175,12 +173,12 @@ class PostgresTable(PostgresBase):
         self._sort_keys = set([])
         if sort:
             for col in sort:
-                if isinstance(col, string_types):
+                if isinstance(col, str):
                     self._sort_keys.add(col)
                 else:
                     self._sort_keys.add(col[0])
             self._primary_sort = sort[0]
-            if not isinstance(self._primary_sort, string_types):
+            if not isinstance(self._primary_sort, str):
                 self._primary_sort = self._primary_sort[0]
             self._sort = self._sort_str(sort)
         else:
@@ -714,7 +712,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         type = type.upper()
-        if isinstance(columns, string_types):
+        if isinstance(columns, str):
             columns = [columns]
         if type not in self._valid_constraint_types:
             raise ValueError("Unrecognized constraint type")

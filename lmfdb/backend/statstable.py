@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import logging
 import time
 from collections import defaultdict
@@ -509,7 +507,7 @@ class PostgresStatsTable(PostgresBase):
 
         If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).  However, we omit entries where D contains only keys starting with ``$``, since these are used to encode queries.
         """
-        if isinstance(cols, string_types):
+        if isinstance(cols, str):
             cols = [cols]
             one_col = True
         else:
@@ -553,7 +551,7 @@ class PostgresStatsTable(PostgresBase):
                 for rec in cur
                 if not any(
                     isinstance(val, dict) and all(
-                        isinstance(k, string_types) and k.startswith("$") for k in val
+                        isinstance(k, str) and k.startswith("$") for k in val
                     )
                     for val in rec[0]
                 )
@@ -570,7 +568,7 @@ class PostgresStatsTable(PostgresBase):
                 return all(val[i] == c for i, c in constraint_list) and not any(
                     isinstance(val[i], dict)
                     and all(
-                        isinstance(k, string_types) and k.startswith("$")
+                        isinstance(k, str) and k.startswith("$")
                         for k in val[i]
                     )
                     for i in column_indexes
@@ -932,7 +930,7 @@ class PostgresStatsTable(PostgresBase):
         - ``suffix`` -- if given, the counts will be performed on the table with the suffix appended.
         - ``commit`` -- if false, the results will not be committed to the database.
         """
-        if isinstance(grouping, string_types):
+        if isinstance(grouping, str):
             grouping = [grouping]
         else:
             grouping = sorted(grouping)
@@ -1046,7 +1044,7 @@ class PostgresStatsTable(PostgresBase):
         A dictionary with keys the possible values taken on the the columns in grouping.
         Each value is a dictionary with keys 'min', 'max', 'avg'
         """
-        if isinstance(grouping, string_types):
+        if isinstance(grouping, str):
             onegroup = True
             grouping = [grouping]
         else:

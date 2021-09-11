@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from six import string_types
 import json
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv
@@ -290,12 +288,12 @@ def validate_edits(diff):
     except Exception as e:
         raise DiffUnknownError(e.args[0])
 
-    if not isinstance(diff["db"], string_types):
+    if not isinstance(diff["db"], str):
         raise DiffBadType("db")
     #Collection can be none in case of Db info edits
-#    if not isinstance(diff["collection"], string_types):
+#    if not isinstance(diff["collection"], str):
 #        raise DiffBadType("collection")
-    if isinstance(diff["diffs"], string_types):
+    if isinstance(diff["diffs"], str):
         raise DiffBadType("diffs (str)")
 
     diffs = diff["diffs"]
