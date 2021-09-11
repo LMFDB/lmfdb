@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from sage.all import ZZ, sqrt, Set, valuation, kronecker_symbol, GF, floor, true, false, Mod, PolynomialRing, next_prime
+from sage.all import ZZ, sqrt, Set, valuation, kronecker_symbol, GF, floor, Mod, PolynomialRing, next_prime
 
-def IsSquareInQp(x,p):
+def IsSquareInQp(x, p):
     if x==0:
-        return true
+        return True
     # Check parity of valuation
     v=valuation(x,p)
     if v%2:
-        return false
+        return False
     # Renormalise to get a unit
     x//=p**v
     # Reduce mod p and conclude
@@ -18,9 +18,11 @@ def IsSquareInQp(x,p):
         return kronecker_symbol(x,p)==1
 
 
-def HasFinitePointAt(F,p,c):
-    # Tests whether y²=c*F(x) has a finite Qp-point with x and y both in Zp,
-    # assuming that deg F = 6 and F integral
+def HasFinitePointAt(F, p, c):
+    """  
+    Tests whether y²=c*F(x) has a finite Qp-point with x and y both in Zp,
+    assuming that deg F = 6 and F integral
+    """
     Fp = GF(p)
     if p > 2 and Fp(F.leading_coefficient()): # Tests to accelerate case of large p
         # Write F(x) = c*lc(F)*R(x)²*S(x) mod p, R as big as possible
@@ -35,7 +37,7 @@ def HasFinitePointAt(F,p,c):
         if s == 0: # F(x) = C*R(x)² mod p, C = c*lc(F) constant
             if IsSquareInQp(c*F.leading_coefficient(),p):
                 if p>r:# Then there is x s.t. R(x) nonzero and C is a square
-                    return true
+                    return True
             #else: # C nonsquare, so if we have a Zp-point it must have R(x) = 0 mod p
             #Z = R.roots()
             ##TODO
@@ -43,7 +45,7 @@ def HasFinitePointAt(F,p,c):
             g = S.degree()//2 - 1 # genus of the curve y²=C*S(x)
             B = floor(p-1-2*g*sqrt(p)) # lower bound on number of points on y²=C*S(x) not at infty
             if B > r+s: # Then there is a point on y²=C*S(x) not at infty and with R(x) and S(x) nonzero
-                return true
+                return True
     #Now p is small, we can run a naive search
     q = p
     Z = []
@@ -56,7 +58,7 @@ def HasFinitePointAt(F,p,c):
             Z.append(x)
         # If we have a mod p point with y nonzero mod p, then it lifts, so we're done
         if IsSquareInQp(c*y, p):
-            return true
+            return True
     #So now, if we have a Qp-point, then its y-coordinate must be 0 mod p
     t = F.variables()[0]
     for z in Z:
@@ -64,17 +66,19 @@ def HasFinitePointAt(F,p,c):
         c1 = F1.content()
         F1 //= c1
         if HasFinitePointAt(F1,p,(c*c1).squarefree_part()):
-            return true
-    return false
+            return True
+    return False
 
-def IsSolubleAt(F,p):
-    # Tests whether y² = F(x) has a Qp-point, assuming F integral of degree 6 and lc(F) squarefree
+def IsSolubleAt(F, p):
+    """
+    Tests whether y² = F(x) has a Qp-point, assuming F integral of degree 6 and lc(F) squarefree
+    """
     lc = F.leading_coefficient()
     if lc % p:
         # The leading coeff. a6 is not 0 mod p
         # Are the points at Infty defined over Qp ?
         if IsSquareInQp(lc,p):
-            return true
+            return True
         # If we have a point (x,y) with v_p(x) = -A, then v_p(f(x)) = v_p(a6*x^6) = -6A so v_p(y) = -3A
         # So we have x = x'/p^A, y = y'/p^3A, with x' and y' p-adic units
         # Renormalise : y'² = a_d x'^6 + a5 p^A x'^5 + a4 p^2A x'^4 + ...
@@ -92,7 +96,7 @@ def IsSolubleAt(F,p):
         # In particular the points at Infty are not defined over Qp
         # Let us try points over Zp first
         if HasFinitePointAt(F,p,1):
-            return true
+            return True
         # Now, if we had a point with v_p(x) = -A, then v_p(a6 x^6) = 1-6A whereas the other terms have v_p >= -5A
         # So if A >= 2, then 1-6A dominates, so v_p(f(x))=1-6A is odd, contradiction.
         # So A=1, and there must be cancellation mod p to prevent v_p(f(x)) = 5
@@ -100,7 +104,7 @@ def IsSolubleAt(F,p):
         # Just renormalise
         a5 = F[F.degree()-1]
         if a5 % p == 0:
-            return false
+            return False
         t = F.variables()[0]
         Zx = PolynomialRing(ZZ,'x')
         x0 = -a5/lc # v_p(x0) = -1, mustr have x = x0 + O(p^0)
@@ -108,9 +112,12 @@ def IsSolubleAt(F,p):
         return HasFinitePointAt(Zx(p**4*F(x0+t)),p,1)
 
 
-def InsolublePlaces(f,h=0):
-    # List of primes at which the curve y²+h(x)*y=f(x) is not soluble
-    # Assumes f and h have integer coefficients
+def InsolublePlaces(f, h=0):
+    """
+    List of primes at which the curve y²+h(x)*y=f(x) is not soluble
+
+    Assumes f and h have integer coefficients
+    """
     S = [] # List of primes at which not soluble
     # Get eqn of the form y²=F(x)
     F = f

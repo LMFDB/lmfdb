@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (
-    Gamma0, floor, cached_function, dimension_new_cusp_forms,
+    Gamma0, cached_function, dimension_new_cusp_forms,
     dimension_eis, dimension_cusp_forms, dimension_modular_forms)
 
 from lmfdb.lmfdb_database import db, SQL
@@ -11,7 +11,7 @@ from .verification import overall, overall_long, fast, slow, accumulate_failures
 
 @cached_function
 def sturm_bound0(level, weight):
-    return floor(weight * Gamma0(level).index()/12)
+    return (weight * Gamma0(level).index()) // 12
 
 
 def get_dirchar(char_mod, char_num, char_order):

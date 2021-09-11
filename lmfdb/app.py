@@ -864,11 +864,9 @@ def white_listed(url):
 def NotWhiteListedBreads():
     res = set()
     for _, endpoint in routes():
-        print(endpoint)
         if not white_listed(endpoint):
-            print(endpoint.lstrip("/").split('/', 1))
             res.add(endpoint.lstrip("/").split('/', 1)[0])
-    print(res)
+    res.remove('L') # all the valid breads are whitelisted
     return res
 
 

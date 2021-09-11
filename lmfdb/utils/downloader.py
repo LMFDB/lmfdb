@@ -1,12 +1,10 @@
-from six import string_types
-
 import time
 
 from flask import abort, send_file, stream_with_context, Response
 
 from werkzeug.datastructures import Headers
 from ast import literal_eval
-from six import BytesIO
+from io import BytesIO
 
 
 class Downloader(object):
@@ -97,7 +95,7 @@ class Downloader(object):
     def to_lang(self, lang, inp, level = 0, prepend = ''):
         if inp is None:
             return self.none[lang]
-        if isinstance(inp, string_types):
+        if isinstance(inp, str):
             return '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)
@@ -187,7 +185,7 @@ class Downloader(object):
         func_start = self.get('function_start',{}).get(lang,[])
         func_body = self.get('function_body',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
-        if isinstance(self.columns, string_types):
+        if isinstance(self.columns, str):
             proj = [self.columns]
         elif isinstance(self.columns, list):
             proj = self.columns
@@ -234,7 +232,7 @@ class Downloader(object):
         if isinstance(data_desc, dict):
             data_desc = data_desc[lang]
         if data_desc is not None:
-            if isinstance(data_desc, string_types):
+            if isinstance(data_desc, str):
                 data_desc = [data_desc]
             for line in data_desc:
                 s += c + ' %s\n' % line

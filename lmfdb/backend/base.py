@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import csv
 import logging
 import re
@@ -425,7 +423,7 @@ class PostgresBase(object):
         A list of pairs (locktype, pid) where locktype is a string as above,
         and pid is the process id of the postgres transaction holding the lock.
         """
-        if isinstance(types, string_types):
+        if isinstance(types, str):
             if types in ["update", "delete", "insert"]:
                 types = [
                     "ShareLock",
@@ -680,7 +678,7 @@ class PostgresBase(object):
         """
         L = []
         for col in sort_list:
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 L.append(Identifier(col))
             elif col[1] == 1:
                 L.append(Identifier(col[0]))
@@ -726,7 +724,7 @@ class PostgresBase(object):
         has_id = False
         col_list = []
         col_type = {}
-        if isinstance(table_name, string_types):
+        if isinstance(table_name, str):
             table_name = [table_name]
         for tname in table_name:
             if data_types is None or tname not in data_types:

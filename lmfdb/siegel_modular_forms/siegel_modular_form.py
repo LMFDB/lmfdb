@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
-
-from __future__ import absolute_import
-from six import BytesIO
+from io import BytesIO
 
 from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set

@@ -7,7 +7,7 @@ import re
 from flask import url_for
 from sage.all import (
     ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
-    LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part,
+    PowerSeriesRing, Integer, primes, CDF, I, real_part, imag_part,
     latex, factor, exp, pi, prod, floor, is_prime, prime_range)
 
 from lmfdb.utils import (
@@ -748,10 +748,10 @@ def euler_p_factor(root_list, PREC):
     '''
     PREC = floor(PREC)
     # return satake_list
-    R = LaurentSeriesRing(CF, 'x')
-    x = R.gens()[0]
-    ep = prod([1 / (1 - a * x) for a in root_list])
-    return ep + O(x ** (PREC + 1))
+    R = PowerSeriesRing(CF, 'x')
+    x = R.gen()
+    ep = ~R.prod([1 - a * x for a in root_list])
+    return ep.O(PREC + 1)
 
 
 def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):

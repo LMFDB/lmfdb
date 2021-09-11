@@ -1,8 +1,8 @@
 # test sage script that uses pari to perform searches on Dirichlet characters
 # useful for independently testing/verifying results of ListCharacters.py
-from six.moves import range
 
 from sage.all import gcd, pari
+
 
 def match(q,n,mod=None,cond=None,ord=None,parity=None,primitive=None):
     """ returns True if chi_q(n,\cdot) matches search parameters """
