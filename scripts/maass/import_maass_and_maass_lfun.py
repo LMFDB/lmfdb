@@ -8,14 +8,12 @@ the command
 %runfile lmfdb/modular_forms/maass_forms/import_maass_and_maass_lfun.py
 
 """
-from __future__ import print_function
-from six.moves import range
 import yaml
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 
 from pymongo.mongo_client import MongoClient
 print("getting connection")
-C= MongoClient(port=dbport)
+C = MongoClient(port=dbport)
 print("authenticating on the L-functions and Maass forms database")
 
 ##pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))

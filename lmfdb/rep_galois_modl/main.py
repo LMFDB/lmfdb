@@ -1,8 +1,6 @@
-from six.moves import range
-
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import make_response, send_file, request, render_template, redirect, url_for
@@ -18,6 +16,7 @@ from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
 # utilitary functions for displays
+
 
 def my_latex(s):
     # This code was copy pasted and should be refactored
