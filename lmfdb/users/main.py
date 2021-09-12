@@ -3,7 +3,6 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
-from __future__ import absolute_import
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -326,7 +325,7 @@ def admin():
 def restart():
     import sys
     from subprocess import Popen, PIPE
-    from six.moves.urllib.parse import urlparse
+    from urllib.parse import urlparse
     urlparts = urlparse(request.url)
     if urlparts.netloc == "beta.lmfdb.org":
         command = ['bash', '/home/lmfdb/restart-dev']

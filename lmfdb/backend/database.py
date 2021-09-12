@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six.moves import input  # in python2, this is raw_input
 import csv
 import logging
 import os

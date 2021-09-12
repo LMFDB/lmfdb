@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
 import time
-import six
 from urllib.parse import urlparse, urlunparse
 
 from flask import (
@@ -185,8 +183,7 @@ def git_infos():
                     '''git reflog -n5''',
                     '''git log --graph  -n 10''']
         kwdargs = {'shell': True, 'stdout': PIPE, 'cwd': cwd}
-        if six.PY3:
-            kwdargs['encoding'] = 'utf-8'
+        kwdargs['encoding'] = 'utf-8'
         pairs = [(c, Popen(c, **kwdargs).communicate()[0]) for c in commands]
         rev = pairs[0][1]
         date = pairs[0][1]
@@ -243,7 +240,7 @@ def nl2br(s):
 
 @app.template_filter('urlencode')
 def urlencode(kwargs):
-    from six.moves.urllib.parse import urlencode
+    from urllib.parse import urlencode
     return urlencode(kwargs)
 
 ##############################
@@ -259,7 +256,7 @@ def netloc_redirect():
         Force https on www.lmfdb.org
         Redirect non-whitelisted routes from www.lmfdb.org to beta.lmfdb.org
     """
-    from six.moves.urllib.parse import urlparse, urlunparse
+    from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
 
