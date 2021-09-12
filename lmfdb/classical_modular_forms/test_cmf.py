@@ -72,7 +72,7 @@ class CmfTest(LmfdbTest):
         assert '1124.1.ba.a' in page.get_data(as_text=True)
         assert r'\Q(\zeta_{35})' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?weight=10&level=10', follow_redirects=True)
-        assert 'Results (4 matches)'
+        assert 'Results (4 matches)' in page.get_data(as_text=True)
         assert '10.10.b.a' in page.get_data(as_text=True)
         assert '2580' in page.get_data(as_text=True)
 
@@ -314,7 +314,7 @@ class CmfTest(LmfdbTest):
         assert 'Dimension search results' in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
-        assert 'Error: Table too large: must have at most 10000 entries'
+        assert 'Error: Table too large: must have at most 10000 entries' in page.get_data(as_text=True)
 
         #the other dim table
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
