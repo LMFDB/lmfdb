@@ -11,7 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
-from __future__ import absolute_import
+
 import string
 import re
 import json

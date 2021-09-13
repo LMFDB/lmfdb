@@ -6,7 +6,7 @@ Imports from a json file directly to the database.
 Data is imported directly to the table lf_fields 
 
 """
-from __future__ import print_function
+
 import sys
 from sage.all import QQ
 import re

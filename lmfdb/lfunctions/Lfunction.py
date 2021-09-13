@@ -6,7 +6,7 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
-from __future__ import absolute_import
+
 import math
 import re
 

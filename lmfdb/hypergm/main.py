@@ -2,7 +2,7 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones, Edgar Costa
 
-from __future__ import absolute_import
+
 import re
 
 from flask import render_template, request, url_for, redirect, abort

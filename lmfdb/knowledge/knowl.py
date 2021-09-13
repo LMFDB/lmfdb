@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # the basic knowledge object, with database awareness, …
-from __future__ import print_function
+
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time

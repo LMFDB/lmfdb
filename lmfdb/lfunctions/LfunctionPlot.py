@@ -1,5 +1,5 @@
 # Code for creating plots for browsing L-functions
-from __future__ import print_function
+
 import math
 from flask import url_for
 from lmfdb import db

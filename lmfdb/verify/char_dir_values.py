@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from sage.all import Integer, euler_phi
 
 from lmfdb import db
