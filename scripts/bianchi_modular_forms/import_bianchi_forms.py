@@ -6,7 +6,7 @@ Revised for postgres (2020)
 May 2021: Replaced by scripts in https://github.com/JohnCremona/bianchi-progs/blob/master/bianchi.py
 
 """
-from __future__ import print_function
+
 
 from lmfdb import db
 print("setting dims")

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from sage.all import ZZ,QQ,PolynomialRing,EllipticCurve,pari
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.nfutils.psort import ideal_label

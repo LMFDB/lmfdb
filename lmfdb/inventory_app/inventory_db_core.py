@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv
 import datetime as dt

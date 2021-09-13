@@ -2,7 +2,7 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
-from __future__ import absolute_import
+
 from lmfdb import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page

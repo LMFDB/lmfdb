@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_db_core as idc
 
 def update_scrape_progress_helper(db_id, coll_id, uid, complete=None, running=None):

@@ -46,7 +46,7 @@ ACKNOWLEDGEMENT (from sympow readme):
 #
 #                  http://www.gnu.org/licenses/
 ########################################################################
-from __future__ import print_function
+
 import os
 
 from sage.structure.sage_object import SageObject
