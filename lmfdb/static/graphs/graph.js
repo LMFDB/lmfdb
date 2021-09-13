@@ -22,7 +22,6 @@ var dbug2 = '';
 // Highlight colors: these were for testing
 var selected_color = 'deepskyblue';
 var highlit_color = 'yellowgreen';
-var can_move_vertically = false;
 
 // Figure out the highlight color for activesubgp
 var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
@@ -35,17 +34,18 @@ for (var j = 0; j < classes.length; j++) {
   }
 }
 
-// A darker color: easier since these items exist in the DOM
 // This is moved later because of some issue with load order
-selected_color = $("#group-diagram-selected").css('background-color');
+// selected_color = $("#group-diagram-selected").css('background-color');
+
+var can_move_vertically = false;
 
 Graph = class {
     constructor(ambient) {
         this.nodeSet = {};
         this.nodes = [];
         this.edges = [];
-    this.ambient = ambient;
-    this.highlit = null;
+        this.ambient = ambient;
+        this.highlit = null;
     }
 
     addNode(value, posnx, orders, options) {
@@ -129,7 +129,7 @@ class Node {
 }
 
 class Renderer {
-    constructor(element, graph, options) {
+  constructor(element, graph, options) {
         this.element = element;
         this.graph = graph;
         this.setOptions(options);
@@ -138,24 +138,28 @@ class Renderer {
         this.radius = 20;
         this.arrowAngle = Math.PI/10;
 
-    //console.log([graph.layoutMaxX, graph.layoutMinX]);
-    //console.log([graph.layoutMaxY, graph.layoutMinY]);
-        this.factorX = (element.width - 2 * this.radius) / (graph.layoutMaxX - graph.layoutMinX+1);
-        this.factorY = (element.height - 2 * this.radius) / (graph.layoutMaxY - graph.layoutMinY+1);
-        this.reposition();
+        this.setSize();
   }
 
-    setOptions(options) {
-        this.options = {
-          radius: 20,
-          arrowAngle: Math.PI/10,
-          //font: tahoma8,
-          edgeColor: 'blue'
-        }
-        for (var k in options) {
-            this.options[k] = options[k];
-        }
+  setSize() {
+    this.factorX = (this.ctx.canvas.width - 2 * this.radius) / (this.graph.layoutMaxX - this.graph.layoutMinX+1);
+    this.factorY = (this.ctx.canvas.height - 2 * this.radius) / (this.graph.layoutMaxY - this.graph.layoutMinY+1);
+    this.reposition();
+    this.draw();
+  }
+
+
+  setOptions(options) {
+    this.options = {
+      radius: 20,
+      arrowAngle: Math.PI/10,
+      //font: tahoma8,
+      edgeColor: 'blue'
     }
+    for (var k in options) {
+      this.options[k] = options[k];
+    }
+  }
 
     translate(point) {
         return [
@@ -194,6 +198,10 @@ class Renderer {
         return [point[0]+dx, point[1]+dy];
     }
 
+    clear() {
+        this.ctx.clearRect(0,0, this.element.width, this.element.height);
+    }
+
     draw() {
         this.ctx.clearRect(0,0, this.element.width, this.element.height);
         for (var i = 0; i < this.graph.nodes.length; i++) {
@@ -230,8 +238,9 @@ class Renderer {
         var lft = node.center[0]-0.5*img.width;
 
         if(node.selected) {
-          // Just get it here, used to be at the start
+          // Just set it here, used to be at the start
           selected_color = $("#group-diagram-selected").css('background-color');
+
           ctxt.fillStyle= selected_color;
           ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
         } else if(node.highlit) {
@@ -760,9 +769,10 @@ function clearsubinfo() {
   mydiv.innerHTML = 'Click on a subgroup in the diagram to see information about it.';
 }
 
-/* Make ourg a global variable */
+/* Make some parts global variables */
 var ourg;
 var ambientlabel;
+
 
 function make_sdiagram(canv, ambient, nodes, edges, orders) {
   g = new Graph(ambient);
@@ -779,7 +789,7 @@ function make_sdiagram(canv, ambient, nodes, edges, orders) {
   layout.setiter(nodes[0][0][7]==0);
   layout.layout();
 
-  var renderer = new Renderer(document.getElementById(canv),g);
+  renderer = new Renderer(document.getElementById(canv),g);
   renderer.draw();
 
   // Need to call Event.Handler here
@@ -788,7 +798,12 @@ function make_sdiagram(canv, ambient, nodes, edges, orders) {
           renderer.draw();
       }
   });
+  // The renderer is stored in sdiagram by the web page
   return renderer;
+}
+
+function redraw() {
+    sdiagram.draw();
 }
 
 function getpositions() {

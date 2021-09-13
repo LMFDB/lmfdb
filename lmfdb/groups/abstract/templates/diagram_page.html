@@ -20,20 +20,30 @@
 </script>
 
 <script type="text/javascript">
+  function getcanvas()
+  {
+    return $("#subdiagram")[0].getContext('2d').canvas;
+  }
   function newh(amt)
   {
-    var h = $("#subdiagram").height();
-    var w = $("#subdiagram").width();
-    $("#subdiagram").height(h+amt);
-    $("#subdiagram").width(w);
+    var ctx = getcanvas();
+    var h = ctx.height;
+    var w = ctx.width;
+    ctx.height = h+amt;
+    ctx.width = w;
+    sdiagram.setSize();
+    sdiagram.draw();
   }
 
   function neww(amt)
   {
-    var h = $("#subdiagram").height();
-    var w = $("#subdiagram").width();
-    $("#subdiagram").height(h);
-    $("#subdiagram").width(w+amt);
+    var ctx = getcanvas();
+    var h = ctx.height;
+    var w = ctx.width;
+    ctx.height = h;
+    ctx.width = w+amt;
+    sdiagram.setSize();
+    sdiagram.draw();
   }
   function togglemovement()
   {
