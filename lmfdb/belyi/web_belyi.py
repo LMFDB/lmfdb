@@ -263,18 +263,22 @@ class WebBelyiGalmap(object):
 
         # Downloads
         if galmap["g"] <= 2:
+            data_label = data["label"]
+            if triple:
+                spl = data_label.split("-")
+                data_label = "-".join(spl[0:-1])
             self.downloads = [
                 (
                     "Code to Magma",
-                    url_for(".belyi_galmap_magma_download", label=data["label"]),
+                    url_for(".belyi_galmap_magma_download", label=data_label),
                 ),
                 (
                     "Code to SageMath",
-                    url_for(".belyi_galmap_sage_download", label=data["label"]),
+                    url_for(".belyi_galmap_sage_download", label=data_label),
                 ),
                 (
                     "All data to text",
-                    url_for(".belyi_galmap_text_download", label=data["label"]),
+                    url_for(".belyi_galmap_text_download", label=data_label),
                 ),
 
             ]
