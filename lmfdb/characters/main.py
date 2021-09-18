@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
+
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort

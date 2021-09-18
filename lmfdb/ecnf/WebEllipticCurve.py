@@ -1,6 +1,5 @@
-from __future__ import print_function
 from flask import url_for
-from six.moves.urllib_parse import quote
+from urllib.parse import quote
 from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db

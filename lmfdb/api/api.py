@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from six.moves.urllib_parse import unquote
+from urllib.parse import unquote
 import re
 import yaml
 import json

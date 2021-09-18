@@ -1,8 +1,6 @@
-from __future__ import absolute_import
-
 from os import path
 import hashlib
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from logging import getLogger
 from .lmfdb_inventory import LOG_ID as LOG_ID
 from .lmfdb_inventory import coll_status as coll_status

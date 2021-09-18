@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 from lmfdb.lmdfb_database import LMFDBDatabase
 from sage.parallel.decorate import parallel

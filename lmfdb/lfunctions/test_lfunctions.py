@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 

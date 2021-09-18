@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six.moves import input  # in python2, this is raw_input
 import datetime
 import inspect
 import os
@@ -14,12 +12,13 @@ from lmfdb.backend.database import PostgresDatabase
 from lmfdb.backend.searchtable import PostgresSearchTable
 from lmfdb.backend.statstable import PostgresStatsTable
 
+
 def overrides(super_class):
     def overrider(method):
         super_method = getattr(super_class, method.__name__)
         assert super_method
         if not method.__doc__:
-                method.__doc__ = super_method.__doc__
+            method.__doc__ = super_method.__doc__
         method.__signature__ = inspect.signature(super_method)
         return method
     return overrider

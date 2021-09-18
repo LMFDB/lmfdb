@@ -1,6 +1,4 @@
-from __future__ import absolute_import
 # Different helper functions.
-from six import string_types
 import math
 import re
 
@@ -89,7 +87,7 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
     try:
-        if isinstance(coeff, string_types):
+        if isinstance(coeff, str):
             if coeff == "I":
                 rp = 0
                 ip = 1
@@ -693,7 +691,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     else:
         lfunction_value_tex_analytic = ''
 
-    if isinstance(val, string_types):
+    if isinstance(val, str):
         Lval = val
     else:
         ccval = CDF(val)

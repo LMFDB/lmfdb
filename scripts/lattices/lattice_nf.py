@@ -8,7 +8,7 @@ with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
-from __future__ import print_function
+
 import os
 import os.path
 

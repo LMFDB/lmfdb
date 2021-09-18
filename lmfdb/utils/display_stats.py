@@ -1,4 +1,3 @@
-from six import string_types
 from collections import defaultdict
 
 from flask import url_for
@@ -495,7 +494,7 @@ class StatsDisplay(UniqueRepresentation):
             being a list of dictionaries as above.
         - ``col_headers`` is a list of column headers.
         """
-        if isinstance(cols, string_types):
+        if isinstance(cols, str):
             cols = [cols]
         if buckets is None:
             buckets = {col: self._buckets[col] for col in cols if self._buckets[col]}
@@ -600,7 +599,7 @@ class StatsDisplay(UniqueRepresentation):
             raise NotImplementedError
 
     def prep(self, attr):
-        if isinstance(attr['cols'], string_types):
+        if isinstance(attr['cols'], str):
             attr['cols'] = [attr['cols']]
         cols = attr['cols']
         # default value for top_title from row_title/columns
@@ -608,7 +607,7 @@ class StatsDisplay(UniqueRepresentation):
             top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        if not isinstance(top_title, string_types):
+        if not isinstance(top_title, str):
             missing_knowl = any(knowl is None for text, knowl in top_title)
             joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
             attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
@@ -656,7 +655,7 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            if isinstance(cols, string_types):
+            if isinstance(cols, str):
                 cols = [cols]
             buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:

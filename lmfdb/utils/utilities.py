@@ -10,7 +10,7 @@ import time
 from copy import copy
 from itertools import islice
 from types import GeneratorType
-from six.moves.urllib_parse import urlencode
+from urllib.parse import urlencode
 
 from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
@@ -1248,7 +1248,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     from io import BytesIO as IO
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from base64 import b64encode
-    from six.moves.urllib_parse import quote
+    from urllib.parse import quote
 
     virtual_file = IO()
     fig = P.matplotlib(axes_pad=axes_pad)

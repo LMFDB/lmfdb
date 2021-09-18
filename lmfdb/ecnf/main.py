@@ -6,7 +6,7 @@ import ast
 import re
 from io import BytesIO
 import time
-from six.moves.urllib_parse import quote, unquote
+from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, send_file, make_response, abort
 from markupsafe import Markup, escape

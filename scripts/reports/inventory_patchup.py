@@ -1,5 +1,5 @@
 #A collection of functions usesd to patch up uploads which had bugs
-from __future__ import print_function
+
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_core as idc
 
