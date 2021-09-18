@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -22,7 +22,7 @@ class SMFPageTest(LmfdbTest):
                 pagedata = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
                 #print "Got %d bytes" % len(pagedata)
                 assert full_label in pagedata and "Hecke eigenform" in pagedata
-            except:
+            except Exception:
                 print("Error on page " + url)
                 errors.append(url)
         if not errors:

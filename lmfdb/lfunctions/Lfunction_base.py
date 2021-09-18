@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import url_for
 from sage.all import ZZ, is_prime, latex, imag_part
 from sage.misc.lazy_attribute import lazy_attribute
@@ -235,7 +235,7 @@ class Lfunction(object):
             try:
                 info['sv_edge'] = specialValueString(self, 1, '1')
                 info['sv_critical'] = specialValueString(self, 0.5, '1/2')
-            except:
+            except Exception:
                 info['sv_critical'] = "L(1/2): not computed"
                 info['sv_edge'] = "L(1): not computed"
 

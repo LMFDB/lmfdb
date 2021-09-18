@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv
 from . import inventory_db_core as idc
@@ -105,7 +105,7 @@ def capture_rollback(db_id, db_name, coll_name, change, coll_id = None):
             current_record = idc.get_field(coll_id, change['item'], type = 'human')
             #Try as a field first
             assert current_record is not None and current_record['err'] is False
-        except:
+        except Exception:
             #Now try as a record
             current_record = idc.get_record(coll_id, change['item'])
             is_record = True
@@ -155,7 +155,7 @@ def store_rollback(rollback_diff):
         _id = None
         lmfdb_db[table].upsert(record)
         return {'err':False, 'id':_id}
-    except:
+    except Exception:
         return {'err':True, 'id':0}
 
 def set_rollback_dead(rollback_doc):
@@ -185,6 +185,6 @@ def apply_rollback(rollback_doc):
         assert(rollback_doc['diff']['live'])
         update_fields(rollback_doc['diff'], storeRollback=False)
         set_rollback_dead(rollback_doc)
-    except:
+    except Exception:
         raise
 #TODO is raise missing a specifier?

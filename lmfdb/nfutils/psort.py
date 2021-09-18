@@ -69,7 +69,7 @@ def make_keys(K,p):
     if not hasattr(K,'psort_dict'):
         K.psort_dict = {}
         K.primes_dict = {}
-    if not p in K.psort_dict:
+    if p not in K.psort_dict:
         #print("creating keys for primes above {}".format(p))
         key_dict = {}
         Fp = GF(p)
@@ -340,7 +340,7 @@ def ideals_of_norm(K,n):
     """
     if not hasattr(K,'ideal_norm_dict'):
         K.ideal_norm_dict = {}
-    if not n in K.ideal_norm_dict:
+    if n not in K.ideal_norm_dict:
         if n==1:
             K.ideal_norm_dict[n] = [K.ideal(1)]
         else:

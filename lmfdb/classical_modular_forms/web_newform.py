@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
-from __future__ import absolute_import
-from six import string_types
 from collections import defaultdict
 import bisect
 import re
@@ -1257,7 +1255,7 @@ function switch_basis(btype) {
         return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
-        if not isinstance(elabel, string_types): # match object
+        if not isinstance(elabel, str):  # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
         if e <= 0 or e > self.rel_dim:

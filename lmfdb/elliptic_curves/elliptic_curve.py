@@ -2,7 +2,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, url_for, request, redirect, make_response, send_file, abort
@@ -709,7 +709,7 @@ def ec_code(**args):
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
+            code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
     return code
 
 def tor_struct_search_Q(prefill="any"):
@@ -768,7 +768,7 @@ class ECSearchArray(SearchArray):
         surj_primes = TextBox(
             name="surj_primes",
             label="Maximal primes",
-            knowl="ec.maximal_galois_rep",
+            knowl="ec.maximal_ladic_galois_rep",
             example="2,3")
         isodeg = TextBox(
             name="isogeny_degrees",
@@ -823,7 +823,7 @@ class ECSearchArray(SearchArray):
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Nonmax $p$",
-            knowl="ec.maximal_galois_rep",
+            knowl="ec.maximal_ladic_galois_rep",
             example="2,3",
             select_box=surj_quant)
         bad_quant = SubsetBox(

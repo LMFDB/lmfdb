@@ -270,7 +270,7 @@ class WebEC(object):
         data['CM'] = "no"
         data['EndE'] = r"\(\Z\)"
         if self.cm:
-            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.nonmax_primes]
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if p not in self.nonmax_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
@@ -531,7 +531,7 @@ class WebEC(object):
         iwasawadata = db.ec_iwasawa.lookup(self.lmfdb_label)
         if not iwasawadata: # For curves with no Iwasawa data
             return
-        if not 'iwp0' in iwasawadata: # For curves with no Iwasawa data
+        if 'iwp0' not in iwasawadata: # For curves with no Iwasawa data
             return
 
         iw['p0'] = iwasawadata['iwp0'] # could be None

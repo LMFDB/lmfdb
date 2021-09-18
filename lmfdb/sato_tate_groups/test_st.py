@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
@@ -97,7 +97,7 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
-        assert '0 matches'
+        assert 'No matches' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1/4')
         assert '1.4.E.4.1a' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=19/24')

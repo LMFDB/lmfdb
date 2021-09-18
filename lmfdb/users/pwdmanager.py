@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-from __future__ import print_function
-from __future__ import absolute_import
-from six import string_types
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -238,6 +235,7 @@ class PostgresUserTable(PostgresBase):
 
 userdb = PostgresUserTable()
 
+
 class LmfdbUser(UserMixin):
     """
     The User Object
@@ -245,7 +243,7 @@ class LmfdbUser(UserMixin):
     properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
-        if not isinstance(uid, string_types):
+        if not isinstance(uid, str):
             raise Exception("Username is not a string")
 
         self._uid = uid
@@ -320,7 +318,7 @@ class LmfdbUser(UserMixin):
         checks if the given password for the user is valid.
         @return: True: OK, False: wrong password.
         """
-        if not 'password' in self._data and not 'bcpassword' in self._data:
+        if 'password' not in self._data and 'bcpassword' not in self._data:
             logger.warning("no password data in db for '%s'!" % self._uid)
             return False
         self._authenticated = userdb.authenticate(self._uid, pwd)

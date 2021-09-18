@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six.moves import range
 import itertools
 import re
 
@@ -522,13 +521,13 @@ def search(info):
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
-    if ((not 'weight' in query or 0 in weight_list) and
-        (not 'degree' in query or 1 in degree_list) and
-        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and
-        (not 'trace_zero_density' in query or query['trace_zero_density'] == '0')):
+    if (('weight' not in query or 0 in weight_list) and
+        ('degree' not in query or 1 in degree_list) and
+        ('identity_component' not in query or query['identity_component'] == 'SO(1)') and
+        ('trace_zero_density' not in query or query['trace_zero_density'] == '0')):
         nres = None
         if components_list is None:
-            components_list = range(1, 3 if ratonly else (start + count + 1 + len(omitted)))
+            components_list = list(range(1, 3 if ratonly else (start + count + 1 + len(omitted))))
             nres = None if ratonly else INFINITY
         elif ratonly:
             components_list = [n for n in range(1,3) if n in components_list]

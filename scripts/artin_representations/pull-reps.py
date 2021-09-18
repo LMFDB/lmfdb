@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 pw_filename = "../../../xyzzy"
 password = open(pw_filename, "r").readlines()[0].strip()
 

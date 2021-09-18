@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
@@ -47,7 +46,6 @@ from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
-from six import string_types
 
 SPECTRAL_STR = r"((?:[rc]\d+)+)(?:e(\d+))?-(0|(?:[pmc]\d+(?:\.\d\d)?)+)"
 SPECTRAL_RE = re.compile("^"+SPECTRAL_STR+"$")
@@ -1554,7 +1552,7 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-    except:
+    except Exception:
         return ""
 
     plotrange = 30
@@ -1628,7 +1626,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, string_types):
+    if isinstance(website_zeros, str):
         return website_zeros
 
     positiveZeros = []
@@ -1726,7 +1724,7 @@ def processEllipticCurveNavigation(startCond, endCond):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1735,7 +1733,7 @@ def processEllipticCurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = isogeny_class_table(N, end)
@@ -1775,7 +1773,7 @@ def processGenus2CurveNavigation(startCond, endCond):
             N = 169
         elif N > 1000:
             N = 1000
-    except:
+    except Exception:
         N = 169
 
     try:
@@ -1784,7 +1782,7 @@ def processGenus2CurveNavigation(startCond, endCond):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 1000
 
     iso_list = genus2_isogeny_class_table(N, end)
@@ -1823,7 +1821,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
             N = 11
         elif N > 100:
             N = 100
-    except:
+    except Exception:
         N = 11
 
     try:
@@ -1832,7 +1830,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
         else:
             end = endCond
 
-    except:
+    except Exception:
         end = 100
 
     iso_list = isogeny_class_table(N, end)
@@ -1895,7 +1893,7 @@ def source(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
@@ -1924,7 +1922,7 @@ def completeness(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)
@@ -1951,7 +1949,7 @@ def reliability(prepath):
     try:
         L = generateLfunctionFromUrl(*args)
         assert L
-    except:
+    except Exception:
         return abort(404)
     info={'bread': ()}
     set_bread_and_friends(info, L, request)

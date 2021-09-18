@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import jsonify_pg_structure as jdbs
 from . import inventory_upload_data as iud
 from .scrape_progress_update import update_scrape_progress

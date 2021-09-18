@@ -6,7 +6,7 @@
 import ast
 import os
 import re
-from six import BytesIO
+from io import BytesIO
 import yaml
 
 from lmfdb.logger import make_logger
@@ -802,7 +802,7 @@ def render_passport(args):
         try:
             numgenvecs = int(request.args['numgenvecs'])
             numbraidreps = int(request.args['numbraidreps'])
-        except:
+        except Exception:
             numgenvecs = 20
             numbraidreps = 20
 

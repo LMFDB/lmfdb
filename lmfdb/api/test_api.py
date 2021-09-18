@@ -38,7 +38,7 @@ class ApiTest(LmfdbTest):
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             assert 'Query: <code><a href="/api/' in data
-            assert not "Error:" in data
+            assert "Error:" not in data
 
     def test_api_examples_yaml(self):
         r"""
@@ -49,7 +49,7 @@ class ApiTest(LmfdbTest):
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
             assert ("jinv:\n  - -65626385453056\n  - 656000554923" in data) or ("'jinv': !!python/unicode '-65626385453056/656000554923'" in data)
-            assert not "Error:" in data
+            assert "Error:" not in data
 
     def test_api_examples_json(self):
         r"""

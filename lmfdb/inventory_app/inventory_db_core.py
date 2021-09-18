@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_helpers as ih
 from . import lmfdb_inventory as inv
 import datetime as dt
@@ -70,7 +70,7 @@ def get_db(name):
     if len(exists_at) > 0:
         try:
             _id = exists_at[0]['_id']
-        except:
+        except Exception:
             #Happens if record is broken - shouldn't be
             _id = -1
         data = exists_at[0]
@@ -229,7 +229,7 @@ def set_coll_scrape_date(coll_id, scrape_date):
 
     try:
         assert(isinstance(scrape_date, dt.datetime))
-    except:
+    except Exception:
         return {'err':True, 'id':0, 'exist':False}
 
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
@@ -352,7 +352,7 @@ def add_index(coll_id, index_data):
         record[indexes_fields[3]] = index_data['keys']
         try:
             upsert_and_check(db['inv_indices'], {}, record)
-        except:
+        except Exception:
             return {'err':True, 'id':0, 'exist':False}
 
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
@@ -371,7 +371,7 @@ def get_all_indices(coll_id):
     try:
         data = list(db[table_to_search].search(rec_find))
         return {'err':False, 'id':-1, 'exist':True, 'data':data}
-    except:
+    except Exception:
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
 def upsert_and_check(table, rec_find, rec_set):
@@ -391,7 +391,7 @@ def upsert_and_check(table, rec_find, rec_set):
             _id = dat[0]['_id']
         else:
             _id = -1
-    except:
+    except Exception:
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':(not upserted)}
 
@@ -411,7 +411,7 @@ def update_and_check(table, rec_find, rec_set):
         result = list(table.search(rec_find))
         if len(result) == 0:
             raise(ValueError)
-    except:
+    except Exception:
         return {'err':True, 'id':-1, 'exist':False}
     return {'err':False, 'id':result[0]['_id'], 'exist':True}
 
@@ -425,7 +425,7 @@ def search_ops_table(rec_find):
     try:
         result = db[table_to_search].search(rec_find)
         return result
-    except:
+    except Exception:
         return []
 
 def add_to_ops_table(rec_set):
@@ -435,7 +435,7 @@ def add_to_ops_table(rec_set):
         # TODO Interface seems to lack any way of inserting a single record????
         db[table_to_change].insert_many([rec_set])
         return {'err':False}
-    except:
+    except Exception:
         return {'err':True}
 
 #End ops ---------------------------------------------------------------------------------
@@ -485,13 +485,13 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
         alter = False
         try:
             rec_set = human_record['data']
-        except:
+        except Exception:
             rec_set = {}
         for field in inv.base_editable_fields:
             try:
                 a = human_record['data'][field]
                 assert(a or not a) #Use a for Pyflakes, but we don't care what is is
-            except:
+            except Exception:
                 rec_set[field] = None
                 alter = True
         #Rec_set is now original data plus any missing base_editable_fields
@@ -519,7 +519,7 @@ def cleanup_records(coll_id, record_list):
             if item['hash'] not in extant_hashes:
                 db[table_to_search].delete(item)
 
-    except:
+    except Exception:
         return {'err':True}
 
 #End table sync --------------------------------------------------------------------------
@@ -556,7 +556,7 @@ def count_records_and_types(coll_id, as_string=False):
         n_types = len(recs)
         n_rec = sum([rec['count'] for rec in recs])
         counts = (n_rec, n_types)
-    except:
+    except Exception:
         pass
     if as_string:
         counts = (comma(counts[0]), comma(counts[1]))

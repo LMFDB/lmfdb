@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import print_function
 import unittest2
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import ssl
 import errno
 from lmfdb.app import app

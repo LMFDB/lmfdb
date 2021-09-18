@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from lmfdb.tests import LmfdbTest
 import os
 import itertools

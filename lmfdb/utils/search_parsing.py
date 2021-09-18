@@ -1,8 +1,6 @@
 # -*- encoding: utf-8 -*-
 
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
-from six.moves import range
-
 import re
 import sys
 from collections import Counter
@@ -799,7 +797,7 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                     # If used more generally we should check every modifier
                     # value -1 is used to force empty search results
                     if isinstance(query[qf], dict):
-                        if (('$in' in query[qf] and not v in query[qf]['$in'])
+                        if (('$in' in query[qf] and v not in query[qf]['$in'])
                            or ('$gt' in query[qf] and not v > query[qf]['$gt'])
                            or ('$gte' in query[qf] and not v >= query[qf]['$gte'])
                            or ('$lt' in query[qf] and not v < query[qf]['$lt'])
@@ -1081,7 +1079,7 @@ def input_to_subfield(inp):
             raise SearchParsingError("You may only specify one subfield.")
         try:
             pol = PolynomialRing(QQ,'x')(str(F1))
-        except:
+        except Exception:
             raise SearchParsingError("Subfield not entered properly.")
         pol *= pol.denominator()
         if not pol.is_irreducible():

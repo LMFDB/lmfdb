@@ -25,7 +25,7 @@ def parse_gens_string(s):
     if s == '[]':
         return []
     g = s[2:-2].split('],[')
-    return [[QQ(c) for c in gi.split(',')] for gi in g if not '?' in gi]
+    return [[QQ(c) for c in gi.split(',')] for gi in g if '?' not in gi]
     
 def get_congruent_number_data(n):
     info = {'n': n}

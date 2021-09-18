@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import ast
 import re
-from six import BytesIO
+from io import BytesIO
 import time
 
 from flask import render_template, request, url_for, redirect, make_response, send_file
@@ -341,7 +341,7 @@ def vect_to_sym(v):
 def theta_display(label, number):
     try:
         number = int(number)
-    except:
+    except Exception:
         number = 20
     if number < 20:
         number = 30

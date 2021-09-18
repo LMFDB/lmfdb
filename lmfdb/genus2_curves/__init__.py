@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
 from lmfdb.api2.searchers import register_search_function
 
-g2c_page = Blueprint("g2c", __name__, template_folder='templates',
-        static_folder="static")
+g2c_page = Blueprint("g2c", __name__, template_folder='templates')
 g2c_logger = make_logger(g2c_page)
 
 @g2c_page.context_processor

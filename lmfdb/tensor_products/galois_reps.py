@@ -671,7 +671,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         q = 1
         E1 = []
         E2 = []
-        if not p in BadPrimes:
+        if p not in BadPrimes:
             for i in range(f):
                 q=q*p
                 E1.append(L1[q-1])
@@ -724,7 +724,7 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         q = 1
         u = 1
         e = D[p-1]
-        if not p in BadPrimes:
+        if p not in BadPrimes:
             for i in range(f):
                 q = q*p
                 u = u*e

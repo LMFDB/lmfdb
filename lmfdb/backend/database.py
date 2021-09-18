@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
-from six.moves import input  # in python2, this is raw_input
 import csv
 import logging
 import os
@@ -509,7 +506,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         - ``new_name`` -- a string giving the desired table name.
         - ``table`` -- a string or PostgresSearchTable object giving an existing table.
         """
-        if isinstance(table, string_types):
+        if isinstance(table, str):
             table = self[table]
         search_columns = {
             typ: [col for col in table.search_cols if table.col_type[col] == typ]
@@ -628,7 +625,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if id_ordered is None:
             id_ordered = sort is not None
         for typ, L in list(search_columns.items()):
-            if isinstance(L, string_types):
+            if isinstance(L, str):
                 search_columns[typ] = [L]
         valid_list = sum(search_columns.values(), [])
         valid_set = set(valid_list)
@@ -664,7 +661,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             dictorder = []
             for typ, cols in coldict.items():
                 self._check_col_datatype(typ)
-                if isinstance(cols, string_types):
+                if isinstance(cols, str):
                     cols = [cols]
                 for col in cols:
                     if col == "id":

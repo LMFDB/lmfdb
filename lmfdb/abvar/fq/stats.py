@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db

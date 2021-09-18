@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six import string_types
 from lmfdb.utils.utilities import key_for_numerically_sort
 #######################################################################
 # Functions for interacting with web structure
@@ -143,6 +142,7 @@ def name_and_object_from_url(url, check_existence=False):
 
     return name, obj_exists
 
+
 def names_and_urls(instances, exclude={}):
     res = []
     names = set()
@@ -151,7 +151,7 @@ def names_and_urls(instances, exclude={}):
 
     # remove duplicate urls
     for instance in instances:
-        if not isinstance(instance, string_types):
+        if not isinstance(instance, str):
             instance = instance['url']
         if instance not in exclude and '|' not in instance:
             urls.add(instance)

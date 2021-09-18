@@ -1,5 +1,5 @@
 #!/usr/local/bin/sage -python
-from __future__ import print_function
+
 import sys, os
 import re
 import json

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from lmfdb.app import app
 from flask import Blueprint
 
