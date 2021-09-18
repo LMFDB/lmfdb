@@ -71,7 +71,7 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/?count=20", "5T1-5_5_5-c")
 
     def test_field_search(self):
-        self.check_args("Belyi/?field=Qsqrt-3", "3T1-3_3_3-a")
+        self.check_args("Belyi/?field=Qsqrt-3", "6T15-4.2_4.2_4.2-a")
         self.not_check_args("Belyi/?field=Qsqrt-3", "1T1-1_1_1-a")
 
     def test_primitive_search(self):

@@ -640,13 +640,13 @@ def belyi_search(info, query):
     parse_ints(info, query, "deg", "deg")
     parse_ints(info, query, "orbit_size", "orbit_size")
     parse_ints(info, query, "pass_size", "pass_size")
-    parse_nf_string(info,query,'field',name="base number field",qfield='moduli_field_label')
+    parse_nf_string(info,query,'field',name="base number field",qfield='base_field_label')
     # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
     for fld in ["geomtype", "group"]:
         if info.get(fld):
             query[fld] = info[fld]
 
-    info["nf_link"] = lambda elt: field_display_gen(elt.get('moduli_field_label'), elt.get('moduli_field'), truncate=16)
+    info["nf_link"] = lambda elt: field_display_gen(elt.get('base_field_label'), elt.get('base_field'), truncate=16)
     parse_bool(info, query, "is_primitive", name="is_primitive")
 
 ################################################################################
