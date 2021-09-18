@@ -254,16 +254,12 @@ class WebBelyiGalmap(object):
             self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
         self.friends.extend(names_and_urls(galmap['friends']))
 
-        # TODO: fix url thing
         #add curve link, if in LMFDB
         if 'curve_label' in galmap.keys():
             data['curve_label'] = galmap['curve_label']
             for name, url in self.friends:
                 if "curve" in name.lower() and data['curve_label'] in name:
                     data["curve_url"] = url
-            #if data['g'] == 1:
-                #data['curve_url'] = url_for("ec.by_ec_label", label=galmap['curve_label'])
-
 
         # Downloads
         if galmap["g"] <= 2:
