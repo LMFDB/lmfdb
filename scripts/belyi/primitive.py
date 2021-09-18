@@ -9,8 +9,8 @@ def primitive(rec):
 
 # get primitivization for passports by pulling from galmaps
 def primitive_passport(rec):
-    map_rec = db.belyi_galmaps_more.lucky({"plabel":rec["plabel"]})
+    map_rec = db.belyi_galmaps_fixed.lucky({"plabel":rec["plabel"]})
     rec["is_primitive"] = map_rec["is_primitive"]
-    map_prim = db.belyi_galmaps_more.lookup(map_rec["primitivization"])
+    map_prim = db.belyi_galmaps_fixed.lookup(map_rec["primitivization"])
     rec["primitivization"] = map_prim["plabel"]
     return rec
