@@ -768,7 +768,7 @@ class ECSearchArray(SearchArray):
         surj_primes = TextBox(
             name="surj_primes",
             label="Maximal primes",
-            knowl="ec.maximal_ladic_galois_rep",
+            knowl="ec.maximal_elladic_galois_rep",
             example="2,3")
         isodeg = TextBox(
             name="isogeny_degrees",
@@ -823,7 +823,7 @@ class ECSearchArray(SearchArray):
         nonsurj_primes = TextBoxWithSelect(
             name="nonsurj_primes",
             label="Nonmax $p$",
-            knowl="ec.maximal_ladic_galois_rep",
+            knowl="ec.maximal_elladic_galois_rep",
             example="2,3",
             select_box=surj_quant)
         bad_quant = SubsetBox(
