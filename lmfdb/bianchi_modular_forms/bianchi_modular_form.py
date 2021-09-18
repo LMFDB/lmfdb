@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six import string_types
 import re
 
 from flask import render_template, url_for, request, redirect, make_response
@@ -592,11 +591,12 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         KNOWL_ID="mf.bianchi.%s"%label,
     )
 
+
 def bianchi_modular_form_by_label(lab):
     if lab == '':
         # do nothing: display the top page
         return redirect(url_for(".index"))
-    if isinstance(lab, string_types):
+    if isinstance(lab, str):
         res = db.bmf_forms.lookup(lab)
     else:
         res = lab

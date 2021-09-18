@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 import os.path
 import sage.misc.preparser
 from sage.interfaces.magma import magma

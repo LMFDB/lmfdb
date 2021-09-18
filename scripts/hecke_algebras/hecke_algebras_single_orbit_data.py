@@ -3,7 +3,7 @@
 
 Author: Samuele Anni
 """
-from __future__ import print_function
+
 import os
 
 from pymongo.mongo_client import MongoClient

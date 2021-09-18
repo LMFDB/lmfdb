@@ -1,5 +1,3 @@
-from six import string_types
-
 null_type = 0
 integer_type = 1
 numeric_type = 2
@@ -151,7 +149,7 @@ def is_string(object):
 
         object - Object to test
         returns True or False """
-    return isinstance(object, string_types)
+    return isinstance(object, str)
 
 
 def is_string_of(object):

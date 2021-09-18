@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six import string_types
 from flask import render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
@@ -94,8 +93,9 @@ def url_for_label(label):
                    field_label=split_full_label(label)[0],
                    label=label)
 
+
 def hilbert_modular_form_by_label(lab):
-    if isinstance(lab, string_types):
+    if isinstance(lab, str):
         res = db.hmf_forms.lookup(lab, projection=0)
     else:
         res = lab

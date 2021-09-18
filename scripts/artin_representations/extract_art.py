@@ -15,7 +15,7 @@
 # On the remaining lines, the value is an index back into the list
 # of polynomials so that if the j-th of these lines is k, then
 # the local factor of the j-th prime is the k-th polynomial
-from __future__ import print_function
+
 
 import sys, time, os
 assert time

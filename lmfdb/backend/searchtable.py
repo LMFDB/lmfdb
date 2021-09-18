@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from six import string_types
 import random
 from itertools import islice
 
@@ -97,8 +95,8 @@ class PostgresSearchTable(PostgresTable):
                 projection.pop(col, None)
             if projection:  # there were more columns requested
                 raise ValueError("%s not column of %s" % (", ".join(projection), self.search_table))
-        else:  # iterable or string_types
-            if isinstance(projection, string_types):
+        else:  # iterable or str
+            if isinstance(projection, str):
                 projection = [projection]
             include_id = False
             for col in projection:
@@ -512,7 +510,7 @@ class PostgresSearchTable(PostgresTable):
         # make fewer SQL queries here.
         try:
             for rec in cur:
-                if projection == 0 or isinstance(projection, string_types):
+                if projection == 0 or isinstance(projection, str):
                     yield rec[0]
                 else:
                     yield {
@@ -550,7 +548,7 @@ class PostgresSearchTable(PostgresTable):
 
         def is_special(v):
             return isinstance(v, dict) and all(
-                isinstance(k, string_types) and k.startswith("$") for k in v
+                isinstance(k, str) and k.startswith("$") for k in v
             )
 
         for orc in ors:
@@ -570,7 +568,7 @@ class PostgresSearchTable(PostgresTable):
                 queries.append(Q)
         if sort:
             col = sort[0]
-            if isinstance(col, string_types):
+            if isinstance(col, str):
                 asc = 1
             else:
                 col, asc = col
@@ -662,7 +660,7 @@ class PostgresSearchTable(PostgresTable):
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
             rec = cur.fetchone()
-            if projection == 0 or isinstance(projection, string_types):
+            if projection == 0 or isinstance(projection, str):
                 return rec[0]
             else:
                 return {
@@ -764,7 +762,7 @@ class PostgresSearchTable(PostgresTable):
         if split_ors or one_per:
             # We need to be able to extract the sort columns, so they need to be added
             _, _, raw_sort = self._process_sort(query, limit, offset, sort)
-            raw_sort = [((col, 1) if isinstance(col, string_types) else col) for col in raw_sort]
+            raw_sort = [((col, 1) if isinstance(col, str) else col) for col in raw_sort]
             sort_cols = [col[0] for col in raw_sort]
             sort_only = tuple(col for col in sort_cols if col not in search_cols)
             search_cols = search_cols + sort_only
@@ -798,7 +796,7 @@ class PostgresSearchTable(PostgresTable):
             for rec in islice(it, off, lim + off):
                 if projection == 0:
                     yield rec[self._label_col]
-                elif isinstance(projection, string_types):
+                elif isinstance(projection, str):
                     yield rec[projection]
                 else:
                     for col in sort_only:

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .id_object import get_description
 from lmfdb import db
 import datetime

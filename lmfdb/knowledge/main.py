@@ -11,7 +11,7 @@
 # (i.e. when it makes sense to add additional fields, e.g. for referencing each other)
 #
 # author: Harald Schilly <harald.schilly@univie.ac.at>
-from __future__ import absolute_import
+
 import string
 import re
 import json
@@ -182,13 +182,13 @@ def ref_to_link(txt):
             ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
+            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
             ref = ref.replace(":","")
             the_arx = ref[5:]    # remove the "arXiv"
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
-            this_link += '"http://arxiv.org/abs/'
+            this_link += '"https://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
 
 
@@ -819,6 +819,7 @@ def index():
             flash_error("The string %s is not a valid regular expression", keywords)
         else:
             flash_error("Unexpected error %s occurred during knowl search", str(e))
+        all_knowls = []
     categories = Counter()
     if cur_cat:
         # Always include the current category

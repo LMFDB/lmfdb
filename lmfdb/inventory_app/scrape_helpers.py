@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from . import inventory_db_core as idc
 import datetime
 from .scrape_frontend import get_scrape_progress

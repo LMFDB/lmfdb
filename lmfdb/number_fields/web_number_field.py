@@ -2,7 +2,6 @@
 from collections import Counter
 import os
 import yaml
-from six import text_type
 
 from flask import url_for
 from sage.all import (
@@ -252,6 +251,7 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+
 def formatfield(coef, show_poly=False, missing_text=None):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
@@ -263,7 +263,7 @@ def formatfield(coef, show_poly=False, missing_text=None):
       If show_poly is set to true and the polynomial is not in the
       database, just display the polynomial (no knowl).
     """
-    if isinstance(coef, text_type):
+    if isinstance(coef, str):
         coef = string2list(coef)
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:

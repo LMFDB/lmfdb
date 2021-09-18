@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import render_template, request, url_for, make_response, jsonify, send_from_directory
 from flask_login import login_required
 from lmfdb.users import admin_required

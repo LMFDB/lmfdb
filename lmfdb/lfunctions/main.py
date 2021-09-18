@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from flask import (render_template, url_for, request, make_response,
                    abort, redirect)
 
@@ -47,7 +46,6 @@ from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.backend.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl
 from lmfdb import db
-from six import string_types
 
 SPECTRAL_STR = r"((?:[rc]\d+)+)(?:e(\d+))?-(0|(?:[pmc]\d+(?:\.\d\d)?)+)"
 SPECTRAL_RE = re.compile("^"+SPECTRAL_STR+"$")
@@ -1628,7 +1626,7 @@ def render_zerosLfunction(request, *args):
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
     # Handle cases where zeros are not available
-    if isinstance(website_zeros, string_types):
+    if isinstance(website_zeros, str):
         return website_zeros
 
     positiveZeros = []

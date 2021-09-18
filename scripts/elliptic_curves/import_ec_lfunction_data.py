@@ -58,7 +58,7 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
 
 """
-from __future__ import print_function
+
 import os
 from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 

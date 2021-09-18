@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import prime_range, CC, gcd, ZZ
 
