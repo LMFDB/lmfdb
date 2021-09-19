@@ -435,15 +435,15 @@ text-align: center;
   {{ place_code('galrep') }}
 
 <p>
-The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {{KNOWL('ec.maximal_ladic_galois_rep', title='maximal image')}}
+The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {{KNOWL('ec.maximal_elladic_galois_rep', title='maximal image')}}
 {% if data.data.galois_data %}
   for all primes $\ell$ except those listed in the table below.
   </p>
   <table class="ntdata"><thead>
   <tr>
   <th>prime $\ell$</th>
-  <th>{{KNOWL('ec.q.galois_rep_image', title='mod-$\ell$ image')}}</th>
-  <th>{{KNOWL('ec.q.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
+  <th>{{KNOWL('ec.galois_rep_modell_image', title='mod-$\ell$ image')}}</th>
+  <th>{{KNOWL('ec.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
   </tr>
   </thead><tbody>
   {% for pr in data.data.galois_data %}

@@ -2284,7 +2284,11 @@ class PostgresTable(PostgresBase):
             if drop:
                 if col is None:
                     raise ValueError("Must specify column name to drop")
-                del current[col]
+                try:
+                    del current[col]
+                except KeyError:
+                    # column was already not present for some reason
+                    return
             elif col is None:
                 assert isinstance(description, dict)
                 for col in description:
