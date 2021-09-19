@@ -349,6 +349,7 @@ def url_for_label(label):
 
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info,query,'jinv','j-invariant')
+    parse_ints(info,query,'conductor')
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['num_bad_primes'] = 1
@@ -362,7 +363,6 @@ def elliptic_curve_search(info, query):
                 raise ValueError("You must specify a single level")
             else:
                 query['conductor'] = {'$in': ZZ(query['conductor']).divisors()}
-    parse_ints(info,query,'conductor')
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'torsion','torsion order')
     parse_ints(info,query,'rank')
