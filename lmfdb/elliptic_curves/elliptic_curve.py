@@ -760,7 +760,7 @@ class ECSearchArray(SearchArray):
                      ('divides','divides'),
                      ],
             min_width=110)
-        cond = TextBox(
+        cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",
             knowl="ec.q.conductor",
